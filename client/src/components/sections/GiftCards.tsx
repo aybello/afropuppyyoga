@@ -5,7 +5,7 @@ import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Gift, Heart } from "lucide-react";
 
-const BOOK_URL = "https://www.eventbrite.ca/o/afropuppyyoga-84060688843";
+const BOOK_URL = "https://lu.ma/afropuppyyoga";
 
 function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const ref = useRef(null);

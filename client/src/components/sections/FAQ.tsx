@@ -41,7 +41,7 @@ const faqs = [
   },
   {
     q: "Can I purchase gift cards?",
-    a: "Yes! Gift cards are available for purchase on our Eventbrite page. They make a perfect gift for birthdays, holidays, or anyone who deserves a little joy.",
+    a: "Yes! Gift cards are available for purchase on our Luma page. They make a perfect gift for birthdays, holidays, or anyone who deserves a little joy.",
   },
   {
     q: "Where are your classes held?",

@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 
 const HERO_BG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/apy_hero_bg-aDMPriKGFaJ3ZgQKWVBv5n.webp";
-const BOOK_URL = "https://www.eventbrite.ca/o/afropuppyyoga-84060688843";
+const BOOK_URL = "https://lu.ma/afropuppyyoga";
 
 const trustedBy = [
   "Wilfrid Laurier University",

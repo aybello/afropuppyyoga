@@ -6,7 +6,7 @@ import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Mail, Instagram, Facebook, Youtube, ExternalLink } from "lucide-react";
 
-const BOOK_URL = "https://www.eventbrite.ca/o/afropuppyyoga-84060688843";
+const BOOK_URL = "https://lu.ma/afropuppyyoga";
 
 const socials = [
   {
@@ -126,7 +126,7 @@ export default function Contact() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-8 py-4 bg-[#F4A800] text-[#1E1208] font-body font-bold text-base rounded-full hover:bg-[#e09800] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
               >
-                Book on Eventbrite
+                Book on Luma
                 <ExternalLink size={16} />
               </a>
             </FadeUp>

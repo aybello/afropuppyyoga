@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
-const BOOK_URL = "https://www.eventbrite.ca/o/afropuppyyoga-84060688843";
+const BOOK_URL = "https://lu.ma/afropuppyyoga";
 
 const navLinks = [
   { label: "Home", href: "#home" },
