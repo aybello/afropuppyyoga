@@ -1,25 +1,41 @@
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { Streamdown } from 'streamdown';
+/* ============================================================
+   Home Page — AfroPuppyYoga
+   Design: Warm Afro-Wellness Editorial
+   Sections: Hero → Experience → About → Private Events →
+             Gallery → Reviews → Gift Cards → FAQ → Contact
+   ============================================================ */
+import Navbar from "@/components/Navbar";
+import Hero from "@/components/sections/Hero";
+import Experience from "@/components/sections/Experience";
+import About from "@/components/sections/About";
+import BookingBanner from "@/components/sections/BookingBanner";
+import PrivateEvents from "@/components/sections/PrivateEvents";
+import Gallery from "@/components/sections/Gallery";
+import Reviews from "@/components/sections/Reviews";
+import GiftCards from "@/components/sections/GiftCards";
+import FAQ from "@/components/sections/FAQ";
+import Contact from "@/components/sections/Contact";
+import Footer from "@/components/Footer";
+import ScrollToTop from "@/components/ScrollToTop";
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Best Practices, Design Guide and Common Pitfalls
- */
 export default function Home() {
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
-
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-[#FEFAF4]">
+      <Navbar />
       <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
+        <Hero />
+        <Experience />
+        <BookingBanner />
+        <About />
+        <PrivateEvents />
+        <Gallery />
+        <Reviews />
+        <GiftCards />
+        <FAQ />
+        <Contact />
       </main>
+      <Footer />
+      <ScrollToTop />
     </div>
   );
 }
