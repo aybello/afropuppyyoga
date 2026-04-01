@@ -10,37 +10,27 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Instagram, Loader2 } from "lucide-react";
 
-// Entertainment Reels from @afropuppyyoga — fun, relatable, not class announcements
+// Entertainment & relatable Reels from @afropuppyyoga — no class announcements
 const REELS = [
   {
     shortcode: "DWaCFHXEXYy",
-    caption: "I'm okay with it tho! 😂🐶",
+    caption: "i'm okay with it tho! 😂🐶 #puppyyoga #relationships",
     likes: 64,
   },
   {
     shortcode: "DWPixfhESbI",
-    caption: "Got exactly what I wanted 😛 #puppyyoga",
+    caption: "got exactly what i wanted 😛 #puppyyoga #fyp",
     likes: 41,
   },
   {
     shortcode: "DWU4taXDNKg",
-    caption: "🧐🤨 #puppyyoga #relatable #fyp",
+    caption: "🧐🤨 #puppyyoga #dog #protect #relatable #fyp",
     likes: 37,
   },
   {
     shortcode: "DWh-37KDNNr",
-    caption: "Gone… to puppy yoga! 🐶",
+    caption: "gone….to puppy yoga! 🐶 #puppyyoga #puppylove",
     likes: 29,
-  },
-  {
-    shortcode: "DWSbQ8UjBlN",
-    caption: "Cool down with playful Husky puppies ❄️🐶",
-    likes: 57,
-  },
-  {
-    shortcode: "DWPX6bZEcfi",
-    caption: "Dachshund puppies + yoga 🐶🧘‍♀️",
-    likes: 163,
   },
 ];
 
@@ -145,7 +135,7 @@ export default function InstagramFeed() {
         </div>
 
         {/* Reels grid — horizontal scroll on mobile, 3-col on desktop */}
-        <div className="flex md:grid md:grid-cols-3 gap-5 overflow-x-auto md:overflow-visible pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory md:snap-none scrollbar-hide">
+        <div className="flex md:grid md:grid-cols-4 gap-5 overflow-x-auto md:overflow-visible pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory md:snap-none scrollbar-hide">
           {REELS.map((reel, i) => (
             <ReelCard key={reel.shortcode} reel={reel} index={i} />
           ))}
