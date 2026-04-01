@@ -8,7 +8,6 @@ import Navbar from "@/components/Navbar";
 import Hero from "@/components/sections/Hero";
 import Experience from "@/components/sections/Experience";
 import About from "@/components/sections/About";
-import BookingBanner from "@/components/sections/BookingBanner";
 import LumaCalendar from "@/components/sections/LumaCalendar";
 import PrivateEvents from "@/components/sections/PrivateEvents";
 import Gallery from "@/components/sections/Gallery";
@@ -27,7 +26,6 @@ export default function Home() {
       <main>
         <Hero />
         <Experience />
-        <BookingBanner />
         <LumaCalendar />
         <About />
         <PrivateEvents />
