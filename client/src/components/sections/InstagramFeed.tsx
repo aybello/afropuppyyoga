@@ -43,7 +43,7 @@ const REELS = [
   {
     id: "review2",
     videoUrl:
-      "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/review2_37f8463c.mp4",
+      "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/review2_h264_d7d03926.mp4",
     thumbUrl:
       "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/review2_thumb_54739e6e.jpg",
     caption: "Another happy guest shares their experience 🧘‍♀️🐾",
