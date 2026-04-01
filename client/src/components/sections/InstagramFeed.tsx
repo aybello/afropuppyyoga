@@ -56,8 +56,11 @@ function ReelCard({ reel, index }: { reel: typeof REELS[0]; index: number }) {
       transition={{ delay: index * 0.08, duration: 0.5 }}
       className="flex-shrink-0 w-[300px] md:w-auto snap-start group"
     >
-      {/* Video tile */}
-      <div className="relative rounded-2xl overflow-hidden bg-[#1A0A12] shadow-md group-hover:shadow-xl transition-shadow duration-300" style={{ aspectRatio: "9/16" }}>
+      {/* Video tile — fixed height so iframe is fully visible and clickable */}
+      <div
+        className="relative rounded-2xl overflow-hidden bg-[#1A0A12] shadow-md group-hover:shadow-xl transition-shadow duration-300"
+        style={{ height: 560 }}
+      >
         {/* Loading state */}
         {!loaded && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#1A0A12] z-10 pointer-events-none">
@@ -78,8 +81,6 @@ function ReelCard({ reel, index }: { reel: typeof REELS[0]; index: number }) {
           onLoad={() => setLoaded(true)}
           style={{
             display: "block",
-            position: "absolute",
-            inset: 0,
             width: "100%",
             height: "100%",
             border: "none",
