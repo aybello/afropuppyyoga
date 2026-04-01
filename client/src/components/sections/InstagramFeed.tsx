@@ -10,22 +10,12 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Instagram, Loader2 } from "lucide-react";
 
-// Top-performing Reels from @afropuppyyoga (sorted by likes)
+// Entertainment Reels from @afropuppyyoga — fun, relatable, not class announcements
 const REELS = [
   {
-    shortcode: "DWPX6bZEcfi",
-    caption: "Dachshund puppies + yoga 🐶🧘‍♀️",
-    likes: 163,
-  },
-  {
-    shortcode: "DWUsnqskdVG",
-    caption: "Feel-good flow with Dachshund puppies 🐾",
-    likes: 80,
-  },
-  {
-    shortcode: "DWSbQ8UjBlN",
-    caption: "Cool down with playful Husky puppies ❄️🐶",
-    likes: 57,
+    shortcode: "DWaCFHXEXYy",
+    caption: "I'm okay with it tho! 😂🐶",
+    likes: 64,
   },
   {
     shortcode: "DWPixfhESbI",
@@ -33,14 +23,24 @@ const REELS = [
     likes: 41,
   },
   {
+    shortcode: "DWU4taXDNKg",
+    caption: "🧐🤨 #puppyyoga #relatable #fyp",
+    likes: 37,
+  },
+  {
     shortcode: "DWh-37KDNNr",
     caption: "Gone… to puppy yoga! 🐶",
     likes: 29,
   },
   {
-    shortcode: "DWQeahHjrxG",
-    caption: "Unwind with fluffy Samoyed puppies ☁️🐾",
-    likes: 27,
+    shortcode: "DWSbQ8UjBlN",
+    caption: "Cool down with playful Husky puppies ❄️🐶",
+    likes: 57,
+  },
+  {
+    shortcode: "DWPX6bZEcfi",
+    caption: "Dachshund puppies + yoga 🐶🧘‍♀️",
+    likes: 163,
   },
 ];
 
