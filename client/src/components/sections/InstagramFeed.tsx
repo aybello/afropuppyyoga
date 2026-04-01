@@ -1,81 +1,201 @@
 /* ============================================================
-   InstagramFeed Section — Reel tiles, 9:16 aspect ratio
+   InstagramFeed Section — 4 native video tiles
    Design: Warm Afro-Wellness Editorial (Pink variant)
-   - 6 Reels: 2 customer review + 4 entertainment/relatable
-   - 3-column grid desktop, horizontal snap-scroll on mobile
+   - 2 customer review Reels + 2 entertainment/relatable Reels
+   - Native <video> elements — play inline on ALL devices incl. mobile
+   - 9:16 aspect ratio, 2-col desktop / single-col snap-scroll mobile
    ============================================================ */
+import { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Instagram } from "lucide-react";
+import { Instagram, Play, Pause, Volume2, VolumeX } from "lucide-react";
 
 const REELS = [
   {
-    shortcode: "DV99b-vDPCy",
-    caption: "Customer review 🐶❤️ — hear what our guests are saying!",
+    id: "review1",
+    videoUrl:
+      "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/reel_review1_e70c52a3.mp4",
+    thumbUrl:
+      "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/reel_review1_thumb_37c4bc42.jpg",
+    caption: "Hear what our guests are saying 🐶❤️",
     tag: "Review",
+    instagramUrl: "https://www.instagram.com/reel/DV99b-vDPCy/",
   },
   {
-    shortcode: "DVKKYGIEa4-",
-    caption: "Another happy guest shares their puppy yoga experience 🧘‍♀️🐾",
+    id: "relatable",
+    videoUrl:
+      "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/reel_relatable_a42ed4d9.mp4",
+    thumbUrl:
+      "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/reel_relatable_thumb_cff0f6f0.jpg",
+    caption: "🧐🤨 #puppyyoga #relatable #fyp",
+    tag: "Relatable",
+    instagramUrl: "https://www.instagram.com/reel/DWU4taXDNKg/",
+  },
+  {
+    id: "okay",
+    videoUrl:
+      "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/reel_okay_fcc176dd.mp4",
+    thumbUrl:
+      "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/reel_okay_thumb_8adc1726.jpg",
+    caption: "i'm okay with it tho! 😂🐶 #puppyyoga",
+    tag: "Relatable",
+    instagramUrl: "https://www.instagram.com/reel/DWaCFHXEXYy/",
+  },
+  {
+    id: "review2",
+    videoUrl: null, // Review 2 video unavailable — fallback to embed
+    thumbUrl: null,
+    caption: "Another happy guest shares their experience 🧘‍♀️🐾",
     tag: "Review",
-  },
-  {
-    shortcode: "DWaCFHXEXYy",
-    caption: "i'm okay with it tho! 😂🐶 #puppyyoga #relationships",
-    tag: "Relatable",
-  },
-  {
-    shortcode: "DWPixfhESbI",
-    caption: "got exactly what i wanted 😛 #puppyyoga #fyp",
-    tag: "Relatable",
-  },
-  {
-    shortcode: "DWU4taXDNKg",
-    caption: "🧐🤨 #puppyyoga #dog #protect #relatable #fyp",
-    tag: "Relatable",
-  },
-  {
-    shortcode: "DWh-37KDNNr",
-    caption: "gone….to puppy yoga! 🐶 #puppyyoga #puppylove",
-    tag: "Relatable",
+    instagramUrl: "https://www.instagram.com/reel/DVKKYGIEa4-/",
+    embedShortcode: "DVKKYGIEa4-",
   },
 ];
 
-function ReelCard({ reel, index }: { reel: typeof REELS[0]; index: number }) {
-  const embedUrl = `https://www.instagram.com/reel/${reel.shortcode}/embed/captioned/`;
+function VideoCard({ reel, index }: { reel: (typeof REELS)[0]; index: number }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [muted, setMuted] = useState(true);
+
+  const togglePlay = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.paused) {
+      v.play();
+      setPlaying(true);
+    } else {
+      v.pause();
+      setPlaying(false);
+    }
+  };
+
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = !v.muted;
+    setMuted(v.muted);
+  };
+
+  // Fallback: embed iframe for reel without video file
+  if (!reel.videoUrl) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ delay: index * 0.1, duration: 0.5 }}
+        className="flex-shrink-0 w-[300px] md:w-auto snap-start group"
+      >
+        <div
+          className="relative rounded-2xl overflow-hidden bg-[#1A0A12] shadow-md"
+          style={{ paddingBottom: "177.78%" }}
+        >
+          <iframe
+            src={`https://www.instagram.com/reel/${reel.embedShortcode}/embed/captioned/`}
+            title={reel.caption}
+            allowFullScreen
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+            scrolling="no"
+            frameBorder="0"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              border: "none",
+            }}
+          />
+        </div>
+        <div className="mt-3 px-1">
+          <span className="inline-block font-body text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full mb-1.5 bg-[#8B2252]/10 text-[#8B2252]">
+            {reel.tag}
+          </span>
+          <p className="font-body text-[#1A0A12]/70 text-xs leading-relaxed line-clamp-2">
+            {reel.caption}
+          </p>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ delay: index * 0.08, duration: 0.5 }}
+      transition={{ delay: index * 0.1, duration: 0.5 }}
       className="flex-shrink-0 w-[300px] md:w-auto snap-start group"
     >
-      {/* 9:16 aspect ratio container */}
+      {/* 9:16 video container */}
       <div
-        className="relative rounded-2xl overflow-hidden bg-[#1A0A12] shadow-md group-hover:shadow-xl transition-shadow duration-300"
-        style={{ paddingBottom: "177.78%" /* 16/9 * 100 */ }}
+        className="relative rounded-2xl overflow-hidden bg-[#1A0A12] shadow-md group-hover:shadow-xl transition-shadow duration-300 cursor-pointer"
+        style={{ paddingBottom: "177.78%" }}
+        onClick={togglePlay}
       >
-        <iframe
-          src={embedUrl}
-          title={reel.caption}
-          allowFullScreen
-          allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-          scrolling="no"
-          frameBorder="0"
+        <video
+          ref={videoRef}
+          src={reel.videoUrl}
+          poster={reel.thumbUrl ?? undefined}
+          playsInline
+          muted
+          loop
+          preload="metadata"
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
           style={{
             position: "absolute",
             top: 0,
             left: 0,
             width: "100%",
             height: "100%",
-            border: "none",
-            background: "#1A0A12",
+            objectFit: "cover",
           }}
         />
+
+        {/* Play/pause overlay */}
+        <div
+          className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 ${
+            playing ? "opacity-0 group-hover:opacity-100" : "opacity-100"
+          }`}
+          style={{ background: playing ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.35)" }}
+        >
+          <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm border border-white/40 flex items-center justify-center shadow-lg">
+            {playing ? (
+              <Pause size={22} className="text-white" fill="white" />
+            ) : (
+              <Play size={22} className="text-white ml-1" fill="white" />
+            )}
+          </div>
+        </div>
+
+        {/* Mute toggle — bottom right */}
+        <button
+          onClick={toggleMute}
+          className="absolute bottom-3 right-3 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
+          aria-label={muted ? "Unmute" : "Mute"}
+        >
+          {muted ? (
+            <VolumeX size={14} className="text-white" />
+          ) : (
+            <Volume2 size={14} className="text-white" />
+          )}
+        </button>
+
+        {/* Instagram link — top right */}
+        <a
+          href={reel.instagramUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
+          aria-label="View on Instagram"
+        >
+          <Instagram size={14} className="text-white" />
+        </a>
       </div>
 
-      {/* Tag + caption below */}
+      {/* Tag + caption */}
       <div className="mt-3 px-1">
         <span
           className={`inline-block font-body text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full mb-1.5 ${
@@ -137,10 +257,10 @@ export default function InstagramFeed() {
           </motion.a>
         </div>
 
-        {/* Reels grid */}
-        <div className="flex md:grid md:grid-cols-3 gap-5 overflow-x-auto md:overflow-visible pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory md:snap-none scrollbar-hide">
+        {/* Video grid — 2-col on desktop, horizontal scroll on mobile */}
+        <div className="flex md:grid md:grid-cols-2 gap-5 overflow-x-auto md:overflow-visible pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory md:snap-none scrollbar-hide max-w-2xl md:mx-auto">
           {REELS.map((reel, i) => (
-            <ReelCard key={reel.shortcode} reel={reel} index={i} />
+            <VideoCard key={reel.id} reel={reel} index={i} />
           ))}
         </div>
 
