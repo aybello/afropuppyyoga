@@ -1,48 +1,43 @@
 /* ============================================================
-   InstagramFeed Section — Embedded Instagram Reels
+   InstagramFeed Section — Direct iframe Instagram Reels
    Design: Warm Afro-Wellness Editorial
-   - 6 top-performing Reels embedded via Instagram oEmbed iframes
-   - Horizontal scroll on mobile, 3-column grid on desktop
+   - 6 top-performing Reels embedded via direct Instagram iframe
+   - No external embed.js dependency — iframes load immediately
+   - 3-column grid on desktop, horizontal scroll on mobile
    - CTA to follow on Instagram
    ============================================================ */
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Instagram, Play } from "lucide-react";
+import { Instagram, Loader2 } from "lucide-react";
 
-// Top-performing Reels from @afropuppyyoga (sorted by engagement)
+// Top-performing Reels from @afropuppyyoga (sorted by likes)
 const REELS = [
   {
-    url: "https://www.instagram.com/reel/DWPX6bZEcfi/",
     shortcode: "DWPX6bZEcfi",
     caption: "Dachshund puppies + yoga 🐶🧘‍♀️",
     likes: 163,
   },
   {
-    url: "https://www.instagram.com/reel/DWUsnqskdVG/",
     shortcode: "DWUsnqskdVG",
     caption: "Feel-good flow with Dachshund puppies 🐾",
     likes: 80,
   },
   {
-    url: "https://www.instagram.com/reel/DWSbQ8UjBlN/",
     shortcode: "DWSbQ8UjBlN",
     caption: "Cool down with playful Husky puppies ❄️🐶",
     likes: 57,
   },
   {
-    url: "https://www.instagram.com/reel/DWPixfhESbI/",
     shortcode: "DWPixfhESbI",
     caption: "Got exactly what I wanted 😛 #puppyyoga",
     likes: 41,
   },
   {
-    url: "https://www.instagram.com/reel/DWh-37KDNNr/",
     shortcode: "DWh-37KDNNr",
     caption: "Gone… to puppy yoga! 🐶",
     likes: 29,
   },
   {
-    url: "https://www.instagram.com/reel/DWQeahHjrxG/",
     shortcode: "DWQeahHjrxG",
     caption: "Unwind with fluffy Samoyed puppies ☁️🐾",
     likes: 27,
@@ -50,75 +45,46 @@ const REELS = [
 ];
 
 function ReelCard({ reel, index }: { reel: typeof REELS[0]; index: number }) {
-  const ref = useRef<HTMLDivElement>(null);
   const [loaded, setLoaded] = useState(false);
-  const [inView, setInView] = useState(false);
 
-  // Lazy-load: only render iframe when card is visible
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setInView(true); },
-      { threshold: 0.1 }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, []);
-
-  // Load Instagram embed script once
-  useEffect(() => {
-    if (!inView) return;
-    if ((window as any).instgrm) {
-      (window as any).instgrm.Embeds.process();
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://www.instagram.com/embed.js";
-    script.async = true;
-    script.onload = () => {
-      if ((window as any).instgrm) (window as any).instgrm.Embeds.process();
-    };
-    document.body.appendChild(script);
-  }, [inView]);
+  const embedUrl = `https://www.instagram.com/reel/${reel.shortcode}/embed/`;
 
   return (
     <motion.div
-      ref={ref}
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.1, duration: 0.5 }}
-      className="flex-shrink-0 w-[300px] md:w-auto"
+      className="flex-shrink-0 w-[300px] md:w-auto snap-start"
     >
       <div className="relative rounded-2xl overflow-hidden bg-[#1E1208]/5 border border-[#1E1208]/8 shadow-sm hover:shadow-md transition-shadow duration-300">
-        {/* Loading placeholder */}
-        {!loaded && inView && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#F5EFE6] z-10 pointer-events-none">
+        {/* Loading spinner */}
+        {!loaded && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#F5EFE6] z-10 pointer-events-none" style={{ minHeight: 560 }}>
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#F4A800] to-[#E1306C] flex items-center justify-center mb-3">
-              <Play size={18} className="text-white ml-0.5" fill="white" />
+              <Loader2 size={18} className="text-white animate-spin" />
             </div>
             <p className="font-body text-xs text-[#1E1208]/50">Loading reel…</p>
           </div>
         )}
 
-        {inView && (
-          <blockquote
-            className="instagram-media"
-            data-instgrm-permalink={`${reel.url}?utm_source=ig_embed&utm_campaign=loading`}
-            data-instgrm-version="14"
-            style={{
-              background: "#FFF",
-              border: 0,
-              borderRadius: "12px",
-              boxShadow: "none",
-              display: "block",
-              margin: 0,
-              minWidth: "280px",
-              padding: 0,
-              width: "100%",
-            }}
-            onLoad={() => setLoaded(true)}
-          />
-        )}
+        <iframe
+          src={embedUrl}
+          title={reel.caption}
+          allowFullScreen
+          allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+          scrolling="no"
+          frameBorder="0"
+          onLoad={() => setLoaded(true)}
+          style={{
+            display: "block",
+            width: "100%",
+            minHeight: 560,
+            border: "none",
+            borderRadius: "12px",
+            background: "transparent",
+          }}
+        />
       </div>
 
       {/* Caption below card */}
@@ -179,7 +145,7 @@ export default function InstagramFeed() {
         </div>
 
         {/* Reels grid — horizontal scroll on mobile, 3-col on desktop */}
-        <div className="flex md:grid md:grid-cols-3 gap-5 overflow-x-auto md:overflow-visible pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory md:snap-none">
+        <div className="flex md:grid md:grid-cols-3 gap-5 overflow-x-auto md:overflow-visible pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory md:snap-none scrollbar-hide">
           {REELS.map((reel, i) => (
             <ReelCard key={reel.shortcode} reel={reel} index={i} />
           ))}
