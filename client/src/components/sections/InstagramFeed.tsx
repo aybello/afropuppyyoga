@@ -42,12 +42,13 @@ const REELS = [
   },
   {
     id: "review2",
-    videoUrl: null, // Review 2 video unavailable — fallback to embed
-    thumbUrl: null,
+    videoUrl:
+      "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/review2_37f8463c.mp4",
+    thumbUrl:
+      "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/review2_thumb_54739e6e.jpg",
     caption: "Another happy guest shares their experience 🧘‍♀️🐾",
     tag: "Review",
     instagramUrl: "https://www.instagram.com/reel/DVKKYGIEa4-/",
-    embedShortcode: "DVKKYGIEa4-",
   },
 ];
 
@@ -75,49 +76,6 @@ function VideoCard({ reel, index }: { reel: (typeof REELS)[0]; index: number }) 
     v.muted = !v.muted;
     setMuted(v.muted);
   };
-
-  // Fallback: embed iframe for reel without video file
-  if (!reel.videoUrl) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ delay: index * 0.1, duration: 0.5 }}
-        className="flex-shrink-0 w-[300px] md:w-auto snap-start group"
-      >
-        <div
-          className="relative rounded-2xl overflow-hidden bg-[#1A0A12] shadow-md"
-          style={{ paddingBottom: "177.78%" }}
-        >
-          <iframe
-            src={`https://www.instagram.com/reel/${reel.embedShortcode}/embed/captioned/`}
-            title={reel.caption}
-            allowFullScreen
-            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-            scrolling="no"
-            frameBorder="0"
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
-              border: "none",
-            }}
-          />
-        </div>
-        <div className="mt-3 px-1">
-          <span className="inline-block font-body text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full mb-1.5 bg-[#8B2252]/10 text-[#8B2252]">
-            {reel.tag}
-          </span>
-          <p className="font-body text-[#1A0A12]/70 text-xs leading-relaxed line-clamp-2">
-            {reel.caption}
-          </p>
-        </div>
-      </motion.div>
-    );
-  }
 
   return (
     <motion.div
