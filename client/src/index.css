@@ -1,7 +1,7 @@
 /* ============================================================
-   AfroPuppyYoga — Warm Afro-Wellness Editorial Design System
-   Design Movement: Editorial wellness meets Afro-cultural warmth
-   Palette: Warm ivory · Forest green · Saffron yellow · Terracotta
+   AfroPuppyYoga — Pink Blossom Wellness Editorial Design System
+   Design Movement: Editorial wellness meets feminine floral warmth
+   Palette: Blush ivory · Deep rose · Warm pink · Dusty mauve
    Typography: Fraunces (display) + Plus Jakarta Sans (body)
    ============================================================ */
 
@@ -48,16 +48,16 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Custom brand tokens */
-  --color-forest: oklch(0.35 0.1 145);
-  --color-forest-light: oklch(0.45 0.09 145);
-  --color-forest-dark: oklch(0.25 0.1 145);
-  --color-saffron: oklch(0.78 0.17 75);
-  --color-saffron-dark: oklch(0.65 0.17 65);
-  --color-terracotta: oklch(0.57 0.14 42);
-  --color-ivory: oklch(0.98 0.012 85);
-  --color-ivory-dark: oklch(0.94 0.015 80);
-  --color-espresso: oklch(0.2 0.025 55);
+  /* Custom brand tokens — Pink Blossom palette */
+  --color-forest: oklch(0.42 0.14 355);        /* deep rose (replaces forest green) */
+  --color-forest-light: oklch(0.55 0.13 355);  /* medium rose */
+  --color-forest-dark: oklch(0.30 0.13 355);   /* dark rose */
+  --color-saffron: oklch(0.82 0.10 10);        /* warm blush pink (replaces saffron) */
+  --color-saffron-dark: oklch(0.68 0.12 5);    /* deeper blush */
+  --color-terracotta: oklch(0.62 0.12 350);    /* dusty mauve (replaces terracotta) */
+  --color-ivory: oklch(0.99 0.008 355);        /* blush-tinted ivory */
+  --color-ivory-dark: oklch(0.96 0.012 350);   /* soft blush white */
+  --color-espresso: oklch(0.22 0.03 355);      /* deep rose-black */
 
   --font-display: "Fraunces", Georgia, serif;
   --font-body: "Plus Jakarta Sans", system-ui, sans-serif;
@@ -66,38 +66,39 @@
 
 :root {
   --radius: 0.5rem;
-  --background: oklch(0.98 0.012 85);
-  --foreground: oklch(0.2 0.025 55);
+  /* Pink Blossom palette */
+  --background: oklch(0.99 0.008 355);         /* blush-tinted ivory */
+  --foreground: oklch(0.22 0.03 355);          /* deep rose-black */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.025 55);
+  --card-foreground: oklch(0.22 0.03 355);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.025 55);
-  --primary: oklch(0.35 0.1 145);
-  --primary-foreground: oklch(0.98 0.012 85);
-  --secondary: oklch(0.94 0.015 80);
-  --secondary-foreground: oklch(0.35 0.1 145);
-  --muted: oklch(0.94 0.015 80);
-  --muted-foreground: oklch(0.5 0.03 65);
-  --accent: oklch(0.78 0.17 75);
-  --accent-foreground: oklch(0.2 0.025 55);
+  --popover-foreground: oklch(0.22 0.03 355);
+  --primary: oklch(0.42 0.14 355);             /* deep rose */
+  --primary-foreground: oklch(0.99 0.008 355);
+  --secondary: oklch(0.96 0.012 350);          /* soft blush white */
+  --secondary-foreground: oklch(0.42 0.14 355);
+  --muted: oklch(0.96 0.012 350);
+  --muted-foreground: oklch(0.52 0.06 355);
+  --accent: oklch(0.82 0.10 10);               /* warm blush pink */
+  --accent-foreground: oklch(0.22 0.03 355);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.88 0.02 75);
-  --input: oklch(0.88 0.02 75);
-  --ring: oklch(0.35 0.1 145);
-  --chart-1: oklch(0.35 0.1 145);
-  --chart-2: oklch(0.78 0.17 75);
-  --chart-3: oklch(0.57 0.14 42);
-  --chart-4: oklch(0.45 0.09 145);
-  --chart-5: oklch(0.65 0.17 65);
-  --sidebar: oklch(0.98 0.012 85);
-  --sidebar-foreground: oklch(0.2 0.025 55);
-  --sidebar-primary: oklch(0.35 0.1 145);
-  --sidebar-primary-foreground: oklch(0.98 0.012 85);
-  --sidebar-accent: oklch(0.94 0.015 80);
-  --sidebar-accent-foreground: oklch(0.2 0.025 55);
-  --sidebar-border: oklch(0.88 0.02 75);
-  --sidebar-ring: oklch(0.35 0.1 145);
+  --border: oklch(0.90 0.018 350);
+  --input: oklch(0.90 0.018 350);
+  --ring: oklch(0.42 0.14 355);
+  --chart-1: oklch(0.42 0.14 355);
+  --chart-2: oklch(0.82 0.10 10);
+  --chart-3: oklch(0.62 0.12 350);
+  --chart-4: oklch(0.55 0.13 355);
+  --chart-5: oklch(0.68 0.12 5);
+  --sidebar: oklch(0.99 0.008 355);
+  --sidebar-foreground: oklch(0.22 0.03 355);
+  --sidebar-primary: oklch(0.42 0.14 355);
+  --sidebar-primary-foreground: oklch(0.99 0.008 355);
+  --sidebar-accent: oklch(0.96 0.012 350);
+  --sidebar-accent-foreground: oklch(0.22 0.03 355);
+  --sidebar-border: oklch(0.90 0.018 350);
+  --sidebar-ring: oklch(0.42 0.14 355);
 }
 
 @layer base {

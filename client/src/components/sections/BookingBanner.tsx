@@ -45,16 +45,16 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export default function BookingBanner() {
   return (
-    <section className="py-20 md:py-24 bg-[#2D5A27]">
+    <section className="py-20 md:py-24 bg-[#8B2252]">
       <div className="container">
         <FadeUp>
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="w-8 h-0.5 bg-[#F4A800]" />
-              <span className="text-[#F4A800] font-body text-xs font-semibold tracking-widest uppercase">
+              <div className="w-8 h-0.5 bg-[#F2A0B8]" />
+              <span className="text-[#F2A0B8] font-body text-xs font-semibold tracking-widest uppercase">
                 Upcoming Classes
               </span>
-              <div className="w-8 h-0.5 bg-[#F4A800]" />
+              <div className="w-8 h-0.5 bg-[#F2A0B8]" />
             </div>
             <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-3">
               Find a Class Near You
@@ -73,10 +73,10 @@ export default function BookingBanner() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1, duration: 0.5 }}
-              className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-[#F4A800]/30 transition-all duration-300 hover:-translate-y-1"
+              className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-[#F2A0B8]/30 transition-all duration-300 hover:-translate-y-1"
             >
               <div className="flex items-center gap-2 mb-4">
-                <MapPin size={16} className="text-[#F4A800]" />
+                <MapPin size={16} className="text-[#F2A0B8]" />
                 <span className="font-display font-bold text-white text-lg">{cls.city}</span>
               </div>
               <div className="space-y-2 mb-5">
@@ -90,7 +90,7 @@ export default function BookingBanner() {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="inline-block px-3 py-1 bg-[#F4A800]/20 text-[#F4A800] font-body text-xs font-semibold rounded-full">
+                <span className="inline-block px-3 py-1 bg-[#F2A0B8]/20 text-[#F2A0B8] font-body text-xs font-semibold rounded-full">
                   {cls.spots}
                 </span>
               </div>
@@ -104,7 +104,7 @@ export default function BookingBanner() {
               href={BOOK_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-10 py-4 bg-[#F4A800] text-[#1E1208] font-body font-bold text-base rounded-full hover:bg-[#e09800] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
+              className="inline-flex items-center gap-2 px-10 py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-base rounded-full hover:bg-[#D4708A] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
             >
               View All Classes & Book Now
               <ArrowRight size={18} />

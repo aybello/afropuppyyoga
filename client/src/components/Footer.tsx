@@ -22,7 +22,7 @@ const handleNavClick = (href: string) => {
 
 export default function Footer() {
   return (
-    <footer className="bg-[#1E1208] text-white py-16">
+    <footer className="bg-[#1A0A12] text-white py-16">
       <div className="container">
         <div className="grid md:grid-cols-3 gap-12 mb-12">
           {/* Brand */}
@@ -35,7 +35,7 @@ export default function Footer() {
               />
               <div>
                 <div className="font-display font-bold text-lg text-white">AfroPuppyYoga</div>
-                <div className="font-body text-xs text-[#F4A800] tracking-widest uppercase">Canada's #1 Puppy Yoga</div>
+                <div className="font-body text-xs text-[#F2A0B8] tracking-widest uppercase">Canada's #1 Puppy Yoga</div>
               </div>
             </div>
             <p className="font-body text-white/50 text-sm leading-relaxed mb-6 max-w-xs">
@@ -45,7 +45,7 @@ export default function Footer() {
               href={BOOK_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center px-6 py-2.5 bg-[#F4A800] text-[#1E1208] font-body font-semibold text-sm rounded-full hover:bg-[#e09800] transition-colors"
+              className="inline-flex items-center px-6 py-2.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-semibold text-sm rounded-full hover:bg-[#D4708A] transition-colors"
             >
               Book a Class
             </a>
@@ -60,7 +60,7 @@ export default function Footer() {
                   <a
                     href={link.href}
                     onClick={(e) => { e.preventDefault(); handleNavClick(link.href); }}
-                    className="font-body text-sm text-white/50 hover:text-[#F4A800] transition-colors"
+                    className="font-body text-sm text-white/50 hover:text-[#F2A0B8] transition-colors"
                   >
                     {link.label}
                   </a>
@@ -77,7 +77,7 @@ export default function Footer() {
                 <div className="font-body text-xs text-white/30 uppercase tracking-wide mb-1">Email</div>
                 <a
                   href="mailto:afropuppyyogaofficial@gmail.com"
-                  className="font-body text-sm text-white/60 hover:text-[#F4A800] transition-colors"
+                  className="font-body text-sm text-white/60 hover:text-[#F2A0B8] transition-colors"
                 >
                   afropuppyyogaofficial@gmail.com
                 </a>
@@ -88,7 +88,7 @@ export default function Footer() {
                   href="https://www.instagram.com/afropuppyyoga"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-body text-sm text-white/60 hover:text-[#F4A800] transition-colors"
+                  className="font-body text-sm text-white/60 hover:text-[#F2A0B8] transition-colors"
                 >
                   @afropuppyyoga
                 </a>

@@ -48,38 +48,38 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export default function About() {
   return (
-    <section id="about" className="py-24 md:py-32 bg-[#F5EFE0]">
+    <section id="about" className="py-24 md:py-32 bg-[#FFF0F4]">
       <div className="container">
         <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
           {/* Text column — comes first on mobile, second on desktop */}
           <div className="order-2 lg:order-1 space-y-8">
             <FadeUp>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-0.5 bg-[#D4603A]" />
-                <span className="text-[#D4603A] font-body text-xs font-semibold tracking-widest uppercase">
+                <div className="w-8 h-0.5 bg-[#C4547A]" />
+                <span className="text-[#C4547A] font-body text-xs font-semibold tracking-widest uppercase">
                   About Us
                 </span>
               </div>
-              <h2 className="font-display text-4xl md:text-5xl font-bold text-[#1E1208] leading-tight">
+              <h2 className="font-display text-4xl md:text-5xl font-bold text-[#1A0A12] leading-tight">
                 Where Wellness Meets
                 <br />
-                <span className="italic text-[#D4603A]">Culture & Puppy Love</span>
+                <span className="italic text-[#C4547A]">Culture & Puppy Love</span>
               </h2>
             </FadeUp>
 
             <FadeUp delay={0.15}>
-              <p className="font-body text-[#1E1208]/75 text-lg leading-relaxed">
-                <strong className="text-[#1E1208] font-semibold">AfroPuppyYoga (APY)</strong> blends the serene art of yoga with the playful spirit of puppies, all set to the rhythmic beauty of Afro beats.
+              <p className="font-body text-[#1A0A12]/75 text-lg leading-relaxed">
+                <strong className="text-[#1A0A12] font-semibold">AfroPuppyYoga (APY)</strong> blends the serene art of yoga with the playful spirit of puppies, all set to the rhythmic beauty of Afro beats.
               </p>
-              <p className="font-body text-[#1E1208]/75 text-lg leading-relaxed mt-4">
+              <p className="font-body text-[#1A0A12]/75 text-lg leading-relaxed mt-4">
                 In each class, participants engage in a series of yoga poses that enhance flexibility and reduce stress, while adorable puppies roam freely, adding a touch of joy and spontaneity. Our sessions create a warm, uplifting atmosphere that relaxes the body and energizes the mind.
               </p>
             </FadeUp>
 
             {/* Pull quote */}
             <FadeUp delay={0.25}>
-              <blockquote className="border-l-4 border-[#D4603A] pl-6 py-2">
-                <p className="font-accent text-xl md:text-2xl italic text-[#1E1208]/80 leading-relaxed">
+              <blockquote className="border-l-4 border-[#C4547A] pl-6 py-2">
+                <p className="font-accent text-xl md:text-2xl italic text-[#1A0A12]/80 leading-relaxed">
                   "An inclusive, vibrant atmosphere inspired by culture, movement, and music — turning every class into a celebration."
                 </p>
               </blockquote>
@@ -95,13 +95,13 @@ export default function About() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.35 + i * 0.1, duration: 0.5 }}
-                    className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-[#e8dcc8] hover:border-[#D4603A]/30 transition-colors"
+                    className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-[#F0D0DC] hover:border-[#C4547A]/30 transition-colors"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-[#D4603A]/10 flex items-center justify-center mb-3">
-                      <b.icon size={18} className="text-[#D4603A]" />
+                    <div className="w-9 h-9 rounded-lg bg-[#C4547A]/10 flex items-center justify-center mb-3">
+                      <b.icon size={18} className="text-[#C4547A]" />
                     </div>
-                    <h3 className="font-display font-bold text-sm text-[#1E1208] mb-1">{b.title}</h3>
-                    <p className="font-body text-xs text-[#1E1208]/60 leading-relaxed">{b.desc}</p>
+                    <h3 className="font-display font-bold text-sm text-[#1A0A12] mb-1">{b.title}</h3>
+                    <p className="font-body text-xs text-[#1A0A12]/60 leading-relaxed">{b.desc}</p>
                   </motion.div>
                 ))}
               </div>
@@ -118,13 +118,13 @@ export default function About() {
                     alt="AfroPuppyYoga instructor with puppy"
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1E1208]/20 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#1A0A12]/20 to-transparent" />
                 </div>
                 {/* Decorative circles */}
-                <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-[#D4603A]/15 -z-10" />
-                <div className="absolute -bottom-8 -left-8 w-48 h-48 rounded-full bg-[#2D5A27]/10 -z-10" />
+                <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-[#C4547A]/15 -z-10" />
+                <div className="absolute -bottom-8 -left-8 w-48 h-48 rounded-full bg-[#8B2252]/10 -z-10" />
                 {/* Floating tag */}
-                <div className="absolute top-6 -left-4 md:-left-8 bg-[#2D5A27] text-white rounded-xl px-4 py-3 shadow-lg">
+                <div className="absolute top-6 -left-4 md:-left-8 bg-[#8B2252] text-white rounded-xl px-4 py-3 shadow-lg">
                   <div className="font-body text-xs font-semibold uppercase tracking-wide mb-0.5 text-white/70">Afro-Beat</div>
                   <div className="font-display font-bold text-sm">Yoga + Puppies</div>
                 </div>

@@ -47,14 +47,14 @@ function ReelCard({ reel, index }: { reel: typeof REELS[0]; index: number }) {
       transition={{ delay: index * 0.1, duration: 0.5 }}
       className="flex-shrink-0 w-[300px] md:w-auto snap-start"
     >
-      <div className="relative rounded-2xl overflow-hidden bg-[#1E1208]/5 border border-[#1E1208]/8 shadow-sm hover:shadow-md transition-shadow duration-300">
+      <div className="relative rounded-2xl overflow-hidden bg-[#1A0A12]/5 border border-[#1A0A12]/8 shadow-sm hover:shadow-md transition-shadow duration-300">
         {/* Loading spinner */}
         {!loaded && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#F5EFE6] z-10 pointer-events-none" style={{ minHeight: 560 }}>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#F4A800] to-[#E1306C] flex items-center justify-center mb-3">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#FFF0F4] z-10 pointer-events-none" style={{ minHeight: 560 }}>
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#F2A0B8] to-[#E1306C] flex items-center justify-center mb-3">
               <Loader2 size={18} className="text-white animate-spin" />
             </div>
-            <p className="font-body text-xs text-[#1E1208]/50">Loading reel…</p>
+            <p className="font-body text-xs text-[#1A0A12]/50">Loading reel…</p>
           </div>
         )}
 
@@ -79,12 +79,12 @@ function ReelCard({ reel, index }: { reel: typeof REELS[0]; index: number }) {
 
       {/* Caption below card */}
       <div className="mt-3 px-1">
-        <p className="font-body text-[#1E1208]/70 text-xs leading-relaxed line-clamp-2">
+        <p className="font-body text-[#1A0A12]/70 text-xs leading-relaxed line-clamp-2">
           {reel.caption}
         </p>
         <div className="flex items-center gap-1 mt-1">
-          <span className="text-[#F4A800]">♥</span>
-          <span className="font-body text-[#1E1208]/40 text-xs">{reel.likes} likes</span>
+          <span className="text-[#F2A0B8]">♥</span>
+          <span className="font-body text-[#1A0A12]/40 text-xs">{reel.likes} likes</span>
         </div>
       </div>
     </motion.div>
@@ -93,7 +93,7 @@ function ReelCard({ reel, index }: { reel: typeof REELS[0]; index: number }) {
 
 export default function InstagramFeed() {
   return (
-    <section id="instagram" className="py-24 md:py-32 bg-[#F5EFE6] overflow-hidden">
+    <section id="instagram" className="py-24 md:py-32 bg-[#FFF0F4] overflow-hidden">
       <div className="container">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
@@ -104,17 +104,17 @@ export default function InstagramFeed() {
             transition={{ duration: 0.6 }}
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-0.5 bg-[#2D5A27]" />
-              <span className="text-[#2D5A27] font-body text-xs font-semibold tracking-widest uppercase">
+              <div className="w-8 h-0.5 bg-[#8B2252]" />
+              <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">
                 @afropuppyyoga
               </span>
             </div>
-            <h2 className="font-display text-4xl md:text-5xl font-bold text-[#1E1208]">
+            <h2 className="font-display text-4xl md:text-5xl font-bold text-[#1A0A12]">
               Watch the Magic
               <br />
-              <span className="italic text-[#2D5A27]">Unfold</span>
+              <span className="italic text-[#8B2252]">Unfold</span>
             </h2>
-            <p className="mt-3 font-body text-[#1E1208]/60 text-base max-w-md">
+            <p className="mt-3 font-body text-[#1A0A12]/60 text-base max-w-md">
               Our latest Reels from Instagram — real moments from real classes, straight from the mat.
             </p>
           </motion.div>
@@ -127,7 +127,7 @@ export default function InstagramFeed() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#F4A800] to-[#E1306C] text-white font-body font-semibold text-sm rounded-full shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 self-start md:self-auto"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#F2A0B8] to-[#E1306C] text-white font-body font-semibold text-sm rounded-full shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 self-start md:self-auto"
           >
             <Instagram size={16} />
             Follow on Instagram
@@ -149,14 +149,14 @@ export default function InstagramFeed() {
           transition={{ duration: 0.5, delay: 0.3 }}
           className="mt-12 text-center"
         >
-          <p className="font-body text-[#1E1208]/50 text-sm mb-4">
+          <p className="font-body text-[#1A0A12]/50 text-sm mb-4">
             New content every week — follow us to stay in the loop!
           </p>
           <a
             href="https://www.instagram.com/afropuppyyoga"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 font-body text-sm font-semibold text-[#2D5A27] hover:text-[#1E1208] transition-colors duration-200"
+            className="inline-flex items-center gap-2 font-body text-sm font-semibold text-[#8B2252] hover:text-[#1A0A12] transition-colors duration-200"
           >
             <Instagram size={15} />
             @afropuppyyoga · 10K+ followers

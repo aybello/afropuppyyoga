@@ -73,22 +73,22 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export default function Contact() {
   return (
-    <section id="contact" className="py-24 md:py-32 bg-[#2D5A27]">
+    <section id="contact" className="py-24 md:py-32 bg-[#8B2252]">
       <div className="container">
         <div className="grid lg:grid-cols-2 gap-16 items-start">
           {/* Left: Contact info + CTA */}
           <div>
             <FadeUp>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-0.5 bg-[#F4A800]" />
-                <span className="text-[#F4A800] font-body text-xs font-semibold tracking-widest uppercase">
+                <div className="w-8 h-0.5 bg-[#F2A0B8]" />
+                <span className="text-[#F2A0B8] font-body text-xs font-semibold tracking-widest uppercase">
                   Get In Touch
                 </span>
               </div>
               <h2 className="font-display text-4xl md:text-5xl font-bold text-white mb-6">
                 Ready to Join
                 <br />
-                <span className="italic text-[#F4A800]">The Pack?</span>
+                <span className="italic text-[#F2A0B8]">The Pack?</span>
               </h2>
               <p className="font-body text-white/70 text-lg leading-relaxed mb-10">
                 Whether you're booking a class, planning a private event, or just want to say hello — we'd love to hear from you. Our team responds within 24 hours.
@@ -104,12 +104,12 @@ export default function Contact() {
                     href={item.href}
                     className="flex items-center gap-4 group"
                   >
-                    <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-[#F4A800]/20 transition-colors">
-                      <item.icon size={20} className="text-[#F4A800]" />
+                    <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-[#F2A0B8]/20 transition-colors">
+                      <item.icon size={20} className="text-[#F2A0B8]" />
                     </div>
                     <div>
                       <div className="font-body text-xs text-white/50 uppercase tracking-wide mb-0.5">{item.label}</div>
-                      <div className="font-body text-white font-medium group-hover:text-[#F4A800] transition-colors">
+                      <div className="font-body text-white font-medium group-hover:text-[#F2A0B8] transition-colors">
                         {item.value}
                       </div>
                     </div>
@@ -124,7 +124,7 @@ export default function Contact() {
                 href={BOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-[#F4A800] text-[#1E1208] font-body font-bold text-base rounded-full hover:bg-[#e09800] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-base rounded-full hover:bg-[#D4708A] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
               >
                 Book on Luma
                 <ExternalLink size={16} />

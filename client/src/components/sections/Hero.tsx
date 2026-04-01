@@ -34,7 +34,7 @@ export default function Hero() {
         {/* Gradient overlay — dark at bottom-left for text legibility, dark at top for nav */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/40" />
         {/* Warm amber tint */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#F4A800]/10 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#F2A0B8]/10 to-transparent" />
       </div>
 
       {/* Content — bottom-left anchored editorial layout */}
@@ -47,8 +47,8 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="flex items-center gap-3 mb-6"
           >
-            <div className="w-8 h-0.5 bg-[#F4A800]" />
-            <span className="text-[#F4A800] font-body text-sm font-semibold tracking-widest uppercase">
+            <div className="w-8 h-0.5 bg-[#F2A0B8]" />
+            <span className="text-[#F2A0B8] font-body text-sm font-semibold tracking-widest uppercase">
               Canada's #1 Puppy Yoga Studio
             </span>
           </motion.div>
@@ -63,7 +63,7 @@ export default function Hero() {
             Where Wellness
             <br />
             Meets{" "}
-            <span className="italic text-[#F4A800]">Puppy Love</span>
+            <span className="italic text-[#F2A0B8]">Puppy Love</span>
           </motion.h1>
 
           {/* Subheadline */}
@@ -87,7 +87,7 @@ export default function Hero() {
               href={BOOK_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center px-8 py-4 bg-[#F4A800] text-[#1E1208] font-body font-bold text-base rounded-full hover:bg-[#e09800] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
+              className="inline-flex items-center px-8 py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-base rounded-full hover:bg-[#D4708A] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
             >
               Book a Class
             </a>

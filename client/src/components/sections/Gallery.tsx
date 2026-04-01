@@ -86,7 +86,7 @@ export default function Gallery() {
   }, [lightboxIdx]);
 
   return (
-    <section id="gallery" className="py-24 md:py-32 bg-[#FEFAF4]">
+    <section id="gallery" className="py-24 md:py-32 bg-[#FFF5F8]">
       <div className="container">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
@@ -97,17 +97,17 @@ export default function Gallery() {
             transition={{ duration: 0.6 }}
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-0.5 bg-[#2D5A27]" />
-              <span className="text-[#2D5A27] font-body text-xs font-semibold tracking-widest uppercase">
+              <div className="w-8 h-0.5 bg-[#8B2252]" />
+              <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">
                 Our Gallery
               </span>
             </div>
-            <h2 className="font-display text-4xl md:text-5xl font-bold text-[#1E1208]">
+            <h2 className="font-display text-4xl md:text-5xl font-bold text-[#1A0A12]">
               Moments of Joy,
               <br />
-              <span className="italic text-[#2D5A27]">Captured</span>
+              <span className="italic text-[#8B2252]">Captured</span>
             </h2>
-            <p className="mt-3 font-body text-[#1E1208]/60 text-base max-w-md">
+            <p className="mt-3 font-body text-[#1A0A12]/60 text-base max-w-md">
               Real photos from our past classes — every smile, stretch, and puppy cuddle.
             </p>
           </motion.div>
@@ -120,7 +120,7 @@ export default function Gallery() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-[#2D5A27] text-[#2D5A27] font-body font-semibold text-sm rounded-full hover:bg-[#2D5A27] hover:text-white transition-all duration-200 self-start md:self-auto"
+            className="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-[#8B2252] text-[#8B2252] font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] hover:text-white transition-all duration-200 self-start md:self-auto"
           >
             <Instagram size={16} />
             Follow @afropuppyyoga
@@ -141,12 +141,12 @@ export default function Gallery() {
               onClick={() => handleCatChange(cat.key)}
               className={`px-5 py-2 rounded-full font-body text-sm font-semibold transition-all duration-200 ${
                 activeCat === cat.key
-                  ? "bg-[#2D5A27] text-white shadow-md"
-                  : "bg-[#1E1208]/8 text-[#1E1208]/70 hover:bg-[#1E1208]/15"
+                  ? "bg-[#8B2252] text-white shadow-md"
+                  : "bg-[#1A0A12]/8 text-[#1A0A12]/70 hover:bg-[#1A0A12]/15"
               }`}
             >
               {cat.label}
-              <span className={`ml-1.5 text-xs ${activeCat === cat.key ? "text-white/70" : "text-[#1E1208]/40"}`}>
+              <span className={`ml-1.5 text-xs ${activeCat === cat.key ? "text-white/70" : "text-[#1A0A12]/40"}`}>
                 ({cat.key === "all" ? PHOTOS.length : PHOTOS.filter(p => p.cat === cat.key).length})
               </span>
             </button>
@@ -180,7 +180,7 @@ export default function Gallery() {
                   className="w-full h-auto block object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 {/* Hover overlay */}
-                <div className="absolute inset-0 bg-[#1E1208]/0 group-hover:bg-[#1E1208]/35 transition-all duration-300 flex items-center justify-center">
+                <div className="absolute inset-0 bg-[#1A0A12]/0 group-hover:bg-[#1A0A12]/35 transition-all duration-300 flex items-center justify-center">
                   <ZoomIn
                     size={26}
                     className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg"
@@ -188,7 +188,7 @@ export default function Gallery() {
                 </div>
                 {/* Category badge on hover */}
                 <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span className="px-2 py-0.5 bg-[#F4A800] text-[#1E1208] font-body text-xs font-bold rounded-full capitalize">
+                  <span className="px-2 py-0.5 bg-[#F2A0B8] text-[#1A0A12] font-body text-xs font-bold rounded-full capitalize">
                     {photo.cat}
                   </span>
                 </div>
@@ -206,7 +206,7 @@ export default function Gallery() {
           >
             <button
               onClick={() => setVisibleCount(c => c + 12)}
-              className="px-8 py-3 border-2 border-[#2D5A27] text-[#2D5A27] font-body font-semibold text-sm rounded-full hover:bg-[#2D5A27] hover:text-white transition-all duration-200"
+              className="px-8 py-3 border-2 border-[#8B2252] text-[#8B2252] font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] hover:text-white transition-all duration-200"
             >
               Load More Photos ({filtered.length - visibleCount} remaining)
             </button>
@@ -221,14 +221,14 @@ export default function Gallery() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="mt-14 text-center"
         >
-          <p className="font-body text-[#1E1208]/50 text-sm mb-3">
+          <p className="font-body text-[#1A0A12]/50 text-sm mb-3">
             Tag us in your photos for a chance to be featured!
           </p>
           <div className="flex flex-wrap items-center justify-center gap-2">
             {["@afropuppyyoga", "#afropuppyyoga", "#puppyyoga", "#yogacanada"].map(tag => (
               <span
                 key={tag}
-                className="px-3 py-1 bg-[#2D5A27]/10 text-[#2D5A27] font-body text-xs font-semibold rounded-full"
+                className="px-3 py-1 bg-[#8B2252]/10 text-[#8B2252] font-body text-xs font-semibold rounded-full"
               >
                 {tag}
               </span>

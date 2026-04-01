@@ -24,20 +24,20 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export default function GiftCards() {
   return (
-    <section className="py-20 bg-[#F4A800]">
+    <section className="py-20 bg-[#F2A0B8]">
       <div className="container">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
           {/* Left */}
           <FadeUp>
             <div className="flex items-start gap-5">
-              <div className="w-14 h-14 rounded-2xl bg-[#1E1208]/15 flex items-center justify-center shrink-0">
-                <Gift size={28} className="text-[#1E1208]" />
+              <div className="w-14 h-14 rounded-2xl bg-[#1A0A12]/15 flex items-center justify-center shrink-0">
+                <Gift size={28} className="text-[#1A0A12]" />
               </div>
               <div>
-                <h2 className="font-display font-bold text-3xl md:text-4xl text-[#1E1208] mb-2">
+                <h2 className="font-display font-bold text-3xl md:text-4xl text-[#1A0A12] mb-2">
                   Give the Gift of Joy
                 </h2>
-                <p className="font-body text-[#1E1208]/70 text-lg leading-relaxed max-w-lg">
+                <p className="font-body text-[#1A0A12]/70 text-lg leading-relaxed max-w-lg">
                   AfroPuppyYoga gift cards are the perfect present for birthdays, holidays, and anyone who deserves a little puppy love. Available in any amount.
                 </p>
               </div>
@@ -51,14 +51,14 @@ export default function GiftCards() {
                 href={BOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-[#1E1208] text-white font-body font-bold text-base rounded-full hover:bg-[#2D1A0A] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-[#1A0A12] text-white font-body font-bold text-base rounded-full hover:bg-[#2D1A0A] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
               >
                 <Gift size={18} />
                 Buy a Gift Card
               </a>
               <a
                 href="mailto:afropuppyyogaofficial@gmail.com?subject=Gift%20Card%20Inquiry"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-white/30 text-[#1E1208] font-body font-semibold text-base rounded-full border-2 border-[#1E1208]/20 hover:bg-white/50 transition-all duration-200"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-white/30 text-[#1A0A12] font-body font-semibold text-base rounded-full border-2 border-[#1A0A12]/20 hover:bg-white/50 transition-all duration-200"
               >
                 <Heart size={18} />
                 Learn More

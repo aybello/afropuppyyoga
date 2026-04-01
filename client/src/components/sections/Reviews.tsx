@@ -61,12 +61,12 @@ const values = [
 ];
 
 const avatarColors = [
-  "bg-[#2D5A27]",
-  "bg-[#D4603A]",
-  "bg-[#F4A800]",
-  "bg-[#2D5A27]",
-  "bg-[#D4603A]",
-  "bg-[#F4A800]",
+  "bg-[#8B2252]",
+  "bg-[#C4547A]",
+  "bg-[#F2A0B8]",
+  "bg-[#8B2252]",
+  "bg-[#C4547A]",
+  "bg-[#F2A0B8]",
 ];
 
 function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
@@ -86,39 +86,39 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export default function Reviews() {
   return (
-    <section id="reviews" className="py-24 md:py-32 bg-[#F5EFE0]">
+    <section id="reviews" className="py-24 md:py-32 bg-[#FFF0F4]">
       <div className="container">
         {/* Header */}
         <FadeUp>
           <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-16 gap-6">
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-0.5 bg-[#D4603A]" />
-                <span className="text-[#D4603A] font-body text-xs font-semibold tracking-widest uppercase">
+                <div className="w-8 h-0.5 bg-[#C4547A]" />
+                <span className="text-[#C4547A] font-body text-xs font-semibold tracking-widest uppercase">
                   Reviews
                 </span>
               </div>
-              <h2 className="font-display text-4xl md:text-5xl font-bold text-[#1E1208]">
+              <h2 className="font-display text-4xl md:text-5xl font-bold text-[#1A0A12]">
                 See What Our
                 <br />
-                <span className="italic text-[#D4603A]">Clients Say</span>
+                <span className="italic text-[#C4547A]">Clients Say</span>
               </h2>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-center">
-                <div className="font-display font-bold text-5xl text-[#1E1208]">4.9</div>
+                <div className="font-display font-bold text-5xl text-[#1A0A12]">4.9</div>
                 <div className="flex gap-0.5 justify-center my-1">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={14} className="fill-[#F4A800] text-[#F4A800]" />
+                    <Star key={i} size={14} className="fill-[#F2A0B8] text-[#F2A0B8]" />
                   ))}
                 </div>
-                <div className="font-body text-xs text-[#1E1208]/50">Based on 167+ reviews</div>
+                <div className="font-body text-xs text-[#1A0A12]/50">Based on 167+ reviews</div>
               </div>
               <a
                 href="https://www.google.com/search?q=afropuppyyoga+reviews"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-5 py-2.5 border-2 border-[#D4603A] text-[#D4603A] font-body font-semibold text-sm rounded-full hover:bg-[#D4603A] hover:text-white transition-all duration-200"
+                className="px-5 py-2.5 border-2 border-[#C4547A] text-[#C4547A] font-body font-semibold text-sm rounded-full hover:bg-[#C4547A] hover:text-white transition-all duration-200"
               >
                 Leave a Review
               </a>
@@ -135,7 +135,7 @@ export default function Reviews() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1, duration: 0.5 }}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-[#e8dcc8] hover:shadow-md hover:-translate-y-1 transition-all duration-300"
+              className="bg-white rounded-2xl p-6 shadow-sm border border-[#F0D0DC] hover:shadow-md hover:-translate-y-1 transition-all duration-300"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -143,18 +143,18 @@ export default function Reviews() {
                     {review.avatar}
                   </div>
                   <div>
-                    <div className="font-display font-bold text-sm text-[#1E1208]">{review.name}</div>
-                    <div className="font-body text-xs text-[#1E1208]/40">{review.date}</div>
+                    <div className="font-display font-bold text-sm text-[#1A0A12]">{review.name}</div>
+                    <div className="font-body text-xs text-[#1A0A12]/40">{review.date}</div>
                   </div>
                 </div>
-                <Quote size={20} className="text-[#F4A800]/40 shrink-0" />
+                <Quote size={20} className="text-[#F2A0B8]/40 shrink-0" />
               </div>
               <div className="flex gap-0.5 mb-3">
                 {[...Array(review.rating)].map((_, j) => (
-                  <Star key={j} size={13} className="fill-[#F4A800] text-[#F4A800]" />
+                  <Star key={j} size={13} className="fill-[#F2A0B8] text-[#F2A0B8]" />
                 ))}
               </div>
-              <p className="font-body text-[#1E1208]/70 text-sm leading-relaxed">{review.text}</p>
+              <p className="font-body text-[#1A0A12]/70 text-sm leading-relaxed">{review.text}</p>
             </motion.div>
           ))}
         </div>
@@ -162,10 +162,10 @@ export default function Reviews() {
         {/* Values section */}
         <FadeUp>
           <div className="mb-10">
-            <h3 className="font-display text-3xl font-bold text-[#1E1208] mb-2">
+            <h3 className="font-display text-3xl font-bold text-[#1A0A12] mb-2">
               Our Values, Shaped by Our Clients
             </h3>
-            <p className="font-body text-[#1E1208]/60">The principles that guide every session we host.</p>
+            <p className="font-body text-[#1A0A12]/60">The principles that guide every session we host.</p>
           </div>
         </FadeUp>
 
@@ -177,12 +177,12 @@ export default function Reviews() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.08, duration: 0.5 }}
-              className="flex gap-4 p-5 bg-white/60 rounded-xl border border-[#e8dcc8]"
+              className="flex gap-4 p-5 bg-white/60 rounded-xl border border-[#F0D0DC]"
             >
-              <div className="w-1.5 rounded-full bg-gradient-to-b from-[#2D5A27] to-[#D4603A] shrink-0" />
+              <div className="w-1.5 rounded-full bg-gradient-to-b from-[#8B2252] to-[#C4547A] shrink-0" />
               <div>
-                <h4 className="font-display font-bold text-base text-[#1E1208] mb-1.5">{val.title}</h4>
-                <p className="font-body text-sm text-[#1E1208]/60 leading-relaxed">{val.desc}</p>
+                <h4 className="font-display font-bold text-base text-[#1A0A12] mb-1.5">{val.title}</h4>
+                <p className="font-body text-sm text-[#1A0A12]/60 leading-relaxed">{val.desc}</p>
               </div>
             </motion.div>
           ))}
