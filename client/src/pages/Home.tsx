@@ -18,7 +18,6 @@ import FAQ from "@/components/sections/FAQ";
 import Contact from "@/components/sections/Contact";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
-import MobileBookingBar from "@/components/MobileBookingBar";
 
 export default function Home() {
   return (
@@ -39,7 +38,6 @@ export default function Home() {
       </main>
       <Footer />
       <ScrollToTop />
-      <MobileBookingBar />
     </div>
   );
 }
