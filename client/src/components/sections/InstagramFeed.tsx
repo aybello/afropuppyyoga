@@ -1,36 +1,52 @@
 /* ============================================================
    InstagramFeed Section — Direct iframe Instagram Reels
    Design: Warm Afro-Wellness Editorial
-   - 6 top-performing Reels embedded via direct Instagram iframe
+   - 6 Reels: 4 entertainment/relatable + 2 customer review Reels
    - No external embed.js dependency — iframes load immediately
-   - 3-column grid on desktop, horizontal scroll on mobile
+   - Clean 3-column grid on desktop, horizontal scroll on mobile
    - CTA to follow on Instagram
    ============================================================ */
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Instagram, Loader2 } from "lucide-react";
 
-// Entertainment & relatable Reels from @afropuppyyoga — no class announcements
+// 4 entertainment/relatable + 2 customer review Reels from @afropuppyyoga
 const REELS = [
+  {
+    shortcode: "DV99b-vDPCy",
+    caption: "Customer review 🐶❤️ — hear what our guests are saying!",
+    likes: null,
+    tag: "Review",
+  },
+  {
+    shortcode: "DVKKYGIEa4-",
+    caption: "Another happy guest shares their puppy yoga experience 🧘‍♀️🐾",
+    likes: null,
+    tag: "Review",
+  },
   {
     shortcode: "DWaCFHXEXYy",
     caption: "i'm okay with it tho! 😂🐶 #puppyyoga #relationships",
     likes: 64,
+    tag: "Relatable",
   },
   {
     shortcode: "DWPixfhESbI",
     caption: "got exactly what i wanted 😛 #puppyyoga #fyp",
     likes: 41,
+    tag: "Relatable",
   },
   {
     shortcode: "DWU4taXDNKg",
     caption: "🧐🤨 #puppyyoga #dog #protect #relatable #fyp",
     likes: 37,
+    tag: "Relatable",
   },
   {
     shortcode: "DWh-37KDNNr",
     caption: "gone….to puppy yoga! 🐶 #puppyyoga #puppylove",
     likes: 29,
+    tag: "Relatable",
   },
 ];
 
@@ -44,13 +60,16 @@ function ReelCard({ reel, index }: { reel: typeof REELS[0]; index: number }) {
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ delay: index * 0.1, duration: 0.5 }}
+      transition={{ delay: index * 0.08, duration: 0.5 }}
       className="flex-shrink-0 w-[300px] md:w-auto snap-start"
     >
       <div className="relative rounded-2xl overflow-hidden bg-[#1A0A12]/5 border border-[#1A0A12]/8 shadow-sm hover:shadow-md transition-shadow duration-300">
         {/* Loading spinner */}
         {!loaded && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#FFF0F4] z-10 pointer-events-none" style={{ minHeight: 560 }}>
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center bg-[#FFF0F4] z-10 pointer-events-none"
+            style={{ minHeight: 560 }}
+          >
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#F2A0B8] to-[#E1306C] flex items-center justify-center mb-3">
               <Loader2 size={18} className="text-white animate-spin" />
             </div>
@@ -77,15 +96,28 @@ function ReelCard({ reel, index }: { reel: typeof REELS[0]; index: number }) {
         />
       </div>
 
-      {/* Caption below card */}
+      {/* Tag + caption below card */}
       <div className="mt-3 px-1">
+        <span
+          className={`inline-block font-body text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full mb-1.5 ${
+            reel.tag === "Review"
+              ? "bg-[#8B2252]/10 text-[#8B2252]"
+              : "bg-[#F2A0B8]/30 text-[#6B1A3F]"
+          }`}
+        >
+          {reel.tag}
+        </span>
         <p className="font-body text-[#1A0A12]/70 text-xs leading-relaxed line-clamp-2">
           {reel.caption}
         </p>
-        <div className="flex items-center gap-1 mt-1">
-          <span className="text-[#F2A0B8]">♥</span>
-          <span className="font-body text-[#1A0A12]/40 text-xs">{reel.likes} likes</span>
-        </div>
+        {reel.likes !== null && (
+          <div className="flex items-center gap-1 mt-1">
+            <span className="text-[#F2A0B8]">♥</span>
+            <span className="font-body text-[#1A0A12]/40 text-xs">
+              {reel.likes} likes
+            </span>
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -93,7 +125,10 @@ function ReelCard({ reel, index }: { reel: typeof REELS[0]; index: number }) {
 
 export default function InstagramFeed() {
   return (
-    <section id="instagram" className="py-24 md:py-32 bg-[#FFF0F4] overflow-hidden">
+    <section
+      id="instagram"
+      className="py-24 md:py-32 bg-[#FFF0F4] overflow-hidden"
+    >
       <div className="container">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
@@ -115,7 +150,7 @@ export default function InstagramFeed() {
               <span className="italic text-[#8B2252]">Unfold</span>
             </h2>
             <p className="mt-3 font-body text-[#1A0A12]/60 text-base max-w-md">
-              Our latest Reels from Instagram — real moments from real classes, straight from the mat.
+              Real moments from real classes — plus what our guests have to say.
             </p>
           </motion.div>
 
@@ -135,7 +170,7 @@ export default function InstagramFeed() {
         </div>
 
         {/* Reels grid — horizontal scroll on mobile, 3-col on desktop */}
-        <div className="flex md:grid md:grid-cols-4 gap-5 overflow-x-auto md:overflow-visible pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory md:snap-none scrollbar-hide">
+        <div className="flex md:grid md:grid-cols-3 gap-5 overflow-x-auto md:overflow-visible pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory md:snap-none scrollbar-hide">
           {REELS.map((reel, i) => (
             <ReelCard key={reel.shortcode} reel={reel} index={i} />
           ))}
