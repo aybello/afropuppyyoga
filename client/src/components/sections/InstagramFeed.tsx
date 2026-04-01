@@ -61,7 +61,7 @@ function ReelCard({ reel, index }: { reel: typeof REELS[0]; index: number }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.08, duration: 0.5 }}
-      className="flex-shrink-0 w-[300px] md:w-auto snap-start"
+      className="flex-shrink-0 w-[340px] md:w-auto snap-start"
     >
       <div className="relative rounded-2xl overflow-hidden bg-[#1A0A12]/5 border border-[#1A0A12]/8 shadow-sm hover:shadow-md transition-shadow duration-300">
         {/* Loading spinner */}

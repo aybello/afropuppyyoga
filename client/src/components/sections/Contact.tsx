@@ -139,7 +139,7 @@ export default function Contact() {
                 Follow Our Journey
               </h3>
             </FadeUp>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {socials.map((social, i) => (
                 <motion.a
                   key={social.name}
@@ -166,7 +166,7 @@ export default function Contact() {
             <FadeUp delay={0.4}>
               <div className="mt-8 bg-white/10 rounded-2xl p-6 border border-white/10">
                 <h4 className="font-display font-bold text-white text-base mb-3">Our Locations</h4>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {["Mississauga", "Hamilton", "Kitchener", "Toronto", "Guelph", "Waterloo"].map((city) => (
                     <div
                       key={city}

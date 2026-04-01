@@ -87,7 +87,7 @@ export default function About() {
 
             {/* Benefits grid */}
             <FadeUp delay={0.35}>
-              <div className="grid grid-cols-2 gap-4 pt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
                 {benefits.map((b, i) => (
                   <motion.div
                     key={b.title}
