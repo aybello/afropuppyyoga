@@ -1,51 +1,60 @@
 /* ============================================================
-   InstagramFeed Section — Clean video-only Reel tiles
-   Design: Warm Afro-Wellness Editorial
-   - Uses /embed/captioned/ endpoint: video-only, no profile header
+   InstagramFeed Section — Reel tiles with mobile tap-to-activate
+   Design: Warm Afro-Wellness Editorial (Pink variant)
    - 6 Reels: 2 customer review + 4 entertainment/relatable
    - 3-column grid desktop, horizontal snap-scroll on mobile
+   - Mobile: transparent overlay blocks first tap (prevents app
+     redirect); tap the overlay to activate the iframe, then play.
    ============================================================ */
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Instagram, Loader2 } from "lucide-react";
+import { Instagram, Play } from "lucide-react";
 
 const REELS = [
   {
     shortcode: "DV99b-vDPCy",
     caption: "Customer review 🐶❤️ — hear what our guests are saying!",
     tag: "Review",
+    thumbnail: "https://www.instagram.com/p/DV99b-vDPCy/media/?size=l",
   },
   {
     shortcode: "DVKKYGIEa4-",
     caption: "Another happy guest shares their puppy yoga experience 🧘‍♀️🐾",
     tag: "Review",
+    thumbnail: "https://www.instagram.com/p/DVKKYGIEa4-/media/?size=l",
   },
   {
     shortcode: "DWaCFHXEXYy",
     caption: "i'm okay with it tho! 😂🐶 #puppyyoga #relationships",
     tag: "Relatable",
+    thumbnail: "https://www.instagram.com/p/DWaCFHXEXYy/media/?size=l",
   },
   {
     shortcode: "DWPixfhESbI",
     caption: "got exactly what i wanted 😛 #puppyyoga #fyp",
     tag: "Relatable",
+    thumbnail: "https://www.instagram.com/p/DWPixfhESbI/media/?size=l",
   },
   {
     shortcode: "DWU4taXDNKg",
     caption: "🧐🤨 #puppyyoga #dog #protect #relatable #fyp",
     tag: "Relatable",
+    thumbnail: "https://www.instagram.com/p/DWU4taXDNKg/media/?size=l",
   },
   {
     shortcode: "DWh-37KDNNr",
     caption: "gone….to puppy yoga! 🐶 #puppyyoga #puppylove",
     tag: "Relatable",
+    thumbnail: "https://www.instagram.com/p/DWh-37KDNNr/media/?size=l",
   },
 ];
 
 function ReelCard({ reel, index }: { reel: typeof REELS[0]; index: number }) {
-  const [loaded, setLoaded] = useState(false);
+  // `activated` tracks whether the user has tapped the overlay on mobile.
+  // On desktop the overlay is never shown; on mobile, first tap activates
+  // the iframe (removing the overlay), second tap plays the video.
+  const [activated, setActivated] = useState(false);
 
-  // /embed/captioned/ shows only the video player — no profile header, no like count, no comments
   const embedUrl = `https://www.instagram.com/reel/${reel.shortcode}/embed/captioned/`;
 
   return (
@@ -56,21 +65,12 @@ function ReelCard({ reel, index }: { reel: typeof REELS[0]; index: number }) {
       transition={{ delay: index * 0.08, duration: 0.5 }}
       className="flex-shrink-0 w-[300px] md:w-auto snap-start group"
     >
-      {/* Video tile — fixed height so iframe is fully visible and clickable */}
+      {/* Video tile */}
       <div
         className="relative rounded-2xl overflow-hidden bg-[#1A0A12] shadow-md group-hover:shadow-xl transition-shadow duration-300"
         style={{ height: 560 }}
       >
-        {/* Loading state */}
-        {!loaded && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#1A0A12] z-10 pointer-events-none">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#F2A0B8] to-[#E1306C] flex items-center justify-center mb-3">
-              <Loader2 size={18} className="text-white animate-spin" />
-            </div>
-            <p className="font-body text-xs text-white/40">Loading reel…</p>
-          </div>
-        )}
-
+        {/* The iframe is always rendered so it loads in the background */}
         <iframe
           src={embedUrl}
           title={reel.caption}
@@ -78,7 +78,6 @@ function ReelCard({ reel, index }: { reel: typeof REELS[0]; index: number }) {
           allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
           scrolling="no"
           frameBorder="0"
-          onLoad={() => setLoaded(true)}
           style={{
             display: "block",
             width: "100%",
@@ -87,6 +86,30 @@ function ReelCard({ reel, index }: { reel: typeof REELS[0]; index: number }) {
             background: "#1A0A12",
           }}
         />
+
+        {/* Mobile-only tap-to-activate overlay.
+            - Hidden on md+ (desktop) via `md:hidden`
+            - On mobile, sits on top of the iframe and intercepts the first tap
+            - Once tapped, it disappears and the iframe becomes interactive */}
+        {!activated && (
+          <div
+            className="md:hidden absolute inset-0 z-20 flex flex-col items-center justify-center cursor-pointer"
+            style={{ background: "rgba(26,10,18,0.45)", backdropFilter: "blur(2px)" }}
+            onClick={() => setActivated(true)}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              setActivated(true);
+            }}
+          >
+            {/* Play button */}
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#F2A0B8] to-[#8B2252] flex items-center justify-center shadow-lg mb-3">
+              <Play size={28} className="text-white ml-1" fill="white" />
+            </div>
+            <p className="font-body text-white/80 text-xs font-semibold tracking-wide">
+              Tap to watch
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Tag + caption below */}
