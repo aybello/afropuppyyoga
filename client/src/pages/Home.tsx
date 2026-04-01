@@ -1,7 +1,7 @@
 /* ============================================================
    Home Page — AfroPuppyYoga
    Design: Warm Afro-Wellness Editorial
-   Sections: Hero → Experience → About → Private Events →
+   Sections: Hero → Experience → LumaCalendar → About → Private Events →
    Gallery → InstagramFeed → Reviews → Gift Cards → FAQ → Contact
    ============================================================ */
 import Navbar from "@/components/Navbar";
@@ -9,6 +9,7 @@ import Hero from "@/components/sections/Hero";
 import Experience from "@/components/sections/Experience";
 import About from "@/components/sections/About";
 import BookingBanner from "@/components/sections/BookingBanner";
+import LumaCalendar from "@/components/sections/LumaCalendar";
 import PrivateEvents from "@/components/sections/PrivateEvents";
 import Gallery from "@/components/sections/Gallery";
 import InstagramFeed from "@/components/sections/InstagramFeed";
@@ -27,6 +28,7 @@ export default function Home() {
         <Hero />
         <Experience />
         <BookingBanner />
+        <LumaCalendar />
         <About />
         <PrivateEvents />
         <Gallery />

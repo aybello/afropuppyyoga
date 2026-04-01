@@ -1,0 +1,136 @@
+/**
+ * LumaCalendar Section
+ * Design: Warm Afro-Wellness Editorial — Pink Blossom palette
+ * Embeds the AfroPuppyYoga Luma calendar using Luma's official iframe embed.
+ * The embed URL format is: https://lu.ma/embed/calendar/{calendar-api-id}/events
+ */
+
+import { useEffect, useRef, useState } from "react";
+import { CalendarDays, ExternalLink } from "lucide-react";
+
+export default function LumaCalendar() {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    // Luma's embed script — initializes checkout widgets if any are present
+    const script = document.createElement("script");
+    script.id = "luma-checkout";
+    script.src = "https://embed.lu.ma/checkout-button.js";
+    script.async = true;
+    if (!document.getElementById("luma-checkout")) {
+      document.body.appendChild(script);
+    }
+  }, []);
+
+  return (
+    <section id="classes" className="py-20 md:py-28" style={{ background: "oklch(0.98 0.01 350)" }}>
+      <div className="container">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-px w-8" style={{ background: "#c2185b" }} />
+              <span
+                className="text-xs font-semibold tracking-widest uppercase"
+                style={{ color: "#c2185b" }}
+              >
+                Book a Class
+              </span>
+            </div>
+            <h2
+              className="text-4xl md:text-5xl font-bold leading-tight"
+              style={{ fontFamily: "'Fraunces', serif", color: "#1a0a0f" }}
+            >
+              Upcoming{" "}
+              <em className="not-italic" style={{ color: "#e91e8c" }}>
+                Classes
+              </em>
+            </h2>
+            <p className="mt-3 text-base md:text-lg max-w-xl" style={{ color: "#5a3040" }}>
+              Browse and book upcoming puppy yoga sessions in Kitchener, Hamilton, and beyond — directly below.
+            </p>
+          </div>
+
+          <a
+            href="https://luma.com/AfroPuppyYoga?k=c"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold transition-all hover:scale-105 shrink-0"
+            style={{
+              background: "#e91e8c",
+              color: "#fff",
+              boxShadow: "0 4px 20px rgba(233,30,140,0.3)",
+            }}
+          >
+            <CalendarDays size={16} />
+            Open Full Calendar
+            <ExternalLink size={14} />
+          </a>
+        </div>
+
+        {/* Luma Calendar Embed */}
+        <div
+          className="relative rounded-2xl overflow-hidden"
+          style={{
+            border: "1px solid rgba(194,24,91,0.15)",
+            boxShadow: "0 8px 40px rgba(194,24,91,0.08)",
+            background: "#fff",
+            minHeight: "600px",
+          }}
+        >
+          {/* Loading skeleton */}
+          {!loaded && (
+            <div
+              className="absolute inset-0 flex flex-col items-center justify-center gap-4"
+              style={{ background: "#fff" }}
+            >
+              <div
+                className="w-12 h-12 rounded-full border-4 border-t-transparent animate-spin"
+                style={{ borderColor: "rgba(233,30,140,0.3)", borderTopColor: "transparent" }}
+              />
+              <p className="text-sm" style={{ color: "#9e6070" }}>
+                Loading upcoming classes…
+              </p>
+            </div>
+          )}
+
+          <iframe
+            ref={iframeRef}
+            src="https://lu.ma/embed/calendar/cal-Z474jeIbvUXskHE/events"
+            width="100%"
+            height="600"
+            frameBorder="0"
+            style={{
+              border: "none",
+              borderRadius: "16px",
+              display: "block",
+              opacity: loaded ? 1 : 0,
+              transition: "opacity 0.4s ease",
+            }}
+            allowFullScreen
+            aria-hidden="false"
+            tabIndex={0}
+            onLoad={() => setLoaded(true)}
+            title="AfroPuppyYoga Upcoming Classes"
+          />
+        </div>
+
+        {/* Footer note */}
+        <p className="text-center text-sm mt-5" style={{ color: "#9e6070" }}>
+          Powered by{" "}
+          <a
+            href="https://lu.ma"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:opacity-70 transition-opacity"
+            style={{ color: "#c2185b" }}
+          >
+            Luma
+          </a>{" "}
+          · Secure checkout · Instant confirmation
+        </p>
+      </div>
+    </section>
+  );
+}
