@@ -25,7 +25,7 @@ const faqs = [
   },
   {
     q: "Can I bring my own yoga mat?",
-    a: "Yes, you're welcome to bring your own mat. We also provide clean, sanitized mats for all participants at no extra charge.",
+    a: "Yes, you're welcome to bring your own mat. We also provide clean, sanitized mats for all participants for a small additional fee.",
   },
   {
     q: "Are there age restrictions?",
