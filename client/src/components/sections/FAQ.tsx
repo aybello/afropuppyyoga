@@ -28,6 +28,10 @@ const faqs = [
     a: "Yes, you're welcome to bring your own mat. We also provide clean, sanitized mats available to rent for $5 per session.",
   },
   {
+    q: "What is your cancellation and refund policy?",
+    a: "Due to the nature of our business, we do not offer refunds for guest cancellations. If you can no longer attend, we will issue a class credit that you can use toward any future session. If we cancel a class for any reason, you will have the choice of a full refund or a class credit — whichever you prefer.",
+  },
+  {
     q: "Are there age restrictions?",
     a: "Participants must be 12 years or older. Those under 18 must be accompanied by a parent or guardian. We welcome all ages and experience levels.",
   },
