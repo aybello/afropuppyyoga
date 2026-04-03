@@ -18,8 +18,11 @@ import FAQ from "@/components/sections/FAQ";
 import Contact from "@/components/sections/Contact";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
+import { useScrollDepthTracking, useTimeOnPageTracking } from "@/hooks/useAnalytics";
 
 export default function Home() {
+  useScrollDepthTracking();
+  useTimeOnPageTracking();
   return (
     <div className="min-h-screen bg-[#FEFAF4]">
       <Navbar />

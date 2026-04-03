@@ -5,6 +5,7 @@
    ============================================================ */
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
+import { trackCTAClick } from "@/hooks/useAnalytics";
 
 const HERO_BG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/apy_hero_bg-aDMPriKGFaJ3ZgQKWVBv5n.webp";
 const BOOK_URL = "https://lu.ma/afropuppyyoga";
@@ -93,12 +94,13 @@ export default function Hero() {
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center px-8 py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-base rounded-full hover:bg-[#D4708A] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
+              onClick={() => trackCTAClick("Book a Class — Hero")}
             >
               Book a Class
             </a>
             <a
               href="#private-events"
-              onClick={(e) => { e.preventDefault(); document.querySelector("#private-events")?.scrollIntoView({ behavior: "smooth" }); }}
+              onClick={(e) => { e.preventDefault(); trackCTAClick("Private Events — Hero"); document.querySelector("#private-events")?.scrollIntoView({ behavior: "smooth" }); }}
               className="inline-flex items-center px-8 py-4 bg-white/15 backdrop-blur-sm text-white font-body font-semibold text-base rounded-full border border-white/30 hover:bg-white/25 transition-all duration-200"
             >
               Private Events

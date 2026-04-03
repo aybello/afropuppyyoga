@@ -4,6 +4,7 @@
    ============================================================ */
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
+import { trackCTAClick } from "@/hooks/useAnalytics";
 
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
 const BOOK_URL = "https://lu.ma/afropuppyyoga";
@@ -100,6 +101,7 @@ export default function Navbar() {
                 href={BOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackCTAClick("Book a Class — Navbar")}
                 className="inline-flex items-center px-4 py-2 sm:px-5 sm:py-2.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-semibold text-xs sm:text-sm rounded-full hover:bg-[#D4708A] transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5"
               >
                 Book a Class
@@ -156,6 +158,7 @@ export default function Navbar() {
                 href={BOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackCTAClick("Book a Class — Mobile Menu")}
                 className="block text-center px-5 py-3 bg-[#F2A0B8] text-[#1A0A12] font-body font-semibold rounded-full hover:bg-[#D4708A] transition-colors"
               >
                 Book a Class
