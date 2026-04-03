@@ -9,14 +9,14 @@ const HERO_BG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBec
 const BOOK_URL = "https://lu.ma/afropuppyyoga";
 
 const trustedBy = [
-  "Wilfrid Laurier University",
-  "University of Waterloo",
-  "McMaster University",
-  "University of Guelph",
-  "Scribenote",
-  "F45 Training",
-  "9Round Kickboxing",
-  "DoubleTree Hotels",
+  { name: "Wilfrid Laurier University", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/laurier_logo_61911be5.webp", height: 32 },
+  { name: "University of Waterloo", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/waterloo_logo_6f34835e.webp", height: 28 },
+  { name: "McMaster University", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/mcmaster_dedf4891.png", height: 40 },
+  { name: "University of Guelph", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/guelph_f38ef088.svg", height: 36 },
+  { name: "Scribenote", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/scribenote_dark_6221d6bf.png", height: 28 },
+  { name: "F45 Training", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/f45_fe9e22f7.svg", height: 32 },
+  { name: "9Round Kickboxing", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/9round_bc6e021c.webp", height: 36 },
+  { name: "Home2 Suites by Hilton", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/home2suites_final_6791f5d4.png", height: 36 },
 ];
 
 export default function Hero() {
@@ -116,11 +116,15 @@ export default function Hero() {
             <span className="text-white/50 font-body text-xs font-semibold tracking-widest uppercase shrink-0">
               Trusted By
             </span>
-            <div className="flex flex-wrap gap-x-6 gap-y-1">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
               {trustedBy.map((org) => (
-                <span key={org} className="text-white/70 font-body text-sm font-medium">
-                  {org}
-                </span>
+                <img
+                  key={org.name}
+                  src={org.src}
+                  alt={org.name}
+                  style={{ height: org.height }}
+                  className="w-auto object-contain brightness-0 invert opacity-70 hover:opacity-100 transition-opacity duration-200"
+                />
               ))}
             </div>
           </div>
