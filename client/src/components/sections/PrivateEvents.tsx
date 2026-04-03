@@ -62,9 +62,9 @@ export default function PrivateEvents() {
         <div className="absolute inset-0 bg-gradient-to-b from-[#1A0A12]/60 via-[#1A0A12]/40 to-[#1A0A12]/80" />
       </div>
 
-      {/* Decorative circles */}
-      <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-[#F2A0B8]/5 translate-x-1/2 -translate-y-1/2" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-[#8B2252]/10 -translate-x-1/2 translate-y-1/2" />
+      {/* Decorative circles — clipped by section overflow-hidden */}
+      <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-[#F2A0B8]/5 translate-x-1/3 -translate-y-1/3" />
+      <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-[#8B2252]/10 -translate-x-1/3 translate-y-1/3" />
 
       <div className="relative container">
         {/* Header */}

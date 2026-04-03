@@ -115,7 +115,7 @@ export default function Hero() {
         className="relative bg-white border-t border-gray-100 py-3 flex items-center"
       >
         {/* Pinned label — sits outside the scrolling track */}
-        <span className="shrink-0 text-black/40 font-body text-[10px] font-bold tracking-[0.2em] uppercase whitespace-nowrap pl-5 pr-4 border-r border-black/15 z-20">
+        <span className="hidden xs:inline-flex shrink-0 text-black/40 font-body text-[10px] font-bold tracking-[0.2em] uppercase whitespace-nowrap pl-5 pr-4 border-r border-black/15 z-20 sm:inline-flex items-center">
           Trusted By
         </span>
 
