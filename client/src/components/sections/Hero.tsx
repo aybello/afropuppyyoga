@@ -112,7 +112,7 @@ export default function Hero() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 1 }}
-        className="relative bg-white/90 backdrop-blur-sm border-t border-white/20 py-3 flex items-center"
+        className="relative bg-white border-t border-gray-100 py-3 flex items-center"
       >
         {/* Pinned label — sits outside the scrolling track */}
         <span className="shrink-0 text-black/40 font-body text-[10px] font-bold tracking-[0.2em] uppercase whitespace-nowrap pl-5 pr-4 border-r border-black/15 z-20">
@@ -122,8 +122,8 @@ export default function Hero() {
         {/* Scrolling marquee — overflow hidden on this wrapper only */}
         <div className="relative flex-1 overflow-hidden">
           {/* Fade edges */}
-          <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-white/90 to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-white/90 to-transparent z-10 pointer-events-none" />
+          <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
 
           {/* Marquee track — two identical sets for seamless loop */}
           <div className="flex items-center animate-[marquee_28s_linear_infinite] gap-0 min-w-max">
@@ -133,7 +133,7 @@ export default function Hero() {
                   src={org.src}
                   alt={org.name}
                   style={{ height: org.height }}
-                  className="w-auto object-contain opacity-70 hover:opacity-100 transition-all duration-300"
+                  className="w-auto object-contain transition-all duration-300 hover:scale-105"
                 />
               </div>
             ))}
