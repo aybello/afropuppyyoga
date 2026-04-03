@@ -21,11 +21,11 @@ const faqs = [
   },
   {
     q: "What is included in the ticket price?",
-    a: "Your ticket includes a 60-minute session (40 min guided yoga + 20 min puppy playtime), complimentary refreshments, use of yoga mats and props, and a memorable experience you'll talk about for years.",
+    a: "Your ticket includes a 60-minute session (40 min guided yoga + 20 min puppy playtime) and complimentary refreshments. Yoga mat rental is available for $5 per session, or you're welcome to bring your own.",
   },
   {
     q: "Can I bring my own yoga mat?",
-    a: "Yes, you're welcome to bring your own mat. We also provide clean, sanitized mats for all participants for a small additional fee.",
+    a: "Yes, you're welcome to bring your own mat. We also provide clean, sanitized mats available to rent for $5 per session.",
   },
   {
     q: "Are there age restrictions?",
