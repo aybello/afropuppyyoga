@@ -32,6 +32,10 @@ const faqs = [
     a: "Due to the nature of our business, we do not offer refunds for guest cancellations. If you can no longer attend, we will issue a class credit that you can use toward any future session. If we cancel a class for any reason, you will have the choice of a full refund or a class credit — whichever you prefer.",
   },
   {
+    q: "Will photos and videos be taken at the event?",
+    a: "Yes! We capture photos and videos during our sessions for use on our social media channels. Attendees are also welcome to take their own photos and videos to share their experience. If you prefer not to be photographed or filmed by us, simply let a team member know before the session and we will make sure to respect your wishes.",
+  },
+  {
     q: "Are there age restrictions?",
     a: "Participants must be 12 years or older. Those under 18 must be accompanied by a parent or guardian. We welcome all ages and experience levels.",
   },
