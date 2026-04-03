@@ -12,6 +12,8 @@ const trustedBy = [
   "Wilfrid Laurier University",
   "University of Waterloo",
   "McMaster University",
+  "University of Guelph",
+  "Scribenote",
   "F45 Training",
   "9Round Kickboxing",
   "DoubleTree Hotels",
