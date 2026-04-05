@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://afropuppyyoga.manus.space/sitemap.xml
+Sitemap: https://afropuppyyoga.ca/sitemap.xml
