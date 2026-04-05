@@ -19,10 +19,14 @@ import Contact from "@/components/sections/Contact";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
 import { useScrollDepthTracking, useTimeOnPageTracking } from "@/hooks/useAnalytics";
+import { useEffect } from "react";
 
 export default function Home() {
   useScrollDepthTracking();
   useTimeOnPageTracking();
+  useEffect(() => {
+    document.title = "AfroPuppyYoga | Puppy Yoga Studio in Canada";
+  }, []);
   return (
     <div className="min-h-screen bg-[#FEFAF4]">
       <Navbar />
