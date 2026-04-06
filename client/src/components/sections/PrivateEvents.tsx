@@ -8,7 +8,7 @@ import { Building2, PartyPopper, Users, MapPin } from "lucide-react";
 import { trackCTAClick } from "@/hooks/useAnalytics";
 
 const EVENTS_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/apy_private_events-Nb3wGnpKGLiacEq7DDkbgp.webp";
-const BOOK_URL = "mailto:afropuppyyogaofficial@gmail.com?subject=Private%20Event%20Inquiry";
+const BOOK_URL = "https://luma.com/mb93ov9f";
 
 const eventTypes = [
   {
@@ -158,6 +158,8 @@ export default function PrivateEvents() {
           <div className="text-center">
             <a
               href={BOOK_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={() => trackCTAClick("Book Your Private Event — Private Events")}
               className="inline-flex items-center px-10 py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-base rounded-full hover:bg-[#D4708A] transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1"
             >
