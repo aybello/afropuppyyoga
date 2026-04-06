@@ -5,8 +5,9 @@
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useRef, useState } from "react";
 import { Plus, Minus } from "lucide-react";
+import type { ReactNode } from "react";
 
-const faqs = [
+const faqs: { q: string; a: ReactNode }[] = [
   {
     q: "What should I wear?",
     a: "Comfortable workout or yoga attire is ideal. We recommend clothes you don't mind getting a little furry — puppies love to cuddle! Avoid wearing anything too precious.",
@@ -49,7 +50,20 @@ const faqs = [
   },
   {
     q: "Can I purchase gift cards?",
-    a: "Yes! Gift cards are available for purchase on our Luma page. They make a perfect gift for birthdays, holidays, or anyone who deserves a little joy.",
+    a: (
+      <>
+        Yes! Gift cards are available for purchase directly on our{" "}
+        <a
+          href="https://luma.com/15iajebr"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#8B2252] underline underline-offset-2 hover:text-[#6B1A3E] transition-colors"
+        >
+          Luma gift card page
+        </a>
+        . They make a perfect gift for birthdays, holidays, or anyone who deserves a little joy.
+      </>
+    ),
   },
   {
     q: "Where are your classes held?",
@@ -57,7 +71,7 @@ const faqs = [
   },
 ];
 
-function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
+function FAQItem({ q, a, index }: { q: string; a: ReactNode; index: number }) {
   const [open, setOpen] = useState(false);
   return (
     <motion.div
@@ -87,9 +101,9 @@ function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <p className="font-body text-[#1A0A12]/70 text-base leading-relaxed pb-5 pr-10">
+            <div className="font-body text-[#1A0A12]/70 text-base leading-relaxed pb-5 pr-10">
               {a}
-            </p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
