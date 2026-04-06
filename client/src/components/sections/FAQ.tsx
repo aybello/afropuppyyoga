@@ -188,7 +188,7 @@ export default function FAQ() {
               Still have questions?
             </h3>
             <p className="font-body text-[#1A0A12]/60 mb-6">
-              We're happy to help! Reach out and we'll get back to you within 24 hours.
+              We're happy to help! Reach out and we'll get back to you within 48 hours.
             </p>
             <a
               href="mailto:afropuppyyogaofficial@gmail.com"
