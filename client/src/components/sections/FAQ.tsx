@@ -42,7 +42,18 @@ const faqs: { q: string; a: ReactNode }[] = [
   },
   {
     q: "How do I book a private event?",
-    a: "Email us at afropuppyyogaofficial@gmail.com with your event details — date, number of guests, location preference, and any special requests. We'll get back to you within 48 hours to confirm availability and discuss customization options.",
+    a: (
+      <>
+        Email us at{" "}
+        <a
+          href="mailto:afropuppyyogaofficial@gmail.com?subject=Private%20Event%20Inquiry"
+          className="text-[#8B2252] underline underline-offset-2 hover:text-[#6B1A3E] transition-colors"
+        >
+          afropuppyyogaofficial@gmail.com
+        </a>{" "}
+        with your event details — date, number of guests, location preference, and any special requests. We'll get back to you within 48 hours to confirm availability and discuss customization options.
+      </>
+    ),
   },
   {
     q: "What if I'm allergic to dogs?",
