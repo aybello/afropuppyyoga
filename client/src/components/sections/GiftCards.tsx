@@ -6,6 +6,7 @@ import { useRef } from "react";
 import { Gift, Heart } from "lucide-react";
 
 const BOOK_URL = "https://lu.ma/afropuppyyoga";
+const GIFT_CARD_URL = "https://luma.com/15iajebr";
 
 function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const ref = useRef(null);
@@ -48,7 +49,7 @@ export default function GiftCards() {
           <FadeUp delay={0.15}>
             <div className="flex flex-col sm:flex-row items-center gap-4 shrink-0">
               <a
-                href={BOOK_URL}
+                href={GIFT_CARD_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-8 py-4 bg-[#1A0A12] text-white font-body font-bold text-base rounded-full hover:bg-[#2D1A0A] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
