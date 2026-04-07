@@ -4,7 +4,7 @@
    ============================================================ */
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { Mail, Instagram, Facebook, Youtube, ExternalLink } from "lucide-react";
+import { Mail, Instagram, Facebook, Youtube, ExternalLink, MapPin } from "lucide-react";
 
 const BOOK_URL = "https://lu.ma/afropuppyyoga";
 
@@ -165,16 +165,37 @@ export default function Contact() {
             {/* Locations */}
             <FadeUp delay={0.4}>
               <div className="mt-8 bg-white/10 rounded-2xl p-6 border border-white/10">
-                <h4 className="font-display font-bold text-white text-base mb-3">Our Locations</h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {["Mississauga", "Hamilton", "Kitchener", "Toronto", "Guelph", "Waterloo"].map((city) => (
-                    <div
-                      key={city}
-                      className="text-center py-2 px-3 bg-white/5 rounded-lg border border-white/10"
-                    >
-                      <span className="font-body text-white/70 text-xs font-medium">{city}</span>
+                <h4 className="font-display font-bold text-white text-base mb-4">Our Locations</h4>
+                <div className="space-y-4">
+                  <a
+                    href="https://maps.google.com/?q=TenC+Dance+Studio+329+King+Street+East+Kitchener+Ontario"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-start gap-3 group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-[#F2A0B8]/20 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-[#F2A0B8]/30 transition-colors">
+                      <MapPin size={15} className="text-[#F2A0B8]" />
                     </div>
-                  ))}
+                    <div>
+                      <div className="font-body text-white font-semibold text-sm group-hover:text-[#F2A0B8] transition-colors">Kitchener</div>
+                      <div className="font-body text-white/60 text-xs leading-relaxed">TenC Dance Studio<br />329 King Street East, Kitchener, ON</div>
+                    </div>
+                  </a>
+                  <div className="border-t border-white/10" />
+                  <a
+                    href="https://maps.google.com/?q=Colibri+Studio+2751+Barton+Street+East+Hamilton+Ontario"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-start gap-3 group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-[#F2A0B8]/20 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-[#F2A0B8]/30 transition-colors">
+                      <MapPin size={15} className="text-[#F2A0B8]" />
+                    </div>
+                    <div>
+                      <div className="font-body text-white font-semibold text-sm group-hover:text-[#F2A0B8] transition-colors">Hamilton</div>
+                      <div className="font-body text-white/60 text-xs leading-relaxed">Colibri Studio<br />2751 Barton Street East, Hamilton, ON</div>
+                    </div>
+                  </a>
                 </div>
               </div>
             </FadeUp>
