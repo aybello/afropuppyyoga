@@ -97,7 +97,7 @@ export default function Contact() {
                 <span className="italic text-[#F2A0B8]">The Pack?</span>
               </h2>
               <p className="font-body text-white/70 text-lg leading-relaxed mb-10">
-                Whether you're booking a class, planning a private event, or just want to say hello — we'd love to hear from you. Our team responds within 24 hours.
+                Whether you're booking a class, planning a private event, or just want to say hello — we'd love to hear from you. Our team responds within 48 hours.
               </p>
             </FadeUp>
 
