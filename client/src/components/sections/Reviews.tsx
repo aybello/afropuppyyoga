@@ -112,7 +112,7 @@ export default function Reviews() {
                     <Star key={i} size={14} className="fill-[#F2A0B8] text-[#F2A0B8]" />
                   ))}
                 </div>
-                <div className="font-body text-xs text-[#1A0A12]/50">Based on 258+ reviews</div>
+                <div className="font-body text-xs text-[#1A0A12]/50">Based on 492+ reviews</div>
               </div>
               <a
                 href="https://www.google.com/search?q=afropuppyyoga+reviews"
