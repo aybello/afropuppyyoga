@@ -143,7 +143,7 @@ export default function Experience() {
         {/* Stats row */}
         <div className="mt-20 md:mt-28 grid grid-cols-2 md:grid-cols-4 gap-8">
           <StatCounter value={1000} suffix="+" label="Happy Participants" delay={0} />
-          <StatCounter value={167} suffix="+" label="5-Star Reviews" delay={0.1} />
+          <StatCounter value={258} suffix="+" label="5-Star Reviews" delay={0.1} />
           <StatCounter value={3} suffix="" label="Ontario Locations" delay={0.2} />
           <StatCounter value={100} suffix="%" label="Guest Approval" delay={0.3} />
         </div>
