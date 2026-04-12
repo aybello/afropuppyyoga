@@ -17,6 +17,7 @@ const navLinks = [
   { label: "Gallery", href: "#gallery" },
   { label: "Reviews", href: "#reviews" },
   { label: "FAQ", href: "#faq" },
+  { label: "Ethics", href: "#ethical-standards" },
   { label: "Contact", href: "#contact" },
 ];
 
