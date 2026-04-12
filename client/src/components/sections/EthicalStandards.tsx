@@ -18,7 +18,7 @@ const pillars = [
       },
       {
         label: "Age and Health Requirements",
-        text: "No puppy under the age of eight weeks is permitted to participate. All puppies must have received veterinary clearance and age-appropriate vaccinations prior to attending any event.",
+        text: "No puppy under the age of six weeks is permitted to participate. All puppies must have received veterinary clearance and age-appropriate vaccinations prior to attending any event.",
       },
       {
         label: "Safe Transportation",
