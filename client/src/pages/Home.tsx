@@ -41,8 +41,8 @@ export default function Home() {
         <InstagramFeed />
         <Reviews />
         <GiftCards />
-        <FAQ />
         <EthicalStandards />
+        <FAQ />
         <Contact />
       </main>
       <Footer />
