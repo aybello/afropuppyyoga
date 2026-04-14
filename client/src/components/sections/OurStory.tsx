@@ -67,7 +67,7 @@ export default function OurStory() {
 
             <FadeUp delay={0.3}>
               <p className="font-body text-[#1A0A12]/75 text-lg leading-relaxed">
-                Built in collaboration with <strong className="text-[#1A0A12] font-semibold">Megan Durkin</strong> and <strong className="text-[#1A0A12] font-semibold">Ala Zeidan</strong> — engineering graduates from the University of Guelph — and students from Guelph's Animal Biology program and the Ontario Veterinary College, APY was designed from the ground up with both human and puppy wellbeing at its core.
+                Ay built APY with the help of close collaborators <strong className="text-[#1A0A12] font-semibold">Megan Durkin</strong> and <strong className="text-[#1A0A12] font-semibold">Ala Zeidan</strong> — engineering graduates from the University of Guelph — alongside students from Guelph's Animal Biology program and the Ontario Veterinary College. Together, they designed the program from the ground up with both human and puppy wellbeing at its core.
               </p>
             </FadeUp>
 
@@ -87,9 +87,9 @@ export default function OurStory() {
           {/* Founders strip */}
           <FadeUp delay={0.45}>
             <div className="mt-14 pt-10 border-t border-[#F0D0DC]">
-              <p className="font-body text-xs text-[#1A0A12]/40 uppercase tracking-widest mb-4">Founded with</p>
+              <p className="font-body text-xs text-[#1A0A12]/40 uppercase tracking-widest mb-4">Built with the support of</p>
               <div className="flex flex-wrap gap-4">
-                {["Ay — Founder", "Megan Durkin — Co-founder", "Ala Zeidan — Co-founder"].map((name) => (
+                {["Ay — Founder", "Megan Durkin — Collaborator", "Ala Zeidan — Collaborator"].map((name) => (
                   <div
                     key={name}
                     className="bg-[#FFF0F4] border border-[#F0D0DC] rounded-full px-5 py-2 font-body text-sm text-[#1A0A12]/70 font-medium"
