@@ -7,6 +7,7 @@ const BOOK_URL = "https://lu.ma/afropuppyyoga";
 const navLinks = [
   { label: "Home", href: "#home" },
   { label: "About", href: "#about" },
+  { label: "Our Story", href: "#our-story" },
   { label: "Experience", href: "#experience" },
   { label: "Private Events", href: "#private-events" },
   { label: "Gallery", href: "#gallery" },

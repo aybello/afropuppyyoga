@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import Hero from "@/components/sections/Hero";
 import Experience from "@/components/sections/Experience";
 import About from "@/components/sections/About";
+import OurStory from "@/components/sections/OurStory";
 import LumaCalendar from "@/components/sections/LumaCalendar";
 import PrivateEvents from "@/components/sections/PrivateEvents";
 import Gallery from "@/components/sections/Gallery";
@@ -36,6 +37,7 @@ export default function Home() {
         <Experience />
         <LumaCalendar />
         <About />
+        <OurStory />
         <PrivateEvents />
         <Gallery />
         <InstagramFeed />
