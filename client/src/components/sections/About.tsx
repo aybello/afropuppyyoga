@@ -61,18 +61,24 @@ export default function About() {
                 </span>
               </div>
               <h2 className="font-display text-4xl md:text-5xl font-bold text-[#1A0A12] leading-tight">
-                Where Wellness Meets
+                Born From Love —
                 <br />
-                <span className="italic text-[#C4547A]">Culture & Puppy Love</span>
+                <span className="italic text-[#C4547A]">A Dog, A Dream & A Community</span>
               </h2>
             </FadeUp>
 
             <FadeUp delay={0.15}>
               <p className="font-body text-[#1A0A12]/75 text-lg leading-relaxed">
-                <strong className="text-[#1A0A12] font-semibold">AfroPuppyYoga (APY)</strong> blends the serene art of yoga with the playful spirit of puppies, all set to the rhythmic beauty of Afro beats.
+                <strong className="text-[#1A0A12] font-semibold">AfroPuppyYoga</strong> was founded by <strong className="text-[#1A0A12] font-semibold">Ay</strong> in 2024 — not from a business plan, but from a feeling. Growing up without dogs, Ay's world changed the moment her brother brought one home. That dog opened doors she never expected: new friendships, spontaneous joy, and a sense of belonging she hadn't felt before.
               </p>
               <p className="font-body text-[#1A0A12]/75 text-lg leading-relaxed mt-4">
-                In each class, participants engage in a series of yoga poses that enhance flexibility and reduce stress, while adorable puppies roam freely, adding a touch of joy and spontaneity. Our sessions create a warm, uplifting atmosphere that relaxes the body and energizes the mind.
+                "There was a point in my life when I wasn't very happy," Ay shares. "My dog was the one good thing I could always look forward to. He saved me." That experience became the seed of something bigger — a space where wellness, community, and unconditional love could exist together.
+              </p>
+              <p className="font-body text-[#1A0A12]/75 text-lg leading-relaxed mt-4">
+                Built in collaboration with <strong className="text-[#1A0A12] font-semibold">Megan Durkin</strong> and <strong className="text-[#1A0A12] font-semibold">Ala Zeidan</strong> — engineering graduates from the University of Guelph — and students from Guelph's Animal Biology program and the Ontario Veterinary College, APY was designed from the ground up with both human and puppy wellbeing at its core.
+              </p>
+              <p className="font-body text-[#1A0A12]/75 text-lg leading-relaxed mt-4">
+                The Afro-beat soundtrack? That's personal too. It was the music playing in the background while Ay was building APY late into the night — and it stayed, because wellness should feel like culture, not a chore.
               </p>
             </FadeUp>
 
@@ -80,7 +86,7 @@ export default function About() {
             <FadeUp delay={0.25}>
               <blockquote className="border-l-4 border-[#C4547A] pl-6 py-2">
                 <p className="font-accent text-xl md:text-2xl italic text-[#1A0A12]/80 leading-relaxed">
-                  "An inclusive, vibrant atmosphere inspired by culture, movement, and music — turning every class into a celebration."
+                  "Wellness spaces aren't always inclusive — we're here to change that. Everyone is welcome at APY."
                 </p>
               </blockquote>
             </FadeUp>
