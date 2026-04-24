@@ -492,21 +492,22 @@ export default function FillRatePredictor() {
                 <div className="flex items-end gap-1 h-16">
                   {monthData.map((m) => {
                     const isSelected = m.month === month;
-                    const height = Math.max(4, (m.fill_rate / 100) * 64);
+                    const fillRatePct = m.fill_rate <= 1 ? m.fill_rate * 100 : m.fill_rate;
+                    const height = Math.max(4, (fillRatePct / 100) * 64);
                     return (
                       <button
                         key={m.month}
                         onClick={() => setMonth(m.month)}
                         className="flex-1 flex flex-col items-center gap-1 group"
-                        title={`${m.month_name}: ${m.fill_rate.toFixed(0)}% fill`}
+                        title={`${m.month_name}: ${(m.fill_rate <= 1 ? m.fill_rate * 100 : m.fill_rate).toFixed(0)}% fill`}
                       >
                         <div
                           className={`w-full rounded-sm transition-all ${
                             isSelected
                               ? "bg-[#2D9B8A]"
-                              : m.fill_rate >= 80
+                              : fillRatePct >= 80
                               ? "bg-emerald-400 group-hover:bg-emerald-500"
-                              : m.fill_rate >= 50
+                              : fillRatePct >= 50
                               ? "bg-teal-300 group-hover:bg-teal-400"
                               : "bg-amber-300 group-hover:bg-amber-400"
                           }`}
@@ -737,7 +738,7 @@ export default function FillRatePredictor() {
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {topBreeds.map((b, i) => {
-                      const fr = b.avg_fill_rate;
+                      const fr = b.avg_fill_rate <= 1 ? b.avg_fill_rate * 100 : b.avg_fill_rate;
                       const tier =
                         fr >= 80 ? "hot" : fr >= 60 ? "high" : fr >= 40 ? "solid" : fr >= 25 ? "moderate" : "low";
                       const cfg = TIER_CONFIG[tier];
@@ -786,7 +787,7 @@ export default function FillRatePredictor() {
               <p className="text-xs text-slate-400 mb-5">Used to estimate fill rates for new breeds</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {Object.entries(breedTypes).map(([key, bt]) => {
-                  const fr = bt.avg_fill_rate_overall;
+                  const fr = bt.avg_fill_rate_overall <= 1 ? bt.avg_fill_rate_overall * 100 : bt.avg_fill_rate_overall;
                   const tier = fr >= 80 ? "hot" : fr >= 60 ? "high" : fr >= 40 ? "solid" : fr >= 25 ? "moderate" : "low";
                   const cfg = TIER_CONFIG[tier];
                   return (
@@ -824,7 +825,7 @@ export default function FillRatePredictor() {
               <p className="text-xs text-slate-400 mb-5">Average fill rate by month across all breeds and locations</p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {monthData.map((m) => {
-                  const fr = m.fill_rate || 0;
+                  const fr = (m.fill_rate || 0) <= 1 ? (m.fill_rate || 0) * 100 : (m.fill_rate || 0);
                   const tier = fr >= 80 ? "hot" : fr >= 60 ? "high" : fr >= 40 ? "solid" : "low";
                   const cfg = TIER_CONFIG[tier];
                   return (
