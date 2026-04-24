@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react";
 
 const MODEL_URL =
-  "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/apy_model_data_62ba8113.json";
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/apy_model_luma_v2_cf116064.json";
 
 const MONTHS = [
   { value: 1, label: "January" },
