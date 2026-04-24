@@ -5,11 +5,13 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
+import FillRatePredictor from "./pages/FillRatePredictor";
 
 function Router() {
   return (
     <Switch>
       <Route path={"/"} component={Home} />
+      <Route path={"/predictor"} component={FillRatePredictor} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
