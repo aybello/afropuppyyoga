@@ -202,6 +202,19 @@ export default function Contact() {
                       <div className="font-body text-white/60 text-xs leading-relaxed">Colibri Studio<br />2751 Barton Street East, Hamilton, ON</div>
                     </div>
                   </a>
+                  <div className="border-t border-white/10" />
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-[#F2A0B8]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <MapPin size={15} className="text-[#F2A0B8]/50" />
+                    </div>
+                    <div>
+                      <div className="font-body text-white/70 font-semibold text-sm flex items-center gap-2">
+                        Oakville
+                        <span className="inline-block px-2 py-0.5 bg-[#F2A0B8]/20 text-[#F2A0B8] text-xs font-body font-semibold rounded-full">Coming Soon</span>
+                      </div>
+                      <div className="font-body text-white/40 text-xs leading-relaxed mt-0.5">Stay tuned for our Oakville launch</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </FadeUp>

@@ -33,7 +33,7 @@ const includes = [
   "Add-ons: Photography, Refreshments & Merchandise",
 ];
 
-const locations = ["Toronto", "Mississauga", "Waterloo", "Guelph", "Hamilton"];
+const locations = ["Toronto", "Kitchener", "Waterloo", "Guelph", "Hamilton", "Oakville"];
 
 function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const ref = useRef(null);

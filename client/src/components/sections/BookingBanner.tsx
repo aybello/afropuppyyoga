@@ -9,22 +9,22 @@ const BOOK_URL = "https://lu.ma/afropuppyyoga";
 
 const upcomingClasses = [
   {
-    city: "Mississauga",
+    city: "Kitchener",
     date: "Saturdays & Sundays",
-    time: "10:00 AM – 11:00 AM",
+    time: "10:00 AM – 4:30 PM",
     spots: "Limited spots",
   },
   {
     city: "Hamilton",
     date: "Saturdays",
-    time: "12:00 PM – 1:00 PM",
+    time: "11:00 AM – 5:30 PM",
     spots: "Limited spots",
   },
   {
-    city: "Kitchener",
-    date: "Sundays",
-    time: "2:00 PM – 3:00 PM",
-    spots: "Limited spots",
+    city: "Oakville",
+    date: "Coming Soon",
+    time: "Stay tuned",
+    spots: "Notify me",
   },
 ];
 

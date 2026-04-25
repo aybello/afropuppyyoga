@@ -98,7 +98,7 @@ export default function Footer() {
               <div>
                 <div className="font-body text-xs text-white/30 uppercase tracking-wide mb-1">Locations</div>
                 <div className="font-body text-sm text-white/60">
-                  Mississauga · Hamilton · Kitchener
+                  Hamilton · Kitchener · Oakville (Soon)
                 </div>
               </div>
             </div>

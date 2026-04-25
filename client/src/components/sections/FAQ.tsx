@@ -80,7 +80,7 @@ const faqs: { q: string; a: ReactNode }[] = [
   },
   {
     q: "Where are your classes held?",
-    a: "We host classes across the Greater Toronto Area including Mississauga, Hamilton, and Kitchener. Specific venue details are provided upon booking confirmation.",
+    a: "We currently host classes in Hamilton and Kitchener, with Oakville coming soon. Specific venue details are provided upon booking confirmation.",
   },
 ];
 
