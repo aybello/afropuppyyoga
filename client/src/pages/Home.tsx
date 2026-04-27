@@ -2,7 +2,7 @@
    Home Page — AfroPuppyYoga
    Design: Warm Afro-Wellness Editorial
    Sections: Hero → Experience → LumaCalendar → About → Private Events →
-   Gallery → InstagramFeed → Reviews → Gift Cards → FAQ → EthicalStandards → Contact
+   Gallery → InstagramFeed → Reviews → Gift Cards → Memberships → EthicalStandards → FAQ → Contact
    ============================================================ */
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/sections/Hero";
@@ -15,6 +15,7 @@ import Gallery from "@/components/sections/Gallery";
 import InstagramFeed from "@/components/sections/InstagramFeed";
 import Reviews from "@/components/sections/Reviews";
 import GiftCards from "@/components/sections/GiftCards";
+import Memberships from "@/components/sections/Memberships";
 import FAQ from "@/components/sections/FAQ";
 import EthicalStandards from "@/components/sections/EthicalStandards";
 import Contact from "@/components/sections/Contact";
@@ -43,6 +44,7 @@ export default function Home() {
         <InstagramFeed />
         <Reviews />
         <GiftCards />
+        <Memberships />
         <EthicalStandards />
         <FAQ />
         <Contact />

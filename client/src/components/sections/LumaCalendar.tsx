@@ -72,15 +72,24 @@ export default function LumaCalendar() {
         </div>
 
         {/* Luma Calendar Embed */}
+        {/* Force light color-scheme at the DOM level so Luma's prefers-color-scheme detection sees light mode regardless of OS setting */}
         <div
-          className="relative rounded-2xl overflow-hidden"
+          className="relative rounded-2xl overflow-hidden luma-embed-wrapper"
           style={{
             border: "1px solid rgba(194,24,91,0.15)",
             boxShadow: "0 8px 40px rgba(194,24,91,0.08)",
-            background: "#fff",
+            background: "#ffffff",
             minHeight: "600px",
+            colorScheme: "light",
+            // Force light mode at the CSS level — overrides OS dark mode for this subtree
           }}
         >
+          {/* Scoped CSS to force light mode inside the iframe wrapper */}
+          <style>{`
+            .luma-embed-wrapper, .luma-embed-wrapper * {
+              color-scheme: light only !important;
+            }
+          `}</style>
           {/* Loading skeleton */}
           {!loaded && (
             <div
@@ -99,7 +108,7 @@ export default function LumaCalendar() {
 
           <iframe
             ref={iframeRef}
-            src="https://lu.ma/embed/calendar/cal-Z474jeIbvUXskHE/events"
+            src="https://lu.ma/embed/calendar/cal-Z474jeIbvUXskHE/events?theme=light&lt=light"
             width="100%"
             height="600"
             frameBorder="0"
@@ -109,6 +118,8 @@ export default function LumaCalendar() {
               display: "block",
               opacity: loaded ? 1 : 0,
               transition: "opacity 0.4s ease",
+              colorScheme: "light",
+              filter: "none",
             }}
             allowFullScreen
             aria-hidden="false"
