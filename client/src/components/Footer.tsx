@@ -26,7 +26,7 @@ export default function Footer() {
   return (
     <footer className="bg-[#1A0A12] text-white py-16">
       <div className="container">
-        <div className="grid md:grid-cols-3 gap-12 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mb-12">
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-3 mb-4">
@@ -56,7 +56,7 @@ export default function Footer() {
           {/* Navigation */}
           <div>
             <h4 className="font-display font-bold text-sm text-white/80 uppercase tracking-widest mb-5">Navigation</h4>
-            <ul className="space-y-2.5">
+            <ul className="grid grid-cols-2 md:grid-cols-1 gap-x-4 gap-y-2.5">
               {navLinks.map((link) => (
                 <li key={link.href}>
                   <a
