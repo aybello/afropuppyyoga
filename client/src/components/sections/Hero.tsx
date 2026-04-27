@@ -70,7 +70,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3 }}
-            className="font-display text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold text-white leading-[1.05] mb-6"
+            className="font-display text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-bold text-white leading-[1.05] mb-6"
           >
             Where Wellness
             <br />
@@ -83,7 +83,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.5 }}
-            className="font-body text-white/85 text-lg md:text-xl leading-relaxed mb-10 max-w-lg"
+            className="font-body text-white/85 text-base md:text-xl leading-relaxed mb-10 max-w-lg"
           >
             Guided yoga, Afro-beat rhythms, and adorable puppies — all in one unforgettable session. Serving Hamilton & Kitchener, with Oakville coming soon.
           </motion.p>
@@ -99,7 +99,7 @@ export default function Hero() {
               href={BOOK_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center px-8 py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-base rounded-full hover:bg-[#D4708A] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
+              className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm sm:text-base rounded-full hover:bg-[#D4708A] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
               onClick={() => trackCTAClick("Book a Class — Hero")}
             >
               Book a Class
@@ -107,7 +107,7 @@ export default function Hero() {
             <a
               href="#private-events"
               onClick={(e) => { e.preventDefault(); trackCTAClick("Private Events — Hero"); document.querySelector("#private-events")?.scrollIntoView({ behavior: "smooth" }); }}
-              className="inline-flex items-center px-8 py-4 bg-white/15 backdrop-blur-sm text-white font-body font-semibold text-base rounded-full border border-white/30 hover:bg-white/25 transition-all duration-200"
+              className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-white/15 backdrop-blur-sm text-white font-body font-semibold text-sm sm:text-base rounded-full border border-white/30 hover:bg-white/25 transition-all duration-200"
             >
               Private Events
             </a>

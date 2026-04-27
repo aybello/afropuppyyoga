@@ -110,7 +110,8 @@ export default function LumaCalendar() {
             ref={iframeRef}
             src="https://lu.ma/embed/calendar/cal-Z474jeIbvUXskHE/events?theme=light&lt=light"
             width="100%"
-            height="600"
+            height="500"
+            className="md:!h-[600px]"
             frameBorder="0"
             style={{
               border: "none",

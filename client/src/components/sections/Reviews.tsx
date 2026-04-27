@@ -104,7 +104,7 @@ export default function Reviews() {
                 <span className="italic text-[#C4547A]">Clients Say</span>
               </h2>
             </div>
-            <div className="flex items-center gap-4 mt-4 md:mt-0">
+            <div className="flex flex-wrap items-center gap-4 mt-4 md:mt-0">
               <div className="text-center">
                 <div className="font-display font-bold text-4xl md:text-5xl text-[#1A0A12]">4.9</div>
                 <div className="flex gap-0.5 justify-center my-1">

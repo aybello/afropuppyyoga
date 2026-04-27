@@ -124,7 +124,7 @@ export default function About() {
                 <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-[#C4547A]/15 -z-10" />
                 <div className="absolute -bottom-8 -left-8 w-48 h-48 rounded-full bg-[#8B2252]/10 -z-10" />
                 {/* Floating tag */}
-                <div className="absolute top-6 -left-4 md:-left-8 bg-[#8B2252] text-white rounded-xl px-4 py-3 shadow-lg">
+                <div className="absolute top-6 left-0 md:-left-8 bg-[#8B2252] text-white rounded-xl px-4 py-3 shadow-lg">
                   <div className="font-body text-xs font-semibold uppercase tracking-wide mb-0.5 text-white/70">Afro-Beat</div>
                   <div className="font-display font-bold text-sm">Yoga + Puppies</div>
                 </div>

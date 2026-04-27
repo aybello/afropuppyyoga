@@ -162,7 +162,7 @@ export default function Gallery() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
             style={{ columnCount: undefined }}
-            className="[column-count:2] md:[column-count:3] lg:[column-count:4] [column-gap:12px]"
+            className="[column-count:1] sm:[column-count:2] md:[column-count:3] lg:[column-count:4] [column-gap:12px]"
           >
             {visible.map((photo, i) => (
               <motion.div
@@ -286,7 +286,7 @@ export default function Gallery() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.92, opacity: 0 }}
               transition={{ duration: 0.22 }}
-              className="relative mx-16 max-w-5xl"
+              className="relative mx-4 sm:mx-16 max-w-5xl w-full"
               onClick={e => e.stopPropagation()}
             >
               <img
@@ -298,7 +298,7 @@ export default function Gallery() {
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent rounded-b-xl px-5 py-4">
                 <p className="font-body text-white/80 text-sm">{filtered[lightboxIdx].alt}</p>
                 <p className="font-body text-white/40 text-xs mt-0.5">
-                  {lightboxIdx + 1} / {filtered.length} · Use ← → keys to navigate
+                  {lightboxIdx + 1} / {filtered.length} · <span className="hidden sm:inline">Use ← → keys to navigate</span><span className="sm:hidden">Tap edges to navigate</span>
                 </p>
               </div>
             </motion.div>

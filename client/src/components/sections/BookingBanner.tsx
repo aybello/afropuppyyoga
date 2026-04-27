@@ -73,7 +73,7 @@ export default function BookingBanner() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1, duration: 0.5 }}
-              className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-[#F2A0B8]/30 transition-all duration-300 hover:-translate-y-1"
+              className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-white/10 hover:border-[#F2A0B8]/30 transition-all duration-300 hover:-translate-y-1"
             >
               <div className="flex items-center gap-2 mb-4">
                 <MapPin size={16} className="text-[#F2A0B8]" />

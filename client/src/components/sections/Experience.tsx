@@ -86,7 +86,7 @@ export default function Experience() {
                 <div className="absolute inset-0 bg-gradient-to-t from-[#1A0A12]/30 to-transparent" />
               </div>
               {/* Floating badge */}
-              <div className="absolute -bottom-6 -right-4 md:-right-8 bg-[#F2A0B8] text-[#1A0A12] rounded-2xl px-6 py-4 shadow-xl">
+              <div className="absolute -bottom-6 right-0 md:-right-8 bg-[#F2A0B8] text-[#1A0A12] rounded-2xl px-6 py-4 shadow-xl">
                 <div className="font-display font-bold text-3xl">60</div>
                 <div className="font-body text-xs font-semibold uppercase tracking-wide">Min Session</div>
               </div>

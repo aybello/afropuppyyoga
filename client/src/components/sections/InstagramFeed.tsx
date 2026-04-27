@@ -83,7 +83,7 @@ function VideoCard({ reel, index }: { reel: (typeof REELS)[0]; index: number }) 
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.1, duration: 0.5 }}
-      className="flex-shrink-0 w-[300px] md:w-auto snap-start group"
+      className="flex-shrink-0 w-full snap-start group"
     >
       {/* 9:16 video container */}
       <div
@@ -216,7 +216,7 @@ export default function InstagramFeed() {
         </div>
 
         {/* Video grid — 2-col on desktop, horizontal scroll on mobile */}
-        <div className="flex md:grid md:grid-cols-2 gap-5 overflow-x-auto md:overflow-visible pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory md:snap-none scrollbar-hide max-w-2xl md:mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto">
           {REELS.map((reel, i) => (
             <VideoCard key={reel.id} reel={reel} index={i} />
           ))}

@@ -52,14 +52,14 @@ export default function GiftCards() {
                 href={GIFT_CARD_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-[#1A0A12] text-white font-body font-bold text-base rounded-full hover:bg-[#2D1A0A] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
+                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 bg-[#1A0A12] text-white font-body font-bold text-base rounded-full hover:bg-[#2D1A0A] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
               >
                 <Gift size={18} />
                 Buy a Gift Card
               </a>
               <a
                 href="mailto:afropuppyyogaofficial@gmail.com?subject=Gift%20Card%20Inquiry"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-white/30 text-[#1A0A12] font-body font-semibold text-base rounded-full border-2 border-[#1A0A12]/20 hover:bg-white/50 transition-all duration-200"
+                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 bg-white/30 text-[#1A0A12] font-body font-semibold text-base rounded-full border-2 border-[#1A0A12]/20 hover:bg-white/50 transition-all duration-200"
               >
                 <Heart size={18} />
                 Learn More
