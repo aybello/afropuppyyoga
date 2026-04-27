@@ -145,7 +145,7 @@ export default function Contact() {
                 Follow Our Journey
               </h3>
             </FadeUp>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               {socials.map((social, i) => (
                 <motion.a
                   key={social.name}
@@ -156,14 +156,14 @@ export default function Contact() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.1 + i * 0.1, duration: 0.5 }}
-                  className="group bg-white/10 hover:bg-white/15 rounded-2xl p-5 border border-white/10 hover:border-white/20 transition-all duration-300 hover:-translate-y-1"
+                  className="group bg-white/10 hover:bg-white/15 rounded-2xl p-3 sm:p-5 border border-white/10 hover:border-white/20 transition-all duration-300 hover:-translate-y-1"
                 >
-                  <div className={`w-10 h-10 rounded-xl ${social.color} flex items-center justify-center mb-4`}>
+                  <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${social.color} flex items-center justify-center mb-3`}>
                     <social.icon size={20} className="text-white" />
                   </div>
-                  <div className="font-display font-bold text-white text-base mb-0.5">{social.name}</div>
-                  <div className="font-body text-white/50 text-sm">{social.handle}</div>
-                  <div className="font-body text-white/40 text-xs mt-2">{social.followers}</div>
+                  <div className="font-display font-bold text-white text-sm sm:text-base mb-0.5">{social.name}</div>
+                  <div className="font-body text-white/50 text-xs sm:text-sm">{social.handle}</div>
+                  <div className="font-body text-white/40 text-xs mt-1 hidden sm:block">{social.followers}</div>
                 </motion.a>
               ))}
             </div>
