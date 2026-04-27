@@ -52,11 +52,12 @@ const DISTANCE_BRACKETS = [
 ];
 
 const PUPPY_MULTIPLIERS = [
-  { count: 1, label: "1 puppy",    mult: 1.00 },
-  { count: 2, label: "2 puppies",  mult: 1.08 },
-  { count: 3, label: "3 puppies",  mult: 1.15 },
-  { count: 4, label: "4 puppies",  mult: 1.22 },
-  { count: 5, label: "5+ puppies", mult: 1.28 },
+  { count: 5,  label: "5 puppies (exceptional)", mult: 0.93 },
+  { count: 6,  label: "6 puppies (standard)",    mult: 1.00 },
+  { count: 7,  label: "7 puppies",               mult: 1.07 },
+  { count: 8,  label: "8 puppies",               mult: 1.13 },
+  { count: 9,  label: "9 puppies",               mult: 1.19 },
+  { count: 10, label: "10+ puppies",             mult: 1.25 },
 ];
 
 const RELIABILITY_MULTIPLIERS = [
@@ -80,7 +81,7 @@ function getTierLabel(pay: number): { label: string; color: string; bg: string }
 export default function BreederCalculator() {
   const [breed, setBreed] = useState(BREEDS[0].name);
   const [distanceKm, setDistanceKm] = useState(15);
-  const [puppyCount, setPuppyCount] = useState(2);
+  const [puppyCount, setPuppyCount] = useState(6);
   const [reliability, setReliability] = useState("good");
 
   const result = useMemo(() => {
@@ -90,7 +91,7 @@ export default function BreederCalculator() {
     const distBracket = DISTANCE_BRACKETS.find((d) => distanceKm <= d.max) ?? DISTANCE_BRACKETS[DISTANCE_BRACKETS.length - 1];
     const distMult = distBracket.mult;
 
-    const puppyMult = (PUPPY_MULTIPLIERS.find((p) => p.count === Math.min(puppyCount, 5)) ?? PUPPY_MULTIPLIERS[1]).mult;
+    const puppyMult = (PUPPY_MULTIPLIERS.find((p) => p.count === Math.min(puppyCount, 10)) ?? PUPPY_MULTIPLIERS[1]).mult;
     const relMult = RELIABILITY_MULTIPLIERS.find((r) => r.key === reliability)?.mult ?? 1.0;
 
     const raw = BASE_PAY * demandMult * distMult * puppyMult * relMult;
@@ -206,18 +207,19 @@ export default function BreederCalculator() {
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">
               Number of Puppies Brought
             </label>
-            <div className="flex gap-2">
-              {[1, 2, 3, 4, 5].map((n) => (
+            <div className="grid grid-cols-3 gap-2">
+              {PUPPY_MULTIPLIERS.map((p) => (
                 <button
-                  key={n}
-                  onClick={() => setPuppyCount(n)}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-bold border transition-all ${
-                    puppyCount === n
+                  key={p.count}
+                  onClick={() => setPuppyCount(p.count)}
+                  className={`py-2.5 rounded-xl text-xs font-bold border transition-all ${
+                    puppyCount === p.count
                       ? "bg-[#2D9B8A] text-white border-[#2D9B8A] shadow-sm"
                       : "bg-slate-50 text-slate-600 border-slate-200 hover:border-[#2D9B8A]"
                   }`}
                 >
-                  {n === 5 ? "5+" : n}
+                  {p.count === 5 ? "5 ⚠" : p.count === 10 ? "10+" : p.count}
+                  {p.count === 6 && <span className="block text-[10px] opacity-70">standard</span>}
                 </button>
               ))}
             </div>
