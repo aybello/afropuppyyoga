@@ -93,29 +93,33 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.65 }}
-            className="flex flex-wrap gap-3"
+            className="flex flex-col sm:flex-row sm:flex-wrap gap-3"
           >
-            <a
-              href={BOOK_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm sm:text-base rounded-full hover:bg-[#D4708A] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
-              onClick={() => trackCTAClick("Book a Class — Hero")}
-            >
-              Book a Class
-            </a>
-            <a
-              href="#memberships"
-              onClick={(e) => { e.preventDefault(); trackCTAClick("Memberships — Hero"); document.querySelector("#memberships")?.scrollIntoView({ behavior: "smooth" }); }}
-              className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 font-body font-bold text-sm sm:text-base rounded-full transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
-              style={{ background: "linear-gradient(135deg, #F2A0B8, #F97316)", color: "#1A0A12" }}
-            >
-              Memberships
-            </a>
+            {/* Row 1 on mobile: Book a Class + Memberships side by side */}
+            <div className="flex gap-3">
+              <a
+                href={BOOK_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center px-5 sm:px-8 py-3 sm:py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm sm:text-base rounded-full hover:bg-[#D4708A] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
+                onClick={() => trackCTAClick("Book a Class — Hero")}
+              >
+                Book a Class
+              </a>
+              <a
+                href="#memberships"
+                onClick={(e) => { e.preventDefault(); trackCTAClick("Memberships — Hero"); document.querySelector("#memberships")?.scrollIntoView({ behavior: "smooth" }); }}
+                className="inline-flex items-center justify-center px-5 sm:px-8 py-3 sm:py-4 font-body font-bold text-sm sm:text-base rounded-full transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
+                style={{ background: "linear-gradient(135deg, #F2A0B8, #F97316)", color: "#1A0A12" }}
+              >
+                Memberships
+              </a>
+            </div>
+            {/* Row 2 on mobile: Private Events */}
             <a
               href="#private-events"
               onClick={(e) => { e.preventDefault(); trackCTAClick("Private Events — Hero"); document.querySelector("#private-events")?.scrollIntoView({ behavior: "smooth" }); }}
-              className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-white/15 backdrop-blur-sm text-white font-body font-semibold text-sm sm:text-base rounded-full border border-white/30 hover:bg-white/25 transition-all duration-200"
+              className="inline-flex items-center justify-center w-fit px-5 sm:px-8 py-3 sm:py-4 bg-white/15 backdrop-blur-sm text-white font-body font-semibold text-sm sm:text-base rounded-full border border-white/30 hover:bg-white/25 transition-all duration-200"
             >
               Private Events
             </a>
