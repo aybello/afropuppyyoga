@@ -52,12 +52,12 @@ const DISTANCE_BRACKETS = [
 ];
 
 const PUPPY_MULTIPLIERS = [
-  { count: 5,  label: "5 — below minimum", mult: 0.88 },
-  { count: 6,  label: "6 — low",           mult: 0.93 },
-  { count: 7,  label: "7 — below ideal",   mult: 0.97 },
+  { count: 5,  label: "5 — below minimum", mult: 0.90 },
+  { count: 6,  label: "6 — good",         mult: 0.97 },
+  { count: 7,  label: "7 — good",          mult: 0.98 },
   { count: 8,  label: "8 — ideal",         mult: 1.00 },
-  { count: 9,  label: "9 — great",         mult: 1.05 },
-  { count: 10, label: "10+ — excellent",   mult: 1.08 },
+  { count: 9,  label: "9 — great",         mult: 1.04 },
+  { count: 10, label: "10+ — excellent",   mult: 1.07 },
 ];
 
 const RELIABILITY_MULTIPLIERS = [
