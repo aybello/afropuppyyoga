@@ -83,15 +83,26 @@ export default function Navbar() {
             <ul className="hidden lg:flex items-center gap-1">
               {navLinks.map((link) => (
                 <li key={link.href}>
-                  <a
-                    href={link.href}
-                    onClick={(e) => { e.preventDefault(); handleNavClick(link.href); }}
-                    className={`px-3 py-2 text-sm font-body font-medium rounded-md transition-all duration-200 hover:bg-[#8B2252]/10 hover:text-[#8B2252] ${
-                      scrolled ? "text-[#1A0A12]" : "text-white/90"
-                    }`}
-                  >
-                    {link.label}
-                  </a>
+                  {link.label === "Memberships" ? (
+                    <a
+                      href={link.href}
+                      onClick={(e) => { e.preventDefault(); handleNavClick(link.href); }}
+                      className="px-3 py-1.5 text-sm font-body font-bold rounded-full transition-all duration-200 text-white"
+                      style={{ background: "linear-gradient(135deg, #e91e8c, #c2410c)", boxShadow: "0 2px 8px rgba(233,30,140,0.35)" }}
+                    >
+                      {link.label}
+                    </a>
+                  ) : (
+                    <a
+                      href={link.href}
+                      onClick={(e) => { e.preventDefault(); handleNavClick(link.href); }}
+                      className={`px-3 py-2 text-sm font-body font-medium rounded-md transition-all duration-200 hover:bg-[#8B2252]/10 hover:text-[#8B2252] ${
+                        scrolled ? "text-[#1A0A12]" : "text-white/90"
+                      }`}
+                    >
+                      {link.label}
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>
@@ -145,13 +156,24 @@ export default function Navbar() {
           <ul className="p-4 space-y-1">
             {navLinks.map((link) => (
               <li key={link.href}>
-                <a
-                  href={link.href}
-                  onClick={(e) => { e.preventDefault(); handleNavClick(link.href); }}
-                  className="block px-4 py-3 text-[#1A0A12] font-body font-medium rounded-lg hover:bg-[#8B2252]/10 hover:text-[#8B2252] transition-colors"
-                >
-                  {link.label}
-                </a>
+                {link.label === "Memberships" ? (
+                  <a
+                    href={link.href}
+                    onClick={(e) => { e.preventDefault(); handleNavClick(link.href); setMenuOpen(false); }}
+                    className="block px-4 py-3 font-body font-bold rounded-lg text-white transition-colors"
+                    style={{ background: "linear-gradient(135deg, #e91e8c, #c2410c)" }}
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <a
+                    href={link.href}
+                    onClick={(e) => { e.preventDefault(); handleNavClick(link.href); }}
+                    className="block px-4 py-3 text-[#1A0A12] font-body font-medium rounded-lg hover:bg-[#8B2252]/10 hover:text-[#8B2252] transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                )}
               </li>
             ))}
             <li className="pt-4">
