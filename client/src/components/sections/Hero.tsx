@@ -93,13 +93,13 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.65 }}
-            className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 max-w-xs sm:max-w-none"
+            className="flex flex-row gap-2"
           >
             <a
               href={BOOK_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="col-span-1 inline-flex items-center justify-center px-4 sm:px-8 py-3 sm:py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm sm:text-base rounded-full hover:bg-[#D4708A] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
+              className="inline-flex items-center justify-center px-3 py-2.5 sm:px-8 sm:py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-xs sm:text-base rounded-full hover:bg-[#D4708A] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1 whitespace-nowrap"
               onClick={() => trackCTAClick("Book a Class — Hero")}
             >
               Book a Class
@@ -107,7 +107,7 @@ export default function Hero() {
             <a
               href="#memberships"
               onClick={(e) => { e.preventDefault(); trackCTAClick("Memberships — Hero"); document.querySelector("#memberships")?.scrollIntoView({ behavior: "smooth" }); }}
-              className="col-span-1 inline-flex items-center justify-center px-4 sm:px-8 py-3 sm:py-4 font-body font-bold text-sm sm:text-base rounded-full transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
+              className="inline-flex items-center justify-center px-3 py-2.5 sm:px-8 sm:py-4 font-body font-bold text-xs sm:text-base rounded-full transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1 whitespace-nowrap"
               style={{ background: "linear-gradient(135deg, #F2A0B8, #F97316)", color: "#1A0A12" }}
             >
               Memberships
@@ -115,7 +115,7 @@ export default function Hero() {
             <a
               href="#private-events"
               onClick={(e) => { e.preventDefault(); trackCTAClick("Private Events — Hero"); document.querySelector("#private-events")?.scrollIntoView({ behavior: "smooth" }); }}
-              className="col-span-2 sm:col-span-1 inline-flex items-center justify-center px-4 sm:px-8 py-3 sm:py-4 bg-white/15 backdrop-blur-sm text-white font-body font-semibold text-sm sm:text-base rounded-full border border-white/30 hover:bg-white/25 transition-all duration-200"
+              className="inline-flex items-center justify-center px-3 py-2.5 sm:px-8 sm:py-4 bg-white/15 backdrop-blur-sm text-white font-body font-semibold text-xs sm:text-base rounded-full border border-white/30 hover:bg-white/25 transition-all duration-200 whitespace-nowrap"
             >
               Private Events
             </a>
