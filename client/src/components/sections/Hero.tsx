@@ -93,7 +93,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.65 }}
-            className="flex flex-wrap gap-4"
+            className="flex flex-wrap gap-3"
           >
             <a
               href={BOOK_URL}
@@ -103,6 +103,14 @@ export default function Hero() {
               onClick={() => trackCTAClick("Book a Class — Hero")}
             >
               Book a Class
+            </a>
+            <a
+              href="#memberships"
+              onClick={(e) => { e.preventDefault(); trackCTAClick("Memberships — Hero"); document.querySelector("#memberships")?.scrollIntoView({ behavior: "smooth" }); }}
+              className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 font-body font-bold text-sm sm:text-base rounded-full transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
+              style={{ background: "linear-gradient(135deg, #F2A0B8, #F97316)", color: "#1A0A12" }}
+            >
+              Memberships
             </a>
             <a
               href="#private-events"
