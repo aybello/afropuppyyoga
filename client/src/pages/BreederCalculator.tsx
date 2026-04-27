@@ -52,12 +52,12 @@ const DISTANCE_BRACKETS = [
 ];
 
 const PUPPY_MULTIPLIERS = [
-  { count: 5,  label: "5 puppies (exceptional)", mult: 0.93 },
-  { count: 6,  label: "6 puppies (standard)",    mult: 1.00 },
-  { count: 7,  label: "7 puppies",               mult: 1.07 },
-  { count: 8,  label: "8 puppies",               mult: 1.13 },
-  { count: 9,  label: "9 puppies",               mult: 1.19 },
-  { count: 10, label: "10+ puppies",             mult: 1.25 },
+  { count: 5,  label: "5 — below minimum", mult: 0.88 },
+  { count: 6,  label: "6 — low",           mult: 0.93 },
+  { count: 7,  label: "7 — below ideal",   mult: 0.97 },
+  { count: 8,  label: "8 — ideal",         mult: 1.00 },
+  { count: 9,  label: "9 — great",         mult: 1.05 },
+  { count: 10, label: "10+ — excellent",   mult: 1.08 },
 ];
 
 const RELIABILITY_MULTIPLIERS = [
@@ -81,7 +81,7 @@ function getTierLabel(pay: number): { label: string; color: string; bg: string }
 export default function BreederCalculator() {
   const [breed, setBreed] = useState(BREEDS[0].name);
   const [distanceKm, setDistanceKm] = useState(15);
-  const [puppyCount, setPuppyCount] = useState(6);
+  const [puppyCount, setPuppyCount] = useState(8);
   const [reliability, setReliability] = useState("good");
 
   const result = useMemo(() => {
@@ -218,8 +218,8 @@ export default function BreederCalculator() {
                       : "bg-slate-50 text-slate-600 border-slate-200 hover:border-[#2D9B8A]"
                   }`}
                 >
-                  {p.count === 5 ? "5 ⚠" : p.count === 10 ? "10+" : p.count}
-                  {p.count === 6 && <span className="block text-[10px] opacity-70">standard</span>}
+                  <span className="block">{p.count === 10 ? "10+" : p.count}</span>
+                  <span className="block text-[9px] opacity-70 leading-tight">{p.label.split(" — ")[1]}</span>
                 </button>
               ))}
             </div>
