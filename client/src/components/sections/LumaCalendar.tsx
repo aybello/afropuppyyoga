@@ -25,7 +25,7 @@ export default function LumaCalendar() {
   }, []);
 
   return (
-    <section id="classes" className="py-20 md:py-28" style={{ background: "oklch(0.98 0.01 350)" }}>
+    <section id="classes" className="py-10 md:py-28" style={{ background: "oklch(0.98 0.01 350)" }}>
       <div className="container">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">

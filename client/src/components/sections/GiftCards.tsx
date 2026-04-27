@@ -25,7 +25,7 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export default function GiftCards() {
   return (
-    <section className="py-20 bg-[#F2A0B8]">
+    <section className="py-10 md:py-20 bg-[#F2A0B8]">
       <div className="container">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
           {/* Left */}

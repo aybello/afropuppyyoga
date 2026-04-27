@@ -52,7 +52,7 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export default function PrivateEvents() {
   return (
-    <section id="private-events" className="py-24 md:py-32 bg-[#1A0A12] relative overflow-hidden">
+    <section id="private-events" className="py-10 md:py-32 bg-[#1A0A12] relative overflow-hidden">
       {/* Background image with dark overlay */}
       <div className="absolute inset-0">
         <img

@@ -39,7 +39,7 @@ const passes = [
 
 export default function Memberships() {
   return (
-    <section id="memberships" className="py-16 md:py-20 px-4" style={{ background: "linear-gradient(135deg, #fdf2f8 0%, #fff7ed 50%, #fdf2f8 100%)" }}>
+    <section id="memberships" className="py-10 md:py-20 px-4" style={{ background: "linear-gradient(135deg, #fdf2f8 0%, #fff7ed 50%, #fdf2f8 100%)" }}>
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="text-center mb-14">

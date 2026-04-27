@@ -145,7 +145,7 @@ export default function FAQ() {
   const rightFaqs = faqs.slice(half);
 
   return (
-    <section id="faq" className="py-24 md:py-32 bg-[#FFF5F8]">
+    <section id="faq" className="py-10 md:py-32 bg-[#FFF5F8]">
       <div className="container">
         {/* Header */}
         <FadeUp>

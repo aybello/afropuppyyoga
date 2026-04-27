@@ -45,7 +45,7 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export default function BookingBanner() {
   return (
-    <section className="py-20 md:py-24 bg-[#8B2252]">
+    <section className="py-10 md:py-24 bg-[#8B2252]">
       <div className="container">
         <FadeUp>
           <div className="text-center mb-12">

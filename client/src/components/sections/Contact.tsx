@@ -79,7 +79,7 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export default function Contact() {
   return (
-    <section id="contact" className="py-24 md:py-32 bg-[#8B2252]">
+    <section id="contact" className="py-10 md:py-32 bg-[#8B2252]">
       <div className="container">
         <div className="grid lg:grid-cols-2 gap-16 items-start">
           {/* Left: Contact info + CTA */}

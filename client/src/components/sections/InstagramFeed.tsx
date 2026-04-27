@@ -174,7 +174,7 @@ function VideoCard({ reel, index }: { reel: (typeof REELS)[0]; index: number }) 
 
 export default function InstagramFeed() {
   return (
-    <section id="instagram" className="py-24 md:py-32 bg-[#FFF0F4] overflow-hidden">
+    <section id="instagram" className="py-10 md:py-32 bg-[#FFF0F4] overflow-hidden">
       <div className="container">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">

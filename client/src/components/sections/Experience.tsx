@@ -52,7 +52,7 @@ function StatCounter({ value, suffix, label, delay }: { value: number; suffix: s
 
 export default function Experience() {
   return (
-    <section id="experience" className="py-24 md:py-32 bg-[#FFF5F8]">
+    <section id="experience" className="py-10 md:py-32 bg-[#FFF5F8]">
       <div className="container">
         {/* Section header */}
         <FadeUp>

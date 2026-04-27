@@ -87,7 +87,7 @@ const pillars = [
 
 export default function EthicalStandards() {
   return (
-    <section id="ethical-standards" className="py-24 md:py-32 bg-[#FDF6F0]">
+    <section id="ethical-standards" className="py-10 md:py-32 bg-[#FDF6F0]">
       <div className="max-w-6xl mx-auto px-6 md:px-10">
 
         {/* Header */}

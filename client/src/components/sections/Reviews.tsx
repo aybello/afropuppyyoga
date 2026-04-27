@@ -86,7 +86,7 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export default function Reviews() {
   return (
-    <section id="reviews" className="py-24 md:py-32 bg-[#FFF0F4]">
+    <section id="reviews" className="py-10 md:py-32 bg-[#FFF0F4]">
       <div className="container">
         {/* Header */}
         <FadeUp>
