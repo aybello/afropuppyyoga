@@ -169,7 +169,7 @@ export default function Reviews() {
           </div>
         </FadeUp>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
           {values.map((val, i) => (
             <motion.div
               key={val.title}
@@ -177,12 +177,12 @@ export default function Reviews() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.08, duration: 0.5 }}
-              className="flex gap-4 p-5 bg-white/60 rounded-xl border border-[#F0D0DC]"
+              className="flex gap-3 p-3 md:p-5 bg-white/60 rounded-xl border border-[#F0D0DC]"
             >
               <div className="w-1.5 rounded-full bg-gradient-to-b from-[#8B2252] to-[#C4547A] shrink-0" />
               <div>
-                <h4 className="font-display font-bold text-base text-[#1A0A12] mb-1.5">{val.title}</h4>
-                <p className="font-body text-sm text-[#1A0A12]/60 leading-relaxed">{val.desc}</p>
+                <h4 className="font-display font-bold text-sm md:text-base text-[#1A0A12] mb-1">{val.title}</h4>
+                <p className="font-body text-xs md:text-sm text-[#1A0A12]/60 leading-relaxed">{val.desc}</p>
               </div>
             </motion.div>
           ))}
