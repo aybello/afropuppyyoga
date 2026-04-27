@@ -162,7 +162,7 @@ export default function Gallery() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
             style={{ columnCount: undefined }}
-            className="[column-count:1] sm:[column-count:2] md:[column-count:3] lg:[column-count:4] [column-gap:12px]"
+            className="[column-count:2] md:[column-count:3] lg:[column-count:4] [column-gap:12px]"
           >
             {visible.map((photo, i) => (
               <motion.div
