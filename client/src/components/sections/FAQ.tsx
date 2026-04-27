@@ -168,7 +168,7 @@ export default function FAQ() {
         </FadeUp>
 
         {/* Two-column FAQ */}
-        <div className="grid grid-cols-2 gap-x-4 md:gap-x-12 lg:gap-x-20">
+        <div className="grid md:grid-cols-2 gap-x-12 lg:gap-x-20">
           <div>
             {leftFaqs.map((faq, i) => (
               <FAQItem key={faq.q} q={faq.q} a={faq.a} index={i} />

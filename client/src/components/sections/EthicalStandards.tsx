@@ -111,24 +111,24 @@ export default function EthicalStandards() {
         </div>
 
         {/* Pillars grid */}
-        <div className="grid grid-cols-2 gap-4 md:gap-8 lg:gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
           {pillars.map((pillar) => {
             const Icon = pillar.icon;
             return (
               <div
                 key={pillar.number}
-                className="bg-white rounded-2xl p-4 md:p-10 shadow-sm border border-[#F2D9E4]/60 hover:shadow-md transition-shadow duration-300"
+                className="bg-white rounded-2xl p-8 md:p-10 shadow-sm border border-[#F2D9E4]/60 hover:shadow-md transition-shadow duration-300"
               >
                 {/* Pillar header */}
                 <div className="flex items-start gap-4 mb-6">
-                  <div className="flex-shrink-0 w-9 h-9 md:w-12 md:h-12 rounded-xl bg-[#F9EDF3] flex items-center justify-center">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-[#F9EDF3] flex items-center justify-center">
                     <Icon size={22} className="text-[#C97B9A]" />
                   </div>
                   <div>
                     <span className="font-body text-xs tracking-[0.18em] uppercase text-[#C97B9A]/70 block mb-1">
                       {pillar.number}
                     </span>
-                    <h3 className="font-display text-sm md:text-2xl font-bold text-[#1A0A12] leading-snug">
+                    <h3 className="font-display text-xl md:text-2xl font-bold text-[#1A0A12] leading-snug">
                       {pillar.title}
                     </h3>
                   </div>
