@@ -90,10 +90,10 @@ export default function PrivateEvents() {
         </FadeUp>
 
         {/* Event type cards */}
-        <div className="grid md:grid-cols-2 gap-6 mb-12">
+        <div className="grid grid-cols-2 gap-3 md:gap-6 mb-12">
           {eventTypes.map((event, i) => (
             <FadeUp key={event.title} delay={i * 0.15}>
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:border-[#F2A0B8]/30 transition-all duration-300 hover:-translate-y-1 group">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 md:p-8 border border-white/10 hover:border-[#F2A0B8]/30 transition-all duration-300 hover:-translate-y-1 group">
                 <div className="flex items-start gap-4 mb-4">
                   <div className="w-12 h-12 rounded-xl bg-[#F2A0B8]/20 flex items-center justify-center shrink-0 group-hover:bg-[#F2A0B8]/30 transition-colors">
                     <event.icon size={22} className="text-[#F2A0B8]" />
@@ -102,7 +102,7 @@ export default function PrivateEvents() {
                     <span className="inline-block px-2.5 py-0.5 bg-[#F2A0B8]/20 text-[#F2A0B8] text-xs font-body font-semibold rounded-full mb-2">
                       {event.tag}
                     </span>
-                    <h3 className="font-display font-bold text-xl text-white">{event.title}</h3>
+                    <h3 className="font-display font-bold text-sm md:text-xl text-white">{event.title}</h3>
                   </div>
                 </div>
                 <p className="font-body text-white/65 leading-relaxed">{event.desc}</p>
@@ -112,9 +112,9 @@ export default function PrivateEvents() {
         </div>
 
         {/* What's included + Locations */}
-        <div className="grid md:grid-cols-2 gap-8 mb-12">
+        <div className="grid grid-cols-2 gap-3 md:gap-8 mb-12">
           <FadeUp delay={0.2}>
-            <div className="bg-white/5 rounded-2xl p-8 border border-white/10">
+            <div className="bg-white/5 rounded-2xl p-4 md:p-8 border border-white/10">
               <div className="flex items-center gap-2 mb-5">
                 <Users size={18} className="text-[#F2A0B8]" />
                 <h3 className="font-display font-bold text-lg text-white">What's Included</h3>
@@ -131,7 +131,7 @@ export default function PrivateEvents() {
           </FadeUp>
 
           <FadeUp delay={0.3}>
-            <div className="bg-white/5 rounded-2xl p-8 border border-white/10">
+            <div className="bg-white/5 rounded-2xl p-4 md:p-8 border border-white/10">
               <div className="flex items-center gap-2 mb-5">
                 <MapPin size={18} className="text-[#F2A0B8]" />
                 <h3 className="font-display font-bold text-lg text-white">Available Across GTA</h3>
