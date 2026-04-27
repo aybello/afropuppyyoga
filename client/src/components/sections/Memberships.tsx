@@ -12,9 +12,9 @@ const passes = [
     borderColor: "#f9a8d4",
     lumaLink: "https://lu.ma/afropuppyyoga",
     perks: [
-      { icon: "🎟", text: "1 class per month included", sub: "(worth $60)" },
-      { icon: "🐶", text: "20% off extra classes" },
-      { icon: "🎉", text: "Birthday month puppy cuddle" },
+      { icon: "🎟", text: "1 free class per month" },
+      { icon: "💸", text: "20% off any additional classes" },
+      { icon: "🎂", text: "1 free class during your birthday month" },
       { icon: "📨", text: "Members-only updates & early news" },
     ],
   },
@@ -29,10 +29,10 @@ const passes = [
     borderColor: "#fed7aa",
     lumaLink: "https://lu.ma/afropuppyyoga",
     perks: [
-      { icon: "🎟", text: "2 classes per month included", sub: "(worth $110)" },
-      { icon: "🐶", text: "20% off additional classes" },
-      { icon: "🎥", text: "Early booking access", sub: "secure spots before public release" },
-      { icon: "✨", text: "Exclusive themed puppy events" },
+      { icon: "🎟", text: "2 free classes per month" },
+      { icon: "💸", text: "20% off any additional classes" },
+      { icon: "🎂", text: "1 free class during your birthday month" },
+      { icon: "📨", text: "Members-only updates & early news" },
     ],
   },
 ];
@@ -118,11 +118,6 @@ export default function Memberships() {
                       <span className="font-semibold text-sm" style={{ color: "#1a0a0f" }}>
                         {perk.text}
                       </span>
-                      {perk.sub && (
-                        <span className="text-xs ml-1" style={{ color: "#9d6b7a" }}>
-                          {perk.sub}
-                        </span>
-                      )}
                     </span>
                   </li>
                 ))}
@@ -143,7 +138,7 @@ export default function Memberships() {
 
         {/* Bottom note */}
         <p className="text-center text-sm mt-8" style={{ color: "#9d6b7a" }}>
-          Cancel anytime. No contracts. Memberships are managed through Luma.
+          3-month minimum commitment. Cancel anytime after that. Memberships are managed through Luma.
         </p>
       </div>
     </section>
