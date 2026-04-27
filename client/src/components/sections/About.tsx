@@ -87,7 +87,7 @@ export default function About() {
 
             {/* Benefits grid */}
             <FadeUp delay={0.35}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+              <div className="grid grid-cols-2 gap-3 pt-4">
                 {benefits.map((b, i) => (
                   <motion.div
                     key={b.title}
@@ -95,7 +95,7 @@ export default function About() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.35 + i * 0.1, duration: 0.5 }}
-                    className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-[#F0D0DC] hover:border-[#C4547A]/30 transition-colors"
+                    className="bg-white/60 backdrop-blur-sm rounded-xl p-3 md:p-4 border border-[#F0D0DC] hover:border-[#C4547A]/30 transition-colors"
                   >
                     <div className="w-9 h-9 rounded-lg bg-[#C4547A]/10 flex items-center justify-center mb-3">
                       <b.icon size={18} className="text-[#C4547A]" />
