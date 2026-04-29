@@ -71,6 +71,12 @@ export default function ChatbotWidget() {
     }
   };
 
+  const handleClose = () => {
+    setIsOpen(false);
+    setMessages([]);
+    setInput("");
+  };
+
   return (
     <>
       {/* Chat Window */}
@@ -83,22 +89,22 @@ export default function ChatbotWidget() {
             width: "min(380px, calc(100vw - 40px))",
             height: "min(520px, calc(100vh - 120px))",
             borderRadius: "16px",
-            background: "#FEFAF4",
-            border: "1px solid #E8D5B0",
+            background: "#FFF5F8",
+            border: "1px solid #F0D0DC",
           }}
         >
           {/* Header */}
           <div
             className="flex items-center justify-between px-4 py-3 flex-shrink-0"
             style={{
-              background: "linear-gradient(135deg, #2D1B0E 0%, #4A2C1A 100%)",
+              background: "linear-gradient(135deg, #8B2252 0%, #c2410c 100%)",
               borderRadius: "16px 16px 0 0",
             }}
           >
             <div className="flex items-center gap-2">
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center text-base"
-                style={{ background: "#C8873A" }}
+                style={{ background: "#F2A0B8" }}
               >
                 🐶
               </div>
@@ -106,13 +112,13 @@ export default function ChatbotWidget() {
                 <p className="text-white font-semibold text-sm leading-tight">
                   APY Assistant
                 </p>
-                <p className="text-xs" style={{ color: "#C8873A" }}>
+                <p className="text-xs" style={{ color: "#F2A0B8" }}>
                   Ask me anything!
                 </p>
               </div>
             </div>
             <button
-              onClick={() => { setIsOpen(false); setMessages([]); setInput(""); }}
+              onClick={handleClose}
               className="text-white/70 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
             >
               <X size={18} />
@@ -127,11 +133,11 @@ export default function ChatbotWidget() {
                   <p className="text-3xl mb-2">🐶🧘</p>
                   <p
                     className="font-semibold text-sm"
-                    style={{ color: "#2D1B0E" }}
+                    style={{ color: "#1A0A12" }}
                   >
                     Hey there! I'm the APY Assistant.
                   </p>
-                  <p className="text-xs mt-1" style={{ color: "#7A5C3A" }}>
+                  <p className="text-xs mt-1" style={{ color: "#8B2252" }}>
                     Ask me about classes, pricing, booking, and more!
                   </p>
                 </div>
@@ -142,9 +148,9 @@ export default function ChatbotWidget() {
                       onClick={() => sendMessage(prompt)}
                       className="text-left text-xs px-3 py-2 rounded-lg border transition-colors hover:opacity-80"
                       style={{
-                        borderColor: "#C8873A",
-                        color: "#4A2C1A",
-                        background: "#FFF8EE",
+                        borderColor: "#F2A0B8",
+                        color: "#8B2252",
+                        background: "#FFF0F5",
                       }}
                     >
                       {prompt}
@@ -162,7 +168,7 @@ export default function ChatbotWidget() {
                     {msg.role === "assistant" && (
                       <div
                         className="w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0 mr-2 mt-1"
-                        style={{ background: "#C8873A" }}
+                        style={{ background: "#F2A0B8" }}
                       >
                         🐶
                       </div>
@@ -172,14 +178,14 @@ export default function ChatbotWidget() {
                       style={
                         msg.role === "user"
                           ? {
-                              background: "#2D1B0E",
-                              color: "#FEFAF4",
+                              background: "linear-gradient(135deg, #e91e8c, #c2410c)",
+                              color: "#ffffff",
                               borderBottomRightRadius: "4px",
                             }
                           : {
-                              background: "#FFF8EE",
-                              color: "#2D1B0E",
-                              border: "1px solid #E8D5B0",
+                              background: "#ffffff",
+                              color: "#1A0A12",
+                              border: "1px solid #F0D0DC",
                               borderBottomLeftRadius: "4px",
                             }
                       }
@@ -198,39 +204,30 @@ export default function ChatbotWidget() {
                   <div className="flex justify-start">
                     <div
                       className="w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0 mr-2 mt-1"
-                      style={{ background: "#C8873A" }}
+                      style={{ background: "#F2A0B8" }}
                     >
                       🐶
                     </div>
                     <div
                       className="px-3 py-2 rounded-2xl"
                       style={{
-                        background: "#FFF8EE",
-                        border: "1px solid #E8D5B0",
+                        background: "#ffffff",
+                        border: "1px solid #F0D0DC",
                         borderBottomLeftRadius: "4px",
                       }}
                     >
                       <div className="flex gap-1 items-center py-1">
                         <span
                           className="w-2 h-2 rounded-full animate-bounce"
-                          style={{
-                            background: "#C8873A",
-                            animationDelay: "0ms",
-                          }}
+                          style={{ background: "#e91e8c", animationDelay: "0ms" }}
                         />
                         <span
                           className="w-2 h-2 rounded-full animate-bounce"
-                          style={{
-                            background: "#C8873A",
-                            animationDelay: "150ms",
-                          }}
+                          style={{ background: "#e91e8c", animationDelay: "150ms" }}
                         />
                         <span
                           className="w-2 h-2 rounded-full animate-bounce"
-                          style={{
-                            background: "#C8873A",
-                            animationDelay: "300ms",
-                          }}
+                          style={{ background: "#e91e8c", animationDelay: "300ms" }}
                         />
                       </div>
                     </div>
@@ -245,8 +242,8 @@ export default function ChatbotWidget() {
           <div
             className="flex gap-2 p-3 flex-shrink-0"
             style={{
-              borderTop: "1px solid #E8D5B0",
-              background: "#FEFAF4",
+              borderTop: "1px solid #F0D0DC",
+              background: "#FFF5F8",
               borderRadius: "0 0 16px 16px",
             }}
           >
@@ -259,9 +256,9 @@ export default function ChatbotWidget() {
               rows={1}
               className="flex-1 resize-none text-sm px-3 py-2 rounded-xl outline-none"
               style={{
-                background: "#FFF8EE",
-                border: "1px solid #E8D5B0",
-                color: "#2D1B0E",
+                background: "#ffffff",
+                border: "1px solid #F0D0DC",
+                color: "#1A0A12",
                 maxHeight: "80px",
                 fontFamily: "inherit",
               }}
@@ -271,7 +268,7 @@ export default function ChatbotWidget() {
               onClick={() => sendMessage(input)}
               disabled={!input.trim() || chatMutation.isPending}
               className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-opacity disabled:opacity-40"
-              style={{ background: "#C8873A" }}
+              style={{ background: "linear-gradient(135deg, #e91e8c, #c2410c)" }}
             >
               {chatMutation.isPending ? (
                 <Loader2 size={16} className="text-white animate-spin" />
@@ -287,7 +284,10 @@ export default function ChatbotWidget() {
       <button
         onClick={() => {
           setIsOpen((prev) => {
-            if (prev) { setMessages([]); setInput(""); }
+            if (prev) {
+              setMessages([]);
+              setInput("");
+            }
             return !prev;
           });
         }}
@@ -299,8 +299,8 @@ export default function ChatbotWidget() {
           height: "56px",
           borderRadius: "50%",
           background: isOpen
-            ? "#2D1B0E"
-            : "linear-gradient(135deg, #C8873A 0%, #A06828 100%)",
+            ? "#8B2252"
+            : "linear-gradient(135deg, #e91e8c 0%, #c2410c 100%)",
           border: "none",
           cursor: "pointer",
         }}
