@@ -55,7 +55,7 @@ Wellness Pack — $60/month (Most Popular)
 - 1 free class during your birthday month
 - Members-only updates and early news
 
-Memberships provide guaranteed class credits, exclusive perks, and priority access every month. Sign up at lu.ma/afropuppyyoga.
+Both memberships require a 3-month minimum commitment. After that, you can cancel anytime. Memberships provide guaranteed class credits, exclusive perks, and priority access every month. Sign up and manage memberships through Luma at lu.ma/afropuppyyoga.
 
 ---
 
