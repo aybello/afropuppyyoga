@@ -103,10 +103,14 @@ export default function ChatbotWidget() {
           >
             <div className="flex items-center gap-2">
               <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-base"
+                className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden"
                 style={{ background: "#F2A0B8" }}
               >
-                🐶
+                <img
+                  src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png"
+                  alt="APY Logo"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div>
                 <p className="text-white font-semibold text-sm leading-tight">
