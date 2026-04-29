@@ -202,7 +202,23 @@ export default function ChatbotWidget() {
                     >
                       {msg.role === "assistant" ? (
                         <div className="prose prose-sm max-w-none text-inherit">
-                          <Streamdown>{msg.content}</Streamdown>
+                          <Streamdown
+                            components={{
+                              a: ({ href, children, ...props }) => (
+                                <a
+                                  href={href}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{ color: "#e91e8c", textDecoration: "underline" }}
+                                  {...props}
+                                >
+                                  {children}
+                                </a>
+                              ),
+                            }}
+                          >
+                            {msg.content}
+                          </Streamdown>
                         </div>
                       ) : (
                         <p className="whitespace-pre-wrap">{msg.content}</p>
