@@ -57,11 +57,15 @@ Wellness Pack — $60/month (Most Popular)
 
 Both memberships require a 3-month minimum commitment. After that, you can cancel anytime. Memberships provide guaranteed class credits, exclusive perks, and priority access every month. Sign up and manage memberships through Luma at lu.ma/afropuppyyoga.
 
+Important: Membership class credits are per person — each credit is for one person attending one class. You cannot use two credits from one membership to bring two people to the same session at the same time. Each person in your group needs their own ticket or membership.
+
 ---
 
 ## How to Book
 
 All tickets and memberships are booked through Luma at lu.ma/afropuppyyoga. Tickets sell out fast — early booking is strongly recommended. Visit the APY website at afropuppyyoga.ca and click "Book a Class" to go directly to the Luma page.
+
+Each class typically has multiple time slots available (e.g., 11am, 1pm, 3pm). Make sure to select your preferred time slot carefully when booking, as the system will book you into whichever slot you select. If you accidentally book the wrong time slot, email afropuppyyogaofficial@gmail.com as soon as possible and the team will help you switch.
 
 ---
 
@@ -93,7 +97,7 @@ Wear comfortable workout or yoga attire. Avoid wearing anything too precious —
 
 ## Locations
 
-APY currently hosts classes in Hamilton and Kitchener, with Oakville coming soon. Specific venue details are provided upon booking confirmation.
+APY currently hosts classes in Hamilton and Kitchener, with Oakville coming soon. Specific venue details (exact address, parking info) are included in your booking confirmation email from Luma. Street parking is typically available near the venue.
 
 ---
 
@@ -101,13 +105,15 @@ APY currently hosts classes in Hamilton and Kitchener, with Oakville coming soon
 
 APY does not offer refunds for guest cancellations. Instead, APY provides a class credit that can be used toward any future session. To receive a rebooking code, email afropuppyyogaofficial@gmail.com with proof of your original ticket (such as a screenshot or confirmation email). APY will then issue a rebooking code (for example, RB100) for a future class.
 
-If APY cancels a class for any reason, guests will have the choice of a full refund or a class credit — whichever they prefer.
+If APY cancels a class for any reason (including weather or emergencies), guests will have the choice of a full refund or a class credit — whichever they prefer.
+
+Note: Tickets are non-transferable in terms of the name on the booking, but if you need to bring a different guest than originally planned, email afropuppyyogaofficial@gmail.com to let the team know.
 
 ---
 
 ## Class Photos
 
-APY takes photos and videos during each session. Photos are uploaded to a public Google Drive folder after the class — no login required. The Google Drive link is shared after each session. If you cannot find your photos, email afropuppyyogaofficial@gmail.com with your session date and location.
+APY takes photos and videos during each session. Photos are uploaded to a public Google Drive folder after the class — no login required. The Google Drive link is shared with attendees after each session via email or social media. If you attended a session and cannot find your photos (for example, if they haven't been uploaded yet or you missed the link), email afropuppyyogaofficial@gmail.com with your session date, location, and which time slot you attended (e.g., 11am or 1pm session).
 
 ---
 
