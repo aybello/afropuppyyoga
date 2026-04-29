@@ -29,7 +29,7 @@ Additional details:
 - Sessions are suitable for all yoga levels, including complete beginners
 - Yoga mats are available to rent for a small fee, or guests can bring their own
 - Photos and videos are taken during sessions and shared with attendees
-- Minimum age is 12 years old. Guests aged 12-17 must be accompanied by a parent or guardian throughout the session
+- All ages are welcome. Guests under the age of 12 must be accompanied by a parent or guardian throughout the session
 
 ---
 
