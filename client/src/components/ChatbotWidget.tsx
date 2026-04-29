@@ -134,7 +134,11 @@ export default function ChatbotWidget() {
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full gap-4">
                 <div className="text-center">
-                  <p className="text-3xl mb-2">🐶🧘</p>
+                  <img
+                    src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png"
+                    alt="APY Logo"
+                    className="w-16 h-16 object-contain mx-auto mb-2"
+                  />
                   <p
                     className="font-semibold text-sm"
                     style={{ color: "#1A0A12" }}
