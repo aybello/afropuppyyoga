@@ -73,7 +73,9 @@ APY gift cards are available through Luma at luma.com/15iajebr. They make a perf
 
 ## Private Events
 
-APY offers private event bookings for birthdays, bachelorette/bachelor parties, corporate team building, and special celebrations. Fill out the private event booking form at luma.com/mb93ov9f with your event details — date, number of guests, location preference, and any special requests. The team will follow up within 24-48 hours with availability, pricing, and next steps.
+APY private events are essentially a public class made exclusive — the same incredible puppy yoga experience (guided yoga + puppy playtime + Afrobeats music + refreshments), but reserved entirely for your group. Perfect for birthdays, bachelorette/bachelor parties, corporate team building, and special celebrations.
+
+Private events start at $1,200. To inquire, fill out the private event booking form at luma.com/mb93ov9f with your event details — date, number of guests, location preference, and any special requests. The team will follow up within 24-48 hours with availability and next steps.
 
 ---
 
