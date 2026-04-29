@@ -21,6 +21,7 @@ import EthicalStandards from "@/components/sections/EthicalStandards";
 import Contact from "@/components/sections/Contact";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
+import ChatbotWidget from "@/components/ChatbotWidget";
 import { useScrollDepthTracking, useTimeOnPageTracking } from "@/hooks/useAnalytics";
 import { useEffect } from "react";
 
@@ -51,6 +52,7 @@ export default function Home() {
       </main>
       <Footer />
       <ScrollToTop />
+      <ChatbotWidget />
     </div>
   );
 }
