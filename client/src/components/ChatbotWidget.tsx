@@ -124,7 +124,7 @@ export default function ChatbotWidget() {
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full gap-4">
                 <div className="text-center">
-                  <p className="text-3xl mb-2">🐶🧘🏾</p>
+                  <p className="text-3xl mb-2">🐶🧘</p>
                   <p
                     className="font-semibold text-sm"
                     style={{ color: "#2D1B0E" }}
