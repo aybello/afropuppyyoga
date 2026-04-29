@@ -113,7 +113,11 @@ Note: Tickets are non-transferable in terms of the name on the booking, but if y
 
 ## Class Photos
 
-APY takes photos and videos during each session. Photos are uploaded to a public Google Drive folder after the class — no login required. The Google Drive link is shared with attendees after each session via email or social media. If you attended a session and cannot find your photos (for example, if they haven't been uploaded yet or you missed the link), email afropuppyyogaofficial@gmail.com with your session date, location, and which time slot you attended (e.g., 11am or 1pm session).
+APY takes photos and videos during each session. Photos are uploaded to a public Google Drive folder after the class — no login required, no account needed.
+
+Direct link to the APY photo drive: https://drive.google.com/drive/u/0/folders/1Q8WpKFj4cUsXlnn0jeKdBeWz5hSunp2t
+
+If you cannot find your specific session photos (for example, if they haven't been uploaded yet or you attended a specific time slot), email afropuppyyogaofficial@gmail.com with your session date, location, and which time slot you attended (e.g., 11am or 1pm session).
 
 ---
 
