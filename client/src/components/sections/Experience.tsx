@@ -16,7 +16,7 @@ const features = [
   { label: "Complimentary refreshments included" },
   { label: "Afro-themed music & vibrant atmosphere" },
   { label: "Photos & videos to capture every moment" },
-  { label: "All ages 12+ welcome" },
+  { label: "All ages 12+ welcome (under 12 with parent/guardian)" },
 ];
 
 function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
