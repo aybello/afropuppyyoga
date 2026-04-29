@@ -112,7 +112,7 @@ export default function ChatbotWidget() {
               </div>
             </div>
             <button
-              onClick={() => setIsOpen(false)}
+              onClick={() => { setIsOpen(false); setMessages([]); setInput(""); }}
               className="text-white/70 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
             >
               <X size={18} />
@@ -285,7 +285,12 @@ export default function ChatbotWidget() {
 
       {/* Floating Button */}
       <button
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={() => {
+          setIsOpen((prev) => {
+            if (prev) { setMessages([]); setInput(""); }
+            return !prev;
+          });
+        }}
         className="fixed z-50 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
         style={{
           bottom: "20px",
