@@ -9,11 +9,9 @@ type Message = {
 };
 
 const SUGGESTED_PROMPTS = [
-  "How do I book a class?",
   "How much are tickets?",
   "What breeds will be at the next class?",
   "What's your refund policy?",
-  "Where are you located?",
 ];
 
 export default function ChatbotWidget() {
