@@ -174,9 +174,11 @@ export default function ChatbotWidget() {
                       </div>
                     )}
                     <div
-                      className="max-w-[80%] px-3 py-2 rounded-2xl text-sm"
-                      style={
-                        msg.role === "user"
+                      className="max-w-[80%] px-3 py-2 rounded-2xl text-sm min-w-0"
+                      style={{
+                        wordBreak: "break-word",
+                        overflowWrap: "anywhere",
+                        ...(msg.role === "user"
                           ? {
                               background: "linear-gradient(135deg, #e91e8c, #c2410c)",
                               color: "#ffffff",
@@ -187,8 +189,8 @@ export default function ChatbotWidget() {
                               color: "#1A0A12",
                               border: "1px solid #F0D0DC",
                               borderBottomLeftRadius: "4px",
-                            }
-                      }
+                            }),
+                      }}
                     >
                       {msg.role === "assistant" ? (
                         <div className="prose prose-sm max-w-none text-inherit">
