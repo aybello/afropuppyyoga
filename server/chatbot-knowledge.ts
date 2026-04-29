@@ -11,8 +11,8 @@ Never mention Eventbrite. APY books exclusively through Luma.
 AfroPuppyYoga is a puppy yoga studio experience in Ontario, Canada. It combines yoga with adorable puppies, Afrobeats and Caribbean music, and a vibrant community atmosphere. APY was founded by Ay Bello with the vision of creating a better, more inclusive puppy yoga experience — one that celebrates people of color and diverse communities.
 
 APY currently operates in two locations:
-- Kitchener-Waterloo (KW): Classes run on Saturdays
-- Hamilton: Classes run on Sundays
+- Kitchener-Waterloo (KW): Classes run on Saturdays at 10:00 AM
+- Hamilton: Classes run on Saturdays at 11:00 AM
 - Oakville: Coming soon
 
 ---
