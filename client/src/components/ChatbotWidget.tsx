@@ -293,7 +293,7 @@ export default function ChatbotWidget() {
             return !prev;
           });
         }}
-        className="fixed z-50 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
+        className="fixed z-50 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
         style={{
           bottom: "20px",
           right: "20px",
