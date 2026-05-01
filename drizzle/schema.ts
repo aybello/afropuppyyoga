@@ -26,3 +26,32 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
 // TODO: Add your tables here
+
+export const invoices = mysqlTable("invoices", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Staff member's name extracted from the invoice */
+  staffName: varchar("staffName", { length: 255 }),
+  /** Position/role extracted from the invoice */
+  position: varchar("position", { length: 255 }),
+  /** Pay amount extracted from the invoice (stored as string to preserve currency formatting) */
+  payAmount: varchar("payAmount", { length: 100 }),
+  /** Due date extracted from the invoice */
+  dueDate: timestamp("dueDate"),
+  /** S3 URL of the uploaded PDF */
+  fileUrl: text("fileUrl").notNull(),
+  /** S3 key of the uploaded PDF */
+  fileKey: varchar("fileKey", { length: 500 }).notNull(),
+  /** Original filename */
+  originalFilename: varchar("originalFilename", { length: 255 }),
+  /** Payment status */
+  status: mysqlEnum("status", ["pending", "paid", "overdue"]).default("pending").notNull(),
+  /** Whether AI extraction has been completed */
+  extractionStatus: mysqlEnum("extractionStatus", ["pending", "completed", "failed"]).default("pending").notNull(),
+  /** Raw extracted text for debugging */
+  extractedData: text("extractedData"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Invoice = typeof invoices.$inferSelect;
+export type InsertInvoice = typeof invoices.$inferInsert;

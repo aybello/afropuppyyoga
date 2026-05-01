@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertInvoice, InsertUser, invoices, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -90,3 +90,29 @@ export async function getUserByOpenId(openId: string) {
 }
 
 // TODO: add feature queries here as your schema grows.
+
+export async function createInvoice(data: InsertInvoice) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(invoices).values(data);
+  return result;
+}
+
+export async function getAllInvoices() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(invoices).orderBy(desc(invoices.createdAt));
+}
+
+export async function getInvoiceById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.select().from(invoices).where(eq(invoices.id, id)).limit(1);
+  return result[0] ?? null;
+}
+
+export async function updateInvoice(id: number, data: Partial<InsertInvoice>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(invoices).set(data).where(eq(invoices.id, id));
+}
