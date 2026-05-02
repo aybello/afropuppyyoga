@@ -30,7 +30,7 @@ const faqs: { q: string; a: ReactNode }[] = [
   },
   {
     q: "What is your cancellation and refund policy?",
-    a: "We operate on a credit-first system. Cancel more than 24 hours before class and you'll receive a full class credit with no expiry. Cancellations within 24 hours and no-shows are not eligible for credits or refunds. If AfroPuppyYoga cancels a class, you'll automatically receive a class credit for any future session. Refunds are not offered. Tickets are transferable to another person if you notify us before class starts.",
+    a: "We operate on a credit-first system. Cancel more than 24 hours before class and you'll receive a full class credit with no expiry. Cancellations within 24 hours and no-shows are not eligible for credits or refunds. If AfroPuppyYoga cancels a class, you'll automatically receive a class credit, or you may request a refund within 48 hours of the cancellation notice. Tickets are transferable to another person if you notify us before class starts.",
   },
   {
     q: "Will photos and videos be taken at the event?",
