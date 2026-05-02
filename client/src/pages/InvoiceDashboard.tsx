@@ -15,6 +15,8 @@ import { FileText, Loader2, AlertTriangle, Clock, CheckCircle2, RefreshCw, Copy 
 import { getLoginUrl } from "@/const";
 import AdminNav from "@/components/AdminNav";
 
+const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
+
 function DaysLeftBadge({ daysLeft, urgency, status }: {
   daysLeft: number | null;
   urgency: string;
