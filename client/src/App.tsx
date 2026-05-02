@@ -1,30 +1,44 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/NotFound";
+import { lazy, Suspense } from "react";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
-import FillRatePredictor from "./pages/FillRatePredictor";
-import BreederCalculator from "./pages/BreederCalculator";
-import InvoiceSubmit from "./pages/InvoiceSubmit";
-import InvoiceDashboard from "@/pages/InvoiceDashboard";
-import ApplicationsDashboard from "@/pages/ApplicationsDashboard";
-import Careers from "./pages/Careers";
-function Router() {
-  // make sure to consider if you need authentication for certain routes
+import { Loader2 } from "lucide-react";
+
+// Lazy load all pages so each page only loads its own code on demand
+const Home = lazy(() => import("./pages/Home"));
+const FillRatePredictor = lazy(() => import("./pages/FillRatePredictor"));
+const BreederCalculator = lazy(() => import("./pages/BreederCalculator"));
+const InvoiceSubmit = lazy(() => import("./pages/InvoiceSubmit"));
+const InvoiceDashboard = lazy(() => import("./pages/InvoiceDashboard"));
+const ApplicationsDashboard = lazy(() => import("./pages/ApplicationsDashboard"));
+const Careers = lazy(() => import("./pages/Careers"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+function PageLoader() {
   return (
-    <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/predictor"} component={FillRatePredictor} />
-      <Route path={"/breeder-calculator"} component={BreederCalculator} />
-      <Route path={"/submit-invoice"} component={InvoiceSubmit} />
-      <Route path="/admin/invoices" component={InvoiceDashboard} />
+    <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-[#8B2252]" />
+    </div>
+  );
+}
+
+function Router() {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <Switch>
+        <Route path={"/"} component={Home} />
+        <Route path={"/predictor"} component={FillRatePredictor} />
+        <Route path={"/breeder-calculator"} component={BreederCalculator} />
+        <Route path={"/submit-invoice"} component={InvoiceSubmit} />
+        <Route path="/admin/invoices" component={InvoiceDashboard} />
         <Route path="/admin/applications" component={ApplicationsDashboard} />
-      <Route path={"/careers"} component={Careers} />
-      <Route path={"/404"} component={NotFound} />
-      <Route component={NotFound} />
-    </Switch>
+        <Route path={"/careers"} component={Careers} />
+        <Route path={"/404"} component={NotFound} />
+        <Route component={NotFound} />
+      </Switch>
+    </Suspense>
   );
 }
 
