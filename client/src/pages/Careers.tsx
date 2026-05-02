@@ -349,8 +349,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
 }
 
 // ── Job Card ──────────────────────────────────────────────────
-function JobCard({ job, onApply }: { job: (typeof JOB_LISTINGS)[0]; onApply: () => void }) {
-  const [expanded, setExpanded] = useState(false);
+function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTINGS)[0]; onApply: () => void; expanded: boolean; onToggle: () => void }) {
 
   return (
     <div className="bg-white border border-[#F0D0DC] rounded-2xl overflow-hidden hover:shadow-lg transition-shadow duration-300">
@@ -388,7 +387,7 @@ function JobCard({ job, onApply }: { job: (typeof JOB_LISTINGS)[0]; onApply: () 
         <p className="font-body text-sm text-[#5A3040] leading-relaxed mb-4">{job.description}</p>
 
         <button
-          onClick={() => setExpanded(!expanded)}
+          onClick={onToggle}
           className="flex items-center gap-1.5 font-body text-xs font-semibold text-[#C2185B] hover:text-[#8B2252] transition-colors"
         >
           {expanded ? "Show less" : "See full details"}
@@ -443,6 +442,16 @@ function JobCard({ job, onApply }: { job: (typeof JOB_LISTINGS)[0]; onApply: () 
 // ── Main Page ─────────────────────────────────────────────────
 export default function Careers() {
   const [selectedJob, setSelectedJob] = useState<(typeof JOB_LISTINGS)[0] | null>(null);
+  // Track expanded state per job ID so each card is fully independent
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const toggleExpanded = (id: string) => {
+    setExpandedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   return (
     <div className="min-h-screen bg-[#FEFAF4]">
@@ -508,6 +517,8 @@ export default function Careers() {
                 key={job.id}
                 job={job}
                 onApply={() => setSelectedJob(job)}
+                expanded={expandedIds.has(job.id)}
+                onToggle={() => toggleExpanded(job.id)}
               />
             ))}
           </div>
