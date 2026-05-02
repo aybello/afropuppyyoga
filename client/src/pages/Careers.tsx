@@ -17,6 +17,7 @@ const JOB_LISTINGS = [
     location: "Kitchener-Waterloo",
     locationCode: "KW",
     type: "Part-Time",
+    badge: "Paid Volunteer",
     emoji: "🐾",
     description:
       "You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class — feeding, cleaning, and making sure every pup is thriving.",
@@ -42,11 +43,12 @@ const JOB_LISTINGS = [
     ],
   },
   {
-    id: "puppy-monitor-hamilton",
+    id: "puppy-monitor-ham",
     title: "Puppy Monitor",
     location: "Hamilton",
-    locationCode: "Hamilton",
+    locationCode: "HAM",
     type: "Part-Time",
+    badge: "Paid Volunteer",
     emoji: "🐾",
     description:
       "You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class — feeding, cleaning, and making sure every pup is thriving.",
@@ -360,13 +362,18 @@ function JobCard({ job, onApply }: { job: (typeof JOB_LISTINGS)[0]; onApply: () 
             </div>
             <div>
               <h3 className="font-display font-bold text-lg text-[#1A0A12]">{job.title}</h3>
-              <div className="flex items-center gap-3 mt-1">
+              <div className="flex items-center gap-3 mt-1 flex-wrap">
                 <span className="flex items-center gap-1 font-body text-xs text-[#8B2252]">
                   <MapPin size={11} /> {job.location}
                 </span>
                 <span className="flex items-center gap-1 font-body text-xs text-[#5A3040]">
                   <Clock size={11} /> {job.type}
                 </span>
+                {(job as any).badge && (
+                  <span className="px-2 py-0.5 bg-[#C2185B]/10 text-[#C2185B] font-body text-[10px] font-semibold rounded-full border border-[#C2185B]/20">
+                    {(job as any).badge}
+                  </span>
+                )}
               </div>
             </div>
           </div>
