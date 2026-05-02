@@ -120,9 +120,17 @@ export default function Footer() {
           <p className="font-body text-xs text-white/30">
             © {new Date().getFullYear()} AfroPuppyYoga. All rights reserved.
           </p>
-          <p className="font-body text-xs text-white/20">
-            Made with ❤️ in Canada
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="font-body text-xs text-white/20">
+              Made with ❤️ in Canada
+            </p>
+            <a
+              href="/admin/invoices"
+              className="font-body text-xs text-white/20 hover:text-white/40 transition-colors"
+            >
+              Staff Portal
+            </a>
+          </div>
         </div>
       </div>
     </footer>

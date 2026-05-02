@@ -14,7 +14,7 @@ import {
 import { Users, Loader2, RefreshCw, Video, Mail, Phone, Star, Eye, XCircle, Inbox } from "lucide-react";
 import { getLoginUrl } from "@/const";
 import { Link } from "wouter";
-
+import AdminNav from "@/components/AdminNav";
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
 
 type AppStatus = "new" | "reviewed" | "shortlisted" | "rejected";
@@ -99,41 +99,7 @@ export default function ApplicationsDashboard() {
   return (
     <div className="min-h-screen bg-[#FEFAF4]">
       {/* Header */}
-      <header className="bg-[#FFF5F8] border-b border-[#F0D0DC] px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <a href="/" className="flex items-center gap-3 group">
-            <img
-              src={LOGO_URL}
-              alt="AfroPuppyYoga"
-              className="w-10 h-10 rounded-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-            <div className="flex flex-col leading-none">
-              <span className="font-display font-bold text-base text-[#1A0A12]">AfroPuppyYoga</span>
-              <span className="font-body text-[10px] text-[#8B2252] tracking-widest uppercase">Admin Portal</span>
-            </div>
-          </a>
-
-          <div className="flex items-center gap-3">
-            <Link href="/admin/invoices">
-              <a className="inline-flex items-center gap-2 px-4 py-2 font-body font-semibold text-sm rounded-full border border-[#F0D0DC] text-[#8B2252] bg-white hover:bg-[#FFF0F4] transition-colors">
-                Invoices
-              </a>
-            </Link>
-            <Link href="/careers">
-              <a className="inline-flex items-center gap-2 px-4 py-2 font-body font-semibold text-sm rounded-full border border-[#F0D0DC] text-[#8B2252] bg-white hover:bg-[#FFF0F4] transition-colors">
-                Careers Page
-              </a>
-            </Link>
-            <button
-              onClick={() => refetch()}
-              className="inline-flex items-center gap-2 px-4 py-2 font-body font-semibold text-sm rounded-full border border-[#F0D0DC] text-[#6B4C3B] bg-white hover:bg-[#FFF0F4] transition-colors"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Refresh
-            </button>
-          </div>
-        </div>
-      </header>
+      <AdminNav />
 
       <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
         {/* Page title */}
