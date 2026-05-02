@@ -77,37 +77,7 @@ const JOB_LISTINGS = [
     location: "Kitchener-Waterloo",
     locationCode: "KW",
     type: "Part-Time",
-    emoji: "🧘🏾‍♀️",
-    description:
-      "Lead our signature 40-minute guided yoga sessions set to Afro-beat rhythms with adorable puppies on the mat. You'll create a joyful, inclusive, and energizing experience for guests of all skill levels. This is not your typical yoga class — it's a celebration of wellness, culture, and community.",
-    responsibilities: [
-      "Lead 40-minute guided yoga sessions for groups of 10-30 guests",
-      "Create a welcoming, inclusive atmosphere for all skill levels",
-      "Coordinate with the puppy monitor team during class",
-      "Adapt sequences to accommodate puppies and spontaneous moments",
-      "Represent the AfroPuppyYoga brand with warmth and professionalism",
-    ],
-    requirements: [
-      "Certified yoga instructor (200hr minimum)",
-      "Experience teaching group classes",
-      "Comfortable and enthusiastic around dogs",
-      "Energetic, charismatic, and community-oriented",
-      "Alignment with APY's Afro-wellness brand values",
-    ],
-    perks: [
-      "Competitive per-class pay",
-      "Free access to APY classes",
-      "Flexible event-based scheduling",
-      "Opportunity to grow with a rapidly expanding brand",
-    ],
-  },
-  {
-    id: "yoga-instructor-bdr",
-    title: "Yoga Instructor",
-    location: "Brampton / Durham Region",
-    locationCode: "BDR",
-    type: "Part-Time",
-    emoji: "🧘🏾‍♀️",
+    emoji: "🧘",
     description:
       "Lead our signature 40-minute guided yoga sessions set to Afro-beat rhythms with adorable puppies on the mat. You'll create a joyful, inclusive, and energizing experience for guests of all skill levels. This is not your typical yoga class — it's a celebration of wellness, culture, and community.",
     responsibilities: [
