@@ -467,10 +467,9 @@ export default function Careers() {
       {/* Values strip */}
       <section className="bg-[#F9E4EE] py-8 border-y border-[#F0D0DC]">
         <div className="container">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
             {[
               { icon: "🐾", label: "Puppy-First Culture" },
-              { icon: "🌍", label: "Afro-Wellness Roots" },
               { icon: "💛", label: "Community Driven" },
               { icon: "✨", label: "Flexible Schedules" },
             ].map((v) => (
