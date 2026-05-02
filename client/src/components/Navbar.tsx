@@ -26,18 +26,30 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Detect if we are on a sub-page (not the homepage)
+  const isSubPage = typeof window !== "undefined" && window.location.pathname !== "/";
+
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleNavClick = (href: string) => {
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     setMenuOpen(false);
-    const el = document.querySelector(href);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (href.startsWith("#")) {
+      if (isSubPage) {
+        // Navigate to homepage with the hash — let the browser handle the scroll
+        window.location.href = "/" + href;
+      } else {
+        e.preventDefault();
+        const el = document.querySelector(href);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }
     }
+    // For isPage links (e.g. /careers), just let the default <a> navigation happen
   };
 
   return (
@@ -53,8 +65,8 @@ export default function Navbar() {
           <nav className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
             <a
-              href="#home"
-              onClick={(e) => { e.preventDefault(); handleNavClick("#home"); }}
+              href={isSubPage ? "/" : "#home"}
+              onClick={(e) => { if (!isSubPage) { e.preventDefault(); handleNavClick(e, "#home"); } }}
               className="flex items-center gap-2.5 group"
             >
               <img
@@ -86,8 +98,8 @@ export default function Navbar() {
                 <li key={link.href}>
                   {link.label === "Memberships" ? (
                     <a
-                      href={link.href}
-                      onClick={(e) => { e.preventDefault(); handleNavClick(link.href); }}
+                      href={isSubPage ? "/#memberships" : link.href}
+                      onClick={(e) => handleNavClick(e, link.href)}
                       className="px-3 py-1.5 text-sm font-body font-bold rounded-full transition-all duration-200 text-white"
                       style={{ background: "linear-gradient(135deg, #e91e8c, #c2410c)", boxShadow: "0 2px 8px rgba(233,30,140,0.35)" }}
                     >
@@ -104,8 +116,8 @@ export default function Navbar() {
                     </a>
                   ) : (
                     <a
-                      href={link.href}
-                      onClick={(e) => { e.preventDefault(); handleNavClick(link.href); }}
+                      href={isSubPage ? `/${link.href}` : link.href}
+                      onClick={(e) => handleNavClick(e, link.href)}
                       className={`px-3 py-2 text-sm font-body font-medium rounded-md transition-all duration-200 hover:bg-[#8B2252]/10 hover:text-[#8B2252] ${
                         scrolled ? "text-[#1A0A12]" : "text-white/90"
                       }`}
@@ -168,8 +180,8 @@ export default function Navbar() {
               <li key={link.href}>
                 {link.label === "Memberships" ? (
                   <a
-                    href={link.href}
-                    onClick={(e) => { e.preventDefault(); handleNavClick(link.href); setMenuOpen(false); }}
+                    href={isSubPage ? "/#memberships" : link.href}
+                    onClick={(e) => { handleNavClick(e, link.href); setMenuOpen(false); }}
                     className="block px-4 py-3 font-body font-bold rounded-lg text-white transition-colors"
                     style={{ background: "linear-gradient(135deg, #e91e8c, #c2410c)" }}
                   >
@@ -185,8 +197,8 @@ export default function Navbar() {
                   </a>
                 ) : (
                   <a
-                    href={link.href}
-                    onClick={(e) => { e.preventDefault(); handleNavClick(link.href); }}
+                    href={isSubPage ? `/${link.href}` : link.href}
+                    onClick={(e) => { handleNavClick(e, link.href); setMenuOpen(false); }}
                     className="block px-4 py-3 text-[#1A0A12] font-body font-medium rounded-lg hover:bg-[#8B2252]/10 hover:text-[#8B2252] transition-colors"
                   >
                     {link.label}
