@@ -442,22 +442,22 @@ export default function Careers() {
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-28 pb-16 bg-[#FEFAF4] relative overflow-hidden">
+      <section className="pt-28 pb-16 bg-[#3D1A2E] relative overflow-hidden">
         <div
-          className="absolute inset-0 opacity-20"
+          className="absolute inset-0 opacity-30"
           style={{
-            backgroundImage: `radial-gradient(circle at 20% 50%, #F2A0B8 0%, transparent 50%), radial-gradient(circle at 80% 20%, #F9E4EE 0%, transparent 40%)`,
+            backgroundImage: `radial-gradient(circle at 20% 60%, #8B2252 0%, transparent 55%), radial-gradient(circle at 85% 20%, #C2185B 0%, transparent 40%)`,
           }}
         />
         <div className="container relative">
           <div className="max-w-2xl">
-            <p className="font-body text-xs text-[#C2185B] uppercase tracking-widest mb-4">
+            <p className="font-body text-xs text-[#F2A0B8] uppercase tracking-widest mb-4">
               — Join the Pack
             </p>
-            <h1 className="font-display font-bold text-4xl md:text-5xl text-[#1A0A12] leading-tight mb-5">
-              Work With <span className="text-[#C2185B]">AfroPuppyYoga</span>
+            <h1 className="font-display font-bold text-4xl md:text-5xl text-white leading-tight mb-5">
+              Work With <span className="text-[#F2A0B8]">AfroPuppyYoga</span>
             </h1>
-            <p className="font-body text-base text-[#5A3040] leading-relaxed max-w-xl">
+            <p className="font-body text-base text-white/70 leading-relaxed max-w-xl">
               We're building Canada's most joyful wellness brand — one puppy at a time. If you love dogs, community, and creating unforgettable experiences, we want to hear from you.
             </p>
           </div>
@@ -509,18 +509,18 @@ export default function Careers() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 bg-[#F9E4EE]">
+      <section className="py-16 bg-[#3D1A2E]">
         <div className="container text-center">
-          <p className="font-body text-xs text-[#C2185B] uppercase tracking-widest mb-3">Don't see your role?</p>
-          <h2 className="font-display font-bold text-2xl md:text-3xl text-[#1A0A12] mb-4">
+          <p className="font-body text-xs text-[#F2A0B8] uppercase tracking-widest mb-3">Don't see your role?</p>
+          <h2 className="font-display font-bold text-2xl md:text-3xl text-white mb-4">
             We're always open to great people
           </h2>
-          <p className="font-body text-sm text-[#5A3040] mb-6 max-w-md mx-auto">
+          <p className="font-body text-sm text-white/60 mb-6 max-w-md mx-auto">
             If you have a skill that could help AfroPuppyYoga grow, reach out. We love hearing from passionate people.
           </p>
           <a
             href="mailto:afropuppyyogaofficial@gmail.com"
-            className="inline-flex items-center px-6 py-3 bg-[#C2185B] text-white font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] transition-colors"
+            className="inline-flex items-center px-6 py-3 bg-[#F2A0B8] text-[#1A0A12] font-body font-semibold text-sm rounded-full hover:bg-[#D4708A] transition-colors"
           >
             Say Hello
           </a>
