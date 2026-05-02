@@ -511,7 +511,7 @@ export default function Careers() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          <div className="flex flex-col gap-6">
             {JOB_LISTINGS.map((job) => (
               <JobCard
                 key={job.id}
