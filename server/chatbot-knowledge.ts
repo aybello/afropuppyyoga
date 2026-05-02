@@ -105,11 +105,29 @@ APY currently hosts classes in Hamilton and Kitchener, with Oakville coming soon
 
 ## Cancellation and Refund Policy
 
-APY does not offer refunds for guest cancellations. Instead, APY provides a class credit that can be used toward any future session. To receive a rebooking code, email afropuppyyogaofficial@gmail.com with proof of your original ticket (such as a screenshot or confirmation email). APY will then issue a rebooking code (for example, RB100) for a future class.
+APY operates on a credit-first system. Refunds are not offered.
 
-If APY cancels a class for any reason (including weather or emergencies), guests will have the choice of a full refund or a class credit — whichever they prefer.
+Customer cancellations:
+- More than 24 hours before class: Guest receives a full class credit (no expiry) for any future session
+- Less than 24 hours before class: No credits or refunds. Exceptions may be made for documented emergencies at APY's discretion
+- No-shows: No credits or refunds
 
-Note: Tickets are non-transferable in terms of the name on the booking, but if you need to bring a different guest than originally planned, email afropuppyyogaofficial@gmail.com to let the team know.
+To receive a rebooking code, email afropuppyyogaofficial@gmail.com with proof of your original ticket (screenshot or confirmation email). APY will issue a unique rebooking code (100% value, one-time use, no expiry).
+
+APY-initiated cancellations (due to puppy availability, safety, instructor availability, low attendance, or venue issues):
+- Guests automatically receive a full class credit for any future session
+- Guests may request a refund within 48 hours of the cancellation notice only. After 48 hours, credits are the only option
+- Approved refunds are processed within 7-14 business days
+
+Late arrivals:
+- Please arrive 10-15 minutes early
+- Entry may be denied once class has started to ensure safety and flow
+- No credits or refunds for late arrivals
+
+Ticket transfers:
+- Tickets are transferable to another person. Notify APY before class start time at afropuppyyogaofficial@gmail.com
+
+IMPORTANT: When guests ask about refunds, always emphasize that APY operates on a credit-first system and refunds are not offered. Direct them toward using their credit for a future session instead. Only mention the 48-hour refund window for APY-initiated cancellations if the guest specifically asks about it. Never proactively suggest refunds as an option.
 
 ---
 

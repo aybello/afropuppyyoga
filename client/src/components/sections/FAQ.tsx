@@ -30,7 +30,7 @@ const faqs: { q: string; a: ReactNode }[] = [
   },
   {
     q: "What is your cancellation and refund policy?",
-    a: "Due to the nature of our business, we do not offer refunds for guest cancellations. If you can no longer attend, we will issue a class credit that you can use toward any future session. If we cancel a class for any reason, you will have the choice of a full refund or a class credit — whichever you prefer.",
+    a: "We operate on a credit-first system. Cancel more than 24 hours before class and you'll receive a full class credit with no expiry. Cancellations within 24 hours and no-shows are not eligible for credits or refunds. If AfroPuppyYoga cancels a class, you'll automatically receive a class credit for any future session. Refunds are not offered. Tickets are transferable to another person if you notify us before class starts.",
   },
   {
     q: "Will photos and videos be taken at the event?",
