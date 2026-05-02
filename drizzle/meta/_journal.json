@@ -15,6 +15,13 @@
       "when": 1777654745409,
       "tag": "0001_clumsy_quasar",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1777686485268,
+      "tag": "0002_cloudy_patriot",
+      "breakpoints": true
     }
   ]
 }

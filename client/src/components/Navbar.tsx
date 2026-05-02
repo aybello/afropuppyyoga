@@ -19,6 +19,7 @@ const navLinks = [
   { label: "Reviews", href: "#reviews" },
   { label: "FAQ", href: "#faq" },
   { label: "Contact", href: "#contact" },
+  { label: "Careers", href: "/careers", isPage: true },
 ];
 
 export default function Navbar() {
@@ -92,6 +93,15 @@ export default function Navbar() {
                     >
                       {link.label}
                     </a>
+                  ) : (link as any).isPage ? (
+                    <a
+                      href={link.href}
+                      className={`px-3 py-2 text-sm font-body font-medium rounded-md transition-all duration-200 hover:bg-[#8B2252]/10 hover:text-[#8B2252] ${
+                        scrolled ? "text-[#1A0A12]" : "text-white/90"
+                      }`}
+                    >
+                      {link.label}
+                    </a>
                   ) : (
                     <a
                       href={link.href}
@@ -162,6 +172,14 @@ export default function Navbar() {
                     onClick={(e) => { e.preventDefault(); handleNavClick(link.href); setMenuOpen(false); }}
                     className="block px-4 py-3 font-body font-bold rounded-lg text-white transition-colors"
                     style={{ background: "linear-gradient(135deg, #e91e8c, #c2410c)" }}
+                  >
+                    {link.label}
+                  </a>
+                ) : (link as any).isPage ? (
+                  <a
+                    href={link.href}
+                    onClick={() => setMenuOpen(false)}
+                    className="block px-4 py-3 text-[#1A0A12] font-body font-medium rounded-lg hover:bg-[#8B2252]/10 hover:text-[#8B2252] transition-colors"
                   >
                     {link.label}
                   </a>

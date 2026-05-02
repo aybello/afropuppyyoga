@@ -55,3 +55,31 @@ export const invoices = mysqlTable("invoices", {
 
 export type Invoice = typeof invoices.$inferSelect;
 export type InsertInvoice = typeof invoices.$inferInsert;
+
+export const jobApplications = mysqlTable("jobApplications", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Role they're applying for */
+  role: varchar("role", { length: 255 }).notNull(),
+  /** Location (KW, Hamilton, BDR) */
+  location: varchar("location", { length: 100 }).notNull(),
+  /** Applicant's full name */
+  name: varchar("name", { length: 255 }).notNull(),
+  /** Applicant's email */
+  email: varchar("email", { length: 320 }).notNull(),
+  /** Applicant's phone number */
+  phone: varchar("phone", { length: 50 }),
+  /** Why they want to work at APY */
+  whyAPY: text("whyAPY"),
+  /** Relevant experience */
+  experience: text("experience"),
+  /** S3 URL of the uploaded video */
+  videoUrl: text("videoUrl"),
+  /** S3 key of the uploaded video */
+  videoKey: varchar("videoKey", { length: 500 }),
+  /** Application status */
+  status: mysqlEnum("appStatus", ["new", "reviewed", "shortlisted", "rejected"]).default("new").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type JobApplication = typeof jobApplications.$inferSelect;
+export type InsertJobApplication = typeof jobApplications.$inferInsert;

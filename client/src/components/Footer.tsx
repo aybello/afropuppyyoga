@@ -15,6 +15,7 @@ const navLinks = [
   { label: "FAQ", href: "#faq" },
   { label: "Ethics", href: "#ethical-standards" },
   { label: "Contact", href: "#contact" },
+  { label: "Careers", href: "/careers", isPage: true },
 ];
 
 const handleNavClick = (href: string) => {
@@ -59,13 +60,22 @@ export default function Footer() {
             <ul className="grid grid-cols-2 md:grid-cols-1 gap-x-4 gap-y-2.5">
               {navLinks.map((link) => (
                 <li key={link.href}>
-                  <a
-                    href={link.href}
-                    onClick={(e) => { e.preventDefault(); handleNavClick(link.href); }}
-                    className="font-body text-sm text-white/50 hover:text-[#F2A0B8] transition-colors"
-                  >
-                    {link.label}
-                  </a>
+                  {(link as any).isPage ? (
+                    <a
+                      href={link.href}
+                      className="font-body text-sm text-white/50 hover:text-[#F2A0B8] transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  ) : (
+                    <a
+                      href={link.href}
+                      onClick={(e) => { e.preventDefault(); handleNavClick(link.href); }}
+                      className="font-body text-sm text-white/50 hover:text-[#F2A0B8] transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>

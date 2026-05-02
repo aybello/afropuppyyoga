@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertInvoice, InsertUser, invoices, users } from "../drizzle/schema";
+import { InsertInvoice, InsertJobApplication, InsertUser, invoices, jobApplications, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -115,4 +115,23 @@ export async function updateInvoice(id: number, data: Partial<InsertInvoice>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(invoices).set(data).where(eq(invoices.id, id));
+}
+
+export async function createJobApplication(data: InsertJobApplication) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(jobApplications).values(data);
+  return result;
+}
+
+export async function getAllJobApplications() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(jobApplications).orderBy(desc(jobApplications.createdAt));
+}
+
+export async function updateJobApplication(id: number, data: Partial<InsertJobApplication>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(jobApplications).set(data).where(eq(jobApplications.id, id));
 }

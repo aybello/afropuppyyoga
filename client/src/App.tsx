@@ -9,6 +9,7 @@ import FillRatePredictor from "./pages/FillRatePredictor";
 import BreederCalculator from "./pages/BreederCalculator";
 import InvoiceSubmit from "./pages/InvoiceSubmit";
 import InvoiceDashboard from "./pages/InvoiceDashboard";
+import Careers from "./pages/Careers";
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
@@ -18,6 +19,7 @@ function Router() {
       <Route path={"/breeder-calculator"} component={BreederCalculator} />
       <Route path={"/submit-invoice"} component={InvoiceSubmit} />
       <Route path={"/admin/invoices"} component={InvoiceDashboard} />
+      <Route path={"/careers"} component={Careers} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

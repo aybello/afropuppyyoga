@@ -11,12 +11,14 @@
 - [x] Add invoice portal link to navbar/admin area
 
 ## Invoice Pages Redesign
-- [ ] Restyle InvoiceSubmit.tsx to match APY brand (warm cream bg, APY fonts, hot pink accents, Navbar/Footer)
-- [ ] Restyle InvoiceDashboard.tsx to match APY brand (same palette, consistent typography)
-- [ ] Add admin dashboard link to the invoice submission page (owner-only, visible when logged in)
+- [x] Restyle InvoiceSubmit.tsx to match APY brand (warm cream bg, APY fonts, hot pink accents, Navbar/Footer)
+- [x] Restyle InvoiceDashboard.tsx to match APY brand (same palette, consistent typography)
+- [x] Add admin dashboard link to the invoice submission page (always visible)
 
 ## Careers Page
-- [ ] Build /careers page with APY brand design
-- [ ] Add open positions section (yoga instructor, operations specialist, photographer/videographer, puppy handler)
-- [ ] Add application form or link to apply
-- [ ] Add careers link to Navbar
+- [ ] Add jobApplications table to drizzle schema
+- [ ] Add tRPC procedure: submitApplication (upload video to S3, save to DB, send email notification)
+- [ ] Build /careers page with 4 job listings (Puppy Monitor KW, Puppy Monitor Hamilton, Yoga Instructor KW, Yoga Instructor BDR)
+- [ ] Application modal with questions: name, email, phone, why APY, relevant experience, video upload
+- [ ] Send email notification to afropuppyyogaofficial@gmail.com on new application
+- [ ] Add Careers link to navbar and footer
