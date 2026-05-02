@@ -1,8 +1,15 @@
+/* ============================================================
+   Invoice Submit — APY Staff Portal
+   Design: Warm Afro-Wellness Editorial (matches main site)
+   ============================================================ */
 import { useState, useRef } from "react";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CheckCircle2, Upload, FileText, AlertCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, Upload, FileText, AlertCircle, Loader2, LayoutDashboard } from "lucide-react";
+import { Link } from "wouter";
+
+const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
 
 export default function InvoiceSubmit() {
   const [file, setFile] = useState<File | null>(null);
@@ -10,6 +17,7 @@ export default function InvoiceSubmit() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
 
   const submitMutation = trpc.invoices.submit.useMutation({
     onSuccess: () => {
@@ -46,7 +54,6 @@ export default function InvoiceSubmit() {
   const handleSubmit = async () => {
     if (!file) return;
     setError(null);
-
     const reader = new FileReader();
     reader.onload = () => {
       const base64 = (reader.result as string).split(",")[1];
@@ -57,130 +64,166 @@ export default function InvoiceSubmit() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center p-6">
-        <Card className="max-w-md w-full text-center border-0 shadow-lg">
-          <CardContent className="pt-10 pb-10">
-            <div className="flex justify-center mb-4">
-              <CheckCircle2 className="w-16 h-16 text-green-500" />
+      <div className="min-h-screen bg-[#FEFAF4] flex flex-col items-center justify-center p-6">
+        {/* Logo */}
+        <a href="/" className="flex items-center gap-3 mb-10">
+          <img src={LOGO_URL} alt="AfroPuppyYoga" className="w-12 h-12 rounded-full object-cover" />
+          <div className="flex flex-col leading-none">
+            <span className="font-display font-bold text-lg text-[#1A0A12]">AfroPuppyYoga</span>
+            <span className="font-body text-[10px] text-[#8B2252] tracking-widest uppercase">Staff Portal</span>
+          </div>
+        </a>
+
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg border border-[#F0D0DC] p-10 text-center">
+          <div className="flex justify-center mb-5">
+            <div className="w-20 h-20 rounded-full bg-[#FFF0F4] flex items-center justify-center">
+              <CheckCircle2 className="w-10 h-10 text-[#8B2252]" />
             </div>
-            <h2 className="text-2xl font-semibold text-[#2C1810] mb-2">Invoice Submitted!</h2>
-            <p className="text-[#6B4C3B] mb-6">
-              Your invoice has been received and is being processed. You'll be paid by the due date on your invoice.
-            </p>
-            <Button
-              onClick={() => setSubmitted(false)}
-              className="bg-[#C4622D] hover:bg-[#A8522A] text-white"
-            >
-              Submit Another Invoice
-            </Button>
-          </CardContent>
-        </Card>
+          </div>
+          <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-3">Invoice Submitted!</h2>
+          <p className="font-body text-[#6B4C3B] mb-8 leading-relaxed">
+            Your invoice has been received and is being processed. You'll be paid by the due date on your invoice.
+          </p>
+          <button
+            onClick={() => setSubmitted(false)}
+            className="inline-flex items-center px-6 py-3 font-body font-semibold text-sm rounded-full text-white transition-all duration-200 hover:-translate-y-0.5"
+            style={{ background: "linear-gradient(135deg, #e91e8c, #c2410c)" }}
+          >
+            Submit Another Invoice
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center p-6">
-      <div className="max-w-lg w-full">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-3">
+    <div className="min-h-screen bg-[#FEFAF4]">
+      {/* Top bar */}
+      <header className="bg-[#FFF5F8] border-b border-[#F0D0DC] px-6 py-4">
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
+          <a href="/" className="flex items-center gap-3 group">
             <img
-              src="https://afropuppyyoga.manus.space/logo.png"
+              src={LOGO_URL}
               alt="AfroPuppyYoga"
-              className="h-12 object-contain"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              className="w-10 h-10 rounded-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
+            <div className="flex flex-col leading-none">
+              <span className="font-display font-bold text-base text-[#1A0A12]">AfroPuppyYoga</span>
+              <span className="font-body text-[10px] text-[#8B2252] tracking-widest uppercase">Staff Portal</span>
+            </div>
+          </a>
+
+          {/* Admin dashboard link — always visible */}
+          <Link href="/admin/invoices">
+            <a className="inline-flex items-center gap-2 px-4 py-2 font-body font-semibold text-sm rounded-full border border-[#F0D0DC] text-[#8B2252] bg-white hover:bg-[#FFF0F4] transition-colors">
+              <LayoutDashboard className="w-4 h-4" />
+              View Dashboard
+            </a>
+          </Link>
+        </div>
+      </header>
+
+      {/* Main content */}
+      <div className="max-w-2xl mx-auto px-6 py-12">
+        {/* Page heading */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 mb-4">
+            <span className="h-px w-8 bg-[#8B2252]" />
+            <span className="font-body text-xs font-semibold tracking-widest uppercase text-[#8B2252]">Staff Portal</span>
+            <span className="h-px w-8 bg-[#8B2252]" />
           </div>
-          <h1 className="text-3xl font-bold text-[#2C1810]">Submit Your Invoice</h1>
-          <p className="text-[#6B4C3B] mt-2">
+          <h1 className="font-display font-bold text-4xl text-[#1A0A12] mb-3">Submit Your Invoice</h1>
+          <p className="font-body text-[#6B4C3B] text-base max-w-sm mx-auto leading-relaxed">
             Upload your invoice PDF and we'll process it right away.
           </p>
         </div>
 
-        <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-[#2C1810]">Invoice Upload</CardTitle>
-            <CardDescription>PDF files only, max 16MB</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            {/* Drop zone */}
-            <div
-              className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
-                dragOver
-                  ? "border-[#C4622D] bg-[#FFF5EE]"
-                  : file
-                  ? "border-green-400 bg-green-50"
-                  : "border-[#D4A574] hover:border-[#C4622D] hover:bg-[#FFF5EE]"
-              }`}
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="application/pdf"
-                className="hidden"
-                onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
-              />
-              {file ? (
-                <div className="flex flex-col items-center gap-2">
-                  <FileText className="w-10 h-10 text-green-500" />
-                  <p className="font-medium text-[#2C1810]">{file.name}</p>
-                  <p className="text-sm text-[#6B4C3B]">
-                    {(file.size / 1024 / 1024).toFixed(2)} MB
-                  </p>
-                  <p className="text-xs text-green-600">Click to change file</p>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-2">
-                  <Upload className="w-10 h-10 text-[#D4A574]" />
-                  <p className="font-medium text-[#2C1810]">
-                    Drop your PDF here or click to browse
-                  </p>
-                  <p className="text-sm text-[#6B4C3B]">PDF files only, max 16MB</p>
-                </div>
-              )}
-            </div>
+        {/* Upload card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-[#F0D0DC] p-8">
+          <h2 className="font-display font-bold text-xl text-[#1A0A12] mb-1">Invoice Upload</h2>
+          <p className="font-body text-sm text-[#6B4C3B] mb-6">PDF files only, max 16MB</p>
 
-            {/* Error */}
-            {error && (
-              <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <span>{error}</span>
+          {/* Drop zone */}
+          <div
+            className={`border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-200 ${
+              dragOver
+                ? "border-[#8B2252] bg-[#FFF0F4]"
+                : file
+                ? "border-emerald-400 bg-emerald-50"
+                : "border-[#F0D0DC] hover:border-[#8B2252] hover:bg-[#FFF0F4]"
+            }`}
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/pdf"
+              className="hidden"
+              onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
+            />
+            {file ? (
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <FileText className="w-7 h-7 text-emerald-600" />
+                </div>
+                <p className="font-body font-semibold text-[#1A0A12]">{file.name}</p>
+                <p className="font-body text-sm text-[#6B4C3B]">
+                  {(file.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+                <p className="font-body text-xs text-emerald-600">Click to change file</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-14 h-14 rounded-full bg-[#FFF0F4] flex items-center justify-center">
+                  <Upload className="w-7 h-7 text-[#8B2252]" />
+                </div>
+                <p className="font-body font-semibold text-[#1A0A12]">
+                  Drop your PDF here or click to browse
+                </p>
+                <p className="font-body text-sm text-[#6B4C3B]">PDF files only, max 16MB</p>
               </div>
             )}
+          </div>
 
-            {/* Submit button */}
-            <Button
-              onClick={handleSubmit}
-              disabled={!file || submitMutation.isPending}
-              className="w-full bg-[#C4622D] hover:bg-[#A8522A] text-white h-12 text-base"
-            >
-              {submitMutation.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Uploading...
-                </>
-              ) : (
-                <>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Submit Invoice
-                </>
-              )}
-            </Button>
+          {/* Error */}
+          {error && (
+            <div className="flex items-start gap-2 mt-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-body">
+              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
 
-            <p className="text-xs text-center text-[#6B4C3B]">
-              Your invoice will be reviewed and payment processed by the due date.
-              Questions? Email{" "}
-              <a href="mailto:afropuppyyogaofficial@gmail.com" className="text-[#C4622D] underline">
-                afropuppyyogaofficial@gmail.com
-              </a>
-            </p>
-          </CardContent>
-        </Card>
+          {/* Submit button */}
+          <button
+            onClick={handleSubmit}
+            disabled={!file || submitMutation.isPending}
+            className="mt-6 w-full inline-flex items-center justify-center gap-2 px-6 py-4 font-body font-semibold text-base rounded-full text-white transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+            style={{ background: "linear-gradient(135deg, #e91e8c, #c2410c)" }}
+          >
+            {submitMutation.isPending ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Upload className="w-5 h-5" />
+                Submit Invoice
+              </>
+            )}
+          </button>
+
+          <p className="font-body text-xs text-center text-[#6B4C3B] mt-5">
+            Your invoice will be reviewed and payment processed by the due date.{" "}
+            Questions? Email{" "}
+            <a href="mailto:afropuppyyogaofficial@gmail.com" className="text-[#8B2252] underline">
+              afropuppyyogaofficial@gmail.com
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );
