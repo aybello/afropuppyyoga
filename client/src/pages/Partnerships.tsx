@@ -1,6 +1,6 @@
 /* ============================================================
    Partnerships Page — AfroPuppyYoga
-   5 partnership categories + CLB Pilates Guelph feature + inquiry form
+   5 partnership categories + Club Pilates Guelph feature + inquiry form
    ============================================================ */
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
@@ -196,17 +196,17 @@ export default function Partnerships() {
             Current Partners
           </p>
           <div className="flex flex-col md:flex-row items-center justify-center gap-8">
-            {/* CLB Pilates Guelph */}
+            {/* Club Pilates Guelph */}
             <div className="flex items-center gap-5 bg-white rounded-2xl px-8 py-6 shadow-sm border border-[#F0D0DC] max-w-md w-full">
               <div className="w-14 h-14 rounded-full bg-[#8B2252]/10 flex items-center justify-center shrink-0">
                 <Heart size={24} className="text-[#8B2252]" />
               </div>
               <div>
-                <p className="font-display font-bold text-[#1A0A12] text-lg">CLB Pilates Guelph</p>
+                <p className="font-display font-bold text-[#1A0A12] text-lg">Club Pilates Guelph</p>
                 <p className="font-body text-[#5A3040] text-sm mt-0.5">Local Business Partner</p>
                 <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-[#8B2252]/10 rounded-full">
                   <CheckCircle size={12} className="text-[#8B2252]" />
-                  <span className="font-body text-xs font-semibold text-[#8B2252]">15% off for CLB members</span>
+                  <span className="font-body text-xs font-semibold text-[#8B2252]">15% off for Club Pilates members</span>
                 </div>
               </div>
             </div>
