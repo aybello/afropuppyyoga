@@ -109,3 +109,33 @@ export const birthdayInquiries = mysqlTable("birthdayInquiries", {
 
 export type BirthdayInquiry = typeof birthdayInquiries.$inferSelect;
 export type InsertBirthdayInquiry = typeof birthdayInquiries.$inferInsert;
+
+export const partnershipInquiries = mysqlTable("partnershipInquiries", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Partnership type */
+  partnershipType: mysqlEnum("partnershipType", [
+    "Corporate Wellness",
+    "Brand Collaboration",
+    "Media & Production",
+    "Local Business",
+    "Breeder Partnership",
+  ]).notNull(),
+  /** Organization or brand name */
+  organizationName: varchar("organizationName", { length: 255 }).notNull(),
+  /** Contact person's name */
+  contactName: varchar("contactName", { length: 255 }).notNull(),
+  /** Contact email */
+  email: varchar("email", { length: 320 }).notNull(),
+  /** Contact phone number */
+  phone: varchar("phone", { length: 50 }),
+  /** Website or social media URL */
+  website: varchar("website", { length: 500 }),
+  /** Description of the proposed partnership */
+  proposal: text("proposal").notNull(),
+  /** Inquiry status */
+  status: mysqlEnum("partnerStatus", ["new", "reviewing", "active", "declined"]).default("new").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PartnershipInquiry = typeof partnershipInquiries.$inferSelect;
+export type InsertPartnershipInquiry = typeof partnershipInquiries.$inferInsert;

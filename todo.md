@@ -31,3 +31,14 @@
 - [x] Add birthday packages CTA to homepage (between Experience and LumaCalendar sections)
 - [x] Wire email notification to afropuppyyogaofficial@gmail.com on new birthday inquiry
 - [x] Add Birthday Packages link to navbar and footer
+
+## Partnerships Feature
+- [x] Add partnershipInquiries table to drizzle schema
+- [x] Add DB helpers for partnership inquiries
+- [x] Add tRPC procedures: submitPartnershipInquiry, getAllPartnershipInquiries, updatePartnershipStatus
+- [x] Build /partnerships page with 5 categories and CLB Pilates Guelph featured
+- [x] Add partnership inquiry form with category selector
+- [x] Wire owner email notification on new partnership inquiry
+- [x] Add Partnerships link to Navbar and Footer
+- [x] Add Partnerships CTA to homepage
+- [x] Write vitest tests for partnership procedures

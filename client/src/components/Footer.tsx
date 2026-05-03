@@ -17,6 +17,7 @@ const navLinks = [
   { label: "Contact", href: "#contact" },
   { label: "Careers", href: "/careers", isPage: true },
   { label: "Birthday Packages", href: "/birthday", isPage: true },
+  { label: "Partnerships", href: "/partnerships", isPage: true },
 ];
 
 const handleNavClick = (href: string) => {

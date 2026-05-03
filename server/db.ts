@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertInvoice, InsertJobApplication, InsertUser, InsertBirthdayInquiry, invoices, jobApplications, users, birthdayInquiries } from "../drizzle/schema";
+import { InsertInvoice, InsertJobApplication, InsertUser, InsertBirthdayInquiry, InsertPartnershipInquiry, invoices, jobApplications, users, birthdayInquiries, partnershipInquiries } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -159,4 +159,23 @@ export async function updateBirthdayInquiry(id: number, data: Partial<InsertBirt
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(birthdayInquiries).set(data).where(eq(birthdayInquiries.id, id));
+}
+
+export async function createPartnershipInquiry(data: InsertPartnershipInquiry) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(partnershipInquiries).values(data);
+  return result;
+}
+
+export async function getAllPartnershipInquiries() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(partnershipInquiries).orderBy(desc(partnershipInquiries.createdAt));
+}
+
+export async function updatePartnershipInquiry(id: number, data: Partial<InsertPartnershipInquiry>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(partnershipInquiries).set(data).where(eq(partnershipInquiries.id, id));
 }

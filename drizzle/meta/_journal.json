@@ -29,6 +29,13 @@
       "when": 1777827669434,
       "tag": "0003_groovy_luckman",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1777831328136,
+      "tag": "0004_public_moon_knight",
+      "breakpoints": true
     }
   ]
 }
