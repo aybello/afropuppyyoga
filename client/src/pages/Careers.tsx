@@ -73,6 +73,37 @@ const JOB_LISTINGS = [
     ],
   },
   {
+    id: "bdr",
+    title: "Business Development Representative",
+    location: "Remote / Canada",
+    locationCode: "REMOTE",
+    type: "Flexible",
+    badge: "Commission-Based",
+    emoji: "💼",
+    description:
+      "Help AfroPuppyYoga grow its brand, partnerships, and community reach. As our BDR, you'll identify and nurture new business opportunities — from corporate wellness partnerships and private event bookings to sponsorships and brand collaborations. You're a natural connector who loves wellness, community, and closing deals.",
+    responsibilities: [
+      "Identify and pursue new corporate wellness and private event leads",
+      "Pitch AfroPuppyYoga to potential partners, sponsors, and collaborators",
+      "Manage outreach via email, LinkedIn, and direct networking",
+      "Follow up with warm leads and convert inquiries into bookings",
+      "Report on pipeline activity and conversion metrics",
+    ],
+    requirements: [
+      "Proven experience in sales, business development, or partnerships",
+      "Excellent written and verbal communication skills",
+      "Self-motivated and comfortable working independently",
+      "Passion for wellness, community, and the APY brand",
+      "Experience with CRM tools is a plus",
+    ],
+    perks: [
+      "Competitive commission on every booking or deal closed",
+      "Flexible remote schedule — work from anywhere in Canada",
+      "Free access to APY classes",
+      "Opportunity to shape the growth of a fast-rising wellness brand",
+    ],
+  },
+  {
     id: "puppy-monitor-ham",
     title: "Puppy Monitor",
     location: "Hamilton",
