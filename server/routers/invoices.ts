@@ -2,7 +2,7 @@ import { z } from "zod";
 import { adminProcedure, publicProcedure, router } from "../_core/trpc";
 import { invokeLLM } from "../_core/llm";
 import { storagePut } from "../storage";
-import { createInvoice, getAllInvoices, updateInvoice } from "../db";
+import { createInvoice, deleteInvoice, getAllInvoices, updateInvoice } from "../db";
 
 function randomSuffix() {
   return Math.random().toString(36).substring(2, 10);
@@ -100,7 +100,7 @@ export const invoicesRouter = router({
   delete: adminProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
-      await updateInvoice(input.id, { status: "paid" }); // soft-delete via status
+      await deleteInvoice(input.id);
       return { success: true };
     }),
 });

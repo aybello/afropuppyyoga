@@ -11,7 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FileText, Loader2, AlertTriangle, Clock, CheckCircle2, RefreshCw, Copy } from "lucide-react";
+import { FileText, Loader2, AlertTriangle, Clock, CheckCircle2, RefreshCw, Copy, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { getLoginUrl } from "@/const";
 import AdminNav from "@/components/AdminNav";
 
@@ -75,6 +76,12 @@ export default function InvoiceDashboard() {
   const updateStatus = trpc.invoices.updateStatus.useMutation({
     onSuccess: () => utils.invoices.list.invalidate(),
   });
+
+  const deleteInvoice = trpc.invoices.delete.useMutation({
+    onSuccess: () => utils.invoices.list.invalidate(),
+  });
+
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
   if (loading) {
     return (
@@ -188,6 +195,7 @@ export default function InvoiceDashboard() {
                     <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Days Left</th>
                     <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Invoice</th>
                     <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Status</th>
+                    <th className="px-5 py-4"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -262,6 +270,35 @@ export default function InvoiceDashboard() {
                             <SelectItem value="overdue">Overdue</SelectItem>
                           </SelectContent>
                         </Select>
+                      </td>
+                      <td className="px-5 py-4">
+                        {confirmDeleteId === invoice.id ? (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                deleteInvoice.mutate({ id: invoice.id });
+                                setConfirmDeleteId(null);
+                              }}
+                              className="px-3 py-1 text-xs font-body font-semibold rounded-full bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteId(null)}
+                              className="px-3 py-1 text-xs font-body font-semibold rounded-full bg-[#F5F0EB] text-[#6B4C3B] hover:bg-[#F0D0DC] transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmDeleteId(invoice.id)}
+                            className="p-1.5 rounded-lg text-[#6B4C3B] hover:text-red-600 hover:bg-red-50 transition-colors"
+                            title="Delete invoice"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

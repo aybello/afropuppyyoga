@@ -117,6 +117,12 @@ export async function updateInvoice(id: number, data: Partial<InsertInvoice>) {
   await db.update(invoices).set(data).where(eq(invoices.id, id));
 }
 
+export async function deleteInvoice(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(invoices).where(eq(invoices.id, id));
+}
+
 export async function createJobApplication(data: InsertJobApplication) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
