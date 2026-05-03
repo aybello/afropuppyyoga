@@ -14,6 +14,7 @@ const InvoiceSubmit = lazy(() => import("./pages/InvoiceSubmit"));
 const InvoiceDashboard = lazy(() => import("./pages/InvoiceDashboard"));
 const ApplicationsDashboard = lazy(() => import("./pages/ApplicationsDashboard"));
 const Careers = lazy(() => import("./pages/Careers"));
+const StaffPortal = lazy(() => import("./pages/StaffPortal"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function PageLoader() {
@@ -35,6 +36,7 @@ function Router() {
         <Route path="/admin/invoices" component={InvoiceDashboard} />
         <Route path="/admin/applications" component={ApplicationsDashboard} />
         <Route path={"/careers"} component={Careers} />
+        <Route path={"/staff"} component={StaffPortal} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>

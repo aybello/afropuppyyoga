@@ -30,9 +30,11 @@
 | `/submit-invoice` | `pages/InvoiceSubmit.tsx` | Staff invoice submission portal — PDF upload, AI extraction |
 | `/admin/invoices` | `pages/InvoiceDashboard.tsx` | Owner invoice dashboard — view all invoices, status management |
 | `/admin/applications` | `pages/ApplicationsDashboard.tsx` | Owner job applications dashboard — view applicants, status management |
+| `/staff` | `pages/StaffPortal.tsx` | Staff Portal hub — central page linking to all internal tools |
 
 ### Navigation to Admin
-- Footer has a discreet "Staff Portal" link (20% opacity) → goes to `/submit-invoice`
+- Footer has a discreet "Staff Portal" link (20% opacity) → goes to `/staff` (the hub page)
+- `/staff` hub page lists all 5 internal tools with descriptions and links
 - Admin pages (`/admin/invoices`, `/admin/applications`) share a top nav bar (`AdminNav.tsx`) with tabs between the two pages and a "Back to Site" button
 
 ---
@@ -81,7 +83,7 @@
 
 ## Known Issues / Pending Items
 
-- **Email notifications for job applications** — Not yet set up. Requires Gmail app password (16-char) from Google Account → Security → App Passwords → create for "APY Website". Once provided, add as secret `GMAIL_APP_PASSWORD` and update `server/routers/careers.ts` to send via Nodemailer.
+- **⚠️ REMIND USER EVERY SESSION: Gmail app password for email notifications** — User wants auto-email to afropuppyyogaofficial@gmail.com when job applications come in. Needs 16-char app password: myaccount.google.com → Security → App passwords → create for "APY Website". Once provided, add as secret `GMAIL_APP_PASSWORD` and update `server/routers/careers.ts` to send via Nodemailer.
 - **TypeScript errors (14 errors)** — Pre-existing TS config issue with `lib.esnext.d.ts` not found. These are non-breaking (dev server and build work fine) but should be resolved by upgrading TypeScript or fixing `tsconfig.json`.
 - **Gift card Stripe flow** — "Buy a Gift Card" button on homepage goes nowhere. Needs Stripe integration.
 - **Dedicated `/cancellation-policy` page** — Not yet built. Would be useful for linking in Luma event descriptions and confirmation emails.
@@ -105,6 +107,11 @@
 - Reordered: Yoga Instructor first, then KW PM, then Hamilton PM
 - Built shared `AdminNav.tsx` component for admin pages
 - Added "Staff Portal" link in footer
+- Built `/staff` Staff Portal hub page with all 5 internal tools
+- Updated footer Staff Portal link to point to `/staff`
+- Added BDR (Business Development Representative) role to Careers page with Commission-Based badge
+- Batch uploaded 9 invoice PDFs from Gmail to invoice dashboard
+- Added delete button (hard delete) to invoice dashboard rows
 - Fixed `LOGO_URL is not defined` error in InvoiceDashboard after header refactor
 - Fixed job card expand state (lifted to parent, tracked per job ID)
 - Added cancellation/refund policy to FAQ (short version, credit-first framing)

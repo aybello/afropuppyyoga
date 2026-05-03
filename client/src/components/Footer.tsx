@@ -125,7 +125,7 @@ export default function Footer() {
               Made with ❤️ in Canada
             </p>
             <a
-              href="/admin/invoices"
+              href="/staff"
               className="font-body text-xs text-white/20 hover:text-white/40 transition-colors"
             >
               Staff Portal
