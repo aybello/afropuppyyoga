@@ -22,3 +22,12 @@
 - [ ] Application modal with questions: name, email, phone, why APY, relevant experience, video upload
 - [ ] Send email notification to afropuppyyogaofficial@gmail.com on new application
 - [ ] Add Careers link to navbar and footer
+
+## Birthday Packages Feature
+- [x] Add birthdayInquiries table to drizzle schema (id, name, email, phone, date, location, tier, groupSize, message, status, createdAt)
+- [x] Add tRPC procedure: submitBirthdayInquiry (public, saves to DB, sends email notification)
+- [x] Add tRPC procedure: getBirthdayInquiries (owner-only, returns all inquiries with status)
+- [x] Build /birthday page with 3 tiers (Basic $600, Premium $900, Deluxe $1,200) and booking inquiry form
+- [x] Add birthday packages CTA to homepage (between Experience and LumaCalendar sections)
+- [x] Wire email notification to afropuppyyogaofficial@gmail.com on new birthday inquiry
+- [x] Add Birthday Packages link to navbar and footer

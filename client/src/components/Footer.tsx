@@ -16,6 +16,7 @@ const navLinks = [
   { label: "Ethics", href: "#ethical-standards" },
   { label: "Contact", href: "#contact" },
   { label: "Careers", href: "/careers", isPage: true },
+  { label: "Birthday Packages", href: "/birthday", isPage: true },
 ];
 
 const handleNavClick = (href: string) => {

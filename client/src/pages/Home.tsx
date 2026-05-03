@@ -10,6 +10,7 @@ import Experience from "@/components/sections/Experience";
 import About from "@/components/sections/About";
 import OurStory from "@/components/sections/OurStory";
 import LumaCalendar from "@/components/sections/LumaCalendar";
+import BirthdayBanner from "@/components/sections/BirthdayBanner";
 import PrivateEvents from "@/components/sections/PrivateEvents";
 import Gallery from "@/components/sections/Gallery";
 import InstagramFeed from "@/components/sections/InstagramFeed";
@@ -37,6 +38,7 @@ export default function Home() {
       <main>
         <Hero />
         <Experience />
+        <BirthdayBanner />
         <LumaCalendar />
         <Memberships />
         <About />

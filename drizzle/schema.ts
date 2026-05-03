@@ -83,3 +83,29 @@ export const jobApplications = mysqlTable("jobApplications", {
 
 export type JobApplication = typeof jobApplications.$inferSelect;
 export type InsertJobApplication = typeof jobApplications.$inferInsert;
+
+export const birthdayInquiries = mysqlTable("birthdayInquiries", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Name of the person booking */
+  name: varchar("name", { length: 255 }).notNull(),
+  /** Contact email */
+  email: varchar("email", { length: 320 }).notNull(),
+  /** Contact phone number */
+  phone: varchar("phone", { length: 50 }),
+  /** Preferred date for the birthday session */
+  preferredDate: varchar("preferredDate", { length: 100 }).notNull(),
+  /** Location: KW or Hamilton */
+  location: mysqlEnum("location", ["KW", "Hamilton"]).notNull(),
+  /** Package tier selected */
+  tier: mysqlEnum("tier", ["Basic", "Premium", "Deluxe"]).notNull(),
+  /** Estimated group size */
+  groupSize: int("groupSize").notNull(),
+  /** Additional message or requests */
+  message: text("message"),
+  /** Inquiry status */
+  status: mysqlEnum("inquiryStatus", ["new", "contacted", "confirmed", "cancelled"]).default("new").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type BirthdayInquiry = typeof birthdayInquiries.$inferSelect;
+export type InsertBirthdayInquiry = typeof birthdayInquiries.$inferInsert;

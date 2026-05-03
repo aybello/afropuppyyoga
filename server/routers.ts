@@ -6,6 +6,7 @@ import { invokeLLM } from "./_core/llm";
 import { APY_SYSTEM_PROMPT } from "./chatbot-knowledge";
 import { invoicesRouter } from "./routers/invoices";
 import { careersRouter } from "./routers/careers";
+import { birthdayRouter } from "./routers/birthday";
 import { z } from "zod";
 
 const messageSchema = z.object({
@@ -17,6 +18,7 @@ export const appRouter = router({
   system: systemRouter,
   invoices: invoicesRouter,
   careers: careersRouter,
+  birthday: birthdayRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

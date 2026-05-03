@@ -20,6 +20,7 @@ const navLinks = [
   { label: "FAQ", href: "#faq" },
   { label: "Contact", href: "#contact" },
   { label: "Careers", href: "/careers", isPage: true },
+  { label: "🎂 Birthday", href: "/birthday", isPage: true },
 ];
 
 export default function Navbar() {
