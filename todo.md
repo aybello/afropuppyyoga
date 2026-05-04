@@ -50,3 +50,13 @@
 - [x] Add rejection letter email button in Applications Dashboard
 - [x] Update application status enum: added interview_scheduled, accepted
 - [x] Wire automated emails via nodemailer/Gmail SMTP (afropuppyyogaofficial@gmail.com) for all three pipeline stages
+
+## Delete Application Feature
+- [ ] Add deleteApplication tRPC procedure to careers router (hard delete from DB + S3 cleanup)
+- [ ] Add delete button (trash icon) to each application row in ApplicationsDashboard
+- [ ] Add confirmation dialog before deleting to prevent accidental deletions
+
+## Interview Invite Email Update
+- [ ] Update interview invite email template to use Google Calendar booking link instead of fixed date/time
+- [ ] Simplify interview invite modal: booking link field (pre-filled) + optional notes only
+- [ ] Update careers router: replace date/time/format fields with bookingLink field

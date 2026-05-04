@@ -142,6 +142,12 @@ export async function updateJobApplication(id: number, data: Partial<InsertJobAp
   await db.update(jobApplications).set(data).where(eq(jobApplications.id, id));
 }
 
+export async function deleteJobApplication(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(jobApplications).where(eq(jobApplications.id, id));
+}
+
 export async function createBirthdayInquiry(data: InsertBirthdayInquiry) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");

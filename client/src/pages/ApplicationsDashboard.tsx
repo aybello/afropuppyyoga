@@ -28,8 +28,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Users, Loader2, Video, Mail, Phone, Star, Eye, XCircle, Inbox,
-  Calendar, CheckCircle, Send,
+  Calendar, CheckCircle, Send, Trash2,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
 import AdminNav from "@/components/AdminNav";
@@ -85,6 +95,8 @@ function StatusBadge({ status }: { status: AppStatus }) {
 }
 
 // ─── Interview Invite Modal ──────────────────────────────────────────────────
+const DEFAULT_BOOKING_LINK = "https://calendar.app.google/RdiW9wP2XYVK27g2A";
+
 function InterviewInviteModal({
   app,
   open,
@@ -95,13 +107,8 @@ function InterviewInviteModal({
   onClose: () => void;
 }) {
   const utils = trpc.useUtils();
-  const [form, setForm] = useState({
-    interviewDate: "",
-    interviewTime: "",
-    interviewFormat: "Video call (Google Meet)",
-    interviewLink: "",
-    additionalNotes: "",
-  });
+  const [bookingLink, setBookingLink] = useState(DEFAULT_BOOKING_LINK);
+  const [additionalNotes, setAdditionalNotes] = useState("");
 
   const sendInvite = trpc.careers.sendInterviewInvite.useMutation({
     onSuccess: () => {
@@ -115,8 +122,8 @@ function InterviewInviteModal({
   });
 
   const handleSubmit = () => {
-    if (!form.interviewDate || !form.interviewTime) {
-      toast.error("Please fill in the date and time");
+    if (!bookingLink.trim()) {
+      toast.error("Please provide a booking link");
       return;
     }
     sendInvite.mutate({
@@ -125,11 +132,8 @@ function InterviewInviteModal({
       applicantEmail: app.email,
       role: app.role,
       location: app.location,
-      interviewDate: form.interviewDate,
-      interviewTime: form.interviewTime,
-      interviewFormat: form.interviewFormat,
-      interviewLink: form.interviewLink || undefined,
-      additionalNotes: form.additionalNotes || undefined,
+      bookingLink: bookingLink.trim(),
+      additionalNotes: additionalNotes || undefined,
     });
   };
 
@@ -146,62 +150,29 @@ function InterviewInviteModal({
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Interview Date *</Label>
-              <Input
-                type="date"
-                value={form.interviewDate}
-                onChange={(e) => setForm({ ...form, interviewDate: e.target.value })}
-                className="border-[#F0D0DC] font-body"
-              />
-            </div>
-            <div>
-              <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Interview Time *</Label>
-              <Input
-                type="time"
-                value={form.interviewTime}
-                onChange={(e) => setForm({ ...form, interviewTime: e.target.value })}
-                className="border-[#F0D0DC] font-body"
-              />
-            </div>
+          <div className="bg-[#FFF5F8] border border-[#F0D0DC] rounded-xl p-4">
+            <p className="font-body text-sm text-[#3D1A2A] leading-relaxed">
+              The applicant will receive an email with a button to book their interview at their convenience.
+            </p>
           </div>
 
           <div>
-            <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Format</Label>
-            <Select
-              value={form.interviewFormat}
-              onValueChange={(v) => setForm({ ...form, interviewFormat: v })}
-            >
-              <SelectTrigger className="border-[#F0D0DC] font-body">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Video call (Google Meet)">Video call (Google Meet)</SelectItem>
-                <SelectItem value="Video call (Zoom)">Video call (Zoom)</SelectItem>
-                <SelectItem value="Phone call">Phone call</SelectItem>
-                <SelectItem value="In-person (KW)">In-person (KW)</SelectItem>
-                <SelectItem value="In-person (Hamilton)">In-person (Hamilton)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Meeting Link (optional)</Label>
+            <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Booking Link *</Label>
             <Input
-              placeholder="https://meet.google.com/..."
-              value={form.interviewLink}
-              onChange={(e) => setForm({ ...form, interviewLink: e.target.value })}
+              placeholder="https://calendar.app.google/..."
+              value={bookingLink}
+              onChange={(e) => setBookingLink(e.target.value)}
               className="border-[#F0D0DC] font-body"
             />
+            <p className="font-body text-xs text-[#C4A0B0] mt-1">Pre-filled with your Google Calendar link</p>
           </div>
 
           <div>
             <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Additional Notes (optional)</Label>
             <Textarea
               placeholder="Any additional info for the applicant..."
-              value={form.additionalNotes}
-              onChange={(e) => setForm({ ...form, additionalNotes: e.target.value })}
+              value={additionalNotes}
+              onChange={(e) => setAdditionalNotes(e.target.value)}
               className="border-[#F0D0DC] font-body resize-none"
               rows={3}
             />
@@ -548,9 +519,20 @@ export default function ApplicationsDashboard() {
     refetchInterval: 15000,
   });
 
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+
   const updateStatus = trpc.careers.updateStatus.useMutation({
     onSuccess: () => utils.careers.list.invalidate(),
     onError: (err) => toast.error(`Error updating status: ${err.message}`),
+  });
+
+  const deleteApplication = trpc.careers.deleteApplication.useMutation({
+    onSuccess: () => {
+      toast.success("Application deleted");
+      utils.careers.list.invalidate();
+      setDeleteConfirmId(null);
+    },
+    onError: (err) => toast.error(`Failed to delete: ${err.message}`),
   });
 
   if (loading) {
@@ -790,6 +772,13 @@ export default function ApplicationsDashboard() {
                           >
                             <XCircle className="w-3 h-3" />
                           </button>
+                          <button
+                            onClick={() => setDeleteConfirmId(app.id)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg font-body text-xs font-semibold text-gray-500 hover:bg-gray-100 hover:text-red-600 hover:border-red-200 transition-colors"
+                            title="Delete application"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -830,6 +819,30 @@ export default function ApplicationsDashboard() {
           onClose={() => { setShowRejectionModal(false); setSelectedApp(null); }}
         />
       )}
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmId !== null} onOpenChange={(v) => !v && setDeleteConfirmId(null)}>
+        <AlertDialogContent className="bg-[#FEFAF4] border-[#F0D0DC]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-display text-xl text-[#1A0A12]">Delete Application?</AlertDialogTitle>
+            <AlertDialogDescription className="font-body text-sm text-[#6B4C3B]">
+              This will permanently delete the application and cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="font-body border-[#F0D0DC]">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteConfirmId !== null && deleteApplication.mutate({ id: deleteConfirmId })}
+              className="font-body bg-red-600 hover:bg-red-700 text-white"
+            >
+              {deleteApplication.isPending ? (
+                <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Deleting...</>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

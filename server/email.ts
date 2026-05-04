@@ -98,10 +98,7 @@ export function buildInterviewInviteEmail(opts: {
   applicantName: string;
   role: string;
   location: string;
-  interviewDate: string;
-  interviewTime: string;
-  interviewFormat: string; // "Video call (Google Meet)" | "In-person" | etc.
-  interviewLink?: string;
+  bookingLink: string; // Google Calendar booking link
   additionalNotes?: string;
 }): { subject: string; html: string; text: string } {
   const subject = `Interview Invitation — ${opts.role} at AfroPuppyYoga`;
@@ -112,54 +109,40 @@ export function buildInterviewInviteEmail(opts: {
       We'd love to meet you, ${opts.applicantName}! 🐾
     </h2>
     <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#3D1A2A;line-height:1.6;">
-      Thank you for applying to join the AfroPuppyYoga family as a <strong>${opts.role}</strong> (${opts.location}). 
+      Thank you for applying to join the AfroPuppyYoga family as a <strong>${opts.role}</strong> (${opts.location}).
       We've reviewed your application and we're excited to invite you for an interview!
     </p>
+    <p style="margin:0 0 24px;font-family:Arial,sans-serif;font-size:15px;color:#3D1A2A;line-height:1.6;">
+      Please use the link below to book your interview at your convenience:
+    </p>
 
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FFF5F8;border-radius:12px;border:1px solid #F0D0DC;margin:24px 0;">
-      <tr><td style="padding:24px;">
-        <p style="margin:0 0 12px;font-family:Arial,sans-serif;font-size:13px;font-weight:bold;color:#8B2252;text-transform:uppercase;letter-spacing:1px;">Interview Details</p>
-        <table cellpadding="0" cellspacing="0">
-          <tr>
-            <td style="font-family:Arial,sans-serif;font-size:14px;color:#6B4C3B;padding:4px 16px 4px 0;font-weight:bold;">📅 Date:</td>
-            <td style="font-family:Arial,sans-serif;font-size:14px;color:#1A0A12;padding:4px 0;">${opts.interviewDate}</td>
-          </tr>
-          <tr>
-            <td style="font-family:Arial,sans-serif;font-size:14px;color:#6B4C3B;padding:4px 16px 4px 0;font-weight:bold;">🕐 Time:</td>
-            <td style="font-family:Arial,sans-serif;font-size:14px;color:#1A0A12;padding:4px 0;">${opts.interviewTime} (Eastern Time)</td>
-          </tr>
-          <tr>
-            <td style="font-family:Arial,sans-serif;font-size:14px;color:#6B4C3B;padding:4px 16px 4px 0;font-weight:bold;">💻 Format:</td>
-            <td style="font-family:Arial,sans-serif;font-size:14px;color:#1A0A12;padding:4px 0;">${opts.interviewFormat}</td>
-          </tr>
-          ${opts.interviewLink ? `
-          <tr>
-            <td style="font-family:Arial,sans-serif;font-size:14px;color:#6B4C3B;padding:4px 16px 4px 0;font-weight:bold;">🔗 Link:</td>
-            <td style="font-family:Arial,sans-serif;font-size:14px;padding:4px 0;"><a href="${opts.interviewLink}" style="color:#C2185B;">${opts.interviewLink}</a></td>
-          </tr>` : ""}
-        </table>
-      </td></tr>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+      <tr>
+        <td align="center">
+          <a href="${opts.bookingLink}" style="display:inline-block;background:linear-gradient(135deg,#C2185B,#8B2252);color:#fff;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;padding:14px 32px;border-radius:8px;text-decoration:none;letter-spacing:0.5px;">📅 Book Your Interview</a>
+        </td>
+      </tr>
     </table>
 
+    <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:14px;color:#6B4C3B;line-height:1.6;text-align:center;">
+      Or copy this link: <a href="${opts.bookingLink}" style="color:#C2185B;word-break:break-all;">${opts.bookingLink}</a>
+    </p>
+
     ${opts.additionalNotes ? `
-    <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#3D1A2A;line-height:1.6;">
+    <p style="margin:24px 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#3D1A2A;line-height:1.6;">
       <strong>Additional Notes:</strong><br/>${opts.additionalNotes}
     </p>` : ""}
 
-    <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#3D1A2A;line-height:1.6;">
-      Please reply to this email to confirm your attendance, or let us know if you need to reschedule. 
-      We're flexible and want to make this work for you!
-    </p>
-    <p style="margin:0 0 24px;font-family:Arial,sans-serif;font-size:15px;color:#3D1A2A;line-height:1.6;">
-      We look forward to connecting with you and learning more about your passion for wellness and puppies. 🐶
+    <p style="margin:24px 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#3D1A2A;line-height:1.6;">
+      If you have any questions or need to reschedule, feel free to reach out. We look forward to speaking with you!
     </p>
     <p style="margin:0;font-family:'Georgia',serif;font-size:15px;color:#1A0A12;">
-      With warmth,<br/>
+      Best regards,<br/>
       <strong>The AfroPuppyYoga Team</strong>
     </p>
   `);
 
-  const text = `Hi ${opts.applicantName},\n\nThank you for applying to join AfroPuppyYoga as a ${opts.role} (${opts.location}). We'd love to meet you!\n\nInterview Details:\n- Date: ${opts.interviewDate}\n- Time: ${opts.interviewTime} (Eastern Time)\n- Format: ${opts.interviewFormat}\n${opts.interviewLink ? `- Link: ${opts.interviewLink}\n` : ""}${opts.additionalNotes ? `\nAdditional Notes: ${opts.additionalNotes}\n` : ""}\nPlease reply to confirm your attendance or to reschedule.\n\nWith warmth,\nThe AfroPuppyYoga Team\nafropuppyyogaofficial@gmail.com`;
+  const text = `Hi ${opts.applicantName},\n\nThank you for applying to join AfroPuppyYoga as a ${opts.role} (${opts.location}). We'd love to meet you!\n\nPlease use the link below to book your interview at your convenience:\n${opts.bookingLink}\n${opts.additionalNotes ? `\nAdditional Notes: ${opts.additionalNotes}\n` : ""}\nIf you have any questions or need to reschedule, feel free to reach out. Looking forward to speaking with you!\n\nBest regards,\nThe AfroPuppyYoga Team\nafropuppyyogaofficial@gmail.com`;
 
   return { subject, html, text };
 }

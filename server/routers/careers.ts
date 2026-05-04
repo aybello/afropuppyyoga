@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { adminProcedure, publicProcedure, router } from "../_core/trpc";
-import { createJobApplication, getAllJobApplications, updateJobApplication } from "../db";
+import { createJobApplication, getAllJobApplications, updateJobApplication, deleteJobApplication } from "../db";
 import { notifyOwner } from "../_core/notification";
 import {
   sendEmail,
@@ -92,10 +92,7 @@ export const careersRouter = router({
         applicantEmail: z.string().email(),
         role: z.string(),
         location: z.string(),
-        interviewDate: z.string(),
-        interviewTime: z.string(),
-        interviewFormat: z.string(),
-        interviewLink: z.string().optional(),
+        bookingLink: z.string().url(), // Google Calendar booking link
         additionalNotes: z.string().optional(),
       })
     )
@@ -104,10 +101,7 @@ export const careersRouter = router({
         applicantName: input.applicantName,
         role: input.role,
         location: input.location,
-        interviewDate: input.interviewDate,
-        interviewTime: input.interviewTime,
-        interviewFormat: input.interviewFormat,
-        interviewLink: input.interviewLink,
+        bookingLink: input.bookingLink,
         additionalNotes: input.additionalNotes,
       });
 
@@ -118,7 +112,7 @@ export const careersRouter = router({
 
       await notifyOwner({
         title: `Interview Invite Sent — ${input.applicantName}`,
-        content: `Interview invitation sent to ${input.applicantName} (${input.applicantEmail}) for ${input.role} (${input.location}).\n\nDate: ${input.interviewDate} at ${input.interviewTime}\nFormat: ${input.interviewFormat}`,
+        content: `Interview invitation sent to ${input.applicantName} (${input.applicantEmail}) for ${input.role} (${input.location}).\n\nBooking link: ${input.bookingLink}`,
       });
 
       return { success: true };
@@ -158,6 +152,16 @@ export const careersRouter = router({
         content: `Offer letter sent to ${input.applicantName} (${input.applicantEmail}) for ${input.role} (${input.location}).${input.startDate ? `\n\nProposed start date: ${input.startDate}` : ""}`,
       });
 
+      return { success: true };
+    }),
+
+  /**
+   * Admin-only: delete an application
+   */
+  deleteApplication: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      await deleteJobApplication(input.id);
       return { success: true };
     }),
 
