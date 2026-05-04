@@ -36,6 +36,13 @@
       "when": 1777831328136,
       "tag": "0004_public_moon_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1777929426230,
+      "tag": "0005_blue_wolf_cub",
+      "breakpoints": true
     }
   ]
 }

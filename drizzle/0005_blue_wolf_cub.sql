@@ -1,0 +1,1 @@
+ALTER TABLE `jobApplications` MODIFY COLUMN `appStatus` enum('new','reviewed','shortlisted','interview_scheduled','accepted','rejected') NOT NULL DEFAULT 'new';

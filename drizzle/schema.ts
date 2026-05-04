@@ -77,7 +77,7 @@ export const jobApplications = mysqlTable("jobApplications", {
   /** S3 key of the uploaded video */
   videoKey: varchar("videoKey", { length: 500 }),
   /** Application status */
-  status: mysqlEnum("appStatus", ["new", "reviewed", "shortlisted", "rejected"]).default("new").notNull(),
+  status: mysqlEnum("appStatus", ["new", "reviewed", "shortlisted", "interview_scheduled", "accepted", "rejected"]).default("new").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

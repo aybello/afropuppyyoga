@@ -44,9 +44,9 @@
 - [x] Write vitest tests for partnership procedures
 
 ## Application Pipeline & Video Upload Fix
-- [ ] Fix video upload: replace base64-in-body with presigned S3 upload URL flow
-- [ ] Add interview invite email with date/time modal in Applications Dashboard
-- [ ] Add offer letter email button in Applications Dashboard
-- [ ] Add rejection letter email button in Applications Dashboard
-- [ ] Update application status enum: add interview_scheduled, accepted
-- [ ] Wire automated emails via nodemailer/Gmail SMTP for all three pipeline stages
+- [x] Fix video upload: replace base64-in-body with multipart upload to /api/upload-video (multer + S3)
+- [x] Add interview invite email with date/time modal in Applications Dashboard
+- [x] Add offer letter email button in Applications Dashboard
+- [x] Add rejection letter email button in Applications Dashboard
+- [x] Update application status enum: added interview_scheduled, accepted
+- [x] Wire automated emails via nodemailer/Gmail SMTP (afropuppyyogaofficial@gmail.com) for all three pipeline stages
