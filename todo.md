@@ -42,3 +42,11 @@
 - [x] Add Partnerships link to Navbar and Footer
 - [x] Add Partnerships CTA to homepage
 - [x] Write vitest tests for partnership procedures
+
+## Application Pipeline & Video Upload Fix
+- [ ] Fix video upload: replace base64-in-body with presigned S3 upload URL flow
+- [ ] Add interview invite email with date/time modal in Applications Dashboard
+- [ ] Add offer letter email button in Applications Dashboard
+- [ ] Add rejection letter email button in Applications Dashboard
+- [ ] Update application status enum: add interview_scheduled, accepted
+- [ ] Wire automated emails via nodemailer/Gmail SMTP for all three pipeline stages

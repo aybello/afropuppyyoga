@@ -180,20 +180,27 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       return;
     }
 
-    let videoBase64: string | undefined;
-    let videoFilename: string | undefined;
-    let videoMimeType: string | undefined;
+    let videoUrl: string | undefined;
+    let videoKey: string | undefined;
 
+    // Upload video via multipart FormData to avoid JSON body size limits
     if (videoFile) {
-      videoFilename = videoFile.name;
-      videoMimeType = videoFile.type;
-      const buffer = await videoFile.arrayBuffer();
-      const bytes = new Uint8Array(buffer);
-      let binary = "";
-      for (let i = 0; i < bytes.byteLength; i++) {
-        binary += String.fromCharCode(bytes[i]);
+      try {
+        const fd = new FormData();
+        fd.append("video", videoFile);
+        const res = await fetch("/api/upload-video", { method: "POST", body: fd });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({ error: "Upload failed" }));
+          setError(errData.error ?? "Video upload failed. Please try again.");
+          return;
+        }
+        const data = await res.json();
+        videoUrl = data.url;
+        videoKey = data.key;
+      } catch {
+        setError("Video upload failed. Please check your connection and try again.");
+        return;
       }
-      videoBase64 = btoa(binary);
     }
 
     applyMutation.mutate({
@@ -204,9 +211,8 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       phone: form.phone || undefined,
       whyAPY: form.whyAPY || undefined,
       experience: form.experience || undefined,
-      videoBase64,
-      videoFilename,
-      videoMimeType,
+      videoUrl,
+      videoKey,
     });
   };
 

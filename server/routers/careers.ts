@@ -1,17 +1,12 @@
 import { z } from "zod";
 import { adminProcedure, publicProcedure, router } from "../_core/trpc";
-import { storagePut } from "../storage";
 import { createJobApplication, getAllJobApplications, updateJobApplication } from "../db";
 import { notifyOwner } from "../_core/notification";
 
-function randomSuffix() {
-  return Math.random().toString(36).substring(2, 10);
-}
-
 export const careersRouter = router({
   /**
-   * Public: submit a job application with optional video upload.
-   * Video is base64-encoded and uploaded to S3.
+   * Public: submit a job application.
+   * Video is uploaded separately via /api/upload-video and the URL is passed here.
    */
   submitApplication: publicProcedure
     .input(
@@ -23,25 +18,11 @@ export const careersRouter = router({
         phone: z.string().optional(),
         whyAPY: z.string().optional(),
         experience: z.string().optional(),
-        videoBase64: z.string().optional(), // base64-encoded video
-        videoFilename: z.string().optional(),
-        videoMimeType: z.string().optional(),
+        videoUrl: z.string().url().optional(),  // S3 URL from /api/upload-video
+        videoKey: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
-      let videoUrl: string | undefined;
-      let videoKey: string | undefined;
-
-      // Upload video to S3 if provided
-      if (input.videoBase64 && input.videoFilename) {
-        const buffer = Buffer.from(input.videoBase64, "base64");
-        const ext = input.videoFilename.split(".").pop() ?? "mp4";
-        videoKey = `applications/${Date.now()}-${randomSuffix()}.${ext}`;
-        const mimeType = input.videoMimeType ?? "video/mp4";
-        const result = await storagePut(videoKey, buffer, mimeType);
-        videoUrl = result.url;
-      }
-
       // Save to DB
       await createJobApplication({
         role: input.role,
@@ -51,14 +32,14 @@ export const careersRouter = router({
         phone: input.phone ?? null,
         whyAPY: input.whyAPY ?? null,
         experience: input.experience ?? null,
-        videoUrl: videoUrl ?? null,
-        videoKey: videoKey ?? null,
+        videoUrl: input.videoUrl ?? null,
+        videoKey: input.videoKey ?? null,
         status: "new",
       });
 
       // Send email notification to owner
-      const videoLine = videoUrl
-        ? `\n\nVideo Application: ${videoUrl}`
+      const videoLine = input.videoUrl
+        ? `\n\nVideo Application: ${input.videoUrl}`
         : "\n\nNo video submitted.";
 
       await notifyOwner({
