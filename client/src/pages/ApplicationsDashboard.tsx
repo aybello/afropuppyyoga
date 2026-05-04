@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Users, Loader2, Video, Mail, Phone, Star, Eye, XCircle, Inbox,
-  Calendar, CheckCircle, Send, AlertCircle,
+  Calendar, CheckCircle, Send,
 } from "lucide-react";
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
@@ -628,18 +628,7 @@ export default function ApplicationsDashboard() {
           </div>
         </div>
 
-        {/* Email config notice */}
-        {!process.env.GMAIL_APP_PASSWORD && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-body text-sm font-semibold text-amber-800">Email sending not configured</p>
-              <p className="font-body text-xs text-amber-700 mt-0.5">
-                Add <code className="bg-amber-100 px-1 rounded">GMAIL_APP_PASSWORD</code> to your environment secrets to enable automated email sending (interview invites, offer letters, rejection letters).
-              </p>
-            </div>
-          </div>
-        )}
+
 
         {/* Applications table */}
         <div className="bg-white rounded-2xl border border-[#F0D0DC] overflow-hidden">
