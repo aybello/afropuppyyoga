@@ -17,6 +17,8 @@ const Careers = lazy(() => import("./pages/Careers"));
 const StaffPortal = lazy(() => import("./pages/StaffPortal"));
 const Birthday = lazy(() => import("./pages/Birthday"));
 const Partnerships = lazy(() => import("./pages/Partnerships"));
+const StaffLogin = lazy(() => import("./pages/StaffLogin"));
+const StaffManagement = lazy(() => import("./pages/StaffManagement"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function PageLoader() {
@@ -41,6 +43,8 @@ function Router() {
         <Route path={"/staff"} component={StaffPortal} />
         <Route path={"/birthday"} component={Birthday} />
         <Route path={"/partnerships"} component={Partnerships} />
+        <Route path={"/staff-login"} component={StaffLogin} />
+        <Route path={"/admin/staff"} component={StaffManagement} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>

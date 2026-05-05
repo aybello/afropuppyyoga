@@ -3,7 +3,7 @@
    Shows links between Invoices, Applications, and back to site
    ============================================================ */
 import { Link, useLocation } from "wouter";
-import { FileText, Users, ArrowLeft, LayoutDashboard } from "lucide-react";
+import { FileText, Users, ArrowLeft, UserCog } from "lucide-react";
 
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
 
@@ -17,6 +17,11 @@ const NAV_ITEMS = [
     href: "/admin/applications",
     label: "Applications",
     icon: Users,
+  },
+  {
+    href: "/admin/staff",
+    label: "Staff",
+    icon: UserCog,
   },
 ];
 

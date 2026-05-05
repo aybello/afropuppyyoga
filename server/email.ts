@@ -203,6 +203,43 @@ export function buildOfferLetterEmail(opts: {
   return { subject, html, text };
 }
 
+export async function sendStaffInviteEmail(opts: {
+  to: string;
+  name: string;
+  magicLink: string;
+}): Promise<void> {
+  const subject = "You've been invited to the AfroPuppyYoga Staff Portal";
+
+  const html = wrapInBrandedLayout(`
+    <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:14px;color:#8B2252;font-weight:bold;letter-spacing:1px;text-transform:uppercase;">Staff Portal Access</p>
+    <h2 style="margin:0 0 24px;font-family:'Georgia',serif;font-size:26px;color:#1A0A12;line-height:1.3;">
+      Welcome to the team, ${opts.name}! 🐾
+    </h2>
+    <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#3D1A2A;line-height:1.6;">
+      You've been invited to access the AfroPuppyYoga Staff Portal. Click the button below to log in — no password needed!
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+      <tr>
+        <td align="center">
+          <a href="${opts.magicLink}" style="display:inline-block;background:linear-gradient(135deg,#C2185B,#8B2252);color:#fff;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;padding:14px 32px;border-radius:8px;text-decoration:none;letter-spacing:0.5px;">Access APY Staff Portal</a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:13px;color:#6B4C3B;line-height:1.6;text-align:center;">
+      Or copy this link: <a href="${opts.magicLink}" style="color:#C2185B;word-break:break-all;">${opts.magicLink}</a>
+    </p>
+    <p style="margin:16px 0 0;font-family:Arial,sans-serif;font-size:12px;color:#9E7B8A;text-align:center;">
+      This link is valid for 7 days. If you didn't expect this email, you can safely ignore it.
+    </p>
+  `);
+
+  const text = `Hi ${opts.name},\n\nYou've been invited to access the AfroPuppyYoga Staff Portal.\n\nClick the link below to log in:\n${opts.magicLink}\n\nThis link is valid for 7 days.\n\nBest regards,\nThe AfroPuppyYoga Team`;
+
+  await sendEmail({ to: opts.to, subject, html, text });
+}
+
 export function buildRejectionLetterEmail(opts: {
   applicantName: string;
   role: string;

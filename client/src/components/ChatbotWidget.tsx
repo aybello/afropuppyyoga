@@ -25,7 +25,7 @@ export default function ChatbotWidget() {
     onSuccess: (response) => {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: response.reply },
+        { role: "assistant", content: typeof response.reply === "string" ? response.reply : String(response.reply) },
       ]);
     },
     onError: () => {

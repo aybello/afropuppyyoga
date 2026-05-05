@@ -43,6 +43,13 @@
       "when": 1777929426230,
       "tag": "0005_blue_wolf_cub",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1777991114072,
+      "tag": "0006_bumpy_silver_surfer",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertInvoice, InsertJobApplication, InsertUser, InsertBirthdayInquiry, InsertPartnershipInquiry, invoices, jobApplications, users, birthdayInquiries, partnershipInquiries } from "../drizzle/schema";
+import { InsertInvoice, InsertJobApplication, InsertUser, InsertBirthdayInquiry, InsertPartnershipInquiry, InsertStaffInvite, invoices, jobApplications, users, birthdayInquiries, partnershipInquiries, staffInvites } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -184,4 +184,37 @@ export async function updatePartnershipInquiry(id: number, data: Partial<InsertP
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(partnershipInquiries).set(data).where(eq(partnershipInquiries.id, id));
+}
+
+// ─── Staff Invites ────────────────────────────────────────────────────────────
+
+export async function createStaffInvite(data: InsertStaffInvite) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(staffInvites).values(data);
+}
+
+export async function getStaffInviteByToken(token: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.select().from(staffInvites).where(eq(staffInvites.token, token)).limit(1);
+  return result[0] ?? null;
+}
+
+export async function getAllActiveStaff() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(staffInvites).where(eq(staffInvites.isActive, 1)).orderBy(desc(staffInvites.createdAt));
+}
+
+export async function updateStaffInvite(id: number, data: Partial<InsertStaffInvite>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(staffInvites).set(data).where(eq(staffInvites.id, id));
+}
+
+export async function revokeStaffInvite(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(staffInvites).set({ isActive: 0 }).where(eq(staffInvites.id, id));
 }

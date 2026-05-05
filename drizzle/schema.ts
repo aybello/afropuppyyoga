@@ -139,3 +139,25 @@ export const partnershipInquiries = mysqlTable("partnershipInquiries", {
 
 export type PartnershipInquiry = typeof partnershipInquiries.$inferSelect;
 export type InsertPartnershipInquiry = typeof partnershipInquiries.$inferInsert;
+
+export const staffInvites = mysqlTable("staffInvites", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Staff member's name */
+  name: varchar("name", { length: 255 }).notNull(),
+  /** Staff member's email address */
+  email: varchar("email", { length: 320 }).notNull(),
+  /** Secure random token for the magic link */
+  token: varchar("token", { length: 128 }).notNull().unique(),
+  /** Whether this invite has been used to log in (still valid for re-login until expiry) */
+  isActive: int("isActive").default(1).notNull(),
+  /** Token expiry — magic links expire after 48 hours of first use, but staff stay active */
+  expiresAt: timestamp("expiresAt").notNull(),
+  /** When the invite was first used */
+  firstUsedAt: timestamp("firstUsedAt"),
+  /** Last login via this token */
+  lastUsedAt: timestamp("lastUsedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type StaffInvite = typeof staffInvites.$inferSelect;
+export type InsertStaffInvite = typeof staffInvites.$inferInsert;

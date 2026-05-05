@@ -160,8 +160,9 @@ Return ONLY valid JSON with these exact keys. If a field cannot be found, use nu
       },
     });
 
-    const content = response.choices?.[0]?.message?.content;
-    if (!content) throw new Error("No content from LLM");
+    const rawContent = response.choices?.[0]?.message?.content;
+    if (!rawContent) throw new Error("No content from LLM");
+    const content = typeof rawContent === "string" ? rawContent : JSON.stringify(rawContent);
 
     const extracted = JSON.parse(content);
 

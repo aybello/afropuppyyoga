@@ -98,7 +98,7 @@ export default function InvoiceDashboard() {
         <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Admin Access Required</h2>
         <p className="font-body text-[#6B4C3B] mb-6">Please log in to view invoices.</p>
         <button
-          onClick={() => window.location.href = getLoginUrl("/admin/invoices")}
+          onClick={() => window.location.href = getLoginUrl()}
           className="inline-flex items-center px-6 py-3 font-body font-semibold text-sm rounded-full text-white transition-all duration-200 hover:-translate-y-0.5"
           style={{ background: "linear-gradient(135deg, #e91e8c, #c2410c)" }}
         >
