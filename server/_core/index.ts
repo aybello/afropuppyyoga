@@ -38,6 +38,24 @@ async function startServer() {
   registerOAuthRoutes(app);
   // Video upload endpoint (multipart, bypasses JSON body limit)
   app.use(uploadRouter);
+  // PDF proxy — serves CDN PDFs with CORS headers so PDF.js can render them
+  app.get("/api/pdf-proxy", async (req, res) => {
+    const url = req.query.url as string;
+    if (!url || !url.startsWith("https://d2xsxph8kpxj0f.cloudfront.net/")) {
+      return res.status(400).send("Invalid URL");
+    }
+    try {
+      const response = await fetch(url);
+      if (!response.ok) return res.status(response.status).send("Failed to fetch PDF");
+      const buffer = await response.arrayBuffer();
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Cache-Control", "public, max-age=86400");
+      res.send(Buffer.from(buffer));
+    } catch (e) {
+      res.status(500).send("Proxy error");
+    }
+  });
   // tRPC API
   app.use(
     "/api/trpc",

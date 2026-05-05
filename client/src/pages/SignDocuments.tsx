@@ -1,11 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { CheckCircle2, FileText, Loader2, AlertCircle, PenLine } from "lucide-react";
+import { CheckCircle2, FileText, Loader2, AlertCircle, PenLine, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
+import * as pdfjsLib from "pdfjs-dist";
+
+// Use the bundled worker (v3 uses .min.js, not .mjs)
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.js",
+  import.meta.url
+).toString();
 
 export default function SignDocuments() {
   const [, setLocation] = useLocation();
@@ -122,7 +129,7 @@ export default function SignDocuments() {
         </div>
 
         {/* Document 1: Offer Letter */}
-        <DocumentCard
+        <PdfDocumentCard
           title="Offer Letter"
           subtitle={`${data.role} — ${data.location}`}
           url={data.offerLetterUrl}
@@ -132,7 +139,7 @@ export default function SignDocuments() {
         />
 
         {/* Document 2: NDA */}
-        <DocumentCard
+        <PdfDocumentCard
           title="Non-Disclosure Agreement (NDA)"
           subtitle="Confidentiality Agreement — All Positions"
           url={data.ndaUrl}
@@ -229,9 +236,9 @@ export default function SignDocuments() {
   );
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// ─── PDF Viewer using PDF.js ──────────────────────────────────────────────────
 
-function DocumentCard({
+function PdfDocumentCard({
   title,
   subtitle,
   url,
@@ -246,6 +253,57 @@ function DocumentCard({
   onCheck: () => void;
   checkLabel: string;
 }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [pages, setPages] = useState<string[]>([]); // base64 data URLs for each page
+  const [loadingPdf, setLoadingPdf] = useState(true);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingPdf(true);
+    setPdfError(null);
+    setPages([]);
+    setCurrentPage(0);
+
+    async function renderPdf() {
+      try {
+        // Route through our server proxy to add CORS headers (CDN blocks direct browser fetch)
+        const proxyUrl = `/api/pdf-proxy?url=${encodeURIComponent(url)}`;
+        const loadingTask = pdfjsLib.getDocument({ url: proxyUrl, withCredentials: false });
+        const pdf = await loadingTask.promise;
+        const rendered: string[] = [];
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+          if (cancelled) return;
+          const page = await pdf.getPage(i);
+          const viewport = page.getViewport({ scale: 1.5 });
+          const canvas = document.createElement("canvas");
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+          // pdfjs-dist v3 uses canvasContext
+          await page.render({ canvasContext: ctx, viewport }).promise;
+          rendered.push(canvas.toDataURL("image/jpeg", 0.92));
+        }
+
+        if (!cancelled) {
+          setPages(rendered);
+          setLoadingPdf(false);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error("PDF render error:", err);
+          setPdfError("Could not load the document. Please use 'Open in new tab' to review it.");
+          setLoadingPdf(false);
+        }
+      }
+    }
+
+    renderPdf();
+    return () => { cancelled = true; };
+  }, [url]);
+
   return (
     <div className="bg-white rounded-2xl border border-[#F0D0DC] p-6 mb-6 shadow-sm">
       <div className="flex items-center gap-3 mb-4">
@@ -257,19 +315,51 @@ function DocumentCard({
           <p className="text-xs text-[#9E7B8A]">{subtitle}</p>
         </div>
         {checked && (
-          <CheckCircle2 className="w-5 h-5 text-green-500 ml-auto" />
+          <CheckCircle2 className="w-5 h-5 text-green-500 ml-auto shrink-0" />
         )}
       </div>
 
-      {/* PDF viewer */}
-      <div className="rounded-xl overflow-hidden border border-[#F0D0DC] mb-4" style={{ height: "500px" }}>
-        <iframe
-          src={`${url}#toolbar=1&navpanes=0`}
-          className="w-full h-full"
-          title={title}
-        />
+      {/* PDF Viewer */}
+      <div
+        ref={containerRef}
+        className="rounded-xl overflow-auto border border-[#F0D0DC] mb-4 bg-[#F5F0F0]"
+        style={{ maxHeight: "520px" }}
+      >
+        {loadingPdf ? (
+          <div className="flex flex-col items-center justify-center h-64 gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-[#C2185B]" />
+            <p className="text-sm text-[#9E7B8A]">Loading document...</p>
+          </div>
+        ) : pdfError ? (
+          <div className="flex flex-col items-center justify-center h-64 gap-3 px-6 text-center">
+            <AlertCircle className="w-8 h-8 text-amber-400" />
+            <p className="text-sm text-[#6B4C3B]">{pdfError}</p>
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-[#C2185B] hover:underline font-medium flex items-center gap-1"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Open document in new tab
+            </a>
+          </div>
+        ) : (
+          <div className="p-3 space-y-3">
+            {pages.map((dataUrl, i) => (
+              <img
+                key={i}
+                src={dataUrl}
+                alt={`Page ${i + 1}`}
+                className="w-full rounded shadow-sm"
+                style={{ display: "block" }}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
+      {/* Bottom bar */}
       <div className="flex items-center gap-3 bg-[#FFF5F8] rounded-xl p-3 border border-[#F0D0DC]">
         <a
           href={url}
@@ -277,7 +367,7 @@ function DocumentCard({
           rel="noopener noreferrer"
           className="text-xs text-[#C2185B] hover:underline font-medium flex items-center gap-1"
         >
-          <FileText className="w-3 h-3" />
+          <ExternalLink className="w-3 h-3" />
           Open in new tab
         </a>
         <div className="flex-1" />
@@ -294,6 +384,8 @@ function DocumentCard({
     </div>
   );
 }
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function CheckboxItem({
   id,
