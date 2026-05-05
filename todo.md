@@ -71,3 +71,7 @@
 - [ ] Build /staff-login page (landing page for magic link token verification)
 - [ ] Gate all admin routes to allow staff sessions in addition to Manus owner
 - [ ] Test end-to-end magic link flow
+
+## Offer Letter PDF Attachments
+- [x] Upload OfferLetter_Volunteer_Kitchener_V2.pdf and NDA_Updated.pdf to S3 CDN
+- [x] Attach both PDFs automatically to the offer letter email sent from Applications Dashboard

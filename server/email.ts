@@ -22,11 +22,18 @@ function getTransporter() {
   });
 }
 
+export interface EmailAttachment {
+  filename: string;
+  path: string; // URL or local path
+  contentType: string;
+}
+
 export interface EmailOptions {
   to: string;
   subject: string;
   html: string;
   text?: string;
+  attachments?: EmailAttachment[];
 }
 
 export async function sendEmail(opts: EmailOptions): Promise<void> {
@@ -38,6 +45,7 @@ export async function sendEmail(opts: EmailOptions): Promise<void> {
     subject: opts.subject,
     html: opts.html,
     text: opts.text,
+    attachments: opts.attachments,
   });
 }
 
@@ -185,8 +193,21 @@ export function buildOfferLetterEmail(opts: {
       ${opts.additionalNotes}
     </p>` : ""}
 
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FFF5F8;border-radius:12px;border:1px solid #F0D0DC;margin:24px 0;">
+      <tr><td style="padding:24px;">
+        <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:13px;font-weight:bold;color:#8B2252;text-transform:uppercase;letter-spacing:1px;">Action Required — Documents Attached</p>
+        <p style="margin:0 0 12px;font-family:Arial,sans-serif;font-size:14px;color:#1A0A12;line-height:1.6;">
+          We've attached two documents to this email that require your initials and signature:
+        </p>
+        <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:14px;color:#3D1A2A;">📄 <strong>Volunteer Offer Letter</strong> — please sign and return within 5 days</p>
+        <p style="margin:0;font-family:Arial,sans-serif;font-size:14px;color:#3D1A2A;">📄 <strong>Non-Disclosure Agreement (NDA)</strong> — please sign and return</p>
+        <p style="margin:12px 0 0;font-family:Arial,sans-serif;font-size:13px;color:#6B4C3B;">
+          Please sign both documents and reply to this email with the signed copies attached.
+        </p>
+      </td></tr>
+    </table>
+
     <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#3D1A2A;line-height:1.6;">
-      Please reply to this email to accept this offer and we'll send over your onboarding details. 
       If you have any questions before then, don't hesitate to reach out — we're here for you!
     </p>
     <p style="margin:0 0 24px;font-family:Arial,sans-serif;font-size:15px;color:#3D1A2A;line-height:1.6;">

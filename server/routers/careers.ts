@@ -142,7 +142,24 @@ export const careersRouter = router({
         additionalNotes: input.additionalNotes,
       });
 
-      await sendEmail({ to: input.applicantEmail, subject, html, text });
+      await sendEmail({
+        to: input.applicantEmail,
+        subject,
+        html,
+        text,
+        attachments: [
+          {
+            filename: "AfroPuppyYoga_Volunteer_Offer_Letter.pdf",
+            path: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/OfferLetter_Volunteer_Kitchener_V2_4a8a6867.pdf",
+            contentType: "application/pdf",
+          },
+          {
+            filename: "AfroPuppyYoga_NDA.pdf",
+            path: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/NDA_Updated_e2dcb73f.pdf",
+            contentType: "application/pdf",
+          },
+        ],
+      });
 
       // Update status to accepted
       await updateJobApplication(input.id, { status: "accepted" });
