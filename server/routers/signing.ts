@@ -160,59 +160,102 @@ export const signingRouter = router({
 // ─── Email Templates ──────────────────────────────────────────────────────────
 
 function buildSigningEmail(opts: { applicantName: string; role: string; location: string; signingLink: string }): string {
+  const firstName = opts.applicantName.split(" ")[0];
   return `
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
-<body style="margin:0;padding:0;background-color:#FEFAF4;font-family:'Georgia',serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#FEFAF4;">
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Review &amp; Sign Your Offer — AfroPuppyYoga</title>
+</head>
+<body style="margin:0;padding:0;background-color:#FDF6F0;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#FDF6F0;">
     <tr>
-      <td align="center" style="padding:40px 20px;">
-        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #F0D0DC;">
+      <td align="center" style="padding:32px 16px;">
+
+        <!-- Card -->
+        <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#FFFFFF;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(194,24,91,0.08);">
+
+          <!-- ── HEADER: logo on cream ── -->
           <tr>
-            <td style="background:linear-gradient(135deg,#C2185B,#8B2252);padding:32px 40px;text-align:center;">
-              <p style="margin:0;font-family:'Georgia',serif;font-size:22px;font-weight:bold;color:#fff;letter-spacing:1px;">🐾 AfroPuppyYoga</p>
-              <p style="margin:6px 0 0;font-family:Arial,sans-serif;font-size:12px;color:rgba(255,255,255,0.8);letter-spacing:2px;text-transform:uppercase;">Canada's #1 Puppy Yoga Studio</p>
+            <td style="background:#FFF0F5;padding:28px 32px 20px;text-align:center;border-bottom:1px solid #F8D7E3;">
+              <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png" alt="AfroPuppyYoga" width="56" height="56" style="display:block;margin:0 auto 10px;border-radius:12px;" />
+              <p style="margin:0;font-family:Georgia,serif;font-size:18px;font-weight:bold;color:#8B1A4A;letter-spacing:0.5px;">AfroPuppyYoga</p>
+              <p style="margin:4px 0 0;font-size:11px;color:#C47A9A;letter-spacing:2px;text-transform:uppercase;">Canada's #1 Puppy Yoga Studio</p>
             </td>
           </tr>
+
+          <!-- ── HERO: congratulations banner ── -->
           <tr>
-            <td style="padding:40px 40px 32px;">
-              <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:14px;color:#8B2252;font-weight:bold;letter-spacing:1px;text-transform:uppercase;">Action Required</p>
-              <h2 style="margin:0 0 24px;font-family:'Georgia',serif;font-size:26px;color:#1A0A12;line-height:1.3;">
-                Review &amp; Sign Your Offer, ${opts.applicantName}! 🐾
-              </h2>
-              <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#3D1A2A;line-height:1.6;">
-                Congratulations on your offer for the <strong>${opts.role}</strong> position at our <strong>${opts.location}</strong> location!
-              </p>
-              <p style="margin:0 0 24px;font-family:Arial,sans-serif;font-size:15px;color:#3D1A2A;line-height:1.6;">
-                Please click the button below to review your Offer Letter and Non-Disclosure Agreement, then sign digitally — it only takes 2 minutes!
-              </p>
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+            <td style="background:linear-gradient(160deg,#F9E4EE 0%,#FFF0F5 100%);padding:36px 32px 28px;text-align:center;">
+              <p style="margin:0 0 6px;font-size:13px;font-weight:bold;color:#C2185B;letter-spacing:1.5px;text-transform:uppercase;">🎉 Congratulations!</p>
+              <h1 style="margin:0 0 12px;font-family:Georgia,serif;font-size:28px;color:#5C0A2E;line-height:1.25;">You've got an offer,<br/>${firstName}!</h1>
+              <p style="margin:0;font-size:15px;color:#7A3050;line-height:1.5;">Your <strong>${opts.role}</strong> position at our <strong>${opts.location}</strong> location is waiting for your signature.</p>
+            </td>
+          </tr>
+
+          <!-- ── BODY ── -->
+          <tr>
+            <td style="padding:32px 32px 24px;">
+
+              <!-- Steps card -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin-bottom:28px;">
+                <tr><td style="padding:20px 24px;">
+                  <p style="margin:0 0 14px;font-size:13px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">What to do next</p>
+                  <table cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td style="padding:4px 12px 4px 0;vertical-align:top;font-size:18px;">📄</td>
+                      <td style="padding:4px 0;font-size:14px;color:#4A1A2A;line-height:1.5;">Read your <strong>Offer Letter</strong> and <strong>NDA</strong> carefully</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:4px 12px 4px 0;vertical-align:top;font-size:18px;">✍️</td>
+                      <td style="padding:4px 0;font-size:14px;color:#4A1A2A;line-height:1.5;">Type your full name as a digital signature</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:4px 12px 4px 0;vertical-align:top;font-size:18px;">✅</td>
+                      <td style="padding:4px 0;font-size:14px;color:#4A1A2A;line-height:1.5;">Click <strong>Sign &amp; Submit</strong> — done in under 2 minutes!</td>
+                    </tr>
+                  </table>
+                </td></tr>
+              </table>
+
+              <!-- CTA button -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
                 <tr>
                   <td align="center">
-                    <a href="${opts.signingLink}" style="display:inline-block;background:linear-gradient(135deg,#C2185B,#8B2252);color:#fff;font-family:Arial,sans-serif;font-size:16px;font-weight:bold;padding:16px 40px;border-radius:8px;text-decoration:none;letter-spacing:0.5px;">✍️ Review &amp; Sign Documents</a>
+                    <a href="${opts.signingLink}" style="display:inline-block;background:#C2185B;color:#ffffff;font-family:Arial,sans-serif;font-size:16px;font-weight:bold;padding:16px 44px;border-radius:50px;text-decoration:none;letter-spacing:0.3px;">✍️ Review &amp; Sign My Documents</a>
                   </td>
                 </tr>
               </table>
-              <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:13px;color:#6B4C3B;text-align:center;">
-                Or copy this link: <a href="${opts.signingLink}" style="color:#C2185B;word-break:break-all;">${opts.signingLink}</a>
+
+              <!-- Fallback link -->
+              <p style="margin:0 0 20px;font-size:12px;color:#9E7B8A;text-align:center;line-height:1.6;">
+                Button not working? Copy and paste this link into your browser:<br/>
+                <a href="${opts.signingLink}" style="color:#C2185B;word-break:break-all;font-size:11px;">${opts.signingLink}</a>
               </p>
-              <p style="margin:16px 0 0;font-family:Arial,sans-serif;font-size:12px;color:#9E7B8A;text-align:center;">
-                This link is valid for 7 days. If you have questions, reply to this email.
-              </p>
+
+              <!-- Expiry note -->
+              <p style="margin:0;font-size:12px;color:#B09AA8;text-align:center;">⏳ This link is valid for <strong>7 days</strong>. Questions? Reply to this email.</p>
             </td>
           </tr>
+
+          <!-- ── FOOTER ── -->
           <tr>
-            <td style="background:#FFF5F8;padding:24px 40px;border-top:1px solid #F0D0DC;text-align:center;">
-              <p style="margin:0;font-family:Arial,sans-serif;font-size:12px;color:#8B2252;">
-                <strong>AfroPuppyYoga</strong> · Kitchener-Waterloo &amp; Hamilton, Ontario
-              </p>
-              <p style="margin:6px 0 0;font-family:Arial,sans-serif;font-size:11px;color:#C4A0B0;">
-                <a href="https://afropuppyyoga.ca" style="color:#C2185B;">afropuppyyoga.ca</a>
+            <td style="background:#FFF0F5;padding:20px 32px;border-top:1px solid #F8D7E3;text-align:center;">
+              <p style="margin:0 0 4px;font-size:12px;font-weight:bold;color:#8B1A4A;">AfroPuppyYoga</p>
+              <p style="margin:0 0 6px;font-size:11px;color:#C4A0B0;">Kitchener-Waterloo &amp; Hamilton, Ontario</p>
+              <p style="margin:0;font-size:11px;">
+                <a href="https://afropuppyyoga.ca" style="color:#C2185B;text-decoration:none;">afropuppyyoga.ca</a>
+                &nbsp;·&nbsp;
+                <a href="https://instagram.com/afropuppyyoga" style="color:#C2185B;text-decoration:none;">@afropuppyyoga</a>
               </p>
             </td>
           </tr>
+
         </table>
+        <!-- /Card -->
+
       </td>
     </tr>
   </table>
