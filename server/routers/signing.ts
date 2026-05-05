@@ -264,42 +264,46 @@ function buildSigningEmail(opts: { applicantName: string; role: string; location
 }
 
 function buildSigningConfirmationEmail(opts: { applicantName: string; role: string; location: string }): string {
-  return `
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8" /></head>
-<body style="margin:0;padding:0;background-color:#FEFAF4;font-family:'Georgia',serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#FEFAF4;">
+  const firstName = opts.applicantName.split(" ")[0];
+  const APY_LOGO = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Documents Received — AfroPuppyYoga</title>
+</head>
+<body style="margin:0;padding:0;background-color:#FDF6F0;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#FDF6F0;">
     <tr>
-      <td align="center" style="padding:40px 20px;">
-        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #F0D0DC;">
+      <td align="center" style="padding:32px 16px;">
+        <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#FFFFFF;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(194,24,91,0.08);">
           <tr>
-            <td style="background:linear-gradient(135deg,#C2185B,#8B2252);padding:32px 40px;text-align:center;">
-              <p style="margin:0;font-family:'Georgia',serif;font-size:22px;font-weight:bold;color:#fff;">🐾 AfroPuppyYoga</p>
+            <td style="background:#FFF0F5;padding:24px 32px 18px;text-align:center;border-bottom:1px solid #F8D7E3;">
+              <img src="${APY_LOGO}" alt="AfroPuppyYoga" width="52" height="52" style="display:block;margin:0 auto 8px;border-radius:12px;" />
+              <p style="margin:0;font-family:Georgia,serif;font-size:17px;font-weight:bold;color:#8B1A4A;letter-spacing:0.5px;">AfroPuppyYoga</p>
+              <p style="margin:3px 0 0;font-size:10px;color:#C47A9A;letter-spacing:2px;text-transform:uppercase;">Canada's #1 Puppy Yoga Studio</p>
             </td>
           </tr>
           <tr>
-            <td style="padding:40px 40px 32px;">
-              <h2 style="margin:0 0 24px;font-family:'Georgia',serif;font-size:26px;color:#1A0A12;">
-                Documents Received! Welcome to the Pack 🐶💕
-              </h2>
-              <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#3D1A2A;line-height:1.6;">
-                Hi ${opts.applicantName}, we've received your signed Offer Letter and NDA for the <strong>${opts.role}</strong> position (${opts.location}). 
-              </p>
-              <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:15px;color:#3D1A2A;line-height:1.6;">
-                We'll be in touch shortly with your onboarding details and orientation schedule. We can't wait to have you on the team!
-              </p>
-              <p style="margin:0;font-family:'Georgia',serif;font-size:15px;color:#1A0A12;">
-                With excitement,<br/>
-                <strong>The AfroPuppyYoga Team</strong>
-              </p>
+            <td style="background:#C2185B;padding:32px 32px 24px;text-align:center;">
+              <p style="margin:0 0 6px;font-size:12px;font-weight:bold;color:#FFD6E7;letter-spacing:1.5px;text-transform:uppercase;">🎉 Documents Received!</p>
+              <h1 style="margin:0 0 10px;font-family:Georgia,serif;font-size:27px;color:#FFFFFF;line-height:1.25;">Welcome to the pack,<br/>${firstName}! 🐶💕</h1>
+              <p style="margin:0;font-size:14px;color:#FFE4EF;line-height:1.5;"><strong style="color:#fff;">${opts.role}</strong> &middot; <strong style="color:#fff;">${opts.location}</strong></p>
             </td>
           </tr>
           <tr>
-            <td style="background:#FFF5F8;padding:24px 40px;border-top:1px solid #F0D0DC;text-align:center;">
-              <p style="margin:0;font-family:Arial,sans-serif;font-size:11px;color:#C4A0B0;">
-                <a href="https://afropuppyyoga.ca" style="color:#C2185B;">afropuppyyoga.ca</a>
-              </p>
+            <td style="padding:32px 32px 24px;background:#FFFFFF;">
+              <p style="margin:0 0 16px;font-size:15px;color:#3D1A2A;line-height:1.7;">We've received your signed Offer Letter and NDA. Your documents are on file and everything is confirmed!</p>
+              <p style="margin:0 0 16px;font-size:15px;color:#3D1A2A;line-height:1.7;">We'll be in touch shortly with your onboarding details and orientation schedule. We can't wait to have you on the team!</p>
+              <p style="margin:24px 0 0;font-family:Georgia,serif;font-size:15px;color:#1A0A12;">With excitement,<br/><strong>The AfroPuppyYoga Team</strong></p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#FFF0F5;padding:18px 32px;border-top:1px solid #F8D7E3;text-align:center;">
+              <p style="margin:0 0 4px;font-size:12px;font-weight:bold;color:#8B1A4A;">AfroPuppyYoga</p>
+              <p style="margin:0 0 5px;font-size:11px;color:#C4A0B0;">Kitchener-Waterloo &amp; Hamilton, Ontario</p>
+              <p style="margin:0;font-size:11px;"><a href="https://afropuppyyoga.ca" style="color:#C2185B;text-decoration:none;">afropuppyyoga.ca</a> &nbsp;&middot;&nbsp; <a href="https://instagram.com/afropuppyyoga" style="color:#C2185B;text-decoration:none;">@afropuppyyoga</a></p>
             </td>
           </tr>
         </table>
