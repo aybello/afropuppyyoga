@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertInvoice, InsertJobApplication, InsertUser, InsertBirthdayInquiry, InsertPartnershipInquiry, InsertStaffInvite, invoices, jobApplications, users, birthdayInquiries, partnershipInquiries, staffInvites } from "../drizzle/schema";
+import { InsertInvoice, InsertJobApplication, InsertUser, InsertBirthdayInquiry, InsertPartnershipInquiry, InsertStaffInvite, InsertSigningToken, invoices, jobApplications, users, birthdayInquiries, partnershipInquiries, staffInvites, signingTokens } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -133,7 +133,29 @@ export async function createJobApplication(data: InsertJobApplication) {
 export async function getAllJobApplications() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return db.select().from(jobApplications).orderBy(desc(jobApplications.createdAt));
+  const apps = await db.select().from(jobApplications).orderBy(desc(jobApplications.createdAt));
+  // Enrich each application with signing status from signingTokens
+  const enriched = await Promise.all(
+    apps.map(async (app) => {
+      const signingRecord = await db
+        .select()
+        .from(signingTokens)
+        .where(eq(signingTokens.applicationId, app.id))
+        .limit(1);
+      const signing = signingRecord[0];
+      return {
+        ...app,
+        signingStatus: signing
+          ? signing.signed === 1
+            ? "signed"
+            : "pending_signature"
+          : null,
+        signedName: signing?.signedName ?? null,
+        signedAt: signing?.signedAt ?? null,
+      };
+    })
+  );
+  return enriched;
 }
 
 export async function updateJobApplication(id: number, data: Partial<InsertJobApplication>) {
@@ -217,4 +239,32 @@ export async function revokeStaffInvite(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(staffInvites).set({ isActive: 0 }).where(eq(staffInvites.id, id));
+}
+
+// ─── Signing Tokens ───────────────────────────────────────────────────────────
+
+export async function createSigningToken(data: InsertSigningToken) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(signingTokens).values(data);
+}
+
+export async function getSigningTokenByToken(token: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.select().from(signingTokens).where(eq(signingTokens.token, token)).limit(1);
+  return result[0] ?? null;
+}
+
+export async function getSigningTokenByApplicationId(applicationId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.select().from(signingTokens).where(eq(signingTokens.applicationId, applicationId)).limit(1);
+  return result[0] ?? null;
+}
+
+export async function updateSigningToken(id: number, data: Partial<InsertSigningToken>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(signingTokens).set(data).where(eq(signingTokens.id, id));
 }

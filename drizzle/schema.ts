@@ -161,3 +161,35 @@ export const staffInvites = mysqlTable("staffInvites", {
 
 export type StaffInvite = typeof staffInvites.$inferSelect;
 export type InsertStaffInvite = typeof staffInvites.$inferInsert;
+
+export const signingTokens = mysqlTable("signingTokens", {
+  id: int("id").autoincrement().primaryKey(),
+  /** The job application this signing request is for */
+  applicationId: int("applicationId").notNull(),
+  /** Applicant's name */
+  applicantName: varchar("applicantName", { length: 255 }).notNull(),
+  /** Applicant's email */
+  applicantEmail: varchar("applicantEmail", { length: 320 }).notNull(),
+  /** Role (Puppy Monitor / Yoga Instructor) */
+  role: varchar("role", { length: 255 }).notNull(),
+  /** Location (KW / Hamilton / BDR) */
+  location: varchar("location", { length: 100 }).notNull(),
+  /** Which offer letter PDF to show (puppy_monitor_kw | puppy_monitor_hamilton | yoga_instructor) */
+  offerLetterType: mysqlEnum("offerLetterType", ["puppy_monitor_kw", "puppy_monitor_hamilton", "yoga_instructor"]).notNull(),
+  /** Secure random token sent in the signing link */
+  token: varchar("token", { length: 128 }).notNull().unique(),
+  /** Whether the applicant has signed */
+  signed: int("signed").default(0).notNull(),
+  /** Typed name used as digital signature */
+  signedName: varchar("signedName", { length: 255 }),
+  /** IP address at time of signing */
+  signedIp: varchar("signedIp", { length: 64 }),
+  /** When they signed */
+  signedAt: timestamp("signedAt"),
+  /** Token expiry (7 days) */
+  expiresAt: timestamp("expiresAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SigningToken = typeof signingTokens.$inferSelect;
+export type InsertSigningToken = typeof signingTokens.$inferInsert;

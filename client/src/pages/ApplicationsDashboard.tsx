@@ -60,6 +60,9 @@ type Application = {
   videoUrl: string | null;
   status: string;
   createdAt: Date;
+  signingStatus: string | null;
+  signedName: string | null;
+  signedAt: Date | null;
 };
 
 function StatusBadge({ status }: { status: AppStatus }) {
@@ -201,7 +204,7 @@ function InterviewInviteModal({
   );
 }
 
-// ─── Offer Letter Modal ──────────────────────────────────────────────────────
+// ─── Send Signing Link Modal ─────────────────────────────────────────────────
 function OfferLetterModal({
   app,
   open,
@@ -212,88 +215,84 @@ function OfferLetterModal({
   onClose: () => void;
 }) {
   const utils = trpc.useUtils();
-  const [form, setForm] = useState({
-    startDate: "",
-    additionalNotes: "",
-  });
+  const [sent, setSent] = useState(false);
+  const [signingLink, setSigningLink] = useState("");
 
-  const sendOffer = trpc.careers.sendOfferLetter.useMutation({
-    onSuccess: () => {
-      toast.success(`Offer letter sent to ${app.email}! 🎉`);
+  const sendSigningLink = trpc.signing.createSigningRequest.useMutation({
+    onSuccess: (data) => {
+      setSent(true);
+      setSigningLink(data.signingLink);
       utils.careers.list.invalidate();
-      onClose();
+      toast.success(`Signing link sent to ${app.email}! 🎉`);
     },
     onError: (err) => {
-      toast.error(`Failed to send offer: ${err.message}`);
+      toast.error(`Failed to send signing link: ${err.message}`);
     },
   });
+
+  const handleSend = () => {
+    sendSigningLink.mutate({
+      applicationId: app.id,
+      applicantName: app.name,
+      applicantEmail: app.email,
+      role: app.role,
+      location: app.location,
+      origin: window.location.origin,
+    });
+  };
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-lg bg-[#FEFAF4] border-[#F0D0DC]">
         <DialogHeader>
           <DialogTitle className="font-display text-xl text-[#1A0A12]">
-            ✅ Send Offer Letter
+            ✍️ Send Offer for Signing
           </DialogTitle>
           <DialogDescription className="font-body text-sm text-[#6B4C3B]">
-            Sending to <strong>{app.name}</strong> ({app.email}) for <strong>{app.role}</strong>
+            Sending to <strong>{app.name}</strong> ({app.email}) for <strong>{app.role}</strong> — {app.location}
           </DialogDescription>
         </DialogHeader>
-
         <div className="space-y-4 py-2">
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-            <p className="font-body text-sm text-green-700">
-              This will send a warm, branded offer letter to the applicant and update their status to <strong>Accepted</strong>.
-            </p>
-          </div>
-
-          <div>
-            <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Proposed Start Date (optional)</Label>
-            <Input
-              type="date"
-              value={form.startDate}
-              onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-              className="border-[#F0D0DC] font-body"
-            />
-          </div>
-
-          <div>
-            <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Additional Notes (optional)</Label>
-            <Textarea
-              placeholder="Any additional details to include in the offer..."
-              value={form.additionalNotes}
-              onChange={(e) => setForm({ ...form, additionalNotes: e.target.value })}
-              className="border-[#F0D0DC] font-body resize-none"
-              rows={3}
-            />
-          </div>
+          {!sent ? (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-2">
+              <p className="font-body text-sm text-green-800 font-semibold">What happens when you click Send:</p>
+              <ul className="font-body text-sm text-green-700 space-y-1 list-disc list-inside">
+                <li>A branded email is sent to the applicant with a secure signing link</li>
+                <li>They view their role-specific Offer Letter + NDA in the browser</li>
+                <li>They type their name as a digital signature and submit</li>
+                <li>You get notified instantly when they sign</li>
+                <li>The link is valid for 7 days</li>
+              </ul>
+            </div>
+          ) : (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-3">
+              <p className="font-body text-sm text-green-800 font-semibold">✅ Signing link sent!</p>
+              <p className="font-body text-xs text-green-700">You can also share this link directly:</p>
+              <div className="bg-white rounded-lg border border-green-200 p-2">
+                <a href={signingLink} target="_blank" rel="noopener noreferrer" className="font-body text-xs text-[#C2185B] break-all hover:underline">
+                  {signingLink}
+                </a>
+              </div>
+            </div>
+          )}
         </div>
-
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onClose} className="font-body border-[#F0D0DC]">
-            Cancel
+            {sent ? "Close" : "Cancel"}
           </Button>
-          <Button
-            onClick={() =>
-              sendOffer.mutate({
-                id: app.id,
-                applicantName: app.name,
-                applicantEmail: app.email,
-                role: app.role,
-                location: app.location,
-                startDate: form.startDate || undefined,
-                additionalNotes: form.additionalNotes || undefined,
-              })
-            }
-            disabled={sendOffer.isPending}
-            className="font-body text-white bg-green-600 hover:bg-green-700"
-          >
-            {sendOffer.isPending ? (
-              <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Sending...</>
-            ) : (
-              <><CheckCircle className="w-4 h-4 mr-2" /> Send Offer</>
-            )}
-          </Button>
+          {!sent && (
+            <Button
+              onClick={handleSend}
+              disabled={sendSigningLink.isPending}
+              className="font-body text-white bg-green-600 hover:bg-green-700"
+            >
+              {sendSigningLink.isPending ? (
+                <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Sending...</>
+              ) : (
+                <><Send className="w-4 h-4 mr-2" /> Send Signing Link</>
+              )}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -637,6 +636,7 @@ export default function ApplicationsDashboard() {
                     <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Role</th>
                     <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Contact</th>
                     <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Video</th>
+                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Signing</th>
                     <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Applied</th>
                     <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Status</th>
                     <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Actions</th>
@@ -708,6 +708,20 @@ export default function ApplicationsDashboard() {
                         )}
                       </td>
 
+                      {/* Signing status */}
+                      <td className="px-5 py-4">
+                        {app.signingStatus === "signed" ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-body font-semibold bg-green-100 text-green-700">
+                            <CheckCircle className="w-3 h-3" /> Signed
+                          </span>
+                        ) : app.signingStatus === "pending_signature" ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-body font-semibold bg-yellow-100 text-yellow-700">
+                            <Send className="w-3 h-3" /> Awaiting
+                          </span>
+                        ) : (
+                          <span className="font-body text-xs text-[#C4A0B0] italic">—</span>
+                        )}
+                      </td>
                       {/* Applied date */}
                       <td className="px-5 py-4 font-body text-xs text-[#6B4C3B]">
                         {new Date(app.createdAt).toLocaleDateString("en-CA", {

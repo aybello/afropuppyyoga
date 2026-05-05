@@ -19,6 +19,7 @@ const Birthday = lazy(() => import("./pages/Birthday"));
 const Partnerships = lazy(() => import("./pages/Partnerships"));
 const StaffLogin = lazy(() => import("./pages/StaffLogin"));
 const StaffManagement = lazy(() => import("./pages/StaffManagement"));
+const SignDocuments = lazy(() => import("./pages/SignDocuments"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function PageLoader() {
@@ -45,6 +46,7 @@ function Router() {
         <Route path={"/partnerships"} component={Partnerships} />
         <Route path={"/staff-login"} component={StaffLogin} />
         <Route path={"/admin/staff"} component={StaffManagement} />
+        <Route path={"/sign"} component={SignDocuments} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>
