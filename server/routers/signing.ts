@@ -188,10 +188,10 @@ function buildSigningEmail(opts: { applicantName: string; role: string; location
 
           <!-- ── HERO: congratulations banner ── -->
           <tr>
-            <td style="background:linear-gradient(160deg,#F9E4EE 0%,#FFF0F5 100%);padding:36px 32px 28px;text-align:center;">
-              <p style="margin:0 0 6px;font-size:13px;font-weight:bold;color:#C2185B;letter-spacing:1.5px;text-transform:uppercase;">🎉 Congratulations!</p>
-              <h1 style="margin:0 0 12px;font-family:Georgia,serif;font-size:28px;color:#5C0A2E;line-height:1.25;">You've got an offer,<br/>${firstName}!</h1>
-              <p style="margin:0;font-size:15px;color:#7A3050;line-height:1.5;">Your <strong>${opts.role}</strong> position at our <strong>${opts.location}</strong> location is waiting for your signature.</p>
+            <td style="background:#C2185B;padding:36px 32px 28px;text-align:center;">
+              <p style="margin:0 0 8px;font-size:13px;font-weight:bold;color:#FFD6E7;letter-spacing:1.5px;text-transform:uppercase;">🎉 Congratulations!</p>
+              <h1 style="margin:0 0 12px;font-family:Georgia,serif;font-size:30px;color:#FFFFFF;line-height:1.25;text-shadow:0 1px 3px rgba(0,0,0,0.15);">You've got an offer,<br/>${firstName}!</h1>
+              <p style="margin:0;font-size:15px;color:#FFE4EF;line-height:1.5;">Your <strong style="color:#fff;">${opts.role}</strong> position at our <strong style="color:#fff;">${opts.location}</strong> location is waiting for your signature.</p>
             </td>
           </tr>
 
