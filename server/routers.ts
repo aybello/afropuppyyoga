@@ -10,6 +10,7 @@ import { birthdayRouter } from "./routers/birthday";
 import { partnershipRouter } from "./routers/partnership";
 import { staffRouter } from "./routers/staff";
 import { signingRouter } from "./routers/signing";
+import { privateEventsRouter } from "./routers/privateEvents";
 import { z } from "zod";
 
 const messageSchema = z.object({
@@ -25,6 +26,7 @@ export const appRouter = router({
   partnership: partnershipRouter,
   staff: staffRouter,
   signing: signingRouter,
+  privateEvents: privateEventsRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
