@@ -210,6 +210,24 @@ export default function Partnerships() {
                 </div>
               </div>
             </div>
+            {/* Fluffy Glaze */}
+            <div className="flex items-center gap-5 bg-white rounded-2xl px-8 py-6 shadow-sm border border-[#F0D0DC] max-w-md w-full">
+              <div className="w-14 h-14 rounded-full bg-white border border-[#F0D0DC] flex items-center justify-center shrink-0 overflow-hidden p-1">
+                <img
+                  src="https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/fluffy_glaze_logo_34eaac35.png"
+                  alt="Fluffy Glaze"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <div>
+                <p className="font-display font-bold text-[#1A0A12] text-lg">Fluffy Glaze</p>
+                <p className="font-body text-[#5A3040] text-sm mt-0.5">Local Business Partner</p>
+                <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-[#8B2252]/10 rounded-full">
+                  <CheckCircle size={12} className="text-[#8B2252]" />
+                  <span className="font-body text-xs font-semibold text-[#8B2252]">Artisan donuts served at select APY events</span>
+                </div>
+              </div>
+            </div>
             {/* Become a partner CTA */}
             <div className="flex items-center gap-4 text-center md:text-left">
               <div>
