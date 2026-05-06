@@ -84,13 +84,13 @@ const CATEGORIES = [
     type: "Breeder Partnership" as PartnershipType,
     icon: Heart,
     title: "Breeder Partnership",
-    tagline: "Become an official APY puppy supplier",
+    tagline: "Become an official APY breeder partner",
     description:
-      "We partner with ethical, responsible breeders who share our commitment to puppy welfare. Our classes run every Saturday across two locations with four sessions per day. We are always looking for healthy, well-socialized puppies.",
+      "We partner with ethical, responsible breeders who share our commitment to puppy welfare. Our classes run every Saturday across two locations and we are always looking for healthy, well-socialized puppies.",
     benefits: [
       "Regular, recurring booking schedule",
       "Featured breeder profile on our website",
-      "Exposure to thousands of potential puppy buyers per month",
+      "Featured placement across our social media and marketing channels",
       "Strict welfare standards and puppy care protocols",
     ],
     accent: "#8B2252",
