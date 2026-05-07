@@ -59,7 +59,7 @@ export default function Footer() {
           {/* Navigation */}
           <div>
             <h4 className="font-display font-bold text-sm text-white/80 uppercase tracking-widest mb-5">Navigation</h4>
-            <ul className="grid grid-cols-2 md:grid-cols-1 gap-x-4 gap-y-2.5">
+            <ul className="grid grid-cols-2 gap-x-6 gap-y-2.5">
               {navLinks.map((link) => (
                 <li key={link.href}>
                   {(link as any).isPage ? (
