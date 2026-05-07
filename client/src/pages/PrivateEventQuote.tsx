@@ -41,8 +41,8 @@ const BASE_MIN = 1200;
 const BASE_MAX = 1500;
 const SECOND_SESSION_MIN = 800;
 const SECOND_SESSION_MAX = 1000;
-const DELUXE_UPGRADE = 750; // photographer + refreshments + premium mats
-const VIP_MIN = 3000;
+const DELUXE_UPGRADE = 500; // photographer + refreshments + premium mats — Deluxe = BASE_MAX + DELUXE_UPGRADE = $2,000
+const VIP_MIN = 2000;
 
 // Travel fees by city (one-way distance from KW studio)
 const TRAVEL_FEES: Record<string, number> = {
@@ -221,7 +221,7 @@ export default function PrivateEventQuote() {
               },
               {
                 name: "Deluxe",
-                price: "$1,950–$2,250",
+                price: "$1,500–$2,000",
                 color: "border-[#F2A0B8] ring-2 ring-[#F2A0B8]/30",
                 badge: "bg-[#F2A0B8]/20 text-[#8B2252]",
                 popular: true,
@@ -229,7 +229,7 @@ export default function PrivateEventQuote() {
               },
               {
                 name: "VIP",
-                price: "$3,000+",
+                price: "$2,000+",
                 color: "border-[#8B2252]/30",
                 badge: "bg-[#1A0A12]/10 text-[#1A0A12]",
                 items: ["Fully customized", "Unlimited guests", "Videography", "Decor + catering"],
@@ -434,7 +434,7 @@ export default function PrivateEventQuote() {
                         {quote.isVip ? (
                           <div>
                             <div className="font-display text-4xl font-bold text-white mb-2">
-                              $3,000+
+                              $2,000+
                             </div>
                             <p className="font-body text-white/60 text-sm">
                               Custom VIP quote — we'll reach out with a tailored proposal.
