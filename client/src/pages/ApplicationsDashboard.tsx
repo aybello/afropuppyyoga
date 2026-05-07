@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Users, Loader2, Video, Mail, Phone, Star, Eye, XCircle, Inbox,
-  Calendar, CheckCircle, Send, Trash2,
+  Calendar, CheckCircle, Send, Trash2, FileText,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -58,6 +58,7 @@ type Application = {
   whyAPY: string | null;
   experience: string | null;
   videoUrl: string | null;
+  resumeUrl: string | null;
   status: string;
   createdAt: Date;
   signingStatus: string | null;
@@ -456,6 +457,21 @@ function ApplicationDetailModal({
               </div>
             )}
 
+            {/* Resume */}
+            {app.resumeUrl && (
+              <div>
+                <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-2">Resume</p>
+                <a
+                  href={app.resumeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-xl font-body text-sm font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
+                >
+                  <FileText className="w-4 h-4" /> View Resume
+                </a>
+              </div>
+            )}
+
             {/* Current Status */}
             <div>
               <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-2">Current Status</p>
@@ -636,6 +652,7 @@ export default function ApplicationsDashboard() {
                     <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Role</th>
                     <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Contact</th>
                     <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Video</th>
+                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Resume</th>
                     <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Signing</th>
                     <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Applied</th>
                     <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Status</th>
@@ -705,6 +722,23 @@ export default function ApplicationsDashboard() {
                           </a>
                         ) : (
                           <span className="font-body text-xs text-[#C4A0B0] italic">No video</span>
+                        )}
+                      </td>
+
+                      {/* Resume */}
+                      <td className="px-5 py-4">
+                        {app.resumeUrl ? (
+                          <a
+                            href={app.resumeUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg font-body text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
+                          >
+                            <FileText className="w-3 h-3" />
+                            View
+                          </a>
+                        ) : (
+                          <span className="font-body text-xs text-[#C4A0B0] italic">No resume</span>
                         )}
                       </td>
 

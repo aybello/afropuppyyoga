@@ -7,6 +7,7 @@ import {
   buildInterviewInviteEmail,
   buildOfferLetterEmail,
   buildRejectionLetterEmail,
+  buildApplicationConfirmationEmail,
 } from "../email";
 
 const APP_STATUS = ["new", "reviewed", "shortlisted", "interview_scheduled", "accepted", "rejected"] as const;
@@ -45,6 +46,8 @@ export const careersRouter = router({
         experience: input.experience ?? null,
         videoUrl: input.videoUrl,
         videoKey: input.videoKey ?? null,
+        resumeUrl: input.resumeUrl,
+        resumeKey: input.resumeKey ?? null,
         status: "new",
       });
 
@@ -76,6 +79,19 @@ export const careersRouter = router({
         subject: `New Application: ${input.name} — ${input.role} (${input.location})`,
         html: emailHtml,
         text: `New job application received!\n\nRole: ${input.role} — ${input.location}\nName: ${input.name}\nEmail: ${input.email}\nPhone: ${input.phone ?? "Not provided"}\n\nWhy APY:\n${input.whyAPY ?? "Not provided"}\n\nExperience:\n${input.experience ?? "Not provided"}\n\nVideo: ${input.videoUrl}\nResume: ${input.resumeUrl}`,
+      });
+
+      // Send auto-confirmation email to the applicant
+      const confirmation = buildApplicationConfirmationEmail({
+        applicantName: input.name,
+        role: input.role,
+        location: input.location,
+      });
+      await sendEmail({
+        to: input.email,
+        subject: confirmation.subject,
+        html: confirmation.html,
+        text: confirmation.text,
       });
 
       // Also send Manus owner notification as backup

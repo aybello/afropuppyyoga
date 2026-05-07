@@ -248,6 +248,42 @@ export async function sendStaffInviteEmail(opts: {
   await sendEmail({ to: opts.to, subject, html, text });
 }
 
+export function buildApplicationConfirmationEmail(opts: {
+  applicantName: string;
+  role: string;
+  location: string;
+}): { subject: string; html: string; text: string } {
+  const subject = `We received your application — ${opts.role} at AfroPuppyYoga`;
+  const firstName = opts.applicantName.split(" ")[0];
+
+  const hero = `
+    <p style="margin:0 0 6px;font-size:12px;font-weight:bold;color:#FFD6E7;letter-spacing:1.5px;text-transform:uppercase;">Application Received</p>
+    <h1 style="margin:0 0 10px;font-family:Georgia,serif;font-size:27px;color:#FFFFFF;line-height:1.25;">Thanks for applying,<br/>${firstName}! 🐾</h1>
+    <p style="margin:0;font-size:14px;color:#FFE4EF;line-height:1.5;"><strong style="color:#fff;">${opts.role}</strong> &middot; <strong style="color:#fff;">${opts.location}</strong></p>
+  `;
+
+  const body = `
+    ${bodyText(`We've received your application for <strong>${opts.role}</strong> at our <strong>${opts.location}</strong> location. Thank you for your interest in joining the AfroPuppyYoga family!`)}
+    ${bodyText(`Our team will review your application and reach out within <strong>5 business days</strong> if your profile is a great fit. We review every application personally, so please be patient with us.`)}
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;">
+      <tr><td style="padding:16px 20px;">
+        <p style="margin:0 0 8px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">What happens next?</p>
+        <p style="margin:0 0 6px;font-size:14px;color:#3D1A2A;">1. Our team reviews your video and resume</p>
+        <p style="margin:0 0 6px;font-size:14px;color:#3D1A2A;">2. Shortlisted candidates receive an interview invite</p>
+        <p style="margin:0;font-size:14px;color:#3D1A2A;">3. Successful applicants join the APY pack!</p>
+      </td></tr>
+    </table>
+    ${bodyText(`In the meantime, feel free to follow us on Instagram <a href="https://instagram.com/afropuppyyoga" style="color:#C2185B;">@afropuppyyoga</a> to stay connected with the APY community.`)}
+    ${signoff("The AfroPuppyYoga Team")}
+  `;
+
+  const html = wrapInBrandedLayout(hero, body);
+
+  const text = `Hi ${opts.applicantName},\n\nThank you for applying for the ${opts.role} position at our ${opts.location} location!\n\nWe've received your application and our team will review it carefully. We'll be in touch within 5 business days if your profile is a great fit.\n\nWhat happens next?\n1. Our team reviews your video and resume\n2. Shortlisted candidates receive an interview invite\n3. Successful applicants join the APY pack!\n\nIf you have any questions, feel free to reply to this email.\n\nWith warmth,\nThe AfroPuppyYoga Team\nafropuppyyogaofficial@gmail.com`;
+
+  return { subject, html, text };
+}
+
 export function buildRejectionLetterEmail(opts: {
   applicantName: string;
   role: string;
