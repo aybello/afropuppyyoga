@@ -46,6 +46,15 @@ import AdminNav from "@/components/AdminNav";
 
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
 
+/**
+ * Returns a proxy URL for video files so they play inline in the browser.
+ * MOV files are served by CloudFront as video/quicktime which triggers a download;
+ * the proxy re-serves them with Content-Type: video/mp4 and Content-Disposition: inline.
+ */
+function getVideoProxyUrl(rawUrl: string): string {
+  return `/api/video-proxy?url=${encodeURIComponent(rawUrl)}`;
+}
+
 type AppStatus = "new" | "reviewed" | "shortlisted" | "interview_scheduled" | "accepted" | "rejected";
 
 type Application = {
@@ -446,14 +455,16 @@ function ApplicationDetailModal({
             {app.videoUrl && (
               <div>
                 <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-2">Video Application</p>
-                <a
-                  href={app.videoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#FFF0F4] border border-[#F0D0DC] rounded-xl font-body text-sm font-semibold text-[#8B2252] hover:bg-[#F9E4EE] transition-colors"
+                <video
+                  src={getVideoProxyUrl(app.videoUrl)}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="w-full rounded-xl border border-[#F0D0DC] bg-black"
+                  style={{ maxHeight: "320px" }}
                 >
-                  <Video className="w-4 h-4" /> Watch Video Application
-                </a>
+                  Your browser does not support video playback.
+                </video>
               </div>
             )}
 
@@ -711,15 +722,14 @@ export default function ApplicationsDashboard() {
                       {/* Video */}
                       <td className="px-5 py-4">
                         {app.videoUrl ? (
-                          <a
-                            href={app.videoUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFF0F4] border border-[#F0D0DC] rounded-lg font-body text-xs font-semibold text-[#8B2252] hover:bg-[#F9E4EE] transition-colors"
-                          >
-                            <Video className="w-3 h-3" />
-                            Watch
-                          </a>
+                          <video
+                            src={getVideoProxyUrl(app.videoUrl)}
+                            controls
+                            playsInline
+                            preload="none"
+                            className="rounded-lg border border-[#F0D0DC] bg-black"
+                            style={{ width: "160px", height: "90px", objectFit: "cover" }}
+                          />
                         ) : (
                           <span className="font-body text-xs text-[#C4A0B0] italic">No video</span>
                         )}

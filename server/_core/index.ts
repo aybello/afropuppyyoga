@@ -38,6 +38,49 @@ async function startServer() {
   registerOAuthRoutes(app);
   // Video upload endpoint (multipart, bypasses JSON body limit)
   app.use(uploadRouter);
+  // Video proxy — re-serves CDN videos with inline Content-Disposition so browsers play instead of download
+  // Needed for MOV files which CloudFront serves as video/quicktime (triggers download in most browsers)
+  app.get("/api/video-proxy", async (req, res) => {
+    const url = req.query.url as string;
+    if (!url || !url.startsWith("https://d2xsxph8kpxj0f.cloudfront.net/")) {
+      return res.status(400).json({ error: "Invalid URL" });
+    }
+    try {
+      // Support range requests for video seeking
+      const rangeHeader = req.headers.range;
+      const fetchHeaders: Record<string, string> = {};
+      if (rangeHeader) fetchHeaders["Range"] = rangeHeader;
+
+      const response = await fetch(url, { headers: fetchHeaders });
+      if (!response.ok) return res.status(response.status).send("Failed to fetch video");
+
+      // Detect file extension to pick the right MIME type
+      const urlPath = new URL(url).pathname.toLowerCase();
+      const isMov = urlPath.endsWith(".mov");
+      const isWebm = urlPath.endsWith(".webm");
+      const contentType = isWebm ? "video/webm" : isMov ? "video/mp4" : "video/mp4";
+
+      // Forward range response status (206 Partial Content) if applicable
+      const status = response.status === 206 ? 206 : 200;
+      const contentRange = response.headers.get("content-range");
+      const contentLength = response.headers.get("content-length");
+
+      res.status(status);
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Content-Disposition", "inline");
+      res.setHeader("Accept-Ranges", "bytes");
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Cache-Control", "public, max-age=3600");
+      if (contentRange) res.setHeader("Content-Range", contentRange);
+      if (contentLength) res.setHeader("Content-Length", contentLength);
+
+      const buffer = await response.arrayBuffer();
+      res.send(Buffer.from(buffer));
+    } catch (e) {
+      res.status(500).json({ error: "Proxy error" });
+    }
+  });
+
   // PDF proxy — serves CDN PDFs with CORS headers so PDF.js can render them
   app.get("/api/pdf-proxy", async (req, res) => {
     const url = req.query.url as string;
