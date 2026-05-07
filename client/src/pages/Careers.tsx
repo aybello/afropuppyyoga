@@ -151,9 +151,11 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
     experience: "",
   });
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const resumeInputRef = useRef<HTMLInputElement>(null);
 
   const applyMutation = trpc.careers.submitApplication.useMutation({
     onSuccess: () => setSubmitted(true),
@@ -171,6 +173,17 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
     setError(null);
   };
 
+  const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Resume must be under 10MB.");
+      return;
+    }
+    setResumeFile(file);
+    setError(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -179,28 +192,53 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       setError("Name and email are required.");
       return;
     }
+    if (!videoFile) {
+      setError("A video introduction is required. Please upload a short 1-2 minute video.");
+      return;
+    }
+    if (!resumeFile) {
+      setError("A resume is required. Please upload your resume (PDF or Word).");
+      return;
+    }
 
-    let videoUrl: string | undefined;
+    // Upload video
+    let videoUrl: string;
     let videoKey: string | undefined;
-
-    // Upload video via multipart FormData to avoid JSON body size limits
-    if (videoFile) {
-      try {
-        const fd = new FormData();
-        fd.append("video", videoFile);
-        const res = await fetch("/api/upload-video", { method: "POST", body: fd });
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({ error: "Upload failed" }));
-          setError(errData.error ?? "Video upload failed. Please try again.");
-          return;
-        }
-        const data = await res.json();
-        videoUrl = data.url;
-        videoKey = data.key;
-      } catch {
-        setError("Video upload failed. Please check your connection and try again.");
+    try {
+      const fd = new FormData();
+      fd.append("video", videoFile);
+      const res = await fetch("/api/upload-video", { method: "POST", body: fd });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({ error: "Upload failed" }));
+        setError(errData.error ?? "Video upload failed. Please try again.");
         return;
       }
+      const data = await res.json();
+      videoUrl = data.url;
+      videoKey = data.key;
+    } catch {
+      setError("Video upload failed. Please check your connection and try again.");
+      return;
+    }
+
+    // Upload resume
+    let resumeUrl: string;
+    let resumeKey: string | undefined;
+    try {
+      const fd = new FormData();
+      fd.append("resume", resumeFile);
+      const res = await fetch("/api/upload-resume", { method: "POST", body: fd });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({ error: "Upload failed" }));
+        setError(errData.error ?? "Resume upload failed. Please try again.");
+        return;
+      }
+      const data = await res.json();
+      resumeUrl = data.url;
+      resumeKey = data.key;
+    } catch {
+      setError("Resume upload failed. Please check your connection and try again.");
+      return;
     }
 
     applyMutation.mutate({
@@ -213,6 +251,8 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       experience: form.experience || undefined,
       videoUrl,
       videoKey,
+      resumeUrl,
+      resumeKey,
     });
   };
 
@@ -323,10 +363,52 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
               />
             </div>
 
+            {/* Resume Upload */}
+            <div>
+              <label className="block font-body text-xs font-semibold text-[#5A3040] uppercase tracking-wide mb-1.5">
+                Resume <span className="text-[#C2185B]">*</span> <span className="text-[#8B2252] font-normal">(PDF or Word, Max 10MB)</span>
+              </label>
+              <p className="font-body text-xs text-[#8B6070] mb-3">
+                Upload your most recent resume or CV.
+              </p>
+              <input
+                ref={resumeInputRef}
+                type="file"
+                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                onChange={handleResumeChange}
+                className="hidden"
+              />
+              {resumeFile ? (
+                <div className="flex items-center gap-3 p-3 bg-[#F9E4EE] border border-[#F0D0DC] rounded-xl">
+                  <CheckCircle size={18} className="text-[#C2185B] shrink-0" />
+                  <span className="font-body text-sm text-[#1A0A12] truncate flex-1">{resumeFile.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => { setResumeFile(null); if (resumeInputRef.current) resumeInputRef.current.value = ""; }}
+                    className="p-1 hover:bg-[#F0D0DC] rounded-full transition-colors text-[#5A3040]"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => resumeInputRef.current?.click()}
+                  className="w-full flex flex-col items-center gap-2 p-6 border-2 border-dashed border-[#F0D0DC] rounded-xl hover:border-[#C2185B] hover:bg-[#FFF0F5] transition-colors group"
+                >
+                  <Upload size={24} className="text-[#C4A0B0] group-hover:text-[#C2185B] transition-colors" />
+                  <span className="font-body text-sm text-[#8B6070] group-hover:text-[#C2185B] transition-colors">
+                    Click to upload your resume
+                  </span>
+                  <span className="font-body text-xs text-[#C4A0B0]">PDF, DOC, DOCX — Max 10MB</span>
+                </button>
+              )}
+            </div>
+
             {/* Video Upload */}
             <div>
               <label className="block font-body text-xs font-semibold text-[#5A3040] uppercase tracking-wide mb-1.5">
-                Video Introduction <span className="text-[#8B2252] font-normal">(Max 100MB)</span>
+                Video Introduction <span className="text-[#C2185B]">*</span> <span className="text-[#8B2252] font-normal">(Max 100MB)</span>
               </label>
               <p className="font-body text-xs text-[#8B6070] mb-3">
                 Record a short 1-2 minute video introducing yourself. Tell us your name, why you love what you do, and why APY feels like the right fit. Be yourself!

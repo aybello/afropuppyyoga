@@ -18,6 +18,23 @@ const upload = multer({
   },
 });
 
+const resumeUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
+  fileFilter: (_req, file, cb) => {
+    const allowed = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only PDF or Word documents are allowed for resumes"));
+    }
+  },
+});
+
 /**
  * POST /api/upload-video
  * Accepts multipart/form-data with a single "video" field.
@@ -39,6 +56,30 @@ router.post("/api/upload-video", upload.single("video"), async (req, res) => {
     return res.json({ url, key });
   } catch (err: any) {
     console.error("[upload-video] Error:", err);
+    return res.status(500).json({ error: err.message ?? "Upload failed" });
+  }
+});
+
+/**
+ * POST /api/upload-resume
+ * Accepts multipart/form-data with a single "resume" field (PDF or Word).
+ * Uploads to S3 and returns { url, key }.
+ */
+router.post("/api/upload-resume", resumeUpload.single("resume"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No resume file provided" });
+    }
+
+    const ext = req.file.originalname.split(".").pop() ?? "pdf";
+    const randomSuffix = Math.random().toString(36).slice(2, 10);
+    const key = `applications/resumes/${Date.now()}-${randomSuffix}.${ext}`;
+
+    const { url } = await storagePut(key, req.file.buffer, req.file.mimetype);
+
+    return res.json({ url, key });
+  } catch (err: any) {
+    console.error("[upload-resume] Error:", err);
     return res.status(500).json({ error: err.message ?? "Upload failed" });
   }
 });
