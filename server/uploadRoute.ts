@@ -35,13 +35,29 @@ const resumeUpload = multer({
   },
 });
 
+// ── Multer error handler middleware ─────────────────────────────────────────
+function handleMulterError(err: any, req: any, res: any, next: any) {
+  if (err && err.code === "LIMIT_FILE_SIZE") {
+    return res.status(400).json({ error: "File is too large. Please check the size limit and try again." });
+  }
+  if (err) {
+    return res.status(400).json({ error: err.message ?? "File upload failed" });
+  }
+  next();
+}
+
 /**
  * POST /api/upload-video
  * Accepts multipart/form-data with a single "video" field.
  * Uploads to S3 and returns { url, key }.
  * No auth required — the key is random and unguessable.
  */
-router.post("/api/upload-video", upload.single("video"), async (req, res) => {
+router.post("/api/upload-video", (req: any, res: any, next: any) => {
+  upload.single("video")(req, res, (err) => {
+    if (err) return handleMulterError(err, req, res, next);
+    next();
+  });
+}, async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No video file provided" });
@@ -65,7 +81,12 @@ router.post("/api/upload-video", upload.single("video"), async (req, res) => {
  * Accepts multipart/form-data with a single "resume" field (PDF or Word).
  * Uploads to S3 and returns { url, key }.
  */
-router.post("/api/upload-resume", resumeUpload.single("resume"), async (req, res) => {
+router.post("/api/upload-resume", (req: any, res: any, next: any) => {
+  resumeUpload.single("resume")(req, res, (err) => {
+    if (err) return handleMulterError(err, req, res, next);
+    next();
+  });
+}, async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No resume file provided" });
