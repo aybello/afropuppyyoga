@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Users, Loader2, Video, Mail, Phone, Star, Eye, XCircle, Inbox,
-  Calendar, CheckCircle, Send, Trash2, FileText,
+  Calendar, CheckCircle, Send, Trash2, FileText, Play,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -722,14 +722,15 @@ export default function ApplicationsDashboard() {
                       {/* Video */}
                       <td className="px-5 py-4">
                         {app.videoUrl ? (
-                          <video
-                            src={getVideoProxyUrl(app.videoUrl)}
-                            controls
-                            playsInline
-                            preload="none"
-                            className="rounded-lg border border-[#F0D0DC] bg-black"
-                            style={{ width: "160px", height: "90px", objectFit: "cover" }}
-                          />
+                          <a
+                            href={getVideoProxyUrl(app.videoUrl)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFF0F5] border border-[#F2A0B8] rounded-lg font-body text-xs font-semibold text-[#8B2252] hover:bg-[#F2A0B8]/20 transition-colors"
+                          >
+                            <Play className="w-3 h-3" />
+                            Watch
+                          </a>
                         ) : (
                           <span className="font-body text-xs text-[#C4A0B0] italic">No video</span>
                         )}
