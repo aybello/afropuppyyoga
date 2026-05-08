@@ -2,7 +2,7 @@
    Careers Page — AfroPuppyYoga
    Design: Warm Afro-Wellness Editorial (matches main site)
    ============================================================ */
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -156,6 +156,15 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resumeInputRef = useRef<HTMLInputElement>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to error message whenever it changes
+  useEffect(() => {
+    if (error && errorRef.current && modalRef.current) {
+      errorRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [error]);
 
   const applyMutation = trpc.careers.submitApplication.useMutation({
     onSuccess: () => setSubmitted(true),
@@ -259,7 +268,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-[#FEFAF4] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div ref={modalRef} className="relative bg-[#FEFAF4] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-[#FEFAF4] border-b border-[#F0D0DC] px-6 py-4 flex items-start justify-between rounded-t-2xl z-10">
           <div>
@@ -293,7 +302,13 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          <form onSubmit={handleSubmit} noValidate className="p-6 space-y-5">
+            {/* Error banner — shown at top so it's always visible */}
+            {error && (
+              <div ref={errorRef} className="p-3 bg-red-50 border border-red-200 rounded-xl">
+                <p className="font-body text-sm text-red-600">{error}</p>
+              </div>
+            )}
             {/* Personal Info */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -306,7 +321,6 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="Your full name"
                   className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#C2185B] focus:ring-1 focus:ring-[#C2185B]/30 transition-colors"
-                  required
                 />
               </div>
               <div>
@@ -319,7 +333,6 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   placeholder="your@email.com"
                   className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#C2185B] focus:ring-1 focus:ring-[#C2185B]/30 transition-colors"
-                  required
                 />
               </div>
             </div>
@@ -446,12 +459,6 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                 </button>
               )}
             </div>
-
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
-                <p className="font-body text-sm text-red-600">{error}</p>
-              </div>
-            )}
 
             <button
               type="submit"
