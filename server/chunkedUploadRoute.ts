@@ -1,57 +1,25 @@
 /**
- * Chunked video upload endpoints.
+ * Chunked video upload endpoints — S3-backed storage.
+ *
+ * Each chunk is uploaded directly to S3 as a temporary object.
+ * On complete, all chunk objects are fetched from S3, assembled, and re-uploaded as the final file.
+ * This works correctly on Cloud Run where each request may hit a different container instance.
  *
  * Flow:
  *   1. POST /api/upload-video-init      → returns { uploadId, key }
- *   2. POST /api/upload-video-chunk     → sends one chunk (≤5MB), returns { received }
- *   3. POST /api/upload-video-complete  → assembles chunks, uploads to S3, returns { url, key }
- *
- * Chunks are stored as temp files: /tmp/chunks/<uploadId>/<chunkIndex>
- * They are cleaned up after a successful complete or after 1 hour (TTL check on init).
+ *   2. POST /api/upload-video-chunk     → uploads chunk to S3, returns { received, total }
+ *   3. POST /api/upload-video-complete  → assembles all chunks from S3, uploads final file, returns { url, key }
  */
 
 import { Router } from "express";
 import multer from "multer";
-import * as fs from "fs";
-import * as path from "path";
-import * as os from "os";
-import { storagePut } from "./storage";
+import { storagePut, storageGet } from "./storage";
 
 const router = Router();
-const CHUNKS_DIR = path.join(os.tmpdir(), "apy-chunks");
 const CHUNK_SIZE_LIMIT = 6 * 1024 * 1024; // 6MB per chunk
 const MAX_TOTAL_SIZE = 500 * 1024 * 1024; // 500MB total video limit
-const CHUNK_TTL_MS = 60 * 60 * 1000; // 1 hour TTL for abandoned uploads
 
-// Ensure chunks directory exists
-if (!fs.existsSync(CHUNKS_DIR)) {
-  fs.mkdirSync(CHUNKS_DIR, { recursive: true });
-}
-
-// In-memory upload registry: uploadId -> { key, ext, totalChunks, receivedChunks, createdAt }
-const uploadRegistry = new Map<string, {
-  key: string;
-  ext: string;
-  totalChunks: number;
-  receivedChunks: Set<number>;
-  createdAt: number;
-}>();
-
-// Clean up abandoned uploads older than TTL
-function cleanupExpiredUploads() {
-  const now = Date.now();
-  for (const [uploadId, meta] of uploadRegistry.entries()) {
-    if (now - meta.createdAt > CHUNK_TTL_MS) {
-      uploadRegistry.delete(uploadId);
-      const uploadDir = path.join(CHUNKS_DIR, uploadId);
-      if (fs.existsSync(uploadDir)) {
-        fs.rmSync(uploadDir, { recursive: true, force: true });
-      }
-    }
-  }
-}
-
-// Multer for individual chunks (max 6MB each)
+// Multer for individual chunks (max 6MB each, memory storage)
 const chunkUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: CHUNK_SIZE_LIMIT },
@@ -65,11 +33,11 @@ function generateUploadId(): string {
  * POST /api/upload-video-init
  * Body: { filename: string, totalChunks: number, totalSize: number }
  * Returns: { uploadId: string, key: string }
+ *
+ * Stores a small JSON manifest in S3 so all container instances can find it.
  */
 router.post("/api/upload-video-init", async (req, res) => {
   try {
-    cleanupExpiredUploads();
-
     const { filename, totalChunks, totalSize } = req.body;
 
     if (!filename || !totalChunks || !totalSize) {
@@ -88,21 +56,17 @@ router.post("/api/upload-video-init", async (req, res) => {
 
     const uploadId = generateUploadId();
     const randomSuffix = Math.random().toString(36).slice(2, 10);
-    const key = `applications/videos/${Date.now()}-${randomSuffix}.${ext}`;
+    const finalKey = `applications/videos/${Date.now()}-${randomSuffix}.${ext}`;
 
-    // Create temp directory for this upload
-    const uploadDir = path.join(CHUNKS_DIR, uploadId);
-    fs.mkdirSync(uploadDir, { recursive: true });
+    // Store manifest in S3 so any container instance can read it
+    const manifest = { finalKey, ext, totalChunks: Number(totalChunks), createdAt: Date.now() };
+    await storagePut(
+      `uploads/chunks/${uploadId}/manifest.json`,
+      Buffer.from(JSON.stringify(manifest)),
+      "application/json"
+    );
 
-    uploadRegistry.set(uploadId, {
-      key,
-      ext,
-      totalChunks: Number(totalChunks),
-      receivedChunks: new Set(),
-      createdAt: Date.now(),
-    });
-
-    return res.json({ uploadId, key });
+    return res.json({ uploadId, key: finalKey });
   } catch (err: any) {
     console.error("[upload-video-init] Error:", err);
     return res.status(500).json({ error: err.message ?? "Failed to initiate upload" });
@@ -114,6 +78,8 @@ router.post("/api/upload-video-init", async (req, res) => {
  * Form fields: uploadId, chunkIndex (0-based)
  * Form file: chunk
  * Returns: { received: number, total: number }
+ *
+ * Uploads the chunk buffer directly to S3 as uploads/chunks/<uploadId>/chunk-<index>
  */
 router.post("/api/upload-video-chunk", (req: any, res: any, next: any) => {
   chunkUpload.single("chunk")(req, res, (err) => {
@@ -134,17 +100,48 @@ router.post("/api/upload-video-chunk", (req: any, res: any, next: any) => {
       return res.status(400).json({ error: "No chunk data provided" });
     }
 
-    const meta = uploadRegistry.get(uploadId);
-    if (!meta) {
+    const idx = Number(chunkIndex);
+
+    // Read manifest from S3 to get totalChunks
+    let manifest: { finalKey: string; ext: string; totalChunks: number; createdAt: number };
+    try {
+      const { url: manifestUrl } = await storageGet(`uploads/chunks/${uploadId}/manifest.json`);
+      const manifestRes = await fetch(manifestUrl);
+      if (!manifestRes.ok) throw new Error("Manifest not found");
+      manifest = await manifestRes.json();
+    } catch {
       return res.status(404).json({ error: "Upload session not found or expired. Please restart the upload." });
     }
 
-    const idx = Number(chunkIndex);
-    const chunkPath = path.join(CHUNKS_DIR, uploadId, `chunk-${idx}`);
-    fs.writeFileSync(chunkPath, req.file.buffer);
-    meta.receivedChunks.add(idx);
+    // Upload chunk to S3
+    await storagePut(
+      `uploads/chunks/${uploadId}/chunk-${idx}`,
+      req.file.buffer,
+      "application/octet-stream"
+    );
 
-    return res.json({ received: meta.receivedChunks.size, total: meta.totalChunks });
+    // Count how many chunks are now in S3 by checking which ones exist
+    // We use a lightweight approach: track received count in a counter object in S3
+    let receivedCount = 0;
+    try {
+      const { url: counterUrl } = await storageGet(`uploads/chunks/${uploadId}/counter.json`);
+      const counterRes = await fetch(counterUrl);
+      if (counterRes.ok) {
+        const counter = await counterRes.json();
+        receivedCount = counter.received ?? 0;
+      }
+    } catch {
+      receivedCount = 0;
+    }
+    receivedCount = Math.max(receivedCount, idx + 1);
+
+    await storagePut(
+      `uploads/chunks/${uploadId}/counter.json`,
+      Buffer.from(JSON.stringify({ received: receivedCount })),
+      "application/json"
+    );
+
+    return res.json({ received: receivedCount, total: manifest.totalChunks });
   } catch (err: any) {
     console.error("[upload-video-chunk] Error:", err);
     return res.status(500).json({ error: err.message ?? "Chunk upload failed" });
@@ -154,7 +151,7 @@ router.post("/api/upload-video-chunk", (req: any, res: any, next: any) => {
 /**
  * POST /api/upload-video-complete
  * Body: { uploadId: string }
- * Assembles all chunks, uploads to S3, cleans up temp files.
+ * Fetches all chunks from S3, assembles them, uploads final file, cleans up.
  * Returns: { url: string, key: string }
  */
 router.post("/api/upload-video-complete", async (req, res) => {
@@ -165,26 +162,34 @@ router.post("/api/upload-video-complete", async (req, res) => {
       return res.status(400).json({ error: "uploadId is required" });
     }
 
-    const meta = uploadRegistry.get(uploadId);
-    if (!meta) {
+    // Read manifest from S3
+    let manifest: { finalKey: string; ext: string; totalChunks: number; createdAt: number };
+    try {
+      const { url: manifestUrl } = await storageGet(`uploads/chunks/${uploadId}/manifest.json`);
+      const manifestRes = await fetch(manifestUrl);
+      if (!manifestRes.ok) throw new Error("Manifest not found");
+      manifest = await manifestRes.json();
+    } catch {
       return res.status(404).json({ error: "Upload session not found or expired. Please restart the upload." });
     }
 
-    // Verify all chunks received
-    for (let i = 0; i < meta.totalChunks; i++) {
-      if (!meta.receivedChunks.has(i)) {
-        return res.status(400).json({ error: `Missing chunk ${i}. Please retry the upload.` });
+    // Fetch all chunks from S3 and assemble
+    const chunkBuffers: Buffer[] = [];
+    for (let i = 0; i < manifest.totalChunks; i++) {
+      try {
+        const { url: chunkUrl } = await storageGet(`uploads/chunks/${uploadId}/chunk-${i}`);
+        const chunkRes = await fetch(chunkUrl);
+        if (!chunkRes.ok) {
+          return res.status(400).json({ error: `Missing chunk ${i}. Please retry the upload.` });
+        }
+        const arrayBuffer = await chunkRes.arrayBuffer();
+        chunkBuffers.push(Buffer.from(arrayBuffer));
+      } catch {
+        return res.status(400).json({ error: `Failed to retrieve chunk ${i}. Please retry the upload.` });
       }
     }
 
-    // Assemble chunks into a single buffer
-    const uploadDir = path.join(CHUNKS_DIR, uploadId);
-    const chunks: Buffer[] = [];
-    for (let i = 0; i < meta.totalChunks; i++) {
-      const chunkPath = path.join(uploadDir, `chunk-${i}`);
-      chunks.push(fs.readFileSync(chunkPath));
-    }
-    const assembled = Buffer.concat(chunks);
+    const assembled = Buffer.concat(chunkBuffers);
 
     // Determine MIME type from extension
     const mimeMap: Record<string, string> = {
@@ -193,16 +198,12 @@ router.post("/api/upload-video-complete", async (req, res) => {
       webm: "video/webm",
       avi: "video/x-msvideo",
     };
-    const mimeType = mimeMap[meta.ext] ?? "video/mp4";
+    const mimeType = mimeMap[manifest.ext] ?? "video/mp4";
 
-    // Upload to S3
-    const { url } = await storagePut(meta.key, assembled, mimeType);
+    // Upload assembled file to S3 at the final key
+    const { url } = await storagePut(manifest.finalKey, assembled, mimeType);
 
-    // Cleanup
-    uploadRegistry.delete(uploadId);
-    fs.rmSync(uploadDir, { recursive: true, force: true });
-
-    return res.json({ url, key: meta.key });
+    return res.json({ url, key: manifest.finalKey });
   } catch (err: any) {
     console.error("[upload-video-complete] Error:", err);
     return res.status(500).json({ error: err.message ?? "Failed to complete upload" });
