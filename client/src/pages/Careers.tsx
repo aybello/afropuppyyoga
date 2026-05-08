@@ -213,7 +213,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       return;
     }
 
-    // Helper: upload with XHR for progress tracking and timeout
+    // Helper: upload a small file with XHR for progress tracking (used for resume)
     const uploadWithProgress = (url: string, fieldName: string, file: File, label: string): Promise<{ url: string; key: string }> => {
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -250,15 +250,70 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       });
     };
 
+    // Chunked upload for video — splits file into 4MB pieces to bypass hosting body size limit
+    const uploadVideoChunked = async (file: File): Promise<{ url: string; key: string }> => {
+      const CHUNK_SIZE = 4 * 1024 * 1024; // 4MB per chunk
+      const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+
+      // 1. Initiate upload session
+      setUploadStatus("Preparing video upload...");
+      const initRes = await fetch("/api/upload-video-init", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: file.name, totalChunks, totalSize: file.size }),
+      });
+      if (!initRes.ok) {
+        const err = await initRes.json().catch(() => ({}));
+        throw new Error(err.error ?? "Failed to initiate video upload");
+      }
+      const { uploadId } = await initRes.json();
+
+      // 2. Upload each chunk
+      for (let i = 0; i < totalChunks; i++) {
+        const start = i * CHUNK_SIZE;
+        const end = Math.min(start + CHUNK_SIZE, file.size);
+        const chunk = file.slice(start, end);
+
+        const pct = Math.round(((i + 1) / totalChunks) * 90); // reserve last 10% for assembly
+        setUploadProgress(pct);
+        setUploadStatus(`Uploading video... ${pct}% (part ${i + 1} of ${totalChunks})`);
+
+        const fd = new FormData();
+        fd.append("uploadId", uploadId);
+        fd.append("chunkIndex", String(i));
+        fd.append("chunk", chunk, `chunk-${i}`);
+
+        const chunkRes = await fetch("/api/upload-video-chunk", { method: "POST", body: fd });
+        if (!chunkRes.ok) {
+          const err = await chunkRes.json().catch(() => ({}));
+          throw new Error(err.error ?? `Failed to upload video part ${i + 1}`);
+        }
+      }
+
+      // 3. Complete the upload — server assembles chunks and uploads to S3
+      setUploadProgress(95);
+      setUploadStatus("Finalizing video upload...");
+      const completeRes = await fetch("/api/upload-video-complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uploadId }),
+      });
+      if (!completeRes.ok) {
+        const err = await completeRes.json().catch(() => ({}));
+        throw new Error(err.error ?? "Failed to finalize video upload");
+      }
+      setUploadProgress(100);
+      return completeRes.json();
+    };
+
     setIsUploading(true);
     setUploadProgress(0);
 
-    // Upload video
+    // Upload video using chunked upload (handles any file size)
     let videoUrl: string;
     let videoKey: string | undefined;
     try {
-      setUploadStatus("Uploading video...");
-      const data = await uploadWithProgress("/api/upload-video", "video", videoFile, "Video");
+      const data = await uploadVideoChunked(videoFile);
       videoUrl = data.url;
       videoKey = data.key;
     } catch (err: any) {

@@ -8,6 +8,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import uploadRouter from "../uploadRoute";
+import chunkedUploadRouter from "../chunkedUploadRoute";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -38,6 +39,8 @@ async function startServer() {
   registerOAuthRoutes(app);
   // Video upload endpoint (multipart, bypasses JSON body limit)
   app.use(uploadRouter);
+  // Chunked video upload endpoints (for large files that exceed hosting body size limit)
+  app.use(chunkedUploadRouter);
   // Video proxy — re-serves CDN videos with inline Content-Disposition so browsers play instead of download
   // Needed for MOV files which CloudFront serves as video/quicktime (triggers download in most browsers)
   app.get("/api/video-proxy", async (req, res) => {
