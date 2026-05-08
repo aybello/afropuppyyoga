@@ -9,8 +9,10 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 150 * 1024 * 1024 }, // 150MB max
   fileFilter: (_req, file, cb) => {
-    const allowed = ["video/mp4", "video/quicktime", "video/webm", "video/x-msvideo"];
-    if (allowed.includes(file.mimetype)) {
+    const allowedMimes = ["video/mp4", "video/quicktime", "video/webm", "video/x-msvideo", "application/octet-stream"];
+    const allowedExts = [".mp4", ".mov", ".webm", ".avi"];
+    const ext = "." + (file.originalname.split(".").pop() ?? "").toLowerCase();
+    if (allowedMimes.includes(file.mimetype) || allowedExts.includes(ext)) {
       cb(null, true);
     } else {
       cb(new Error("Only video files are allowed (mp4, mov, webm, avi)"));
@@ -22,12 +24,15 @@ const resumeUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
   fileFilter: (_req, file, cb) => {
-    const allowed = [
+    const allowedMimes = [
       "application/pdf",
       "application/msword",
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/octet-stream",
     ];
-    if (allowed.includes(file.mimetype)) {
+    const allowedExts = [".pdf", ".doc", ".docx"];
+    const ext = "." + (file.originalname.split(".").pop() ?? "").toLowerCase();
+    if (allowedMimes.includes(file.mimetype) || allowedExts.includes(ext)) {
       cb(null, true);
     } else {
       cb(new Error("Only PDF or Word documents are allowed for resumes"));
