@@ -250,9 +250,9 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       });
     };
 
-    // Chunked upload for video — splits file into 4MB pieces to bypass hosting body size limit
+    // Chunked upload for video — splits file into 1MB pieces to bypass hosting proxy body size limit
     const uploadVideoChunked = async (file: File): Promise<{ url: string; key: string }> => {
-      const CHUNK_SIZE = 4 * 1024 * 1024; // 4MB per chunk
+      const CHUNK_SIZE = 1 * 1024 * 1024; // 1MB per chunk (keeps each request under proxy timeout)
       const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
       // 1. Initiate upload session
