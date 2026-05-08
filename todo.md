@@ -75,3 +75,10 @@
 ## Offer Letter PDF Attachments
 - [x] Upload OfferLetter_Volunteer_Kitchener_V2.pdf and NDA_Updated.pdf to S3 CDN
 - [x] Attach both PDFs automatically to the offer letter email sent from Applications Dashboard
+
+## Make Video Upload Optional
+- [x] Remove video required validation in Careers.tsx handleSubmit
+- [x] Update video upload zone label from required to optional
+- [x] Update submit logic to not require videoUrl
+- [x] Make videoUrl and videoKey optional in careers tRPC router schema
+- [x] Update video size label from MAX 100MB to MAX 500MB

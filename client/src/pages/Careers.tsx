@@ -177,8 +177,8 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 100 * 1024 * 1024) {
-      setError("Video must be under 100MB.");
+    if (file.size > 500 * 1024 * 1024) {
+      setError("Video must be under 500MB.");
       return;
     }
     setVideoFile(file);
@@ -202,10 +202,6 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
 
     if (!form.name || !form.email) {
       setError("Name and email are required.");
-      return;
-    }
-    if (!videoFile) {
-      setError("A video introduction is required. Please upload a short 1-2 minute video.");
       return;
     }
     if (!resumeFile) {
@@ -329,18 +325,20 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
     setIsUploading(true);
     setUploadProgress(0);
 
-    // Upload video using chunked upload (handles any file size)
-    let videoUrl: string;
+    // Upload video using chunked upload (handles any file size) — optional
+    let videoUrl: string | undefined;
     let videoKey: string | undefined;
-    try {
-      const data = await uploadVideoChunked(videoFile);
-      videoUrl = data.url;
-      videoKey = data.key;
-    } catch (err: any) {
-      setIsUploading(false);
-      setUploadStatus(null);
-      setError(err.message ?? "Video upload failed. Please try again.");
-      return;
+    if (videoFile) {
+      try {
+        const data = await uploadVideoChunked(videoFile);
+        videoUrl = data.url;
+        videoKey = data.key;
+      } catch (err: any) {
+        setIsUploading(false);
+        setUploadStatus(null);
+        setError(err.message ?? "Video upload failed. Please try again.");
+        return;
+      }
     }
 
     // Upload resume
@@ -369,7 +367,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       phone: form.phone || undefined,
       whyAPY: form.whyAPY || undefined,
       experience: form.experience || undefined,
-      videoUrl,
+      videoUrl: videoUrl,
       videoKey,
       resumeUrl,
       resumeKey,
@@ -532,7 +530,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
             {/* Video Upload */}
             <div>
               <label className="block font-body text-xs font-semibold text-[#5A3040] uppercase tracking-wide mb-1.5">
-                Video Introduction <span className="text-[#C2185B]">*</span> <span className="text-[#8B2252] font-normal">(Max 100MB)</span>
+                Video Introduction <span className="text-[#8B6070] font-normal">(Optional — Max 500MB)</span>
               </label>
               <p className="font-body text-xs text-[#8B6070] mb-3">
                 Record a short 1-2 minute video introducing yourself. Tell us your name, why you love what you do, and why APY feels like the right fit. Be yourself!
@@ -566,7 +564,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                   <span className="font-body text-sm text-[#8B6070] group-hover:text-[#C2185B] transition-colors">
                     Click to upload your video
                   </span>
-                  <span className="font-body text-xs text-[#C4A0B0]">MP4, MOV, WebM — Max 100MB</span>
+                  <span className="font-body text-xs text-[#C4A0B0]">MP4, MOV, WebM — Max 500MB (optional)</span>
                 </button>
               )}
             </div>

@@ -28,7 +28,7 @@ export const careersRouter = router({
         phone: z.string().optional(),
         whyAPY: z.string().optional(),
         experience: z.string().optional(),
-        videoUrl: z.string().url(), // Required: S3 URL from /api/upload-video
+        videoUrl: z.string().url().optional(), // Optional: S3 URL from /api/upload-video
         videoKey: z.string().optional(),
         resumeUrl: z.string().url(), // Required: S3 URL from /api/upload-resume
         resumeKey: z.string().optional(),
@@ -44,7 +44,7 @@ export const careersRouter = router({
         phone: input.phone ?? null,
         whyAPY: input.whyAPY ?? null,
         experience: input.experience ?? null,
-        videoUrl: input.videoUrl,
+        videoUrl: input.videoUrl ?? null,
         videoKey: input.videoKey ?? null,
         resumeUrl: input.resumeUrl,
         resumeKey: input.resumeKey ?? null,
@@ -67,7 +67,7 @@ export const careersRouter = router({
           ${input.whyAPY ? `<div style="margin-bottom: 16px;"><p style="color: #8B2252; font-size: 12px; font-weight: bold; text-transform: uppercase; margin: 0 0 6px;">Why APY</p><p style="color: #5A3040; font-size: 14px; line-height: 1.6; margin: 0; background: white; padding: 12px; border-radius: 8px; border: 1px solid #F0D0DC;">${input.whyAPY}</p></div>` : ""}
           ${input.experience ? `<div style="margin-bottom: 16px;"><p style="color: #8B2252; font-size: 12px; font-weight: bold; text-transform: uppercase; margin: 0 0 6px;">Experience</p><p style="color: #5A3040; font-size: 14px; line-height: 1.6; margin: 0; background: white; padding: 12px; border-radius: 8px; border: 1px solid #F0D0DC;">${input.experience}</p></div>` : ""}
           <div style="display: flex; gap: 12px; margin-top: 24px;">
-            <a href="${input.videoUrl}" style="flex: 1; display: block; text-align: center; background: #C2185B; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: bold;">▶ Watch Video</a>
+            ${input.videoUrl ? `<a href="${input.videoUrl}" style="flex: 1; display: block; text-align: center; background: #C2185B; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: bold;">▶ Watch Video</a>` : `<span style="flex: 1; display: block; text-align: center; background: #E0C0CC; color: #8B6070; padding: 12px 20px; border-radius: 8px; font-size: 14px;">No video submitted</span>`}
             <a href="${input.resumeUrl}" style="flex: 1; display: block; text-align: center; background: #3D1A2E; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: bold;">📄 View Resume</a>
           </div>
           <p style="color: #C4A0B0; font-size: 11px; text-align: center; margin-top: 24px;">Manage applications at afropuppyyoga.ca/admin/applications</p>
@@ -78,7 +78,7 @@ export const careersRouter = router({
         to: "afropuppyyogaofficial@gmail.com",
         subject: `New Application: ${input.name} — ${input.role} (${input.location})`,
         html: emailHtml,
-        text: `New job application received!\n\nRole: ${input.role} — ${input.location}\nName: ${input.name}\nEmail: ${input.email}\nPhone: ${input.phone ?? "Not provided"}\n\nWhy APY:\n${input.whyAPY ?? "Not provided"}\n\nExperience:\n${input.experience ?? "Not provided"}\n\nVideo: ${input.videoUrl}\nResume: ${input.resumeUrl}`,
+        text: `New job application received!\n\nRole: ${input.role} — ${input.location}\nName: ${input.name}\nEmail: ${input.email}\nPhone: ${input.phone ?? "Not provided"}\n\nWhy APY:\n${input.whyAPY ?? "Not provided"}\n\nExperience:\n${input.experience ?? "Not provided"}\n\nVideo: ${input.videoUrl ?? "Not provided"}\nResume: ${input.resumeUrl}`,
       });
 
       // Send auto-confirmation email to the applicant
@@ -97,7 +97,7 @@ export const careersRouter = router({
       // Also send Manus owner notification as backup
       await notifyOwner({
         title: `New Application: ${input.role} (${input.location})`,
-        content: `${input.name} (${input.email}) applied for ${input.role} — ${input.location}.\n\nVideo: ${input.videoUrl}\nResume: ${input.resumeUrl}`,
+        content: `${input.name} (${input.email}) applied for ${input.role} — ${input.location}.\n\nVideo: ${input.videoUrl ?? "Not provided"}\nResume: ${input.resumeUrl}`,
       });
 
       return { success: true };
