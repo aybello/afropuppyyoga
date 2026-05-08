@@ -290,9 +290,9 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
         }
       }
 
-      // 3. Complete the upload — server assembles chunks and uploads to S3
+      // 3. Trigger background assembly — returns immediately with a jobId
       setUploadProgress(95);
-      setUploadStatus("Finalizing video upload...");
+      setUploadStatus("Processing video...");
       const completeRes = await fetch("/api/upload-video-complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -300,10 +300,30 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       });
       if (!completeRes.ok) {
         const err = await completeRes.json().catch(() => ({}));
-        throw new Error(err.error ?? "Failed to finalize video upload");
+        throw new Error(err.error ?? "Failed to start video processing");
       }
-      setUploadProgress(100);
-      return completeRes.json();
+      const { jobId } = await completeRes.json();
+
+      // 4. Poll for assembly result (up to 5 minutes)
+      const MAX_POLLS = 150; // 150 x 2s = 5 minutes
+      for (let poll = 0; poll < MAX_POLLS; poll++) {
+        await new Promise((r) => setTimeout(r, 2000));
+        const statusRes = await fetch(`/api/upload-video-status/${jobId}`);
+        if (!statusRes.ok) throw new Error("Failed to check video processing status");
+        const status = await statusRes.json();
+        if (status.status === "done") {
+          setUploadProgress(100);
+          return { url: status.url, key: status.key };
+        }
+        if (status.status === "error") {
+          throw new Error(status.error ?? "Video processing failed");
+        }
+        // Still pending — update progress indicator
+        const processPct = 95 + Math.min(4, Math.floor((poll / MAX_POLLS) * 5));
+        setUploadProgress(processPct);
+        setUploadStatus(`Processing video... (${poll + 1}s)`);
+      }
+      throw new Error("Video processing timed out. Please try again.");
     };
 
     setIsUploading(true);

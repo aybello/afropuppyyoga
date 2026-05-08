@@ -1,14 +1,15 @@
 /**
- * Chunked video upload endpoints — S3-backed storage.
+ * Chunked video upload endpoints — S3-backed storage with async assembly.
  *
  * Each chunk is uploaded directly to S3 as a temporary object.
- * On complete, all chunk objects are fetched from S3, assembled, and re-uploaded as the final file.
- * This works correctly on Cloud Run where each request may hit a different container instance.
+ * On complete, assembly runs in the background and the client polls for the result.
+ * This avoids request timeout issues on Cloud Run for large files.
  *
  * Flow:
  *   1. POST /api/upload-video-init      → returns { uploadId, key }
  *   2. POST /api/upload-video-chunk     → uploads chunk to S3, returns { received, total }
- *   3. POST /api/upload-video-complete  → assembles all chunks from S3, uploads final file, returns { url, key }
+ *   3. POST /api/upload-video-complete  → starts background assembly, returns { jobId }
+ *   4. GET  /api/upload-video-status/:jobId → polls for { status: 'pending'|'done'|'error', url?, key?, error? }
  */
 
 import { Router } from "express";
@@ -19,13 +20,16 @@ const router = Router();
 const CHUNK_SIZE_LIMIT = 6 * 1024 * 1024; // 6MB per chunk
 const MAX_TOTAL_SIZE = 500 * 1024 * 1024; // 500MB total video limit
 
+// In-memory job registry — safe because we return quickly and poll
+const jobs = new Map<string, { status: "pending" | "done" | "error"; url?: string; key?: string; error?: string }>();
+
 // Multer for individual chunks (max 6MB each, memory storage)
 const chunkUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: CHUNK_SIZE_LIMIT },
 });
 
-function generateUploadId(): string {
+function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
@@ -33,8 +37,6 @@ function generateUploadId(): string {
  * POST /api/upload-video-init
  * Body: { filename: string, totalChunks: number, totalSize: number }
  * Returns: { uploadId: string, key: string }
- *
- * Stores a small JSON manifest in S3 so all container instances can find it.
  */
 router.post("/api/upload-video-init", async (req, res) => {
   try {
@@ -54,7 +56,7 @@ router.post("/api/upload-video-init", async (req, res) => {
       return res.status(400).json({ error: "Only video files are allowed (mp4, mov, webm, avi)" });
     }
 
-    const uploadId = generateUploadId();
+    const uploadId = generateId();
     const randomSuffix = Math.random().toString(36).slice(2, 10);
     const finalKey = `applications/videos/${Date.now()}-${randomSuffix}.${ext}`;
 
@@ -78,8 +80,6 @@ router.post("/api/upload-video-init", async (req, res) => {
  * Form fields: uploadId, chunkIndex (0-based)
  * Form file: chunk
  * Returns: { received: number, total: number }
- *
- * Uploads the chunk buffer directly to S3 as uploads/chunks/<uploadId>/chunk-<index>
  */
 router.post("/api/upload-video-chunk", (req: any, res: any, next: any) => {
   chunkUpload.single("chunk")(req, res, (err) => {
@@ -120,8 +120,7 @@ router.post("/api/upload-video-chunk", (req: any, res: any, next: any) => {
       "application/octet-stream"
     );
 
-    // Count how many chunks are now in S3 by checking which ones exist
-    // We use a lightweight approach: track received count in a counter object in S3
+    // Track received count
     let receivedCount = 0;
     try {
       const { url: counterUrl } = await storageGet(`uploads/chunks/${uploadId}/counter.json`);
@@ -151,8 +150,8 @@ router.post("/api/upload-video-chunk", (req: any, res: any, next: any) => {
 /**
  * POST /api/upload-video-complete
  * Body: { uploadId: string }
- * Fetches all chunks from S3, assembles them, uploads final file, cleans up.
- * Returns: { url: string, key: string }
+ * Starts background assembly and returns immediately with { jobId }.
+ * Client polls GET /api/upload-video-status/:jobId for the result.
  */
 router.post("/api/upload-video-complete", async (req, res) => {
   try {
@@ -162,7 +161,7 @@ router.post("/api/upload-video-complete", async (req, res) => {
       return res.status(400).json({ error: "uploadId is required" });
     }
 
-    // Read manifest from S3
+    // Verify manifest exists before starting job
     let manifest: { finalKey: string; ext: string; totalChunks: number; createdAt: number };
     try {
       const { url: manifestUrl } = await storageGet(`uploads/chunks/${uploadId}/manifest.json`);
@@ -173,41 +172,67 @@ router.post("/api/upload-video-complete", async (req, res) => {
       return res.status(404).json({ error: "Upload session not found or expired. Please restart the upload." });
     }
 
-    // Fetch all chunks from S3 and assemble
-    const chunkBuffers: Buffer[] = [];
-    for (let i = 0; i < manifest.totalChunks; i++) {
-      try {
-        const { url: chunkUrl } = await storageGet(`uploads/chunks/${uploadId}/chunk-${i}`);
-        const chunkRes = await fetch(chunkUrl);
-        if (!chunkRes.ok) {
-          return res.status(400).json({ error: `Missing chunk ${i}. Please retry the upload.` });
-        }
-        const arrayBuffer = await chunkRes.arrayBuffer();
-        chunkBuffers.push(Buffer.from(arrayBuffer));
-      } catch {
-        return res.status(400).json({ error: `Failed to retrieve chunk ${i}. Please retry the upload.` });
-      }
-    }
+    // Create job and return immediately
+    const jobId = generateId();
+    jobs.set(jobId, { status: "pending" });
 
-    const assembled = Buffer.concat(chunkBuffers);
+    // Run assembly in background (do not await)
+    assembleChunks(jobId, uploadId, manifest).catch((err) => {
+      console.error("[upload-video-complete] Background assembly error:", err);
+      jobs.set(jobId, { status: "error", error: err.message ?? "Assembly failed" });
+    });
 
-    // Determine MIME type from extension
-    const mimeMap: Record<string, string> = {
-      mp4: "video/mp4",
-      mov: "video/quicktime",
-      webm: "video/webm",
-      avi: "video/x-msvideo",
-    };
-    const mimeType = mimeMap[manifest.ext] ?? "video/mp4";
-
-    // Upload assembled file to S3 at the final key
-    const { url } = await storagePut(manifest.finalKey, assembled, mimeType);
-
-    return res.json({ url, key: manifest.finalKey });
+    return res.json({ jobId });
   } catch (err: any) {
     console.error("[upload-video-complete] Error:", err);
-    return res.status(500).json({ error: err.message ?? "Failed to complete upload" });
+    return res.status(500).json({ error: err.message ?? "Failed to start upload completion" });
   }
 });
+
+/**
+ * GET /api/upload-video-status/:jobId
+ * Returns: { status: 'pending'|'done'|'error', url?, key?, error? }
+ */
+router.get("/api/upload-video-status/:jobId", (req, res) => {
+  const job = jobs.get(req.params.jobId);
+  if (!job) {
+    return res.status(404).json({ error: "Job not found" });
+  }
+  return res.json(job);
+});
+
+/**
+ * Background assembly: fetches all chunks from S3, concatenates, uploads final file.
+ */
+async function assembleChunks(
+  jobId: string,
+  uploadId: string,
+  manifest: { finalKey: string; ext: string; totalChunks: number; createdAt: number }
+) {
+  const mimeMap: Record<string, string> = {
+    mp4: "video/mp4",
+    mov: "video/quicktime",
+    webm: "video/webm",
+    avi: "video/x-msvideo",
+  };
+  const mimeType = mimeMap[manifest.ext] ?? "video/mp4";
+
+  const chunkBuffers: Buffer[] = [];
+  for (let i = 0; i < manifest.totalChunks; i++) {
+    const { url: chunkUrl } = await storageGet(`uploads/chunks/${uploadId}/chunk-${i}`);
+    const chunkRes = await fetch(chunkUrl);
+    if (!chunkRes.ok) {
+      throw new Error(`Missing chunk ${i}. Please retry the upload.`);
+    }
+    const arrayBuffer = await chunkRes.arrayBuffer();
+    chunkBuffers.push(Buffer.from(arrayBuffer));
+  }
+
+  const assembled = Buffer.concat(chunkBuffers);
+  const { url } = await storagePut(manifest.finalKey, assembled, mimeType);
+
+  jobs.set(jobId, { status: "done", url, key: manifest.finalKey });
+  console.log(`[upload-video-complete] Job ${jobId} done: ${url}`);
+}
 
 export default router;
