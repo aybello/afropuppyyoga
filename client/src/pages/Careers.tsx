@@ -154,6 +154,9 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resumeInputRef = useRef<HTMLInputElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
@@ -210,23 +213,58 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       return;
     }
 
+    // Helper: upload with XHR for progress tracking and timeout
+    const uploadWithProgress = (url: string, fieldName: string, file: File, label: string): Promise<{ url: string; key: string }> => {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.timeout = 3 * 60 * 1000; // 3 minute timeout
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const pct = Math.round((e.loaded / e.total) * 100);
+            setUploadProgress(pct);
+            setUploadStatus(`Uploading ${label}... ${pct}%`);
+          }
+        };
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              resolve(JSON.parse(xhr.responseText));
+            } catch {
+              reject(new Error("Invalid server response"));
+            }
+          } else {
+            try {
+              const err = JSON.parse(xhr.responseText);
+              reject(new Error(err.error ?? `${label} upload failed (${xhr.status})`));
+            } catch {
+              reject(new Error(`${label} upload failed (${xhr.status})`));
+            }
+          }
+        };
+        xhr.onerror = () => reject(new Error(`${label} upload failed. Please check your connection.`));
+        xhr.ontimeout = () => reject(new Error(`${label} upload timed out. Please try a smaller file or check your connection.`));
+        const fd = new FormData();
+        fd.append(fieldName, file);
+        xhr.open("POST", url);
+        xhr.send(fd);
+      });
+    };
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
     // Upload video
     let videoUrl: string;
     let videoKey: string | undefined;
     try {
-      const fd = new FormData();
-      fd.append("video", videoFile);
-      const res = await fetch("/api/upload-video", { method: "POST", body: fd });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({ error: "Upload failed" }));
-        setError(errData.error ?? "Video upload failed. Please try again.");
-        return;
-      }
-      const data = await res.json();
+      setUploadStatus("Uploading video...");
+      const data = await uploadWithProgress("/api/upload-video", "video", videoFile, "Video");
       videoUrl = data.url;
       videoKey = data.key;
-    } catch {
-      setError("Video upload failed. Please check your connection and try again.");
+    } catch (err: any) {
+      setIsUploading(false);
+      setUploadStatus(null);
+      setError(err.message ?? "Video upload failed. Please try again.");
       return;
     }
 
@@ -234,22 +272,20 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
     let resumeUrl: string;
     let resumeKey: string | undefined;
     try {
-      const fd = new FormData();
-      fd.append("resume", resumeFile);
-      const res = await fetch("/api/upload-resume", { method: "POST", body: fd });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({ error: "Upload failed" }));
-        setError(errData.error ?? "Resume upload failed. Please try again.");
-        return;
-      }
-      const data = await res.json();
+      setUploadProgress(0);
+      setUploadStatus("Uploading resume...");
+      const data = await uploadWithProgress("/api/upload-resume", "resume", resumeFile, "Resume");
       resumeUrl = data.url;
       resumeKey = data.key;
-    } catch {
-      setError("Resume upload failed. Please check your connection and try again.");
+    } catch (err: any) {
+      setIsUploading(false);
+      setUploadStatus(null);
+      setError(err.message ?? "Resume upload failed. Please try again.");
       return;
     }
 
+    setIsUploading(false);
+    setUploadStatus(null);
     applyMutation.mutate({
       role: job.title,
       location: job.locationCode,
@@ -460,12 +496,25 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
               )}
             </div>
 
+            {/* Upload progress bar */}
+            {(isUploading || uploadStatus) && (
+              <div className="space-y-2">
+                <div className="w-full bg-[#F0D0DC] rounded-full h-2 overflow-hidden">
+                  <div
+                    className="h-2 bg-[#C2185B] rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+                <p className="font-body text-xs text-[#8B2252] text-center">{uploadStatus}</p>
+              </div>
+            )}
+
             <button
               type="submit"
-              disabled={applyMutation.isPending}
+              disabled={applyMutation.isPending || isUploading}
               className="w-full py-3 bg-[#C2185B] text-white font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {applyMutation.isPending ? "Submitting..." : "Submit Application"}
+              {isUploading ? uploadStatus ?? "Uploading..." : applyMutation.isPending ? "Submitting..." : "Submit Application"}
             </button>
           </form>
         )}
