@@ -88,3 +88,11 @@
 - [x] Add sendOnboardingEmail mutation to server/routers/careers.ts
 - [x] Add OnboardingEmailModal component to ApplicationsDashboard.tsx
 - [x] Add Send Onboarding Email button to table row actions and detail modal (only show when signingStatus === "signed")
+
+## Onboarded Status
+- [x] Add "onboarded" to APP_STATUS enum in drizzle/schema.ts
+- [x] Run pnpm db:push to migrate
+- [x] Add "onboarded" to APP_STATUS in careers router
+- [x] Add "Onboarded" option to status dropdown in ApplicationsDashboard
+- [x] Add teal StatusBadge style for "onboarded"
+- [x] Auto-set status to "onboarded" when onboarding email is sent

@@ -11,7 +11,7 @@ import {
   buildOnboardingEmail,
 } from "../email";
 
-const APP_STATUS = ["new", "reviewed", "shortlisted", "interview_scheduled", "accepted", "rejected"] as const;
+const APP_STATUS = ["new", "reviewed", "shortlisted", "interview_scheduled", "accepted", "rejected", "onboarded"] as const;
 type AppStatus = (typeof APP_STATUS)[number];
 
 export const careersRouter = router({
@@ -255,9 +255,12 @@ export const careersRouter = router({
 
       await sendEmail({ to: input.applicantEmail, subject, html, text });
 
+      // Auto-advance status to onboarded
+      await updateJobApplication(input.id, { status: "onboarded" });
+
       await notifyOwner({
         title: `Onboarding Email Sent — ${input.applicantName}`,
-        content: `Onboarding email sent to ${input.applicantName} (${input.applicantEmail}) for ${input.role} (${input.location}).`,
+        content: `Onboarding email sent to ${input.applicantName} (${input.applicantEmail}) for ${input.role} (${input.location}). Status updated to Onboarded.`,
       });
 
       return { success: true };

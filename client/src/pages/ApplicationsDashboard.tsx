@@ -55,7 +55,7 @@ function getVideoProxyUrl(rawUrl: string): string {
   return `/api/video-proxy?url=${encodeURIComponent(rawUrl)}`;
 }
 
-type AppStatus = "new" | "reviewed" | "shortlisted" | "interview_scheduled" | "accepted" | "rejected";
+type AppStatus = "new" | "reviewed" | "shortlisted" | "interview_scheduled" | "accepted" | "rejected" | "onboarded";
 
 type Application = {
   id: number;
@@ -83,6 +83,7 @@ function StatusBadge({ status }: { status: AppStatus }) {
     interview_scheduled: "bg-purple-100 text-purple-700",
     accepted: "bg-green-100 text-green-700",
     rejected: "bg-red-100 text-red-600",
+    onboarded: "bg-teal-100 text-teal-700",
   };
   const icons: Record<AppStatus, React.ReactNode> = {
     new: <Inbox className="w-3 h-3" />,
@@ -91,6 +92,7 @@ function StatusBadge({ status }: { status: AppStatus }) {
     interview_scheduled: <Calendar className="w-3 h-3" />,
     accepted: <CheckCircle className="w-3 h-3" />,
     rejected: <XCircle className="w-3 h-3" />,
+    onboarded: <PartyPopper className="w-3 h-3" />,
   };
   const labels: Record<AppStatus, string> = {
     new: "New",
@@ -99,6 +101,7 @@ function StatusBadge({ status }: { status: AppStatus }) {
     interview_scheduled: "Interview Scheduled",
     accepted: "Accepted",
     rejected: "Rejected",
+    onboarded: "Onboarded",
   };
   return (
     <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-body font-semibold ${styles[status]}`}>
@@ -916,6 +919,7 @@ export default function ApplicationsDashboard() {
                             <SelectItem value="interview_scheduled">Interview Scheduled</SelectItem>
                             <SelectItem value="accepted">Accepted</SelectItem>
                             <SelectItem value="rejected">Rejected</SelectItem>
+                            <SelectItem value="onboarded">Onboarded</SelectItem>
                           </SelectContent>
                         </Select>
                       </td>
