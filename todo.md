@@ -82,3 +82,9 @@
 - [x] Update submit logic to not require videoUrl
 - [x] Make videoUrl and videoKey optional in careers tRPC router schema
 - [x] Update video size label from MAX 100MB to MAX 500MB
+
+## Onboarding Email Feature
+- [x] Add buildOnboardingEmail() template to server/email.ts
+- [x] Add sendOnboardingEmail mutation to server/routers/careers.ts
+- [x] Add OnboardingEmailModal component to ApplicationsDashboard.tsx
+- [x] Add Send Onboarding Email button to table row actions and detail modal (only show when signingStatus === "signed")

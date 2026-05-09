@@ -8,6 +8,7 @@ import {
   buildOfferLetterEmail,
   buildRejectionLetterEmail,
   buildApplicationConfirmationEmail,
+  buildOnboardingEmail,
 } from "../email";
 
 const APP_STATUS = ["new", "reviewed", "shortlisted", "interview_scheduled", "accepted", "rejected"] as const;
@@ -223,6 +224,42 @@ export const careersRouter = router({
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
       await deleteJobApplication(input.id);
+      return { success: true };
+    }),
+
+  /**
+   * Admin-only: send onboarding email to a hired + signed applicant
+   */
+  sendOnboardingEmail: adminProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        applicantName: z.string(),
+        applicantEmail: z.string().email(),
+        role: z.string(),
+        location: z.string(),
+        orientationDate: z.string().optional(),
+        planningDocUrl: z.string().optional(),
+        additionalNotes: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { subject, html, text } = buildOnboardingEmail({
+        applicantName: input.applicantName,
+        role: input.role,
+        location: input.location,
+        orientationDate: input.orientationDate,
+        planningDocUrl: input.planningDocUrl,
+        additionalNotes: input.additionalNotes,
+      });
+
+      await sendEmail({ to: input.applicantEmail, subject, html, text });
+
+      await notifyOwner({
+        title: `Onboarding Email Sent — ${input.applicantName}`,
+        content: `Onboarding email sent to ${input.applicantName} (${input.applicantEmail}) for ${input.role} (${input.location}).`,
+      });
+
       return { success: true };
     }),
 

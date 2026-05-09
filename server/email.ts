@@ -314,3 +314,85 @@ export function buildRejectionLetterEmail(opts: {
 
   return { subject, html, text };
 }
+
+export function buildOnboardingEmail(opts: {
+  applicantName: string;
+  role: string;
+  location: string;
+  orientationDate?: string;   // e.g. "Saturday, May 10th"
+  planningDocUrl?: string;    // link to the planning doc
+  additionalNotes?: string;
+}): { subject: string; html: string; text: string } {
+  const subject = `Welcome to the AfroPuppyYoga Team! Your Onboarding Details Inside 🐾`;
+  const firstName = opts.applicantName.split(" ")[0];
+  const planningUrl = opts.planningDocUrl ?? "https://docs.google.com/spreadsheets/d/1pEEx_HXTw3JV82q7FTLaM6qmc8aHoqk0KdVGicyWupo/edit?usp=sharing";
+
+  const hero = `
+    <p style="margin:0 0 6px;font-size:12px;font-weight:bold;color:#FFD6E7;letter-spacing:1.5px;text-transform:uppercase;">Welcome to the Pack!</p>
+    <h1 style="margin:0 0 10px;font-family:Georgia,serif;font-size:27px;color:#FFFFFF;line-height:1.25;">We're so excited to have<br/>you on board, ${firstName}! 🐶✨</h1>
+    <p style="margin:0;font-size:14px;color:#FFE4EF;line-height:1.5;"><strong style="color:#fff;">${opts.role}</strong> &middot; <strong style="color:#fff;">${opts.location}</strong></p>
+  `;
+
+  const body = `
+    ${bodyText(`Hello ${firstName},`)}
+    ${bodyText(`Welcome to the AfroPuppyYoga team! We're thrilled to have you joining us as a <strong>${opts.role}</strong>. 🐶✨`)}
+    ${opts.orientationDate ? `
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;">
+      <tr><td style="padding:16px 20px;">
+        <p style="margin:0 0 4px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Orientation Class Invitation</p>
+        <p style="margin:0;font-size:14px;color:#3D1A2A;line-height:1.6;">We would like to invite you to your <strong>orientation class on ${opts.orientationDate}</strong>. This is a great opportunity to experience a live session, get comfortable with the flow, and meet the team before your first official class.</p>
+      </td></tr>
+    </table>` : ""}
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;">
+      <tr><td style="padding:16px 20px;">
+        <p style="margin:0 0 12px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Your Next Steps</p>
+        <p style="margin:0 0 10px;font-size:14px;color:#3D1A2A;line-height:1.6;"><strong>1. Planning Document</strong><br/>Please open the planning document linked below. In the "PM Availability" tab, add your name to the dates you're available for your assigned location.</p>
+        <p style="margin:0 0 10px;font-size:14px;color:#3D1A2A;line-height:1.6;"><strong>2. Training &amp; Resources</strong><br/>Please review the following documents under Organizational Structure:<br/>
+          &bull; Puppy Monitor Training Guide<br/>
+          &bull; Puppy First Aid Document<br/>
+          &bull; Puppy Socialization &amp; Safety Guidelines
+        </p>
+        <p style="margin:0;font-size:14px;color:#3D1A2A;line-height:1.6;"><strong>3. Group Chat</strong><br/>You'll be added to the official ${opts.role} group chat shortly. This is where we coordinate upcoming classes and share important updates.</p>
+      </td></tr>
+    </table>
+    ${pillButton(planningUrl, "📋 Open Planning Document")}
+    ${fallbackLink(planningUrl)}
+    ${opts.additionalNotes ? `<table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;"><tr><td style="padding:16px 20px;"><p style="margin:0 0 6px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Additional Notes</p><p style="margin:0;font-size:14px;color:#3D1A2A;line-height:1.6;">${opts.additionalNotes}</p></td></tr></table>` : ""}
+    ${bodyText(`If you have any questions or need clarification at any point, feel free to reach out to me directly at <a href="tel:2897881885" style="color:#C2185B;">289-788-1885</a>.`)}
+    ${bodyText(`Thanks again, and welcome to the team!`)}
+    ${signoff("Ay &amp; The AfroPuppyYoga Team")}
+  `;
+
+  const html = wrapInBrandedLayout(hero, body);
+
+  const text = `Hello ${firstName},
+
+Welcome to the AfroPuppyYoga team! We're thrilled to have you joining us as a ${opts.role}. 🐶✨
+${opts.orientationDate ? `\nWe would like to invite you to your orientation class on ${opts.orientationDate}. This is a great opportunity to experience a live session, get comfortable with the flow, and meet the team before your first official class.\n` : ""}
+Here are your next steps to get started:
+
+1. Planning Document
+Please open the planning document linked below. In the "PM Availability" tab, add your name to the dates you're available for your assigned location.
+
+2. Training & Resources
+Please review the following documents under Organizational Structure:
+- Puppy Monitor Training Guide
+- Puppy First Aid Document
+- Puppy Socialization & Safety Guidelines
+
+3. Group Chat
+You'll be added to the official ${opts.role} group chat shortly. This is where we coordinate upcoming classes and share important updates.
+
+Planning Document:
+${planningUrl}
+${opts.additionalNotes ? `\n${opts.additionalNotes}\n` : ""}
+If you have any questions or need clarification at any point, feel free to reach out to me directly at 289-788-1885.
+
+Thanks again, and welcome to the team!
+
+Warmly,
+Ay & The AfroPuppyYoga Team
+afropuppyyogaofficial@gmail.com`;
+
+  return { subject, html, text };
+}

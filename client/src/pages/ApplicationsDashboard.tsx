@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Users, Loader2, Video, Mail, Phone, Star, Eye, XCircle, Inbox,
-  Calendar, CheckCircle, Send, Trash2, FileText, Play,
+  Calendar, CheckCircle, Send, Trash2, FileText, Play, PartyPopper,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -309,6 +309,112 @@ function OfferLetterModal({
   );
 }
 
+// ─── Onboarding Email Modal ──────────────────────────────────────────────────
+function OnboardingEmailModal({
+  app,
+  open,
+  onClose,
+}: {
+  app: Application;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const utils = trpc.useUtils();
+  const [orientationDate, setOrientationDate] = useState("");
+  const [additionalNotes, setAdditionalNotes] = useState("");
+
+  const sendOnboarding = trpc.careers.sendOnboardingEmail.useMutation({
+    onSuccess: () => {
+      toast.success(`Onboarding email sent to ${app.email}! 🎉`);
+      utils.careers.list.invalidate();
+      onClose();
+    },
+    onError: (err) => {
+      toast.error(`Failed to send onboarding email: ${err.message}`);
+    },
+  });
+
+  const handleSend = () => {
+    sendOnboarding.mutate({
+      id: app.id,
+      applicantName: app.name,
+      applicantEmail: app.email,
+      role: app.role,
+      location: app.location,
+      orientationDate: orientationDate.trim() || undefined,
+      additionalNotes: additionalNotes.trim() || undefined,
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-lg bg-[#FEFAF4] border-[#F0D0DC]">
+        <DialogHeader>
+          <DialogTitle className="font-display text-xl text-[#1A0A12]">
+            🐾 Send Onboarding Email
+          </DialogTitle>
+          <DialogDescription className="font-body text-sm text-[#6B4C3B]">
+            Sending to <strong>{app.name}</strong> ({app.email}) for <strong>{app.role}</strong> — {app.location}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-1">
+            <p className="font-body text-sm text-emerald-800 font-semibold">What this email includes:</p>
+            <ul className="font-body text-sm text-emerald-700 space-y-1 list-disc list-inside">
+              <li>Welcome message and orientation class invitation</li>
+              <li>Link to the APY Planning Document (PM Availability tab)</li>
+              <li>Training resources checklist</li>
+              <li>Group chat onboarding note</li>
+              <li>Direct contact number for questions</li>
+            </ul>
+          </div>
+
+          <div>
+            <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Orientation Class Date (optional)</Label>
+            <Input
+              placeholder="e.g. Saturday, May 10th"
+              value={orientationDate}
+              onChange={(e) => setOrientationDate(e.target.value)}
+              className="border-[#F0D0DC] font-body"
+            />
+            <p className="font-body text-xs text-[#C4A0B0] mt-1">Leave blank to omit the orientation class section</p>
+          </div>
+
+          <div>
+            <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Additional Notes (optional)</Label>
+            <Textarea
+              placeholder="Any extra info to include for this specific hire..."
+              value={additionalNotes}
+              onChange={(e) => setAdditionalNotes(e.target.value)}
+              className="border-[#F0D0DC] font-body resize-none"
+              rows={3}
+            />
+          </div>
+        </div>
+
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={onClose} className="font-body border-[#F0D0DC]">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSend}
+            disabled={sendOnboarding.isPending}
+            className="font-body text-white"
+            style={{ background: "linear-gradient(135deg, #C2185B, #8B2252)" }}
+          >
+            {sendOnboarding.isPending ? (
+              <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Sending...</>
+            ) : (
+              <><PartyPopper className="w-4 h-4 mr-2" /> Send Onboarding Email</>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── Rejection Letter Modal ──────────────────────────────────────────────────
 function RejectionLetterModal({
   app,
@@ -408,6 +514,7 @@ function ApplicationDetailModal({
   const [showInterviewModal, setShowInterviewModal] = useState(false);
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
 
   return (
     <>
@@ -513,6 +620,15 @@ function ApplicationDetailModal({
                 >
                   <XCircle className="w-4 h-4 mr-2" /> Send Rejection
                 </Button>
+                {app.signingStatus === "signed" && (
+                  <Button
+                    onClick={() => { onClose(); setShowOnboardingModal(true); }}
+                    className="font-body text-sm text-white"
+                    style={{ background: "linear-gradient(135deg, #C2185B, #8B2252)" }}
+                  >
+                    <PartyPopper className="w-4 h-4 mr-2" /> Send Onboarding Email
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -528,6 +644,9 @@ function ApplicationDetailModal({
       {showRejectionModal && (
         <RejectionLetterModal app={app} open={showRejectionModal} onClose={() => setShowRejectionModal(false)} />
       )}
+      {showOnboardingModal && (
+        <OnboardingEmailModal app={app} open={showOnboardingModal} onClose={() => setShowOnboardingModal(false)} />
+      )}
     </>
   );
 }
@@ -540,6 +659,7 @@ export default function ApplicationsDashboard() {
   const [showInterviewModal, setShowInterviewModal] = useState(false);
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
 
   const { data: applications, isLoading } = trpc.careers.list.useQuery(undefined, {
     refetchInterval: 15000,
@@ -831,6 +951,15 @@ export default function ApplicationsDashboard() {
                           >
                             <XCircle className="w-3 h-3" />
                           </button>
+                          {app.signingStatus === "signed" && (
+                            <button
+                              onClick={() => { setSelectedApp(app as Application); setShowOnboardingModal(true); }}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-pink-50 border border-pink-200 rounded-lg font-body text-xs font-semibold text-pink-700 hover:bg-pink-100 transition-colors"
+                              title="Send onboarding email"
+                            >
+                              <PartyPopper className="w-3 h-3" />
+                            </button>
+                          )}
                           <button
                             onClick={() => setDeleteConfirmId(app.id)}
                             className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg font-body text-xs font-semibold text-gray-500 hover:bg-gray-100 hover:text-red-600 hover:border-red-200 transition-colors"
