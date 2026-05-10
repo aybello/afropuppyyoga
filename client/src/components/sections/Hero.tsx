@@ -32,6 +32,7 @@ const trustedBy = [
   { name: "Solstice Pilates", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/solstice-pilates-ca-logo_388e4cec.webp", height: 60 },
   { name: "Vivia Riu Medspa", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/vivia-riu-medspa-logo_6c9b4b43.png", height: 80 },
   { name: "Fluffy Glaze", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/fluffy_glaze_logo_34eaac35.png", height: 56 },
+  { name: "Manulife", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/manulife_logo_3b225683.jpg", height: 32 },
 ];
 
 export default function Hero() {

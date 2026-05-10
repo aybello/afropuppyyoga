@@ -96,3 +96,11 @@
 - [x] Add "Onboarded" option to status dropdown in ApplicationsDashboard
 - [x] Add teal StatusBadge style for "onboarded"
 - [x] Auto-set status to "onboarded" when onboarding email is sent
+
+## Manulife + Invoice Remaining Balance
+- [x] Add Manulife logo to the Trusted By section on the homepage
+- [x] Add amountPaidCents and paymentNotes fields to invoices schema
+- [x] Run pnpm db:push for amountPaidCents migration
+- [x] Add recordPayment mutation to invoice router
+- [x] Add Remaining tab to InvoiceDashboard showing outstanding balances
+- [x] Add Record Payment button in invoice rows to log partial/full payments

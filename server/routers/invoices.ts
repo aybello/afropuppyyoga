@@ -86,12 +86,47 @@ export const invoicesRouter = router({
     .input(
       z.object({
         id: z.number(),
-        status: z.enum(["pending", "paid", "overdue"]),
+        status: z.enum(["pending", "partial", "paid", "overdue"]),
       })
     )
     .mutation(async ({ input }) => {
       await updateInvoice(input.id, { status: input.status });
       return { success: true };
+    }),
+
+  /**
+   * Owner-only: record a payment (full or partial) against an invoice.
+   * amountPaidCents is the NEW total paid so far (cumulative), not the incremental amount.
+   */
+  recordPayment: adminProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        /** Total amount paid so far in cents (cumulative) */
+        amountPaidCents: z.number().int().min(0),
+        /** Optional note about this payment */
+        paymentNotes: z.string().optional(),
+        /** Total invoice amount in cents (to auto-determine status) */
+        totalAmountCents: z.number().int().min(0),
+      })
+    )
+    .mutation(async ({ input }) => {
+      // Auto-determine status based on paid vs total
+      let status: "pending" | "partial" | "paid" | "overdue" = "partial";
+      if (input.amountPaidCents <= 0) {
+        status = "pending";
+      } else if (input.amountPaidCents >= input.totalAmountCents) {
+        status = "paid";
+      } else {
+        status = "partial";
+      }
+
+      await updateInvoice(input.id, {
+        amountPaidCents: input.amountPaidCents,
+        paymentNotes: input.paymentNotes,
+        status,
+      });
+      return { success: true, status };
     }),
 
   /**

@@ -43,8 +43,12 @@ export const invoices = mysqlTable("invoices", {
   fileKey: varchar("fileKey", { length: 500 }).notNull(),
   /** Original filename */
   originalFilename: varchar("originalFilename", { length: 255 }),
+  /** Amount paid so far (in cents, to avoid floating point issues) */
+  amountPaidCents: int("amountPaidCents").default(0).notNull(),
+  /** Payment notes (e.g. "half payment on May 1") */
+  paymentNotes: text("paymentNotes"),
   /** Payment status */
-  status: mysqlEnum("status", ["pending", "paid", "overdue"]).default("pending").notNull(),
+  status: mysqlEnum("status", ["pending", "partial", "paid", "overdue"]).default("pending").notNull(),
   /** Whether AI extraction has been completed */
   extractionStatus: mysqlEnum("extractionStatus", ["pending", "completed", "failed"]).default("pending").notNull(),
   /** Raw extracted text for debugging */
