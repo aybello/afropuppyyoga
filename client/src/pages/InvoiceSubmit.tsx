@@ -114,11 +114,12 @@ export default function InvoiceSubmit() {
           </a>
 
           {/* Admin dashboard link — always visible */}
-          <Link href="/admin/invoices">
-            <a className="inline-flex items-center gap-2 px-4 py-2 font-body font-semibold text-sm rounded-full border border-[#F0D0DC] text-[#8B2252] bg-white hover:bg-[#FFF0F4] transition-colors">
-              <LayoutDashboard className="w-4 h-4" />
-              View Dashboard
-            </a>
+          <Link
+            href="/admin/invoices"
+            className="inline-flex items-center gap-2 px-4 py-2 font-body font-semibold text-sm rounded-full border border-[#F0D0DC] text-[#8B2252] bg-white hover:bg-[#FFF0F4] transition-colors"
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            View Dashboard
           </Link>
         </div>
       </header>
