@@ -49,17 +49,17 @@ export default function AdminNav() {
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
             const active = location === href || location.startsWith(href);
             return (
-              <Link key={href} href={href}>
-                <a
-                  className={`inline-flex items-center gap-2 px-4 py-2 font-body font-semibold text-sm rounded-full transition-colors ${
-                    active
-                      ? "bg-[#C2185B] text-white"
-                      : "text-[#8B2252] hover:bg-[#FFF0F4] border border-[#F0D0DC] bg-white"
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {label}
-                </a>
+              <Link
+                key={href}
+                href={href}
+                className={`inline-flex items-center gap-2 px-4 py-2 font-body font-semibold text-sm rounded-full transition-colors ${
+                  active
+                    ? "bg-[#C2185B] text-white"
+                    : "text-[#8B2252] hover:bg-[#FFF0F4] border border-[#F0D0DC] bg-white"
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {label}
               </Link>
             );
           })}
