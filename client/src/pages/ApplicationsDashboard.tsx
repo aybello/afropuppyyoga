@@ -324,6 +324,7 @@ function OnboardingEmailModal({
 }) {
   const utils = trpc.useUtils();
   const [orientationDate, setOrientationDate] = useState("");
+  const [orientationTime, setOrientationTime] = useState("");
   const [additionalNotes, setAdditionalNotes] = useState("");
 
   const sendOnboarding = trpc.careers.sendOnboardingEmail.useMutation({
@@ -345,6 +346,7 @@ function OnboardingEmailModal({
       role: app.role,
       location: app.location,
       orientationDate: orientationDate.trim() || undefined,
+      orientationTime: orientationTime.trim() || undefined,
       additionalNotes: additionalNotes.trim() || undefined,
     });
   };
@@ -365,23 +367,35 @@ function OnboardingEmailModal({
           <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-1">
             <p className="font-body text-sm text-emerald-800 font-semibold">What this email includes:</p>
             <ul className="font-body text-sm text-emerald-700 space-y-1 list-disc list-inside">
-              <li>Welcome message and orientation class invitation</li>
-              <li>Link to the APY Planning Document (PM Availability tab)</li>
-              <li>Training resources checklist</li>
-              <li>Group chat onboarding note</li>
-              <li>Direct contact number for questions</li>
+              <li>Welcome message and orientation class invitation (date, time, location)</li>
+              <li>What to wear: black yoga attire + grippy socks</li>
+              <li>Link to the APY Planning Document (training resources inside)</li>
+              <li>iMessage group chat onboarding note</li>
+              <li>Reply CTA + direct contact number</li>
             </ul>
           </div>
 
-          <div>
-            <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Orientation Class Date (optional)</Label>
-            <Input
-              placeholder="e.g. Saturday, May 10th"
-              value={orientationDate}
-              onChange={(e) => setOrientationDate(e.target.value)}
-              className="border-[#F0D0DC] font-body"
-            />
-            <p className="font-body text-xs text-[#C4A0B0] mt-1">Leave blank to omit the orientation class section</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Orientation Date (optional)</Label>
+              <Input
+                placeholder="e.g. Saturday, May 10th"
+                value={orientationDate}
+                onChange={(e) => setOrientationDate(e.target.value)}
+                className="border-[#F0D0DC] font-body"
+              />
+              <p className="font-body text-xs text-[#C4A0B0] mt-1">Leave blank to omit</p>
+            </div>
+            <div>
+              <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Orientation Time (optional)</Label>
+              <Input
+                placeholder="e.g. 9:00 AM"
+                value={orientationTime}
+                onChange={(e) => setOrientationTime(e.target.value)}
+                className="border-[#F0D0DC] font-body"
+              />
+              <p className="font-body text-xs text-[#C4A0B0] mt-1">Kitchener: 9am, Hamilton: 10am</p>
+            </div>
           </div>
 
           <div>

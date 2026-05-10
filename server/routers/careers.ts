@@ -9,6 +9,7 @@ import {
   buildRejectionLetterEmail,
   buildApplicationConfirmationEmail,
   buildOnboardingEmail,
+  buildYogaInstructorOnboardingEmail,
 } from "../email";
 
 const APP_STATUS = ["new", "reviewed", "shortlisted", "interview_scheduled", "accepted", "rejected", "onboarded"] as const;
@@ -239,19 +240,32 @@ export const careersRouter = router({
         role: z.string(),
         location: z.string(),
         orientationDate: z.string().optional(),
+        orientationTime: z.string().optional(),
         planningDocUrl: z.string().optional(),
         additionalNotes: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
-      const { subject, html, text } = buildOnboardingEmail({
-        applicantName: input.applicantName,
-        role: input.role,
-        location: input.location,
-        orientationDate: input.orientationDate,
-        planningDocUrl: input.planningDocUrl,
-        additionalNotes: input.additionalNotes,
-      });
+      // Use role-specific email template
+      const isYogaInstructor = input.role.toLowerCase().includes("yoga instructor") || input.role.toLowerCase().includes("instructor");
+      const { subject, html, text } = isYogaInstructor
+        ? buildYogaInstructorOnboardingEmail({
+            applicantName: input.applicantName,
+            location: input.location,
+            orientationDate: input.orientationDate,
+            orientationTime: input.orientationTime,
+            planningDocUrl: input.planningDocUrl,
+            additionalNotes: input.additionalNotes,
+          })
+        : buildOnboardingEmail({
+            applicantName: input.applicantName,
+            role: input.role,
+            location: input.location,
+            orientationDate: input.orientationDate,
+            orientationTime: input.orientationTime,
+            planningDocUrl: input.planningDocUrl,
+            additionalNotes: input.additionalNotes,
+          });
 
       await sendEmail({ to: input.applicantEmail, subject, html, text });
 

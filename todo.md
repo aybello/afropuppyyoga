@@ -104,3 +104,9 @@
 - [x] Add recordPayment mutation to invoice router
 - [x] Add Remaining tab to InvoiceDashboard showing outstanding balances
 - [x] Add Record Payment button in invoice rows to log partial/full payments
+
+## Onboarding Email Improvements
+- [x] Update buildOnboardingEmail: add time, location, training resources link, iMessage group chat, CTA, what-to-bring
+- [x] Update OnboardingEmailModal: add time and location input fields
+- [x] Add buildYogaInstructorOnboardingEmail template for yoga instructor role
+- [x] Update sendOnboardingEmail router to use role-specific template
