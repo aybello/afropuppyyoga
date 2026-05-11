@@ -110,3 +110,7 @@
 - [x] Update OnboardingEmailModal: add time and location input fields
 - [x] Add buildYogaInstructorOnboardingEmail template for yoga instructor role
 - [x] Update sendOnboardingEmail router to use role-specific template
+
+## Role-Specific Offer Letter Templates
+- [x] Add buildYogaInstructorOfferLetterEmail template ($22/hr, paid, offer letter + NDA)
+- [x] Wire yoga instructor offer letter to sendOfferLetter router (auto-select by role)

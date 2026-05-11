@@ -10,6 +10,7 @@ import {
   buildApplicationConfirmationEmail,
   buildOnboardingEmail,
   buildYogaInstructorOnboardingEmail,
+  buildYogaInstructorOfferLetterEmail,
 } from "../email";
 
 const APP_STATUS = ["new", "reviewed", "shortlisted", "interview_scheduled", "accepted", "rejected", "onboarded"] as const;
@@ -180,13 +181,22 @@ export const careersRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const { subject, html, text } = buildOfferLetterEmail({
-        applicantName: input.applicantName,
-        role: input.role,
-        location: input.location,
-        startDate: input.startDate,
-        additionalNotes: input.additionalNotes,
-      });
+      // Use role-specific offer letter template
+      const isYogaInstructor = input.role.toLowerCase().includes("yoga instructor") || input.role.toLowerCase().includes("instructor");
+      const { subject, html, text } = isYogaInstructor
+        ? buildYogaInstructorOfferLetterEmail({
+            applicantName: input.applicantName,
+            location: input.location,
+            startDate: input.startDate,
+            additionalNotes: input.additionalNotes,
+          })
+        : buildOfferLetterEmail({
+            applicantName: input.applicantName,
+            role: input.role,
+            location: input.location,
+            startDate: input.startDate,
+            additionalNotes: input.additionalNotes,
+          });
 
       await sendEmail({
         to: input.applicantEmail,
