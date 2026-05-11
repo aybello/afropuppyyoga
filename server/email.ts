@@ -614,3 +614,45 @@ afropuppyyoga.ca`;
 
   return { subject, html, text };
 }
+
+// ─── Signing Invite Email ─────────────────────────────────────────────────────
+
+export function buildSigningInviteEmail(opts: {
+  firstName: string;
+  applicantName: string;
+  role: string;
+  location: string;
+  signingLink: string;
+  startDate?: string;
+  additionalNotes?: string;
+}): string {
+  const hero = `
+    <p style="margin:0 0 6px;font-size:12px;font-weight:bold;color:#FFD6E7;letter-spacing:1.5px;text-transform:uppercase;">Congratulations!</p>
+    <h1 style="margin:0 0 10px;font-family:Georgia,serif;font-size:27px;color:#FFFFFF;line-height:1.25;">Your offer is ready,<br/>${opts.firstName}!</h1>
+    <p style="margin:0;font-size:14px;color:#FFE4EF;line-height:1.5;"><strong style="color:#fff;">${opts.role}</strong> &middot; <strong style="color:#fff;">${opts.location}</strong></p>
+  `;
+
+  const body = `
+    ${bodyText(`Hi ${opts.firstName},`)}
+    ${bodyText(`We are thrilled to offer you the <strong>${opts.role}</strong> position at our <strong>${opts.location}</strong> location. Please review your Offer Letter and Non-Disclosure Agreement (NDA) and sign them digitally using the button below.`)}
+
+    ${opts.startDate ? `<table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;"><tr><td style="padding:16px 20px;"><p style="margin:0 0 4px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Proposed Start Date</p><p style="margin:0;font-size:15px;color:#1A0A12;font-weight:bold;">📅 ${opts.startDate}</p></td></tr></table>` : ""}
+    ${opts.additionalNotes ? `${bodyText(opts.additionalNotes)}` : ""}
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;">
+      <tr><td style="padding:16px 20px;">
+        <p style="margin:0 0 10px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">How to sign</p>
+        <p style="margin:0 0 6px;font-size:14px;color:#3D1A2A;">📄 Read the Offer Letter and NDA carefully</p>
+        <p style="margin:0 0 6px;font-size:14px;color:#3D1A2A;">✅ Check the boxes to confirm you have read each document</p>
+        <p style="margin:0;font-size:14px;color:#3D1A2A;">✍️ Type your full legal name and click <strong>Sign and Submit</strong></p>
+      </td></tr>
+    </table>
+
+    ${pillButton(opts.signingLink, "Review and Sign My Documents")}
+    ${fallbackLink(opts.signingLink)}
+    <p style="margin:0 0 16px;font-size:12px;color:#B09AA8;text-align:center;">This link is valid for <strong>7 days</strong>. Questions? Reply to this email or call 289-788-1885.</p>
+    ${signoff("Ay &amp; The AfroPuppyYoga Team")}
+  `;
+
+  return wrapInBrandedLayout(hero, body);
+}

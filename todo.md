@@ -114,3 +114,13 @@
 ## Role-Specific Offer Letter Templates
 - [x] Add buildYogaInstructorOfferLetterEmail template ($22/hr, paid, offer letter + NDA)
 - [x] Wire yoga instructor offer letter to sendOfferLetter router (auto-select by role)
+
+## Online Signing Portal
+- [ ] Add signingTokens table to drizzle schema (id, token, applicationId, applicantName, applicantEmail, role, location, startDate, signedAt, signatureText, ipAddress, createdAt, expiresAt)
+- [ ] Run pnpm db:push for signingTokens migration
+- [ ] Add getSigningDocument public procedure (fetch document by token)
+- [ ] Add signDocument public procedure (record signature, update application signingStatus to signed)
+- [ ] Build /sign/:token public page with full Offer Letter + NDA content and signature input
+- [ ] Update sendOfferLetter router to generate signing token and email the link
+- [ ] Notify admin when applicant signs
+- [ ] Test full flow: Send Offer Letter -> applicant gets link -> signs -> admin notified -> status updates

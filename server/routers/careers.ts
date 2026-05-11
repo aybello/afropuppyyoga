@@ -1,17 +1,17 @@
 import { z } from "zod";
 import { adminProcedure, publicProcedure, router } from "../_core/trpc";
-import { createJobApplication, getAllJobApplications, updateJobApplication, deleteJobApplication } from "../db";
+import { createJobApplication, getAllJobApplications, updateJobApplication, deleteJobApplication, createSigningToken } from "../db";
 import { notifyOwner } from "../_core/notification";
 import {
   sendEmail,
   buildInterviewInviteEmail,
-  buildOfferLetterEmail,
   buildRejectionLetterEmail,
   buildApplicationConfirmationEmail,
   buildOnboardingEmail,
   buildYogaInstructorOnboardingEmail,
-  buildYogaInstructorOfferLetterEmail,
+  buildSigningInviteEmail,
 } from "../email";
+import crypto from "crypto";
 
 const APP_STATUS = ["new", "reviewed", "shortlisted", "interview_scheduled", "accepted", "rejected", "onboarded"] as const;
 type AppStatus = (typeof APP_STATUS)[number];
@@ -178,54 +178,68 @@ export const careersRouter = router({
         location: z.string(),
         startDate: z.string().optional(),
         additionalNotes: z.string().optional(),
+        origin: z.string().optional(), // frontend origin for building the signing link
       })
     )
-    .mutation(async ({ input }) => {
-      // Use role-specific offer letter template
-      const isYogaInstructor = input.role.toLowerCase().includes("yoga instructor") || input.role.toLowerCase().includes("instructor");
-      const { subject, html, text } = isYogaInstructor
-        ? buildYogaInstructorOfferLetterEmail({
-            applicantName: input.applicantName,
-            location: input.location,
-            startDate: input.startDate,
-            additionalNotes: input.additionalNotes,
-          })
-        : buildOfferLetterEmail({
-            applicantName: input.applicantName,
-            role: input.role,
-            location: input.location,
-            startDate: input.startDate,
-            additionalNotes: input.additionalNotes,
-          });
+    .mutation(async ({ input, ctx }) => {
+      // Determine offer letter type from role and location
+      const roleLower = input.role.toLowerCase();
+      const locationLower = input.location.toLowerCase();
+      let offerLetterType: "puppy_monitor_kw" | "puppy_monitor_hamilton" | "yoga_instructor" = "puppy_monitor_kw";
+      if (roleLower.includes("yoga") || roleLower.includes("instructor")) {
+        offerLetterType = "yoga_instructor";
+      } else if (locationLower.includes("hamilton")) {
+        offerLetterType = "puppy_monitor_hamilton";
+      }
+
+      // Generate a unique signing token (7 day expiry)
+      const token = crypto.randomBytes(48).toString("hex");
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+      await createSigningToken({
+        applicationId: input.id,
+        applicantName: input.applicantName,
+        applicantEmail: input.applicantEmail,
+        role: input.role,
+        location: input.location,
+        offerLetterType,
+        token,
+        signed: 0,
+        expiresAt,
+      });
+
+      // Build the signing portal link using the origin passed from the frontend
+      const origin = input.origin ?? "https://afropuppyyoga.ca";
+      const signingLink = `${origin}/sign?token=${token}`;
+
+      // Send the signing invitation email
+      const firstName = input.applicantName.split(" ")[0];
+      const emailHtml = buildSigningInviteEmail({
+        firstName,
+        applicantName: input.applicantName,
+        role: input.role,
+        location: input.location,
+        signingLink,
+        startDate: input.startDate,
+        additionalNotes: input.additionalNotes,
+      });
 
       await sendEmail({
         to: input.applicantEmail,
-        subject,
-        html,
-        text,
-        attachments: [
-          {
-            filename: "AfroPuppyYoga_Volunteer_Offer_Letter.pdf",
-            path: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/OfferLetter_Volunteer_Kitchener_V2_4a8a6867.pdf",
-            contentType: "application/pdf",
-          },
-          {
-            filename: "AfroPuppyYoga_NDA.pdf",
-            path: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/NDA_Updated_e2dcb73f.pdf",
-            contentType: "application/pdf",
-          },
-        ],
+        subject: `${firstName}, your AfroPuppyYoga offer is ready to sign! 🐾`,
+        html: emailHtml,
+        text: `Hi ${firstName},\n\nCongratulations! We are excited to offer you the ${input.role} position at AfroPuppyYoga (${input.location}).\n\nPlease review and sign your Offer Letter and NDA using the link below:\n${signingLink}\n\nThis link is valid for 7 days.\n\nWarm regards,\nThe AfroPuppyYoga Team`,
       });
 
       // Update status to accepted
       await updateJobApplication(input.id, { status: "accepted" });
 
       await notifyOwner({
-        title: `Offer Letter Sent — ${input.applicantName}`,
-        content: `Offer letter sent to ${input.applicantName} (${input.applicantEmail}) for ${input.role} (${input.location}).${input.startDate ? `\n\nProposed start date: ${input.startDate}` : ""}`,
+        title: `Offer Letter Sent: ${input.applicantName}`,
+        content: `Offer letter sent to ${input.applicantName} (${input.applicantEmail}) for ${input.role} (${input.location}).\nSigning link: ${signingLink}`,
       });
 
-      return { success: true };
+      return { success: true, signingLink };
     }),
 
   /**
