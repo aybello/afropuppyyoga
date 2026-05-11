@@ -518,35 +518,42 @@ export function buildYogaInstructorOfferLetterEmail(opts: {
   additionalNotes?: string;
 }): { subject: string; html: string; text: string } {
   const firstName = opts.applicantName.split(" ")[0];
-  const subject = `${firstName}, you've been offered a Yoga Instructor role at AfroPuppyYoga! 🧘✨`;
+  const subject = `Offer of Employment — Yoga Instructor Position at AfroPuppyYoga`;
 
   const hero = `
-    <p style="margin:0 0 6px;font-size:12px;font-weight:bold;color:#FFD6E7;letter-spacing:1.5px;text-transform:uppercase;">🎉 Offer of Employment</p>
-    <h1 style="margin:0 0 10px;font-family:Georgia,serif;font-size:27px;color:#FFFFFF;line-height:1.25;">Welcome to the pack,<br/>${firstName}! 🧘✨</h1>
+    <p style="margin:0 0 6px;font-size:12px;font-weight:bold;color:#FFD6E7;letter-spacing:1.5px;text-transform:uppercase;">Offer of Employment</p>
+    <h1 style="margin:0 0 10px;font-family:Georgia,serif;font-size:27px;color:#FFFFFF;line-height:1.25;">Welcome to AfroPuppyYoga,<br/>${firstName}! 🧘✨</h1>
     <p style="margin:0;font-size:14px;color:#FFE4EF;line-height:1.5;"><strong style="color:#fff;">Yoga Instructor</strong> &middot; <strong style="color:#fff;">${opts.location}</strong></p>
   `;
 
   const body = `
-    ${bodyText(`Dear ${firstName},`)}
-    ${bodyText(`On behalf of the entire AfroPuppyYoga team, we are thrilled to offer you the position of <strong>Yoga Instructor</strong> at our <strong>${opts.location}</strong> location. After reviewing your application and getting to know you through the process, we are confident you are the perfect fit for our community.`)}
+    ${bodyText(`Dear <strong>${opts.applicantName}</strong>,`)}
+    ${bodyText(`We are excited to formally offer you the position of <strong>Yoga Instructor</strong> with <strong>AfroPuppyYoga (APY)</strong>. Your passion for wellness and dedication to community health makes you an excellent fit for our team.`)}
 
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;">
       <tr><td style="padding:16px 20px;">
-        <p style="margin:0 0 10px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Your Role</p>
-        <p style="margin:0 0 8px;font-size:14px;color:#3D1A2A;line-height:1.7;">As a <strong>Yoga Instructor</strong> at AfroPuppyYoga, you will lead our signature puppy yoga sessions — guiding participants through a fun, accessible yoga flow while adorable puppies roam freely around the room. Your responsibilities will include:</p>
-        <p style="margin:0 0 5px;font-size:14px;color:#3D1A2A;">&bull; Leading engaging, beginner-friendly yoga classes set to Afro-beat rhythms</p>
-        <p style="margin:0 0 5px;font-size:14px;color:#3D1A2A;">&bull; Creating a welcoming, inclusive, and energetic atmosphere for all participants</p>
-        <p style="margin:0 0 5px;font-size:14px;color:#3D1A2A;">&bull; Coordinating with the Puppy Monitor team to ensure a safe and smooth session</p>
-        <p style="margin:0 0 5px;font-size:14px;color:#3D1A2A;">&bull; Curating and managing your class music playlist in line with APY's vibe and guidelines</p>
-        <p style="margin:0;font-size:14px;color:#3D1A2A;">&bull; Representing the AfroPuppyYoga brand with professionalism, warmth, and authenticity</p>
+        <p style="margin:0 0 12px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Position Details — Yoga Instructor</p>
+        <p style="margin:0 0 10px;font-size:14px;color:#3D1A2A;line-height:1.6;"><strong>Compensation:</strong> $22 per hour for teaching yoga classes</p>
+        <p style="margin:0 0 8px;font-size:14px;color:#3D1A2A;"><strong>Key Responsibilities:</strong></p>
+        <p style="margin:0 0 5px;font-size:14px;color:#3D1A2A;">&bull; Lead engaging and safe yoga sessions tailored to participants' needs</p>
+        <p style="margin:0 0 5px;font-size:14px;color:#3D1A2A;">&bull; Incorporate AfroPuppyYoga's mission into class delivery, ensuring a joyful experience for all attendees</p>
+        <p style="margin:0;font-size:14px;color:#3D1A2A;">&bull; Assist with class setup, breakdown, and interaction with puppies and participants during sessions</p>
       </td></tr>
     </table>
 
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;">
       <tr><td style="padding:16px 20px;">
-        <p style="margin:0 0 10px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Compensation</p>
-        <p style="margin:0 0 6px;font-size:14px;color:#3D1A2A;line-height:1.6;"><strong>Rate:</strong> $22.00 per hour</p>
-        <p style="margin:0;font-size:13px;color:#6B4C3B;">Full compensation details, payment schedule, and terms are outlined in the attached Offer Letter.</p>
+        <p style="margin:0 0 8px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Schedule and Hours</p>
+        <p style="margin:0;font-size:14px;color:#3D1A2A;line-height:1.6;">Class scheduling will be determined based on APY's event calendar. Flexibility, punctuality, and adaptability are essential to maintaining the quality of our client experience.</p>
+      </td></tr>
+    </table>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;">
+      <tr><td style="padding:16px 20px;">
+        <p style="margin:0 0 8px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Terms and Conditions</p>
+        <p style="margin:0 0 6px;font-size:14px;color:#3D1A2A;line-height:1.6;"><strong>Probation Period:</strong> A probationary period of <strong>4 months</strong> will apply to assess performance and alignment with APY's goals.</p>
+        <p style="margin:0 0 6px;font-size:14px;color:#3D1A2A;line-height:1.6;"><strong>Confidentiality:</strong> You will be required to sign a <strong>Non-Disclosure Agreement (NDA)</strong> to protect AfroPuppyYoga's proprietary information.</p>
+        <p style="margin:0;font-size:14px;color:#3D1A2A;line-height:1.6;"><strong>Performance Reviews:</strong> Class feedback and team collaboration will be reviewed periodically.</p>
       </td></tr>
     </table>
 
@@ -554,51 +561,56 @@ export function buildYogaInstructorOfferLetterEmail(opts: {
 
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;">
       <tr><td style="padding:16px 20px;">
-        <p style="margin:0 0 10px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Action Required — Documents Attached</p>
-        <p style="margin:0 0 8px;font-size:14px;color:#3D1A2A;line-height:1.6;">Please review and sign both of the following documents and reply to this email with the signed copies attached within <strong>5 business days</strong>:</p>
-        <p style="margin:0 0 6px;font-size:14px;color:#3D1A2A;">📄 <strong>Employment Offer Letter</strong> — outlines your role, compensation, and terms</p>
-        <p style="margin:0 0 10px;font-size:14px;color:#3D1A2A;">📄 <strong>Non-Disclosure Agreement (NDA)</strong> — protects our business information and brand</p>
-        <p style="margin:0;font-size:13px;color:#6B4C3B;">If you have any questions about the documents before signing, please don't hesitate to reach out.</p>
+        <p style="margin:0 0 8px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Acceptance of Offer — Documents Attached</p>
+        <p style="margin:0 0 8px;font-size:14px;color:#3D1A2A;line-height:1.6;">Please confirm your acceptance of this offer by signing and returning the attached documents at your earliest convenience. Once confirmed, we will provide you with onboarding materials and schedule details for your first session.</p>
+        <p style="margin:0 0 5px;font-size:14px;color:#3D1A2A;">📄 <strong>Employment Offer Letter</strong> — sign and return</p>
+        <p style="margin:0;font-size:14px;color:#3D1A2A;">📄 <strong>Non-Disclosure Agreement (NDA)</strong> — sign and return</p>
       </td></tr>
     </table>
 
     ${opts.additionalNotes ? `<table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;"><tr><td style="padding:16px 20px;"><p style="margin:0 0 6px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Additional Notes</p><p style="margin:0;font-size:14px;color:#3D1A2A;line-height:1.6;">${opts.additionalNotes}</p></td></tr></table>` : ""}
 
-    ${bodyText(`We are so excited to welcome you into the AfroPuppyYoga family. You are joining a team that is passionate about wellness, community, and creating unforgettable experiences. The puppies can't wait to meet you! 🐶💕`)}
-    ${bodyText(`If you have any questions at all, feel free to call or text me directly at <a href="tel:2897881885" style="color:#C2185B;">289-788-1885</a>.`)}
-    ${signoff("Ay &amp; The AfroPuppyYoga Team")}
+    ${bodyText(`We are thrilled to welcome you to AfroPuppyYoga and look forward to the positive impact you will bring to our team and community.`)}
+    ${bodyText(`If you have any questions, feel free to call or text <a href="tel:2897881885" style="color:#C2185B;">289-788-1885</a>.`)}
+    ${signoff("The AfroPuppyYoga Team")}
   `;
 
   const html = wrapInBrandedLayout(hero, body);
 
-  const text = `Dear ${firstName},
+  const text = `Dear ${opts.applicantName},
 
-On behalf of the entire AfroPuppyYoga team, we are thrilled to offer you the position of Yoga Instructor at our ${opts.location} location.
+We are excited to formally offer you the position of Yoga Instructor with AfroPuppyYoga (APY). Your passion for wellness and dedication to community health makes you an excellent fit for our team.
 
-YOUR ROLE
-As a Yoga Instructor at AfroPuppyYoga, you will lead our signature puppy yoga sessions, guiding participants through a fun, accessible yoga flow while adorable puppies roam freely around the room. Your responsibilities include:
-- Leading engaging, beginner-friendly yoga classes set to Afro-beat rhythms
-- Creating a welcoming, inclusive, and energetic atmosphere for all participants
-- Coordinating with the Puppy Monitor team to ensure a safe and smooth session
-- Curating and managing your class music playlist in line with APY's guidelines
-- Representing the AfroPuppyYoga brand with professionalism, warmth, and authenticity
+POSITION DETAILS — YOGA INSTRUCTOR
+Compensation: $22 per hour for teaching yoga classes
 
-COMPENSATION
-Rate: $22.00 per hour
-Full compensation details, payment schedule, and terms are outlined in the attached Offer Letter.
+Key Responsibilities:
+- Lead engaging and safe yoga sessions tailored to participants' needs
+- Incorporate AfroPuppyYoga's mission into class delivery, ensuring a joyful experience for all attendees
+- Assist with class setup, breakdown, and interaction with puppies and participants during sessions
+
+SCHEDULE AND HOURS
+Class scheduling will be determined based on APY's event calendar. Flexibility, punctuality, and adaptability are essential to maintaining the quality of our client experience.
+
+TERMS AND CONDITIONS
+Probation Period: A probationary period of 4 months will apply to assess performance and alignment with APY's goals.
+Confidentiality: You will be required to sign a Non-Disclosure Agreement (NDA) to protect AfroPuppyYoga's proprietary information.
+Performance Reviews: Class feedback and team collaboration will be reviewed periodically.
 ${opts.startDate ? `\nProposed Start Date: ${opts.startDate}\n` : ""}
-ACTION REQUIRED — DOCUMENTS ATTACHED
-Please review and sign both of the following documents and reply to this email with the signed copies attached within 5 business days:
-- Employment Offer Letter — outlines your role, compensation, and terms
-- Non-Disclosure Agreement (NDA) — protects our business information and brand
+ACCEPTANCE OF OFFER
+Please confirm your acceptance of this offer by signing and returning the attached documents at your earliest convenience. Once confirmed, we will provide you with onboarding materials and schedule details for your first session.
+
+Attached:
+- Employment Offer Letter — sign and return
+- Non-Disclosure Agreement (NDA) — sign and return
 ${opts.additionalNotes ? `\n${opts.additionalNotes}\n` : ""}
-We are so excited to welcome you into the AfroPuppyYoga family. The puppies can't wait to meet you!
+We are thrilled to welcome you to AfroPuppyYoga and look forward to the positive impact you will bring to our team and community.
 
-If you have any questions, feel free to call or text 289-788-1885.
-
-Warmly,
-Ay & The AfroPuppyYoga Team
-afropuppyyogaofficial@gmail.com`;
+Warm regards,
+The AfroPuppyYoga Team
+afropuppyyogaofficial@gmail.com
+289-788-1885
+afropuppyyoga.ca`;
 
   return { subject, html, text };
 }
