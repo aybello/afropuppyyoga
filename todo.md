@@ -124,3 +124,12 @@
 - [ ] Update sendOfferLetter router to generate signing token and email the link
 - [ ] Notify admin when applicant signs
 - [ ] Test full flow: Send Offer Letter -> applicant gets link -> signs -> admin notified -> status updates
+
+## Puppy Monitor + Puppy Specialist Offer Letters
+- [x] Write buildPuppyMonitorOfferLetterEmail template ($50/shift, paid volunteer)
+- [x] Write buildPuppySpecialistOfferLetterEmail template ($18/hr)
+- [x] Add inline offer letter content for Puppy Monitor in SignDocuments.tsx getOfferLetterContent()
+- [x] Add inline offer letter content for Puppy Specialist in SignDocuments.tsx getOfferLetterContent()
+- [x] Update detectOfferLetterType in signing.ts to handle puppy_specialist role
+- [x] Add puppy_specialist to offerLetterType enum in drizzle schema
+- [x] Run pnpm db:push for puppy_specialist enum migration

@@ -182,8 +182,8 @@ export const signingTokens = mysqlTable("signingTokens", {
   role: varchar("role", { length: 255 }).notNull(),
   /** Location (KW / Hamilton / BDR) */
   location: varchar("location", { length: 100 }).notNull(),
-  /** Which offer letter PDF to show (puppy_monitor_kw | puppy_monitor_hamilton | yoga_instructor) */
-  offerLetterType: mysqlEnum("offerLetterType", ["puppy_monitor_kw", "puppy_monitor_hamilton", "yoga_instructor"]).notNull(),
+  /** Which offer letter to show (puppy_monitor_kw | puppy_monitor_hamilton | yoga_instructor | puppy_specialist) */
+  offerLetterType: mysqlEnum("offerLetterType", ["puppy_monitor_kw", "puppy_monitor_hamilton", "yoga_instructor", "puppy_specialist"]).notNull(),
   /** Secure random token sent in the signing link */
   token: varchar("token", { length: 128 }).notNull().unique(),
   /** Whether the applicant has signed */

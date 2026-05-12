@@ -6,15 +6,7 @@ import { sendEmail } from "../email";
 import crypto from "crypto";
 
 // CDN URLs for all offer letter PDFs
-const OFFER_LETTER_URLS = {
-  puppy_monitor_kw: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/OfferLetter_Volunteer_Kitchener_V2_4a8a6867.pdf",
-  puppy_monitor_hamilton: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/OfferLetter_Volunteer_Hamilton_2026_ed683aa6.pdf",
-  yoga_instructor: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/Offer_Letter_YogaInstructor_6ac240d8.pdf",
-} as const;
-
-const NDA_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/NDA_Updated_e2dcb73f.pdf";
-
-type OfferLetterType = keyof typeof OFFER_LETTER_URLS;
+type OfferLetterType = "puppy_monitor_kw" | "puppy_monitor_hamilton" | "yoga_instructor" | "puppy_specialist";
 
 function detectOfferLetterType(role: string, location: string): OfferLetterType {
   const roleLower = role.toLowerCase();
@@ -23,7 +15,10 @@ function detectOfferLetterType(role: string, location: string): OfferLetterType 
   if (roleLower.includes("yoga")) {
     return "yoga_instructor";
   }
-  if (locationLower.includes("hamilton")) {
+  if (roleLower.includes("specialist")) {
+    return "puppy_specialist";
+  }
+  if (locationLower.includes("hamilton") || locationLower.includes("ham")) {
     return "puppy_monitor_hamilton";
   }
   return "puppy_monitor_kw";

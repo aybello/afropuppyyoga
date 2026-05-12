@@ -1,0 +1,1 @@
+ALTER TABLE `signingTokens` MODIFY COLUMN `offerLetterType` enum('puppy_monitor_kw','puppy_monitor_hamilton','yoga_instructor','puppy_specialist') NOT NULL;

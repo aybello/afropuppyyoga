@@ -22,6 +22,7 @@ function getOfferLetterContent(
   });
 
   const isYogaInstructor = offerLetterType === "yoga_instructor";
+  const isPuppySpecialist = offerLetterType === "puppy_specialist";
 
   if (isYogaInstructor) {
     return (
@@ -78,6 +79,67 @@ function getOfferLetterContent(
     );
   }
 
+  // Puppy Specialist
+  if (isPuppySpecialist) {
+    return (
+      <div className="space-y-4 text-sm text-[#2A1018] leading-relaxed">
+        <p className="text-xs text-[#9E7B8A]">{today}</p>
+        <p>Dear <strong>{applicantName}</strong>,</p>
+        <p>
+          On behalf of the entire AfroPuppyYoga team, we are thrilled to offer you the position of{" "}
+          <strong>Puppy Specialist</strong> at our <strong>{location}</strong> location. Your love for
+          animals and commitment to creating safe, joyful experiences for our puppies and participants
+          makes you an outstanding addition to our team.
+        </p>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B1A4A] uppercase text-xs tracking-wide mb-2">Position Details</p>
+          <p><strong>Position:</strong> Puppy Specialist</p>
+          <p><strong>Location:</strong> {location}</p>
+          <p><strong>Compensation:</strong> $18.00 per hour</p>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B1A4A] uppercase text-xs tracking-wide mb-2">Key Responsibilities</p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Serve as the primary caretaker and handler for puppies during all APY sessions</li>
+            <li>Monitor puppy health, behaviour, and stress levels throughout each class</li>
+            <li>Ensure all puppies are properly socialized, fed, and rested before and after sessions</li>
+            <li>Coordinate puppy logistics including transport, supplies, and veterinary communication</li>
+            <li>Educate participants on safe and respectful puppy interaction</li>
+            <li>Represent AfroPuppyYoga with warmth, professionalism, and a deep love for animals</li>
+          </ul>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B1A4A] uppercase text-xs tracking-wide mb-2">Schedule and Hours</p>
+          <p>
+            Scheduling will be determined based on APY's event calendar. Flexibility and availability
+            on weekends are essential for this role.
+          </p>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B1A4A] uppercase text-xs tracking-wide mb-2">Terms and Conditions</p>
+          <p><strong>Probation Period:</strong> A probationary period of 4 months will apply to assess performance and alignment with APY's standards.</p>
+          <p className="mt-2"><strong>Confidentiality:</strong> You will be required to sign a Non-Disclosure Agreement (NDA) to protect AfroPuppyYoga's proprietary information.</p>
+          <p className="mt-2"><strong>Dress Code:</strong> Black yoga attire and grippy socks are required for all sessions.</p>
+          <p className="mt-2"><strong>Performance Reviews:</strong> Puppy welfare outcomes and team collaboration will be reviewed periodically.</p>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p>
+            We are so excited to welcome you to the AfroPuppyYoga family. The puppies are already
+            excited to meet you! 🐶💕
+          </p>
+          <p className="mt-3">Warmly,</p>
+          <p className="font-bold">Ay &amp; The AfroPuppyYoga Team</p>
+          <p className="text-xs text-[#9E7B8A]">afropuppyyogaofficial@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
+        </div>
+      </div>
+    );
+  }
+
   // Puppy Monitor (KW or Hamilton)
   return (
     <div className="space-y-4 text-sm text-[#2A1018] leading-relaxed">
@@ -94,8 +156,9 @@ function getOfferLetterContent(
 
       <div className="border-t border-[#F0D0DC] pt-4">
         <p className="font-bold text-[#8B1A4A] uppercase text-xs tracking-wide mb-2">Position Details</p>
-        <p><strong>Position:</strong> Puppy Monitor (Volunteer)</p>
+        <p><strong>Position:</strong> Puppy Monitor</p>
         <p><strong>Location:</strong> {location}</p>
+        <p><strong>Compensation:</strong> $50.00 per shift</p>
       </div>
 
       <div className="border-t border-[#F0D0DC] pt-4">
