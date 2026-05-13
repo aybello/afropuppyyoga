@@ -134,7 +134,8 @@
 - [x] Add puppy_specialist to offerLetterType enum in drizzle schema
 - [x] Run pnpm db:push for puppy_specialist enum migration
 
-## Social Media Intern Job Posting
-- [x] Add Social Media Intern role to the job postings in Careers.tsx
-- [x] Role auto-passed from job.title — no separate dropdown needed
-- [x] Verified posting visible on Careers page
+## Luma API Proxy
+- [x] Store LUMA_API_KEY as a server secret
+- [x] Add http-proxy-middleware to dependencies
+- [x] Add /api/luma/* proxy route in Express server (forward all methods/paths to https://api.lu.ma)
+- [x] Test proxy with a real Luma API call (19/19 tests passing)

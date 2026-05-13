@@ -9,6 +9,7 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import uploadRouter from "../uploadRoute";
 import chunkedUploadRouter from "../chunkedUploadRoute";
+import { createProxyMiddleware } from "http-proxy-middleware";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -102,6 +103,24 @@ async function startServer() {
       res.status(500).send("Proxy error");
     }
   });
+  // Luma API proxy — forwards /api/luma/* to https://api.lu.ma with API key injected
+  const LUMA_API_KEY = process.env.LUMA_API_KEY || "";
+  app.use(
+    "/api/luma",
+    createProxyMiddleware({
+      target: "https://api.lu.ma",
+      changeOrigin: true,
+      pathRewrite: { "^/api/luma": "" },
+      on: {
+        proxyReq: (proxyReq) => {
+          proxyReq.setHeader("x-luma-api-key", LUMA_API_KEY);
+          // Remove any forwarded host headers that could confuse Luma
+          proxyReq.removeHeader("x-forwarded-host");
+        },
+      },
+    })
+  );
+
   // tRPC API
   app.use(
     "/api/trpc",
