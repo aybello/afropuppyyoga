@@ -133,3 +133,8 @@
 - [x] Update detectOfferLetterType in signing.ts to handle puppy_specialist role
 - [x] Add puppy_specialist to offerLetterType enum in drizzle schema
 - [x] Run pnpm db:push for puppy_specialist enum migration
+
+## Social Media Intern Job Posting
+- [x] Add Social Media Intern role to the job postings in Careers.tsx
+- [x] Role auto-passed from job.title — no separate dropdown needed
+- [x] Verified posting visible on Careers page
