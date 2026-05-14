@@ -7,7 +7,7 @@ import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
-import { MapPin, Clock, Heart, Upload, CheckCircle, X, ChevronDown } from "lucide-react";
+import { MapPin, Clock, Heart, Upload, CheckCircle, X, ChevronDown, Link as LinkIcon, Video } from "lucide-react";
 
 /// ── Job listings ────────────────────────────────────────────
 const JOB_LISTINGS = [
@@ -151,6 +151,8 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
     experience: "",
   });
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoLink, setVideoLink] = useState("");
+  const [videoMode, setVideoMode] = useState<"upload" | "link">("upload");
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -207,6 +209,22 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
     if (!resumeFile) {
       setError("A resume is required. Please upload your resume (PDF or Word).");
       return;
+    }
+    // Video is required
+    if (videoMode === "upload" && !videoFile) {
+      setError("A video introduction is required. Please upload a video or paste a link.");
+      return;
+    }
+    if (videoMode === "link") {
+      const trimmed = videoLink.trim();
+      if (!trimmed) {
+        setError("A video introduction is required. Please upload a video or paste a link.");
+        return;
+      }
+      try { new URL(trimmed); } catch {
+        setError("Please enter a valid video URL (e.g. a YouTube, Google Drive, or Dropbox link).");
+        return;
+      }
     }
 
     // Helper: upload a small file with XHR for progress tracking (used for resume)
@@ -325,12 +343,14 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
     setIsUploading(true);
     setUploadProgress(0);
 
-    // Upload video using chunked upload (handles any file size) — optional
-    let videoUrl: string | undefined;
+    // Video is required — either upload the file or use the pasted link
+    let videoUrl: string;
     let videoKey: string | undefined;
-    if (videoFile) {
+    if (videoMode === "link") {
+      videoUrl = videoLink.trim();
+    } else {
       try {
-        const data = await uploadVideoChunked(videoFile);
+        const data = await uploadVideoChunked(videoFile!);
         videoUrl = data.url;
         videoKey = data.key;
       } catch (err: any) {
@@ -527,14 +547,41 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
               )}
             </div>
 
-            {/* Video Upload */}
+            {/* Video Introduction — Required */}
             <div>
               <label className="block font-body text-xs font-semibold text-[#5A3040] uppercase tracking-wide mb-1.5">
-                Video Introduction <span className="text-[#8B6070] font-normal">(Optional — Max 500MB)</span>
+                Video Introduction <span className="text-[#C2185B]">*</span>
               </label>
               <p className="font-body text-xs text-[#8B6070] mb-3">
                 Record a short 1-2 minute video introducing yourself. Tell us your name, why you love what you do, and why APY feels like the right fit. Be yourself!
               </p>
+              {/* Tab toggle: Upload vs Link */}
+              <div className="flex rounded-xl overflow-hidden border border-[#F0D0DC] mb-3">
+                <button
+                  type="button"
+                  onClick={() => { setVideoMode("upload"); setVideoLink(""); }}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 font-body text-xs font-semibold transition-colors ${
+                    videoMode === "upload"
+                      ? "bg-[#C2185B] text-white"
+                      : "bg-white text-[#8B6070] hover:bg-[#FFF0F5]"
+                  }`}
+                >
+                  <Upload size={14} />
+                  Upload Video
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setVideoMode("link"); setVideoFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 font-body text-xs font-semibold transition-colors ${
+                    videoMode === "link"
+                      ? "bg-[#C2185B] text-white"
+                      : "bg-white text-[#8B6070] hover:bg-[#FFF0F5]"
+                  }`}
+                >
+                  <LinkIcon size={14} />
+                  Paste a Link
+                </button>
+              </div>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -542,30 +589,51 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                 onChange={handleVideoChange}
                 className="hidden"
               />
-              {videoFile ? (
-                <div className="flex items-center gap-3 p-3 bg-[#F9E4EE] border border-[#F0D0DC] rounded-xl">
-                  <CheckCircle size={18} className="text-[#C2185B] shrink-0" />
-                  <span className="font-body text-sm text-[#1A0A12] truncate flex-1">{videoFile.name}</span>
+              {videoMode === "upload" ? (
+                videoFile ? (
+                  <div className="flex items-center gap-3 p-3 bg-[#F9E4EE] border border-[#F0D0DC] rounded-xl">
+                    <CheckCircle size={18} className="text-[#C2185B] shrink-0" />
+                    <span className="font-body text-sm text-[#1A0A12] truncate flex-1">{videoFile.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => { setVideoFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+                      className="p-1 hover:bg-[#F0D0DC] rounded-full transition-colors text-[#5A3040]"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
                   <button
                     type="button"
-                    onClick={() => { setVideoFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
-                    className="p-1 hover:bg-[#F0D0DC] rounded-full transition-colors text-[#5A3040]"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full flex flex-col items-center gap-2 p-6 border-2 border-dashed border-[#F0D0DC] rounded-xl hover:border-[#C2185B] hover:bg-[#FFF0F5] transition-colors group"
                   >
-                    <X size={14} />
+                    <Video size={24} className="text-[#C4A0B0] group-hover:text-[#C2185B] transition-colors" />
+                    <span className="font-body text-sm text-[#8B6070] group-hover:text-[#C2185B] transition-colors">
+                      Click to upload your video
+                    </span>
+                    <span className="font-body text-xs text-[#C4A0B0]">MP4, MOV, WebM — Max 500MB</span>
                   </button>
-                </div>
+                )
               ) : (
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full flex flex-col items-center gap-2 p-6 border-2 border-dashed border-[#F0D0DC] rounded-xl hover:border-[#C2185B] hover:bg-[#FFF0F5] transition-colors group"
-                >
-                  <Upload size={24} className="text-[#C4A0B0] group-hover:text-[#C2185B] transition-colors" />
-                  <span className="font-body text-sm text-[#8B6070] group-hover:text-[#C2185B] transition-colors">
-                    Click to upload your video
-                  </span>
-                  <span className="font-body text-xs text-[#C4A0B0]">MP4, MOV, WebM — Max 500MB (optional)</span>
-                </button>
+                <div className="space-y-2">
+                  <input
+                    type="url"
+                    value={videoLink}
+                    onChange={(e) => setVideoLink(e.target.value)}
+                    placeholder="https://youtube.com/... or Google Drive / Dropbox link"
+                    className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#C2185B] focus:ring-1 focus:ring-[#C2185B]/30 transition-colors"
+                  />
+                  <p className="font-body text-xs text-[#8B6070]">
+                    Accepted: YouTube, Google Drive, Dropbox, or any direct video link. Make sure sharing is set to "Anyone with the link".
+                  </p>
+                  {videoLink.trim() && (() => { try { new URL(videoLink.trim()); return true; } catch { return false; } })() && (
+                    <div className="flex items-center gap-2 p-2.5 bg-[#F9E4EE] border border-[#F0D0DC] rounded-xl">
+                      <CheckCircle size={16} className="text-[#C2185B] shrink-0" />
+                      <span className="font-body text-xs text-[#5A3040]">Link looks good!</span>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 

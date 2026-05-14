@@ -150,3 +150,12 @@
 - [x] Update careers router: list, updateStatus, sendInterviewInvite, sendOfferLetter, deleteApplication, sendOnboardingEmail, sendRejectionLetter now use staffProcedure
 - [x] Update birthday router: getAll, updateStatus now use staffProcedure
 - [x] Update signing router: createSigningRequest, getSigningStatus now use staffProcedure
+
+## Video Required on Job Applications
+- [x] Make videoUrl required in careers router backend schema
+- [x] Add videoMode state (upload/link) to ApplicationModal
+- [x] Add tab toggle UI: Upload Video vs Paste a Link
+- [x] Add videoLink input with URL validation for link mode
+- [x] Add required validation: block submit if no video provided
+- [x] Update upload logic to use pasted link directly (no upload needed)
+- [x] Update ApplicationsDashboard to handle external links (YouTube/Drive/Dropbox) vs S3 uploads

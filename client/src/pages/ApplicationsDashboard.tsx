@@ -55,6 +55,17 @@ function getVideoProxyUrl(rawUrl: string): string {
   return `/api/video-proxy?url=${encodeURIComponent(rawUrl)}`;
 }
 
+/** Returns true if the URL is an external video link (YouTube, Drive, Dropbox, etc.) */
+function isExternalVideoLink(url: string): boolean {
+  try {
+    const u = new URL(url);
+    const externalHosts = ["youtube.com", "youtu.be", "drive.google.com", "dropbox.com", "vimeo.com", "loom.com"];
+    return externalHosts.some((h) => u.hostname === h || u.hostname.endsWith("." + h));
+  } catch {
+    return false;
+  }
+}
+
 type AppStatus = "new" | "reviewed" | "shortlisted" | "interview_scheduled" | "accepted" | "rejected" | "onboarded";
 
 type Application = {
@@ -579,16 +590,32 @@ function ApplicationDetailModal({
             {app.videoUrl && (
               <div>
                 <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-2">Video Application</p>
-                <video
-                  src={getVideoProxyUrl(app.videoUrl)}
-                  controls
-                  playsInline
-                  preload="metadata"
-                  className="w-full rounded-xl border border-[#F0D0DC] bg-black"
-                  style={{ maxHeight: "320px" }}
-                >
-                  Your browser does not support video playback.
-                </video>
+                {isExternalVideoLink(app.videoUrl) ? (
+                  <a
+                    href={app.videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-3 bg-[#F9E4EE] border border-[#F0D0DC] rounded-xl hover:bg-[#F0D0DC] transition-colors"
+                  >
+                    <Play className="w-5 h-5 text-[#C2185B] shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-body text-sm font-semibold text-[#1A0A12]">Watch Video</p>
+                      <p className="font-body text-xs text-[#8B6070] truncate">{app.videoUrl}</p>
+                    </div>
+                    <span className="font-body text-xs text-[#C2185B] font-semibold shrink-0">Open ↗</span>
+                  </a>
+                ) : (
+                  <video
+                    src={getVideoProxyUrl(app.videoUrl)}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="w-full rounded-xl border border-[#F0D0DC] bg-black"
+                    style={{ maxHeight: "320px" }}
+                  >
+                    Your browser does not support video playback.
+                  </video>
+                )}
               </div>
             )}
 

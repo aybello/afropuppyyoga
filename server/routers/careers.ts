@@ -31,8 +31,8 @@ export const careersRouter = router({
         phone: z.string().optional(),
         whyAPY: z.string().optional(),
         experience: z.string().optional(),
-        videoUrl: z.string().url().optional(), // Optional: S3 URL from /api/upload-video
-        videoKey: z.string().optional(),
+        videoUrl: z.string().url(), // Required: S3 URL from upload OR a pasted video link
+        videoKey: z.string().optional(), // Only present when file was uploaded (not for links)
         resumeUrl: z.string().url(), // Required: S3 URL from /api/upload-resume
         resumeKey: z.string().optional(),
       })
@@ -47,7 +47,7 @@ export const careersRouter = router({
         phone: input.phone ?? null,
         whyAPY: input.whyAPY ?? null,
         experience: input.experience ?? null,
-        videoUrl: input.videoUrl ?? null,
+        videoUrl: input.videoUrl,
         videoKey: input.videoKey ?? null,
         resumeUrl: input.resumeUrl,
         resumeKey: input.resumeKey ?? null,
