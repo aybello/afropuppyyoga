@@ -103,6 +103,7 @@ export default function StaffManagement() {
     );
   }
 
+  // Staff management is admin-only — staff members cannot manage other staff
   if (user.role !== "admin") {
     return (
       <div className="min-h-screen bg-[#FEFAF4] flex flex-col items-center justify-center p-6">

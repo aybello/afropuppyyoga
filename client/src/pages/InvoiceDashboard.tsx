@@ -301,7 +301,7 @@ export default function InvoiceDashboard() {
     );
   }
 
-  if (user.role !== "admin") {
+  if (user.role !== "admin" && user.role !== "staff") {
     return (
       <div className="min-h-screen bg-[#FEFAF4] flex flex-col items-center justify-center p-6">
         <img src={LOGO_URL} alt="AfroPuppyYoga" className="w-16 h-16 rounded-full object-cover mb-6" />

@@ -8,9 +8,12 @@ import {
   getAllActiveStaff,
   revokeStaffInvite,
   updateStaffInvite,
+  upsertUser,
 } from "../db";
 import { sendStaffInviteEmail } from "../email";
-import { ENV } from "../_core/env";
+import { sdk } from "../_core/sdk";
+import { getSessionCookieOptions } from "../_core/cookies";
+import { COOKIE_NAME, ONE_YEAR_MS } from "../../shared/const";
 
 export const staffRouter = router({
   /**
@@ -57,13 +60,13 @@ export const staffRouter = router({
     }),
 
   /**
-   * Public: verify a magic link token and return staff info.
-   * The frontend uses this to establish a staff session via a cookie.
-   * Token must be active and not expired.
+   * Public: verify a magic link token and set a real session cookie.
+   * This upserts a user record with role "staff" so useAuth() recognises them
+   * and admin pages that check role === "staff" grant access.
    */
   verifyMagicLink: publicProcedure
     .input(z.object({ token: z.string() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const invite = await getStaffInviteByToken(input.token);
 
       if (!invite) {
@@ -85,11 +88,33 @@ export const staffRouter = router({
         firstUsedAt: invite.firstUsedAt ?? now,
       });
 
+      // Use a synthetic openId so staff don't need a Manus OAuth account.
+      // Prefix with "staff:" to avoid collisions with real Manus openIds.
+      const staffOpenId = `staff:${invite.email}`;
+
+      // Upsert a user record with role "staff" so authenticateRequest returns them.
+      await upsertUser({
+        openId: staffOpenId,
+        name: invite.name,
+        email: invite.email,
+        loginMethod: "magic_link",
+        role: "staff",
+        lastSignedIn: now,
+      });
+
+      // Create a real session cookie (same mechanism as Manus OAuth).
+      const sessionToken = await sdk.createSessionToken(staffOpenId, {
+        name: invite.name,
+        expiresInMs: ONE_YEAR_MS,
+      });
+
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+
       return {
         id: invite.id,
         name: invite.name,
         email: invite.email,
-        token: invite.token,
       };
     }),
 

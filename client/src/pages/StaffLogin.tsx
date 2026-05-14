@@ -20,10 +20,7 @@ export default function StaffLogin() {
     onSuccess: (data) => {
       setStaffName(data.name);
       setStatus("success");
-      // Store the staff token in localStorage so the app knows this is a staff session
-      localStorage.setItem("apy_staff_token", data.token);
-      localStorage.setItem("apy_staff_name", data.name);
-      localStorage.setItem("apy_staff_email", data.email);
+      // Session cookie is now set server-side — no localStorage needed.
       // Redirect to staff portal after a short delay
       setTimeout(() => {
         navigate("/staff");
