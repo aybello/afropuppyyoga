@@ -16,6 +16,7 @@ import {
   Clock,
   CheckCircle2,
   UserCog,
+  RefreshCw,
 } from "lucide-react";
 import {
   Dialog,
@@ -62,9 +63,20 @@ export default function StaffManagement() {
     },
   });
 
+  const resendInvite = trpc.staff.resendInvite.useMutation({
+    onSuccess: () => {
+      toast.success("New invite link sent! The staff member will receive a fresh email.");
+      utils.staff.listStaff.invalidate();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to resend invite. Please try again.");
+    },
+  });
+
   const [inviteOpen, setInviteOpen] = useState(false);
   const [form, setForm] = useState({ name: "", email: "" });
   const [confirmRevokeId, setConfirmRevokeId] = useState<number | null>(null);
+  const [resendingId, setResendingId] = useState<number | null>(null);
 
   const handleInvite = () => {
     if (!form.name.trim() || !form.email.trim()) {
@@ -247,13 +259,33 @@ export default function StaffManagement() {
                           })}
                         </td>
                         <td className="px-5 py-4">
-                          <button
-                            onClick={() => setConfirmRevokeId(staff.id)}
-                            className="p-2 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                            title="Revoke access"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => {
+                                setResendingId(staff.id);
+                                resendInvite.mutate(
+                                  { id: staff.id, origin: window.location.origin },
+                                  { onSettled: () => setResendingId(null) }
+                                );
+                              }}
+                              disabled={resendInvite.isPending && resendingId === staff.id}
+                              className="p-2 rounded-lg text-[#8B2252] hover:text-[#C2185B] hover:bg-[#FFF0F4] transition-colors disabled:opacity-50"
+                              title="Resend invite link"
+                            >
+                              {resendInvite.isPending && resendingId === staff.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <RefreshCw className="w-4 h-4" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => setConfirmRevokeId(staff.id)}
+                              className="p-2 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                              title="Revoke access"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

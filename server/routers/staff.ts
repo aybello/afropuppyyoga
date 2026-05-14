@@ -119,6 +119,47 @@ export const staffRouter = router({
     }),
 
   /**
+   * Owner-only: resend a magic link invite to an existing staff member.
+   * Regenerates a fresh token and resets the 7-day expiry window.
+   */
+  resendInvite: protectedProcedure
+    .input(z.object({ id: z.number(), origin: z.string().url() }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can resend invites" });
+      }
+
+      // Look up the existing invite
+      const db = await import("../db");
+      const allStaff = await db.getAllActiveStaff();
+      const invite = allStaff.find((s) => s.id === input.id);
+
+      if (!invite) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Staff member not found" });
+      }
+
+      // Generate a fresh token and reset expiry to 7 days from now
+      const newToken = randomBytes(48).toString("hex");
+      const newExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+      await updateStaffInvite(invite.id, {
+        token: newToken,
+        expiresAt: newExpiresAt,
+        isActive: 1,
+      });
+
+      const magicLink = `${input.origin}/staff-login?token=${newToken}`;
+
+      await sendStaffInviteEmail({
+        to: invite.email,
+        name: invite.name,
+        magicLink,
+      });
+
+      return { success: true };
+    }),
+
+  /**
    * Owner-only: list all active staff members.
    */
   listStaff: protectedProcedure.query(async ({ ctx }) => {

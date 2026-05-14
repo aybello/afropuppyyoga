@@ -139,3 +139,7 @@
 - [x] Add http-proxy-middleware to dependencies
 - [x] Add /api/luma/* proxy route in Express server (forward all methods/paths to https://api.lu.ma)
 - [x] Test proxy with a real Luma API call (19/19 tests passing)
+
+## Resend Invite Button
+- [x] Add resendInvite tRPC procedure to staff router (regenerate token, update DB, resend email)
+- [x] Add Resend Invite button to StaffManagement UI with loading/success state
