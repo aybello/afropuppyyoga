@@ -1,0 +1,20 @@
+{
+  "query": "\nSELECT \n  COUNT(*) as total_invoices,\n  SUM(amountPaidCents) as total_paid_cents,\n  SUM(CASE WHEN status = 'paid' THEN amountPaidCents ELSE 0 END) as fully_paid_cents,\n  SUM(CASE WHEN status = 'partial' THEN amountPaidCents ELSE 0 END) as partial_paid_cents,\n  COUNT(CASE WHEN status = 'paid' THEN 1 END) as paid_count,\n  COUNT(CASE WHEN status = 'partial' THEN 1 END) as partial_count,\n  COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_count,\n  COUNT(CASE WHEN status = 'overdue' THEN 1 END) as overdue_count\nFROM invoices;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user rctM7roTvbHGWtX.8285ce197966 --database TnRBecMtwf5qQkTJcvZpfJ --execute \nSELECT \n  COUNT(*) as total_invoices,\n  SUM(amountPaidCents) as total_paid_cents,\n  SUM(CASE WHEN status = 'paid' THEN amountPaidCents ELSE 0 END) as fully_paid_cents,\n  SUM(CASE WHEN status = 'partial' THEN amountPaidCents ELSE 0 END) as partial_paid_cents,\n  COUNT(CASE WHEN status = 'paid' THEN 1 END) as paid_count,\n  COUNT(CASE WHEN status = 'partial' THEN 1 END) as partial_count,\n  COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_count,\n  COUNT(CASE WHEN status = 'overdue' THEN 1 END) as overdue_count\nFROM invoices;\n",
+  "rows": [
+    {
+      "total_invoices": "14",
+      "total_paid_cents": "114840",
+      "fully_paid_cents": "84484",
+      "partial_paid_cents": "30356",
+      "paid_count": "7",
+      "partial_count": "1",
+      "pending_count": "6",
+      "overdue_count": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_invoices\ttotal_paid_cents\tfully_paid_cents\tpartial_paid_cents\tpaid_count\tpartial_count\tpending_count\toverdue_count\n14\t114840\t84484\t30356\t7\t1\t6\t0\n",
+  "stderr": "",
+  "execution_time_ms": 278
+}
