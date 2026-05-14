@@ -43,3 +43,19 @@ export const adminProcedure = t.procedure.use(
     });
   }),
 );
+
+// Allows both admin and staff roles — use for procedures that staff should access
+export const staffProcedure = t.procedure.use(
+  t.middleware(async opts => {
+    const { ctx, next } = opts;
+    if (!ctx.user || (ctx.user.role !== 'admin' && ctx.user.role !== 'staff')) {
+      throw new TRPCError({ code: "FORBIDDEN", message: NOT_ADMIN_ERR_MSG });
+    }
+    return next({
+      ctx: {
+        ...ctx,
+        user: ctx.user,
+      },
+    });
+  }),
+);

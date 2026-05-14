@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { adminProcedure, publicProcedure, router } from "../_core/trpc";
+import { adminProcedure, staffProcedure, publicProcedure, router } from "../_core/trpc";
 import { createBirthdayInquiry, getAllBirthdayInquiries, updateBirthdayInquiry } from "../db";
 import { notifyOwner } from "../_core/notification";
 
@@ -55,14 +55,14 @@ Please confirm availability and follow up within 24 hours.`,
   /**
    * Admin only: get all birthday inquiries.
    */
-  getAll: adminProcedure.query(async () => {
+  getAll: staffProcedure.query(async () => {
     return getAllBirthdayInquiries();
   }),
 
   /**
    * Admin only: update inquiry status.
    */
-  updateStatus: adminProcedure
+  updateStatus: staffProcedure
     .input(
       z.object({
         id: z.number(),

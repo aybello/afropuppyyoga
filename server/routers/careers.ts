@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { adminProcedure, publicProcedure, router } from "../_core/trpc";
+import { adminProcedure, staffProcedure, publicProcedure, router } from "../_core/trpc";
 import { createJobApplication, getAllJobApplications, updateJobApplication, deleteJobApplication, createSigningToken } from "../db";
 import { notifyOwner } from "../_core/notification";
 import {
@@ -109,14 +109,14 @@ export const careersRouter = router({
   /**
    * Admin-only: list all applications
    */
-  list: adminProcedure.query(async () => {
+  list: staffProcedure.query(async () => {
     return getAllJobApplications();
   }),
 
   /**
    * Admin-only: update application status
    */
-  updateStatus: adminProcedure
+  updateStatus: staffProcedure
     .input(
       z.object({
         id: z.number(),
@@ -131,7 +131,7 @@ export const careersRouter = router({
   /**
    * Admin-only: send interview invitation email to applicant
    */
-  sendInterviewInvite: adminProcedure
+  sendInterviewInvite: staffProcedure
     .input(
       z.object({
         id: z.number(),
@@ -168,7 +168,7 @@ export const careersRouter = router({
   /**
    * Admin-only: send offer letter email to applicant
    */
-  sendOfferLetter: adminProcedure
+  sendOfferLetter: staffProcedure
     .input(
       z.object({
         id: z.number(),
@@ -245,7 +245,7 @@ export const careersRouter = router({
   /**
    * Admin-only: delete an application
    */
-  deleteApplication: adminProcedure
+  deleteApplication: staffProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
       await deleteJobApplication(input.id);
@@ -255,7 +255,7 @@ export const careersRouter = router({
   /**
    * Admin-only: send onboarding email to a hired + signed applicant
    */
-  sendOnboardingEmail: adminProcedure
+  sendOnboardingEmail: staffProcedure
     .input(
       z.object({
         id: z.number(),
@@ -307,7 +307,7 @@ export const careersRouter = router({
   /**
    * Admin-only: send rejection letter email to applicant
    */
-  sendRejectionLetter: adminProcedure
+  sendRejectionLetter: staffProcedure
     .input(
       z.object({
         id: z.number(),

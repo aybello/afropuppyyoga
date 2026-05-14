@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { adminProcedure, publicProcedure, router } from "../_core/trpc";
+import { adminProcedure, staffProcedure, publicProcedure, router } from "../_core/trpc";
 import { createSigningToken, getSigningTokenByToken, updateSigningToken, getSigningTokenByApplicationId } from "../db";
 import { notifyOwner } from "../_core/notification";
 import { sendEmail } from "../email";
@@ -28,7 +28,7 @@ export const signingRouter = router({
   /**
    * Admin-only: create a signing request and send the signing link to the applicant
    */
-  createSigningRequest: adminProcedure
+  createSigningRequest: staffProcedure
     .input(
       z.object({
         applicationId: z.number(),
@@ -136,7 +136,7 @@ export const signingRouter = router({
   /**
    * Admin-only: check signing status for an application
    */
-  getSigningStatus: adminProcedure
+  getSigningStatus: staffProcedure
     .input(z.object({ applicationId: z.number() }))
     .query(async ({ input }) => {
       const record = await getSigningTokenByApplicationId(input.applicationId);

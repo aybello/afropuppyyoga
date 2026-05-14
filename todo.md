@@ -143,3 +143,10 @@
 ## Resend Invite Button
 - [x] Add resendInvite tRPC procedure to staff router (regenerate token, update DB, resend email)
 - [x] Add Resend Invite button to StaffManagement UI with loading/success state
+
+## Staff Data Access Fix
+- [x] Add staffProcedure to trpc.ts allowing admin and staff roles
+- [x] Update invoices router: list, updateStatus, recordPayment, delete now use staffProcedure
+- [x] Update careers router: list, updateStatus, sendInterviewInvite, sendOfferLetter, deleteApplication, sendOnboardingEmail, sendRejectionLetter now use staffProcedure
+- [x] Update birthday router: getAll, updateStatus now use staffProcedure
+- [x] Update signing router: createSigningRequest, getSigningStatus now use staffProcedure
