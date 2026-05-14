@@ -1,9 +1,11 @@
 /* ============================================================
    AdminNav — Shared navigation bar for all APY admin pages
-   Shows links between Invoices, Applications, and back to site
+   Shows links between Invoices, Applications, Partnerships, and back to site
+   Staff tab is only visible to admin role (not staff role)
    ============================================================ */
 import { Link, useLocation } from "wouter";
-import { FileText, Users, ArrowLeft, UserCog } from "lucide-react";
+import { FileText, Users, ArrowLeft, UserCog, Handshake } from "lucide-react";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
 
@@ -12,21 +14,35 @@ const NAV_ITEMS = [
     href: "/admin/invoices",
     label: "Invoices",
     icon: FileText,
+    adminOnly: false,
   },
   {
     href: "/admin/applications",
     label: "Applications",
     icon: Users,
+    adminOnly: false,
+  },
+  {
+    href: "/admin/partnerships",
+    label: "Partnerships",
+    icon: Handshake,
+    adminOnly: false,
   },
   {
     href: "/admin/staff",
     label: "Staff",
     icon: UserCog,
+    adminOnly: true, // only admins can manage staff — hidden from staff role
   },
 ];
 
 export default function AdminNav() {
   const [location] = useLocation();
+  const { user } = useAuth();
+
+  const visibleItems = NAV_ITEMS.filter(
+    (item) => !item.adminOnly || user?.role === "admin"
+  );
 
   return (
     <header className="bg-[#FFF5F8] border-b border-[#F0D0DC] px-6 py-4 sticky top-0 z-40">
@@ -46,7 +62,7 @@ export default function AdminNav() {
 
         {/* Admin page tabs */}
         <nav className="flex items-center gap-1">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+          {visibleItems.map(({ href, label, icon: Icon }) => {
             const active = location === href || location.startsWith(href);
             return (
               <Link

@@ -14,6 +14,7 @@ import {
   ArrowRight,
   Lock,
   ExternalLink,
+  Handshake,
 } from "lucide-react";
 
 const TOOLS = [
@@ -76,6 +77,18 @@ const TOOLS = [
     border: "#E8C0D0",
     badge: null,
     adminOnly: false,
+  },
+  {
+    id: "partnerships",
+    title: "Partnership Inquiries",
+    description: "Review and manage all incoming partnership inquiries — corporate wellness, brand collabs, media, and more.",
+    href: "/admin/partnerships",
+    icon: Handshake,
+    color: "#2E7D32",
+    bg: "#F1F8E9",
+    border: "#C5E1A5",
+    badge: "Admin",
+    adminOnly: true,
   },
 ];
 
@@ -150,7 +163,7 @@ export default function StaffPortal() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {TOOLS.map((tool) => {
             const Icon = tool.icon;
-            const isLocked = tool.adminOnly && !isAuthenticated;
+            const isLocked = tool.adminOnly && (!isAuthenticated || (user?.role !== "admin" && user?.role !== "staff"));
 
             return (
               <Link key={tool.id} href={tool.href}>

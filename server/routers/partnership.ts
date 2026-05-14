@@ -1,7 +1,6 @@
 import { z } from "zod";
-import { publicProcedure, protectedProcedure } from "../_core/trpc";
+import { publicProcedure, staffProcedure } from "../_core/trpc";
 import { router } from "../_core/trpc";
-import { TRPCError } from "@trpc/server";
 import {
   createPartnershipInquiry,
   getAllPartnershipInquiries,
@@ -50,24 +49,19 @@ export const partnershipRouter = router({
       return { success: true };
     }),
 
-  getAll: protectedProcedure.query(async ({ ctx }) => {
-    if (ctx.user.role !== "admin") {
-      throw new TRPCError({ code: "FORBIDDEN" });
-    }
+  // staffProcedure allows both admin and staff roles — no inline role check needed
+  getAll: staffProcedure.query(async () => {
     return getAllPartnershipInquiries();
   }),
 
-  updateStatus: protectedProcedure
+  updateStatus: staffProcedure
     .input(
       z.object({
         id: z.number(),
         status: z.enum(["new", "reviewing", "active", "declined"]),
       })
     )
-    .mutation(async ({ ctx, input }) => {
-      if (ctx.user.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
+    .mutation(async ({ input }) => {
       await updatePartnershipInquiry(input.id, { status: input.status });
       return { success: true };
     }),

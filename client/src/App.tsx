@@ -13,6 +13,7 @@ const BreederCalculator = lazy(() => import("./pages/BreederCalculator"));
 const InvoiceSubmit = lazy(() => import("./pages/InvoiceSubmit"));
 const InvoiceDashboard = lazy(() => import("./pages/InvoiceDashboard"));
 const ApplicationsDashboard = lazy(() => import("./pages/ApplicationsDashboard"));
+const PartnershipsDashboard = lazy(() => import("./pages/PartnershipsDashboard"));
 const Careers = lazy(() => import("./pages/Careers"));
 const StaffPortal = lazy(() => import("./pages/StaffPortal"));
 const Birthday = lazy(() => import("./pages/Birthday"));
@@ -41,6 +42,7 @@ function Router() {
         <Route path={"/submit-invoice"} component={InvoiceSubmit} />
         <Route path="/admin/invoices" component={InvoiceDashboard} />
         <Route path="/admin/applications" component={ApplicationsDashboard} />
+        <Route path="/admin/partnerships" component={PartnershipsDashboard} />
         <Route path={"/careers"} component={Careers} />
         <Route path={"/staff"} component={StaffPortal} />
         <Route path={"/birthday"} component={Birthday} />

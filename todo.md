@@ -159,3 +159,12 @@
 - [x] Add required validation: block submit if no video provided
 - [x] Update upload logic to use pasted link directly (no upload needed)
 - [x] Update ApplicationsDashboard to handle external links (YouTube/Drive/Dropbox) vs S3 uploads
+
+## Access Control Audit Fixes (May 2026)
+- [x] Fix StaffPortal hub lock logic to check role (admin/staff) not just isAuthenticated
+- [x] Fix AdminNav to hide Staff tab from staff role users
+- [x] Add Partnerships tab to AdminNav (visible to admin and staff)
+- [x] Convert partnership getAll and updateStatus to staffProcedure (backend)
+- [x] Build PartnershipsDashboard page at /admin/partnerships (admin + staff access)
+- [x] Register /admin/partnerships route in App.tsx
+- [x] Add Partnership Inquiries tool card to StaffPortal hub
