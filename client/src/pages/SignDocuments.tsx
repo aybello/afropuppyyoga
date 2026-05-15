@@ -391,7 +391,6 @@ export default function SignDocuments() {
   const [signedName, setSignedName] = useState("");
   const [hasReadOffer, setHasReadOffer] = useState(false);
   const [hasReadNDA, setHasReadNDA] = useState(false);
-  const [confirmedAge, setConfirmedAge] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const { data, isLoading, error } = trpc.signing.getSigningRequest.useQuery(
@@ -412,10 +411,6 @@ export default function SignDocuments() {
     }
     if (!hasReadOffer || !hasReadNDA) {
       toast.error("Please confirm you have read both documents before signing.");
-      return;
-    }
-    if (!confirmedAge) {
-      toast.error("Please confirm you are 18 years of age or older.");
       return;
     }
     submitMutation.mutate({ token, signedName: signedName.trim() });
@@ -583,12 +578,6 @@ export default function SignDocuments() {
                 onChange={setHasReadNDA}
                 label="I have read and agree to the terms of the Non-Disclosure Agreement"
               />
-              <CheckboxItem
-                id="confirmAge"
-                checked={confirmedAge}
-                onChange={setConfirmedAge}
-                label="I confirm I am 18 years of age or older"
-              />
             </div>
 
             <Button
@@ -597,8 +586,7 @@ export default function SignDocuments() {
                 submitMutation.isPending ||
                 !signedName.trim() ||
                 !hasReadOffer ||
-                !hasReadNDA ||
-                !confirmedAge
+                !hasReadNDA
               }
               className="w-full h-12 bg-gradient-to-r from-[#C2185B] to-[#8B2252] hover:from-[#AD1457] hover:to-[#7B1D47] text-white font-bold text-base rounded-xl"
             >
