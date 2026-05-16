@@ -143,6 +143,8 @@ const JOB_LISTINGS = [
     location: "Hamilton / Kitchener-Waterloo",
     locationCode: "HAM / KW",
     type: "Part-Time",
+    badge: "Now Hiring",
+    pay: "$18/hr",
     emoji: "🐶",
     description:
       "As our Puppy Specialist, you are the expert on all things puppy at AfroPuppyYoga. You'll be responsible for sourcing, vetting, and coordinating with our breeder and rescue partners to ensure every litter that joins our classes is healthy, well-socialized, and ethically cared for. You'll also serve as the on-site puppy welfare lead during events, making sure every pup has a safe and positive experience from arrival to departure.",
@@ -752,8 +754,17 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
                   <Clock size={11} /> {job.type}
                 </span>
                 {(job as any).badge && (
-                  <span className="px-2 py-0.5 bg-[#C2185B]/10 text-[#C2185B] font-body text-[10px] font-semibold rounded-full border border-[#C2185B]/20">
-                    {(job as any).badge}
+                  <span className={`px-2 py-0.5 font-body text-[10px] font-semibold rounded-full border ${
+                    (job as any).badge === "Now Hiring"
+                      ? "bg-green-100 text-green-700 border-green-300"
+                      : "bg-[#C2185B]/10 text-[#C2185B] border-[#C2185B]/20"
+                  }`}>
+                    {(job as any).badge === "Now Hiring" ? "🟢 Now Hiring" : (job as any).badge}
+                  </span>
+                )}
+                {(job as any).pay && (
+                  <span className="px-2 py-0.5 bg-[#FFF5E0] text-[#8B6010] font-body text-[10px] font-semibold rounded-full border border-[#F0D080]">
+                    {(job as any).pay}
                   </span>
                 )}
               </div>
