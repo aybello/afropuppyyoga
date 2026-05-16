@@ -7,7 +7,7 @@ import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
-import { MapPin, Clock, Heart, Upload, CheckCircle, X, ChevronDown, Link as LinkIcon, Video } from "lucide-react";
+import { MapPin, Clock, Heart, Upload, CheckCircle, X, ChevronDown, Link as LinkIcon, Video, Share2, Copy, Check } from "lucide-react";
 
 /// ── Job listings ────────────────────────────────────────────
 const JOB_LISTINGS = [
@@ -735,6 +735,68 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
 
 // ── Job Card ──────────────────────────────────────────────────
 function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTINGS)[0]; onApply: () => void; expanded: boolean; onToggle: () => void }) {
+  const [shareOpen, setShareOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const shareRef = useRef<HTMLDivElement>(null);
+
+  // Close share dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (shareRef.current && !shareRef.current.contains(e.target as Node)) {
+        setShareOpen(false);
+      }
+    };
+    if (shareOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [shareOpen]);
+
+  const getShareUrl = () => `${window.location.origin}/careers#${job.id}`;
+  const shareText = `🐾 ${job.title} — ${job.location} (${job.type}) at AfroPuppyYoga! Apply now:`;
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(getShareUrl());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // fallback
+      const el = document.createElement("textarea");
+      el.value = getShareUrl();
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const shareLinks = [
+    {
+      label: "Facebook",
+      icon: "f",
+      color: "#1877F2",
+      href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl())}`,
+    },
+    {
+      label: "X (Twitter)",
+      icon: "𝕏",
+      color: "#000000",
+      href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(getShareUrl())}`,
+    },
+    {
+      label: "LinkedIn",
+      icon: "in",
+      color: "#0A66C2",
+      href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getShareUrl())}`,
+    },
+    {
+      label: "WhatsApp",
+      icon: "W",
+      color: "#25D366",
+      href: `https://wa.me/?text=${encodeURIComponent(shareText + " " + getShareUrl())}`,
+    },
+  ];
 
   return (
     <div className="bg-white border border-[#F0D0DC] rounded-2xl overflow-hidden hover:shadow-lg transition-shadow duration-300">
@@ -770,12 +832,59 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
               </div>
             </div>
           </div>
-          <button
-            onClick={onApply}
-            className="shrink-0 px-4 py-2 bg-[#C2185B] text-white font-body font-semibold text-xs rounded-full hover:bg-[#8B2252] transition-colors"
-          >
-            Apply
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Share button */}
+            <div ref={shareRef} className="relative">
+              <button
+                onClick={() => setShareOpen((v) => !v)}
+                className="flex items-center gap-1.5 px-3 py-2 border border-[#F0D0DC] text-[#8B2252] font-body font-semibold text-xs rounded-full hover:bg-[#FFF0F5] hover:border-[#C2185B] transition-colors"
+                aria-label="Share this job"
+              >
+                <Share2 size={13} />
+                <span className="hidden sm:inline">Share</span>
+              </button>
+              {shareOpen && (
+                <div className="absolute right-0 top-full mt-2 w-44 bg-white border border-[#F0D0DC] rounded-2xl shadow-lg z-20 overflow-hidden">
+                  <div className="px-3 py-2 border-b border-[#F0D0DC]">
+                    <p className="font-body text-[10px] font-semibold text-[#5A3040] uppercase tracking-wide">Share this role</p>
+                  </div>
+                  {shareLinks.map((s) => (
+                    <a
+                      key={s.label}
+                      href={s.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setShareOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 hover:bg-[#FFF0F5] transition-colors"
+                    >
+                      <span
+                        className="w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-[10px] shrink-0"
+                        style={{ backgroundColor: s.color }}
+                      >
+                        {s.icon}
+                      </span>
+                      <span className="font-body text-xs text-[#1A0A12]">{s.label}</span>
+                    </a>
+                  ))}
+                  <button
+                    onClick={() => { handleCopyLink(); setShareOpen(false); }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[#FFF0F5] transition-colors border-t border-[#F0D0DC]"
+                  >
+                    <span className="w-6 h-6 rounded-full bg-[#F0D0DC] flex items-center justify-center shrink-0">
+                      {copied ? <Check size={11} className="text-green-600" /> : <Copy size={11} className="text-[#8B2252]" />}
+                    </span>
+                    <span className="font-body text-xs text-[#1A0A12]">{copied ? "Copied!" : "Copy Link"}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={onApply}
+              className="px-4 py-2 bg-[#C2185B] text-white font-body font-semibold text-xs rounded-full hover:bg-[#8B2252] transition-colors"
+            >
+              Apply
+            </button>
+          </div>
         </div>
 
         <p className="font-body text-sm text-[#5A3040] leading-relaxed mb-4">{job.description}</p>

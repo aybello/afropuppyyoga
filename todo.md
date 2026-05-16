@@ -169,3 +169,4 @@
 - [x] Register /admin/partnerships route in App.tsx
 - [x] Add Partnership Inquiries tool card to StaffPortal hub
 - [ ] Add 18+ age confirmation checkbox to signing portal — must be checked before signature can be submitted
+- [ ] Add share button to job listing cards on Careers page (Facebook, X, LinkedIn, copy link)
