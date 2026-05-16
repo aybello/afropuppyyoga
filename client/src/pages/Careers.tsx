@@ -17,6 +17,7 @@ const JOB_LISTINGS = [
     location: "Kitchener-Waterloo",
     locationCode: "KW",
     type: "Part-Time",
+    badge: "Now Hiring",
     emoji: "🧘",
     description:
       "Lead our signature 40-minute guided yoga sessions set to Afro-beat rhythms with adorable puppies on the mat. You'll create a joyful, inclusive, and energizing experience for guests of all skill levels. This is not your typical yoga class — it's a celebration of wellness, culture, and community.",
@@ -47,7 +48,7 @@ const JOB_LISTINGS = [
     location: "Kitchener-Waterloo",
     locationCode: "KW",
     type: "Part-Time",
-    badge: "Paid Volunteer",
+    badge: "Now Hiring",
     emoji: "🐾",
     description:
       "You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class — feeding, cleaning, and making sure every pup is thriving.",
@@ -78,7 +79,8 @@ const JOB_LISTINGS = [
     location: "Remote / Canada",
     locationCode: "REMOTE",
     type: "Flexible",
-    badge: "Commission-Based",
+    badge: "Now Hiring",
+    subBadge: "Commission-Based",
     emoji: "💼",
     description:
       "Help AfroPuppyYoga grow its brand, partnerships, and community reach. As our BDR, you'll identify and nurture new business opportunities — from corporate wellness partnerships and private event bookings to sponsorships and brand collaborations. You're a natural connector who loves wellness, community, and closing deals.",
@@ -109,7 +111,8 @@ const JOB_LISTINGS = [
     location: "Remote / Canada",
     locationCode: "REMOTE",
     type: "Part-Time",
-    badge: "Paid",
+    badge: "Now Hiring",
+    subBadge: "Paid",
     emoji: "📱",
     description:
       "You live on Instagram, you think in Reels, and you have a genuine love for wellness and community. As our Social Media Intern, you'll help shape the online voice of AfroPuppyYoga — creating content, engaging our community, and growing our presence across platforms. This is a hands-on role where your creativity directly impacts a fast-growing brand.",
@@ -178,7 +181,7 @@ const JOB_LISTINGS = [
     location: "Hamilton",
     locationCode: "HAM",
     type: "Part-Time",
-    badge: "Paid Volunteer",
+    badge: "Now Hiring",
     emoji: "🐾",
     description:
       "You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class — feeding, cleaning, and making sure every pup is thriving.",
@@ -779,22 +782,11 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
       href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl())}`,
     },
     {
-      label: "X (Twitter)",
-      icon: "𝕏",
-      color: "#000000",
-      href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(getShareUrl())}`,
-    },
-    {
-      label: "LinkedIn",
-      icon: "in",
-      color: "#0A66C2",
-      href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getShareUrl())}`,
-    },
-    {
-      label: "WhatsApp",
-      icon: "W",
-      color: "#25D366",
-      href: `https://wa.me/?text=${encodeURIComponent(shareText + " " + getShareUrl())}`,
+      label: "Instagram",
+      icon: "IG",
+      color: "#E1306C",
+      // Instagram doesn't support direct URL sharing — copy the link and open Instagram
+      href: null as string | null,
     },
   ];
 
@@ -816,12 +808,13 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
                   <Clock size={11} /> {job.type}
                 </span>
                 {(job as any).badge && (
-                  <span className={`px-2 py-0.5 font-body text-[10px] font-semibold rounded-full border ${
-                    (job as any).badge === "Now Hiring"
-                      ? "bg-green-100 text-green-700 border-green-300"
-                      : "bg-[#C2185B]/10 text-[#C2185B] border-[#C2185B]/20"
-                  }`}>
-                    {(job as any).badge === "Now Hiring" ? "🟢 Now Hiring" : (job as any).badge}
+                  <span className="px-2 py-0.5 font-body text-[10px] font-semibold rounded-full border bg-green-100 text-green-700 border-green-300">
+                    🟢 Now Hiring
+                  </span>
+                )}
+                {(job as any).subBadge && (
+                  <span className="px-2 py-0.5 bg-[#C2185B]/10 text-[#C2185B] font-body text-[10px] font-semibold rounded-full border border-[#C2185B]/20">
+                    {(job as any).subBadge}
                   </span>
                 )}
                 {(job as any).pay && (
@@ -848,24 +841,40 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
                   <div className="px-3 py-2 border-b border-[#F0D0DC]">
                     <p className="font-body text-[10px] font-semibold text-[#5A3040] uppercase tracking-wide">Share this role</p>
                   </div>
-                  {shareLinks.map((s) => (
-                    <a
-                      key={s.label}
-                      href={s.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => setShareOpen(false)}
-                      className="flex items-center gap-3 px-3 py-2.5 hover:bg-[#FFF0F5] transition-colors"
-                    >
-                      <span
-                        className="w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-[10px] shrink-0"
-                        style={{ backgroundColor: s.color }}
+                  {shareLinks.map((s) =>
+                    s.href ? (
+                      <a
+                        key={s.label}
+                        href={s.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setShareOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 hover:bg-[#FFF0F5] transition-colors"
                       >
-                        {s.icon}
-                      </span>
-                      <span className="font-body text-xs text-[#1A0A12]">{s.label}</span>
-                    </a>
-                  ))}
+                        <span
+                          className="w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-[10px] shrink-0"
+                          style={{ backgroundColor: s.color }}
+                        >
+                          {s.icon}
+                        </span>
+                        <span className="font-body text-xs text-[#1A0A12]">{s.label}</span>
+                      </a>
+                    ) : (
+                      <button
+                        key={s.label}
+                        onClick={() => { handleCopyLink(); setShareOpen(false); }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[#FFF0F5] transition-colors"
+                      >
+                        <span
+                          className="w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-[10px] shrink-0"
+                          style={{ backgroundColor: s.color }}
+                        >
+                          {s.icon}
+                        </span>
+                        <span className="font-body text-xs text-[#1A0A12]">{s.label} (Copy Link)</span>
+                      </button>
+                    )
+                  )}
                   <button
                     onClick={() => { handleCopyLink(); setShareOpen(false); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[#FFF0F5] transition-colors border-t border-[#F0D0DC]"
