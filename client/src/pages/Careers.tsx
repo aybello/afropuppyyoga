@@ -49,6 +49,7 @@ const JOB_LISTINGS = [
     locationCode: "KW",
     type: "Part-Time",
     badge: "Now Hiring",
+    pay: "$50/shift",
     emoji: "🐾",
     description:
       "You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class — feeding, cleaning, and making sure every pup is thriving.",
@@ -182,6 +183,7 @@ const JOB_LISTINGS = [
     locationCode: "HAM",
     type: "Part-Time",
     badge: "Now Hiring",
+    pay: "$50/shift",
     emoji: "🐾",
     description:
       "You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class — feeding, cleaning, and making sure every pup is thriving.",

@@ -162,8 +162,8 @@ export default function PrivateEventQuote() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name || !email) {
-      toast.error("Please enter your name and email so we can follow up.");
+    if (!name || !email || !phone) {
+      toast.error("Please enter your name, email, and phone number so we can follow up.");
       return;
     }
     submitInquiry.mutate({
@@ -508,7 +508,7 @@ export default function PrivateEventQuote() {
                       </div>
                       <div className="space-y-2">
                         <Label className="font-body text-sm font-semibold text-[#3D1A2E]">
-                          Phone Number
+                          Phone Number *
                         </Label>
                         <div className="relative">
                           <Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#3D1A2E]/40" />
