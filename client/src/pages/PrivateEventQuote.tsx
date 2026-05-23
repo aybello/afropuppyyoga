@@ -213,6 +213,7 @@ export default function PrivateEventQuote() {
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {[
               {
+                emoji: "\uD83D\uDC3E",
                 name: "Classic Experience",
                 price: "$1,200-$1,500",
                 desc: "Perfect for birthdays, girls' days & intimate wellness experiences.",
@@ -221,15 +222,17 @@ export default function PrivateEventQuote() {
                 items: ["60-min beginner-friendly session", "Up to 20 guests", "Puppies + handlers", "Professional yoga instructor", "Group photo + puppy playtime", "Basic mats", "Refreshments & wellness treats", "Curated music & atmosphere"],
               },
               {
+                emoji: "\u2728",
                 name: "Signature Experience",
                 price: "$1,500-$2,250",
-                desc: "Our most popular — for bachelorettes, celebrations & elevated social experiences.",
+                desc: "Our most popular - for bachelorettes, celebrations & elevated social experiences.",
                 color: "border-[#F2A0B8] ring-2 ring-[#F2A0B8]/30",
                 badge: "bg-[#F2A0B8]/20 text-[#8B2252]",
                 popular: true,
                 items: ["Everything in Classic", "Professional event photography", "Premium mats & elevated setup", "Enhanced photo moments & styling", "Extended puppy interaction", "Elevated event atmosphere"],
               },
               {
+                emoji: "\uD83D\uDC8E",
                 name: "Luxury Experience",
                 price: "$2,500+",
                 desc: "For corporate events, large activations & fully customized luxury experiences.",
@@ -248,7 +251,7 @@ export default function PrivateEventQuote() {
                   </span>
                 )}
                 <div className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-body font-semibold mb-2 ${pkg.badge}`}>
-                  {pkg.name}
+                  {pkg.emoji} {pkg.name}
                 </div>
                 <div className="font-display text-2xl font-bold text-[#1A0A12] mb-1">{pkg.price}</div>
                 <p className="font-body text-[#3D1A2E]/55 text-xs mb-4 leading-relaxed">{pkg.desc}</p>
