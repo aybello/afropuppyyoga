@@ -4,7 +4,7 @@
    Staff tab is only visible to admin role (not staff role)
    ============================================================ */
 import { Link, useLocation } from "wouter";
-import { FileText, Users, ArrowLeft, UserCog, Handshake } from "lucide-react";
+import { FileText, Users, ArrowLeft, UserCog, Handshake, Sparkles } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
@@ -26,6 +26,12 @@ const NAV_ITEMS = [
     href: "/admin/partnerships",
     label: "Partnerships",
     icon: Handshake,
+    adminOnly: false,
+  },
+  {
+    href: "/admin/private-events",
+    label: "Private Events",
+    icon: Sparkles,
     adminOnly: false,
   },
   {

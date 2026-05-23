@@ -1,7 +1,11 @@
 import { z } from "zod";
-import { publicProcedure, router } from "../_core/trpc";
+import { publicProcedure, protectedProcedure, router } from "../_core/trpc";
 import { notifyOwner } from "../_core/notification";
 import { sendEmail } from "../email";
+import { getDb } from "../db";
+import { privateEventInquiries } from "../../drizzle/schema";
+import { desc, eq } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 
 const APY_EMAIL = "afropuppyyogaofficial@gmail.com";
 
@@ -109,7 +113,7 @@ export const privateEventsRouter = router({
         eventType: z.string().min(1),
         guests: z.number().min(1),
         location: z.string().min(1),
-        packageType: z.enum(["base", "deluxe", "vip"]),
+        packageType: z.enum(["classic", "signature", "luxury"]),
         preferredDate: z.string().optional().default(""),
         notes: z.string().optional().default(""),
         estimatedMin: z.number(),
@@ -118,75 +122,140 @@ export const privateEventsRouter = router({
     )
     .mutation(async ({ input }) => {
       const packageLabel =
-        input.packageType === "base"
-          ? "Base ($1,200–$1,500)"
-          : input.packageType === "deluxe"
-          ? "Deluxe ($1,950–$2,250)"
-          : "VIP ($3,000+)";
+        input.packageType === "classic"
+          ? "Classic Experience ($1,200-$1,500)"
+          : input.packageType === "signature"
+          ? "Signature Experience ($1,500-$2,250)"
+          : "Luxury Experience ($2,500+)";
 
       const estimateStr =
         input.estimatedMin > 0
-          ? `$${input.estimatedMin.toLocaleString()} – $${input.estimatedMax.toLocaleString()} CAD`
-          : "Custom VIP quote";
+          ? `$${input.estimatedMin.toLocaleString()} - $${input.estimatedMax.toLocaleString()} CAD`
+          : "Custom Luxury quote";
 
-      // Send branded email to APY inbox
-      await sendEmail({
-        to: APY_EMAIL,
-        subject: `Private Event Inquiry: ${input.name} — ${input.guests} guests (${input.location})`,
-        html: buildInquiryEmailHtml({
-          name: input.name,
-          email: input.email,
-          phone: input.phone,
-          eventType: input.eventType,
-          guests: input.guests,
-          location: input.location,
-          packageType: input.packageType,
-          packageLabel,
-          preferredDate: input.preferredDate,
-          notes: input.notes,
-          estimateStr,
-        }),
-        text: [
-          `NEW PRIVATE EVENT INQUIRY`,
-          ``,
-          `Name: ${input.name}`,
-          `Email: ${input.email}`,
-          `Phone: ${input.phone || "Not provided"}`,
-          ``,
-          `Event Type: ${input.eventType}`,
-          `Guests: ${input.guests}`,
-          `Location: ${input.location}`,
-          `Package: ${packageLabel}`,
-          `Preferred Date: ${input.preferredDate || "Not specified"}`,
-          ``,
-          `Estimated Quote: ${estimateStr}`,
-          ``,
-          `Notes: ${input.notes || "None"}`,
-        ].join("\n"),
+      // 1. Save to database first (source of truth)
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      await db.insert(privateEventInquiries).values({
+        name: input.name,
+        email: input.email,
+        phone: input.phone || null,
+        eventType: input.eventType,
+        guests: input.guests,
+        location: input.location,
+        packageType: input.packageType,
+        preferredDate: input.preferredDate || null,
+        notes: input.notes || null,
+        estimatedMin: input.estimatedMin,
+        estimatedMax: input.estimatedMax,
+        status: "new",
       });
 
-      // Also send Manus owner notification as backup
-      await notifyOwner({
-        title: `Private Event Inquiry — ${input.name} (${input.guests} guests, ${input.location})`,
-        content: [
-          `NEW PRIVATE EVENT INQUIRY`,
-          ``,
-          `Name: ${input.name}`,
-          `Email: ${input.email}`,
-          `Phone: ${input.phone || "Not provided"}`,
-          ``,
-          `Event Type: ${input.eventType}`,
-          `Guests: ${input.guests}`,
-          `Location: ${input.location}`,
-          `Package: ${packageLabel}`,
-          `Preferred Date: ${input.preferredDate || "Not specified"}`,
-          ``,
-          `Estimated Quote: ${estimateStr}`,
-          ``,
-          `Notes: ${input.notes || "None"}`,
-        ].join("\n"),
-      });
+      // 2. Send branded email to APY inbox
+      try {
+        await sendEmail({
+          to: APY_EMAIL,
+          subject: `Private Event Inquiry: ${input.name} — ${input.guests} guests (${input.location})`,
+          html: buildInquiryEmailHtml({
+            name: input.name,
+            email: input.email,
+            phone: input.phone,
+            eventType: input.eventType,
+            guests: input.guests,
+            location: input.location,
+            packageType: input.packageType,
+            packageLabel,
+            preferredDate: input.preferredDate,
+            notes: input.notes,
+            estimateStr,
+          }),
+          text: [
+            `NEW PRIVATE EVENT INQUIRY`,
+            ``,
+            `Name: ${input.name}`,
+            `Email: ${input.email}`,
+            `Phone: ${input.phone || "Not provided"}`,
+            ``,
+            `Event Type: ${input.eventType}`,
+            `Guests: ${input.guests}`,
+            `Location: ${input.location}`,
+            `Package: ${packageLabel}`,
+            `Preferred Date: ${input.preferredDate || "Not specified"}`,
+            ``,
+            `Estimated Quote: ${estimateStr}`,
+            ``,
+            `Notes: ${input.notes || "None"}`,
+          ].join("\n"),
+        });
+      } catch (e) {
+        console.error("Failed to send inquiry email:", e);
+        // Don't throw — inquiry is already saved to DB
+      }
 
+      // 3. Also send Manus owner notification as backup
+      try {
+        await notifyOwner({
+          title: `Private Event Inquiry — ${input.name} (${input.guests} guests, ${input.location})`,
+          content: [
+            `NEW PRIVATE EVENT INQUIRY`,
+            ``,
+            `Name: ${input.name}`,
+            `Email: ${input.email}`,
+            `Phone: ${input.phone || "Not provided"}`,
+            ``,
+            `Event Type: ${input.eventType}`,
+            `Guests: ${input.guests}`,
+            `Location: ${input.location}`,
+            `Package: ${packageLabel}`,
+            `Preferred Date: ${input.preferredDate || "Not specified"}`,
+            ``,
+            `Estimated Quote: ${estimateStr}`,
+            ``,
+            `Notes: ${input.notes || "None"}`,
+          ].join("\n"),
+        });
+      } catch (e) {
+        console.error("Failed to send owner notification:", e);
+      }
+
+      return { success: true };
+    }),
+
+  // Admin: list all inquiries (newest first)
+  listInquiries: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.user.role !== "admin" && ctx.user.role !== "staff") {
+      throw new TRPCError({ code: "FORBIDDEN" });
+    }
+    const db = await getDb();
+    if (!db) return [];
+    return db
+      .select()
+      .from(privateEventInquiries)
+      .orderBy(desc(privateEventInquiries.createdAt));
+  }),
+
+  // Admin: update inquiry status
+  updateStatus: protectedProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        status: z.enum(["new", "contacted", "confirmed", "cancelled"]),
+        adminNotes: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role !== "admin" && ctx.user.role !== "staff") {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      await db
+        .update(privateEventInquiries)
+        .set({
+          status: input.status,
+          ...(input.adminNotes !== undefined ? { adminNotes: input.adminNotes } : {}),
+        })
+        .where(eq(privateEventInquiries.id, input.id));
       return { success: true };
     }),
 });

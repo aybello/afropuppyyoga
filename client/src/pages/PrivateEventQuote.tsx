@@ -219,7 +219,16 @@ export default function PrivateEventQuote() {
                 desc: "Perfect for birthdays, girls' days & intimate wellness experiences.",
                 color: "border-[#8B2252]/30",
                 badge: "bg-[#8B2252]/10 text-[#8B2252]",
-                items: ["60-min beginner-friendly session", "Up to 20 guests", "Puppies + handlers", "Professional yoga instructor", "Group photo + puppy playtime", "Basic mats", "Refreshments & wellness treats", "Curated music & atmosphere"],
+                items: [
+                  { emoji: "\u2728", text: "60-min beginner-friendly Puppy Yoga session" },
+                  { emoji: "\uD83D\uDC36", text: "Puppies + dedicated puppy handlers" },
+                  { emoji: "\uD83E\uDDD8", text: "Professional yoga instructor" },
+                  { emoji: "\uD83D\uDCF8", text: "Group photo + puppy playtime" },
+                  { emoji: "\uD83D\uDC9B", text: "Basic mats included" },
+                  { emoji: "\uD83E\uDD64", text: "Refreshments & wellness treats" },
+                  { emoji: "\uD83C\uDFB6", text: "Curated music & atmosphere" },
+                  { emoji: "\uD83D\uDC65", text: "Up to 20 guests" },
+                ],
               },
               {
                 emoji: "\u2728",
@@ -229,7 +238,14 @@ export default function PrivateEventQuote() {
                 color: "border-[#F2A0B8] ring-2 ring-[#F2A0B8]/30",
                 badge: "bg-[#F2A0B8]/20 text-[#8B2252]",
                 popular: true,
-                items: ["Everything in Classic", "Professional event photography", "Premium mats & elevated setup", "Enhanced photo moments & styling", "Extended puppy interaction", "Elevated event atmosphere"],
+                items: [
+                  { emoji: "\uD83D\uDC3E", text: "Everything in Classic Experience" },
+                  { emoji: "\uD83D\uDCF8", text: "Professional event photography" },
+                  { emoji: "\uD83E\uDDD8", text: "Premium mats & elevated setup" },
+                  { emoji: "\u2728", text: "Enhanced photo moments & event styling" },
+                  { emoji: "\uD83D\uDC36", text: "Extended puppy interaction experience" },
+                  { emoji: "\uD83D\uDC9B", text: "Elevated event atmosphere & setup" },
+                ],
               },
               {
                 emoji: "\uD83D\uDC8E",
@@ -238,7 +254,14 @@ export default function PrivateEventQuote() {
                 desc: "For corporate events, large activations & fully customized luxury experiences.",
                 color: "border-[#8B2252]/30",
                 badge: "bg-[#1A0A12]/10 text-[#1A0A12]",
-                items: ["Everything in Signature", "Professional videography", "Curated gift bags & branded add-ons", "Larger puppy team & staffing", "Catering & wellness vendors", "Fully customized experience"],
+                items: [
+                  { emoji: "\uD83D\uDC8E", text: "Everything in Signature Experience" },
+                  { emoji: "\uD83C\uDFAC", text: "Professional videography options" },
+                  { emoji: "\uD83C\uDF81", text: "Curated gift bags & branded add-ons" },
+                  { emoji: "\uD83D\uDC36", text: "Larger puppy team & staffing support" },
+                  { emoji: "\uD83C\uDF69", text: "Catering, dessert & wellness vendors" },
+                  { emoji: "\u2728", text: "Fully customized event experience" },
+                ],
               },
             ].map((pkg) => (
               <div
@@ -257,9 +280,9 @@ export default function PrivateEventQuote() {
                 <p className="font-body text-[#3D1A2E]/55 text-xs mb-4 leading-relaxed">{pkg.desc}</p>
                 <ul className="space-y-2">
                   {pkg.items.map((item) => (
-                    <li key={item} className="flex items-center gap-2 text-sm font-body text-[#3D1A2E]/70">
-                      <CheckCircle2 size={14} className="text-[#8B2252] shrink-0" />
-                      {item}
+                    <li key={item.text} className="flex items-start gap-2 text-sm font-body text-[#3D1A2E]/70">
+                      <span className="shrink-0 text-base leading-none mt-0.5">{item.emoji}</span>
+                      {item.text}
                     </li>
                   ))}
                 </ul>

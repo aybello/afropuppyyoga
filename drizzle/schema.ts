@@ -201,3 +201,37 @@ export const signingTokens = mysqlTable("signingTokens", {
 
 export type SigningToken = typeof signingTokens.$inferSelect;
 export type InsertSigningToken = typeof signingTokens.$inferInsert;
+export const privateEventInquiries = mysqlTable("privateEventInquiries", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Name of the person booking */
+  name: varchar("name", { length: 255 }).notNull(),
+  /** Contact email */
+  email: varchar("email", { length: 320 }).notNull(),
+  /** Contact phone number */
+  phone: varchar("phone", { length: 50 }),
+  /** Type of event (Birthday, Bachelorette, etc.) */
+  eventType: varchar("eventType", { length: 100 }).notNull(),
+  /** Number of guests */
+  guests: int("guests").notNull(),
+  /** Location label */
+  location: varchar("location", { length: 255 }).notNull(),
+  /** Package type: classic, signature, luxury */
+  packageType: varchar("packageType", { length: 50 }).notNull(),
+  /** Preferred date string */
+  preferredDate: varchar("preferredDate", { length: 100 }),
+  /** Additional notes */
+  notes: text("notes"),
+  /** Estimated minimum price */
+  estimatedMin: int("estimatedMin").notNull(),
+  /** Estimated maximum price */
+  estimatedMax: int("estimatedMax").notNull(),
+  /** Inquiry status */
+  status: mysqlEnum("peStatus", ["new", "contacted", "confirmed", "cancelled"]).default("new").notNull(),
+  /** Internal notes from admin */
+  adminNotes: text("adminNotes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PrivateEventInquiry = typeof privateEventInquiries.$inferSelect;
+export type InsertPrivateEventInquiry = typeof privateEventInquiries.$inferInsert;

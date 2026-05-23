@@ -22,6 +22,7 @@ const StaffLogin = lazy(() => import("./pages/StaffLogin"));
 const StaffManagement = lazy(() => import("./pages/StaffManagement"));
 const SignDocuments = lazy(() => import("./pages/SignDocuments"));
 const PrivateEventQuote = lazy(() => import("./pages/PrivateEventQuote"));
+const PrivateEventsDashboard = lazy(() => import("./pages/PrivateEventsDashboard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function PageLoader() {
@@ -51,6 +52,7 @@ function Router() {
         <Route path={"/admin/staff"} component={StaffManagement} />
         <Route path={"/sign"} component={SignDocuments} />
         <Route path={"/private-events/quote"} component={PrivateEventQuote} />
+        <Route path="/admin/private-events" component={PrivateEventsDashboard} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>
