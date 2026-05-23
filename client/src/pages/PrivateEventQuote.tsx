@@ -114,7 +114,7 @@ function calculateQuote(
   }
 
   const breakdown: string[] = [];
-  breakdown.push(`Base package (up to 20 guests, 1 session): $${BASE_MIN}–$${BASE_MAX}`);
+  breakdown.push(`Base package (up to 20 guests, 1 session, drinks & photos included): $${BASE_MIN}–$${BASE_MAX}`);
   if (sessions === 2) {
     breakdown.push(`Second session for ${guests} guests: +$${SECOND_SESSION_MIN}–$${SECOND_SESSION_MAX}`);
   }
@@ -217,7 +217,7 @@ export default function PrivateEventQuote() {
                 price: "$1,200–$1,500",
                 color: "border-[#8B2252]/30",
                 badge: "bg-[#8B2252]/10 text-[#8B2252]",
-                items: ["1-hour yoga session", "Up to 20 guests", "Puppies + instructor", "Basic mats"],
+                items: ["1-hour yoga session", "Up to 20 guests", "Puppies + instructor", "Basic mats", "Drinks & refreshments", "Photos & videos"],
               },
               {
                 name: "Deluxe",
