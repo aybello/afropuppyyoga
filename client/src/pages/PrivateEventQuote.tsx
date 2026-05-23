@@ -1,11 +1,11 @@
 /* ============================================================
    Private Event Quote Generator — AfroPuppyYoga
    Pricing logic:
-   - Base package: $1,200–$1,500 (up to 20 guests, 1 hr, at studio)
-   - 21–40 guests: second session added (+$800–$1,000)
-   - 40+ guests: VIP / custom quote
+   - Classic package: $1,200-$1,500 (up to 20 guests, 1 hr, at studio)
+   - 21-40 guests: second session added (+$800-$1,000)
+   - 40+ guests: Luxury / custom quote
    - Offsite travel fee by city distance from KW
-   - Package upgrades: Base / Deluxe / VIP
+   - Package upgrades: Classic / Signature / Luxury
    ============================================================ */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -41,8 +41,8 @@ const BASE_MIN = 1200;
 const BASE_MAX = 1500;
 const SECOND_SESSION_MIN = 800;
 const SECOND_SESSION_MAX = 1000;
-const DELUXE_UPGRADE = 500; // photographer + refreshments + premium mats — Deluxe = BASE_MAX + DELUXE_UPGRADE = $2,000
-const VIP_MIN = 2000;
+const SIGNATURE_UPGRADE = 750; // professional photographer + premium mats + enhanced styling — Signature = BASE_MAX + SIGNATURE_UPGRADE = $2,250
+const LUXURY_MIN = 2500;
 
 // Travel fees by city (one-way distance from KW studio)
 const TRAVEL_FEES: Record<string, number> = {
@@ -89,15 +89,15 @@ const LOCATIONS = [
 function calculateQuote(
   guests: number,
   locationKey: string,
-  packageType: "base" | "deluxe" | "vip"
+  packageType: "classic" | "signature" | "luxury"
 ): { min: number; max: number; sessions: number; isVip: boolean; breakdown: string[] } {
-  if (packageType === "vip" || guests > 40) {
+  if (packageType === "luxury" || guests > 40) {
     return {
-      min: VIP_MIN,
-      max: VIP_MIN + 1500,
+      min: LUXURY_MIN,
+      max: LUXURY_MIN + 2500,
       sessions: Math.ceil(guests / 20),
       isVip: true,
-      breakdown: ["Fully customized VIP experience", "Pricing tailored to your event"],
+      breakdown: ["Fully customized Luxury experience", "Pricing tailored to your event"],
     };
   }
 
@@ -108,21 +108,21 @@ function calculateQuote(
   let min = BASE_MIN + (sessions === 2 ? SECOND_SESSION_MIN : 0) + travelFee;
   let max = BASE_MAX + (sessions === 2 ? SECOND_SESSION_MAX : 0) + travelFee;
 
-  if (packageType === "deluxe") {
-    min += DELUXE_UPGRADE;
-    max += DELUXE_UPGRADE;
+  if (packageType === "signature") {
+    min += SIGNATURE_UPGRADE;
+    max += SIGNATURE_UPGRADE;
   }
 
   const breakdown: string[] = [];
-  breakdown.push(`Base package (up to 20 guests, 1 session, drinks & photos included): $${BASE_MIN}–$${BASE_MAX}`);
+  breakdown.push(`Classic package (up to 20 guests, 60-min session, drinks & photos included): $${BASE_MIN}-$${BASE_MAX}`);
   if (sessions === 2) {
-    breakdown.push(`Second session for ${guests} guests: +$${SECOND_SESSION_MIN}–$${SECOND_SESSION_MAX}`);
+    breakdown.push(`Second session for ${guests} guests: +$${SECOND_SESSION_MIN}-$${SECOND_SESSION_MAX}`);
   }
   if (isOffsite) {
     breakdown.push(`Travel fee (${LOCATIONS.find((l) => l.value === locationKey)?.label ?? "offsite"}): +$${travelFee}`);
   }
-  if (packageType === "deluxe") {
-    breakdown.push(`Deluxe upgrade (photographer, refreshments, premium mats): +$${DELUXE_UPGRADE}`);
+  if (packageType === "signature") {
+    breakdown.push(`Signature upgrade (professional photographer, premium mats, enhanced styling): +$${SIGNATURE_UPGRADE}`);
   }
 
   return { min, max, sessions, isVip: false, breakdown };
@@ -136,7 +136,7 @@ export default function PrivateEventQuote() {
   const [eventType, setEventType] = useState("");
   const [guests, setGuests] = useState("");
   const [locationKey, setLocationKey] = useState("");
-  const [packageType, setPackageType] = useState<"base" | "deluxe" | "vip">("base");
+  const [packageType, setPackageType] = useState<"classic" | "signature" | "luxury">("classic");
   const [preferredDate, setPreferredDate] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -213,26 +213,29 @@ export default function PrivateEventQuote() {
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {[
               {
-                name: "Base",
-                price: "$1,200–$1,500",
+                name: "Classic Experience",
+                price: "$1,200-$1,500",
+                desc: "Perfect for birthdays, girls' days & intimate wellness experiences.",
                 color: "border-[#8B2252]/30",
                 badge: "bg-[#8B2252]/10 text-[#8B2252]",
-                items: ["1-hour yoga session", "Up to 20 guests", "Puppies + instructor", "Basic mats", "Drinks & refreshments", "Photos & videos"],
+                items: ["60-min beginner-friendly session", "Up to 20 guests", "Puppies + handlers", "Professional yoga instructor", "Group photo + puppy playtime", "Basic mats", "Refreshments & wellness treats", "Curated music & atmosphere"],
               },
               {
-                name: "Deluxe",
-                price: "$1,500–$2,000",
+                name: "Signature Experience",
+                price: "$1,500-$2,250",
+                desc: "Our most popular — for bachelorettes, celebrations & elevated social experiences.",
                 color: "border-[#F2A0B8] ring-2 ring-[#F2A0B8]/30",
                 badge: "bg-[#F2A0B8]/20 text-[#8B2252]",
                 popular: true,
-                items: ["Everything in Base", "Professional photographer", "Refreshments", "Premium mats"],
+                items: ["Everything in Classic", "Professional event photography", "Premium mats & elevated setup", "Enhanced photo moments & styling", "Extended puppy interaction", "Elevated event atmosphere"],
               },
               {
-                name: "VIP",
-                price: "$2,000+",
+                name: "Luxury Experience",
+                price: "$2,500+",
+                desc: "For corporate events, large activations & fully customized luxury experiences.",
                 color: "border-[#8B2252]/30",
                 badge: "bg-[#1A0A12]/10 text-[#1A0A12]",
-                items: ["Fully customized", "Unlimited guests", "Videography", "Decor + catering"],
+                items: ["Everything in Signature", "Professional videography", "Curated gift bags & branded add-ons", "Larger puppy team & staffing", "Catering & wellness vendors", "Fully customized experience"],
               },
             ].map((pkg) => (
               <div
@@ -244,10 +247,11 @@ export default function PrivateEventQuote() {
                     Most Popular
                   </span>
                 )}
-                <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-body font-semibold mb-3 ${pkg.badge}`}>
+                <div className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-body font-semibold mb-2 ${pkg.badge}`}>
                   {pkg.name}
-                </span>
-                <div className="font-display text-2xl font-bold text-[#1A0A12] mb-4">{pkg.price}</div>
+                </div>
+                <div className="font-display text-2xl font-bold text-[#1A0A12] mb-1">{pkg.price}</div>
+                <p className="font-body text-[#3D1A2E]/55 text-xs mb-4 leading-relaxed">{pkg.desc}</p>
                 <ul className="space-y-2">
                   {pkg.items.map((item) => (
                     <li key={item} className="flex items-center gap-2 text-sm font-body text-[#3D1A2E]/70">
@@ -397,7 +401,7 @@ export default function PrivateEventQuote() {
                         Package *
                       </Label>
                       <div className="grid grid-cols-3 gap-3">
-                        {(["base", "deluxe", "vip"] as const).map((pkg) => (
+                        {(["classic", "signature", "luxury"] as const).map((pkg) => (
                           <button
                             key={pkg}
                             type="button"
@@ -434,16 +438,16 @@ export default function PrivateEventQuote() {
                         {quote.isVip ? (
                           <div>
                             <div className="font-display text-4xl font-bold text-white mb-2">
-                              $2,000+
+                              $2,500+
                             </div>
                             <p className="font-body text-white/60 text-sm">
-                              Custom VIP quote — we'll reach out with a tailored proposal.
+                              Custom Luxury quote — we'll reach out with a fully tailored proposal.
                             </p>
                           </div>
                         ) : (
                           <>
                             <div className="font-display text-4xl font-bold text-white mb-1">
-                              ${quote.min.toLocaleString()} – ${quote.max.toLocaleString()}
+                              ${quote.min.toLocaleString()} - ${quote.max.toLocaleString()}
                             </div>
                             <p className="font-body text-white/50 text-sm mb-6">Estimated price range (CAD)</p>
 
