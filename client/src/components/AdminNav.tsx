@@ -4,7 +4,7 @@
    Staff tab is only visible to admin role (not staff role)
    ============================================================ */
 import { Link, useLocation } from "wouter";
-import { FileText, Users, ArrowLeft, UserCog, Handshake, Sparkles } from "lucide-react";
+import { FileText, Users, ArrowLeft, UserCog, Handshake, Sparkles, LayoutGrid } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
@@ -87,14 +87,23 @@ export default function AdminNav() {
           })}
         </nav>
 
-        {/* Back to site */}
-        <a
-          href="/"
-          className="inline-flex items-center gap-2 px-4 py-2 font-body font-semibold text-sm rounded-full border border-[#F0D0DC] text-[#6B4C3B] bg-white hover:bg-[#FFF0F4] transition-colors shrink-0"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="hidden sm:inline">Back to Site</span>
-        </a>
+        {/* Right side: Portal home + Back to site */}
+        <div className="flex items-center gap-2 shrink-0">
+          <Link
+            href="/staff"
+            className="inline-flex items-center gap-2 px-4 py-2 font-body font-semibold text-sm rounded-full border border-[#F0D0DC] text-[#8B2252] bg-white hover:bg-[#FFF0F4] transition-colors"
+          >
+            <LayoutGrid className="w-4 h-4" />
+            <span className="hidden sm:inline">All Tools</span>
+          </Link>
+          <a
+            href="/"
+            className="inline-flex items-center gap-2 px-4 py-2 font-body font-semibold text-sm rounded-full border border-[#F0D0DC] text-[#6B4C3B] bg-white hover:bg-[#FFF0F4] transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="hidden sm:inline">Back to Site</span>
+          </a>
+        </div>
       </div>
     </header>
   );
