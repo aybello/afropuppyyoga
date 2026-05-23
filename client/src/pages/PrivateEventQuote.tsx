@@ -281,7 +281,7 @@ export default function PrivateEventQuote() {
                 <ul className="space-y-2">
                   {pkg.items.map((item) => (
                     <li key={item.text} className="flex items-start gap-2 text-sm font-body text-[#3D1A2E]/70">
-                      <span className="shrink-0 text-base leading-none mt-0.5">{item.emoji}</span>
+                      <span className="shrink-0 text-base leading-none mt-0.5" style={{ color: 'initial', opacity: 1, filter: 'none' }}>{item.emoji}</span>
                       {item.text}
                     </li>
                   ))}
