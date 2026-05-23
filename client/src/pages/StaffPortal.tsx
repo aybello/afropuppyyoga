@@ -15,6 +15,7 @@ import {
   Lock,
   ExternalLink,
   Handshake,
+  Sparkles,
 } from "lucide-react";
 
 const TOOLS = [
@@ -87,6 +88,18 @@ const TOOLS = [
     color: "#2E7D32",
     bg: "#F1F8E9",
     border: "#C5E1A5",
+    badge: "Admin",
+    adminOnly: true,
+  },
+  {
+    id: "private-events",
+    title: "Private Event Inquiries",
+    description: "Track every private event inquiry submitted through the quote form — view details, update status, and add internal notes.",
+    href: "/admin/private-events",
+    icon: Sparkles,
+    color: "#8B2252",
+    bg: "#FFF0F5",
+    border: "#F0D0DC",
     badge: "Admin",
     adminOnly: true,
   },
