@@ -18,6 +18,7 @@ const navLinks = [
   { label: "Careers", href: "/careers", isPage: true },
   { label: "🎂 Birthday", href: "/birthday", isPage: true },
   { label: "Partnerships", href: "/partnerships", isPage: true },
+  { label: "🐾 Loyalty", href: "/loyalty", isPage: true },
 ];
 
 export default function Navbar() {

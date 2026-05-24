@@ -16,6 +16,7 @@ import Gallery from "@/components/sections/Gallery";
 import InstagramFeed from "@/components/sections/InstagramFeed";
 import Reviews from "@/components/sections/Reviews";
 import GiftCards from "@/components/sections/GiftCards";
+import LoyaltyProgram from "@/components/sections/LoyaltyProgram";
 import Memberships from "@/components/sections/Memberships";
 import FAQ from "@/components/sections/FAQ";
 import EthicalStandards from "@/components/sections/EthicalStandards";
@@ -47,6 +48,7 @@ export default function Home() {
         <Gallery />
         <InstagramFeed />
         <Reviews />
+        <LoyaltyProgram />
         <GiftCards />
         <EthicalStandards />
         <FAQ />
