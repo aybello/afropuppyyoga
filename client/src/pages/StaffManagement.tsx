@@ -103,7 +103,7 @@ export default function StaffManagement() {
       <div className="min-h-screen bg-[#FEFAF4] flex flex-col items-center justify-center p-6">
         <img src={LOGO_URL} alt="AfroPuppyYoga" className="w-16 h-16 rounded-full object-cover mb-6" />
         <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Admin Access Required</h2>
-        <p className="font-body text-[#6B4C3B] mb-6">Please log in to manage staff.</p>
+        <p className="font-body text-[#1A0A12] mb-6">Please log in to manage staff.</p>
         <button
           onClick={() => (window.location.href = getLoginUrl())}
           className="inline-flex items-center px-6 py-3 font-body font-semibold text-sm rounded-full text-white transition-all duration-200 hover:-translate-y-0.5"
@@ -121,7 +121,7 @@ export default function StaffManagement() {
       <div className="min-h-screen bg-[#FEFAF4] flex flex-col items-center justify-center p-6">
         <img src={LOGO_URL} alt="AfroPuppyYoga" className="w-16 h-16 rounded-full object-cover mb-6" />
         <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Access Denied</h2>
-        <p className="font-body text-[#6B4C3B]">This page is for admins only.</p>
+        <p className="font-body text-[#1A0A12]">This page is for admins only.</p>
       </div>
     );
   }
@@ -141,14 +141,14 @@ export default function StaffManagement() {
               <span className="font-body text-xs font-semibold tracking-widest uppercase text-[#8B2252]">Admin</span>
             </div>
             <h1 className="font-display font-bold text-3xl text-[#1A0A12]">Staff Access</h1>
-            <p className="font-body text-sm text-[#6B4C3B] mt-1">
+            <p className="font-body text-sm text-[#1A0A12] mt-1">
               Invite team members to the staff portal via magic link — no password required.
             </p>
           </div>
           <button
             onClick={() => setInviteOpen(true)}
             className="inline-flex items-center gap-2 px-5 py-2.5 font-body font-semibold text-sm rounded-full text-white transition-all duration-200 hover:-translate-y-0.5 shrink-0"
-            style={{ background: "linear-gradient(135deg, #C2185B, #8B2252)" }}
+            style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}
           >
             <UserPlus className="w-4 h-4" />
             Invite Staff
@@ -161,7 +161,7 @@ export default function StaffManagement() {
           style={{ background: "#FFF5F8", borderColor: "#F0D0DC" }}
         >
           <p className="font-body text-sm font-semibold text-[#8B2252] mb-2">How it works</p>
-          <ol className="font-body text-sm text-[#6B4C3B] space-y-1 list-decimal list-inside">
+          <ol className="font-body text-sm text-[#1A0A12] space-y-1 list-decimal list-inside">
             <li>Enter the staff member's name and email, then click "Invite Staff"</li>
             <li>They receive an email with a "Access APY Staff Portal" button</li>
             <li>Clicking the link logs them in instantly — no password needed</li>
@@ -178,17 +178,17 @@ export default function StaffManagement() {
             </div>
           ) : !staffList || staffList.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="w-16 h-16 rounded-full bg-[#FFF0F4] flex items-center justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-[#FFF5F8] flex items-center justify-center mb-4">
                 <UserCog className="w-8 h-8 text-[#8B2252]" />
               </div>
               <h3 className="font-display font-bold text-xl text-[#1A0A12] mb-2">No staff invited yet</h3>
-              <p className="font-body text-[#6B4C3B] text-sm mb-6">
+              <p className="font-body text-[#1A0A12] text-sm mb-6">
                 Click "Invite Staff" to send a magic link to a team member.
               </p>
               <button
                 onClick={() => setInviteOpen(true)}
                 className="inline-flex items-center gap-2 px-5 py-2.5 font-body font-semibold text-sm rounded-full text-white"
-                style={{ background: "linear-gradient(135deg, #C2185B, #8B2252)" }}
+                style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}
               >
                 <UserPlus className="w-4 h-4" />
                 Invite First Staff Member
@@ -222,7 +222,7 @@ export default function StaffManagement() {
                           </span>
                         </td>
                         <td className="px-5 py-4">
-                          <span className="font-body text-sm text-[#6B4C3B] flex items-center gap-1.5">
+                          <span className="font-body text-sm text-[#1A0A12] flex items-center gap-1.5">
                             <Mail className="w-3.5 h-3.5 text-[#C4A0B0]" />
                             {staff.email}
                           </span>
@@ -242,7 +242,7 @@ export default function StaffManagement() {
                             </span>
                           )}
                         </td>
-                        <td className="px-5 py-4 font-body text-sm text-[#6B4C3B]">
+                        <td className="px-5 py-4 font-body text-sm text-[#1A0A12]">
                           {staff.lastUsedAt
                             ? new Date(staff.lastUsedAt).toLocaleDateString("en-CA", {
                                 year: "numeric",
@@ -251,7 +251,7 @@ export default function StaffManagement() {
                               })
                             : <span className="italic text-[#C4A0B0]">Never</span>}
                         </td>
-                        <td className="px-5 py-4 font-body text-sm text-[#6B4C3B]">
+                        <td className="px-5 py-4 font-body text-sm text-[#1A0A12]">
                           {new Date(staff.createdAt).toLocaleDateString("en-CA", {
                             year: "numeric",
                             month: "short",
@@ -269,7 +269,7 @@ export default function StaffManagement() {
                                 );
                               }}
                               disabled={resendInvite.isPending && resendingId === staff.id}
-                              className="p-2 rounded-lg text-[#8B2252] hover:text-[#C2185B] hover:bg-[#FFF0F4] transition-colors disabled:opacity-50"
+                              className="p-2 rounded-lg text-[#8B2252] hover:text-[#8B2252] hover:bg-[#FFF5F8] transition-colors disabled:opacity-50"
                               title="Resend invite link"
                             >
                               {resendInvite.isPending && resendingId === staff.id ? (
@@ -306,7 +306,7 @@ export default function StaffManagement() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <p className="font-body text-sm text-[#6B4C3B]">
+            <p className="font-body text-sm text-[#1A0A12]">
               Enter the staff member's details. They'll receive an email with a one-click login link.
             </p>
             <div className="space-y-2">
@@ -350,7 +350,7 @@ export default function StaffManagement() {
               onClick={handleInvite}
               disabled={inviteStaff.isPending}
               className="font-body font-semibold text-white"
-              style={{ background: "linear-gradient(135deg, #C2185B, #8B2252)" }}
+              style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}
             >
               {inviteStaff.isPending ? (
                 <>
@@ -376,7 +376,7 @@ export default function StaffManagement() {
               Revoke Access?
             </DialogTitle>
           </DialogHeader>
-          <p className="font-body text-sm text-[#6B4C3B] py-2">
+          <p className="font-body text-sm text-[#1A0A12] py-2">
             This will immediately revoke <strong>{confirmRevokeStaff?.name}</strong>'s access to the staff portal.
             Their login link will stop working. You can always invite them again later.
           </p>

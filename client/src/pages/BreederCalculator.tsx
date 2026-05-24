@@ -113,7 +113,7 @@ export default function BreederCalculator() {
   const barPct = Math.round(((result.pay - 450) / (700 - 450)) * 100);
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] font-sans">
+    <div className="min-h-screen bg-[#FEFAF4] font-sans">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-6 py-4">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
@@ -127,7 +127,7 @@ export default function BreederCalculator() {
           </div>
           <a
             href="/predictor"
-            className="text-sm text-[#2D9B8A] font-medium hover:underline hidden sm:block"
+            className="text-sm text-[#8B2252] font-medium hover:underline hidden sm:block"
           >
             ← Fill Rate Predictor
           </a>
@@ -147,7 +147,7 @@ export default function BreederCalculator() {
             <select
               value={breed}
               onChange={(e) => setBreed(e.target.value)}
-              className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#2D9B8A]"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#8B2252]"
             >
               {BREEDS.map((b) => (
                 <option key={b.name} value={b.name}>
@@ -179,7 +179,7 @@ export default function BreederCalculator() {
                 max={120}
                 value={distanceKm}
                 onChange={(e) => setDistanceKm(Number(e.target.value))}
-                className="flex-1 accent-[#2D9B8A]"
+                className="flex-1 accent-[#8B2252]"
               />
               <span className="text-sm font-bold text-slate-800 w-16 text-right">
                 {distanceKm} km
@@ -192,8 +192,8 @@ export default function BreederCalculator() {
                   onClick={() => setDistanceKm(d.max === 999 ? 90 : Math.round(d.max * 0.7))}
                   className={`text-xs px-2 py-1 rounded-lg border transition-all ${
                     result.distBracket.label === d.label
-                      ? "bg-[#2D9B8A] text-white border-[#2D9B8A]"
-                      : "bg-slate-50 text-slate-600 border-slate-200 hover:border-[#2D9B8A]"
+                      ? "bg-[#8B2252] text-white border-[#8B2252]"
+                      : "bg-slate-50 text-slate-600 border-slate-200 hover:border-[#8B2252]"
                   }`}
                 >
                   {d.label}
@@ -214,8 +214,8 @@ export default function BreederCalculator() {
                   onClick={() => setPuppyCount(p.count)}
                   className={`py-2.5 rounded-xl text-xs font-bold border transition-all ${
                     puppyCount === p.count
-                      ? "bg-[#2D9B8A] text-white border-[#2D9B8A] shadow-sm"
-                      : "bg-slate-50 text-slate-600 border-slate-200 hover:border-[#2D9B8A]"
+                      ? "bg-[#8B2252] text-white border-[#8B2252] shadow-sm"
+                      : "bg-slate-50 text-slate-600 border-slate-200 hover:border-[#8B2252]"
                   }`}
                 >
                   <span className="block">{p.count === 10 ? "10+" : p.count}</span>
@@ -237,8 +237,8 @@ export default function BreederCalculator() {
                   onClick={() => setReliability(r.key)}
                   className={`text-left px-3 py-2.5 rounded-xl border text-sm transition-all ${
                     reliability === r.key
-                      ? "bg-[#2D9B8A] text-white border-[#2D9B8A]"
-                      : "bg-slate-50 text-slate-700 border-slate-200 hover:border-[#2D9B8A]"
+                      ? "bg-[#8B2252] text-white border-[#8B2252]"
+                      : "bg-slate-50 text-slate-700 border-slate-200 hover:border-[#8B2252]"
                   }`}
                 >
                   {r.label}

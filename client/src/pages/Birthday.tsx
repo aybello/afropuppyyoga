@@ -12,7 +12,7 @@ const TIERS = [
     price: "$600",
     tagline: "The Perfect Celebration",
     color: "#F2A0B8",
-    bgColor: "#FFF0F5",
+    bgColor: "#FFF5F8",
     borderColor: "#F2A0B8",
     minGuests: 6,
     maxGuests: 8,
@@ -140,7 +140,7 @@ export default function Birthday() {
             </p>
             <a
               href="/"
-              className="inline-flex items-center px-8 py-3 bg-[#8B2252] text-white font-body font-semibold rounded-full hover:bg-[#6B1A3E] transition-colors"
+              className="inline-flex items-center px-8 py-3 bg-[#8B2252] text-white font-body font-semibold rounded-full hover:bg-[#6B1A3F] transition-colors"
             >
               Back to Home
             </a>
@@ -156,7 +156,7 @@ export default function Birthday() {
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-28 pb-16 px-4 text-center bg-gradient-to-b from-[#FFF0F5] to-[#FEFAF4]">
+      <section className="pt-28 pb-16 px-4 text-center bg-gradient-to-b from-[#FFF5F8] to-[#FEFAF4]">
         <div className="max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#F2A0B8]/20 rounded-full mb-6">
             <Cake size={14} className="text-[#8B2252]" />
@@ -264,7 +264,7 @@ export default function Birthday() {
       </section>
 
       {/* Booking Form */}
-      <section className="py-16 px-4 bg-[#1A0A12]" id="book">
+      <section className="py-16 px-4 bg-[#8B2252]" id="book">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#F2A0B8]/20 rounded-full mb-4">
@@ -352,9 +352,9 @@ export default function Birthday() {
                   onChange={e => setForm(f => ({ ...f, location: e.target.value as "KW" | "Hamilton" | "" }))}
                   className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white font-body text-sm focus:outline-none focus:border-[#F2A0B8] transition-colors"
                 >
-                  <option value="" disabled className="bg-[#1A0A12]">Select location</option>
-                  <option value="KW" className="bg-[#1A0A12]">Kitchener-Waterloo</option>
-                  <option value="Hamilton" className="bg-[#1A0A12]">Hamilton</option>
+                  <option value="" disabled className="bg-white">Select location</option>
+                  <option value="KW" className="bg-white">Kitchener-Waterloo</option>
+                  <option value="Hamilton" className="bg-white">Hamilton</option>
                 </select>
               </div>
               <div>
@@ -387,7 +387,7 @@ export default function Birthday() {
             <button
               type="submit"
               disabled={submitInquiry.isPending}
-              className="w-full py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-base rounded-full hover:bg-[#D4708A] transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0"
+              className="w-full py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-base rounded-full hover:bg-[#F2A0B8] transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0"
             >
               {submitInquiry.isPending ? "Submitting..." : "Submit Birthday Inquiry"}
             </button>

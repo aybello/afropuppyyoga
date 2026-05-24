@@ -58,7 +58,7 @@ function StatusBadge({ status, daysLeft, urgency }: {
     );
   }
   if (daysLeft === null) {
-    return <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-body font-semibold bg-[#F5F0EB] text-[#6B4C3B]">No due date</span>;
+    return <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-body font-semibold bg-[#FFF5F8] text-[#1A0A12]">No due date</span>;
   }
   if (urgency === "overdue") {
     return (
@@ -133,11 +133,11 @@ function RecordPaymentModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#F0D0DC]">
           <div>
             <h2 className="font-display font-bold text-lg text-[#1A0A12]">Record Payment</h2>
-            <p className="font-body text-xs text-[#6B4C3B] mt-0.5">
+            <p className="font-body text-xs text-[#1A0A12] mt-0.5">
               {invoice.staffName ?? "Unknown staff"} · Invoice total: {invoice.payAmount ?? "—"}
             </p>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-[#6B4C3B] hover:bg-[#FFF0F4] transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded-lg text-[#1A0A12] hover:bg-[#FFF5F8] transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -147,17 +147,17 @@ function RecordPaymentModal({
           {/* Progress bar */}
           {totalCents > 0 && (
             <div>
-              <div className="flex justify-between text-xs font-body text-[#6B4C3B] mb-1">
+              <div className="flex justify-between text-xs font-body text-[#1A0A12] mb-1">
                 <span>Paid so far</span>
                 <span>{centsToDisplay(alreadyPaidCents)} / {invoice.payAmount}</span>
               </div>
-              <div className="h-2 bg-[#F5F0EB] rounded-full overflow-hidden">
+              <div className="h-2 bg-[#FFF5F8] rounded-full overflow-hidden">
                 <div
                   className="h-full bg-[#8B2252] rounded-full transition-all"
                   style={{ width: `${Math.min(100, (alreadyPaidCents / totalCents) * 100)}%` }}
                 />
               </div>
-              <p className="text-xs font-body text-[#6B4C3B] mt-1">
+              <p className="text-xs font-body text-[#1A0A12] mt-1">
                 Remaining: <span className="font-semibold text-[#1A0A12]">{centsToDisplay(remainingCents)}</span>
               </p>
             </div>
@@ -169,7 +169,7 @@ function RecordPaymentModal({
               Total Amount Paid So Far (CAD)
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm text-[#6B4C3B]">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm text-[#1A0A12]">$</span>
               <input
                 type="number"
                 min="0"
@@ -181,7 +181,7 @@ function RecordPaymentModal({
               />
             </div>
             {totalCents > 0 && amountCents > 0 && (
-              <p className="text-xs font-body text-[#6B4C3B] mt-1">
+              <p className="text-xs font-body text-[#1A0A12] mt-1">
                 New remaining: <span className={`font-semibold ${newRemaining === 0 ? "text-emerald-600" : "text-[#8B2252]"}`}>
                   {centsToDisplay(newRemaining)}
                 </span>
@@ -195,13 +195,13 @@ function RecordPaymentModal({
             <div className="flex gap-2">
               <button
                 onClick={() => setAmountStr((totalCents / 2 / 100).toFixed(2))}
-                className="flex-1 px-3 py-2 text-xs font-body font-semibold rounded-xl border border-[#F0D0DC] text-[#6B4C3B] bg-white hover:bg-[#FFF0F4] transition-colors"
+                className="flex-1 px-3 py-2 text-xs font-body font-semibold rounded-xl border border-[#F0D0DC] text-[#1A0A12] bg-white hover:bg-[#FFF5F8] transition-colors"
               >
                 Half ({centsToDisplay(Math.round(totalCents / 2))})
               </button>
               <button
                 onClick={() => setAmountStr((totalCents / 100).toFixed(2))}
-                className="flex-1 px-3 py-2 text-xs font-body font-semibold rounded-xl border border-[#F0D0DC] text-[#6B4C3B] bg-white hover:bg-[#FFF0F4] transition-colors"
+                className="flex-1 px-3 py-2 text-xs font-body font-semibold rounded-xl border border-[#F0D0DC] text-[#1A0A12] bg-white hover:bg-[#FFF5F8] transition-colors"
               >
                 Full ({invoice.payAmount})
               </button>
@@ -227,7 +227,7 @@ function RecordPaymentModal({
         <div className="flex gap-3 px-6 py-4 border-t border-[#F0D0DC]">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2.5 font-body font-semibold text-sm rounded-full border border-[#F0D0DC] text-[#6B4C3B] bg-white hover:bg-[#FFF0F4] transition-colors"
+            className="flex-1 px-4 py-2.5 font-body font-semibold text-sm rounded-full border border-[#F0D0DC] text-[#1A0A12] bg-white hover:bg-[#FFF5F8] transition-colors"
           >
             Cancel
           </button>
@@ -289,7 +289,7 @@ export default function InvoiceDashboard() {
       <div className="min-h-screen bg-[#FEFAF4] flex flex-col items-center justify-center p-6">
         <img src={LOGO_URL} alt="AfroPuppyYoga" className="w-16 h-16 rounded-full object-cover mb-6" />
         <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Admin Access Required</h2>
-        <p className="font-body text-[#6B4C3B] mb-6">Please log in to view invoices.</p>
+        <p className="font-body text-[#1A0A12] mb-6">Please log in to view invoices.</p>
         <button
           onClick={() => window.location.href = getLoginUrl()}
           className="inline-flex items-center px-6 py-3 font-body font-semibold text-sm rounded-full text-white transition-all duration-200 hover:-translate-y-0.5"
@@ -306,7 +306,7 @@ export default function InvoiceDashboard() {
       <div className="min-h-screen bg-[#FEFAF4] flex flex-col items-center justify-center p-6">
         <img src={LOGO_URL} alt="AfroPuppyYoga" className="w-16 h-16 rounded-full object-cover mb-6" />
         <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Access Denied</h2>
-        <p className="font-body text-[#6B4C3B]">This page is for admins only.</p>
+        <p className="font-body text-[#1A0A12]">This page is for admins only.</p>
       </div>
     );
   }
@@ -368,13 +368,13 @@ export default function InvoiceDashboard() {
             <span className="font-body text-xs font-semibold tracking-widest uppercase text-[#8B2252]">Admin</span>
           </div>
           <h1 className="font-display font-bold text-3xl text-[#1A0A12]">Staff Invoices</h1>
-          <p className="font-body text-sm text-[#6B4C3B] mt-1">Manage and track staff payment requests</p>
+          <p className="font-body text-sm text-[#1A0A12] mt-1">Manage and track staff payment requests</p>
         </div>
 
         {/* Summary cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="bg-white rounded-2xl p-5 border border-[#F0D0DC]">
-            <p className="font-body text-xs text-[#6B4C3B] mb-1">Pending</p>
+            <p className="font-body text-xs text-[#1A0A12] mb-1">Pending</p>
             <p className="font-display font-bold text-3xl text-[#1A0A12]">{pendingCount}</p>
           </div>
           <div className="bg-white rounded-2xl p-5 border border-blue-200">
@@ -386,7 +386,7 @@ export default function InvoiceDashboard() {
             <p className="font-display font-bold text-3xl text-red-600">{overdueCount}</p>
           </div>
           <div className="bg-white rounded-2xl p-5 border border-[#F0D0DC]">
-            <p className="font-body text-xs text-[#6B4C3B] mb-1">Outstanding</p>
+            <p className="font-body text-xs text-[#1A0A12] mb-1">Outstanding</p>
             <p className="font-display font-bold text-3xl text-[#8B2252]">
               ${totalOutstanding.toFixed(2)}
             </p>
@@ -402,12 +402,12 @@ export default function InvoiceDashboard() {
               className={`inline-flex items-center gap-2 px-4 py-2 font-body font-semibold text-sm rounded-xl transition-colors ${
                 activeTab === tab.id
                   ? "bg-[#8B2252] text-white"
-                  : "text-[#6B4C3B] hover:bg-[#FFF0F4]"
+                  : "text-[#1A0A12] hover:bg-[#FFF5F8]"
               }`}
             >
               {tab.label}
               <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
-                activeTab === tab.id ? "bg-white/20 text-white" : "bg-[#F5F0EB] text-[#8B2252]"
+                activeTab === tab.id ? "bg-white/20 text-white" : "bg-[#FFF5F8] text-[#8B2252]"
               }`}>
                 {tab.count}
               </span>
@@ -423,7 +423,7 @@ export default function InvoiceDashboard() {
             </div>
           ) : filteredInvoices.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="w-16 h-16 rounded-full bg-[#FFF0F4] flex items-center justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-[#FFF5F8] flex items-center justify-center mb-4">
                 <FileText className="w-8 h-8 text-[#8B2252]" />
               </div>
               <h3 className="font-display font-bold text-xl text-[#1A0A12] mb-2">
@@ -431,13 +431,13 @@ export default function InvoiceDashboard() {
                  activeTab === "paid" ? "No paid invoices yet" : "No invoices yet"}
               </h3>
               {activeTab === "all" && (
-                <p className="font-body text-[#6B4C3B] text-sm mb-4">
+                <p className="font-body text-[#1A0A12] text-sm mb-4">
                   Share the invoice submission link with your staff
                 </p>
               )}
               {activeTab === "all" && (
                 <div className="px-5 py-3 bg-[#FFF5F8] rounded-xl border border-[#F0D0DC]">
-                  <p className="font-body text-xs text-[#6B4C3B] font-mono">
+                  <p className="font-body text-xs text-[#1A0A12] font-mono">
                     {window.location.origin}/submit-invoice
                   </p>
                 </div>
@@ -476,7 +476,7 @@ export default function InvoiceDashboard() {
                         {/* Staff name */}
                         <td className="px-5 py-4">
                           {invoice.extractionStatus === "pending" ? (
-                            <span className="flex items-center gap-1.5 font-body text-sm text-[#6B4C3B]">
+                            <span className="flex items-center gap-1.5 font-body text-sm text-[#1A0A12]">
                               <Loader2 className="w-3 h-3 animate-spin" />
                               Processing...
                             </span>
@@ -484,19 +484,19 @@ export default function InvoiceDashboard() {
                             <span className="font-body text-sm text-red-500">Extraction failed</span>
                           ) : (
                             <span className="font-body font-semibold text-sm text-[#1A0A12]">
-                              {invoice.staffName ?? <span className="italic text-[#6B4C3B]">Not found</span>}
+                              {invoice.staffName ?? <span className="italic text-[#1A0A12]">Not found</span>}
                             </span>
                           )}
                         </td>
 
                         {/* Position */}
-                        <td className="px-5 py-4 font-body text-sm text-[#6B4C3B]">
+                        <td className="px-5 py-4 font-body text-sm text-[#1A0A12]">
                           {invoice.position ?? <span className="italic">—</span>}
                         </td>
 
                         {/* Invoice total */}
                         <td className="px-5 py-4 font-body font-bold text-sm text-[#1A0A12]">
-                          {invoice.payAmount ?? <span className="italic text-[#6B4C3B]">—</span>}
+                          {invoice.payAmount ?? <span className="italic text-[#1A0A12]">—</span>}
                         </td>
 
                         {/* Paid / Remaining */}
@@ -505,29 +505,29 @@ export default function InvoiceDashboard() {
                             <span className="font-body text-xs text-emerald-600 font-semibold">Fully paid</span>
                           ) : hasPaid ? (
                             <div>
-                              <div className="flex justify-between text-xs font-body text-[#6B4C3B] mb-1">
+                              <div className="flex justify-between text-xs font-body text-[#1A0A12] mb-1">
                                 <span className="text-emerald-600 font-semibold">${paidAmount.toFixed(2)} paid</span>
                                 <span className="text-[#8B2252] font-semibold">${remaining.toFixed(2)} left</span>
                               </div>
-                              <div className="h-1.5 bg-[#F5F0EB] rounded-full overflow-hidden">
+                              <div className="h-1.5 bg-[#FFF5F8] rounded-full overflow-hidden">
                                 <div
                                   className="h-full bg-emerald-500 rounded-full"
                                   style={{ width: `${paidPct}%` }}
                                 />
                               </div>
                               {invoice.paymentNotes && (
-                                <p className="text-[10px] text-[#6B4C3B] mt-0.5 italic truncate max-w-[130px]" title={invoice.paymentNotes}>
+                                <p className="text-[10px] text-[#1A0A12] mt-0.5 italic truncate max-w-[130px]" title={invoice.paymentNotes}>
                                   {invoice.paymentNotes}
                                 </p>
                               )}
                             </div>
                           ) : (
-                            <span className="font-body text-xs text-[#6B4C3B] italic">No payments yet</span>
+                            <span className="font-body text-xs text-[#1A0A12] italic">No payments yet</span>
                           )}
                         </td>
 
                         {/* Due date */}
-                        <td className="px-5 py-4 font-body text-sm text-[#6B4C3B]">
+                        <td className="px-5 py-4 font-body text-sm text-[#1A0A12]">
                           {invoice.dueDate
                             ? new Date(invoice.dueDate).toLocaleDateString("en-CA", {
                                 year: "numeric",
@@ -594,7 +594,7 @@ export default function InvoiceDashboard() {
                                 amountPaidCents: invoice.amountPaidCents ?? 0,
                                 paymentNotes: invoice.paymentNotes,
                               })}
-                              className="p-1.5 rounded-lg text-[#6B4C3B] hover:text-[#8B2252] hover:bg-[#FFF0F4] transition-colors"
+                              className="p-1.5 rounded-lg text-[#1A0A12] hover:text-[#8B2252] hover:bg-[#FFF5F8] transition-colors"
                               title="Record payment"
                             >
                               <DollarSign className="w-4 h-4" />
@@ -614,7 +614,7 @@ export default function InvoiceDashboard() {
                                 </button>
                                 <button
                                   onClick={() => setConfirmDeleteId(null)}
-                                  className="px-2 py-1 text-xs font-body font-semibold rounded-full bg-[#F5F0EB] text-[#6B4C3B] hover:bg-[#F0D0DC] transition-colors"
+                                  className="px-2 py-1 text-xs font-body font-semibold rounded-full bg-[#FFF5F8] text-[#1A0A12] hover:bg-[#F0D0DC] transition-colors"
                                 >
                                   Cancel
                                 </button>
@@ -622,7 +622,7 @@ export default function InvoiceDashboard() {
                             ) : (
                               <button
                                 onClick={() => setConfirmDeleteId(invoice.id)}
-                                className="p-1.5 rounded-lg text-[#6B4C3B] hover:text-red-600 hover:bg-red-50 transition-colors"
+                                className="p-1.5 rounded-lg text-[#1A0A12] hover:text-red-600 hover:bg-red-50 transition-colors"
                                 title="Delete invoice"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -643,13 +643,13 @@ export default function InvoiceDashboard() {
         {invoices && invoices.length > 0 && (
           <div className="bg-white rounded-2xl border border-[#F0D0DC] p-6">
             <p className="font-body font-semibold text-sm text-[#1A0A12] mb-1">Staff Invoice Submission Link</p>
-            <p className="font-body text-xs text-[#6B4C3B] mb-3">Share this link with your staff to submit invoices:</p>
+            <p className="font-body text-xs text-[#1A0A12] mb-3">Share this link with your staff to submit invoices:</p>
             <div className="flex items-center gap-3">
               <code className="flex-1 font-body text-xs bg-[#FFF5F8] border border-[#F0D0DC] rounded-xl px-4 py-3 text-[#1A0A12]">
                 {window.location.origin}/submit-invoice
               </code>
               <button
-                className="inline-flex items-center gap-1.5 px-4 py-3 font-body font-semibold text-xs rounded-xl border border-[#F0D0DC] text-[#6B4C3B] bg-white hover:bg-[#FFF0F4] transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-3 font-body font-semibold text-xs rounded-xl border border-[#F0D0DC] text-[#1A0A12] bg-white hover:bg-[#FFF5F8] transition-colors"
                 onClick={() => navigator.clipboard.writeText(`${window.location.origin}/submit-invoice`)}
               >
                 <Copy className="w-3.5 h-3.5" />

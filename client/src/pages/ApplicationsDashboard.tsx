@@ -171,7 +171,7 @@ function InterviewInviteModal({
           <DialogTitle className="font-display text-xl text-[#1A0A12]">
             📅 Send Interview Invite
           </DialogTitle>
-          <DialogDescription className="font-body text-sm text-[#6B4C3B]">
+          <DialogDescription className="font-body text-sm text-[#1A0A12]">
             Sending to <strong>{app.name}</strong> ({app.email}) for <strong>{app.role}</strong>
           </DialogDescription>
         </DialogHeader>
@@ -214,7 +214,7 @@ function InterviewInviteModal({
             onClick={handleSubmit}
             disabled={sendInvite.isPending}
             className="font-body text-white"
-            style={{ background: "linear-gradient(135deg, #C2185B, #8B2252)" }}
+            style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}
           >
             {sendInvite.isPending ? (
               <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Sending...</>
@@ -272,7 +272,7 @@ function OfferLetterModal({
           <DialogTitle className="font-display text-xl text-[#1A0A12]">
             ✍️ Send Offer for Signing
           </DialogTitle>
-          <DialogDescription className="font-body text-sm text-[#6B4C3B]">
+          <DialogDescription className="font-body text-sm text-[#1A0A12]">
             Sending to <strong>{app.name}</strong> ({app.email}) for <strong>{app.role}</strong> — {app.location}
           </DialogDescription>
         </DialogHeader>
@@ -293,7 +293,7 @@ function OfferLetterModal({
               <p className="font-body text-sm text-green-800 font-semibold">✅ Signing link sent!</p>
               <p className="font-body text-xs text-green-700">You can also share this link directly:</p>
               <div className="bg-white rounded-lg border border-green-200 p-2">
-                <a href={signingLink} target="_blank" rel="noopener noreferrer" className="font-body text-xs text-[#C2185B] break-all hover:underline">
+                <a href={signingLink} target="_blank" rel="noopener noreferrer" className="font-body text-xs text-[#8B2252] break-all hover:underline">
                   {signingLink}
                 </a>
               </div>
@@ -369,7 +369,7 @@ function OnboardingEmailModal({
           <DialogTitle className="font-display text-xl text-[#1A0A12]">
             🐾 Send Onboarding Email
           </DialogTitle>
-          <DialogDescription className="font-body text-sm text-[#6B4C3B]">
+          <DialogDescription className="font-body text-sm text-[#1A0A12]">
             Sending to <strong>{app.name}</strong> ({app.email}) for <strong>{app.role}</strong> — {app.location}
           </DialogDescription>
         </DialogHeader>
@@ -429,7 +429,7 @@ function OnboardingEmailModal({
             onClick={handleSend}
             disabled={sendOnboarding.isPending}
             className="font-body text-white"
-            style={{ background: "linear-gradient(135deg, #C2185B, #8B2252)" }}
+            style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}
           >
             {sendOnboarding.isPending ? (
               <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Sending...</>
@@ -474,7 +474,7 @@ function RejectionLetterModal({
           <DialogTitle className="font-display text-xl text-[#1A0A12]">
             Send Rejection Letter
           </DialogTitle>
-          <DialogDescription className="font-body text-sm text-[#6B4C3B]">
+          <DialogDescription className="font-body text-sm text-[#1A0A12]">
             Sending to <strong>{app.name}</strong> ({app.email}) for <strong>{app.role}</strong>
           </DialogDescription>
         </DialogHeader>
@@ -550,7 +550,7 @@ function ApplicationDetailModal({
         <DialogContent className="max-w-2xl bg-[#FEFAF4] border-[#F0D0DC] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl text-[#1A0A12]">{app.name}</DialogTitle>
-            <DialogDescription className="font-body text-sm text-[#6B4C3B]">
+            <DialogDescription className="font-body text-sm text-[#1A0A12]">
               {app.role} · {app.location} · Applied {new Date(app.createdAt).toLocaleDateString("en-CA", { month: "long", day: "numeric", year: "numeric" })}
             </DialogDescription>
           </DialogHeader>
@@ -560,12 +560,12 @@ function ApplicationDetailModal({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-1">Email</p>
-                <a href={`mailto:${app.email}`} className="font-body text-sm text-[#1A0A12] hover:text-[#C2185B]">{app.email}</a>
+                <a href={`mailto:${app.email}`} className="font-body text-sm text-[#1A0A12] hover:text-[#8B2252]">{app.email}</a>
               </div>
               {app.phone && (
                 <div>
                   <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-1">Phone</p>
-                  <a href={`tel:${app.phone}`} className="font-body text-sm text-[#1A0A12] hover:text-[#C2185B]">{app.phone}</a>
+                  <a href={`tel:${app.phone}`} className="font-body text-sm text-[#1A0A12] hover:text-[#8B2252]">{app.phone}</a>
                 </div>
               )}
             </div>
@@ -597,12 +597,12 @@ function ApplicationDetailModal({
                     rel="noopener noreferrer"
                     className="flex items-center gap-3 p-3 bg-[#F9E4EE] border border-[#F0D0DC] rounded-xl hover:bg-[#F0D0DC] transition-colors"
                   >
-                    <Play className="w-5 h-5 text-[#C2185B] shrink-0" />
+                    <Play className="w-5 h-5 text-[#8B2252] shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="font-body text-sm font-semibold text-[#1A0A12]">Watch Video</p>
                       <p className="font-body text-xs text-[#8B6070] truncate">{app.videoUrl}</p>
                     </div>
-                    <span className="font-body text-xs text-[#C2185B] font-semibold shrink-0">Open ↗</span>
+                    <span className="font-body text-xs text-[#8B2252] font-semibold shrink-0">Open ↗</span>
                   </a>
                 ) : (
                   <video
@@ -668,7 +668,7 @@ function ApplicationDetailModal({
                   <Button
                     onClick={() => { onClose(); setShowOnboardingModal(true); }}
                     className="font-body text-sm text-white"
-                    style={{ background: "linear-gradient(135deg, #C2185B, #8B2252)" }}
+                    style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}
                   >
                     <PartyPopper className="w-4 h-4 mr-2" /> Send Onboarding Email
                   </Button>
@@ -738,7 +738,7 @@ export default function ApplicationsDashboard() {
       <div className="min-h-screen bg-[#FEFAF4] flex flex-col items-center justify-center p-6">
         <img src={LOGO_URL} alt="AfroPuppyYoga" className="w-16 h-16 rounded-full object-cover mb-6" />
         <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Admin Access Required</h2>
-        <p className="font-body text-[#6B4C3B] mb-6">Please log in to view applications.</p>
+        <p className="font-body text-[#1A0A12] mb-6">Please log in to view applications.</p>
         <button
           onClick={() => window.location.href = getLoginUrl()}
           className="inline-flex items-center px-6 py-3 font-body font-semibold text-sm rounded-full text-white transition-all duration-200 hover:-translate-y-0.5"
@@ -755,7 +755,7 @@ export default function ApplicationsDashboard() {
       <div className="min-h-screen bg-[#FEFAF4] flex flex-col items-center justify-center p-6">
         <img src={LOGO_URL} alt="AfroPuppyYoga" className="w-16 h-16 rounded-full object-cover mb-6" />
         <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Access Denied</h2>
-        <p className="font-body text-[#6B4C3B]">This page is for admins only.</p>
+        <p className="font-body text-[#1A0A12]">This page is for admins only.</p>
       </div>
     );
   }
@@ -777,13 +777,13 @@ export default function ApplicationsDashboard() {
             <span className="font-body text-xs font-semibold tracking-widest uppercase text-[#8B2252]">Admin</span>
           </div>
           <h1 className="font-display font-bold text-3xl text-[#1A0A12]">Job Applications</h1>
-          <p className="font-body text-sm text-[#6B4C3B] mt-1">Review and manage applicants for all open positions</p>
+          <p className="font-body text-sm text-[#1A0A12] mt-1">Review and manage applicants for all open positions</p>
         </div>
 
         {/* Summary cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="bg-white rounded-2xl p-5 border border-[#F0D0DC]">
-            <p className="font-body text-xs text-[#6B4C3B] mb-1">Total</p>
+            <p className="font-body text-xs text-[#1A0A12] mb-1">Total</p>
             <p className="font-display font-bold text-3xl text-[#1A0A12]">{totalCount}</p>
           </div>
           <div className="bg-white rounded-2xl p-5 border border-blue-200">
@@ -810,11 +810,11 @@ export default function ApplicationsDashboard() {
             </div>
           ) : !applications || applications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="w-16 h-16 rounded-full bg-[#FFF0F4] flex items-center justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-[#FFF5F8] flex items-center justify-center mb-4">
                 <Users className="w-8 h-8 text-[#8B2252]" />
               </div>
               <h3 className="font-display font-bold text-xl text-[#1A0A12] mb-2">No applications yet</h3>
-              <p className="font-body text-[#6B4C3B] text-sm">
+              <p className="font-body text-[#1A0A12] text-sm">
                 Applications submitted through the careers page will appear here.
               </p>
             </div>
@@ -844,11 +844,11 @@ export default function ApplicationsDashboard() {
                       <td className="px-5 py-4">
                         <button
                           onClick={() => setSelectedApp(app as Application)}
-                          className="text-left hover:text-[#C2185B] transition-colors"
+                          className="text-left hover:text-[#8B2252] transition-colors"
                         >
                           <p className="font-body font-semibold text-sm text-[#1A0A12]">{app.name}</p>
                           {app.whyAPY && (
-                            <p className="font-body text-xs text-[#6B4C3B] mt-0.5 max-w-[180px] truncate" title={app.whyAPY}>
+                            <p className="font-body text-xs text-[#1A0A12] mt-0.5 max-w-[180px] truncate" title={app.whyAPY}>
                               {app.whyAPY}
                             </p>
                           )}
@@ -857,7 +857,7 @@ export default function ApplicationsDashboard() {
 
                       {/* Role */}
                       <td className="px-5 py-4">
-                        <p className="font-body text-sm text-[#6B4C3B]">{app.role}</p>
+                        <p className="font-body text-sm text-[#1A0A12]">{app.role}</p>
                         <p className="font-body text-xs text-[#C4A0B0]">{app.location}</p>
                       </td>
 
@@ -874,7 +874,7 @@ export default function ApplicationsDashboard() {
                           {app.phone && (
                             <a
                               href={`tel:${app.phone}`}
-                              className="flex items-center gap-1.5 font-body text-xs text-[#6B4C3B] hover:underline"
+                              className="flex items-center gap-1.5 font-body text-xs text-[#1A0A12] hover:underline"
                             >
                               <Phone className="w-3 h-3 shrink-0" />
                               {app.phone}
@@ -890,7 +890,7 @@ export default function ApplicationsDashboard() {
                             href={getVideoProxyUrl(app.videoUrl)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFF0F5] border border-[#F2A0B8] rounded-lg font-body text-xs font-semibold text-[#8B2252] hover:bg-[#F2A0B8]/20 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFF5F8] border border-[#F2A0B8] rounded-lg font-body text-xs font-semibold text-[#8B2252] hover:bg-[#F2A0B8]/20 transition-colors"
                           >
                             <Play className="w-3 h-3" />
                             Watch
@@ -932,7 +932,7 @@ export default function ApplicationsDashboard() {
                         )}
                       </td>
                       {/* Applied date */}
-                      <td className="px-5 py-4 font-body text-xs text-[#6B4C3B]">
+                      <td className="px-5 py-4 font-body text-xs text-[#1A0A12]">
                         {new Date(app.createdAt).toLocaleDateString("en-CA", {
                           month: "short",
                           day: "numeric",
@@ -970,7 +970,7 @@ export default function ApplicationsDashboard() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => setSelectedApp(app as Application)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#FFF0F4] border border-[#F0D0DC] rounded-lg font-body text-xs font-semibold text-[#8B2252] hover:bg-[#F9E4EE] transition-colors"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#FFF5F8] border border-[#F0D0DC] rounded-lg font-body text-xs font-semibold text-[#8B2252] hover:bg-[#F9E4EE] transition-colors"
                             title="View full application"
                           >
                             <Eye className="w-3 h-3" /> View
@@ -1057,7 +1057,7 @@ export default function ApplicationsDashboard() {
         <AlertDialogContent className="bg-[#FEFAF4] border-[#F0D0DC]">
           <AlertDialogHeader>
             <AlertDialogTitle className="font-display text-xl text-[#1A0A12]">Delete Application?</AlertDialogTitle>
-            <AlertDialogDescription className="font-body text-sm text-[#6B4C3B]">
+            <AlertDialogDescription className="font-body text-sm text-[#1A0A12]">
               This will permanently delete the application and cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

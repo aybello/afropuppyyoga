@@ -28,7 +28,7 @@ export default function BirthdayBanner() {
             <a
               href="/birthday"
               onClick={() => trackCTAClick("Explore Birthday Packages — Homepage Banner")}
-              className="inline-flex items-center gap-2 px-8 py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-base rounded-full hover:bg-[#D4708A] transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-base rounded-full hover:bg-[#F2A0B8] transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1"
             >
               <Cake size={18} />
               Explore Birthday Packages

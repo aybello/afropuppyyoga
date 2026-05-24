@@ -99,7 +99,7 @@ export default function PartnershipsDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#C2185B]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#8B2252]" />
       </div>
     );
   }
@@ -110,7 +110,7 @@ export default function PartnershipsDashboard() {
         <div className="text-center">
           <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Login Required</h2>
           <p className="font-body text-sm text-[#5A3040] mb-4">Please sign in to access the Partnerships Dashboard.</p>
-          <a href={getLoginUrl()} className="inline-flex items-center gap-2 px-4 py-2 bg-[#C2185B] text-white rounded-full font-body font-semibold text-sm">
+          <a href={getLoginUrl()} className="inline-flex items-center gap-2 px-4 py-2 bg-[#8B2252] text-white rounded-full font-body font-semibold text-sm">
             Sign In
           </a>
         </div>
@@ -150,11 +150,11 @@ export default function PartnershipsDashboard() {
       <main className="max-w-6xl mx-auto px-6 py-10">
         {/* Header */}
         <div className="mb-8">
-          <p className="font-body text-xs font-semibold text-[#C2185B] uppercase tracking-widest mb-2">
+          <p className="font-body text-xs font-semibold text-[#8B2252] uppercase tracking-widest mb-2">
             Admin Portal
           </p>
           <div className="flex items-center gap-3 mb-1">
-            <Handshake className="w-7 h-7 text-[#C2185B]" />
+            <Handshake className="w-7 h-7 text-[#8B2252]" />
             <h1 className="font-display font-bold text-3xl text-[#1A0A12]">Partnership Inquiries</h1>
           </div>
           <p className="font-body text-sm text-[#5A3040]">
@@ -209,7 +209,7 @@ export default function PartnershipsDashboard() {
         {/* Table */}
         {isLoading ? (
           <div className="flex justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-[#C2185B]" />
+            <Loader2 className="w-8 h-8 animate-spin text-[#8B2252]" />
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -237,7 +237,7 @@ export default function PartnershipsDashboard() {
                   {filtered.map((inq, idx) => (
                     <tr
                       key={inq.id}
-                      className={`border-b border-[#F9EEF2] hover:bg-[#FFF8FA] transition-colors ${idx % 2 === 0 ? "" : "bg-[#FFFBFC]"}`}
+                      className={`border-b border-[#F9EEF2] hover:bg-[#FFF5F8] transition-colors ${idx % 2 === 0 ? "" : "bg-[#FEFAF4]"}`}
                     >
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2">
@@ -266,7 +266,7 @@ export default function PartnershipsDashboard() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="font-body text-xs border-[#F0D0DC] text-[#8B2252] hover:bg-[#FFF0F4]"
+                          className="font-body text-xs border-[#F0D0DC] text-[#8B2252] hover:bg-[#FFF5F8]"
                           onClick={() => setSelectedInquiry(inq as PartnershipInquiry)}
                         >
                           View
@@ -308,7 +308,7 @@ export default function PartnershipsDashboard() {
                   <Mail className="w-4 h-4 text-[#C4A0B0] mt-0.5 shrink-0" />
                   <div>
                     <p className="font-body text-xs text-[#8B6070]">Email</p>
-                    <a href={`mailto:${selectedInquiry.email}`} className="font-body text-sm font-semibold text-[#C2185B] hover:underline">
+                    <a href={`mailto:${selectedInquiry.email}`} className="font-body text-sm font-semibold text-[#8B2252] hover:underline">
                       {selectedInquiry.email}
                     </a>
                   </div>
@@ -331,7 +331,7 @@ export default function PartnershipsDashboard() {
                         href={selectedInquiry.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-body text-sm font-semibold text-[#C2185B] hover:underline flex items-center gap-1"
+                        className="font-body text-sm font-semibold text-[#8B2252] hover:underline flex items-center gap-1"
                       >
                         Visit <ExternalLink className="w-3 h-3" />
                       </a>
@@ -369,7 +369,7 @@ export default function PartnershipsDashboard() {
                       <SelectItem value="declined">Declined</SelectItem>
                     </SelectContent>
                   </Select>
-                  {updateStatusMutation.isPending && <Loader2 className="w-4 h-4 animate-spin text-[#C2185B]" />}
+                  {updateStatusMutation.isPending && <Loader2 className="w-4 h-4 animate-spin text-[#8B2252]" />}
                 </div>
               </div>
             </div>

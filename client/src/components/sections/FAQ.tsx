@@ -57,7 +57,7 @@ const faqs: { q: string; a: ReactNode }[] = [
           href="https://luma.com/mb93ov9f"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[#8B2252] underline underline-offset-2 hover:text-[#6B1A3E] transition-colors"
+          className="text-[#8B2252] underline underline-offset-2 hover:text-[#6B1A3F] transition-colors"
         >
           private event booking form
         </a>
@@ -78,7 +78,7 @@ const faqs: { q: string; a: ReactNode }[] = [
           href="https://luma.com/15iajebr"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[#8B2252] underline underline-offset-2 hover:text-[#6B1A3E] transition-colors"
+          className="text-[#8B2252] underline underline-offset-2 hover:text-[#6B1A3F] transition-colors"
         >
           Luma gift card page
         </a>
@@ -191,7 +191,7 @@ export default function FAQ() {
 
         {/* Still have questions CTA */}
         <FadeUp delay={0.3}>
-          <div className="mt-16 text-center bg-[#FFF0F4] rounded-2xl p-8 md:p-12">
+          <div className="mt-16 text-center bg-[#FFF5F8] rounded-2xl p-8 md:p-12">
             <h3 className="font-display font-bold text-2xl text-[#1A0A12] mb-3">
               Still have questions?
             </h3>

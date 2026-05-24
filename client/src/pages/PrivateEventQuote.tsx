@@ -186,7 +186,7 @@ export default function PrivateEventQuote() {
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-28 pb-12 bg-[#1A0A12] relative overflow-hidden">
+      <section className="pt-28 pb-12 bg-[#3D1A2E] relative overflow-hidden">
         <div className="absolute inset-0 opacity-10"
           style={{ backgroundImage: "radial-gradient(circle at 70% 50%, #F2A0B8 0%, transparent 60%)" }}
         />
@@ -317,7 +317,7 @@ export default function PrivateEventQuote() {
                 </p>
                 <a
                   href="/"
-                  className="inline-flex items-center gap-2 px-8 py-3 bg-[#8B2252] text-white font-body font-semibold rounded-full hover:bg-[#6B1A3E] transition-colors"
+                  className="inline-flex items-center gap-2 px-8 py-3 bg-[#8B2252] text-white font-body font-semibold rounded-full hover:bg-[#6B1A3F] transition-colors"
                 >
                   Back to Home
                 </a>
@@ -583,7 +583,7 @@ export default function PrivateEventQuote() {
                   <Button
                     type="submit"
                     disabled={!quoteReady || !name || !email || submitInquiry.isPending}
-                    className="w-full py-4 bg-[#8B2252] hover:bg-[#6B1A3E] text-white font-body font-bold text-base rounded-full transition-all"
+                    className="w-full py-4 bg-[#8B2252] hover:bg-[#6B1A3F] text-white font-body font-bold text-base rounded-full transition-all"
                   >
                     {submitInquiry.isPending ? "Sending..." : "Send My Inquiry"}
                     {!submitInquiry.isPending && <ChevronRight size={18} className="ml-1" />}

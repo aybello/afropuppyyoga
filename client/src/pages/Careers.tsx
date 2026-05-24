@@ -549,7 +549,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
           <div>
             <p className="font-body text-xs text-[#8B2252] uppercase tracking-widest mb-1">Apply Now</p>
             <h2 className="font-display font-bold text-xl text-[#1A0A12]">
-              {job.title} <span className="text-[#C2185B]">— {job.location}</span>
+              {job.title} <span className="text-[#8B2252]">— {job.location}</span>
             </h2>
           </div>
           <button
@@ -563,7 +563,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
         {submitted ? (
           <div className="p-10 text-center">
             <div className="w-16 h-16 bg-[#F9E4EE] rounded-full flex items-center justify-center mx-auto mb-5">
-              <CheckCircle size={32} className="text-[#C2185B]" />
+              <CheckCircle size={32} className="text-[#8B2252]" />
             </div>
             <h3 className="font-display font-bold text-2xl text-[#1A0A12] mb-3">Application Received!</h3>
             <p className="font-body text-[#5A3040] text-base leading-relaxed mb-6">
@@ -571,7 +571,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
             </p>
             <button
               onClick={onClose}
-              className="px-6 py-2.5 bg-[#C2185B] text-white font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] transition-colors"
+              className="px-6 py-2.5 bg-[#8B2252] text-white font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] transition-colors"
             >
               Close
             </button>
@@ -588,26 +588,26 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block font-body text-xs font-semibold text-[#5A3040] uppercase tracking-wide mb-1.5">
-                  Full Name <span className="text-[#C2185B]">*</span>
+                  Full Name <span className="text-[#8B2252]">*</span>
                 </label>
                 <input
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="Your full name"
-                  className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#C2185B] focus:ring-1 focus:ring-[#C2185B]/30 transition-colors"
+                  className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#8B2252] focus:ring-1 focus:ring-[#8B2252]/30 transition-colors"
                 />
               </div>
               <div>
                 <label className="block font-body text-xs font-semibold text-[#5A3040] uppercase tracking-wide mb-1.5">
-                  Email <span className="text-[#C2185B]">*</span>
+                  Email <span className="text-[#8B2252]">*</span>
                 </label>
                 <input
                   type="email"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   placeholder="your@email.com"
-                  className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#C2185B] focus:ring-1 focus:ring-[#C2185B]/30 transition-colors"
+                  className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#8B2252] focus:ring-1 focus:ring-[#8B2252]/30 transition-colors"
                 />
               </div>
             </div>
@@ -621,7 +621,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 placeholder="+1 (555) 000-0000"
-                className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#C2185B] focus:ring-1 focus:ring-[#C2185B]/30 transition-colors"
+                className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#8B2252] focus:ring-1 focus:ring-[#8B2252]/30 transition-colors"
               />
             </div>
 
@@ -634,7 +634,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                 onChange={(e) => setForm({ ...form, whyAPY: e.target.value })}
                 placeholder="Tell us what draws you to APY and what you'd bring to the team..."
                 rows={3}
-                className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#C2185B] focus:ring-1 focus:ring-[#C2185B]/30 transition-colors resize-none"
+                className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#8B2252] focus:ring-1 focus:ring-[#8B2252]/30 transition-colors resize-none"
               />
             </div>
 
@@ -647,14 +647,14 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                 onChange={(e) => setForm({ ...form, experience: e.target.value })}
                 placeholder="Share your relevant experience (yoga certifications, dog handling, event work, etc.)..."
                 rows={3}
-                className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#C2185B] focus:ring-1 focus:ring-[#C2185B]/30 transition-colors resize-none"
+                className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#8B2252] focus:ring-1 focus:ring-[#8B2252]/30 transition-colors resize-none"
               />
             </div>
 
             {/* Resume Upload */}
             <div>
               <label className="block font-body text-xs font-semibold text-[#5A3040] uppercase tracking-wide mb-1.5">
-                Resume <span className="text-[#C2185B]">*</span> <span className="text-[#8B2252] font-normal">(PDF or Word, Max 10MB)</span>
+                Resume <span className="text-[#8B2252]">*</span> <span className="text-[#8B2252] font-normal">(PDF or Word, Max 10MB)</span>
               </label>
               <p className="font-body text-xs text-[#8B6070] mb-3">
                 Upload your most recent resume or CV.
@@ -668,7 +668,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
               />
               {resumeFile ? (
                 <div className="flex items-center gap-3 p-3 bg-[#F9E4EE] border border-[#F0D0DC] rounded-xl">
-                  <CheckCircle size={18} className="text-[#C2185B] shrink-0" />
+                  <CheckCircle size={18} className="text-[#8B2252] shrink-0" />
                   <span className="font-body text-sm text-[#1A0A12] truncate flex-1">{resumeFile.name}</span>
                   <button
                     type="button"
@@ -682,10 +682,10 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                 <button
                   type="button"
                   onClick={() => resumeInputRef.current?.click()}
-                  className="w-full flex flex-col items-center gap-2 p-6 border-2 border-dashed border-[#F0D0DC] rounded-xl hover:border-[#C2185B] hover:bg-[#FFF0F5] transition-colors group"
+                  className="w-full flex flex-col items-center gap-2 p-6 border-2 border-dashed border-[#F0D0DC] rounded-xl hover:border-[#8B2252] hover:bg-[#FFF5F8] transition-colors group"
                 >
-                  <Upload size={24} className="text-[#C4A0B0] group-hover:text-[#C2185B] transition-colors" />
-                  <span className="font-body text-sm text-[#8B6070] group-hover:text-[#C2185B] transition-colors">
+                  <Upload size={24} className="text-[#C4A0B0] group-hover:text-[#8B2252] transition-colors" />
+                  <span className="font-body text-sm text-[#8B6070] group-hover:text-[#8B2252] transition-colors">
                     Click to upload your resume
                   </span>
                   <span className="font-body text-xs text-[#C4A0B0]">PDF, DOC, DOCX — Max 10MB</span>
@@ -696,7 +696,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
             {/* Video Introduction — Required */}
             <div>
               <label className="block font-body text-xs font-semibold text-[#5A3040] uppercase tracking-wide mb-1.5">
-                Video Introduction <span className="text-[#C2185B]">*</span>
+                Video Introduction <span className="text-[#8B2252]">*</span>
               </label>
               <p className="font-body text-xs text-[#8B6070] mb-3">
                 Record a short 1-2 minute video introducing yourself. Tell us your name, why you love what you do, and why APY feels like the right fit. Be yourself!
@@ -708,8 +708,8 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                   onClick={() => { setVideoMode("upload"); setVideoLink(""); }}
                   className={`flex-1 flex items-center justify-center gap-2 py-2.5 font-body text-xs font-semibold transition-colors ${
                     videoMode === "upload"
-                      ? "bg-[#C2185B] text-white"
-                      : "bg-white text-[#8B6070] hover:bg-[#FFF0F5]"
+                      ? "bg-[#8B2252] text-white"
+                      : "bg-white text-[#8B6070] hover:bg-[#FFF5F8]"
                   }`}
                 >
                   <Upload size={14} />
@@ -720,8 +720,8 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                   onClick={() => { setVideoMode("link"); setVideoFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
                   className={`flex-1 flex items-center justify-center gap-2 py-2.5 font-body text-xs font-semibold transition-colors ${
                     videoMode === "link"
-                      ? "bg-[#C2185B] text-white"
-                      : "bg-white text-[#8B6070] hover:bg-[#FFF0F5]"
+                      ? "bg-[#8B2252] text-white"
+                      : "bg-white text-[#8B6070] hover:bg-[#FFF5F8]"
                   }`}
                 >
                   <LinkIcon size={14} />
@@ -738,7 +738,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
               {videoMode === "upload" ? (
                 videoFile ? (
                   <div className="flex items-center gap-3 p-3 bg-[#F9E4EE] border border-[#F0D0DC] rounded-xl">
-                    <CheckCircle size={18} className="text-[#C2185B] shrink-0" />
+                    <CheckCircle size={18} className="text-[#8B2252] shrink-0" />
                     <span className="font-body text-sm text-[#1A0A12] truncate flex-1">{videoFile.name}</span>
                     <button
                       type="button"
@@ -752,10 +752,10 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full flex flex-col items-center gap-2 p-6 border-2 border-dashed border-[#F0D0DC] rounded-xl hover:border-[#C2185B] hover:bg-[#FFF0F5] transition-colors group"
+                    className="w-full flex flex-col items-center gap-2 p-6 border-2 border-dashed border-[#F0D0DC] rounded-xl hover:border-[#8B2252] hover:bg-[#FFF5F8] transition-colors group"
                   >
-                    <Video size={24} className="text-[#C4A0B0] group-hover:text-[#C2185B] transition-colors" />
-                    <span className="font-body text-sm text-[#8B6070] group-hover:text-[#C2185B] transition-colors">
+                    <Video size={24} className="text-[#C4A0B0] group-hover:text-[#8B2252] transition-colors" />
+                    <span className="font-body text-sm text-[#8B6070] group-hover:text-[#8B2252] transition-colors">
                       Click to upload your video
                     </span>
                     <span className="font-body text-xs text-[#C4A0B0]">MP4, MOV, WebM — Max 500MB</span>
@@ -768,14 +768,14 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                     value={videoLink}
                     onChange={(e) => setVideoLink(e.target.value)}
                     placeholder="https://youtube.com/... or Google Drive / Dropbox link"
-                    className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#C2185B] focus:ring-1 focus:ring-[#C2185B]/30 transition-colors"
+                    className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#8B2252] focus:ring-1 focus:ring-[#8B2252]/30 transition-colors"
                   />
                   <p className="font-body text-xs text-[#8B6070]">
                     Accepted: YouTube, Google Drive, Dropbox, or any direct video link. Make sure sharing is set to "Anyone with the link".
                   </p>
                   {videoLink.trim() && (() => { try { new URL(videoLink.trim()); return true; } catch { return false; } })() && (
                     <div className="flex items-center gap-2 p-2.5 bg-[#F9E4EE] border border-[#F0D0DC] rounded-xl">
-                      <CheckCircle size={16} className="text-[#C2185B] shrink-0" />
+                      <CheckCircle size={16} className="text-[#8B2252] shrink-0" />
                       <span className="font-body text-xs text-[#5A3040]">Link looks good!</span>
                     </div>
                   )}
@@ -788,7 +788,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
               <div className="space-y-2">
                 <div className="w-full bg-[#F0D0DC] rounded-full h-2 overflow-hidden">
                   <div
-                    className="h-2 bg-[#C2185B] rounded-full transition-all duration-300"
+                    className="h-2 bg-[#8B2252] rounded-full transition-all duration-300"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
@@ -799,7 +799,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
             <button
               type="submit"
               disabled={applyMutation.isPending || isUploading}
-              className="w-full py-3 bg-[#C2185B] text-white font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-[#8B2252] text-white font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isUploading ? uploadStatus ?? "Uploading..." : applyMutation.isPending ? "Submitting..." : "Submit Application"}
             </button>
@@ -887,12 +887,12 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
                   </span>
                 )}
                 {(job as any).subBadge && (
-                  <span className="px-2 py-0.5 bg-[#C2185B]/10 text-[#C2185B] font-body text-[10px] font-semibold rounded-full border border-[#C2185B]/20">
+                  <span className="px-2 py-0.5 bg-[#8B2252]/10 text-[#8B2252] font-body text-[10px] font-semibold rounded-full border border-[#8B2252]/20">
                     {(job as any).subBadge}
                   </span>
                 )}
                 {(job as any).pay && (
-                  <span className="px-2 py-0.5 bg-[#FFF5E0] text-[#8B6010] font-body text-[10px] font-semibold rounded-full border border-[#F0D080]">
+                  <span className="px-2 py-0.5 bg-[#FEFAF4] text-[#8B6010] font-body text-[10px] font-semibold rounded-full border border-[#F0D080]">
                     {(job as any).pay}
                   </span>
                 )}
@@ -904,7 +904,7 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
             <div ref={shareRef} className="relative">
               <button
                 onClick={() => setShareOpen((v) => !v)}
-                className="flex items-center gap-1.5 px-3 py-2 border border-[#F0D0DC] text-[#8B2252] font-body font-semibold text-xs rounded-full hover:bg-[#FFF0F5] hover:border-[#C2185B] transition-colors"
+                className="flex items-center gap-1.5 px-3 py-2 border border-[#F0D0DC] text-[#8B2252] font-body font-semibold text-xs rounded-full hover:bg-[#FFF5F8] hover:border-[#8B2252] transition-colors"
                 aria-label="Share this job"
               >
                 <Share2 size={13} />
@@ -923,7 +923,7 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => setShareOpen(false)}
-                        className="flex items-center gap-3 px-3 py-2.5 hover:bg-[#FFF0F5] transition-colors"
+                        className="flex items-center gap-3 px-3 py-2.5 hover:bg-[#FFF5F8] transition-colors"
                       >
                         <span
                           className="w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-[10px] shrink-0"
@@ -937,7 +937,7 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
                       <button
                         key={s.label}
                         onClick={() => { handleCopyLink(); setShareOpen(false); }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[#FFF0F5] transition-colors"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[#FFF5F8] transition-colors"
                       >
                         <span
                           className="w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-[10px] shrink-0"
@@ -951,7 +951,7 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
                   )}
                   <button
                     onClick={() => { handleCopyLink(); setShareOpen(false); }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[#FFF0F5] transition-colors border-t border-[#F0D0DC]"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[#FFF5F8] transition-colors border-t border-[#F0D0DC]"
                   >
                     <span className="w-6 h-6 rounded-full bg-[#F0D0DC] flex items-center justify-center shrink-0">
                       {copied ? <Check size={11} className="text-green-600" /> : <Copy size={11} className="text-[#8B2252]" />}
@@ -963,7 +963,7 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
             </div>
             <button
               onClick={onApply}
-              className="px-4 py-2 bg-[#C2185B] text-white font-body font-semibold text-xs rounded-full hover:bg-[#8B2252] transition-colors"
+              className="px-4 py-2 bg-[#8B2252] text-white font-body font-semibold text-xs rounded-full hover:bg-[#8B2252] transition-colors"
             >
               Apply
             </button>
@@ -974,7 +974,7 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
 
         <button
           onClick={onToggle}
-          className="flex items-center gap-1.5 font-body text-xs font-semibold text-[#C2185B] hover:text-[#8B2252] transition-colors"
+          className="flex items-center gap-1.5 font-body text-xs font-semibold text-[#8B2252] hover:text-[#8B2252] transition-colors"
         >
           {expanded ? "Show less" : "See full details"}
           <ChevronDown size={14} className={`transition-transform ${expanded ? "rotate-180" : ""}`} />
@@ -987,7 +987,7 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
               <ul className="space-y-1.5">
                 {job.responsibilities.map((r, i) => (
                   <li key={i} className="flex items-start gap-2 font-body text-sm text-[#5A3040]">
-                    <span className="text-[#C2185B] mt-0.5 shrink-0">•</span> {r}
+                    <span className="text-[#8B2252] mt-0.5 shrink-0">•</span> {r}
                   </li>
                 ))}
               </ul>
@@ -997,7 +997,7 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
               <ul className="space-y-1.5">
                 {job.requirements.map((r, i) => (
                   <li key={i} className="flex items-start gap-2 font-body text-sm text-[#5A3040]">
-                    <span className="text-[#C2185B] mt-0.5 shrink-0">•</span> {r}
+                    <span className="text-[#8B2252] mt-0.5 shrink-0">•</span> {r}
                   </li>
                 ))}
               </ul>
@@ -1007,14 +1007,14 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
               <ul className="space-y-1.5">
                 {job.perks.map((p, i) => (
                   <li key={i} className="flex items-start gap-2 font-body text-sm text-[#5A3040]">
-                    <Heart size={12} className="text-[#C2185B] mt-0.5 shrink-0" /> {p}
+                    <Heart size={12} className="text-[#8B2252] mt-0.5 shrink-0" /> {p}
                   </li>
                 ))}
               </ul>
             </div>
             <button
               onClick={onApply}
-              className="w-full py-2.5 bg-[#C2185B] text-white font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] transition-colors"
+              className="w-full py-2.5 bg-[#8B2252] text-white font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] transition-colors"
             >
               Apply for This Role
             </button>
@@ -1044,11 +1044,11 @@ export default function Careers() {
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-28 pb-16 bg-[#FFF0F4] relative overflow-hidden">
+      <section className="pt-28 pb-16 bg-[#FFF5F8] relative overflow-hidden">
         <div
           className="absolute inset-0 opacity-20"
           style={{
-            backgroundImage: `radial-gradient(circle at 20% 60%, #F2A0B8 0%, transparent 55%), radial-gradient(circle at 85% 20%, #D4708A 0%, transparent 40%)`,
+            backgroundImage: `radial-gradient(circle at 20% 60%, #F2A0B8 0%, transparent 55%), radial-gradient(circle at 85% 20%, #F2A0B8 0%, transparent 40%)`,
           }}
         />
         <div className="container relative">
@@ -1112,7 +1112,7 @@ export default function Careers() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 bg-[#FFF0F4] border-t border-[#F0D0DC]">
+      <section className="py-16 bg-[#FFF5F8] border-t border-[#F0D0DC]">
         <div className="container text-center">
           <p className="font-body text-xs text-[#8B2252] uppercase tracking-widest mb-3">Don't see your role?</p>
           <h2 className="font-display font-bold text-2xl md:text-3xl text-[#1A0A12] mb-4">
@@ -1123,7 +1123,7 @@ export default function Careers() {
           </p>
           <a
             href="mailto:afropuppyyogaofficial@gmail.com"
-            className="inline-flex items-center px-6 py-3 bg-[#8B2252] text-white font-body font-semibold text-sm rounded-full hover:bg-[#6B1A3E] transition-colors"
+            className="inline-flex items-center px-6 py-3 bg-[#8B2252] text-white font-body font-semibold text-sm rounded-full hover:bg-[#6B1A3F] transition-colors"
           >
             Say Hello
           </a>

@@ -104,7 +104,7 @@ export default function BookingBanner() {
               href={BOOK_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-10 py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-base rounded-full hover:bg-[#D4708A] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
+              className="inline-flex items-center gap-2 px-10 py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-base rounded-full hover:bg-[#F2A0B8] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
             >
               View All Classes & Book Now
               <ArrowRight size={18} />

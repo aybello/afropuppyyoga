@@ -87,7 +87,7 @@ const pillars = [
 
 export default function EthicalStandards() {
   return (
-    <section id="ethical-standards" className="py-10 md:py-32 bg-[#FDF6F0]">
+    <section id="ethical-standards" className="py-10 md:py-32 bg-[#FFF5F8]">
       <div className="max-w-6xl mx-auto px-6 md:px-10">
 
         {/* Header */}
@@ -165,7 +165,7 @@ export default function EthicalStandards() {
           </p>
           <a
             href="#contact"
-            className="inline-block mt-6 px-7 py-3 rounded-full bg-[#C97B9A] text-white font-body text-sm font-semibold hover:bg-[#b56a88] transition-colors duration-200"
+            className="inline-block mt-6 px-7 py-3 rounded-full bg-[#C97B9A] text-white font-body text-sm font-semibold hover:bg-[#8B2252] transition-colors duration-200"
           >
             Get in Touch
           </a>

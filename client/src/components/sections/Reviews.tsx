@@ -62,10 +62,10 @@ const values = [
 
 const avatarColors = [
   "bg-[#8B2252]",
-  "bg-[#C4547A]",
+  "bg-[#8B2252]",
   "bg-[#F2A0B8]",
   "bg-[#8B2252]",
-  "bg-[#C4547A]",
+  "bg-[#8B2252]",
   "bg-[#F2A0B8]",
 ];
 
@@ -86,22 +86,22 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export default function Reviews() {
   return (
-    <section id="reviews" className="py-10 md:py-32 bg-[#FFF0F4]">
+    <section id="reviews" className="py-10 md:py-32 bg-[#FFF5F8]">
       <div className="container">
         {/* Header */}
         <FadeUp>
           <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-16 gap-6">
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-0.5 bg-[#C4547A]" />
-                <span className="text-[#C4547A] font-body text-xs font-semibold tracking-widest uppercase">
+                <div className="w-8 h-0.5 bg-[#8B2252]" />
+                <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">
                   Reviews
                 </span>
               </div>
               <h2 className="font-display text-4xl md:text-5xl font-bold text-[#1A0A12]">
                 See What Our
                 <br />
-                <span className="italic text-[#C4547A]">Clients Say</span>
+                <span className="italic text-[#8B2252]">Clients Say</span>
               </h2>
             </div>
             <div className="flex flex-wrap items-center gap-4 mt-4 md:mt-0">
@@ -118,7 +118,7 @@ export default function Reviews() {
                 href="https://www.google.com/search?q=afropuppyyoga+reviews"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-5 py-2.5 border-2 border-[#C4547A] text-[#C4547A] font-body font-semibold text-sm rounded-full hover:bg-[#C4547A] hover:text-white transition-all duration-200"
+                className="px-5 py-2.5 border-2 border-[#8B2252] text-[#8B2252] font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] hover:text-white transition-all duration-200"
               >
                 Leave a Review
               </a>
@@ -179,7 +179,7 @@ export default function Reviews() {
               transition={{ delay: i * 0.08, duration: 0.5 }}
               className="flex gap-3 p-3 md:p-5 bg-white/60 rounded-xl border border-[#F0D0DC]"
             >
-              <div className="w-1.5 rounded-full bg-gradient-to-b from-[#8B2252] to-[#C4547A] shrink-0" />
+              <div className="w-1.5 rounded-full bg-gradient-to-b from-[#8B2252] to-[#8B2252] shrink-0" />
               <div>
                 <h4 className="font-display font-bold text-sm md:text-base text-[#1A0A12] mb-1">{val.title}</h4>
                 <p className="font-body text-xs md:text-sm text-[#1A0A12]/60 leading-relaxed">{val.desc}</p>

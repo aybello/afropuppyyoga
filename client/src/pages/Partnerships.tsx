@@ -63,7 +63,7 @@ const CATEGORIES = [
       "Paid collaboration agreements for featured content",
       "Press and editorial partnerships",
     ],
-    accent: "#D4708A",
+    accent: "#F2A0B8",
   },
   {
     type: "Local Business" as PartnershipType,
@@ -181,7 +181,7 @@ export default function Partnerships() {
           <a
             href="#partnership-form"
             onClick={() => trackCTAClick("Partner With Us CTA — Hero")}
-            className="inline-flex items-center gap-2 px-8 py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-base rounded-full hover:bg-[#D4708A] transition-all duration-200 shadow-xl hover:-translate-y-1"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-base rounded-full hover:bg-[#F2A0B8] transition-all duration-200 shadow-xl hover:-translate-y-1"
           >
             Partner With Us
             <ArrowRight size={18} />
@@ -444,7 +444,7 @@ export default function Partnerships() {
               <button
                 type="submit"
                 disabled={submitMutation.isPending}
-                className="w-full py-4 bg-[#8B2252] text-white font-body font-bold text-base rounded-full hover:bg-[#6D1A3F] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0"
+                className="w-full py-4 bg-[#8B2252] text-white font-body font-bold text-base rounded-full hover:bg-[#6B1A3F] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0"
               >
                 {submitMutation.isPending ? "Submitting..." : "Submit Partnership Inquiry"}
               </button>

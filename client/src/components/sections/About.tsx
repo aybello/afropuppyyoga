@@ -48,22 +48,22 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export default function About() {
   return (
-    <section id="about" className="py-10 md:py-32 bg-[#FFF0F4]">
+    <section id="about" className="py-10 md:py-32 bg-[#FFF5F8]">
       <div className="container">
         <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
           {/* Text column — comes first on mobile, second on desktop */}
           <div className="order-2 lg:order-1 space-y-8">
             <FadeUp>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-0.5 bg-[#C4547A]" />
-                <span className="text-[#C4547A] font-body text-xs font-semibold tracking-widest uppercase">
+                <div className="w-8 h-0.5 bg-[#8B2252]" />
+                <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">
                   About Us
                 </span>
               </div>
               <h2 className="font-display text-4xl md:text-5xl font-bold text-[#1A0A12] leading-tight">
                 Where Wellness Meets
                 <br />
-                <span className="italic text-[#C4547A]">Culture & Puppy Love</span>
+                <span className="italic text-[#8B2252]">Culture & Puppy Love</span>
               </h2>
             </FadeUp>
 
@@ -78,7 +78,7 @@ export default function About() {
 
             {/* Pull quote */}
             <FadeUp delay={0.25}>
-              <blockquote className="border-l-4 border-[#C4547A] pl-6 py-2">
+              <blockquote className="border-l-4 border-[#8B2252] pl-6 py-2">
                 <p className="font-accent text-xl md:text-2xl italic text-[#1A0A12]/80 leading-relaxed">
                   "An inclusive, vibrant atmosphere inspired by culture, movement, and music — turning every class into a celebration."
                 </p>
@@ -95,10 +95,10 @@ export default function About() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.35 + i * 0.1, duration: 0.5 }}
-                    className="bg-white/60 backdrop-blur-sm rounded-xl p-3 md:p-4 border border-[#F0D0DC] hover:border-[#C4547A]/30 transition-colors"
+                    className="bg-white/60 backdrop-blur-sm rounded-xl p-3 md:p-4 border border-[#F0D0DC] hover:border-[#8B2252]/30 transition-colors"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-[#C4547A]/10 flex items-center justify-center mb-3">
-                      <b.icon size={18} className="text-[#C4547A]" />
+                    <div className="w-9 h-9 rounded-lg bg-[#8B2252]/10 flex items-center justify-center mb-3">
+                      <b.icon size={18} className="text-[#8B2252]" />
                     </div>
                     <h3 className="font-display font-bold text-sm text-[#1A0A12] mb-1">{b.title}</h3>
                     <p className="font-body text-xs text-[#1A0A12]/60 leading-relaxed">{b.desc}</p>
@@ -121,7 +121,7 @@ export default function About() {
                   <div className="absolute inset-0 bg-gradient-to-t from-[#1A0A12]/20 to-transparent" />
                 </div>
                 {/* Decorative circles */}
-                <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-[#C4547A]/15 -z-10" />
+                <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-[#8B2252]/15 -z-10" />
                 <div className="absolute -bottom-8 -left-8 w-48 h-48 rounded-full bg-[#8B2252]/10 -z-10" />
                 {/* Floating tag */}
                 <div className="absolute top-6 left-0 md:-left-8 bg-[#8B2252] text-white rounded-xl px-4 py-3 shadow-lg">

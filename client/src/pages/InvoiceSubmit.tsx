@@ -76,12 +76,12 @@ export default function InvoiceSubmit() {
 
         <div className="max-w-md w-full bg-white rounded-2xl shadow-lg border border-[#F0D0DC] p-10 text-center">
           <div className="flex justify-center mb-5">
-            <div className="w-20 h-20 rounded-full bg-[#FFF0F4] flex items-center justify-center">
+            <div className="w-20 h-20 rounded-full bg-[#FFF5F8] flex items-center justify-center">
               <CheckCircle2 className="w-10 h-10 text-[#8B2252]" />
             </div>
           </div>
           <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-3">Invoice Submitted!</h2>
-          <p className="font-body text-[#6B4C3B] mb-8 leading-relaxed">
+          <p className="font-body text-[#1A0A12] mb-8 leading-relaxed">
             Your invoice has been received and is being processed. You'll be paid by the due date on your invoice.
           </p>
           <button
@@ -116,7 +116,7 @@ export default function InvoiceSubmit() {
           {/* Admin dashboard link — always visible */}
           <Link
             href="/admin/invoices"
-            className="inline-flex items-center gap-2 px-4 py-2 font-body font-semibold text-sm rounded-full border border-[#F0D0DC] text-[#8B2252] bg-white hover:bg-[#FFF0F4] transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 font-body font-semibold text-sm rounded-full border border-[#F0D0DC] text-[#8B2252] bg-white hover:bg-[#FFF5F8] transition-colors"
           >
             <LayoutDashboard className="w-4 h-4" />
             View Dashboard
@@ -134,7 +134,7 @@ export default function InvoiceSubmit() {
             <span className="h-px w-8 bg-[#8B2252]" />
           </div>
           <h1 className="font-display font-bold text-4xl text-[#1A0A12] mb-3">Submit Your Invoice</h1>
-          <p className="font-body text-[#6B4C3B] text-base max-w-sm mx-auto leading-relaxed">
+          <p className="font-body text-[#1A0A12] text-base max-w-sm mx-auto leading-relaxed">
             Upload your invoice PDF and we'll process it right away.
           </p>
         </div>
@@ -142,16 +142,16 @@ export default function InvoiceSubmit() {
         {/* Upload card */}
         <div className="bg-white rounded-2xl shadow-sm border border-[#F0D0DC] p-8">
           <h2 className="font-display font-bold text-xl text-[#1A0A12] mb-1">Invoice Upload</h2>
-          <p className="font-body text-sm text-[#6B4C3B] mb-6">PDF files only, max 16MB</p>
+          <p className="font-body text-sm text-[#1A0A12] mb-6">PDF files only, max 16MB</p>
 
           {/* Drop zone */}
           <div
             className={`border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-200 ${
               dragOver
-                ? "border-[#8B2252] bg-[#FFF0F4]"
+                ? "border-[#8B2252] bg-[#FFF5F8]"
                 : file
                 ? "border-emerald-400 bg-emerald-50"
-                : "border-[#F0D0DC] hover:border-[#8B2252] hover:bg-[#FFF0F4]"
+                : "border-[#F0D0DC] hover:border-[#8B2252] hover:bg-[#FFF5F8]"
             }`}
             onClick={() => fileInputRef.current?.click()}
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -171,20 +171,20 @@ export default function InvoiceSubmit() {
                   <FileText className="w-7 h-7 text-emerald-600" />
                 </div>
                 <p className="font-body font-semibold text-[#1A0A12]">{file.name}</p>
-                <p className="font-body text-sm text-[#6B4C3B]">
+                <p className="font-body text-sm text-[#1A0A12]">
                   {(file.size / 1024 / 1024).toFixed(2)} MB
                 </p>
                 <p className="font-body text-xs text-emerald-600">Click to change file</p>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-3">
-                <div className="w-14 h-14 rounded-full bg-[#FFF0F4] flex items-center justify-center">
+                <div className="w-14 h-14 rounded-full bg-[#FFF5F8] flex items-center justify-center">
                   <Upload className="w-7 h-7 text-[#8B2252]" />
                 </div>
                 <p className="font-body font-semibold text-[#1A0A12]">
                   Drop your PDF here or click to browse
                 </p>
-                <p className="font-body text-sm text-[#6B4C3B]">PDF files only, max 16MB</p>
+                <p className="font-body text-sm text-[#1A0A12]">PDF files only, max 16MB</p>
               </div>
             )}
           </div>
@@ -217,7 +217,7 @@ export default function InvoiceSubmit() {
             )}
           </button>
 
-          <p className="font-body text-xs text-center text-[#6B4C3B] mt-5">
+          <p className="font-body text-xs text-center text-[#1A0A12] mt-5">
             Your invoice will be reviewed and payment processed by the due date.{" "}
             Questions? Email{" "}
             <a href="mailto:afropuppyyogaofficial@gmail.com" className="text-[#8B2252] underline">

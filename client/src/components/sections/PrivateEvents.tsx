@@ -53,7 +53,7 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export default function PrivateEvents() {
   return (
-    <section id="private-events" className="py-10 md:py-32 bg-[#1A0A12] relative overflow-hidden">
+    <section id="private-events" className="py-10 md:py-32 bg-[#FFF5F8] relative overflow-hidden">
       {/* Background image with dark overlay */}
       <div className="absolute inset-0">
         <img
@@ -141,7 +141,7 @@ export default function PrivateEvents() {
                 {locations.map((loc) => (
                   <span
                     key={loc}
-                    className="px-4 py-2 bg-[#8B2252]/30 text-white/80 font-body text-sm font-medium rounded-full border border-[#8B2252]/40"
+                    className="px-4 py-2 bg-[#8B2252]/30 text-[#1A0A12]/70 font-body text-sm font-medium rounded-full border border-[#8B2252]/40"
                   >
                     {loc}
                   </span>
@@ -161,7 +161,7 @@ export default function PrivateEvents() {
               <Link
                 href="/private-events/quote"
                 onClick={() => trackCTAClick("Get a Quote — Private Events")}
-                className="inline-flex items-center px-10 py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-base rounded-full hover:bg-[#D4708A] transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1"
+                className="inline-flex items-center px-10 py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-base rounded-full hover:bg-[#F2A0B8] transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1"
               >
                 Get an Instant Quote
               </Link>

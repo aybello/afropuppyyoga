@@ -372,7 +372,7 @@ export default function PrivateEventsDashboard() {
               <Button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="w-full bg-[#8B2252] hover:bg-[#6B1A3E] text-white font-body font-bold rounded-full"
+                className="w-full bg-[#8B2252] hover:bg-[#6B1A3F] text-white font-body font-bold rounded-full"
               >
                 {isSaving ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
                 Save Changes

@@ -25,8 +25,8 @@ const TOOLS = [
     description: "Staff can upload and submit their invoices for processing. AI extracts the details automatically.",
     href: "/submit-invoice",
     icon: Upload,
-    color: "#C2185B",
-    bg: "#FFF0F5",
+    color: "#8B2252",
+    bg: "#FFF5F8",
     border: "#F0D0DC",
     badge: null,
     adminOnly: false,
@@ -61,8 +61,8 @@ const TOOLS = [
     description: "AI-powered class demand forecasting. Predict ticket sales and revenue for upcoming sessions by breed, location, and month.",
     href: "/predictor",
     icon: TrendingUp,
-    color: "#C2185B",
-    bg: "#FFF0F5",
+    color: "#8B2252",
+    bg: "#FFF5F8",
     border: "#F0D0DC",
     badge: null,
     adminOnly: false,
@@ -98,7 +98,7 @@ const TOOLS = [
     href: "/admin/private-events",
     icon: Sparkles,
     color: "#8B2252",
-    bg: "#FFF0F5",
+    bg: "#FFF5F8",
     border: "#F0D0DC",
     badge: "Admin",
     adminOnly: true,
@@ -111,7 +111,7 @@ export default function StaffPortal() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
-        <div className="w-8 h-8 border-3 border-[#C2185B] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-3 border-[#8B2252] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -122,7 +122,7 @@ export default function StaffPortal() {
       <header className="bg-white border-b border-[#F0D0DC] sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-8 h-8 bg-[#C2185B] rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-[#8B2252] rounded-lg flex items-center justify-center">
               <span className="text-white text-sm font-bold">A</span>
             </div>
             <div>
@@ -132,7 +132,7 @@ export default function StaffPortal() {
           </Link>
           <Link
             href="/"
-            className="flex items-center gap-1.5 font-body text-xs text-[#8B2252] hover:text-[#C2185B] transition-colors"
+            className="flex items-center gap-1.5 font-body text-xs text-[#8B2252] hover:text-[#8B2252] transition-colors"
           >
             <ExternalLink size={12} />
             Back to Site
@@ -144,7 +144,7 @@ export default function StaffPortal() {
       <main className="max-w-5xl mx-auto px-6 py-12">
         {/* Page title */}
         <div className="mb-10">
-          <p className="font-body text-xs font-semibold text-[#C2185B] uppercase tracking-widest mb-2">
+          <p className="font-body text-xs font-semibold text-[#8B2252] uppercase tracking-widest mb-2">
             — Internal Tools
           </p>
           <h1 className="font-display font-bold text-4xl text-[#1A0A12] mb-3">
@@ -184,7 +184,7 @@ export default function StaffPortal() {
                   className={`group relative bg-white border rounded-2xl p-6 transition-all duration-200 cursor-pointer ${
                     isLocked
                       ? "opacity-60 cursor-not-allowed border-[#F0D0DC]"
-                      : "hover:shadow-md hover:-translate-y-0.5 border-[#F0D0DC] hover:border-[#C2185B]/30"
+                      : "hover:shadow-md hover:-translate-y-0.5 border-[#F0D0DC] hover:border-[#8B2252]/30"
                   }`}
                   style={{ borderColor: tool.border }}
                 >
@@ -224,7 +224,7 @@ export default function StaffPortal() {
                     </div>
                     <ArrowRight
                       size={16}
-                      className="text-[#C4A0B0] group-hover:text-[#C2185B] transition-colors shrink-0 mt-1"
+                      className="text-[#C4A0B0] group-hover:text-[#8B2252] transition-colors shrink-0 mt-1"
                     />
                   </div>
                 </div>

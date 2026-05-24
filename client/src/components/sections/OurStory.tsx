@@ -29,15 +29,15 @@ export default function OurStory() {
           {/* Section label */}
           <FadeUp>
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-0.5 bg-[#C4547A]" />
-              <span className="text-[#C4547A] font-body text-xs font-semibold tracking-widest uppercase">
+              <div className="w-8 h-0.5 bg-[#8B2252]" />
+              <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">
                 Our Story
               </span>
             </div>
             <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-[#1A0A12] leading-tight mb-10">
               Born From Love —
               <br />
-              <span className="italic text-[#C4547A]">A Dog, A Dream & A Community</span>
+              <span className="italic text-[#8B2252]">A Dog, A Dream & A Community</span>
             </h2>
           </FadeUp>
 
@@ -51,11 +51,11 @@ export default function OurStory() {
 
             {/* Pull quote */}
             <FadeUp delay={0.2}>
-              <blockquote className="border-l-4 border-[#C4547A] pl-6 py-3 my-8">
+              <blockquote className="border-l-4 border-[#8B2252] pl-6 py-3 my-8">
                 <p className="font-accent text-xl md:text-2xl italic text-[#1A0A12]/80 leading-relaxed">
                   "There was a point in my life when I wasn't very happy. My dog was the one good thing I could always look forward to. He saved me."
                 </p>
-                <footer className="mt-3 font-body text-sm text-[#C4547A] font-semibold tracking-wide">— Ay, Founder of AfroPuppyYoga</footer>
+                <footer className="mt-3 font-body text-sm text-[#8B2252] font-semibold tracking-wide">— Ay, Founder of AfroPuppyYoga</footer>
               </blockquote>
             </FadeUp>
 
@@ -92,7 +92,7 @@ export default function OurStory() {
                 {["Ay — Founder", "Megan Durkin — Collaborator", "Ala Zeidan — Collaborator"].map((name) => (
                   <div
                     key={name}
-                    className="bg-[#FFF0F4] border border-[#F0D0DC] rounded-full px-5 py-2 font-body text-sm text-[#1A0A12]/70 font-medium"
+                    className="bg-[#FFF5F8] border border-[#F0D0DC] rounded-full px-5 py-2 font-body text-sm text-[#1A0A12]/70 font-medium"
                   >
                     {name}
                   </div>

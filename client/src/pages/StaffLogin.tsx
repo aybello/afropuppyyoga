@@ -70,7 +70,7 @@ export default function StaffLogin() {
             >
               Verifying your link...
             </h2>
-            <p style={{ color: "#6B4C3B", fontSize: "14px" }}>
+            <p style={{ color: "#1A0A12", fontSize: "14px" }}>
               Just a moment while we log you in.
             </p>
           </>
@@ -85,7 +85,7 @@ export default function StaffLogin() {
             >
               Welcome, {staffName}! 🐾
             </h2>
-            <p style={{ color: "#6B4C3B", fontSize: "14px" }}>
+            <p style={{ color: "#1A0A12", fontSize: "14px" }}>
               You're logged in. Redirecting you to the staff portal...
             </p>
           </>
@@ -100,14 +100,14 @@ export default function StaffLogin() {
             >
               Link Invalid
             </h2>
-            <p style={{ color: "#6B4C3B", fontSize: "14px", marginBottom: "24px" }}>
+            <p style={{ color: "#1A0A12", fontSize: "14px", marginBottom: "24px" }}>
               {errorMessage}
             </p>
             <p style={{ color: "#9E7B8A", fontSize: "13px" }}>
               Please contact your manager to request a new invite link, or email us at{" "}
               <a
                 href="mailto:afropuppyyogaofficial@gmail.com"
-                style={{ color: "#C2185B" }}
+                style={{ color: "#8B2252" }}
               >
                 afropuppyyogaofficial@gmail.com
               </a>

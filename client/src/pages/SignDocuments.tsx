@@ -295,8 +295,8 @@ function DocumentCard({
   return (
     <div className="bg-white rounded-2xl border border-[#F0D0DC] mb-6 shadow-sm overflow-hidden">
       {/* Card header */}
-      <div className="bg-[#FFF0F5] px-6 py-4 border-b border-[#F0D0DC] flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-[#C2185B]/10 flex items-center justify-center flex-shrink-0">
+      <div className="bg-[#FFF5F8] px-6 py-4 border-b border-[#F0D0DC] flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-[#8B2252]/10 flex items-center justify-center flex-shrink-0">
           <span className="text-sm">📄</span>
         </div>
         <div>
@@ -317,7 +317,7 @@ function DocumentCard({
           id={`check-${title}`}
           checked={checked}
           onChange={(e) => onChange(e.target.checked)}
-          className="w-4 h-4 accent-[#C2185B] cursor-pointer"
+          className="w-4 h-4 accent-[#8B2252] cursor-pointer"
         />
         <label htmlFor={`check-${title}`} className="text-sm text-[#3D1A2A] cursor-pointer select-none">
           {checkLabel}
@@ -347,7 +347,7 @@ function CheckboxItem({
         id={id}
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="w-4 h-4 mt-0.5 accent-[#C2185B] cursor-pointer flex-shrink-0"
+        className="w-4 h-4 mt-0.5 accent-[#8B2252] cursor-pointer flex-shrink-0"
       />
       <label htmlFor={id} className="text-sm text-[#3D1A2A] cursor-pointer select-none leading-snug">
         {label}
@@ -365,15 +365,15 @@ function ErrorState({ message }: { message: string }) {
         <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
           <span className="text-2xl">⚠️</span>
         </div>
-        <h2 className="font-serif text-xl font-bold text-[#1A0A12] mb-3">Unable to Load Documents</h2>
-        <p className="text-sm text-[#6B4C3B] leading-relaxed mb-6">{message}</p>
+        <h2 className="font-body text-xl font-bold text-[#1A0A12] mb-3">Unable to Load Documents</h2>
+        <p className="text-sm text-[#1A0A12] leading-relaxed mb-6">{message}</p>
         <p className="text-xs text-[#9E7B8A]">
           Need help? Contact us at{" "}
-          <a href="mailto:afropuppyyogaofficial@gmail.com" className="text-[#C2185B] hover:underline">
+          <a href="mailto:afropuppyyogaofficial@gmail.com" className="text-[#8B2252] hover:underline">
             afropuppyyogaofficial@gmail.com
           </a>{" "}
           or call{" "}
-          <a href="tel:2897881885" className="text-[#C2185B] hover:underline">
+          <a href="tel:2897881885" className="text-[#8B2252] hover:underline">
             289-788-1885
           </a>
         </p>
@@ -424,7 +424,7 @@ export default function SignDocuments() {
     return (
       <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-10 h-10 animate-spin text-[#C2185B] mx-auto mb-4" />
+          <Loader2 className="w-10 h-10 animate-spin text-[#8B2252] mx-auto mb-4" />
           <p className="text-[#8B2252] font-medium">Loading your documents...</p>
         </div>
       </div>
@@ -441,7 +441,7 @@ export default function SignDocuments() {
         <div className="max-w-md w-full text-center">
           <div className="bg-white rounded-2xl border border-[#F0D0DC] p-10 shadow-sm">
             <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-6" />
-            <h1 className="font-serif text-2xl font-bold text-[#1A0A12] mb-3">Documents Signed!</h1>
+            <h1 className="font-body text-2xl font-bold text-[#1A0A12] mb-3">Documents Signed!</h1>
             <p className="text-[#3D1A2A] text-sm leading-relaxed mb-6">
               Thank you{data.signedName ? `, ${data.signedName}` : ""}! Your Offer Letter and NDA
               have been signed and received by AfroPuppyYoga. We'll be in touch shortly with your
@@ -451,11 +451,11 @@ export default function SignDocuments() {
               <p className="text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-2">
                 Signing Record
               </p>
-              <p className="text-xs text-[#6B4C3B]">
+              <p className="text-xs text-[#1A0A12]">
                 Signed as: <strong>{data.signedName}</strong>
               </p>
               {data.signedAt && (
-                <p className="text-xs text-[#6B4C3B] mt-1">
+                <p className="text-xs text-[#1A0A12] mt-1">
                   Date:{" "}
                   {new Date(data.signedAt).toLocaleString("en-CA", {
                     timeZone: "America/Toronto",
@@ -465,7 +465,7 @@ export default function SignDocuments() {
             </div>
             <a
               href="https://afropuppyyoga.ca"
-              className="text-sm text-[#C2185B] hover:underline font-medium"
+              className="text-sm text-[#8B2252] hover:underline font-medium"
             >
               Visit afropuppyyoga.ca
             </a>
@@ -478,8 +478,8 @@ export default function SignDocuments() {
   return (
     <div className="min-h-screen bg-[#FEFAF4]">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#C2185B] to-[#8B2252] py-6 px-4 text-center">
-        <p className="font-serif text-xl font-bold text-white tracking-wide">🐾 AfroPuppyYoga</p>
+      <div className="bg-gradient-to-r from-[#8B2252] to-[#8B2252] py-6 px-4 text-center">
+        <p className="font-body text-xl font-bold text-white tracking-wide">🐾 AfroPuppyYoga</p>
         <p className="text-xs text-white/70 mt-1 tracking-widest uppercase">
           Document Signing Portal
         </p>
@@ -488,7 +488,7 @@ export default function SignDocuments() {
       <div className="max-w-3xl mx-auto px-4 py-10">
         {/* Welcome banner */}
         <div className="bg-white rounded-2xl border border-[#F0D0DC] p-6 mb-8 shadow-sm">
-          <h1 className="font-serif text-2xl font-bold text-[#1A0A12] mb-2">
+          <h1 className="font-body text-2xl font-bold text-[#1A0A12] mb-2">
             Hi {data.applicantName}! 👋
           </h1>
           <p className="text-[#3D1A2A] text-sm leading-relaxed">
@@ -534,10 +534,10 @@ export default function SignDocuments() {
         <div className="bg-white rounded-2xl border border-[#F0D0DC] p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-8 h-8 rounded-full bg-[#FFF5F8] border border-[#F0D0DC] flex items-center justify-center">
-              <PenLine className="w-4 h-4 text-[#C2185B]" />
+              <PenLine className="w-4 h-4 text-[#8B2252]" />
             </div>
             <div>
-              <h2 className="font-serif text-lg font-bold text-[#1A0A12]">Digital Signature</h2>
+              <h2 className="font-body text-lg font-bold text-[#1A0A12]">Digital Signature</h2>
               <p className="text-xs text-[#9E7B8A]">Type your full legal name to sign both documents</p>
             </div>
           </div>
@@ -548,14 +548,14 @@ export default function SignDocuments() {
                 htmlFor="signedName"
                 className="text-sm font-semibold text-[#3D1A2A] mb-2 block"
               >
-                Full Legal Name <span className="text-[#C2185B]">*</span>
+                Full Legal Name <span className="text-[#8B2252]">*</span>
               </Label>
               <Input
                 id="signedName"
                 value={signedName}
                 onChange={(e) => setSignedName(e.target.value)}
                 placeholder="e.g. Jane Doe"
-                className="border-[#F0D0DC] focus:border-[#C2185B] focus:ring-[#C2185B]/20 text-[#1A0A12] font-serif text-lg h-12"
+                className="border-[#F0D0DC] focus:border-[#8B2252] focus:ring-[#8B2252]/20 text-[#1A0A12] font-body text-lg h-12"
                 required
               />
               <p className="text-xs text-[#9E7B8A] mt-1.5">
@@ -588,7 +588,7 @@ export default function SignDocuments() {
                 !hasReadOffer ||
                 !hasReadNDA
               }
-              className="w-full h-12 bg-gradient-to-r from-[#C2185B] to-[#8B2252] hover:from-[#AD1457] hover:to-[#7B1D47] text-white font-bold text-base rounded-xl"
+              className="w-full h-12 bg-gradient-to-r from-[#8B2252] to-[#8B2252] hover:from-[#AD1457] hover:to-[#7B1D47] text-white font-bold text-base rounded-xl"
             >
               {submitMutation.isPending ? (
                 <>
@@ -612,7 +612,7 @@ export default function SignDocuments() {
       <div className="text-center py-8 border-t border-[#F0D0DC] mt-4">
         <p className="text-xs text-[#9E7B8A]">
           AfroPuppyYoga · Kitchener-Waterloo &amp; Hamilton, Ontario ·{" "}
-          <a href="https://afropuppyyoga.ca" className="text-[#C2185B] hover:underline">
+          <a href="https://afropuppyyoga.ca" className="text-[#8B2252] hover:underline">
             afropuppyyoga.ca
           </a>
         </p>
