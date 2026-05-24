@@ -1,6 +1,7 @@
 /* ============================================================
    Loyalty Program Section — "The Pack"
    Layout: Headline + 3-step paw progression + CTA
+   Colors: Warm light palette matching APY brand (#FEFAF4, #8B2252, #F2A0B8)
    ============================================================ */
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
@@ -32,7 +33,7 @@ export default function LoyaltyProgram() {
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section id="loyalty" ref={ref} className="py-16 md:py-28 bg-[#1A0A12]">
+    <section id="loyalty" ref={ref} className="py-16 md:py-28 bg-[#FFF5F8]">
       <div className="max-w-5xl mx-auto px-6">
         {/* Header */}
         <motion.div
@@ -42,17 +43,17 @@ export default function LoyaltyProgram() {
           className="text-center mb-14"
         >
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-8 h-0.5 bg-[#F2A0B8]" />
-            <span className="text-[#F2A0B8] font-body text-xs font-semibold tracking-widest uppercase">
+            <div className="w-8 h-0.5 bg-[#8B2252]" />
+            <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">
               The Pack
             </span>
-            <div className="w-8 h-0.5 bg-[#F2A0B8]" />
+            <div className="w-8 h-0.5 bg-[#8B2252]" />
           </div>
-          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-5 leading-tight">
+          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-[#1A0A12] mb-5 leading-tight">
             Come Back.<br />
-            <span className="italic text-[#F2A0B8]">We Save Your Spot.</span>
+            <span className="italic text-[#8B2252]">We Save Your Spot.</span>
           </h2>
-          <p className="font-body text-white/70 text-lg max-w-xl mx-auto leading-relaxed">
+          <p className="font-body text-[#1A0A12]/65 text-lg max-w-xl mx-auto leading-relaxed">
             The APY Loyalty Program rewards you for showing up. Attend 3 classes and your next one is on us — automatically.
           </p>
         </motion.div>
@@ -65,23 +66,18 @@ export default function LoyaltyProgram() {
               initial={{ opacity: 0, y: 32 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.15 * i }}
-              className="relative"
             >
-              {/* Connector line between steps */}
-              {i < steps.length - 1 && (
-                <div className="hidden md:block absolute top-10 left-[calc(100%+0px)] w-8 border-t-2 border-dashed border-[#F2A0B8]/30 z-10" style={{ transform: "translateX(-50%)" }} />
-              )}
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-7 h-full flex flex-col items-start">
-                <div className="w-12 h-12 rounded-full bg-[#8B2252] flex items-center justify-center mb-5 text-xl">
+              <div className="bg-white border border-[#F2A0B8]/40 rounded-2xl p-7 h-full flex flex-col items-start shadow-sm">
+                <div className="w-12 h-12 rounded-full bg-[#F2A0B8]/30 flex items-center justify-center mb-5 text-xl">
                   {step.emoji}
                 </div>
-                <div className="text-[#F2A0B8] font-body text-xs font-semibold tracking-widest uppercase mb-2">
+                <div className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase mb-2">
                   Step {step.number}
                 </div>
-                <h3 className="font-display text-xl font-bold text-white mb-3">
+                <h3 className="font-display text-xl font-bold text-[#1A0A12] mb-3">
                   {step.title}
                 </h3>
-                <p className="font-body text-white/60 text-sm leading-relaxed">
+                <p className="font-body text-[#1A0A12]/60 text-sm leading-relaxed">
                   {step.description}
                 </p>
               </div>
@@ -94,30 +90,22 @@ export default function LoyaltyProgram() {
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.5 }}
-          className="bg-[#8B2252]/20 border border-[#8B2252]/30 rounded-2xl px-8 py-6 flex flex-col md:flex-row items-center justify-between gap-6 mb-10"
+          className="bg-[#8B2252]/8 border border-[#F2A0B8]/50 rounded-2xl px-8 py-6 flex flex-col md:flex-row items-center justify-between gap-6 mb-10"
         >
           <div className="flex flex-wrap gap-6 justify-center md:justify-start">
-            <div className="text-center md:text-left">
-              <div className="text-white font-display font-bold text-2xl">3</div>
-              <div className="text-white/50 font-body text-xs uppercase tracking-wide">Classes</div>
-            </div>
-            <div className="w-px bg-white/10 hidden md:block" />
-            <div className="text-center md:text-left">
-              <div className="text-white font-display font-bold text-2xl">1</div>
-              <div className="text-white/50 font-body text-xs uppercase tracking-wide">Free Ticket</div>
-            </div>
-            <div className="w-px bg-white/10 hidden md:block" />
-            <div className="text-center md:text-left">
-              <div className="text-white font-display font-bold text-2xl">60</div>
-              <div className="text-white/50 font-body text-xs uppercase tracking-wide">Day Expiry</div>
-            </div>
-            <div className="w-px bg-white/10 hidden md:block" />
-            <div className="text-center md:text-left">
-              <div className="text-[#F2A0B8] font-display font-bold text-2xl">∞</div>
-              <div className="text-white/50 font-body text-xs uppercase tracking-wide">Repeats Forever</div>
-            </div>
+            {[
+              { value: "3", label: "Classes" },
+              { value: "1", label: "Free Ticket" },
+              { value: "60", label: "Day Expiry" },
+              { value: "∞", label: "Repeats Forever" },
+            ].map((stat, i) => (
+              <div key={i} className="text-center md:text-left">
+                <div className="text-[#8B2252] font-display font-bold text-2xl">{stat.value}</div>
+                <div className="text-[#1A0A12]/50 font-body text-xs uppercase tracking-wide">{stat.label}</div>
+              </div>
+            ))}
           </div>
-          <div className="text-white/50 font-body text-sm text-center md:text-right max-w-xs">
+          <div className="text-[#1A0A12]/50 font-body text-sm text-center md:text-right max-w-xs">
             The cycle resets after each reward. Class 4 becomes your new Class 1.
           </div>
         </motion.div>
@@ -139,7 +127,7 @@ export default function LoyaltyProgram() {
           </a>
           <Link
             href="/loyalty"
-            className="inline-flex items-center px-8 py-4 border border-white/20 text-white font-body font-semibold text-base rounded-full hover:border-white/40 hover:bg-white/5 transition-all duration-200"
+            className="inline-flex items-center px-8 py-4 border border-[#8B2252]/30 text-[#8B2252] font-body font-semibold text-base rounded-full hover:border-[#8B2252]/60 hover:bg-[#8B2252]/5 transition-all duration-200"
           >
             Learn More
           </Link>

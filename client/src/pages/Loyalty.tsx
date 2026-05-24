@@ -1,6 +1,6 @@
 /* ============================================================
    Loyalty Program Page — /loyalty
-   Full dedicated page for The Pack loyalty program
+   Colors: Warm light palette matching APY brand
    ============================================================ */
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
@@ -75,7 +75,7 @@ export default function Loyalty() {
       <Navbar />
 
       {/* Hero */}
-      <section className="bg-[#1A0A12] pt-28 pb-20 px-6">
+      <section className="bg-[#FFF5F8] pt-28 pb-20 px-6 border-b border-[#F2A0B8]/20">
         <div className="max-w-3xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
@@ -83,16 +83,16 @@ export default function Loyalty() {
             transition={{ duration: 0.6 }}
           >
             <div className="flex items-center justify-center gap-3 mb-5">
-              <div className="w-8 h-0.5 bg-[#F2A0B8]" />
-              <span className="text-[#F2A0B8] font-body text-xs font-semibold tracking-widest uppercase">
+              <div className="w-8 h-0.5 bg-[#8B2252]" />
+              <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">
                 The Pack
               </span>
-              <div className="w-8 h-0.5 bg-[#F2A0B8]" />
+              <div className="w-8 h-0.5 bg-[#8B2252]" />
             </div>
-            <h1 className="font-display text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+            <h1 className="font-display text-5xl md:text-6xl font-bold text-[#1A0A12] mb-6 leading-tight">
               APY Loyalty Program
             </h1>
-            <p className="font-body text-white/70 text-xl leading-relaxed mb-10 max-w-2xl mx-auto">
+            <p className="font-body text-[#1A0A12]/65 text-xl leading-relaxed mb-10 max-w-2xl mx-auto">
               Attend 3 classes. Get 1 free. Automatically. No apps, no punch cards, no forms — just show up and we take care of the rest.
             </p>
             <a
@@ -127,9 +127,9 @@ export default function Loyalty() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="bg-white border border-[#F2A0B8]/30 rounded-2xl p-8 flex gap-5"
+                className="bg-white border border-[#F2A0B8]/30 rounded-2xl p-8 flex gap-5 shadow-sm"
               >
-                <div className="shrink-0 w-12 h-12 rounded-full bg-[#8B2252] flex items-center justify-center text-xl">
+                <div className="shrink-0 w-12 h-12 rounded-full bg-[#F2A0B8]/30 flex items-center justify-center text-xl">
                   {step.emoji}
                 </div>
                 <div>
@@ -169,7 +169,7 @@ export default function Loyalty() {
       </section>
 
       {/* FAQ */}
-      <section className="py-20 px-6 bg-[#FEFAF4]">
+      <section className="py-20 px-6 bg-[#FFF5F8]">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-[#1A0A12] mb-3">
@@ -184,7 +184,7 @@ export default function Loyalty() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-40px" }}
                 transition={{ duration: 0.4, delay: i * 0.07 }}
-                className="bg-white border border-[#F2A0B8]/30 rounded-xl px-7 py-6"
+                className="bg-white border border-[#F2A0B8]/30 rounded-xl px-7 py-6 shadow-sm"
               >
                 <h3 className="font-body font-semibold text-[#1A0A12] text-base mb-2">
                   {faq.q}
@@ -199,13 +199,13 @@ export default function Loyalty() {
       </section>
 
       {/* Bottom CTA */}
-      <section className="py-16 px-6 bg-[#1A0A12] text-center">
+      <section className="py-16 px-6 bg-[#FFF5F8] border-t border-[#F2A0B8]/20 text-center">
         <div className="max-w-xl mx-auto">
           <div className="text-4xl mb-4">🐾</div>
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-4">
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-[#1A0A12] mb-4">
             Your next free class is 3 sessions away.
           </h2>
-          <p className="font-body text-white/60 text-base mb-8">
+          <p className="font-body text-[#1A0A12]/60 text-base mb-8">
             Book your first class today. We'll handle the rest.
           </p>
           <a
