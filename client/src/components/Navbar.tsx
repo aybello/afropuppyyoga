@@ -1,8 +1,8 @@
 /* ============================================================
    Navbar — Warm Afro-Wellness Editorial
    Transparent on hero, solid ivory on scroll
-   Primary links: Home, Experience, Memberships, Private Events, Gallery
-   Secondary links (More ▾): Birthday, Careers, Partnerships, Loyalty
+   Primary links: Home, Experience, Memberships, Private Events, Gallery, Careers, Loyalty
+   Secondary links (More ▾): Birthday, Partnerships
    ============================================================ */
 import { useState, useEffect, useRef } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
@@ -17,17 +17,19 @@ const primaryLinks = [
   { label: "Memberships", href: "#memberships" },
   { label: "Private Events", href: "#private-events" },
   { label: "Gallery", href: "#gallery" },
+  { label: "Careers", href: "/careers", isPage: true },
 ];
+
+// Loyalty is highlighted separately (pill style like Memberships)
+const loyaltyLink = { label: "🐾 Loyalty", href: "/loyalty", isPage: true };
 
 const moreLinks = [
   { label: "🎂 Birthday Packages", href: "/birthday", isPage: true },
-  { label: "🐾 Loyalty Program", href: "/loyalty", isPage: true },
   { label: "🤝 Partnerships", href: "/partnerships", isPage: true },
-  { label: "💼 Careers", href: "/careers", isPage: true },
 ];
 
 // All links for mobile menu
-const allLinks = [...primaryLinks, ...moreLinks];
+const allLinks = [...primaryLinks, loyaltyLink, ...moreLinks];
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -116,6 +118,14 @@ export default function Navbar() {
                     >
                       {link.label}
                     </a>
+                  ) : (link as any).isPage ? (
+                    <a
+                      href={link.href}
+                      onClick={() => { setMenuOpen(false); setMoreOpen(false); }}
+                      className={`px-3 py-2 text-sm font-body font-medium rounded-md transition-all duration-200 ${navTextClass} ${navHoverClass}`}
+                    >
+                      {link.label}
+                    </a>
                   ) : (
                     <a
                       href={isSubPage ? `/${link.href}` : link.href}
@@ -127,6 +137,18 @@ export default function Navbar() {
                   )}
                 </li>
               ))}
+
+              {/* Loyalty — highlighted pill like Memberships but teal/gold variant */}
+              <li>
+                <a
+                  href={loyaltyLink.href}
+                  onClick={() => { setMenuOpen(false); setMoreOpen(false); }}
+                  className="px-3 py-1.5 text-sm font-body font-bold rounded-full transition-all duration-200 text-white"
+                  style={{ background: "linear-gradient(135deg, #C97B9A, #8B2252)", boxShadow: "0 2px 8px rgba(201,123,154,0.4)" }}
+                >
+                  {loyaltyLink.label}
+                </a>
+              </li>
 
               {/* More dropdown */}
               <li ref={moreRef} className="relative">
@@ -200,6 +222,15 @@ export default function Navbar() {
                     onClick={(e) => { handleNavClick(e, link.href); setMenuOpen(false); }}
                     className="block px-4 py-3 font-body font-bold rounded-lg text-white transition-colors"
                     style={{ background: "linear-gradient(135deg, #e91e8c, #8B2252)" }}
+                  >
+                    {link.label}
+                  </a>
+                ) : link.label === loyaltyLink.label ? (
+                  <a
+                    href={link.href}
+                    onClick={() => setMenuOpen(false)}
+                    className="block px-4 py-3 font-body font-bold rounded-lg text-white transition-colors"
+                    style={{ background: "linear-gradient(135deg, #C97B9A, #8B2252)" }}
                   >
                     {link.label}
                   </a>

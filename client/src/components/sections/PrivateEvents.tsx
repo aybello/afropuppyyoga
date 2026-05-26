@@ -31,11 +31,10 @@ const includes = [
   "Certified yoga instructors & event hosts",
   "All mats, props & cleanup provided",
   "Custom playlists and Afro-inspired ambiance",
-  "Drinks, refreshments & wellness treats",
-  "Group photos & puppy playtime included",
+  "Add-ons: Photography, Refreshments & Merchandise",
 ];
 
-const locations = ["Kitchener-Waterloo", "Hamilton", "Oakville (Coming Soon)"];
+const locations = ["Toronto", "Kitchener", "Waterloo", "Guelph", "Hamilton", "Oakville"];
 
 function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const ref = useRef(null);
@@ -60,9 +59,9 @@ export default function PrivateEvents() {
         <img
           src={EVENTS_IMG}
           alt="Private puppy yoga event"
-          className="w-full h-full object-cover opacity-40"
+          className="w-full h-full object-cover opacity-25"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#1A0A12]/50 via-[#1A0A12]/30 to-[#1A0A12]/70" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1A0A12]/60 via-[#1A0A12]/40 to-[#1A0A12]/80" />
       </div>
 
       {/* Decorative circles — clipped by section overflow-hidden */}
@@ -136,13 +135,13 @@ export default function PrivateEvents() {
             <div className="bg-white/5 rounded-2xl p-8 border border-white/10">
               <div className="flex items-center gap-2 mb-5">
                 <MapPin size={18} className="text-[#F2A0B8]" />
-                <h3 className="font-display font-bold text-lg text-white">Available Locations</h3>
+                <h3 className="font-display font-bold text-lg text-white">Available Across GTA</h3>
               </div>
               <div className="flex flex-wrap gap-3">
                 {locations.map((loc) => (
                   <span
                     key={loc}
-                    className="px-4 py-2 bg-[#F2A0B8]/20 text-white font-body text-sm font-medium rounded-full border border-[#F2A0B8]/40"
+                    className="px-4 py-2 bg-[#8B2252]/30 text-[#1A0A12]/70 font-body text-sm font-medium rounded-full border border-[#8B2252]/40"
                   >
                     {loc}
                   </span>
