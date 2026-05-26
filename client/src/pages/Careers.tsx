@@ -767,31 +767,18 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                     type="url"
                     value={videoLink}
                     onChange={(e) => setVideoLink(e.target.value)}
-                    placeholder="https://youtube.com/... or Google Drive / Loom / Dropbox link"
+                    placeholder="https://youtube.com/... or Google Drive / Dropbox link"
                     className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#8B2252] focus:ring-1 focus:ring-[#8B2252]/30 transition-colors"
                   />
                   <p className="font-body text-xs text-[#8B6070]">
-                    Paste a link to your video introduction. Accepted: YouTube, Google Drive, Loom, Dropbox, or any direct video link. Make sure sharing is set to “Anyone with the link”.
-                    <span className="block mt-1 text-[#C4A0B0]">Note: LinkedIn profile links are not accepted here — please share a video of yourself.</span>
+                    Accepted: YouTube, Google Drive, Dropbox, or any direct video link. Make sure sharing is set to "Anyone with the link".
                   </p>
-                  {videoLink.trim() && (() => {
-                    try {
-                      const u = new URL(videoLink.trim());
-                      if (u.hostname.includes("linkedin.com")) {
-                        return (
-                          <div className="flex items-center gap-2 p-2.5 bg-amber-50 border border-amber-200 rounded-xl">
-                            <span className="text-amber-600 text-xs">⚠️ This looks like a LinkedIn profile, not a video. Please upload a video or paste a YouTube/Drive/Loom link instead.</span>
-                          </div>
-                        );
-                      }
-                      return (
-                        <div className="flex items-center gap-2 p-2.5 bg-[#F9E4EE] border border-[#F0D0DC] rounded-xl">
-                          <CheckCircle size={16} className="text-[#8B2252] shrink-0" />
-                          <span className="font-body text-xs text-[#5A3040]">Link looks good!</span>
-                        </div>
-                      );
-                    } catch { return false; }
-                  })()}
+                  {videoLink.trim() && (() => { try { new URL(videoLink.trim()); return true; } catch { return false; } })() && (
+                    <div className="flex items-center gap-2 p-2.5 bg-[#F9E4EE] border border-[#F0D0DC] rounded-xl">
+                      <CheckCircle size={16} className="text-[#8B2252] shrink-0" />
+                      <span className="font-body text-xs text-[#5A3040]">Link looks good!</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

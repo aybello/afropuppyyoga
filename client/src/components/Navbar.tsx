@@ -138,13 +138,13 @@ export default function Navbar() {
                 </li>
               ))}
 
-              {/* Loyalty — highlighted pill like Memberships but teal/gold variant */}
+              {/* Loyalty — same bright hot pink pill as Memberships */}
               <li>
                 <a
                   href={loyaltyLink.href}
                   onClick={() => { setMenuOpen(false); setMoreOpen(false); }}
                   className="px-3 py-1.5 text-sm font-body font-bold rounded-full transition-all duration-200 text-white"
-                  style={{ background: "linear-gradient(135deg, #C97B9A, #8B2252)", boxShadow: "0 2px 8px rgba(201,123,154,0.4)" }}
+                  style={{ background: "linear-gradient(135deg, #e91e8c, #8B2252)", boxShadow: "0 2px 8px rgba(233,30,140,0.35)" }}
                 >
                   {loyaltyLink.label}
                 </a>
@@ -230,7 +230,7 @@ export default function Navbar() {
                     href={link.href}
                     onClick={() => setMenuOpen(false)}
                     className="block px-4 py-3 font-body font-bold rounded-lg text-white transition-colors"
-                    style={{ background: "linear-gradient(135deg, #C97B9A, #8B2252)" }}
+                    style={{ background: "linear-gradient(135deg, #e91e8c, #8B2252)" }}
                   >
                     {link.label}
                   </a>
