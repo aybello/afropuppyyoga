@@ -77,7 +77,7 @@ const LOCATIONS = [
   { value: "guelph", label: "Guelph" },
   { value: "hamilton", label: "Hamilton (APY Studio)" },
   { value: "burlington", label: "Burlington" },
-  { value: "oakville", label: "Oakville (Coming Soon)" },
+  { value: "oakville", label: "Oakville (APY Studio)" },
   { value: "other", label: "Other (specify in notes)" },
 ];
 

@@ -88,7 +88,7 @@ const faqs: { q: string; a: ReactNode }[] = [
   },
   {
     q: "Where are your classes held?",
-    a: "We currently host classes in Hamilton and Kitchener, with Oakville coming soon. Specific venue details are provided upon booking confirmation.",
+    a: "We currently host classes in Hamilton, Kitchener, and Oakville. Specific venue details are provided upon booking confirmation.",
   },
 ];
 
@@ -153,7 +153,7 @@ export default function FAQ() {
   const rightFaqs = faqs.slice(half);
 
   return (
-    <section id="faq" className="py-10 md:py-32 bg-[#FFF5F8]">
+    <section id="faq" className="py-10 md:py-16 bg-[#FFF5F8]">
       <div className="container">
         {/* Header */}
         <FadeUp>

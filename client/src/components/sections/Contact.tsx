@@ -1,12 +1,12 @@
-import { BOOK_URL } from "@/const";
 /* ============================================================
-   Contact Section — Social links + contact info
-   Layout: Two-column with contact info + social grid
+   Contact Section — Contact form + social links + locations
+   Layout: Two-column — left: form + contact info, right: social + locations
    ============================================================ */
+import { BOOK_URL } from "@/const";
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
-import { Mail, Instagram, Facebook, Youtube, ExternalLink, MapPin, Phone } from "lucide-react";
-
+import { useRef, useState } from "react";
+import { Mail, Instagram, Facebook, Youtube, ExternalLink, MapPin, Phone, Send, CheckCircle } from "lucide-react";
+import { trpc } from "@/lib/trpc";
 
 const socials = [
   {
@@ -15,7 +15,7 @@ const socials = [
     url: "https://www.instagram.com/afropuppyyoga",
     icon: Instagram,
     color: "bg-gradient-to-br from-[#f09433] via-[#e6683c] to-[#bc1888]",
-    followers: "Follow for daily puppy content",
+    followers: "10K+ followers",
   },
   {
     name: "Facebook",
@@ -47,18 +47,27 @@ const socials = [
   },
 ];
 
-const contactInfo = [
+const locations = [
   {
-    label: "Email",
-    value: "afropuppyyogaofficial@gmail.com",
-    href: "mailto:afropuppyyogaofficial@gmail.com",
-    icon: Mail,
+    city: "Kitchener",
+    venue: "TenC Dance Studio",
+    address: "329 King Street East, Kitchener, ON",
+    mapsUrl: "https://maps.google.com/?q=TenC+Dance+Studio+329+King+Street+East+Kitchener+Ontario",
+    active: true,
   },
   {
-    label: "Phone",
-    value: "(289) 788-1885",
-    href: "tel:+12897881885",
-    icon: Phone,
+    city: "Hamilton",
+    venue: "Colibri Studio",
+    address: "2751 Barton Street East, Hamilton, ON",
+    mapsUrl: "https://maps.google.com/?q=Colibri+Studio+2751+Barton+Street+East+Hamilton+Ontario",
+    active: true,
+  },
+  {
+    city: "Oakville",
+    venue: "1670 North Service Rd E",
+    address: "Oakville, ON",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=1670%20North%20Service%20Rd%20E&query_place_id=ChIJofNPAT9DK4gRAhVcvaHDk7Y",
+    active: true,
   },
 ];
 
@@ -78,11 +87,38 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 }
 
 export default function Contact() {
+  const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
+
+  const notifyOwner = trpc.system.notifyOwner.useMutation({
+    onSuccess: () => {
+      setSubmitted(true);
+      setForm({ name: "", email: "", message: "" });
+    },
+    onError: () => {
+      setError("Something went wrong. Please email us directly at afropuppyyogaofficial@gmail.com");
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
+      setError("Please fill in all fields.");
+      return;
+    }
+    setError("");
+    notifyOwner.mutate({
+      title: `New Contact Form Message from ${form.name}`,
+      content: `**Name:** ${form.name}\n**Email:** ${form.email}\n\n**Message:**\n${form.message}`,
+    });
+  };
+
   return (
     <section id="contact" className="py-10 md:py-14 bg-[#8B2252]">
       <div className="container">
         <div className="grid lg:grid-cols-2 gap-10 items-start">
-          {/* Left: Contact info + CTA */}
+          {/* Left: Contact form + info */}
           <div>
             <FadeUp>
               <div className="flex items-center gap-3 mb-4">
@@ -101,26 +137,71 @@ export default function Contact() {
               </p>
             </FadeUp>
 
-            {/* Contact items */}
-            <FadeUp delay={0.15}>
-              <div className="space-y-3 mb-6">
-                {contactInfo.map((item) => (
-                  <a
-                    key={item.label}
-                    href={item.href}
-                    className="flex items-center gap-4 group"
-                  >
-                    <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-[#F2A0B8]/20 transition-colors">
-                      <item.icon size={20} className="text-[#F2A0B8]" />
+            {/* Contact form */}
+            <FadeUp delay={0.1}>
+              {submitted ? (
+                <div className="flex items-center gap-3 bg-white/10 rounded-2xl p-5 border border-white/20 mb-6">
+                  <CheckCircle size={22} className="text-[#F2A0B8] flex-shrink-0" />
+                  <div>
+                    <div className="font-body font-semibold text-white text-sm">Message sent!</div>
+                    <div className="font-body text-white/60 text-xs mt-0.5">We'll get back to you within 48 hours.</div>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-3 mb-6">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Your name"
+                        value={form.name}
+                        onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                        maxLength={100}
+                        className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/40 font-body text-sm focus:outline-none focus:border-[#F2A0B8]/60 transition-colors"
+                      />
                     </div>
                     <div>
-                      <div className="font-body text-xs text-white/50 uppercase tracking-wide mb-0.5">{item.label}</div>
-                      <div className="font-body text-white font-medium group-hover:text-[#F2A0B8] transition-colors">
-                        {item.value}
-                      </div>
+                      <input
+                        type="email"
+                        placeholder="Email address"
+                        value={form.email}
+                        onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                        maxLength={200}
+                        className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/40 font-body text-sm focus:outline-none focus:border-[#F2A0B8]/60 transition-colors"
+                      />
                     </div>
-                  </a>
-                ))}
+                  </div>
+                  <textarea
+                    placeholder="Your message..."
+                    value={form.message}
+                    onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
+                    maxLength={1000}
+                    rows={4}
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/40 font-body text-sm focus:outline-none focus:border-[#F2A0B8]/60 transition-colors resize-none"
+                  />
+                  {error && <p className="font-body text-[#F2A0B8] text-xs">{error}</p>}
+                  <button
+                    type="submit"
+                    disabled={notifyOwner.isPending}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm rounded-full hover:bg-[#f0b0c4] transition-all duration-200 shadow-lg hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {notifyOwner.isPending ? "Sending..." : <>Send Message <Send size={14} /></>}
+                  </button>
+                </form>
+              )}
+            </FadeUp>
+
+            {/* Contact items */}
+            <FadeUp delay={0.2}>
+              <div className="flex flex-wrap gap-4 mb-6">
+                <a href="mailto:afropuppyyogaofficial@gmail.com" className="flex items-center gap-2 group">
+                  <Mail size={15} className="text-[#F2A0B8]" />
+                  <span className="font-body text-white/70 text-sm group-hover:text-[#F2A0B8] transition-colors">afropuppyyogaofficial@gmail.com</span>
+                </a>
+                <a href="tel:+12897881885" className="flex items-center gap-2 group">
+                  <Phone size={15} className="text-[#F2A0B8]" />
+                  <span className="font-body text-white/70 text-sm group-hover:text-[#F2A0B8] transition-colors">(289) 788-1885</span>
+                </a>
               </div>
             </FadeUp>
 
@@ -130,7 +211,7 @@ export default function Contact() {
                 href={BOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-base rounded-full hover:bg-[#F2A0B8] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-base rounded-full hover:bg-[#f0b0c4] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
               >
                 Book on Luma
                 <ExternalLink size={16} />
@@ -138,14 +219,14 @@ export default function Contact() {
             </FadeUp>
           </div>
 
-          {/* Right: Social links */}
+          {/* Right: Social links + locations */}
           <div>
             <FadeUp delay={0.1}>
-              <h3 className="font-display font-bold text-xl text-white mb-6">
+              <h3 className="font-display font-bold text-xl text-white mb-4">
                 Follow Our Journey
               </h3>
             </FadeUp>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 mb-6">
               {socials.map((social, i) => (
                 <motion.a
                   key={social.name}
@@ -156,65 +237,42 @@ export default function Contact() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.1 + i * 0.1, duration: 0.5 }}
-                  className="group bg-white/10 hover:bg-white/15 rounded-2xl p-3 sm:p-5 border border-white/10 hover:border-white/20 transition-all duration-300 hover:-translate-y-1"
+                  className="group bg-white/10 hover:bg-white/15 rounded-2xl p-3 sm:p-4 border border-white/10 hover:border-white/20 transition-all duration-300 hover:-translate-y-1"
                 >
-                  <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${social.color} flex items-center justify-center mb-3`}>
-                    <social.icon size={20} className="text-white" />
+                  <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl ${social.color} flex items-center justify-center mb-2`}>
+                    <social.icon size={18} className="text-white" />
                   </div>
-                  <div className="font-display font-bold text-white text-sm sm:text-base mb-0.5">{social.name}</div>
-                  <div className="font-body text-white/50 text-xs sm:text-sm">{social.handle}</div>
-                  <div className="font-body text-white/40 text-xs mt-1 hidden sm:block">{social.followers}</div>
+                  <div className="font-display font-bold text-white text-sm mb-0.5">{social.name}</div>
+                  <div className="font-body text-white/50 text-xs">{social.handle}</div>
+                  <div className="font-body text-white/40 text-xs mt-0.5 hidden sm:block">{social.followers}</div>
                 </motion.a>
               ))}
             </div>
 
             {/* Locations */}
             <FadeUp delay={0.4}>
-              <div className="mt-8 bg-white/10 rounded-2xl p-6 border border-white/10">
-                <h4 className="font-display font-bold text-white text-base mb-4">Our Locations</h4>
-                <div className="space-y-4">
-                  <a
-                    href="https://maps.google.com/?q=TenC+Dance+Studio+329+King+Street+East+Kitchener+Ontario"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-start gap-3 group"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-[#F2A0B8]/20 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-[#F2A0B8]/30 transition-colors">
-                      <MapPin size={15} className="text-[#F2A0B8]" />
+              <div className="bg-white/10 rounded-2xl p-5 border border-white/10">
+                <h4 className="font-display font-bold text-white text-base mb-3">Our Locations</h4>
+                <div className="space-y-3">
+                  {locations.map((loc, i) => (
+                    <div key={loc.city}>
+                      {i > 0 && <div className="border-t border-white/10 mb-3" />}
+                      <a
+                        href={loc.mapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-start gap-3 group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-[#F2A0B8]/20 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-[#F2A0B8]/30 transition-colors">
+                          <MapPin size={15} className="text-[#F2A0B8]" />
+                        </div>
+                        <div>
+                          <div className="font-body text-white font-semibold text-sm group-hover:text-[#F2A0B8] transition-colors">{loc.city}</div>
+                          <div className="font-body text-white/60 text-xs leading-relaxed">{loc.venue}<br />{loc.address}</div>
+                        </div>
+                      </a>
                     </div>
-                    <div>
-                      <div className="font-body text-white font-semibold text-sm group-hover:text-[#F2A0B8] transition-colors">Kitchener</div>
-                      <div className="font-body text-white/60 text-xs leading-relaxed">TenC Dance Studio<br />329 King Street East, Kitchener, ON</div>
-                    </div>
-                  </a>
-                  <div className="border-t border-white/10" />
-                  <a
-                    href="https://maps.google.com/?q=Colibri+Studio+2751+Barton+Street+East+Hamilton+Ontario"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-start gap-3 group"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-[#F2A0B8]/20 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-[#F2A0B8]/30 transition-colors">
-                      <MapPin size={15} className="text-[#F2A0B8]" />
-                    </div>
-                    <div>
-                      <div className="font-body text-white font-semibold text-sm group-hover:text-[#F2A0B8] transition-colors">Hamilton</div>
-                      <div className="font-body text-white/60 text-xs leading-relaxed">Colibri Studio<br />2751 Barton Street East, Hamilton, ON</div>
-                    </div>
-                  </a>
-                  <div className="border-t border-white/10" />
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[#F2A0B8]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <MapPin size={15} className="text-[#F2A0B8]/50" />
-                    </div>
-                    <div>
-                      <div className="font-body text-white/70 font-semibold text-sm flex items-center gap-2">
-                        Oakville
-                        <span className="inline-block px-2 py-0.5 bg-[#F2A0B8]/20 text-[#F2A0B8] text-xs font-body font-semibold rounded-full">Coming Soon</span>
-                      </div>
-                      <div className="font-body text-white/40 text-xs leading-relaxed mt-0.5">Stay tuned for our Oakville launch</div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </FadeUp>

@@ -54,7 +54,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="font-body text-white/50 text-sm leading-relaxed mb-6 max-w-xs">
-              Where wellness meets culture and puppy love. Serving Hamilton, Kitchener-Waterloo, and Oakville (coming soon) with joy, movement, and adorable puppies.
+              Where wellness meets culture and puppy love. Serving Hamilton, Kitchener-Waterloo, and Oakville with joy, movement, and adorable puppies.
             </p>
             <a
               href={BOOK_URL}
@@ -133,7 +133,7 @@ export default function Footer() {
               <div>
                 <div className="font-body text-xs text-white/30 uppercase tracking-wide mb-1">Locations</div>
                 <div className="font-body text-sm text-white/60">
-                  Hamilton · Kitchener · Oakville (Soon)
+                  Hamilton · Kitchener · Oakville
                 </div>
               </div>
             </div>
