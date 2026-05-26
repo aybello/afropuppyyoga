@@ -1,14 +1,13 @@
+import { BOOK_URL, LOGO_URL  } from "@/const";
 /* ============================================================
    Footer — Minimal, warm, brand-consistent
    ============================================================ */
-const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
-const BOOK_URL = "https://lu.ma/afropuppyyoga";
 
 const navGroups = [
   {
     heading: "Classes & Events",
     links: [
-      { label: "Book a Class", href: "https://lu.ma/afropuppyyoga", isExternal: true },
+      { label: "Book a Class", href: BOOK_URL, isExternal: true },
       { label: "Experience", href: "#experience" },
       { label: "Memberships", href: "#memberships" },
       { label: "Private Events", href: "#private-events" },

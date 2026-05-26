@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { index, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -55,7 +55,7 @@ export const invoices = mysqlTable("invoices", {
   extractedData: text("extractedData"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
+}, (t) => [index("idx_invoices_status").on(t.status)]);
 
 export type Invoice = typeof invoices.$inferSelect;
 export type InsertInvoice = typeof invoices.$inferInsert;
@@ -87,7 +87,7 @@ export const jobApplications = mysqlTable("jobApplications", {
   /** Application status */
   status: mysqlEnum("appStatus", ["new", "reviewed", "shortlisted", "interview_scheduled", "accepted", "rejected", "onboarded"]).default("new").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+}, (t) => [index("idx_jobapps_status").on(t.status), index("idx_jobapps_email").on(t.email)]);
 
 export type JobApplication = typeof jobApplications.$inferSelect;
 export type InsertJobApplication = typeof jobApplications.$inferInsert;
@@ -113,7 +113,7 @@ export const birthdayInquiries = mysqlTable("birthdayInquiries", {
   /** Inquiry status */
   status: mysqlEnum("inquiryStatus", ["new", "contacted", "confirmed", "cancelled"]).default("new").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+}, (t) => [index("idx_birthday_status").on(t.status)]);
 
 export type BirthdayInquiry = typeof birthdayInquiries.$inferSelect;
 export type InsertBirthdayInquiry = typeof birthdayInquiries.$inferInsert;
@@ -143,7 +143,7 @@ export const partnershipInquiries = mysqlTable("partnershipInquiries", {
   /** Inquiry status */
   status: mysqlEnum("partnerStatus", ["new", "reviewing", "active", "declined"]).default("new").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+}, (t) => [index("idx_partnership_status").on(t.status)]);
 
 export type PartnershipInquiry = typeof partnershipInquiries.$inferSelect;
 export type InsertPartnershipInquiry = typeof partnershipInquiries.$inferInsert;
@@ -165,7 +165,7 @@ export const staffInvites = mysqlTable("staffInvites", {
   /** Last login via this token */
   lastUsedAt: timestamp("lastUsedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+}, (t) => [index("idx_staff_isActive").on(t.isActive), index("idx_staff_email").on(t.email)]);
 
 export type StaffInvite = typeof staffInvites.$inferSelect;
 export type InsertStaffInvite = typeof staffInvites.$inferInsert;
@@ -231,7 +231,7 @@ export const privateEventInquiries = mysqlTable("privateEventInquiries", {
   adminNotes: text("adminNotes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
+}, (t) => [index("idx_pe_status").on(t.status)]);
 
 export type PrivateEventInquiry = typeof privateEventInquiries.$inferSelect;
 export type InsertPrivateEventInquiry = typeof privateEventInquiries.$inferInsert;

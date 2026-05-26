@@ -99,6 +99,13 @@
       "when": 1779555932092,
       "tag": "0013_rapid_sabra",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "5",
+      "when": 1779828276813,
+      "tag": "0014_clever_vision",
+      "breakpoints": true
     }
   ]
 }

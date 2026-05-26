@@ -1,3 +1,4 @@
+import { LOGO_URL } from "@/const";
 import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Loader2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
@@ -106,7 +107,7 @@ export default function ChatbotWidget() {
                 style={{ background: "#F2A0B8" }}
               >
                 <img
-                  src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png"
+                  src={LOGO_URL}
                   alt="APY Logo"
                   className="w-full h-full object-cover"
                 />
@@ -134,7 +135,7 @@ export default function ChatbotWidget() {
               <div className="flex flex-col items-center justify-center h-full gap-4">
                 <div className="text-center">
                   <img
-                    src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png"
+                    src={LOGO_URL}
                     alt="APY Logo"
                     className="w-16 h-16 object-contain mx-auto mb-2"
                   />

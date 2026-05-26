@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
+import { getLoginUrl, LOGO_URL } from "@/const";
 import AdminNav from "@/components/AdminNav";
 import { toast } from "sonner";
 import {
@@ -29,8 +29,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const LOGO_URL =
-  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
 
 export default function StaffManagement() {
   const { user, loading } = useAuth();

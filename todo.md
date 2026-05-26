@@ -185,3 +185,24 @@
 - [ ] Ethics section: replace full content with summary + "Read Our Full Standards →" link
 - [ ] Luma calendar: add skeleton loader while iframe loads
 - [ ] Our Story: add pull quote and visual break
+
+## Codebase Audit Fixes (May 26, 2026)
+- [x] Add rate limiting (express-rate-limit) to public form endpoints
+- [x] Fix HTML injection in careers email template (escapeHtml helper)
+- [x] Fix HTML injection in privateEvents email template (escapeHtml helper)
+- [x] Fix URL validation - block javascript: URIs and LinkedIn URLs in videoUrl fields
+- [x] Add max length to careers whyAPY and experience fields
+- [x] Add max length to chatbot message content (1000 chars)
+- [x] Centralize LOGO_URL constant in const.ts (was duplicated in 10+ files)
+- [x] Centralize BOOK_URL constant in const.ts (was duplicated in 8+ files)
+- [x] Fix staff token leak - exclude token from getAllActiveStaff response
+- [x] Fix gallery keyboard accessibility (role=button, tabIndex, onKeyDown)
+- [x] Remove console.log from ComponentShowcase
+- [x] Add canonical link tag to index.html
+- [x] Update sitemap.xml to include all public pages (loyalty, careers, birthday, partnerships, ethics)
+- [x] Add DB indexes on status columns for all 5 inquiry tables + staffInvites
+- [x] Build missing Birthday Admin Dashboard (/admin/birthday)
+- [x] Add Birthday tab to AdminNav
+- [x] Add Birthday Inquiries card to StaffPortal
+- [x] Fix streaming video proxy (was buffering entire file in memory)
+- [x] Fix in-memory job registry memory leak in chunkedUploadRoute

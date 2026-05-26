@@ -6,9 +6,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
-
-const LOGO_URL =
-  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
+import { LOGO_URL } from "@/const";
 
 export default function StaffLogin() {
   const [, navigate] = useLocation();

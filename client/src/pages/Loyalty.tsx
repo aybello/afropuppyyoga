@@ -1,3 +1,4 @@
+import { BOOK_URL } from "@/const";
 /* ============================================================
    Loyalty Program Page — /loyalty
    Colors: Warm light palette matching APY brand
@@ -96,7 +97,7 @@ export default function Loyalty() {
               Attend 3 classes. Get 1 free. Automatically. No apps, no punch cards, no forms — just show up and we take care of the rest.
             </p>
             <a
-              href="https://lu.ma/afropuppyyoga"
+              href={BOOK_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center px-10 py-4 bg-[#8B2252] text-white font-body font-semibold text-base rounded-full hover:bg-[#6B1A3F] transition-all duration-200 shadow-md"
@@ -209,7 +210,7 @@ export default function Loyalty() {
             Book your first class today. We'll handle the rest.
           </p>
           <a
-            href="https://lu.ma/afropuppyyoga"
+            href={BOOK_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center px-10 py-4 bg-[#8B2252] text-white font-body font-semibold text-base rounded-full hover:bg-[#6B1A3F] transition-all duration-200 shadow-md"

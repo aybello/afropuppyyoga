@@ -1,4 +1,3 @@
-import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
@@ -10,6 +9,7 @@ import { serveStatic, setupVite } from "./vite";
 import uploadRouter from "../uploadRoute";
 import chunkedUploadRouter from "../chunkedUploadRoute";
 import { createProxyMiddleware } from "http-proxy-middleware";
+import rateLimit from "express-rate-limit";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -30,6 +30,34 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   throw new Error(`No available port found starting from ${startPort}`);
 }
 
+// Rate limiters
+const formLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many submissions. Please try again in 15 minutes." },
+  skip: () => process.env.NODE_ENV === "development",
+});
+
+const chatbotLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many messages. Please try again in 15 minutes." },
+  skip: () => process.env.NODE_ENV === "development",
+});
+
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many uploads. Please try again in an hour." },
+  skip: () => process.env.NODE_ENV === "development",
+});
+
 async function startServer() {
   const app = express();
   const server = createServer(app);
@@ -46,14 +74,31 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
+
+  // Apply upload rate limiter to upload endpoints
+  app.use("/api/upload-video-init", uploadLimiter);
+  app.use("/api/upload-video-chunk", uploadLimiter);
+  app.use("/api/upload-resume", uploadLimiter);
+
   // Video upload endpoint (multipart, bypasses JSON body limit)
   app.use(uploadRouter);
   // Chunked video upload endpoints (for large files that exceed hosting body size limit)
   app.use(chunkedUploadRouter);
-  // Video proxy — re-serves CDN videos with inline Content-Disposition so browsers play instead of download
-  // Needed for MOV files which CloudFront serves as video/quicktime (triggers download in most browsers)
+
+  // Apply form rate limiter to tRPC public mutations
+  // We target specific procedure paths to avoid limiting admin/auth calls
+  app.use("/api/trpc/careers.submitApplication", formLimiter);
+  app.use("/api/trpc/privateEvents.submitInquiry", formLimiter);
+  app.use("/api/trpc/birthday.submit", formLimiter);
+  app.use("/api/trpc/partnership.submit", formLimiter);
+  app.use("/api/trpc/invoices.submit", formLimiter);
+  app.use("/api/trpc/chatbot.chat", chatbotLimiter);
+
+  // Video proxy — streams CDN videos with inline Content-Disposition so browsers play instead of download
+  // Uses streaming (not buffering) to avoid loading entire video into memory
   app.get("/api/video-proxy", async (req, res) => {
     const url = req.query.url as string;
     if (!url || !url.startsWith("https://d2xsxph8kpxj0f.cloudfront.net/")) {
@@ -67,6 +112,7 @@ async function startServer() {
 
       const response = await fetch(url, { headers: fetchHeaders });
       if (!response.ok) return res.status(response.status).send("Failed to fetch video");
+      if (!response.body) return res.status(500).send("No response body");
 
       // Detect file extension to pick the right MIME type
       const urlPath = new URL(url).pathname.toLowerCase();
@@ -88,8 +134,11 @@ async function startServer() {
       if (contentRange) res.setHeader("Content-Range", contentRange);
       if (contentLength) res.setHeader("Content-Length", contentLength);
 
-      const buffer = await response.arrayBuffer();
-      res.send(Buffer.from(buffer));
+      // Stream the response body directly to the client (no memory buffering)
+      const { Readable } = await import("stream");
+      const nodeStream = Readable.fromWeb(response.body as any);
+      nodeStream.pipe(res);
+      nodeStream.on("error", () => res.end());
     } catch (e) {
       res.status(500).json({ error: "Proxy error" });
     }
@@ -113,6 +162,7 @@ async function startServer() {
       res.status(500).send("Proxy error");
     }
   });
+
   // Luma API proxy — forwards /api/luma/* to https://api.lu.ma with API key injected
   const LUMA_API_KEY = process.env.LUMA_API_KEY || "";
   app.use(

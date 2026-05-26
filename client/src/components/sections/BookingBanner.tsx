@@ -1,3 +1,4 @@
+import { BOOK_URL } from "@/const";
 /* ============================================================
    Booking Banner — Upcoming classes highlight strip
    ============================================================ */
@@ -5,7 +6,6 @@ import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Calendar, MapPin, Clock, ArrowRight } from "lucide-react";
 
-const BOOK_URL = "https://lu.ma/afropuppyyoga";
 
 const upcomingClasses = [
   {

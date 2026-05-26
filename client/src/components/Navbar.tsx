@@ -1,3 +1,4 @@
+import { BOOK_URL, LOGO_URL  } from "@/const";
 /* ============================================================
    Navbar — Warm Afro-Wellness Editorial
    Transparent on hero, solid ivory on scroll
@@ -8,8 +9,6 @@ import { useState, useEffect, useRef } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { trackCTAClick } from "@/hooks/useAnalytics";
 
-const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
-const BOOK_URL = "https://lu.ma/afropuppyyoga";
 
 const primaryLinks = [
   { label: "Home", href: "#home" },
@@ -35,7 +34,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
-  const moreRef = useRef<HTMLDivElement>(null);
+  const moreRef = useRef<HTMLLIElement>(null);
 
   const isSubPage = typeof window !== "undefined" && window.location.pathname !== "/";
 

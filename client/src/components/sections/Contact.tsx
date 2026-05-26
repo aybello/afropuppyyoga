@@ -1,3 +1,4 @@
+import { BOOK_URL } from "@/const";
 /* ============================================================
    Contact Section — Social links + contact info
    Layout: Two-column with contact info + social grid
@@ -6,7 +7,6 @@ import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Mail, Instagram, Facebook, Youtube, ExternalLink, MapPin, Phone } from "lucide-react";
 
-const BOOK_URL = "https://lu.ma/afropuppyyoga";
 
 const socials = [
   {

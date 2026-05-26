@@ -1,3 +1,4 @@
+import { BOOK_URL } from "@/const";
 /* ============================================================
    MobileBookingBar — Sticky bottom bar visible only on mobile
    Design: Warm Afro-Wellness Editorial
@@ -10,7 +11,6 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CalendarDays, Users } from "lucide-react";
 
-const BOOK_URL = "https://lu.ma/afropuppyyoga";
 
 export default function MobileBookingBar() {
   const [visible, setVisible] = useState(false);

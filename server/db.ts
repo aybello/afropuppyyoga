@@ -226,7 +226,17 @@ export async function getStaffInviteByToken(token: string) {
 export async function getAllActiveStaff() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return db.select().from(staffInvites).where(eq(staffInvites.isActive, 1)).orderBy(desc(staffInvites.createdAt));
+  return db.select({
+    id: staffInvites.id,
+    name: staffInvites.name,
+    email: staffInvites.email,
+    isActive: staffInvites.isActive,
+    expiresAt: staffInvites.expiresAt,
+    firstUsedAt: staffInvites.firstUsedAt,
+    lastUsedAt: staffInvites.lastUsedAt,
+    createdAt: staffInvites.createdAt,
+    // token is intentionally excluded — never send magic link tokens to the frontend
+  }).from(staffInvites).where(eq(staffInvites.isActive, 1)).orderBy(desc(staffInvites.createdAt));
 }
 
 export async function updateStaffInvite(id: number, data: Partial<InsertStaffInvite>) {

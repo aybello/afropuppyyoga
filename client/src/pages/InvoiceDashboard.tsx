@@ -17,10 +17,9 @@ import {
   Copy, Trash2, DollarSign, X, Wallet,
 } from "lucide-react";
 import { useState } from "react";
-import { getLoginUrl } from "@/const";
+import { getLoginUrl, LOGO_URL } from "@/const";
 import AdminNav from "@/components/AdminNav";
 
-const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

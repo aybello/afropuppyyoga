@@ -15,7 +15,7 @@ import { z } from "zod";
 
 const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
-  content: z.string(),
+  content: z.string().max(1000, "Message too long (max 1000 characters)"),
 });
 
 export const appRouter = router({

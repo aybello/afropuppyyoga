@@ -40,11 +40,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { getLoginUrl } from "@/const";
+import { getLoginUrl, LOGO_URL } from "@/const";
 import { toast } from "sonner";
 import AdminNav from "@/components/AdminNav";
 
-const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
 
 /**
  * Returns a proxy URL for video files so they play inline in the browser.

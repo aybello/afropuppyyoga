@@ -1,3 +1,4 @@
+import { BOOK_URL } from "@/const";
 import { Button } from "@/components/ui/button";
 
 const passes = [
@@ -10,7 +11,7 @@ const passes = [
     accentColor: "#e91e8c",
     bgColor: "#fff5fa",
     borderColor: "#f9a8d4",
-    lumaLink: "https://lu.ma/afropuppyyoga",
+    lumaLink: BOOK_URL,
     perks: [
       { icon: "🎟", text: "1 free class per month" },
       { icon: "💸", text: "20% off any additional classes" },
@@ -27,7 +28,7 @@ const passes = [
     accentColor: "#8B2252",
     bgColor: "#fff5f8",
     borderColor: "#f9a8d4",
-    lumaLink: "https://lu.ma/afropuppyyoga",
+    lumaLink: BOOK_URL,
     perks: [
       { icon: "🎟", text: "2 free classes per month" },
       { icon: "💸", text: "20% off any additional classes" },

@@ -1,3 +1,4 @@
+import { BOOK_URL } from "@/const";
 /* ============================================================
    Experience Section — What to expect at AfroPuppyYoga
    Layout: Asymmetric two-column with large image + feature list
@@ -8,7 +9,6 @@ import { Check } from "lucide-react";
 import { useCountUp } from "@/hooks/useCountUp";
 
 const CLASS_IMG = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/VAHzfQKnVMpHXicj.jpg";
-const BOOK_URL = "https://lu.ma/afropuppyyoga";
 
 const features = [
   { label: "40 minutes of guided yoga with puppies" },

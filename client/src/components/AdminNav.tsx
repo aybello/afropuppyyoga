@@ -1,13 +1,13 @@
+import { LOGO_URL } from "@/const";
 /* ============================================================
    AdminNav — Shared navigation bar for all APY admin pages
    Shows links between Invoices, Applications, Partnerships, and back to site
    Staff tab is only visible to admin role (not staff role)
    ============================================================ */
 import { Link, useLocation } from "wouter";
-import { FileText, Users, ArrowLeft, UserCog, Handshake, Sparkles, LayoutGrid } from "lucide-react";
+import { FileText, Users, ArrowLeft, UserCog, Handshake, Sparkles, LayoutGrid, Cake } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 
-const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
 
 const NAV_ITEMS = [
   {
@@ -32,6 +32,12 @@ const NAV_ITEMS = [
     href: "/admin/private-events",
     label: "Private Events",
     icon: Sparkles,
+    adminOnly: false,
+  },
+  {
+    href: "/admin/birthday",
+    label: "Birthday",
+    icon: Cake,
     adminOnly: false,
   },
   {

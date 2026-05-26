@@ -172,6 +172,10 @@ export default function Gallery() {
                 transition={{ delay: Math.min(i * 0.04, 0.4), duration: 0.4 }}
                 className="break-inside-avoid mb-3 group relative overflow-hidden rounded-xl cursor-pointer"
                 onClick={() => setLightboxIdx(i)}
+                role="button"
+                tabIndex={0}
+                aria-label={`View photo: ${photo.alt}`}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setLightboxIdx(i); } }}
               >
                 <img
                   src={photo.src}

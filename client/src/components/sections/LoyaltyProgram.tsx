@@ -1,3 +1,4 @@
+import { BOOK_URL } from "@/const";
 /* ============================================================
    Loyalty Program Section — "The Pack"
    Layout: Headline + 3-step paw progression + CTA
@@ -118,7 +119,7 @@ export default function LoyaltyProgram() {
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <a
-            href="https://lu.ma/afropuppyyoga"
+            href={BOOK_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center px-8 py-4 bg-[#8B2252] text-white font-body font-semibold text-base rounded-full hover:bg-[#6B1A3F] transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5"

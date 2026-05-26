@@ -1,3 +1,4 @@
+import { LOGO_URL } from "@/const";
 /* ============================================================
    Invoice Submit — APY Staff Portal
    Design: Warm Afro-Wellness Editorial (matches main site)
@@ -9,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, Upload, FileText, AlertCircle, Loader2, LayoutDashboard } from "lucide-react";
 import { Link } from "wouter";
 
-const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
 
 export default function InvoiceSubmit() {
   const [file, setFile] = useState<File | null>(null);

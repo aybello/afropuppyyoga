@@ -1,3 +1,4 @@
+import { BOOK_URL } from "@/const";
 /* ============================================================
    Hero Section — Full-bleed editorial, text anchored bottom-left
    Background: AI-generated warm yoga studio with puppies
@@ -8,7 +9,6 @@ import { ChevronDown } from "lucide-react";
 import { trackCTAClick } from "@/hooks/useAnalytics";
 
 const HERO_BG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/apy_hero_bg-aDMPriKGFaJ3ZgQKWVBv5n.webp";
-const BOOK_URL = "https://lu.ma/afropuppyyoga";
 
 // Each logo: src = CDN URL, height = display height in px
 // All logos are shown in their natural colors on a white/frosted strip
