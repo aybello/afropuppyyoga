@@ -18,6 +18,7 @@ const navLinks = [
   { label: "Careers", href: "/careers", isPage: true },
   { label: "Birthday Packages", href: "/birthday", isPage: true },
   { label: "Partnerships", href: "/partnerships", isPage: true },
+  { label: "Loyalty Program", href: "/loyalty", isPage: true },
 ];
 
 const handleNavClick = (href: string) => {
@@ -44,7 +45,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="font-body text-white/50 text-sm leading-relaxed mb-6 max-w-xs">
-              Where wellness meets culture and puppy love. Serving the Greater Toronto Area with joy, movement, and adorable puppies.
+              Where wellness meets culture and puppy love. Serving Hamilton, Kitchener-Waterloo, and Oakville (coming soon) with joy, movement, and adorable puppies.
             </p>
             <a
               href={BOOK_URL}

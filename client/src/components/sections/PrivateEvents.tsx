@@ -31,10 +31,11 @@ const includes = [
   "Certified yoga instructors & event hosts",
   "All mats, props & cleanup provided",
   "Custom playlists and Afro-inspired ambiance",
-  "Add-ons: Photography, Refreshments & Merchandise",
+  "Drinks, refreshments & wellness treats",
+  "Group photos & puppy playtime included",
 ];
 
-const locations = ["Toronto", "Kitchener", "Waterloo", "Guelph", "Hamilton", "Oakville"];
+const locations = ["Kitchener-Waterloo", "Hamilton", "Oakville (Coming Soon)"];
 
 function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const ref = useRef(null);
