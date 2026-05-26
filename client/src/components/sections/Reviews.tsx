@@ -112,10 +112,10 @@ export default function Reviews() {
                     <Star key={i} size={14} className="fill-[#F2A0B8] text-[#F2A0B8]" />
                   ))}
                 </div>
-                <div className="font-body text-xs text-[#1A0A12]/50">Based on 429+ verified reviews</div>
+                <div className="font-body text-xs text-[#1A0A12]/50">Based on 494+ verified reviews</div>
               </div>
               <a
-                href="https://www.google.com/search?q=afropuppyyoga+reviews"
+                href="https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsdiY1GsfLo"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-5 py-2.5 border-2 border-[#8B2252] text-[#8B2252] font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] hover:text-white transition-all duration-200"
