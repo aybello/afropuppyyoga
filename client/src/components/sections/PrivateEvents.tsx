@@ -59,9 +59,9 @@ export default function PrivateEvents() {
         <img
           src={EVENTS_IMG}
           alt="Private puppy yoga event"
-          className="w-full h-full object-cover opacity-25"
+          className="w-full h-full object-cover opacity-40"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#1A0A12]/60 via-[#1A0A12]/40 to-[#1A0A12]/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1A0A12]/70 via-[#1A0A12]/55 to-[#1A0A12]/85" />
       </div>
 
       {/* Decorative circles — clipped by section overflow-hidden */}
@@ -141,7 +141,7 @@ export default function PrivateEvents() {
                 {locations.map((loc) => (
                   <span
                     key={loc}
-                    className="px-4 py-2 bg-[#8B2252]/30 text-[#1A0A12]/70 font-body text-sm font-medium rounded-full border border-[#8B2252]/40"
+                    className="px-4 py-2 bg-[#F2A0B8]/15 text-white font-body text-sm font-medium rounded-full border border-[#F2A0B8]/30"
                   >
                     {loc}
                   </span>
