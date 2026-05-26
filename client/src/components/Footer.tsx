@@ -12,7 +12,7 @@ const navGroups = [
       { label: "Memberships", href: "#memberships" },
       { label: "Private Events", href: "#private-events" },
       { label: "Birthday Packages", href: "/birthday", isPage: true },
-      { label: "Loyalty Program", href: "/loyalty", isPage: true },
+      { label: "Rewards", href: "/loyalty", isPage: true },
     ],
   },
   {

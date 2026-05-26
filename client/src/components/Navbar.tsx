@@ -20,7 +20,7 @@ const primaryLinks = [
 ];
 
 // Loyalty is highlighted separately (pill style like Memberships)
-const loyaltyLink = { label: "🐾 Loyalty", href: "/loyalty", isPage: true };
+const loyaltyLink = { label: "🐾 Rewards", href: "/loyalty", isPage: true };
 
 const moreLinks = [
   { label: "🎂 Birthday Packages", href: "/birthday", isPage: true },

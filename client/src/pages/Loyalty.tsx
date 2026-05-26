@@ -1,6 +1,6 @@
 import { BOOK_URL } from "@/const";
 /* ============================================================
-   Loyalty Program Page — /loyalty
+   Rewards Program Page — /loyalty
    Colors: Warm light palette matching APY brand
    ============================================================ */
 import { motion } from "framer-motion";
@@ -14,7 +14,7 @@ const steps = [
     emoji: "🐾",
     title: "Attend Your First Class",
     description:
-      "Book any APY class through Luma using your email address. Every confirmed booking counts toward your loyalty progress.",
+      "Book any APY class through Luma using your email address. Every confirmed booking counts toward your rewards progress.",
   },
   {
     number: "02",
@@ -41,12 +41,12 @@ const steps = [
 
 const faqs = [
   {
-    q: "Do I need to sign up for the loyalty program?",
+    q: "Do I need to sign up for the rewards program?",
     a: "No sign-up required. Any customer who books through Luma using the same email address is automatically enrolled. Your attendance is tracked from your very first class.",
   },
   {
     q: "What counts as a qualifying class?",
-    a: "Any standard APY class booked and attended through Luma qualifies. Private events and gifted tickets may not count toward your loyalty total.",
+    a: "Any standard APY class booked and attended through Luma qualifies. Private events and gifted tickets may not count toward your rewards total.",
   },
   {
     q: "What is the free ticket worth?",
@@ -68,7 +68,7 @@ const faqs = [
 
 export default function Loyalty() {
   useEffect(() => {
-    document.title = "The Pack — APY Loyalty Program | AfroPuppyYoga";
+    document.title = "The Pack — APY Rewards Program | AfroPuppyYoga";
   }, []);
 
   return (
@@ -91,7 +91,7 @@ export default function Loyalty() {
               <div className="w-8 h-0.5 bg-[#8B2252]" />
             </div>
             <h1 className="font-display text-5xl md:text-6xl font-bold text-[#1A0A12] mb-6 leading-tight">
-              APY Loyalty Program
+              APY Rewards Program
             </h1>
             <p className="font-body text-[#1A0A12]/65 text-xl leading-relaxed mb-10 max-w-2xl mx-auto">
               Attend 3 classes. Get 1 free. Automatically. No apps, no punch cards, no forms — just show up and we take care of the rest.

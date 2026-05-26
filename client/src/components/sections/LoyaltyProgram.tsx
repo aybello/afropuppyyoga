@@ -1,6 +1,6 @@
 import { BOOK_URL } from "@/const";
 /* ============================================================
-   Loyalty Program Section — "The Pack"
+   Rewards Program Section — "The Pack"
    Layout: Headline + 3-step paw progression + CTA
    Colors: Warm light palette matching APY brand (#FEFAF4, #8B2252, #F2A0B8)
    ============================================================ */
@@ -55,7 +55,7 @@ export default function LoyaltyProgram() {
             <span className="italic text-[#8B2252]">We Save Your Spot.</span>
           </h2>
           <p className="font-body text-[#1A0A12]/65 text-lg max-w-xl mx-auto leading-relaxed">
-            The APY Loyalty Program rewards you for showing up. Attend 3 classes and your next one is on us — automatically.
+            The APY Rewards Program rewards you for showing up. Attend 3 classes and your next one is on us — automatically.
           </p>
         </motion.div>
 
