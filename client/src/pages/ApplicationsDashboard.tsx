@@ -47,23 +47,33 @@ import AdminNav from "@/components/AdminNav";
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
 
 /**
- * Returns a proxy URL for video files so they play inline in the browser.
+ * Returns a proxy URL for CDN-hosted video files so they play inline in the browser.
  * MOV files are served by CloudFront as video/quicktime which triggers a download;
  * the proxy re-serves them with Content-Type: video/mp4 and Content-Disposition: inline.
+ * Only use for our own CDN URLs — external links should be opened directly.
  */
 function getVideoProxyUrl(rawUrl: string): string {
   return `/api/video-proxy?url=${encodeURIComponent(rawUrl)}`;
 }
 
-/** Returns true if the URL is an external video link (YouTube, Drive, Dropbox, etc.) */
-function isExternalVideoLink(url: string): boolean {
+/** Returns true if the URL is a CDN-hosted video we uploaded (should be proxied for inline playback) */
+function isCdnVideo(url: string): boolean {
   try {
     const u = new URL(url);
-    const externalHosts = ["youtube.com", "youtu.be", "drive.google.com", "dropbox.com", "vimeo.com", "loom.com"];
-    return externalHosts.some((h) => u.hostname === h || u.hostname.endsWith("." + h));
+    return u.hostname === "d2xsxph8kpxj0f.cloudfront.net";
   } catch {
     return false;
   }
+}
+
+/** Returns true if the URL is an external link (not our CDN) — should open in new tab, not embed */
+function isExternalVideoLink(url: string): boolean {
+  return !isCdnVideo(url);
+}
+
+/** Returns the best URL to use for a video — proxy for CDN files, direct for external links */
+function getVideoUrl(rawUrl: string): string {
+  return isCdnVideo(rawUrl) ? getVideoProxyUrl(rawUrl) : rawUrl;
 }
 
 type AppStatus = "new" | "reviewed" | "shortlisted" | "interview_scheduled" | "accepted" | "rejected" | "onboarded";
@@ -587,37 +597,43 @@ function ApplicationDetailModal({
             )}
 
             {/* Video */}
-            {app.videoUrl && (
-              <div>
-                <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-2">Video Application</p>
-                {isExternalVideoLink(app.videoUrl) ? (
-                  <a
-                    href={app.videoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-3 bg-[#F9E4EE] border border-[#F0D0DC] rounded-xl hover:bg-[#F0D0DC] transition-colors"
-                  >
-                    <Play className="w-5 h-5 text-[#8B2252] shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-body text-sm font-semibold text-[#1A0A12]">Watch Video</p>
-                      <p className="font-body text-xs text-[#8B6070] truncate">{app.videoUrl}</p>
-                    </div>
-                    <span className="font-body text-xs text-[#8B2252] font-semibold shrink-0">Open ↗</span>
-                  </a>
-                ) : (
-                  <video
-                    src={getVideoProxyUrl(app.videoUrl)}
-                    controls
-                    playsInline
-                    preload="metadata"
-                    className="w-full rounded-xl border border-[#F0D0DC] bg-black"
-                    style={{ maxHeight: "320px" }}
-                  >
-                    Your browser does not support video playback.
-                  </video>
-                )}
-              </div>
-            )}
+            {app.videoUrl && (() => {
+              const isLinkedIn = app.videoUrl.includes("linkedin.com");
+              const isCdn = isCdnVideo(app.videoUrl);
+              const label = isLinkedIn ? "LinkedIn Profile" : isCdn ? "Video Application" : "Video Link";
+              const linkLabel = isLinkedIn ? "View LinkedIn ↗" : "Open ↗";
+              return (
+                <div>
+                  <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-2">{label}</p>
+                  {isCdn ? (
+                    <video
+                      src={getVideoProxyUrl(app.videoUrl)}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      className="w-full rounded-xl border border-[#F0D0DC] bg-black"
+                      style={{ maxHeight: "320px" }}
+                    >
+                      Your browser does not support video playback.
+                    </video>
+                  ) : (
+                    <a
+                      href={app.videoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3 bg-[#F9E4EE] border border-[#F0D0DC] rounded-xl hover:bg-[#F0D0DC] transition-colors"
+                    >
+                      <Play className="w-5 h-5 text-[#8B2252] shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-body text-sm font-semibold text-[#1A0A12]">{isLinkedIn ? "LinkedIn Profile" : "Watch Video"}</p>
+                        <p className="font-body text-xs text-[#8B6070] truncate">{app.videoUrl}</p>
+                      </div>
+                      <span className="font-body text-xs text-[#8B2252] font-semibold shrink-0">{linkLabel}</span>
+                    </a>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Resume */}
             {app.resumeUrl && (
@@ -887,13 +903,13 @@ export default function ApplicationsDashboard() {
                       <td className="px-5 py-4">
                         {app.videoUrl ? (
                           <a
-                            href={getVideoProxyUrl(app.videoUrl)}
+                            href={getVideoUrl(app.videoUrl)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFF5F8] border border-[#F2A0B8] rounded-lg font-body text-xs font-semibold text-[#8B2252] hover:bg-[#F2A0B8]/20 transition-colors"
                           >
                             <Play className="w-3 h-3" />
-                            Watch
+                            {isCdnVideo(app.videoUrl) ? "Watch" : "Open ↗"}
                           </a>
                         ) : (
                           <span className="font-body text-xs text-[#C4A0B0] italic">No video</span>

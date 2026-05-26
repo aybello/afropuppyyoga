@@ -1,0 +1,80 @@
+{
+  "query": "SELECT id, name, role, videoUrl, createdAt FROM jobApplications ORDER BY createdAt DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user rctM7roTvbHGWtX.8285ce197966 --database TnRBecMtwf5qQkTJcvZpfJ --execute SELECT id, name, role, videoUrl, createdAt FROM jobApplications ORDER BY createdAt DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "330007",
+      "name": "Elliott Braund",
+      "role": "Puppy Monitor",
+      "videoUrl": "https://drive.google.com/file/d/1BQOjNct_M_JQVxiRto2gbFpwhuTSXyxB/view?usp=sharing",
+      "createdAt": "2026-05-26 15:15:41"
+    },
+    {
+      "id": "330006",
+      "name": "Amirah Date",
+      "role": "Puppy Monitor",
+      "videoUrl": "https://www.linkedin.com/in/amirah-d-9bb02a359?utm_source=share_via&utm_content=profile&utm_medium=member_ios",
+      "createdAt": "2026-05-25 21:46:26"
+    },
+    {
+      "id": "330005",
+      "name": "Amirah Date",
+      "role": "Puppy Monitor",
+      "videoUrl": "https://www.linkedin.com/in/amirah-d-9bb02a359?utm_source=share_via&utm_content=profile&utm_medium=member_ios",
+      "createdAt": "2026-05-25 21:45:16"
+    },
+    {
+      "id": "330004",
+      "name": "Amirah Date",
+      "role": "Puppy Specialist",
+      "videoUrl": "https://www.linkedin.com/in/amirah-d-9bb02a359?utm_source=share_via&utm_content=profile&utm_medium=member_ios",
+      "createdAt": "2026-05-25 21:43:57"
+    },
+    {
+      "id": "330003",
+      "name": "Amirah Date",
+      "role": "Business Development Representative",
+      "videoUrl": "https://www.linkedin.com/in/amirah-d-9bb02a359?utm_source=share_via&utm_content=profile&utm_medium=member_ios",
+      "createdAt": "2026-05-25 21:42:14"
+    },
+    {
+      "id": "330001",
+      "name": "Harjot Randhawa",
+      "role": "Puppy Monitor",
+      "videoUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/applications/videos/1779735843147-9cbj7azb.mov",
+      "createdAt": "2026-05-25 19:06:38"
+    },
+    {
+      "id": "300001",
+      "name": "Nyla Grech",
+      "role": "Social Media Intern",
+      "videoUrl": "https://drive.google.com/file/d/14WD3WUXlidMYoNqhUzqSOi2P2h2D4y2o/view?usp=sharing",
+      "createdAt": "2026-05-22 02:02:14"
+    },
+    {
+      "id": "240001",
+      "name": "Bronte Towler",
+      "role": "Puppy Monitor",
+      "videoUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/applications/videos/1779136996038-w9c5d9vd.mov",
+      "createdAt": "2026-05-18 20:43:47"
+    },
+    {
+      "id": "210001",
+      "name": "Allie Forrest",
+      "role": "Puppy Monitor",
+      "videoUrl": "NULL",
+      "createdAt": "2026-05-14 01:53:57"
+    },
+    {
+      "id": "180001",
+      "name": "Danielle Witvoet",
+      "role": "Puppy Monitor",
+      "videoUrl": "NULL",
+      "createdAt": "2026-05-13 16:22:34"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\trole\tvideoUrl\tcreatedAt\n330007\tElliott Braund\tPuppy Monitor\thttps://drive.google.com/file/d/1BQOjNct_M_JQVxiRto2gbFpwhuTSXyxB/view?usp=sharing\t2026-05-26 15:15:41\n330006\tAmirah Date\tPuppy Monitor\thttps://www.linkedin.com/in/amirah-d-9bb02a359?utm_source=share_via&utm_content=profile&utm_medium=member_ios\t2026-05-25 21:46:26\n330005\tAmirah Date\tPuppy Monitor\thttps://www.linkedin.com/in/amirah-d-9bb02a359?utm_source=share_via&utm_content=profile&utm_medium=member_ios\t2026-05-25 21:45:16\n330004\tAmirah Date\tPuppy Specialist\thttps://www.linkedin.com/in/amirah-d-9bb02a359?utm_source=share_via&utm_content=profile&utm_medium=member_ios\t2026-05-25 21:43:57\n330003\tAmirah Date\tBusiness Development Representative\thttps://www.linkedin.com/in/amirah-d-9bb02a359?utm_source=share_via&utm_content=profile&utm_medium=member_ios\t2026-05-25 21:42:14\n330001\tHarjot Randhawa\tPuppy Monitor\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/applications/videos/1779735843147-9cbj7azb.mov\t2026-05-25 19:06:38\n300001\tNyla Grech\tSocial Media Intern\thttps://drive.google.com/file/d/14WD3WUXlidMYoNqhUzqSOi2P2h2D4y2o/view?usp=sharing\t2026-05-22 02:02:14\n240001\tBronte Towler\tPuppy Monitor\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/applications/videos/1779136996038-w9c5d9vd.mov\t2026-05-18 20:43:47\n210001\tAllie Forrest\tPuppy Monitor\tNULL\t2026-05-14 01:53:57\n180001\tDanielle Witvoet\tPuppy Monitor\tNULL\t2026-05-13 16:22:34\n",
+  "stderr": "",
+  "execution_time_ms": 293
+}
