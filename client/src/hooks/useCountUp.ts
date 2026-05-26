@@ -5,8 +5,8 @@ export function useCountUp(end: number, duration = 2000, startOnView = true) {
   const [hasStarted, setHasStarted] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  // Scale duration for small numbers so they don't crawl — cap at 120ms per unit
-  const effectiveDuration = end <= 20 ? Math.min(duration, end * 120) : duration;
+  // For small numbers, use a fixed 800ms so the count-up is still visible but not sluggish
+  const effectiveDuration = end <= 20 ? 800 : duration;
 
   useEffect(() => {
     if (!startOnView) {
