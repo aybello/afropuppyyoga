@@ -48,7 +48,7 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export default function About() {
   return (
-    <section id="about" className="py-10 md:py-32 bg-[#FFF5F8]">
+    <section id="about" className="py-10 md:py-20 bg-[#FFF5F8]">
       <div className="container">
         <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
           {/* Text column — comes first on mobile, second on desktop */}

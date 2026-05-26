@@ -90,19 +90,34 @@ export default function LumaCalendar() {
               color-scheme: light only !important;
             }
           `}</style>
-          {/* Loading skeleton */}
+          {/* Loading skeleton — shimmer cards */}
           {!loaded && (
-            <div
-              className="absolute inset-0 flex flex-col items-center justify-center gap-4"
-              style={{ background: "#fff" }}
-            >
-              <div
-                className="w-12 h-12 rounded-full border-4 border-t-transparent animate-spin"
-                style={{ borderColor: "rgba(233,30,140,0.3)", borderTopColor: "transparent" }}
-              />
-              <p className="text-sm" style={{ color: "#9e6070" }}>
-                Loading upcoming classes…
-              </p>
+            <div className="absolute inset-0 p-6" style={{ background: "#fff" }}>
+              <style>{`
+                @keyframes shimmer {
+                  0% { background-position: -600px 0; }
+                  100% { background-position: 600px 0; }
+                }
+                .skeleton-shimmer {
+                  background: linear-gradient(90deg, #f5e8ef 25%, #fce4ef 50%, #f5e8ef 75%);
+                  background-size: 600px 100%;
+                  animation: shimmer 1.4s infinite linear;
+                  border-radius: 10px;
+                }
+              `}</style>
+              {/* Skeleton event cards */}
+              {[1, 2, 3].map(i => (
+                <div key={i} className="mb-4 p-4 border border-[#F0D0DC] rounded-xl flex gap-4 items-start">
+                  <div className="skeleton-shimmer w-14 h-14 shrink-0 rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <div className="skeleton-shimmer h-4 w-3/4" />
+                    <div className="skeleton-shimmer h-3 w-1/2" />
+                    <div className="skeleton-shimmer h-3 w-1/3" />
+                  </div>
+                  <div className="skeleton-shimmer w-20 h-8 rounded-full shrink-0" />
+                </div>
+              ))}
+              <p className="text-center text-xs mt-4" style={{ color: "#c2185b" }}>Loading upcoming classes…</p>
             </div>
           )}
 

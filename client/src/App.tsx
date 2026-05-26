@@ -24,6 +24,7 @@ const SignDocuments = lazy(() => import("./pages/SignDocuments"));
 const PrivateEventQuote = lazy(() => import("./pages/PrivateEventQuote"));
 const PrivateEventsDashboard = lazy(() => import("./pages/PrivateEventsDashboard"));
 const Loyalty = lazy(() => import("./pages/Loyalty"));
+const Ethics = lazy(() => import("./pages/Ethics"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function PageLoader() {
@@ -55,6 +56,7 @@ function Router() {
         <Route path={"/private-events/quote"} component={PrivateEventQuote} />
         <Route path="/admin/private-events" component={PrivateEventsDashboard} />
         <Route path="/loyalty" component={Loyalty} />
+        <Route path="/ethics" component={Ethics} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>

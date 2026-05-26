@@ -170,3 +170,18 @@
 - [x] Add Partnership Inquiries tool card to StaffPortal hub
 - [ ] Add 18+ age confirmation checkbox to signing portal — must be checked before signature can be submitted
 - [ ] Add share button to job listing cards on Careers page (Facebook, X, LinkedIn, copy link)
+
+## UI/UX Audit Fixes (May 26, 2026)
+- [ ] Fix "Available Across GTA" → "Available Locations" in PrivateEvents.tsx
+- [ ] Fix membership button color inconsistency (Puppy Pass pink vs Wellness Pack dark)
+- [ ] Remove large white space gaps between Memberships→About and OurStory→PrivateEvents
+- [ ] Move "Our Values" cards out of Reviews section into its own section
+- [ ] Fix gallery portrait photo cropping (object-position: top)
+- [ ] Strengthen Loyalty section background color
+- [ ] Group footer navigation links into two columns
+- [ ] Add hero subtitle text-shadow for legibility
+- [ ] Reduce Private Events dark overlay opacity
+- [ ] Navbar: collapse secondary links (Birthday, Partnerships, Loyalty, Careers) into "More ▾" dropdown
+- [ ] Ethics section: replace full content with summary + "Read Our Full Standards →" link
+- [ ] Luma calendar: add skeleton loader while iframe loads
+- [ ] Our Story: add pull quote and visual break

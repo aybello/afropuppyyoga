@@ -86,7 +86,7 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export default function Reviews() {
   return (
-    <section id="reviews" className="py-10 md:py-32 bg-[#FFF5F8]">
+    <section id="reviews" className="py-10 md:py-20 bg-[#FFF5F8]">
       <div className="container">
         {/* Header */}
         <FadeUp>
@@ -159,13 +159,17 @@ export default function Reviews() {
           ))}
         </div>
 
-        {/* Values section */}
+        {/* Values section — visually separated from reviews */}
         <FadeUp>
-          <div className="mb-10">
+          <div className="border-t border-[#F0D0DC] pt-14 mt-4 mb-10">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-0.5 bg-[#8B2252]" />
+              <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">Our Values</span>
+            </div>
             <h3 className="font-display text-3xl font-bold text-[#1A0A12] mb-2">
-              Our Values, Shaped by Our Clients
+              The Principles Behind Every Session
             </h3>
-            <p className="font-body text-[#1A0A12]/60">The principles that guide every session we host.</p>
+            <p className="font-body text-[#1A0A12]/60">What guides every class, every event, and every puppy cuddle.</p>
           </div>
         </FadeUp>
 

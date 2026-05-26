@@ -4,21 +4,31 @@
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
 const BOOK_URL = "https://lu.ma/afropuppyyoga";
 
-const navLinks = [
-  { label: "Home", href: "#home" },
-  { label: "About", href: "#about" },
-  { label: "Our Story", href: "#our-story" },
-  { label: "Experience", href: "#experience" },
-  { label: "Private Events", href: "#private-events" },
-  { label: "Gallery", href: "#gallery" },
-  { label: "Reviews", href: "#reviews" },
-  { label: "FAQ", href: "#faq" },
-  { label: "Ethics", href: "#ethical-standards" },
-  { label: "Contact", href: "#contact" },
-  { label: "Careers", href: "/careers", isPage: true },
-  { label: "Birthday Packages", href: "/birthday", isPage: true },
-  { label: "Partnerships", href: "/partnerships", isPage: true },
-  { label: "Loyalty Program", href: "/loyalty", isPage: true },
+const navGroups = [
+  {
+    heading: "Classes & Events",
+    links: [
+      { label: "Book a Class", href: "https://lu.ma/afropuppyyoga", isExternal: true },
+      { label: "Experience", href: "#experience" },
+      { label: "Memberships", href: "#memberships" },
+      { label: "Private Events", href: "#private-events" },
+      { label: "Birthday Packages", href: "/birthday", isPage: true },
+      { label: "Loyalty Program", href: "/loyalty", isPage: true },
+    ],
+  },
+  {
+    heading: "About & More",
+    links: [
+      { label: "About", href: "#about" },
+      { label: "Our Story", href: "#our-story" },
+      { label: "Gallery", href: "#gallery" },
+      { label: "Reviews", href: "#reviews" },
+      { label: "FAQ", href: "#faq" },
+      { label: "Ethics", href: "#ethical-standards" },
+      { label: "Careers", href: "/careers", isPage: true },
+      { label: "Partnerships", href: "/partnerships", isPage: true },
+    ],
+  },
 ];
 
 const handleNavClick = (href: string) => {
@@ -30,7 +40,7 @@ export default function Footer() {
   return (
     <footer className="bg-[#1A0A12] text-white py-16">
       <div className="container">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-10 mb-12">
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-3 mb-4">
@@ -57,31 +67,44 @@ export default function Footer() {
             </a>
           </div>
 
-          {/* Navigation */}
-          <div>
-            <h4 className="font-display font-bold text-sm text-white/80 uppercase tracking-widest mb-5">Navigation</h4>
-            <ul className="grid grid-cols-2 gap-x-6 gap-y-2.5">
-              {navLinks.map((link) => (
-                <li key={link.href}>
-                  {(link as any).isPage ? (
-                    <a
-                      href={link.href}
-                      className="font-body text-sm text-white/50 hover:text-[#F2A0B8] transition-colors"
-                    >
-                      {link.label}
-                    </a>
-                  ) : (
-                    <a
-                      href={link.href}
-                      onClick={(e) => { e.preventDefault(); handleNavClick(link.href); }}
-                      className="font-body text-sm text-white/50 hover:text-[#F2A0B8] transition-colors"
-                    >
-                      {link.label}
-                    </a>
-                  )}
-                </li>
-              ))}
-            </ul>
+          {/* Navigation — two grouped columns */}
+          <div className="md:col-span-1 grid grid-cols-2 gap-8">
+            {navGroups.map((group) => (
+              <div key={group.heading}>
+                <h4 className="font-display font-bold text-xs text-white/40 uppercase tracking-widest mb-4">{group.heading}</h4>
+                <ul className="space-y-2.5">
+                  {group.links.map((link) => (
+                    <li key={link.href}>
+                      {(link as any).isPage ? (
+                        <a
+                          href={link.href}
+                          className="font-body text-sm text-white/50 hover:text-[#F2A0B8] transition-colors"
+                        >
+                          {link.label}
+                        </a>
+                      ) : (link as any).isExternal ? (
+                        <a
+                          href={link.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-body text-sm text-[#F2A0B8] font-semibold hover:text-white transition-colors"
+                        >
+                          {link.label} →
+                        </a>
+                      ) : (
+                        <a
+                          href={link.href}
+                          onClick={(e) => { e.preventDefault(); handleNavClick(link.href); }}
+                          className="font-body text-sm text-white/50 hover:text-[#F2A0B8] transition-colors"
+                        >
+                          {link.label}
+                        </a>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
 
           {/* Contact */}

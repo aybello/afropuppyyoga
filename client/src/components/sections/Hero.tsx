@@ -91,6 +91,7 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.5 }}
             className="font-body text-white/85 text-base md:text-xl leading-relaxed mb-10 max-w-lg"
+            style={{ textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}
           >
             Guided yoga, Afro-beat rhythms, and adorable puppies — all in one unforgettable session. Serving Hamilton & Kitchener, with Oakville coming soon.
           </motion.p>

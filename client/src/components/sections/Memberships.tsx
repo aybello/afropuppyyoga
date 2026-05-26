@@ -24,9 +24,9 @@ const passes = [
     period: "/month",
     tagline: "For regulars who want consistency and extra perks.",
     badge: "Most Popular",
-    accentColor: "#c2410c",
-    bgColor: "#fff7ed",
-    borderColor: "#fed7aa",
+    accentColor: "#8B2252",
+    bgColor: "#fff5f8",
+    borderColor: "#f9a8d4",
     lumaLink: "https://lu.ma/afropuppyyoga",
     perks: [
       { icon: "🎟", text: "2 free classes per month" },
