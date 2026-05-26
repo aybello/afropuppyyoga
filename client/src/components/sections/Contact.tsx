@@ -79,9 +79,9 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export default function Contact() {
   return (
-    <section id="contact" className="py-10 md:py-32 bg-[#8B2252]">
+    <section id="contact" className="py-10 md:py-14 bg-[#8B2252]">
       <div className="container">
-        <div className="grid lg:grid-cols-2 gap-16 items-start">
+        <div className="grid lg:grid-cols-2 gap-10 items-start">
           {/* Left: Contact info + CTA */}
           <div>
             <FadeUp>
@@ -91,19 +91,19 @@ export default function Contact() {
                   Get In Touch
                 </span>
               </div>
-              <h2 className="font-display text-4xl md:text-5xl font-bold text-white mb-6">
+              <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-4">
                 Ready to Join
                 <br />
                 <span className="italic text-[#F2A0B8]">The Pack?</span>
               </h2>
-              <p className="font-body text-white/70 text-lg leading-relaxed mb-10">
+              <p className="font-body text-white/70 text-base leading-relaxed mb-6">
                 Whether you're booking a class, planning a private event, or just want to say hello — we'd love to hear from you. Our team responds within 48 hours.
               </p>
             </FadeUp>
 
             {/* Contact items */}
             <FadeUp delay={0.15}>
-              <div className="space-y-4 mb-10">
+              <div className="space-y-3 mb-6">
                 {contactInfo.map((item) => (
                   <a
                     key={item.label}
