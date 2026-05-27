@@ -49,14 +49,6 @@ const chatbotLimiter = rateLimit({
   skip: () => process.env.NODE_ENV === "development",
 });
 
-const uploadLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 50, // Increased from 10 — allows up to 50 uploads per IP per hour
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: "Too many uploads. Please try again in an hour." },
-  skip: () => process.env.NODE_ENV === "development",
-});
 
 async function startServer() {
   const app = express();
@@ -77,11 +69,6 @@ async function startServer() {
 
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
-
-  // Apply upload rate limiter to upload endpoints
-  app.use("/api/upload-video-init", uploadLimiter);
-  app.use("/api/upload-video-chunk", uploadLimiter);
-  app.use("/api/upload-resume", uploadLimiter);
 
   // Video upload endpoint (multipart, bypasses JSON body limit)
   app.use(uploadRouter);
