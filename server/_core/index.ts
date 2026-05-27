@@ -51,7 +51,7 @@ const chatbotLimiter = rateLimit({
 
 const uploadLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10,
+  max: 50, // Increased from 10 — allows up to 50 uploads per IP per hour
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Too many uploads. Please try again in an hour." },
