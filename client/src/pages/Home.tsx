@@ -5,6 +5,7 @@
    Gallery → InstagramFeed → Reviews → Gift Cards → EthicalStandards → FAQ → Contact
    ============================================================ */
 import Navbar from "@/components/Navbar";
+import SummerSaleBanner from "@/components/SummerSaleBanner";
 import Hero from "@/components/sections/Hero";
 import Experience from "@/components/sections/Experience";
 import About from "@/components/sections/About";
@@ -34,6 +35,7 @@ export default function Home() {
   }, []);
   return (
     <div className="min-h-screen bg-[#FEFAF4]">
+      <SummerSaleBanner />
       <Navbar />
       <main>
         <Hero />
