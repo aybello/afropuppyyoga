@@ -82,15 +82,16 @@ export default function LumaCalendar() {
           </div>
           <div className="flex flex-wrap gap-3 flex-1">
             {[
-              { label: "Early Bird", was: "$56", now: "$50" },
-              { label: "Regular", was: "$58", now: "$52" },
-              { label: "Bring a Friend", was: "$108", now: "$96" },
-              { label: "Group of 3", was: "$156", now: "$138" },
+              { label: "Early Bird", was: "$56", now: "$45" },
+              { label: "Regular", was: "$58", now: "$46" },
+              { label: "Bring a Friend", was: "$108", now: "$86" },
+              { label: "Group of 3", was: "$156", now: "$125" },
             ].map((t) => (
               <div key={t.label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.7)", border: "1px solid #f9a8d4" }}>
                 <span className="text-xs font-semibold" style={{ color: "#7c3f5e" }}>{t.label}</span>
                 <span className="text-xs line-through" style={{ color: "#9d6b7a" }}>{t.was}</span>
                 <span className="text-sm font-black" style={{ color: "#be185d" }}>{t.now}</span>
+                <span className="text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ background: "#be185d", color: "#fff" }}>20% off</span>
               </div>
             ))}
           </div>

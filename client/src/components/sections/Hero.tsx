@@ -70,7 +70,7 @@ export default function Hero() {
               className="font-body text-xs font-bold tracking-widest uppercase px-4 py-1.5 rounded-full"
               style={{ background: "linear-gradient(135deg, #F97316, #e91e8c)", color: "#fff", letterSpacing: "0.15em" }}
             >
-              ☀️ Summer Sessions Now Open
+              ☀️ Summer Sale — 20% Off
             </span>
           </motion.div>
 
