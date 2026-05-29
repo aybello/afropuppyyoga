@@ -1,5 +1,6 @@
 /* ============================================================
-   Summer Sale Banner — Sticky top bar announcing the sale
+   Summer Sale Banner — renders inline inside the fixed Navbar header
+   No positioning needed — it stacks above the nav naturally
    ============================================================ */
 import { useState } from "react";
 import { X } from "lucide-react";
@@ -12,36 +13,36 @@ export default function SummerSaleBanner() {
 
   return (
     <div
-      className="relative z-50 w-full flex items-center justify-center gap-2 px-4 py-2.5 text-center text-sm font-semibold"
+      className="relative w-full flex items-center justify-center gap-2 px-8 py-2 text-center text-xs sm:text-sm font-semibold"
       style={{
         background: "linear-gradient(90deg, #be185d 0%, #e91e8c 50%, #f97316 100%)",
         color: "#fff",
       }}
     >
-      {/* Sunburst emoji + text */}
-      <span className="text-base">☀️</span>
-      <span className="tracking-wide">
-        <span className="font-black uppercase tracking-widest mr-1">SUMMER SALE</span>
-        — Classes from{" "}
-        <span className="line-through opacity-70 mr-1">$56</span>
+      <span>☀️</span>
+      <span>
+        <span className="font-black uppercase tracking-widest">SUMMER SALE</span>
+        {" — Classes from "}
+        <span className="line-through opacity-70">$56</span>
+        {" "}
         <span className="font-black text-yellow-200">$50</span>
-        {" "}· Groups save up to $18
+        <span className="hidden sm:inline"> · Groups save up to $18</span>
       </span>
       <a
         href={BOOK_URL}
         target="_blank"
         rel="noopener noreferrer"
-        className="ml-2 hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap"
-        style={{ background: "rgba(255,255,255,0.25)", color: "#fff", border: "1px solid rgba(255,255,255,0.4)" }}
+        className="hidden sm:inline-flex items-center px-3 py-0.5 rounded-full text-xs font-bold ml-1"
+        style={{ background: "rgba(255,255,255,0.25)", border: "1px solid rgba(255,255,255,0.4)" }}
       >
         Book Now →
       </a>
       <button
         onClick={() => setDismissed(true)}
         className="absolute right-3 top-1/2 -translate-y-1/2 opacity-70 hover:opacity-100 transition-opacity"
-        aria-label="Dismiss banner"
+        aria-label="Dismiss"
       >
-        <X size={16} />
+        <X size={14} />
       </button>
     </div>
   );

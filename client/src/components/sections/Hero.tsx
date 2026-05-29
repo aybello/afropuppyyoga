@@ -59,6 +59,21 @@ export default function Hero() {
       {/* Content — bottom-left anchored editorial layout */}
       <div className="relative flex-1 flex flex-col justify-end container pb-20 md:pb-28 pt-24">
         <div className="max-w-2xl">
+          {/* Summer Sale Badge */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="inline-flex items-center gap-2 mb-5"
+          >
+            <span
+              className="font-body text-xs font-bold tracking-widest uppercase px-4 py-1.5 rounded-full"
+              style={{ background: "linear-gradient(135deg, #F97316, #e91e8c)", color: "#fff", letterSpacing: "0.15em" }}
+            >
+              ☀️ Summer Sessions Now Open
+            </span>
+          </motion.div>
+
           {/* Eyebrow */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
