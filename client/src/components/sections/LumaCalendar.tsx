@@ -71,33 +71,6 @@ export default function LumaCalendar() {
           </a>
         </div>
 
-        {/* Summer Sale Pricing Callout */}
-        <div
-          className="mb-8 rounded-2xl px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-4"
-          style={{ background: "linear-gradient(135deg, #fce7f3 0%, #fff7ed 100%)", border: "1.5px solid #f9a8d4" }}
-        >
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-2xl">☀️</span>
-            <span className="text-sm font-black uppercase tracking-widest" style={{ color: "#be185d" }}>Summer Sale</span>
-          </div>
-          <div className="flex flex-wrap gap-3 flex-1">
-            {[
-              { label: "Early Bird", was: "$56", now: "$45" },
-              { label: "Regular", was: "$58", now: "$46" },
-              { label: "Bring a Friend", was: "$108", now: "$86" },
-              { label: "Group of 3", was: "$156", now: "$125" },
-            ].map((t) => (
-              <div key={t.label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.7)", border: "1px solid #f9a8d4" }}>
-                <span className="text-xs font-semibold" style={{ color: "#7c3f5e" }}>{t.label}</span>
-                <span className="text-xs line-through" style={{ color: "#9d6b7a" }}>{t.was}</span>
-                <span className="text-sm font-black" style={{ color: "#be185d" }}>{t.now}</span>
-                <span className="text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ background: "#be185d", color: "#fff" }}>20% off</span>
-              </div>
-            ))}
-          </div>
-          <span className="text-xs" style={{ color: "#9d6b7a" }}>Limited time · Prices in CAD</span>
-        </div>
-
         {/* Luma Calendar Embed */}
         {/* Force light color-scheme at the DOM level so Luma's prefers-color-scheme detection sees light mode regardless of OS setting */}
         <div
