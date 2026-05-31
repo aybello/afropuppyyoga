@@ -46,7 +46,7 @@ const faqs: { q: string; a: ReactNode }[] = [
   },
   {
     q: "Are there age restrictions?",
-    a: "Participants must be 12 years or older. Those under 18 must be accompanied by a parent or guardian. We welcome all ages and experience levels.",
+    a: "Participants must be 12 years or older. Those under 12 must be accompanied by a parent or guardian. We welcome all ages and experience levels.",
   },
   {
     q: "How do I book a private event?",
