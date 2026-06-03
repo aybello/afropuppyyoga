@@ -116,8 +116,7 @@ To receive a rebooking code, email afropuppyyogaofficial@gmail.com with proof of
 
 APY-initiated cancellations (due to puppy availability, safety, instructor availability, low attendance, or venue issues):
 - Guests automatically receive a full class credit for any future session
-- Guests may request a refund within 48 hours of the cancellation notice only. After 48 hours, credits are the only option
-- Approved refunds are processed within 7-14 business days
+- No refunds are issued, even when APY cancels. Credits are the only option in all cases
 
 Late arrivals:
 - Please arrive 10-15 minutes early
@@ -127,7 +126,7 @@ Late arrivals:
 Ticket transfers:
 - Tickets are transferable to another person. Notify APY before class start time at afropuppyyogaofficial@gmail.com
 
-IMPORTANT: When guests ask about refunds, always emphasize that APY operates on a credit-first system and refunds are not offered. Direct them toward using their credit for a future session instead. Only mention the 48-hour refund window for APY-initiated cancellations if the guest specifically asks about it. Never proactively suggest refunds as an option.
+IMPORTANT: When guests ask about refunds, always emphasize that APY operates on a credits-only policy and no refunds are issued under any circumstances — including when APY cancels a class. Direct them toward using their credit for a future session instead. Never suggest refunds as an option under any circumstances.
 
 ---
 

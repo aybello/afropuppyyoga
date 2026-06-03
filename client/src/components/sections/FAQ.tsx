@@ -32,11 +32,9 @@ const faqs: { q: string; a: ReactNode }[] = [
     q: "What is your cancellation and refund policy?",
     a: (
       <>
-        We operate on a credit-first system. Cancel more than 24 hours before class and you'll receive a full class credit with no expiry. Cancellations within 24 hours and no-shows are not eligible for credits or refunds. If AfroPuppyYoga cancels a class, you'll automatically receive a class credit, or you may request a refund within 48 hours of the cancellation notice. Approved refunds are processed within 7–14 business days. After the 48-hour window, credits are the only option. Tickets are transferable to another person if you notify us before class starts.
+        We operate on a <strong>credits-only</strong> policy — no refunds are issued under any circumstances. Cancel more than 24 hours before class and you'll receive a full class credit with no expiry. Cancellations within 24 hours and no-shows are not eligible for credits. If AfroPuppyYoga cancels a class, you'll automatically receive a full class credit valid for any future session. Tickets are transferable to another person if you notify us before class starts.
         <br /><br />
-        <strong>Why might my refund take longer than expected?</strong> As a small, independently run business, our revenue is actively reinvested into operations — venue bookings, puppy care, instructor fees, and event logistics. In rare cases where a class is cancelled unexpectedly, there may be a short delay before your refund is processed as we work through our operating cycle. This is never intentional and we are always working to resolve refunds as quickly as possible. If you have not received your refund within the stated window, please reach out to us directly and we will prioritize your case.
-        <br /><br />
-        <strong>Is my payment secure?</strong> Absolutely. All payments are processed through Stripe, one of the world's most trusted and secure payment platforms. We never store your card details, and Stripe's infrastructure is PCI-DSS compliant. AfroPuppyYoga has zero interest in withholding funds — your money is always protected and any delay is strictly a timing matter, not a dispute over your entitlement to a refund.
+        <strong>Is my payment secure?</strong> Absolutely. All payments are processed through Stripe, one of the world's most trusted and secure payment platforms. We never store your card details, and Stripe's infrastructure is PCI-DSS compliant.
       </>
     ),
   },
