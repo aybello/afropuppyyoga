@@ -32,7 +32,7 @@ export default function Home() {
   useScrollDepthTracking();
   useTimeOnPageTracking();
   useEffect(() => {
-    document.title = "AfroPuppyYoga | Puppy Yoga Studio in Canada";
+    document.title = "AfroPuppyYoga | Canada's #1 Puppy Yoga Experience in Ontario";
   }, []);
   return (
     <div className="min-h-screen bg-[#FEFAF4]">
