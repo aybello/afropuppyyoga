@@ -2,7 +2,7 @@ import { LOGO_URL } from "@/const";
 import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Loader2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
-import { Streamdown } from "streamdown";
+import ReactMarkdown from "react-markdown";
 
 type Message = {
   role: "user" | "assistant";
@@ -202,7 +202,7 @@ export default function ChatbotWidget() {
                     >
                       {msg.role === "assistant" ? (
                         <div className="prose prose-sm max-w-none text-inherit">
-                          <Streamdown
+                          <ReactMarkdown
                             components={{
                               a: ({ href, children, ...props }) => (
                                 <a
@@ -218,7 +218,7 @@ export default function ChatbotWidget() {
                             }}
                           >
                             {msg.content}
-                          </Streamdown>
+                          </ReactMarkdown>
                         </div>
                       ) : (
                         <p className="whitespace-pre-wrap">{msg.content}</p>
