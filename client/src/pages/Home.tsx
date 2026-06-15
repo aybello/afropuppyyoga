@@ -24,7 +24,6 @@ import Contact from "@/components/sections/Contact";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
 import ChatbotWidget from "@/components/ChatbotWidget";
-import MobileBookingBar from "@/components/MobileBookingBar";
 import RewardsStrip from "@/components/RewardsStrip";
 import { useScrollDepthTracking, useTimeOnPageTracking } from "@/hooks/useAnalytics";
 import { useEffect } from "react";
@@ -59,7 +58,6 @@ export default function Home() {
       <Footer />
       <ScrollToTop />
       <ChatbotWidget />
-      <MobileBookingBar />
     </div>
   );
 }
