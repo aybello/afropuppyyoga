@@ -17,6 +17,7 @@ import {
   Handshake,
   Sparkles,
   Cake,
+  PawPrint,
 } from "lucide-react";
 
 const TOOLS = [
@@ -100,6 +101,18 @@ const TOOLS = [
     icon: Sparkles,
     color: "#8B2252",
     bg: "#FFF5F8",
+    border: "#F0D0DC",
+    badge: "Admin",
+    adminOnly: true,
+  },
+  {
+    id: "breeders",
+    title: "Breeder Database",
+    description: "Manage and track your breeder relationships — contact info, breeds, litter timelines, rates, and contract status.",
+    href: "/admin/breeders",
+    icon: PawPrint,
+    color: "#C2185B",
+    bg: "#FFF0F4",
     border: "#F0D0DC",
     badge: "Admin",
     adminOnly: true,
