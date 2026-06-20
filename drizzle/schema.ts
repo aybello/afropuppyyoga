@@ -268,3 +268,39 @@ export const breeders = mysqlTable("breeders", {
 
 export type Breeder = typeof breeders.$inferSelect;
 export type InsertBreeder = typeof breeders.$inferInsert;
+
+export const locationPresets = mysqlTable("locationPresets", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Display label e.g. "TenC Dance Studio - Kitchener" */
+  label: varchar("label", { length: 255 }).notNull(),
+  /** City name */
+  city: varchar("city", { length: 100 }).notNull(),
+  /** Full address */
+  address: text("address").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type LocationPreset = typeof locationPresets.$inferSelect;
+export type InsertLocationPreset = typeof locationPresets.$inferInsert;
+
+export const breederConfirmations = mysqlTable("breederConfirmations", {
+  id: int("id").autoincrement().primaryKey(),
+  /** The breeder this confirmation was sent to */
+  breederId: int("breederId").notNull(),
+  /** Breeder name snapshot at time of sending */
+  breederName: varchar("breederName", { length: 255 }).notNull(),
+  /** Email address it was sent to */
+  sentToEmail: varchar("sentToEmail", { length: 320 }).notNull(),
+  /** JSON array of event blocks */
+  events: text("events").notNull(),
+  /** Optional availability check note */
+  availabilityNote: text("availabilityNote"),
+  /** Full email body that was sent (HTML) */
+  emailBody: text("emailBody").notNull(),
+  /** Send status */
+  status: mysqlEnum("confStatus", ["sent", "failed"]).default("sent").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [index("idx_conf_breederId").on(t.breederId)]);
+
+export type BreederConfirmation = typeof breederConfirmations.$inferSelect;
+export type InsertBreederConfirmation = typeof breederConfirmations.$inferInsert;
