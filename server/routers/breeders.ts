@@ -35,7 +35,17 @@ const eventBlockSchema = z.object({
 
 const APY_LOGO = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
 
-function buildConfirmationEmail(opts: {
+function formatDateHuman(dateStr: string): string {
+  if (!dateStr) return dateStr;
+  // Handle ISO date format YYYY-MM-DD from date picker
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const d = new Date(dateStr + "T12:00:00");
+    return d.toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric" });
+  }
+  return dateStr; // already formatted
+}
+
+function generateConfirmationEmail(opts: {
   breederFirstName: string;
   events: z.infer<typeof eventBlockSchema>[];
   availabilityNote?: string;
@@ -51,7 +61,7 @@ function buildConfirmationEmail(opts: {
     return `
       <div style="border:1px solid #e8c0d0;border-radius:10px;padding:18px 22px;margin:18px 0;background:#fff9fb;">
         <p style="margin:0 0 10px;font-size:16px;font-weight:700;color:#8B2252;">📍 ${ev.city}</p>
-        <p style="margin:4px 0;"><strong>Date:</strong> ${ev.date}</p>
+        <p style="margin:4px 0;"><strong>Date:</strong> ${formatDateHuman(ev.date)}</p>
         ${transportLine}
         <p style="margin:4px 0;"><strong>Location:</strong> ${ev.location}</p>
         <p style="margin:4px 0;"><strong>Compensation:</strong> ${ev.compensation} (paid via e-transfer)</p>
@@ -104,7 +114,7 @@ function buildConfirmationEmail(opts: {
     const transport = ev.apyTransport
       ? `APY will provide transportation.\nPickup Time: ${ev.pickupTime ?? ""}\nReturn Time: ${ev.returnTime ?? ""}`
       : `Drop-off Time: ${ev.dropOffTime ?? ""}\nPick-up Time: ${ev.pickUpTime ?? ""}`;
-    return `📍 ${ev.city}\nDate: ${ev.date}\n${transport}\nLocation: ${ev.location}\nCompensation: ${ev.compensation} (paid via e-transfer)`;
+    return `📍 ${ev.city}\nDate: ${formatDateHuman(ev.date)}\n${transport}\nLocation: ${ev.location}\nCompensation: ${ev.compensation} (paid via e-transfer)`;
   }).join("\n\n---\n\n");
 
   const text = `Hi ${opts.breederFirstName},\n\nWe're excited to be working with you and your puppies for our upcoming AfroPuppyYoga classes.\n\nAs discussed, here are the confirmed details:\n\n${textEvents}\n\nPlease ensure all puppies:\n- Are freshly groomed, clean, and smell pleasant\n- Are up to date on vaccinations\n- Have been dewormed\n\nOur team will supervise the puppies at all times and ensure they receive regular breaks, water, and a safe, controlled environment throughout the events.\n\nFor any dates where APY is handling transportation, please provide the pickup address that works best for you.\n\n${opts.availabilityNote ? `We also wanted to see if you may have availability for ${opts.availabilityNote}. If so, we'd love to discuss potentially adding that date as well.\n\n` : ""}Please confirm that the above dates and times work for you, and we can finalize everything from there.\n\nLooking forward to working together.\n\nBest,\nThe AfroPuppyYoga Team\nP: 289-788-1885\nE: afropuppyyogaofficial@gmail.com\nW: afropuppyyoga.ca`;
@@ -227,7 +237,7 @@ export const breedersRouter = router({
       availabilityNote: z.string().optional(),
     }))
     .mutation(async ({ input }) => {
-      const { html, text } = buildConfirmationEmail(input);
+      const { html, text } = generateConfirmationEmail(input);
       return { html, text };
     }),
 
@@ -240,7 +250,7 @@ export const breedersRouter = router({
       availabilityNote: z.string().optional(),
     }))
     .mutation(async ({ input }) => {
-      const { html, text } = buildConfirmationEmail({
+      const { html, text } = generateConfirmationEmail({
         breederFirstName: input.breederFirstName,
         events: input.events,
         availabilityNote: input.availabilityNote,

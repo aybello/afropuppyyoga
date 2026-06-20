@@ -2,7 +2,7 @@
    BreedersDashboard — Admin page for managing the breeder database
    Features: Search, filter, add/edit/delete, send confirmation emails
    ============================================================ */
-import { useState } from "react";
+import { useState, useRef } from "react";
 import AdminNav from "@/components/AdminNav";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -45,9 +45,16 @@ const EMPTY_FORM = {
 };
 
 const EMPTY_EVENT = {
-  city: "", date: "", location: "", apyTransport: false,
+  city: "", date: "", location: "", isPrivateEvent: false, apyTransport: false,
   dropOffTime: "", pickUpTime: "", pickupTime: "", returnTime: "", compensation: "",
 };
+
+// Fixed studio locations
+const STUDIO_LOCATIONS = [
+  { city: "Kitchener", label: "Kitchener — TenC Dance Studio", address: "TenC Dance Studio, 329 King Street East, Kitchener, Ontario" },
+  { city: "Oakville", label: "Oakville — 1670 North Service Road", address: "1670 North Service Road, Oakville, Ontario" },
+  { city: "Hamilton", label: "Hamilton — Colibri Studio", address: "Colibri Studio, 2751 Barton Street East, Hamilton, Ontario" },
+];
 
 export default function BreedersDashboard() {
   const utils = trpc.useUtils();
@@ -150,6 +157,23 @@ export default function BreedersDashboard() {
 
   function applyPreset(idx: number, preset: any) {
     setEvents(ev => ev.map((e, i) => i === idx ? { ...e, city: preset.city, location: preset.address } : e));
+  }
+
+  function applyStudio(idx: number, studioLabel: string) {
+    if (studioLabel === "private") {
+      setEvents(ev => ev.map((e, i) => i === idx ? { ...e, city: "", location: "", isPrivateEvent: true } : e));
+    } else {
+      const studio = STUDIO_LOCATIONS.find(s => s.label === studioLabel);
+      if (studio) {
+        setEvents(ev => ev.map((e, i) => i === idx ? { ...e, city: studio.city, location: studio.address, isPrivateEvent: false } : e));
+      }
+    }
+  }
+
+  function formatDateForDisplay(dateStr: string): string {
+    if (!dateStr) return "";
+    const d = new Date(dateStr + "T12:00:00");
+    return d.toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric" });
   }
 
   function handlePreview() {
@@ -445,49 +469,48 @@ export default function BreedersDashboard() {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                      <Label className="font-body text-xs text-[#6B4C3B] font-semibold uppercase tracking-wider">City *</Label>
+                  {/* Studio / Location selector */}
+                  <div className="mb-3">
+                    <Label className="font-body text-xs text-[#6B4C3B] font-semibold uppercase tracking-wider">Location *</Label>
+                    <Select
+                      value={ev.isPrivateEvent ? "private" : (STUDIO_LOCATIONS.find(s => s.address === ev.location)?.label ?? "")}
+                      onValueChange={(val) => applyStudio(idx, val)}
+                    >
+                      <SelectTrigger className="mt-1 border-[#F0D0DC] font-body text-sm">
+                        <SelectValue placeholder="Select a studio..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {STUDIO_LOCATIONS.map(s => (
+                          <SelectItem key={s.label} value={s.label}>{s.label}</SelectItem>
+                        ))}
+                        <SelectItem value="private">🏠 Private Event (enter address)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {ev.isPrivateEvent && (
                       <Input
-                        value={ev.city}
-                        onChange={(e) => updateEvent(idx, "city", e.target.value)}
-                        className="mt-1 border-[#F0D0DC] font-body text-sm"
-                        placeholder="e.g. Kitchener"
+                        value={ev.location}
+                        onChange={(e) => updateEvent(idx, "location", e.target.value)}
+                        className="mt-2 border-[#F0D0DC] font-body text-sm"
+                        placeholder="Enter full address for private event"
                       />
-                    </div>
-                    <div>
-                      <Label className="font-body text-xs text-[#6B4C3B] font-semibold uppercase tracking-wider">Date *</Label>
-                      <Input
-                        value={ev.date}
-                        onChange={(e) => updateEvent(idx, "date", e.target.value)}
-                        className="mt-1 border-[#F0D0DC] font-body text-sm"
-                        placeholder="e.g. Saturday, July 18"
-                      />
-                    </div>
+                    )}
+                    {!ev.isPrivateEvent && ev.city && (
+                      <p className="text-xs text-[#8B2252] mt-1 font-body">📍 {ev.city} · {ev.location}</p>
+                    )}
                   </div>
 
+                  {/* Date picker */}
                   <div className="mb-3">
-                    <div className="flex items-center justify-between mb-1">
-                      <Label className="font-body text-xs text-[#6B4C3B] font-semibold uppercase tracking-wider">Location *</Label>
-                      {presets.length > 0 && (
-                        <Select onValueChange={(val) => { const p = presets.find((p: any) => String(p.id) === val); if (p) applyPreset(idx, p); }}>
-                          <SelectTrigger className="h-7 text-xs border-[#F0D0DC] w-44 font-body">
-                            <SelectValue placeholder="Use preset..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {presets.map((p: any) => (
-                              <SelectItem key={p.id} value={String(p.id)}>{p.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    </div>
-                    <Input
-                      value={ev.location}
-                      onChange={(e) => updateEvent(idx, "location", e.target.value)}
-                      className="border-[#F0D0DC] font-body text-sm"
-                      placeholder="Full address"
+                    <Label className="font-body text-xs text-[#6B4C3B] font-semibold uppercase tracking-wider">Date *</Label>
+                    <input
+                      type="date"
+                      value={ev.date}
+                      onChange={(e) => updateEvent(idx, "date", e.target.value)}
+                      className="mt-1 w-full border border-[#F0D0DC] rounded-md px-3 py-2 font-body text-sm bg-white text-[#1A0A12] focus:outline-none focus:ring-2 focus:ring-[#C2185B]/30"
                     />
+                    {ev.date && (
+                      <p className="text-xs text-[#8B2252] mt-1 font-body">{formatDateForDisplay(ev.date)}</p>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-3 mb-3">
