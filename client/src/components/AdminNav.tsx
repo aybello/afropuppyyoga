@@ -5,7 +5,7 @@ import { LOGO_URL } from "@/const";
    Staff tab is only visible to admin role (not staff role)
    ============================================================ */
 import { Link, useLocation } from "wouter";
-import { FileText, Users, ArrowLeft, UserCog, Handshake, Sparkles, LayoutGrid, Cake } from "lucide-react";
+import { FileText, Users, ArrowLeft, UserCog, Handshake, Sparkles, LayoutGrid, Cake, PawPrint } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 
 
@@ -38,6 +38,12 @@ const NAV_ITEMS = [
     href: "/admin/birthday",
     label: "Birthday",
     icon: Cake,
+    adminOnly: false,
+  },
+  {
+    href: "/admin/breeders",
+    label: "Breeders",
+    icon: PawPrint,
     adminOnly: false,
   },
   {

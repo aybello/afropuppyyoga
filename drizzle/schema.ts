@@ -235,3 +235,36 @@ export const privateEventInquiries = mysqlTable("privateEventInquiries", {
 
 export type PrivateEventInquiry = typeof privateEventInquiries.$inferSelect;
 export type InsertPrivateEventInquiry = typeof privateEventInquiries.$inferInsert;
+
+export const breeders = mysqlTable("breeders", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Breeder / kennel name */
+  name: varchar("name", { length: 255 }).notNull(),
+  /** Contact person name */
+  contactName: varchar("contactName", { length: 255 }),
+  /** Phone number(s) */
+  phone: varchar("phone", { length: 255 }),
+  /** Email address */
+  email: varchar("email", { length: 320 }),
+  /** Instagram handle */
+  instagram: varchar("instagram", { length: 255 }),
+  /** Breed(s) they supply */
+  breed: varchar("breed", { length: 255 }),
+  /** Litter timeline / availability notes */
+  litterTimeline: varchar("litterTimeline", { length: 255 }),
+  /** Typical rate (stored as string to handle ranges like '$500-550') */
+  typicalRate: varchar("typicalRate", { length: 100 }),
+  /** Transport arrangement */
+  transport: varchar("transport", { length: 255 }),
+  /** Contract status */
+  contractStatus: mysqlEnum("contractStatus", ["No contract yet", "Contract sent", "Contract completed"]).default("No contract yet").notNull(),
+  /** Internal notes */
+  notes: text("notes"),
+  /** Whether this breeder is currently active */
+  isActive: int("isActive").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (t) => [index("idx_breeders_contractStatus").on(t.contractStatus), index("idx_breeders_isActive").on(t.isActive)]);
+
+export type Breeder = typeof breeders.$inferSelect;
+export type InsertBreeder = typeof breeders.$inferInsert;
