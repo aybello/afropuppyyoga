@@ -330,6 +330,54 @@ export const careersRouter = router({
     }),
 
   /**
+   * Admin-only: resend onboarding email to an already-onboarded applicant (no status change)
+   */
+  resendOnboardingEmail: staffProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        applicantName: z.string(),
+        applicantEmail: z.string().email(),
+        role: z.string(),
+        location: z.string(),
+        orientationDate: z.string().optional(),
+        orientationTime: z.string().optional(),
+        planningDocUrl: z.string().optional(),
+        additionalNotes: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const isYogaInstructor = input.role.toLowerCase().includes("yoga instructor") || input.role.toLowerCase().includes("instructor");
+      const { subject, html, text } = isYogaInstructor
+        ? buildYogaInstructorOnboardingEmail({
+            applicantName: input.applicantName,
+            location: input.location,
+            orientationDate: input.orientationDate,
+            orientationTime: input.orientationTime,
+            planningDocUrl: input.planningDocUrl,
+            additionalNotes: input.additionalNotes,
+          })
+        : buildOnboardingEmail({
+            applicantName: input.applicantName,
+            role: input.role,
+            location: input.location,
+            orientationDate: input.orientationDate,
+            orientationTime: input.orientationTime,
+            planningDocUrl: input.planningDocUrl,
+            additionalNotes: input.additionalNotes,
+          });
+
+      await sendEmail({ to: input.applicantEmail, subject, html, text });
+
+      await notifyOwner({
+        title: `Onboarding Email Resent -- ${input.applicantName}`,
+        content: `Onboarding email resent to ${input.applicantName} (${input.applicantEmail}) for ${input.role} (${input.location}).`,
+      });
+
+      return { success: true };
+    }),
+
+  /**
    * Admin-only: send rejection letter email to applicant
    */
   sendRejectionLetter: staffProcedure

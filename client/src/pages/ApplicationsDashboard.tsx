@@ -543,6 +543,25 @@ function ApplicationDetailModal({
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
 
+  const resendOnboarding = trpc.careers.resendOnboardingEmail.useMutation({
+    onSuccess: () => {
+      toast.success(`Onboarding email resent to ${app.email}! 📬`);
+    },
+    onError: (err) => {
+      toast.error(`Failed to resend onboarding email: ${err.message}`);
+    },
+  });
+
+  const handleResend = () => {
+    resendOnboarding.mutate({
+      id: app.id,
+      applicantName: app.name,
+      applicantEmail: app.email,
+      role: app.role,
+      location: app.location,
+    });
+  };
+
   return (
     <>
       <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -663,13 +682,27 @@ function ApplicationDetailModal({
                 >
                   <XCircle className="w-4 h-4 mr-2" /> Send Rejection
                 </Button>
-                {app.signingStatus === "signed" && (
+                {app.signingStatus === "signed" && app.status !== "onboarded" && (
                   <Button
                     onClick={() => { onClose(); setShowOnboardingModal(true); }}
                     className="font-body text-sm text-white"
                     style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}
                   >
                     <PartyPopper className="w-4 h-4 mr-2" /> Send Onboarding Email
+                  </Button>
+                )}
+                {app.status === "onboarded" && (
+                  <Button
+                    onClick={handleResend}
+                    disabled={resendOnboarding.isPending}
+                    variant="outline"
+                    className="font-body text-sm border-teal-300 text-teal-700 hover:bg-teal-50"
+                  >
+                    {resendOnboarding.isPending ? (
+                      <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Resending...</>
+                    ) : (
+                      <><Send className="w-4 h-4 mr-2" /> Resend Onboarding Email</>
+                    )}
                   </Button>
                 )}
               </div>
