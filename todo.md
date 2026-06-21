@@ -206,3 +206,11 @@
 - [x] Add Birthday Inquiries card to StaffPortal
 - [x] Fix streaming video proxy (was buffering entire file in memory)
 - [x] Fix in-memory job registry memory leak in chunkedUploadRoute
+
+## Refund Tracker (June 20, 2026)
+- [x] Add refunds table to drizzle/schema.ts and push migration
+- [x] Build tRPC refunds router (CRUD + stats)
+- [x] Build RefundTracker page UI (/admin/refunds)
+- [x] Add Refund Tracker to AdminNav
+- [x] Add Refund Tracker card to StaffPortal
+- [x] Add /admin/refunds route to App.tsx

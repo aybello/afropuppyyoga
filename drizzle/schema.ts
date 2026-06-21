@@ -1,4 +1,4 @@
-import { index, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { bigint, index, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -304,3 +304,52 @@ export const breederConfirmations = mysqlTable("breederConfirmations", {
 
 export type BreederConfirmation = typeof breederConfirmations.$inferSelect;
 export type InsertBreederConfirmation = typeof breederConfirmations.$inferInsert;
+
+// ─── Refund Tracker ──────────────────────────────────────────────────────────
+
+export const refunds = mysqlTable("refunds", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Customer full name */
+  customerName: varchar("customerName", { length: 255 }).notNull(),
+  /** Customer email */
+  customerEmail: varchar("customerEmail", { length: 320 }),
+  /** Order / booking reference (e.g. Luma order ID or Stripe payment intent) */
+  orderRef: varchar("orderRef", { length: 255 }),
+  /** Class / event name the refund is for */
+  eventName: varchar("eventName", { length: 255 }),
+  /** City / location */
+  location: mysqlEnum("refundLocation", ["Hamilton", "Kitchener", "Oakville", "Other"]).default("Other").notNull(),
+  /** Refund amount in cents (e.g. 5000 = $50.00) */
+  amountCents: int("amountCents").notNull(),
+  /** Reason for the refund */
+  reason: mysqlEnum("refundReason", [
+    "Customer request",
+    "Event cancelled",
+    "Event rescheduled",
+    "Duplicate charge",
+    "No show",
+    "Medical / emergency",
+    "Other",
+  ]).default("Customer request").notNull(),
+  /** Additional notes */
+  notes: text("notes"),
+  /** Refund method */
+  method: mysqlEnum("refundMethod", ["Stripe", "E-Transfer", "Cash", "Credit", "Other"]).default("Stripe").notNull(),
+  /** Current status */
+  status: mysqlEnum("refundStatus", ["Pending", "Processed", "Denied"]).default("Pending").notNull(),
+  /** Date the refund was requested (UTC ms) */
+  requestedAt: bigint("requestedAt", { mode: "number" }).notNull(),
+  /** Date the refund was processed (UTC ms), null if not yet processed */
+  processedAt: bigint("processedAt", { mode: "number" }),
+  /** Staff member who processed the refund */
+  processedBy: varchar("processedBy", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (t) => [
+  index("idx_refunds_status").on(t.status),
+  index("idx_refunds_location").on(t.location),
+  index("idx_refunds_requestedAt").on(t.requestedAt),
+]);
+
+export type Refund = typeof refunds.$inferSelect;
+export type InsertRefund = typeof refunds.$inferInsert;

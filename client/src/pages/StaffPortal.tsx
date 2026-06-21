@@ -18,6 +18,7 @@ import {
   Sparkles,
   Cake,
   PawPrint,
+  RotateCcw,
 } from "lucide-react";
 
 const TOOLS = [
@@ -114,6 +115,18 @@ const TOOLS = [
     color: "#C2185B",
     bg: "#FFF0F4",
     border: "#F0D0DC",
+    badge: "Admin",
+    adminOnly: true,
+  },
+  {
+    id: "refunds",
+    title: "Refund Tracker",
+    description: "Log and track all customer refund requests. Filter by status, location, and reason. See totals at a glance.",
+    href: "/admin/refunds",
+    icon: RotateCcw,
+    color: "#1565C0",
+    bg: "#E3F2FD",
+    border: "#BBDEFB",
     badge: "Admin",
     adminOnly: true,
   },
