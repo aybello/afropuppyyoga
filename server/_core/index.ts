@@ -84,35 +84,37 @@ async function startServer() {
   app.use("/api/trpc/invoices.submit", formLimiter);
   app.use("/api/trpc/chatbot.chat", chatbotLimiter);
 
-  // Video proxy — streams CDN videos with inline Content-Disposition so browsers play instead of download
-  // Uses streaming (not buffering) to avoid loading entire video into memory
+  // Video proxy — for Range requests (browser seeking), proxy the bytes with correct Content-Type.
+  // For full-file requests (new tab), redirect directly to CloudFront which has CORS + accept-ranges.
+  // This avoids the platform response-body-size limit that kills full 40MB streams.
   app.get("/api/video-proxy", async (req, res) => {
     const url = req.query.url as string;
     if (!url || !url.startsWith("https://d2xsxph8kpxj0f.cloudfront.net/")) {
       return res.status(400).json({ error: "Invalid URL" });
     }
     try {
-      // Support range requests for video seeking
       const rangeHeader = req.headers.range;
-      const fetchHeaders: Record<string, string> = {};
-      if (rangeHeader) fetchHeaders["Range"] = rangeHeader;
 
-      const response = await fetch(url, { headers: fetchHeaders });
+      // If no Range header: redirect browser directly to CloudFront.
+      // CloudFront already serves CORS + Accept-Ranges + inline playback for range requests.
+      // The only issue is MOV files get video/quicktime — browsers handle it fine for playback.
+      if (!rangeHeader) {
+        return res.redirect(302, url);
+      }
+
+      // Range request: proxy with correct Content-Type so browser can seek correctly.
+      const response = await fetch(url, { headers: { Range: rangeHeader } });
       if (!response.ok) return res.status(response.status).send("Failed to fetch video");
       if (!response.body) return res.status(500).send("No response body");
 
-      // Detect file extension to pick the right MIME type
       const urlPath = new URL(url).pathname.toLowerCase();
-      const isMov = urlPath.endsWith(".mov");
       const isWebm = urlPath.endsWith(".webm");
-      const contentType = isWebm ? "video/webm" : isMov ? "video/mp4" : "video/mp4";
+      const contentType = isWebm ? "video/webm" : "video/mp4";
 
-      // Forward range response status (206 Partial Content) if applicable
-      const status = response.status === 206 ? 206 : 200;
       const contentRange = response.headers.get("content-range");
       const contentLength = response.headers.get("content-length");
 
-      res.status(status);
+      res.status(206);
       res.setHeader("Content-Type", contentType);
       res.setHeader("Content-Disposition", "inline");
       res.setHeader("Accept-Ranges", "bytes");
@@ -121,7 +123,6 @@ async function startServer() {
       if (contentRange) res.setHeader("Content-Range", contentRange);
       if (contentLength) res.setHeader("Content-Length", contentLength);
 
-      // Stream the response body directly to the client (no memory buffering)
       const { Readable } = await import("stream");
       const nodeStream = Readable.fromWeb(response.body as any);
       nodeStream.pipe(res);
