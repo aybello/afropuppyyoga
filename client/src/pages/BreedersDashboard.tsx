@@ -1,8 +1,9 @@
 /* ============================================================
    BreedersDashboard — Admin page for managing the breeder database
-   Features: Search, filter, add/edit/delete, send confirmation emails
+   Features: Search, filter, add/edit/delete, send confirmation emails,
+             monthly availability blast, per-breeder availability history
    ============================================================ */
-import { useState, useRef } from "react";
+import { useState } from "react";
 import AdminNav from "@/components/AdminNav";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
   PawPrint, Plus, Search, Pencil, Trash2, Phone, Mail, Instagram,
-  ChevronDown, ChevronUp, Send, Eye, History, MapPin, X, Clock
+  ChevronDown, ChevronUp, Send, Eye, History, MapPin, X, Clock,
+  CalendarCheck, CheckCircle2, AlertCircle, Loader2
 } from "lucide-react";
 
 type ContractStatus = "No contract yet" | "Contract sent" | "Contract completed";
@@ -56,10 +58,47 @@ const STUDIO_LOCATIONS = [
   { city: "Hamilton", label: "Hamilton — Colibri Studio", address: "Colibri Studio, 2751 Barton Street East, Hamilton, Ontario" },
 ];
 
+// Time options in 30-min increments from 6:00 AM to 11:00 PM
+const TIME_OPTIONS: string[] = [];
+for (let h = 6; h <= 23; h++) {
+  const ampm = h < 12 ? "AM" : "PM";
+  const hour = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  TIME_OPTIONS.push(`${hour}:00 ${ampm}`);
+  if (h < 23) TIME_OPTIONS.push(`${hour}:30 ${ampm}`);
+}
+
+function TimeSelect({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+  return (
+    <Select value={value || ""} onValueChange={onChange}>
+      <SelectTrigger className="mt-1 border-[#F0D0DC] font-body text-sm">
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent className="max-h-60">
+        {TIME_OPTIONS.map(t => (
+          <SelectItem key={t} value={t}>{t}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+// Generate upcoming months for the blast selector (current + next 5)
+function getUpcomingMonths() {
+  const months = [];
+  const now = new Date();
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const label = d.toLocaleDateString("en-CA", { month: "long", year: "numeric" });
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    months.push({ label, key });
+  }
+  return months;
+}
+
 export default function BreedersDashboard() {
   const utils = trpc.useUtils();
 
-  // ── Breeder list state ──────────────────────────────────────────────────────
+  // Breeder list state
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -68,18 +107,27 @@ export default function BreedersDashboard() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [form, setForm] = useState({ ...EMPTY_FORM });
 
-  // ── Confirmation state ──────────────────────────────────────────────────────
+  // Confirmation state
   const [confirmBreeder, setConfirmBreeder] = useState<any>(null);
   const [events, setEvents] = useState([{ ...EMPTY_EVENT }]);
   const [availabilityNote, setAvailabilityNote] = useState("");
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState<number | null>(null);
 
-  // ── Location presets state ──────────────────────────────────────────────────
+  // Availability blast state
+  const [showBlastModal, setShowBlastModal] = useState(false);
+  const [blastMonth, setBlastMonth] = useState(() => getUpcomingMonths()[1]); // default next month
+  const [blastCustomMessage, setBlastCustomMessage] = useState("");
+  const [blastResult, setBlastResult] = useState<{ sent: number; failed: number } | null>(null);
+
+  // Availability responses per breeder
+  const [showAvailability, setShowAvailability] = useState<number | null>(null);
+
+  // Location presets state
   const [showPresetsModal, setShowPresetsModal] = useState(false);
   const [newPreset, setNewPreset] = useState({ label: "", city: "", address: "" });
 
-  // ── Queries ─────────────────────────────────────────────────────────────────
+  // Queries
   const { data: breeders = [], isLoading } = trpc.breeders.list.useQuery({
     search: search || undefined,
     contractStatus: filterStatus as any,
@@ -92,7 +140,12 @@ export default function BreedersDashboard() {
     { enabled: showHistory !== null }
   );
 
-  // ── Mutations ────────────────────────────────────────────────────────────────
+  const { data: breederAvailability = [], isLoading: availLoading } = trpc.breeders.getBreederResponses.useQuery(
+    { breederId: showAvailability! },
+    { enabled: showAvailability !== null }
+  );
+
+  // Mutations
   const addMutation = trpc.breeders.add.useMutation({
     onSuccess: () => { utils.breeders.list.invalidate(); setShowAddModal(false); setForm({ ...EMPTY_FORM }); },
   });
@@ -122,8 +175,14 @@ export default function BreedersDashboard() {
   const deletePresetMutation = trpc.breeders.deletePreset.useMutation({
     onSuccess: () => utils.breeders.listPresets.invalidate(),
   });
+  const blastMutation = trpc.breeders.sendAvailabilityBlast.useMutation({
+    onSuccess: (data) => {
+      setBlastResult({ sent: data.sent, failed: data.failed });
+    },
+    onError: (e) => alert(`Error sending blast: ${e.message}`),
+  });
 
-  // ── Helpers ──────────────────────────────────────────────────────────────────
+  // Helpers
   function openEdit(b: any) {
     setForm({
       name: b.name ?? "", contactName: b.contactName ?? "", phone: b.phone ?? "",
@@ -153,10 +212,6 @@ export default function BreedersDashboard() {
 
   function updateEvent(idx: number, field: string, value: any) {
     setEvents(ev => ev.map((e, i) => i === idx ? { ...e, [field]: value } : e));
-  }
-
-  function applyPreset(idx: number, preset: any) {
-    setEvents(ev => ev.map((e, i) => i === idx ? { ...e, city: preset.city, location: preset.address } : e));
   }
 
   function applyStudio(idx: number, studioLabel: string) {
@@ -194,12 +249,23 @@ export default function BreedersDashboard() {
     });
   }
 
+  function handleBlast() {
+    blastMutation.mutate({
+      monthLabel: blastMonth.label,
+      monthKey: blastMonth.key,
+      customMessage: blastCustomMessage || undefined,
+      origin: window.location.origin,
+    });
+  }
+
   const contractCounts = {
     all: breeders.length,
     "No contract yet": breeders.filter((b: any) => b.contractStatus === "No contract yet").length,
     "Contract sent": breeders.filter((b: any) => b.contractStatus === "Contract sent").length,
     "Contract completed": breeders.filter((b: any) => b.contractStatus === "Contract completed").length,
   };
+
+  const upcomingMonths = getUpcomingMonths();
 
   return (
     <div className="min-h-screen bg-[#FEFAF4]">
@@ -214,9 +280,9 @@ export default function BreedersDashboard() {
               <span className="font-body text-xs font-semibold text-[#C2185B] uppercase tracking-widest">Admin</span>
             </div>
             <h1 className="font-display text-3xl font-bold text-[#1A0A12]">Breeder Database</h1>
-            <p className="font-body text-sm text-[#6B4C3B] mt-1">Manage breeders and send booking confirmations</p>
+            <p className="font-body text-sm text-[#6B4C3B] mt-1">Manage breeders, send confirmations, and check availability</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap justify-end">
             <Button
               variant="outline"
               onClick={() => setShowPresetsModal(true)}
@@ -224,6 +290,14 @@ export default function BreedersDashboard() {
             >
               <MapPin className="w-4 h-4" />
               <span className="hidden sm:inline">Locations</span>
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => { setBlastResult(null); setBlastCustomMessage(""); setShowBlastModal(true); }}
+              className="border-[#C2185B] text-[#C2185B] hover:bg-[#FFF0F4] font-body gap-2"
+            >
+              <CalendarCheck className="w-4 h-4" />
+              <span className="hidden sm:inline">Availability Blast</span>
             </Button>
             <Button
               onClick={() => { setForm({ ...EMPTY_FORM }); setShowAddModal(true); }}
@@ -382,6 +456,15 @@ export default function BreedersDashboard() {
                         <Button
                           size="sm"
                           variant="outline"
+                          className="border-[#C2185B] text-[#C2185B] hover:bg-[#FFF0F4] font-body gap-1.5"
+                          onClick={(e) => { e.stopPropagation(); setShowAvailability(b.id); }}
+                        >
+                          <CalendarCheck className="w-3.5 h-3.5" />
+                          Availability
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
                           className="border-[#F0D0DC] text-[#8B2252] hover:bg-[#FFF0F4] font-body gap-1.5"
                           onClick={(e) => { e.stopPropagation(); setShowHistory(b.id); }}
                         >
@@ -416,6 +499,154 @@ export default function BreedersDashboard() {
         )}
       </div>
 
+      {/* ── Availability Blast Modal ──────────────────────────────────────────── */}
+      <Dialog open={showBlastModal} onOpenChange={(open) => { if (!open) { setShowBlastModal(false); setBlastResult(null); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl text-[#1A0A12]">Send Availability Blast</DialogTitle>
+          </DialogHeader>
+          {blastResult ? (
+            <div className="py-4 text-center space-y-4">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-8 h-8 text-green-600" />
+              </div>
+              <div>
+                <p className="font-display text-lg text-[#1A0A12] font-semibold">Blast Sent!</p>
+                <p className="font-body text-sm text-[#6B4C3B] mt-1">
+                  {blastResult.sent} email{blastResult.sent !== 1 ? "s" : ""} sent successfully.
+                  {blastResult.failed > 0 && <span className="text-red-600"> {blastResult.failed} failed.</span>}
+                </p>
+                <p className="font-body text-xs text-[#8B6B5A] mt-2">Each breeder received a unique link to submit their availability for {blastMonth.label}. Responses will appear in each breeder's Availability tab.</p>
+              </div>
+              <Button onClick={() => { setShowBlastModal(false); setBlastResult(null); }} className="bg-[#C2185B] hover:bg-[#A01550] text-white font-body w-full">Done</Button>
+            </div>
+          ) : (
+            <div className="space-y-5 py-2">
+              <div>
+                <Label className="font-body text-sm text-[#1A0A12] font-semibold">Month to Check Availability For *</Label>
+                <Select
+                  value={blastMonth.key}
+                  onValueChange={(key) => {
+                    const m = upcomingMonths.find(m => m.key === key);
+                    if (m) setBlastMonth(m);
+                  }}
+                >
+                  <SelectTrigger className="mt-1 border-[#F0D0DC] font-body">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {upcomingMonths.map(m => (
+                      <SelectItem key={m.key} value={m.key}>{m.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="font-body text-sm text-[#1A0A12] font-semibold">Custom Message (optional)</Label>
+                <Textarea
+                  value={blastCustomMessage}
+                  onChange={(e) => setBlastCustomMessage(e.target.value)}
+                  className="mt-1 border-[#F0D0DC] font-body resize-none"
+                  rows={3}
+                  placeholder="e.g. We are looking for 2-3 puppies per class, ideally small breeds..."
+                />
+              </div>
+              <div className="p-3 bg-[#FFF5F8] border border-[#F0D0DC] rounded-lg">
+                <p className="font-body text-xs text-[#6B4C3B]">
+                  This will email <strong>all active breeders with an email address</strong> asking for their availability in <strong>{blastMonth.label}</strong>. Each breeder gets a unique link to submit their dates.
+                </p>
+              </div>
+              {blastMutation.error && (
+                <div className="flex items-center gap-2 text-red-600 text-sm font-body bg-red-50 rounded-lg px-4 py-3">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {blastMutation.error.message}
+                </div>
+              )}
+            </div>
+          )}
+          {!blastResult && (
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowBlastModal(false)} className="font-body border-[#F0D0DC]">Cancel</Button>
+              <Button
+                onClick={handleBlast}
+                disabled={blastMutation.isPending}
+                className="bg-[#C2185B] hover:bg-[#A01550] text-white font-body gap-2"
+              >
+                {blastMutation.isPending ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" />Sending...</>
+                ) : (
+                  <><Send className="w-4 h-4" />Send Blast</>
+                )}
+              </Button>
+            </DialogFooter>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Breeder Availability Responses Modal ─────────────────────────────── */}
+      <Dialog open={showAvailability !== null} onOpenChange={(open) => { if (!open) setShowAvailability(null); }}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl text-[#1A0A12]">Availability Responses</DialogTitle>
+          </DialogHeader>
+          {availLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-[#C2185B]" />
+            </div>
+          ) : breederAvailability.length === 0 ? (
+            <div className="text-center py-8">
+              <CalendarCheck className="w-10 h-10 text-[#F0D0DC] mx-auto mb-2" />
+              <p className="font-body text-sm text-[#6B4C3B]">No availability responses yet</p>
+              <p className="font-body text-xs text-[#8B6B5A] mt-1">Send an availability blast to collect responses from this breeder.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {breederAvailability.map((r: any) => (
+                <div key={r.id} className="border border-[#F0D0DC] rounded-xl p-4 bg-[#FEFAF4]">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      {r.responded ? (
+                        <span className="inline-flex items-center gap-1 text-xs font-body font-medium text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
+                          <CheckCircle2 className="w-3 h-3" /> Responded
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-xs font-body font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                          <Clock className="w-3 h-3" /> Pending
+                        </span>
+                      )}
+                    </div>
+                    <span className="font-body text-xs text-[#8B6B5A]">
+                      {new Date(r.createdAt).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}
+                    </span>
+                  </div>
+                  {r.responded ? (
+                    <div className="space-y-2">
+                      <div>
+                        <p className="font-body text-xs text-[#8B6B5A] uppercase tracking-wider mb-1">Available Dates</p>
+                        <p className="font-body text-sm text-[#1A0A12] bg-white rounded-lg p-3 border border-[#F0D0DC] whitespace-pre-wrap">{r.availabilityText}</p>
+                      </div>
+                      {r.responseNotes && (
+                        <div>
+                          <p className="font-body text-xs text-[#8B6B5A] uppercase tracking-wider mb-1">Notes</p>
+                          <p className="font-body text-sm text-[#1A0A12] bg-white rounded-lg p-3 border border-[#F0D0DC]">{r.responseNotes}</p>
+                        </div>
+                      )}
+                      {r.respondedAt && (
+                        <p className="font-body text-xs text-[#8B6B5A]">
+                          Responded {new Date(r.respondedAt).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="font-body text-xs text-[#8B6B5A] italic">Awaiting response from breeder...</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* ── Send Confirmation Modal ─────────────────────────────────────────── */}
       <Dialog open={!!confirmBreeder} onOpenChange={(open) => { if (!open) { setConfirmBreeder(null); setPreviewHtml(null); } }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -426,7 +657,6 @@ export default function BreedersDashboard() {
           </DialogHeader>
 
           {previewHtml ? (
-            /* Preview mode */
             <div>
               <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                 <p className="font-body text-sm text-amber-800">
@@ -452,9 +682,7 @@ export default function BreedersDashboard() {
               </div>
             </div>
           ) : (
-            /* Edit mode */
             <div className="space-y-6 py-2">
-              {/* Event blocks */}
               {events.map((ev, idx) => (
                 <div key={idx} className="border border-[#F0D0DC] rounded-xl p-4 bg-[#FEFAF4] relative">
                   <div className="flex items-center justify-between mb-3">
@@ -483,7 +711,7 @@ export default function BreedersDashboard() {
                         {STUDIO_LOCATIONS.map(s => (
                           <SelectItem key={s.label} value={s.label}>{s.label}</SelectItem>
                         ))}
-                        <SelectItem value="private">🏠 Private Event (enter address)</SelectItem>
+                        <SelectItem value="private">Private Event (enter address)</SelectItem>
                       </SelectContent>
                     </Select>
                     {ev.isPrivateEvent && (
@@ -525,22 +753,22 @@ export default function BreedersDashboard() {
                     <div className="grid grid-cols-2 gap-3 mb-3">
                       <div>
                         <Label className="font-body text-xs text-[#6B4C3B] font-semibold uppercase tracking-wider">Pickup Time</Label>
-                        <Input value={ev.pickupTime} onChange={(e) => updateEvent(idx, "pickupTime", e.target.value)} className="mt-1 border-[#F0D0DC] font-body text-sm" placeholder="12:00 PM" />
+                        <TimeSelect value={ev.pickupTime} onChange={(v) => updateEvent(idx, "pickupTime", v)} placeholder="Select time..." />
                       </div>
                       <div>
                         <Label className="font-body text-xs text-[#6B4C3B] font-semibold uppercase tracking-wider">Return Time</Label>
-                        <Input value={ev.returnTime} onChange={(e) => updateEvent(idx, "returnTime", e.target.value)} className="mt-1 border-[#F0D0DC] font-body text-sm" placeholder="2:30 PM" />
+                        <TimeSelect value={ev.returnTime} onChange={(v) => updateEvent(idx, "returnTime", v)} placeholder="Select time..." />
                       </div>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-3 mb-3">
                       <div>
                         <Label className="font-body text-xs text-[#6B4C3B] font-semibold uppercase tracking-wider">Drop-off Time</Label>
-                        <Input value={ev.dropOffTime} onChange={(e) => updateEvent(idx, "dropOffTime", e.target.value)} className="mt-1 border-[#F0D0DC] font-body text-sm" placeholder="9:00 AM" />
+                        <TimeSelect value={ev.dropOffTime} onChange={(v) => updateEvent(idx, "dropOffTime", v)} placeholder="Select time..." />
                       </div>
                       <div>
                         <Label className="font-body text-xs text-[#6B4C3B] font-semibold uppercase tracking-wider">Pick-up Time</Label>
-                        <Input value={ev.pickUpTime} onChange={(e) => updateEvent(idx, "pickUpTime", e.target.value)} className="mt-1 border-[#F0D0DC] font-body text-sm" placeholder="4:30 PM" />
+                        <TimeSelect value={ev.pickUpTime} onChange={(v) => updateEvent(idx, "pickUpTime", v)} placeholder="Select time..." />
                       </div>
                     </div>
                   )}
@@ -649,7 +877,6 @@ export default function BreedersDashboard() {
           <div className="space-y-4">
             <p className="font-body text-sm text-[#6B4C3B]">Save frequently used venues so you can quickly fill them in when creating confirmations.</p>
 
-            {/* Add new preset */}
             <div className="border border-[#F0D0DC] rounded-xl p-4 bg-[#FEFAF4] space-y-3">
               <p className="font-body text-sm font-semibold text-[#1A0A12]">Add New Location</p>
               <div>
@@ -673,7 +900,6 @@ export default function BreedersDashboard() {
               </Button>
             </div>
 
-            {/* Existing presets */}
             {presets.length > 0 && (
               <div className="space-y-2">
                 {presets.map((p: any) => (

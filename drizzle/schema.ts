@@ -353,3 +353,52 @@ export const refunds = mysqlTable("refunds", {
 
 export type Refund = typeof refunds.$inferSelect;
 export type InsertRefund = typeof refunds.$inferInsert;
+
+// ─── Breeder Availability Blasts ──────────────────────────────────────────────
+/**
+ * One row per monthly availability blast sent to all active breeders.
+ */
+export const breederAvailabilityBlasts = mysqlTable("breederAvailabilityBlasts", {
+  id: int("id").autoincrement().primaryKey(),
+  /** e.g. "July 2026" */
+  monthLabel: varchar("monthLabel", { length: 100 }).notNull(),
+  /** ISO month string e.g. "2026-07" for sorting */
+  monthKey: varchar("monthKey", { length: 7 }).notNull(),
+  /** Number of breeders emailed */
+  emailedCount: int("emailedCount").default(0).notNull(),
+  /** Optional custom message included in the blast */
+  customMessage: text("customMessage"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [index("idx_blasts_monthKey").on(t.monthKey)]);
+
+export type BreederAvailabilityBlast = typeof breederAvailabilityBlasts.$inferSelect;
+export type InsertBreederAvailabilityBlast = typeof breederAvailabilityBlasts.$inferInsert;
+
+/**
+ * One row per breeder per blast.
+ * Breeder clicks a unique token link in their email to submit availability.
+ */
+export const breederAvailabilityResponses = mysqlTable("breederAvailabilityResponses", {
+  id: int("id").autoincrement().primaryKey(),
+  blastId: int("blastId").notNull(),
+  breederId: int("breederId").notNull(),
+  breederName: varchar("breederName", { length: 255 }).notNull(),
+  breederEmail: varchar("breederEmail", { length: 320 }).notNull(),
+  /** Unique one-time token embedded in the email link */
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  /** Whether the breeder has responded */
+  responded: int("responded").default(0).notNull(),
+  /** Free-text availability e.g. "July 5, 12, 19 - mornings preferred" */
+  availabilityText: text("availabilityText"),
+  /** Any additional notes from the breeder */
+  responseNotes: text("responseNotes"),
+  respondedAt: timestamp("respondedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  index("idx_avail_blastId").on(t.blastId),
+  index("idx_avail_breederId").on(t.breederId),
+  index("idx_avail_token").on(t.token),
+]);
+
+export type BreederAvailabilityResponse = typeof breederAvailabilityResponses.$inferSelect;
+export type InsertBreederAvailabilityResponse = typeof breederAvailabilityResponses.$inferInsert;
