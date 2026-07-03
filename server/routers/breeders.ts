@@ -461,19 +461,6 @@ export const breedersRouter = router({
         .orderBy(desc(breederAvailabilityResponses.responded), breederAvailabilityResponses.breederName);
     }),
 
-  /** Get all responses for a specific breeder across all blasts */
-  getBreederResponses: staffProcedure
-    .input(z.object({ breederId: z.number() }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) return [];
-      return db
-        .select()
-        .from(breederAvailabilityResponses)
-        .where(eq(breederAvailabilityResponses.breederId, input.breederId))
-        .orderBy(desc(breederAvailabilityResponses.createdAt));
-    }),
-
   /** Public: validate a token and return the blast/breeder info for the response form */
   getAvailabilityToken: publicProcedure
     .input(z.object({ token: z.string() }))
@@ -527,5 +514,98 @@ export const breedersRouter = router({
         })
         .where(eq(breederAvailabilityResponses.token, input.token));
       return { success: true, breederName: row.breederName };
+    }),
+
+  /** Send a one-off availability request to a single breeder */
+  sendAvailabilityRequest: staffProcedure
+    .input(z.object({
+      breederId: z.number(),
+      monthLabel: z.string().min(1),
+      monthKey: z.string().min(1),
+      customMessage: z.string().optional(),
+      origin: z.string().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+      const breederRows = await db.select().from(breeders).where(eq(breeders.id, input.breederId)).limit(1);
+      if (breederRows.length === 0) throw new Error("Breeder not found");
+      const breeder = breederRows[0];
+      if (!breeder.email?.trim()) throw new Error("This breeder has no email address on file. Please add their email first.");
+      // Reuse or create a blast record for this month
+      let blastId: number;
+      const existingBlast = await db
+        .select()
+        .from(breederAvailabilityBlasts)
+        .where(eq(breederAvailabilityBlasts.monthKey, input.monthKey))
+        .limit(1);
+      if (existingBlast.length > 0) {
+        blastId = existingBlast[0].id;
+      } else {
+        const [blast] = await db
+          .insert(breederAvailabilityBlasts)
+          .values({ monthLabel: input.monthLabel, monthKey: input.monthKey, emailedCount: 1, customMessage: input.customMessage ?? null })
+          .$returningId();
+        blastId = blast.id;
+      }
+      const token = crypto.randomBytes(32).toString("hex");
+      const firstName = (breeder.contactName ?? breeder.name).split(" ")[0];
+      const origin = input.origin ?? "https://afropuppyyoga.ca";
+      const responseLink = `${origin}/breeder-availability?token=${token}`;
+      await db.insert(breederAvailabilityResponses).values({
+        blastId,
+        breederId: breeder.id,
+        breederName: breeder.contactName ?? breeder.name,
+        breederEmail: breeder.email!,
+        token,
+        responded: 0,
+      });
+      const customSection = input.customMessage
+        ? `<p style="margin:16px 0;line-height:1.6;color:#3D1A2A;">${input.customMessage}</p>`
+        : "";
+      const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#FFF5F8;font-family:Georgia,serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#FFF5F8;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(194,24,91,0.08);">
+        <tr><td style="background:linear-gradient(135deg,#C2185B,#8B2252);padding:32px 40px;text-align:center;">
+          <img src="${APY_LOGO}" alt="AfroPuppyYoga" width="64" style="border-radius:50%;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;" />
+          <h1 style="color:#FFFFFF;font-family:Georgia,serif;font-size:22px;margin:0;">Availability Check</h1>
+          <p style="color:rgba(255,255,255,0.85);font-size:14px;margin:6px 0 0;">${input.monthLabel}</p>
+        </td></tr>
+        <tr><td style="padding:36px 40px;">
+          <p style="color:#1A0A12;font-size:16px;line-height:1.7;margin:0 0 16px;">Hi ${firstName},</p>
+          <p style="color:#3D1A2A;font-size:15px;line-height:1.7;margin:0 0 16px;">We are planning our AfroPuppyYoga classes for <strong>${input.monthLabel}</strong> and would love to know your availability!</p>
+          ${customSection}
+          <p style="color:#3D1A2A;font-size:15px;line-height:1.7;margin:0 0 24px;">Please click the button below to let us know which dates and times work best for you and your puppies.</p>
+          <div style="text-align:center;margin:28px 0;">
+            <a href="${responseLink}" style="display:inline-block;background:#C2185B;color:#FFFFFF;text-decoration:none;font-family:Georgia,serif;font-size:16px;font-weight:bold;padding:14px 36px;border-radius:50px;">Share My Availability</a>
+          </div>
+          <p style="color:#8B6070;font-size:13px;line-height:1.6;margin:0;">This link is unique to you. If you have any questions, reply to this email or reach us at <a href="tel:289-788-1885" style="color:#C2185B;">289-788-1885</a>.</p>
+        </td></tr>
+        <tr><td style="background:#FFF5F8;padding:20px 40px;text-align:center;border-top:1px solid #F0D0DC;">
+          <p style="color:#8B6070;font-size:12px;margin:0;">The AfroPuppyYoga Team &nbsp;|&nbsp; afropuppyyogaofficial@gmail.com &nbsp;|&nbsp; afropuppyyoga.ca</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+      await sendEmail({ to: breeder.email!, subject: `AfroPuppyYoga — Availability Check for ${input.monthLabel}`, html });
+      return { success: true };
+    }),
+
+  /** Get all availability responses for a specific breeder */
+  getBreederResponses: staffProcedure
+    .input(z.object({ breederId: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      return db
+        .select()
+        .from(breederAvailabilityResponses)
+        .where(eq(breederAvailabilityResponses.breederId, input.breederId))
+        .orderBy(desc(breederAvailabilityResponses.createdAt));
     }),
 });

@@ -120,8 +120,11 @@ export default function BreedersDashboard() {
   const [blastCustomMessage, setBlastCustomMessage] = useState("");
   const [blastResult, setBlastResult] = useState<{ sent: number; failed: number } | null>(null);
 
-  // Availability responses per breeder
-  const [showAvailability, setShowAvailability] = useState<number | null>(null);
+  // Availability per-breeder state (request + log)
+  const [showAvailability, setShowAvailability] = useState<any | null>(null); // stores the full breeder object
+  const [reqMonth, setReqMonth] = useState(() => getUpcomingMonths()[1]);
+  const [reqMessage, setReqMessage] = useState("");
+  const [reqSent, setReqSent] = useState(false);
 
   // Location presets state
   const [showPresetsModal, setShowPresetsModal] = useState(false);
@@ -140,8 +143,8 @@ export default function BreedersDashboard() {
     { enabled: showHistory !== null }
   );
 
-  const { data: breederAvailability = [], isLoading: availLoading } = trpc.breeders.getBreederResponses.useQuery(
-    { breederId: showAvailability! },
+  const { data: breederAvailability = [], isLoading: availLoading, refetch: refetchAvail } = trpc.breeders.getBreederResponses.useQuery(
+    { breederId: showAvailability?.id ?? 0 },
     { enabled: showAvailability !== null }
   );
 
@@ -180,6 +183,13 @@ export default function BreedersDashboard() {
       setBlastResult({ sent: data.sent, failed: data.failed });
     },
     onError: (e) => alert(`Error sending blast: ${e.message}`),
+  });
+  const reqAvailMutation = trpc.breeders.sendAvailabilityRequest.useMutation({
+    onSuccess: () => {
+      setReqSent(true);
+      refetchAvail();
+    },
+    onError: (e) => alert(`Error: ${e.message}`),
   });
 
   // Helpers
@@ -457,7 +467,7 @@ export default function BreedersDashboard() {
                           size="sm"
                           variant="outline"
                           className="border-[#C2185B] text-[#C2185B] hover:bg-[#FFF0F4] font-body gap-1.5"
-                          onClick={(e) => { e.stopPropagation(); setShowAvailability(b.id); }}
+                          onClick={(e) => { e.stopPropagation(); setShowAvailability(b); setReqSent(false); setReqMonth(getUpcomingMonths()[1]); setReqMessage(""); }}
                         >
                           <CalendarCheck className="w-3.5 h-3.5" />
                           Availability
@@ -583,67 +593,134 @@ export default function BreedersDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Breeder Availability Responses Modal ─────────────────────────────── */}
-      <Dialog open={showAvailability !== null} onOpenChange={(open) => { if (!open) setShowAvailability(null); }}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+      {/* ── Per-Breeder Availability Modal (Request + Log) ─────────────────────── */}
+      <Dialog open={showAvailability !== null} onOpenChange={(open) => { if (!open) { setShowAvailability(null); setReqSent(false); } }}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl text-[#1A0A12]">Availability Responses</DialogTitle>
+            <DialogTitle className="font-display text-xl text-[#1A0A12]">
+              Availability — {showAvailability?.contactName || showAvailability?.name}
+            </DialogTitle>
+            {showAvailability?.email && (
+              <p className="font-body text-xs text-[#8B6B5A] mt-1">{showAvailability.email}</p>
+            )}
           </DialogHeader>
-          {availLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-[#C2185B]" />
-            </div>
-          ) : breederAvailability.length === 0 ? (
-            <div className="text-center py-8">
-              <CalendarCheck className="w-10 h-10 text-[#F0D0DC] mx-auto mb-2" />
-              <p className="font-body text-sm text-[#6B4C3B]">No availability responses yet</p>
-              <p className="font-body text-xs text-[#8B6B5A] mt-1">Send an availability blast to collect responses from this breeder.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {breederAvailability.map((r: any) => (
-                <div key={r.id} className="border border-[#F0D0DC] rounded-xl p-4 bg-[#FEFAF4]">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      {r.responded ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-body font-medium text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
-                          <CheckCircle2 className="w-3 h-3" /> Responded
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-xs font-body font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                          <Clock className="w-3 h-3" /> Pending
-                        </span>
-                      )}
-                    </div>
-                    <span className="font-body text-xs text-[#8B6B5A]">
-                      {new Date(r.createdAt).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}
-                    </span>
-                  </div>
-                  {r.responded ? (
-                    <div className="space-y-2">
-                      <div>
-                        <p className="font-body text-xs text-[#8B6B5A] uppercase tracking-wider mb-1">Available Dates</p>
-                        <p className="font-body text-sm text-[#1A0A12] bg-white rounded-lg p-3 border border-[#F0D0DC] whitespace-pre-wrap">{r.availabilityText}</p>
-                      </div>
-                      {r.responseNotes && (
-                        <div>
-                          <p className="font-body text-xs text-[#8B6B5A] uppercase tracking-wider mb-1">Notes</p>
-                          <p className="font-body text-sm text-[#1A0A12] bg-white rounded-lg p-3 border border-[#F0D0DC]">{r.responseNotes}</p>
-                        </div>
-                      )}
-                      {r.respondedAt && (
-                        <p className="font-body text-xs text-[#8B6B5A]">
-                          Responded {new Date(r.respondedAt).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}
-                        </p>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="font-body text-xs text-[#8B6B5A] italic">Awaiting response from breeder...</p>
-                  )}
+
+          {/* ── Request Section ── */}
+          <div className="border border-[#F0D0DC] rounded-xl p-4 bg-[#FFF5F8] mb-4">
+            <p className="font-body text-sm font-semibold text-[#8B2252] mb-3">Request Availability</p>
+            {reqSent ? (
+              <div className="flex items-center gap-2 text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <p className="font-body text-sm">Request sent to {showAvailability?.email}!</p>
+              </div>
+            ) : !showAvailability?.email ? (
+              <div className="flex items-center gap-2 text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <p className="font-body text-sm">No email on file. Edit this breeder to add their email first.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <Label className="font-body text-xs text-[#1A0A12] font-semibold">Month *</Label>
+                  <Select value={reqMonth.key} onValueChange={(k) => { const m = getUpcomingMonths().find(x => x.key === k); if (m) setReqMonth(m); }}>
+                    <SelectTrigger className="mt-1 border-[#F0D0DC] font-body text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getUpcomingMonths().map(m => (
+                        <SelectItem key={m.key} value={m.key}>{m.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              ))}
-            </div>
-          )}
+                <div>
+                  <Label className="font-body text-xs text-[#1A0A12] font-semibold">Custom Message (optional)</Label>
+                  <Textarea
+                    className="mt-1 border-[#F0D0DC] font-body text-sm resize-none"
+                    rows={2}
+                    placeholder="Any extra context for this breeder..."
+                    value={reqMessage}
+                    onChange={e => setReqMessage(e.target.value)}
+                  />
+                </div>
+                <Button
+                  size="sm"
+                  className="bg-[#C2185B] hover:bg-[#A01550] text-white font-body gap-1.5 w-full"
+                  disabled={reqAvailMutation.isPending}
+                  onClick={() => reqAvailMutation.mutate({
+                    breederId: showAvailability.id,
+                    monthLabel: reqMonth.label,
+                    monthKey: reqMonth.key,
+                    customMessage: reqMessage || undefined,
+                    origin: window.location.origin,
+                  })}
+                >
+                  {reqAvailMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                  Send Availability Request
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* ── Response Log ── */}
+          <div>
+            <p className="font-body text-sm font-semibold text-[#1A0A12] mb-3">Response Log</p>
+            {availLoading ? (
+              <div className="flex items-center justify-center py-6">
+                <Loader2 className="w-5 h-5 animate-spin text-[#C2185B]" />
+              </div>
+            ) : breederAvailability.length === 0 ? (
+              <div className="text-center py-6">
+                <CalendarCheck className="w-8 h-8 text-[#F0D0DC] mx-auto mb-2" />
+                <p className="font-body text-sm text-[#6B4C3B]">No requests sent yet</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {breederAvailability.map((r: any) => (
+                  <div key={r.id} className="border border-[#F0D0DC] rounded-xl p-4 bg-[#FEFAF4]">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        {r.responded ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-body font-medium text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
+                            <CheckCircle2 className="w-3 h-3" /> Responded
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs font-body font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                            <Clock className="w-3 h-3" /> Pending
+                          </span>
+                        )}
+                        <span className="font-body text-xs text-[#8B6B5A] font-medium">{r.monthLabel ?? ""}</span>
+                      </div>
+                      <span className="font-body text-xs text-[#8B6B5A]">
+                        {new Date(r.createdAt).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}
+                      </span>
+                    </div>
+                    {r.responded ? (
+                      <div className="space-y-2">
+                        <div>
+                          <p className="font-body text-xs text-[#8B6B5A] uppercase tracking-wider mb-1">Available Dates</p>
+                          <p className="font-body text-sm text-[#1A0A12] bg-white rounded-lg p-3 border border-[#F0D0DC] whitespace-pre-wrap">{r.availabilityText}</p>
+                        </div>
+                        {r.responseNotes && (
+                          <div>
+                            <p className="font-body text-xs text-[#8B6B5A] uppercase tracking-wider mb-1">Notes</p>
+                            <p className="font-body text-sm text-[#1A0A12] bg-white rounded-lg p-3 border border-[#F0D0DC]">{r.responseNotes}</p>
+                          </div>
+                        )}
+                        {r.respondedAt && (
+                          <p className="font-body text-xs text-[#8B6B5A]">
+                            Responded {new Date(r.respondedAt).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="font-body text-xs text-[#8B6B5A] italic">Awaiting response from breeder...</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
