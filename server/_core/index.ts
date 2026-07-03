@@ -6,6 +6,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { seoRenderMiddleware } from "../seoRenderer";
 import uploadRouter from "../uploadRoute";
 import chunkedUploadRouter from "../chunkedUploadRoute";
 import { createProxyMiddleware } from "http-proxy-middleware";
@@ -177,6 +178,9 @@ async function startServer() {
       createContext,
     })
   );
+  // SEO dynamic rendering — serve pre-rendered HTML to crawlers
+  app.use(seoRenderMiddleware);
+
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
