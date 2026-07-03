@@ -50,6 +50,16 @@ const REELS = [
     tag: "Review",
     instagramUrl: "https://www.instagram.com/reel/DVKKYGIEa4-/",
   },
+  {
+    id: "new_reel",
+    videoUrl:
+      "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/ywRUsSmgYoqYPJOZ.mp4",
+    thumbUrl:
+      "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/YsmvRsuruPouMOgB.jpg",
+    caption: "Fun times at puppy yoga 🐾✨ #puppyyoga #fyp",
+    tag: "Vibes",
+    instagramUrl: "https://www.instagram.com/reel/DZ7SyjbRYPb/",
+  },
 ];
 
 function VideoCard({ reel, index }: { reel: (typeof REELS)[0]; index: number }) {
