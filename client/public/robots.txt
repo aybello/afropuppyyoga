@@ -1,4 +1,12 @@
 User-agent: *
 Allow: /
+Disallow: /admin/
+Disallow: /staff
+Disallow: /staff-login
+Disallow: /submit-invoice
+Disallow: /sign
+Disallow: /predictor
+Disallow: /breeder-calculator
+Disallow: /breeder-availability
 
 Sitemap: https://afropuppyyoga.ca/sitemap.xml
