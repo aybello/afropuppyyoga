@@ -12,7 +12,7 @@ type Message = {
 const SUGGESTED_PROMPTS = [
   "How much are tickets?",
   "What breeds will be at the next class?",
-  "What's your refund policy?",
+  "What happens if my class is cancelled?",
 ];
 
 export default function ChatbotWidget() {
