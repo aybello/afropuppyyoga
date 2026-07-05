@@ -113,32 +113,39 @@ const SCHED_LOCATION_COLORS: Record<SchedLocation, string> = {
   Hamilton: "bg-purple-50 text-purple-700 border-purple-200",
   Oakville: "bg-amber-50 text-amber-700 border-amber-200",
 };
+const SCHED_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
+type SchedDay = typeof SCHED_DAYS[number];
 const SCHED_DAY_COLORS: Record<string, string> = {
-  Saturday: "bg-blue-50 text-blue-700 border-blue-200",
-  Sunday: "bg-green-50 text-green-700 border-green-200",
+  Monday:    "bg-slate-50 text-slate-700 border-slate-200",
+  Tuesday:   "bg-violet-50 text-violet-700 border-violet-200",
+  Wednesday: "bg-cyan-50 text-cyan-700 border-cyan-200",
+  Thursday:  "bg-orange-50 text-orange-700 border-orange-200",
+  Friday:    "bg-yellow-50 text-yellow-700 border-yellow-200",
+  Saturday:  "bg-blue-50 text-blue-700 border-blue-200",
+  Sunday:    "bg-green-50 text-green-700 border-green-200",
 };
+const SCHED_WEEKEND_DAYS = new Set(["Saturday", "Sunday"]);
 const EMPTY_SCHED_FORM = {
   classDate: "",
-  dayOfWeek: "" as "Saturday" | "Sunday" | "",
+  dayOfWeek: "" as SchedDay | "",
   location: "" as SchedLocation | "",
   breed: "",
   breederId: 0,
   breederName: "",
   notes: "",
 };
-function getUpcomingWeekends(): { date: string; label: string; day: "Saturday" | "Sunday" }[] {
-  const results: { date: string; label: string; day: "Saturday" | "Sunday" }[] = [];
+/** Returns the next 84 days (all days) */
+function getUpcomingDays(): { date: string; label: string; day: SchedDay }[] {
+  const results: { date: string; label: string; day: SchedDay }[] = [];
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const DOW_NAMES: SchedDay[] = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   for (let i = 0; i < 84; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
-    const dow = d.getDay();
-    if (dow === 6 || dow === 0) {
-      const iso = d.toISOString().slice(0, 10);
-      const label = d.toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
-      results.push({ date: iso, label, day: dow === 6 ? "Saturday" : "Sunday" });
-    }
+    const iso = d.toISOString().slice(0, 10);
+    const label = d.toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+    results.push({ date: iso, label, day: DOW_NAMES[d.getDay()] });
   }
   return results;
 }
@@ -150,7 +157,7 @@ export default function BreedersDashboard() {
   const [activeView, setActiveView] = useState<"breeders" | "schedule">("breeders");
 
   // Schedule state
-  const weekends = useMemo(() => getUpcomingWeekends(), []);
+  const weekends = useMemo(() => getUpcomingDays(), []);
   const [schedForm, setSchedForm] = useState({ ...EMPTY_SCHED_FORM });
   const [schedEditId, setSchedEditId] = useState<number | null>(null);
   const [showSchedDialog, setShowSchedDialog] = useState(false);
@@ -228,7 +235,7 @@ export default function BreedersDashboard() {
     setSchedEditId(s.id); setShowSchedDialog(true);
   }
   function handleSchedDateChange(dateStr: string) {
-    const w = weekends.find(w => w.date === dateStr);
+    const w = weekends.find((w: { date: string; day: SchedDay }) => w.date === dateStr);
     setSchedForm(f => ({ ...f, classDate: dateStr, dayOfWeek: w?.day ?? "" }));
   }
   function handleSchedBreederChange(breederId: string) {
@@ -737,11 +744,11 @@ export default function BreedersDashboard() {
             <div>
               <Label className="font-body text-sm text-[#1A0A12] font-semibold">Class Date <span className="text-red-500">*</span></Label>
               <Select value={schedForm.classDate} onValueChange={handleSchedDateChange}>
-                <SelectTrigger className="mt-1 border-[#F0D0DC] font-body text-sm"><SelectValue placeholder="Select a Saturday or Sunday" /></SelectTrigger>
+                <SelectTrigger className="mt-1 border-[#F0D0DC] font-body text-sm"><SelectValue placeholder="Select a date" /></SelectTrigger>
                 <SelectContent className="max-h-64">
-                  {weekends.map(w => (
+                  {weekends.map((w: { date: string; label: string; day: SchedDay }) => (
                     <SelectItem key={w.date} value={w.date}>
-                      <span className={`inline-block w-20 text-xs font-semibold mr-2 ${w.day === "Saturday" ? "text-blue-600" : "text-green-600"}`}>{w.day}</span>{w.label}
+                      <span className={`inline-block w-24 text-xs font-semibold mr-2 ${SCHED_WEEKEND_DAYS.has(w.day) ? "text-blue-600" : "text-gray-500"}`}>{w.day}</span>{w.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
