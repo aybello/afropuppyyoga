@@ -170,6 +170,14 @@ async function startServer() {
     })
   );
 
+  // Keep-alive ping endpoint — called by scheduled heartbeat every 5 min to prevent cold starts
+  app.get("/api/ping", (_req, res) => {
+    res.json({ ok: true, ts: Date.now() });
+  });
+  app.post("/api/scheduled/ping", (_req, res) => {
+    res.json({ ok: true, ts: Date.now() });
+  });
+
   // tRPC API
   app.use(
     "/api/trpc",

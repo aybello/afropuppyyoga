@@ -59,7 +59,31 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
+  // Serve static assets with long-lived cache headers
+  // /assets/* files have content-hash in filename — safe to cache for 1 year
+  app.use(
+    "/assets",
+    express.static(path.join(distPath, "assets"), {
+      maxAge: "1y",
+      immutable: true,
+      setHeaders: (res) => {
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      },
+    })
+  );
+
+  // Serve other static files (robots.txt, sitemap, favicon) with short cache
+  app.use(
+    express.static(distPath, {
+      maxAge: "1h",
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith(".html")) {
+          // Never cache HTML — always fresh so users get latest app
+          res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        }
+      },
+    })
+  );
 
   // fall through to index.html — but serve SEO HTML to crawlers first
   app.use("*", (req, res, next) => {

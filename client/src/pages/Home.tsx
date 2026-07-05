@@ -4,29 +4,37 @@
    Sections: Hero → Experience → LumaCalendar → Memberships → About → Our Story → Private Events →
    Gallery → InstagramFeed → Reviews → Gift Cards → EthicalStandards → FAQ → Contact
    ============================================================ */
+import { lazy, Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import SummerSaleBanner from "@/components/SummerSaleBanner";
 import Hero from "@/components/sections/Hero";
 import Experience from "@/components/sections/Experience";
-import About from "@/components/sections/About";
-import OurStory from "@/components/sections/OurStory";
-import LumaCalendar from "@/components/sections/LumaCalendar";
-import PrivateEvents from "@/components/sections/PrivateEvents";
-import Gallery from "@/components/sections/Gallery";
-import InstagramFeed from "@/components/sections/InstagramFeed";
-import Reviews from "@/components/sections/Reviews";
-import GiftCards from "@/components/sections/GiftCards";
-import LoyaltyProgram from "@/components/sections/LoyaltyProgram";
-import Memberships from "@/components/sections/Memberships";
-import FAQ from "@/components/sections/FAQ";
-import EthicalStandards from "@/components/sections/EthicalStandards";
-import Contact from "@/components/sections/Contact";
-import Footer from "@/components/Footer";
+import RewardsStrip from "@/components/RewardsStrip";
 import ScrollToTop from "@/components/ScrollToTop";
 import ChatbotWidget from "@/components/ChatbotWidget";
-import RewardsStrip from "@/components/RewardsStrip";
 import { useScrollDepthTracking, useTimeOnPageTracking } from "@/hooks/useAnalytics";
 import { useEffect } from "react";
+
+// Lazy-load below-the-fold sections — they load as the user scrolls, not on initial paint
+const LumaCalendar = lazy(() => import("@/components/sections/LumaCalendar"));
+const Memberships = lazy(() => import("@/components/sections/Memberships"));
+const About = lazy(() => import("@/components/sections/About"));
+const OurStory = lazy(() => import("@/components/sections/OurStory"));
+const PrivateEvents = lazy(() => import("@/components/sections/PrivateEvents"));
+const Gallery = lazy(() => import("@/components/sections/Gallery"));
+const InstagramFeed = lazy(() => import("@/components/sections/InstagramFeed"));
+const Reviews = lazy(() => import("@/components/sections/Reviews"));
+const LoyaltyProgram = lazy(() => import("@/components/sections/LoyaltyProgram"));
+const GiftCards = lazy(() => import("@/components/sections/GiftCards"));
+const EthicalStandards = lazy(() => import("@/components/sections/EthicalStandards"));
+const FAQ = lazy(() => import("@/components/sections/FAQ"));
+const Contact = lazy(() => import("@/components/sections/Contact"));
+const Footer = lazy(() => import("@/components/Footer"));
+
+// Lightweight placeholder shown while a section loads
+function SectionFallback() {
+  return <div className="w-full py-16 bg-[#FEFAF4]" aria-hidden="true" />;
+}
 
 export default function Home() {
   useScrollDepthTracking();
@@ -38,24 +46,55 @@ export default function Home() {
     <div className="min-h-screen bg-[#FEFAF4]">
       <Navbar />
       <main>
+        {/* Above the fold — loaded immediately */}
         <Hero />
         <RewardsStrip />
         <Experience />
-        <LumaCalendar />
-        <Memberships />
-        <About />
-        <OurStory />
-        <PrivateEvents />
-        <Gallery />
-        <InstagramFeed />
-        <Reviews />
-        <LoyaltyProgram />
-        <GiftCards />
-        <EthicalStandards />
-        <FAQ />
-        <Contact />
+
+        {/* Below the fold — lazy loaded */}
+        <Suspense fallback={<SectionFallback />}>
+          <LumaCalendar />
+        </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <Memberships />
+        </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <About />
+        </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <OurStory />
+        </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <PrivateEvents />
+        </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <Gallery />
+        </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <InstagramFeed />
+        </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <Reviews />
+        </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <LoyaltyProgram />
+        </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <GiftCards />
+        </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <EthicalStandards />
+        </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <FAQ />
+        </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <Contact />
+        </Suspense>
       </main>
-      <Footer />
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
       <ScrollToTop />
       <ChatbotWidget />
     </div>
