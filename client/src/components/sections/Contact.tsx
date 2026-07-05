@@ -15,7 +15,7 @@ const socials = [
     url: "https://www.instagram.com/afropuppyyoga",
     icon: Instagram,
     color: "bg-gradient-to-br from-[#f09433] via-[#e6683c] to-[#bc1888]",
-    followers: "10K+ followers",
+    followers: "12.2K followers",
   },
   {
     name: "Facebook",
