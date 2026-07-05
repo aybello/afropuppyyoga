@@ -4,7 +4,7 @@
    Features: View applications, update status, send interview invite,
              offer letter, and rejection letter via automated email.
    ============================================================ */
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import {
@@ -727,10 +727,54 @@ function ApplicationDetailModal({
   );
 }
 
+// ─── Drag-to-scroll hook ─────────────────────────────────────────────────────
+function useDragScroll() {
+  const ref = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
+
+  const onMouseDown = useCallback((e: React.MouseEvent) => {
+    if (!ref.current) return;
+    isDragging.current = true;
+    startX.current = e.pageX - ref.current.offsetLeft;
+    scrollLeft.current = ref.current.scrollLeft;
+    ref.current.style.cursor = 'grabbing';
+    ref.current.style.userSelect = 'none';
+  }, []);
+
+  const onMouseUp = useCallback(() => {
+    isDragging.current = false;
+    if (ref.current) {
+      ref.current.style.cursor = 'grab';
+      ref.current.style.userSelect = '';
+    }
+  }, []);
+
+  const onMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging.current || !ref.current) return;
+    e.preventDefault();
+    const x = e.pageX - ref.current.offsetLeft;
+    const walk = (x - startX.current) * 1.2;
+    ref.current.scrollLeft = scrollLeft.current - walk;
+  }, []);
+
+  const onMouseLeave = useCallback(() => {
+    isDragging.current = false;
+    if (ref.current) {
+      ref.current.style.cursor = 'grab';
+      ref.current.style.userSelect = '';
+    }
+  }, []);
+
+  return { ref, onMouseDown, onMouseUp, onMouseMove, onMouseLeave };
+}
+
 // ─── Main Dashboard ──────────────────────────────────────────────────────────
 export default function ApplicationsDashboard() {
   const { user, loading } = useAuth();
   const utils = trpc.useUtils();
+  const dragScroll = useDragScroll();
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [showInterviewModal, setShowInterviewModal] = useState(false);
   const [showOfferModal, setShowOfferModal] = useState(false);
@@ -851,7 +895,15 @@ export default function ApplicationsDashboard() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div
+              ref={dragScroll.ref}
+              className="overflow-x-auto cursor-grab"
+              style={{ scrollbarWidth: 'thin', scrollbarColor: '#F0D0DC #FEFAF4' }}
+              onMouseDown={dragScroll.onMouseDown}
+              onMouseUp={dragScroll.onMouseUp}
+              onMouseMove={dragScroll.onMouseMove}
+              onMouseLeave={dragScroll.onMouseLeave}
+            >
               <table className="w-full">
                 <thead>
                   <tr className="bg-[#FFF5F8] border-b border-[#F0D0DC]">
