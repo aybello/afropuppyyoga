@@ -4,7 +4,7 @@
    Features: View applications, update status, send interview invite,
              offer letter, and rejection letter via automated email.
    ============================================================ */
-import { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import {
@@ -46,9 +46,28 @@ import AdminNav from "@/components/AdminNav";
 
 
 /**
- * Returns a proxy URL for video files so they play inline in the browser.
- * MOV files are served by CloudFront as video/quicktime which triggers a download;
- * the proxy re-serves them with Content-Type: video/mp4 and Content-Disposition: inline.
+ * Fetches a fresh presigned URL for a stored video key, then opens it in a new tab.
+ * Falls back to the raw URL if no key is available (e.g. external links).
+ */
+async function openVideo(videoKey: string | null | undefined, videoUrl: string | null | undefined) {
+  if (!videoUrl) return;
+  if (videoKey && !isExternalVideoLink(videoUrl)) {
+    try {
+      const res = await fetch(`/api/video-url?key=${encodeURIComponent(videoKey)}`);
+      if (res.ok) {
+        const { url } = await res.json();
+        window.open(url, "_blank");
+        return;
+      }
+    } catch {
+      // fall through to raw URL
+    }
+  }
+  window.open(videoUrl, "_blank");
+}
+
+/**
+ * Returns a proxy URL for range-request video seeking in the inline player.
  */
 function getVideoProxyUrl(rawUrl: string): string {
   return `/api/video-proxy?url=${encodeURIComponent(rawUrl)}`;
@@ -77,6 +96,7 @@ type Application = {
   whyAPY: string | null;
   experience: string | null;
   videoUrl: string | null;
+  videoKey: string | null;
   resumeUrl: string | null;
   status: string;
   createdAt: Date;
@@ -84,6 +104,44 @@ type Application = {
   signedName: string | null;
   signedAt: Date | null;
 };
+
+/** Fetches a fresh presigned URL for stored videos and renders an inline player. */
+function FreshVideo({ videoKey, videoUrl }: { videoKey: string | null; videoUrl: string | null }) {
+  const [src, setSrc] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    if (!videoUrl) return;
+    if (videoKey) {
+      fetch(`/api/video-url?key=${encodeURIComponent(videoKey)}`)
+        .then((r) => r.ok ? r.json() : Promise.reject())
+        .then(({ url }) => setSrc(getVideoProxyUrl(url)))
+        .catch(() => setSrc(getVideoProxyUrl(videoUrl)))
+        .finally(() => setLoading(false));
+    } else {
+      setSrc(getVideoProxyUrl(videoUrl));
+      setLoading(false);
+    }
+  }, [videoKey, videoUrl]);
+
+  if (loading) return <div className="w-full h-32 rounded-xl border border-[#F0D0DC] bg-[#FFF5F8] flex items-center justify-center"><span className="font-body text-xs text-[#8B6070]">Loading video...</span></div>;
+  if (error || !src) return <div className="w-full h-32 rounded-xl border border-[#F0D0DC] bg-[#FFF5F8] flex items-center justify-center"><span className="font-body text-xs text-[#8B6070]">Video unavailable</span></div>;
+
+  return (
+    <video
+      src={src}
+      controls
+      playsInline
+      preload="metadata"
+      className="w-full rounded-xl border border-[#F0D0DC] bg-black"
+      style={{ maxHeight: "320px" }}
+      onError={() => setError(true)}
+    >
+      Your browser does not support video playback.
+    </video>
+  );
+}
 
 function StatusBadge({ status }: { status: AppStatus }) {
   const styles: Record<AppStatus, string> = {
@@ -623,16 +681,7 @@ function ApplicationDetailModal({
                     <span className="font-body text-xs text-[#8B2252] font-semibold shrink-0">Open ↗</span>
                   </a>
                 ) : (
-                  <video
-                    src={getVideoProxyUrl(app.videoUrl)}
-                    controls
-                    playsInline
-                    preload="metadata"
-                    className="w-full rounded-xl border border-[#F0D0DC] bg-black"
-                    style={{ maxHeight: "320px" }}
-                  >
-                    Your browser does not support video playback.
-                  </video>
+                  <FreshVideo videoKey={app.videoKey} videoUrl={app.videoUrl} />
                 )}
               </div>
             )}
@@ -970,15 +1019,13 @@ export default function ApplicationsDashboard() {
                       {/* Video */}
                       <td className="px-5 py-4">
                         {app.videoUrl ? (
-                          <a
-                            href={getVideoProxyUrl(app.videoUrl)}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            onClick={() => openVideo(app.videoKey, app.videoUrl)}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFF5F8] border border-[#F2A0B8] rounded-lg font-body text-xs font-semibold text-[#8B2252] hover:bg-[#F2A0B8]/20 transition-colors"
                           >
                             <Play className="w-3 h-3" />
                             Watch
-                          </a>
+                          </button>
                         ) : (
                           <span className="font-body text-xs text-[#C4A0B0] italic">No video</span>
                         )}

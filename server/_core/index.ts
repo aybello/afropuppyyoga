@@ -11,6 +11,7 @@ import uploadRouter from "../uploadRoute";
 import chunkedUploadRouter from "../chunkedUploadRoute";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import rateLimit from "express-rate-limit";
+import { storageGet } from "../storage";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -88,17 +89,34 @@ async function startServer() {
   // Video proxy — for Range requests (browser seeking), proxy the bytes with correct Content-Type.
   // For full-file requests (new tab), redirect directly to CloudFront which has CORS + accept-ranges.
   // This avoids the platform response-body-size limit that kills full 40MB streams.
+  // GET /api/video-url?key=<storageKey>
+  // Generates a fresh presigned URL for a video stored in Manus storage.
+  // Used by the admin dashboard to play applicant videos that may have expired URLs.
+  app.get("/api/video-url", async (req, res) => {
+    const key = req.query.key as string;
+    if (!key || key.includes("..") || !key.startsWith("applications/")) {
+      return res.status(400).json({ error: "Invalid key" });
+    }
+    try {
+      const { url } = await storageGet(key);
+      return res.json({ url });
+    } catch (e) {
+      return res.status(500).json({ error: "Failed to generate video URL" });
+    }
+  });
+
+  // GET /api/video-proxy?url=<presignedUrl>
+  // Proxies range requests for video seeking with correct Content-Type headers.
+  // For full-file requests, redirects directly to the presigned URL.
   app.get("/api/video-proxy", async (req, res) => {
     const url = req.query.url as string;
-    if (!url || !url.startsWith("https://d2xsxph8kpxj0f.cloudfront.net/")) {
+    if (!url || !url.startsWith("https://")) {
       return res.status(400).json({ error: "Invalid URL" });
     }
     try {
       const rangeHeader = req.headers.range;
 
-      // If no Range header: redirect browser directly to CloudFront.
-      // CloudFront already serves CORS + Accept-Ranges + inline playback for range requests.
-      // The only issue is MOV files get video/quicktime — browsers handle it fine for playback.
+      // If no Range header: redirect browser directly to the presigned URL.
       if (!rangeHeader) {
         return res.redirect(302, url);
       }
@@ -108,8 +126,8 @@ async function startServer() {
       if (!response.ok) return res.status(response.status).send("Failed to fetch video");
       if (!response.body) return res.status(500).send("No response body");
 
-      const urlPath = new URL(url).pathname.toLowerCase();
-      const isWebm = urlPath.endsWith(".webm");
+      const urlLower = url.toLowerCase().split("?")[0];
+      const isWebm = urlLower.endsWith(".webm");
       const contentType = isWebm ? "video/webm" : "video/mp4";
 
       const contentRange = response.headers.get("content-range");
@@ -120,7 +138,7 @@ async function startServer() {
       res.setHeader("Content-Disposition", "inline");
       res.setHeader("Accept-Ranges", "bytes");
       res.setHeader("Access-Control-Allow-Origin", "*");
-      res.setHeader("Cache-Control", "public, max-age=3600");
+      res.setHeader("Cache-Control", "no-store");
       if (contentRange) res.setHeader("Content-Range", contentRange);
       if (contentLength) res.setHeader("Content-Length", contentLength);
 
