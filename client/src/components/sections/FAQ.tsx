@@ -32,7 +32,11 @@ const faqs: { q: string; a: ReactNode }[] = [
     q: "What is your cancellation and refund policy?",
     a: (
       <>
-        We operate on a <strong>credits-only</strong> policy — no refunds are issued under any circumstances. Cancel more than 24 hours before class and you'll receive a full class credit with no expiry. Cancellations within 24 hours and no-shows are not eligible for credits. If AfroPuppyYoga cancels a class, you'll automatically receive a full class credit valid for any future session. Tickets are transferable to another person if you notify us before class starts.
+        We never want to cancel a class. Cancellations cost us just as much as they cost you — we lose revenue, our puppies miss out on socialization, and our team loses a shift. When we do have to cancel, it is always due to circumstances outside our control: puppy availability, instructor emergencies, safety concerns, or venue issues.
+        <br /><br />
+        Because of the nature of our business and the stage we are at, issuing cash refunds is not practical for us. Instead, we operate on a <strong>class credit system</strong>. If your class is ever cancelled by us, you will receive a class credit delivered as a coupon code — it never expires, and it can be transferred to another person. We believe this is the fairest way to honour your commitment to us while we honour ours to you.
+        <br /><br />
+        We are deeply grateful for your kindness and support. It means everything to us.
         <br /><br />
         <strong>Is my payment secure?</strong> Absolutely. All payments are processed through Stripe, one of the world's most trusted and secure payment platforms. We never store your card details, and Stripe's infrastructure is PCI-DSS compliant.
       </>

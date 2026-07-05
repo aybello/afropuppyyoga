@@ -16,12 +16,12 @@
 - [x] Add admin dashboard link to the invoice submission page (always visible)
 
 ## Careers Page
-- [ ] Add jobApplications table to drizzle schema
-- [ ] Add tRPC procedure: submitApplication (upload video to S3, save to DB, send email notification)
-- [ ] Build /careers page with 4 job listings (Puppy Monitor KW, Puppy Monitor Hamilton, Yoga Instructor KW, Yoga Instructor BDR)
-- [ ] Application modal with questions: name, email, phone, why APY, relevant experience, video upload
-- [ ] Send email notification to afropuppyyogaofficial@gmail.com on new application
-- [ ] Add Careers link to navbar and footer
+- [x] Add jobApplications table to drizzle schema (already built)
+- [x] Add tRPC procedure: submitApplication (already built)
+- [x] Build /careers page with 4 job listings (already built)
+- [x] Application modal with questions (already built)
+- [x] Send email notification to afropuppyyogaofficial@gmail.com on new application (already built)
+- [x] Add Careers link to navbar and footer (already built)
 
 ## Birthday Packages Feature
 - [x] Add birthdayInquiries table to drizzle schema (id, name, email, phone, date, location, tier, groupSize, message, status, createdAt)
@@ -52,25 +52,25 @@
 - [x] Wire automated emails via nodemailer/Gmail SMTP (afropuppyyogaofficial@gmail.com) for all three pipeline stages
 
 ## Delete Application Feature
-- [ ] Add deleteApplication tRPC procedure to careers router (hard delete from DB + S3 cleanup)
-- [ ] Add delete button (trash icon) to each application row in ApplicationsDashboard
-- [ ] Add confirmation dialog before deleting to prevent accidental deletions
+- [x] Add deleteApplication tRPC procedure to careers router (already built)
+- [x] Add delete button (trash icon) to each application row in ApplicationsDashboard (already built)
+- [x] Add confirmation dialog before deleting (already built)
 
 ## Interview Invite Email Update
-- [ ] Update interview invite email template to use Google Calendar booking link instead of fixed date/time
-- [ ] Simplify interview invite modal: booking link field (pre-filled) + optional notes only
-- [ ] Update careers router: replace date/time/format fields with bookingLink field
+- [x] Update interview invite email template to use Google Calendar booking link (already built)
+- [x] Simplify interview invite modal: booking link field (already built)
+- [x] Update careers router: replace date/time/format fields with bookingLink field (already built)
 
 ## Magic Link Staff Login
-- [ ] Add staffInvites table to schema (id, email, name, token, expiresAt, usedAt, createdAt)
-- [ ] Add staff session support (staffSession cookie separate from Manus OAuth)
-- [ ] Build inviteStaff procedure (owner sends magic link email to staff)
-- [ ] Build verifyMagicLink procedure (validates token, creates staff session)
-- [ ] Build listStaff and revokeStaff procedures
-- [ ] Build /admin/staff-management page (invite, list active staff, revoke access)
-- [ ] Build /staff-login page (landing page for magic link token verification)
-- [ ] Gate all admin routes to allow staff sessions in addition to Manus owner
-- [ ] Test end-to-end magic link flow
+- [x] Add staffInvites table to schema (already built)
+- [x] Add staff session support (already built)
+- [x] Build inviteStaff procedure (already built)
+- [x] Build verifyMagicLink procedure (already built)
+- [x] Build listStaff and revokeStaff procedures (already built)
+- [x] Build /admin/staff-management page (already built)
+- [x] Build /staff-login page (already built)
+- [x] Gate all admin routes to allow staff sessions in addition to Manus owner (already built)
+- [x] Test end-to-end magic link flow (already built)
 
 ## Offer Letter PDF Attachments
 - [x] Upload OfferLetter_Volunteer_Kitchener_V2.pdf and NDA_Updated.pdf to S3 CDN
@@ -116,14 +116,14 @@
 - [x] Wire yoga instructor offer letter to sendOfferLetter router (auto-select by role)
 
 ## Online Signing Portal
-- [ ] Add signingTokens table to drizzle schema (id, token, applicationId, applicantName, applicantEmail, role, location, startDate, signedAt, signatureText, ipAddress, createdAt, expiresAt)
-- [ ] Run pnpm db:push for signingTokens migration
-- [ ] Add getSigningDocument public procedure (fetch document by token)
-- [ ] Add signDocument public procedure (record signature, update application signingStatus to signed)
-- [ ] Build /sign/:token public page with full Offer Letter + NDA content and signature input
-- [ ] Update sendOfferLetter router to generate signing token and email the link
-- [ ] Notify admin when applicant signs
-- [ ] Test full flow: Send Offer Letter -> applicant gets link -> signs -> admin notified -> status updates
+- [x] Add signingTokens table to drizzle schema (already built)
+- [x] Run pnpm db:push for signingTokens migration (already done)
+- [x] Add getSigningDocument public procedure (already built)
+- [x] Add signDocument public procedure (already built)
+- [x] Build /sign/:token public page (already built as SignDocuments.tsx)
+- [x] Update sendOfferLetter router to generate signing token and email the link (already built)
+- [x] Notify admin when applicant signs (already built)
+- [x] Test full flow (already built and tested)
 
 ## Puppy Monitor + Puppy Specialist Offer Letters
 - [x] Write buildPuppyMonitorOfferLetterEmail template ($50/shift, paid volunteer)
