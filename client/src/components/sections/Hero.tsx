@@ -34,6 +34,7 @@ const trustedBy = [
   { name: "Fluffy Glaze", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/fluffy_glaze_logo_34eaac35.png", height: 56 },
   { name: "Manulife", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/manulife_logo_cropped_ecd0a51b.png", height: 40 },
   { name: "Soul Seat", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/soul_seat_logo_cca03879.png", height: 52 },
+  { name: "Brock Solutions", src: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/dwXWkrdWFpxsxxJF.png", height: 36 },
 ];
 
 export default function Hero() {
