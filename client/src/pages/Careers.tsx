@@ -853,14 +853,19 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
       label: "Facebook",
       icon: "f",
       color: "#1877F2",
-      href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl())}`,
+      href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl())}` as string | null,
     },
     {
-      label: "Instagram",
-      icon: "IG",
-      color: "#E1306C",
-      // Instagram doesn't support direct URL sharing — copy the link and open Instagram
-      href: null as string | null,
+      label: "X (Twitter)",
+      icon: "𝕏",
+      color: "#000000",
+      href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(getShareUrl())}` as string | null,
+    },
+    {
+      label: "LinkedIn",
+      icon: "in",
+      color: "#0A66C2",
+      href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getShareUrl())}` as string | null,
     },
   ];
 

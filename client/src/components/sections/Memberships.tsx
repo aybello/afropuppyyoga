@@ -40,7 +40,7 @@ const passes = [
 
 export default function Memberships() {
   return (
-    <section id="memberships" className="py-10 md:py-20 px-4" style={{ background: "linear-gradient(135deg, #fdf2f8 0%, #fff7ed 50%, #fdf2f8 100%)" }}>
+    <section id="memberships" className="py-10 md:py-16 px-4" style={{ background: "linear-gradient(135deg, #fdf2f8 0%, #fff7ed 50%, #fdf2f8 100%)" }}>
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="text-center mb-14">
@@ -128,7 +128,7 @@ export default function Memberships() {
               <a href={pass.lumaLink} target="_blank" rel="noopener noreferrer">
                 <Button
                   className="w-full py-6 text-base font-bold rounded-2xl text-white transition-all"
-                  style={{ background: pass.accentColor, border: "none" }}
+                  style={{ background: "linear-gradient(135deg, #e91e8c, #8B2252)", border: "none", boxShadow: "0 2px 8px rgba(233,30,140,0.3)" }}
                 >
                   Join {pass.name} →
                 </Button>

@@ -168,23 +168,23 @@
 - [x] Build PartnershipsDashboard page at /admin/partnerships (admin + staff access)
 - [x] Register /admin/partnerships route in App.tsx
 - [x] Add Partnership Inquiries tool card to StaffPortal hub
-- [ ] Add 18+ age confirmation checkbox to signing portal — must be checked before signature can be submitted
-- [ ] Add share button to job listing cards on Careers page (Facebook, X, LinkedIn, copy link)
+- [x] Add 18+ age confirmation checkbox to signing portal — must be checked before signature can be submitted
+- [x] Add share button to job listing cards on Careers page (Facebook, X, LinkedIn, copy link) — X and LinkedIn added (Facebook was already there)
 
 ## UI/UX Audit Fixes (May 26, 2026)
-- [ ] Fix "Available Across GTA" → "Available Locations" in PrivateEvents.tsx
-- [ ] Fix membership button color inconsistency (Puppy Pass pink vs Wellness Pack dark)
-- [ ] Remove large white space gaps between Memberships→About and OurStory→PrivateEvents
-- [ ] Move "Our Values" cards out of Reviews section into its own section
-- [ ] Fix gallery portrait photo cropping (object-position: top)
-- [ ] Strengthen Loyalty section background color
-- [ ] Group footer navigation links into two columns
-- [ ] Add hero subtitle text-shadow for legibility
-- [ ] Reduce Private Events dark overlay opacity
-- [ ] Navbar: collapse secondary links (Birthday, Partnerships, Loyalty, Careers) into "More ▾" dropdown
-- [ ] Ethics section: replace full content with summary + "Read Our Full Standards →" link
-- [ ] Luma calendar: add skeleton loader while iframe loads
-- [ ] Our Story: add pull quote and visual break
+- [x] Fix "Available Across GTA" → "Available Locations" in PrivateEvents.tsx
+- [x] Fix membership button color inconsistency (Puppy Pass pink vs Wellness Pack dark)
+- [x] Remove large white space gaps between Memberships→About and OurStory→PrivateEvents
+- [x] Move "Our Values" cards out of Reviews section into its own section
+- [x] Fix gallery portrait photo cropping (object-position: top) — already had object-top
+- [x] Strengthen Loyalty section background color
+- [x] Group footer navigation links into two columns — already implemented
+- [x] Add hero subtitle text-shadow for legibility — already implemented
+- [x] Reduce Private Events dark overlay opacity
+- [x] Navbar: collapse secondary links (Birthday, Partnerships, Loyalty, Careers) into "More ▾" dropdown — Birthday and Partnerships already in More dropdown
+- [x] Ethics section: replace full content with summary + "Read Our Full Standards →" link — already implemented
+- [x] Luma calendar: add skeleton loader while iframe loads — already implemented
+- [x] Our Story: add pull quote and visual break — already implemented
 
 ## Codebase Audit Fixes (May 26, 2026)
 - [x] Add rate limiting (express-rate-limit) to public form endpoints

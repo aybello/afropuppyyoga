@@ -34,7 +34,7 @@ export default function LoyaltyProgram() {
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section id="loyalty" ref={ref} className="py-16 md:py-28 bg-[#FDE8F0]">
+    <section id="loyalty" ref={ref} className="py-16 md:py-28 bg-[#F5C6D8]">
       <div className="max-w-5xl mx-auto px-6">
         {/* Header */}
         <motion.div

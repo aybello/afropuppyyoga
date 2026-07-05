@@ -51,15 +51,6 @@ const reviews = [
   },
 ];
 
-const values = [
-  { title: "Wellness First", desc: "Creating a balanced space for mind and body through gentle movement and relaxation." },
-  { title: "Community Spirit", desc: "More than a class — a community where genuine connections and shared memories are made." },
-  { title: "Compassion & Care", desc: "Kindness in everything we do, ensuring both guests and puppies feel safe and valued." },
-  { title: "Joyful Energy", desc: "Positivity and laughter in every class — movement, good vibes, and puppy interactions." },
-  { title: "Inclusivity", desc: "Everyone is welcome. We embrace all ages, backgrounds, and experience levels." },
-  { title: "Wholesome Fun", desc: "Blending wellness with play, turning each session into a meaningful, memorable experience." },
-];
-
 const avatarColors = [
   "bg-[#8B2252]",
   "bg-[#8B2252]",
@@ -159,38 +150,7 @@ export default function Reviews() {
           ))}
         </div>
 
-        {/* Values section — visually separated from reviews */}
-        <FadeUp>
-          <div className="border-t border-[#F0D0DC] pt-14 mt-4 mb-10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-0.5 bg-[#8B2252]" />
-              <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">Our Values</span>
-            </div>
-            <h3 className="font-display text-3xl font-bold text-[#1A0A12] mb-2">
-              The Principles Behind Every Session
-            </h3>
-            <p className="font-body text-[#1A0A12]/60">What guides every class, every event, and every puppy cuddle.</p>
-          </div>
-        </FadeUp>
 
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
-          {values.map((val, i) => (
-            <motion.div
-              key={val.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08, duration: 0.5 }}
-              className="flex gap-3 p-3 md:p-5 bg-white/60 rounded-xl border border-[#F0D0DC]"
-            >
-              <div className="w-1.5 rounded-full bg-gradient-to-b from-[#8B2252] to-[#8B2252] shrink-0" />
-              <div>
-                <h4 className="font-display font-bold text-sm md:text-base text-[#1A0A12] mb-1">{val.title}</h4>
-                <p className="font-body text-xs md:text-sm text-[#1A0A12]/60 leading-relaxed">{val.desc}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
       </div>
     </section>
   );

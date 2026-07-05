@@ -24,6 +24,7 @@ const PrivateEvents = lazy(() => import("@/components/sections/PrivateEvents"));
 const Gallery = lazy(() => import("@/components/sections/Gallery"));
 const InstagramFeed = lazy(() => import("@/components/sections/InstagramFeed"));
 const Reviews = lazy(() => import("@/components/sections/Reviews"));
+const OurValues = lazy(() => import("@/components/sections/OurValues"));
 const LoyaltyProgram = lazy(() => import("@/components/sections/LoyaltyProgram"));
 const GiftCards = lazy(() => import("@/components/sections/GiftCards"));
 const EthicalStandards = lazy(() => import("@/components/sections/EthicalStandards"));
@@ -75,6 +76,9 @@ export default function Home() {
         </Suspense>
         <Suspense fallback={<SectionFallback />}>
           <Reviews />
+        </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <OurValues />
         </Suspense>
         <Suspense fallback={<SectionFallback />}>
           <LoyaltyProgram />

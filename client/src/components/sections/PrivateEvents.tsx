@@ -59,9 +59,9 @@ export default function PrivateEvents() {
         <img
           src={EVENTS_IMG}
           alt="Private puppy yoga event"
-          className="w-full h-full object-cover opacity-40"
+          className="w-full h-full object-cover opacity-60"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#1A0A12]/70 via-[#1A0A12]/55 to-[#1A0A12]/85" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1A0A12]/50 via-[#1A0A12]/40 to-[#1A0A12]/70" />
       </div>
 
       {/* Decorative circles — clipped by section overflow-hidden */}
@@ -135,7 +135,7 @@ export default function PrivateEvents() {
             <div className="bg-white/5 rounded-2xl p-8 border border-white/10">
               <div className="flex items-center gap-2 mb-5">
                 <MapPin size={18} className="text-[#F2A0B8]" />
-                <h3 className="font-display font-bold text-lg text-white">Available Across GTA</h3>
+                <h3 className="font-display font-bold text-lg text-white">Available Locations</h3>
               </div>
               <div className="flex flex-wrap gap-3">
                 {locations.map((loc) => (
