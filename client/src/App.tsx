@@ -29,6 +29,7 @@ const Ethics = lazy(() => import("./pages/Ethics"));
 const BreedersDashboard = lazy(() => import("./pages/BreedersDashboard"));
 const RefundTracker = lazy(() => import("./pages/RefundTracker"));
 const BreederAvailability = lazy(() => import("./pages/BreederAvailability"));
+const PuppySchedule = lazy(() => import("./pages/PuppySchedule"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function PageLoader() {
@@ -61,6 +62,7 @@ function Router() {
         <Route path="/admin/private-events" component={PrivateEventsDashboard} />
         <Route path="/admin/birthday" component={BirthdayDashboard} />
         <Route path="/admin/breeders" component={BreedersDashboard} />
+        <Route path="/admin/puppy-schedule" component={PuppySchedule} />
         <Route path="/admin/refunds" component={RefundTracker} />
         <Route path="/breeder-availability" component={BreederAvailability} />
         <Route path="/loyalty" component={Loyalty} />

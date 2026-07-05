@@ -402,3 +402,34 @@ export const breederAvailabilityResponses = mysqlTable("breederAvailabilityRespo
 
 export type BreederAvailabilityResponse = typeof breederAvailabilityResponses.$inferSelect;
 export type InsertBreederAvailabilityResponse = typeof breederAvailabilityResponses.$inferInsert;
+
+// ─── Puppy Class Schedule ──────────────────────────────────────────────────────
+/**
+ * One row per scheduled class slot.
+ * Owner selects a Saturday or Sunday date, a location, a breed, and the breeder attending.
+ */
+export const puppySchedule = mysqlTable("puppySchedule", {
+  id: int("id").autoincrement().primaryKey(),
+  /** ISO date string e.g. "2026-07-12" — must be a Saturday or Sunday */
+  classDate: varchar("classDate", { length: 10 }).notNull(),
+  /** Day of week — enforced in app logic */
+  dayOfWeek: mysqlEnum("dayOfWeek", ["Saturday", "Sunday"]).notNull(),
+  /** Location */
+  location: mysqlEnum("schedLocation", ["Kitchener", "Hamilton", "Oakville"]).notNull(),
+  /** Breed attending this class */
+  breed: varchar("breed", { length: 255 }).notNull(),
+  /** FK to breeders.id */
+  breederId: int("breederId").notNull(),
+  /** Breeder name snapshot for display without join */
+  breederName: varchar("breederName", { length: 255 }).notNull(),
+  /** Optional notes e.g. number of puppies, special instructions */
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (t) => [
+  index("idx_schedule_classDate").on(t.classDate),
+  index("idx_schedule_location").on(t.location),
+  index("idx_schedule_breederId").on(t.breederId),
+]);
+export type PuppySchedule = typeof puppySchedule.$inferSelect;
+export type InsertPuppySchedule = typeof puppySchedule.$inferInsert;
