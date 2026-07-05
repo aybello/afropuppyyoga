@@ -275,7 +275,7 @@ const JOB_LISTINGS = [
     perks: [
       "Paid part-time role with flexible remote schedule",
       "Free access to APY classes",
-      "Hands-on experience growing a real brand with 11k+ followers",
+      "Hands-on experience growing a real brand with 12.2k+ followers",
       "Mentorship and creative freedom to bring your ideas to life",
       "Be part of a culturally rich, community-driven wellness brand",
     ],
