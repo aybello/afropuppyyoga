@@ -774,7 +774,20 @@ export function seoRenderMiddleware(
   // Only serve to crawlers
   if (!isCrawler(req)) return next();
 
-  const pageFn = PAGES[req.path] || PAGES["/"];
+  const pageFn = PAGES[req.path];
+
+  // Unknown path — do not fall back to homepage (prevents soft 404s and
+  // duplicate homepage canonicals for random/internal URLs).
+  if (!pageFn) {
+    res
+      .status(404)
+      .set({ "Content-Type": "text/html; charset=utf-8" })
+      .end(
+        `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" /><title>404 Not Found | AfroPuppyYoga</title><meta name="robots" content="noindex, nofollow" /></head><body><h1>404 — Page Not Found</h1><p><a href="https://afropuppyyoga.ca/">Return to AfroPuppyYoga</a></p></body></html>`
+      );
+    return;
+  }
+
   const html = pageFn();
   res.status(200).set({ "Content-Type": "text/html; charset=utf-8" }).end(html);
 }
