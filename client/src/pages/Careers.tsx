@@ -3,6 +3,7 @@
    Design: Warm Afro-Wellness Editorial (matches main site)
    ============================================================ */
 import { useState, useRef, useEffect } from "react";
+import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -1032,6 +1033,11 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
 
 // ── Main Page ─────────────────────────────────────────────────
 export default function Careers() {
+  useSeoMeta({
+    title: "Careers at AfroPuppyYoga | Join Our Team in Ontario",
+    description: "Join the AfroPuppyYoga team. We're hiring Puppy Monitors and Yoga Instructors in Kitchener-Waterloo, Hamilton, and Brantford. Apply with a short video today.",
+    canonical: "https://afropuppyyoga.ca/careers",
+  });
   const [selectedJob, setSelectedJob] = useState<(typeof JOB_LISTINGS)[0] | null>(null);
   // Track expanded state per job ID so each card is fully independent
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());

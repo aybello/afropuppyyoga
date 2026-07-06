@@ -1,38 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Homepage -->
   <url>
     <loc>https://afropuppyyoga.ca/</loc>
-    <lastmod>2026-05-26</lastmod>
+    <lastmod>2026-07-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
+  <!-- Birthday Packages -->
   <url>
-    <loc>https://afropuppyyoga.ca/loyalty</loc>
-    <lastmod>2026-05-26</lastmod>
+    <loc>https://afropuppyyoga.ca/birthday</loc>
+    <lastmod>2026-07-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+  <!-- Loyalty / Rewards -->
+  <url>
+    <loc>https://afropuppyyoga.ca/loyalty</loc>
+    <lastmod>2026-07-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- Careers -->
   <url>
     <loc>https://afropuppyyoga.ca/careers</loc>
-    <lastmod>2026-05-26</lastmod>
+    <lastmod>2026-07-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <!-- Private Events Quote -->
   <url>
-    <loc>https://afropuppyyoga.ca/birthday</loc>
-    <lastmod>2026-05-26</lastmod>
+    <loc>https://afropuppyyoga.ca/private-events/quote</loc>
+    <lastmod>2026-07-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <!-- Partnerships -->
   <url>
     <loc>https://afropuppyyoga.ca/partnerships</loc>
-    <lastmod>2026-05-26</lastmod>
+    <lastmod>2026-07-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
+  <!-- Ethical Standards -->
   <url>
     <loc>https://afropuppyyoga.ca/ethics</loc>
-    <lastmod>2026-05-26</lastmod>
+    <lastmod>2026-07-06</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>

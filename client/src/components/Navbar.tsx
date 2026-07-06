@@ -25,6 +25,8 @@ const loyaltyLink = { label: "🐾 Rewards", href: "/loyalty", isPage: true };
 const moreLinks = [
   { label: "🎂 Birthday Packages", href: "/birthday", isPage: true },
   { label: "🤝 Partnerships", href: "/partnerships", isPage: true },
+  { label: "🐶 Private Event Quote", href: "/private-events/quote", isPage: true },
+  { label: "🌿 Ethical Standards", href: "/ethics", isPage: true },
 ];
 
 // All links for mobile menu

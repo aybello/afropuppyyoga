@@ -8,6 +8,7 @@
    - Package upgrades: Classic / Signature / Luxury
    ============================================================ */
 import { useState } from "react";
+import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -126,6 +127,11 @@ function calculateQuote(
 
 // ── Main component ─────────────────────────────────────────
 export default function PrivateEventQuote() {
+  useSeoMeta({
+    title: "Private Event Quote | AfroPuppyYoga",
+    description: "Get an instant quote for a private puppy yoga event with AfroPuppyYoga. Perfect for corporate wellness days, bachelorette parties, birthdays, and team events across Ontario.",
+    canonical: "https://afropuppyyoga.ca/private-events/quote",
+  });
   const [step, setStep] = useState<"form" | "quote" | "submitted">("form");
 
   // Form state

@@ -3,6 +3,7 @@
    5 partnership categories + Club Pilates Guelph feature + inquiry form
    ============================================================ */
 import { useState } from "react";
+import { useSeoMeta } from "@/hooks/useSeoMeta";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { trpc } from "@/lib/trpc";
@@ -108,6 +109,11 @@ type FormState = {
 };
 
 export default function Partnerships() {
+  useSeoMeta({
+    title: "Partner With AfroPuppyYoga | Corporate Wellness, Brand Collaborations & More",
+    description: "Partner with Canada's #1 puppy yoga studio. We offer corporate wellness sessions, brand collaborations, media partnerships, and local business cross-promotions across Ontario.",
+    canonical: "https://afropuppyyoga.ca/partnerships",
+  });
   const [form, setForm] = useState<FormState>({
     partnershipType: "",
     organizationName: "",

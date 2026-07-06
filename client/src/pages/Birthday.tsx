@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -74,6 +75,11 @@ const TIERS = [
 ];
 
 export default function Birthday() {
+  useSeoMeta({
+    title: "Birthday Puppy Yoga Packages | AfroPuppyYoga",
+    description: "Celebrate your birthday with puppies! AfroPuppyYoga offers private birthday packages in Hamilton, Kitchener & Oakville. Packages start at $600 for 6-8 guests.",
+    canonical: "https://afropuppyyoga.ca/birthday",
+  });
   const [selectedTier, setSelectedTier] = useState<"Basic" | "Premium" | "Deluxe" | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({
@@ -132,9 +138,9 @@ export default function Birthday() {
             <div className="w-20 h-20 rounded-full bg-[#F2A0B8]/20 flex items-center justify-center mx-auto mb-6">
               <CheckCircle2 size={40} className="text-[#8B2252]" />
             </div>
-            <h1 className="font-display text-4xl font-bold text-[#1A0A12] mb-4">
+            <h2 className="font-display text-4xl font-bold text-[#1A0A12] mb-4">
               Inquiry Received! 🎂
-            </h1>
+            </h2>
             <p className="font-body text-[#5C3347] text-lg leading-relaxed mb-8">
               Thank you for choosing AfroPuppyYoga for your celebration! We'll review your request and get back to you within 24 hours to confirm availability and next steps.
             </p>

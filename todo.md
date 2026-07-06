@@ -214,3 +214,17 @@
 - [x] Add Refund Tracker to AdminNav
 - [x] Add Refund Tracker card to StaffPortal
 - [x] Add /admin/refunds route to App.tsx
+
+## Technical SEO Fixes (Ahrefs Audit — Jul 6 2026)
+- [x] Regenerate sitemap.xml with only 7 canonical public pages (removed admin/internal/redirect URLs)
+- [x] Update robots.txt to disallow all admin, staff, sign, and utility routes
+- [x] Create useSeoMeta hook for per-page canonical + meta description injection
+- [x] Add useSeoMeta to Home, Ethics, Loyalty, Birthday, Partnerships, Careers, PrivateEventQuote pages
+- [x] Fix Footer.tsx: change Ethics link from anchor to /ethics page; add Private Event Quote link
+- [x] Fix Navbar More dropdown: add /ethics and /private-events/quote to remove orphan status
+- [x] Fix duplicate H1 on Birthday.tsx (success state h1 changed to h2)
+- [x] Expand Ethics.tsx with 5-question FAQ section, dual CTA, and internal links (word count fix)
+- [x] Fix LocalBusiness schema: add required address field, fix logo to ImageObject, remove duplicate Organization entity
+- [x] Add FAQPage schema to index.html (6 questions matching homepage FAQ)
+- [x] Add BreadcrumbList schema to index.html
+- [x] Consolidate duplicate google-site-verification meta tags in index.html

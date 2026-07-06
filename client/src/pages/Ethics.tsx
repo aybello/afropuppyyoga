@@ -3,11 +3,12 @@
    Linked from the EthicalStandards summary section on homepage
    ============================================================ */
 import { Heart, Shield, Users, Leaf } from "lucide-react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
-import { useEffect } from "react";
+import { useSeoMeta } from "@/hooks/useSeoMeta";
 
 const pillars = [
   {
@@ -89,8 +90,12 @@ const pillars = [
 ];
 
 export default function Ethics() {
+  useSeoMeta({
+    title: "Puppy Welfare & Ethical Standards | AfroPuppyYoga",
+    description: "Learn how AfroPuppyYoga ensures the safety, comfort, and wellbeing of every puppy in our classes. Our 4 ethical pillars cover sourcing, environment, supervision, and socialization.",
+    canonical: "https://afropuppyyoga.ca/ethics",
+  });
   useEffect(() => {
-    document.title = "Puppy Welfare & Ethical Standards | AfroPuppyYoga";
     window.scrollTo(0, 0);
   }, []);
 
@@ -169,6 +174,55 @@ export default function Ethics() {
             })}
           </div>
 
+      {/* FAQ Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="mt-20"
+          >
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-[#1A0A12] mb-8 text-center">
+              Common Questions About <span className="italic text-[#8B2252]">Puppy Welfare</span>
+            </h2>
+            <div className="space-y-5 max-w-3xl mx-auto">
+              {[
+                {
+                  q: "How old are the puppies at your classes?",
+                  a: "All puppies must be at least six weeks old and have received veterinary clearance and age-appropriate vaccinations before attending any AfroPuppyYoga event. We do not permit puppies younger than six weeks under any circumstances.",
+                },
+                {
+                  q: "Are the puppies tired or stressed after a class?",
+                  a: "Puppy welfare is our top priority. Classes are structured with built-in rest periods. Designated Calm Zones with water and comfortable bedding are always available. If a puppy retreats to a Calm Zone, they are strictly off-limits to participants. Our Puppy Monitors watch for signs of fatigue and remove any puppy that needs a break.",
+                },
+                {
+                  q: "Do you work with puppy mills or commercial breeders?",
+                  a: "Absolutely not. We partner exclusively with responsible, ethical breeders and registered local rescue organizations. Every breeder we work with is vetted against our standards. We will never work with puppy mills or high-volume commercial breeding facilities.",
+                },
+                {
+                  q: "Can participants pick up the puppies?",
+                  a: "Participants are not permitted to pick up or carry puppies while standing. All interactions must occur while seated safely on the yoga mat to prevent accidental drops or stress. Puppy Monitors enforce this rule throughout every class.",
+                },
+                {
+                  q: "What breeds of puppies come to your classes?",
+                  a: "The breed varies by class and depends on our breeder partners' available litters. Common breeds include Golden Retrievers, Labrador Retrievers, Doodles, and other friendly, sociable breeds. The specific breed is typically announced on our Luma booking page before each class.",
+                },
+              ].map((item, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.07, duration: 0.4 }}
+                  className="bg-white border border-[#F2D9E4]/60 rounded-2xl p-6 shadow-sm"
+                >
+                  <h3 className="font-display font-bold text-base md:text-lg text-[#1A0A12] mb-2">{item.q}</h3>
+                  <p className="font-body text-sm text-[#1A0A12]/70 leading-relaxed">{item.a}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
           {/* Transparency callout */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -181,14 +235,26 @@ export default function Ethics() {
               Transparency is our promise.
             </p>
             <p className="font-body text-sm md:text-base text-[#1A0A12]/65 max-w-xl mx-auto mb-6">
-              If you have any questions about our practices, our partners, or how we care for our puppies, please don't hesitate to reach out.
+              If you have any questions about our practices, our partners, or how we care for our puppies, please don't hesitate to reach out. We are always happy to share more about how we work.
             </p>
-            <a
-              href="/#contact"
-              className="inline-block px-7 py-3 rounded-full bg-[#C97B9A] text-white font-body text-sm font-semibold hover:bg-[#8B2252] transition-colors duration-200"
-            >
-              Get in Touch
-            </a>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <a
+                href="/#contact"
+                className="inline-block px-7 py-3 rounded-full bg-[#C97B9A] text-white font-body text-sm font-semibold hover:bg-[#8B2252] transition-colors duration-200"
+              >
+                Get in Touch
+              </a>
+              <a
+                href="/"
+                className="inline-block px-7 py-3 rounded-full border-2 border-[#C97B9A] text-[#8B2252] font-body text-sm font-semibold hover:bg-[#F9EDF3] transition-colors duration-200"
+              >
+                Book a Class
+              </a>
+            </div>
+            <p className="font-body text-xs text-[#1A0A12]/40 mt-8">
+              Want to become a breeder partner?{" "}
+              <a href="/partnerships" className="text-[#8B2252] underline hover:no-underline">Learn about our Breeder Partnership program.</a>
+            </p>
           </motion.div>
         </div>
       </section>

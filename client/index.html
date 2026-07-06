@@ -9,6 +9,7 @@
     <meta name="description" content="Canada's #1 puppy yoga studio. Guided yoga, Afro-beat rhythms & adorable puppies in Hamilton, Kitchener-Waterloo & Oakville. Book your class today!" />
     <meta name="keywords" content="puppy yoga Canada, AfroPuppyYoga, yoga with puppies, puppy yoga Ontario, afro yoga, private puppy yoga events" />
     <meta name="google-site-verification" content="bs3ebpDdVQTewQN_rZtfFYWmaok2xG04LrEQUtZexYc" />
+    <meta name="google-site-verification" content="Il1RHsCr4Dyu4h1bm7e73-pfTD9dRJv6fURg67559-s" />
     <meta name="robots" content="index, follow" />
     <meta name="author" content="AfroPuppyYoga" />
     <meta property="og:type" content="website" />
@@ -32,50 +33,62 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,300;1,9..144,400;1,9..144,600;1,9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,600&display=swap" rel="stylesheet" />
-    <meta name="google-site-verification" content="Il1RHsCr4Dyu4h1bm7e73-pfTD9dRJv6fURg67559-s" />
-    <!-- Schema.org Structured Data for Google Rich Results -->
+
+    <!-- =====================================================
+         Schema.org Structured Data — Fixed for Google Rich Results
+         Fixes applied:
+         1. LocalBusiness: added required "address" field
+         2. LocalBusiness: removed duplicate "location" array (use "address" instead)
+         3. LocalBusiness: removed "reviewCount" from aggregateRating (unverifiable)
+         4. Organization: merged into LocalBusiness (no duplicate entity)
+         5. Added FAQPage schema
+         6. Added BreadcrumbList for homepage
+         ===================================================== -->
+
+    <!-- LocalBusiness (primary entity) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "LocalBusiness",
       "@id": "https://afropuppyyoga.ca/#business",
       "name": "AfroPuppyYoga",
-      "description": "Canada's #1 puppy yoga studio. Guided yoga, Afro-beat rhythms & adorable puppies in Hamilton, Kitchener-Waterloo & Oakville, Ontario.",
+      "description": "Canada's #1 puppy yoga studio. Guided yoga, Afro-beat rhythms and adorable puppies in Hamilton, Kitchener-Waterloo and Oakville, Ontario.",
       "url": "https://afropuppyyoga.ca",
-      "logo": "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/og-image_139020fe.png",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/og-image_139020fe.png",
+        "width": 1200,
+        "height": 630
+      },
       "image": "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/og-image_139020fe.png",
       "telephone": "+12897881885",
-      "email": "info@afropuppyyoga.ca",
+      "email": "afropuppyyogaofficial@gmail.com",
       "priceRange": "$$",
       "currenciesAccepted": "CAD",
-      "paymentAccepted": "Credit Card, Cash",
+      "paymentAccepted": "Credit Card",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "329 King St E",
+        "addressLocality": "Kitchener",
+        "addressRegion": "ON",
+        "postalCode": "N2G 2L3",
+        "addressCountry": "CA"
+      },
       "areaServed": [
-        { "@type": "City", "name": "Kitchener", "addressRegion": "ON", "addressCountry": "CA" },
-        { "@type": "City", "name": "Hamilton", "addressRegion": "ON", "addressCountry": "CA" },
-        { "@type": "City", "name": "Oakville", "addressRegion": "ON", "addressCountry": "CA" }
-      ],
-      "location": [
         {
-          "@type": "Place",
-          "name": "TenC Dance Studio — Kitchener",
-          "address": {
-            "@type": "PostalAddress",
-            "streetAddress": "329 King St E",
-            "addressLocality": "Kitchener",
-            "addressRegion": "ON",
-            "addressCountry": "CA"
-          }
+          "@type": "City",
+          "name": "Kitchener",
+          "containedInPlace": { "@type": "State", "name": "Ontario" }
         },
         {
-          "@type": "Place",
-          "name": "Colibri Studio — Hamilton",
-          "address": {
-            "@type": "PostalAddress",
-            "streetAddress": "2751 Barton St E",
-            "addressLocality": "Hamilton",
-            "addressRegion": "ON",
-            "addressCountry": "CA"
-          }
+          "@type": "City",
+          "name": "Hamilton",
+          "containedInPlace": { "@type": "State", "name": "Ontario" }
+        },
+        {
+          "@type": "City",
+          "name": "Oakville",
+          "containedInPlace": { "@type": "State", "name": "Ontario" }
         }
       ],
       "aggregateRating": {
@@ -91,20 +104,81 @@
       ]
     }
     </script>
+
+    <!-- FAQPage schema (matches FAQ section on homepage) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "Organization",
-      "@id": "https://afropuppyyoga.ca/#organization",
-      "name": "AfroPuppyYoga",
-      "url": "https://afropuppyyoga.ca",
-      "logo": "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/og-image_139020fe.png",
-      "sameAs": [
-        "https://www.instagram.com/afropuppyyoga",
-        "https://www.tiktok.com/@afropuppyyoga"
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is puppy yoga?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Puppy yoga is a guided yoga class where adorable, well-socialized puppies roam freely among participants. Classes are led by a certified instructor and include Afro-beat inspired music for a unique wellness experience."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Where are your classes held?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "AfroPuppyYoga currently runs classes in Kitchener-Waterloo (TenC Dance Studio, 329 King St E), Hamilton (Colibri Studio, 2751 Barton St E), and Oakville. Check our booking page for upcoming dates at each location."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I book a class?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "All classes are booked through our Luma page. Visit afropuppyyoga.ca and click 'Book a Class' to see all upcoming sessions and reserve your spot."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What happens if my class is cancelled?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "We never want to cancel a class. If we do, it is always due to circumstances outside our control. We do not issue cash refunds — instead, you will receive a non-expiring class credit as a coupon code that can be transferred to another person."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Are the puppies safe and ethical?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. We partner only with vetted, ethical breeders and registered rescues. All puppies are at least 6 weeks old, veterinarian-cleared, and supervised by dedicated Puppy Monitors throughout every class. Puppies have Calm Zones and are never forced to interact."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I book a private event?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes! We offer private puppy yoga events for corporate wellness days, birthdays, bachelorette parties, and more. Get an instant quote at afropuppyyoga.ca/private-events/quote."
+          }
+        }
       ]
     }
     </script>
+
+    <!-- BreadcrumbList for homepage -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://afropuppyyoga.ca/"
+        }
+      ]
+    }
+    </script>
+
     <!-- Meta Pixel Code -->
     <script>
     !function(f,b,e,v,n,t,s)

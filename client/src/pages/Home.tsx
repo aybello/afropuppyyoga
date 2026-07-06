@@ -13,6 +13,7 @@ import RewardsStrip from "@/components/RewardsStrip";
 import ScrollToTop from "@/components/ScrollToTop";
 import ChatbotWidget from "@/components/ChatbotWidget";
 import { useScrollDepthTracking, useTimeOnPageTracking } from "@/hooks/useAnalytics";
+import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { useEffect } from "react";
 
 // Lazy-load below-the-fold sections — they load as the user scrolls, not on initial paint
@@ -40,9 +41,11 @@ function SectionFallback() {
 export default function Home() {
   useScrollDepthTracking();
   useTimeOnPageTracking();
-  useEffect(() => {
-    document.title = "AfroPuppyYoga | Ontario's #1 Puppy Yoga Experience";
-  }, []);
+  useSeoMeta({
+    title: "AfroPuppyYoga | Ontario's #1 Puppy Yoga Experience",
+    description: "Canada's #1 puppy yoga studio. Guided yoga, Afro-beat rhythms & adorable puppies in Hamilton, Kitchener-Waterloo & Oakville, Ontario. Book your class today!",
+    canonical: "https://afropuppyyoga.ca/",
+  });
   return (
     <div className="min-h-screen bg-[#FEFAF4]">
       <Navbar />

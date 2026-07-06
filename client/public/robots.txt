@@ -1,5 +1,7 @@
 User-agent: *
 Allow: /
+
+# Admin and internal tools — not for indexing
 Disallow: /admin/
 Disallow: /staff
 Disallow: /staff-login
@@ -8,5 +10,7 @@ Disallow: /sign
 Disallow: /predictor
 Disallow: /breeder-calculator
 Disallow: /breeder-availability
+Disallow: /404
 
+# Sitemap
 Sitemap: https://afropuppyyoga.ca/sitemap.xml

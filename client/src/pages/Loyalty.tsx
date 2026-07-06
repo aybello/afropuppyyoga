@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useEffect } from "react";
+import { useSeoMeta } from "@/hooks/useSeoMeta";
 
 const steps = [
   {
@@ -67,6 +68,11 @@ const faqs = [
 ];
 
 export default function Loyalty() {
+  useSeoMeta({
+    title: "The Pack — APY Rewards Program | AfroPuppyYoga",
+    description: "Join The Pack, AfroPuppyYoga's free rewards program. Earn paw points every class, unlock perks, and get exclusive member benefits at our studios in Hamilton, Kitchener & Oakville.",
+    canonical: "https://afropuppyyoga.ca/loyalty",
+  });
   useEffect(() => {
     document.title = "The Pack — APY Rewards Program | AfroPuppyYoga";
   }, []);

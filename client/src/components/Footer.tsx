@@ -23,9 +23,10 @@ const navGroups = [
       { label: "Gallery", href: "#gallery" },
       { label: "Reviews", href: "#reviews" },
       { label: "FAQ", href: "#faq" },
-      { label: "Ethics", href: "#ethical-standards" },
+      { label: "Ethical Standards", href: "/ethics", isPage: true },
       { label: "Careers", href: "/careers", isPage: true },
       { label: "Partnerships", href: "/partnerships", isPage: true },
+      { label: "Private Event Quote", href: "/private-events/quote", isPage: true },
     ],
   },
 ];
