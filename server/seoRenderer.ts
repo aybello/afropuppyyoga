@@ -54,6 +54,10 @@ const CRAWLER_UA_PATTERNS = [
   /chrome-lighthouse/i,
   /telegrambot/i,
   /manus-seo/i, // Manus SEO analyzer
+  /ahrefsbot/i, // Ahrefs crawler
+  /semrushbot/i, // SEMrush crawler
+  /dotbot/i,
+  /mj12bot/i,
 ];
 
 export function isCrawler(req: Request): boolean {
@@ -102,6 +106,7 @@ function buildHtml(opts: {
   <meta name="twitter:image" content="${ogImage}" />
   <meta name="robots" content="index, follow" />
   <meta name="google-site-verification" content="Il1RHsCr4Dyu4h1bm7e73-pfTD9dRJv6fURg67559-s" />
+  <meta name="google-site-verification" content="bs3ebpDdVQTewQN_rZtfFYWmaok2xG04LrEQUtZexYc" />
   ${schemas.map((s) => `<script type="application/ld+json">${JSON.stringify(s)}</script>`).join("\n  ")}
 </head>
 <body>
@@ -110,9 +115,92 @@ ${opts.body}
 </html>`;
 }
 
-// ─── Page Definitions ─────────────────────────────────────────────────────────
+// ─── Shared Schema Fragments ──────────────────────────────────────────────────
 
 const BASE = "https://afropuppyyoga.ca";
+
+const OG_IMAGE =
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/og-image_139020fe.png";
+
+/** Canonical LocalBusiness schema — synced with client/index.html */
+const LOCAL_BUSINESS_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "@id": `${BASE}/#business`,
+  name: "AfroPuppyYoga",
+  description:
+    "Canada's #1 puppy yoga studio. Guided yoga, Afro-beat rhythms and adorable puppies in Hamilton, Kitchener-Waterloo and Oakville, Ontario.",
+  url: BASE,
+  logo: {
+    "@type": "ImageObject",
+    url: OG_IMAGE,
+    width: 1200,
+    height: 630,
+  },
+  image: OG_IMAGE,
+  telephone: "+12897881885",
+  email: "afropuppyyogaofficial@gmail.com",
+  priceRange: "$$",
+  currenciesAccepted: "CAD",
+  paymentAccepted: "Credit Card",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "329 King St E",
+    addressLocality: "Kitchener",
+    addressRegion: "ON",
+    postalCode: "N2G 2L3",
+    addressCountry: "CA",
+  },
+  areaServed: [
+    {
+      "@type": "City",
+      name: "Kitchener",
+      containedInPlace: { "@type": "State", name: "Ontario" },
+    },
+    {
+      "@type": "City",
+      name: "Hamilton",
+      containedInPlace: { "@type": "State", name: "Ontario" },
+    },
+    {
+      "@type": "City",
+      name: "Oakville",
+      containedInPlace: { "@type": "State", name: "Ontario" },
+    },
+  ],
+  aggregateRating: {
+    "@type": "AggregateRating",
+    ratingValue: "4.6",
+    reviewCount: "494",
+    bestRating: "5",
+    worstRating: "1",
+  },
+  sameAs: [
+    "https://www.instagram.com/afropuppyyoga",
+    "https://www.tiktok.com/@afropuppyyoga",
+  ],
+};
+
+/** Build a BreadcrumbList schema for any page */
+function breadcrumb(
+  ...items: Array<{ name: string; url: string }>
+): object {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: `${BASE}/` },
+      ...items.map((item, i) => ({
+        "@type": "ListItem",
+        position: i + 2,
+        name: item.name,
+        item: item.url,
+      })),
+    ],
+  };
+}
+
+// ─── Page Definitions ─────────────────────────────────────────────────────────
 
 const PAGES: Record<string, () => string> = {
   "/": () =>
@@ -122,38 +210,7 @@ const PAGES: Record<string, () => string> = {
         "Canada's #1 puppy yoga studio. Guided yoga, Afro-beat rhythms & adorable puppies in Hamilton, Kitchener-Waterloo & Oakville, Ontario. Book your class today!",
       canonical: `${BASE}/`,
       schema: [
-        {
-          "@context": "https://schema.org",
-          "@type": "LocalBusiness",
-          "@id": `${BASE}/#business`,
-          name: "AfroPuppyYoga",
-          description:
-            "Canada's #1 puppy yoga studio. Guided yoga, Afro-beat rhythms & adorable puppies in Hamilton, Kitchener-Waterloo & Oakville, Ontario.",
-          url: BASE,
-          logo: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/og-image_139020fe.png",
-          image:
-            "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/og-image_139020fe.png",
-          telephone: "+12897881885",
-          email: "info@afropuppyyoga.ca",
-          priceRange: "$$",
-          currenciesAccepted: "CAD",
-          areaServed: [
-            { "@type": "City", name: "Kitchener", addressRegion: "ON", addressCountry: "CA" },
-            { "@type": "City", name: "Hamilton", addressRegion: "ON", addressCountry: "CA" },
-            { "@type": "City", name: "Oakville", addressRegion: "ON", addressCountry: "CA" },
-          ],
-          aggregateRating: {
-            "@type": "AggregateRating",
-            ratingValue: "4.6",
-            reviewCount: "494",
-            bestRating: "5",
-            worstRating: "1",
-          },
-          sameAs: [
-            "https://www.instagram.com/afropuppyyoga",
-            "https://www.tiktok.com/@afropuppyyoga",
-          ],
-        },
+        LOCAL_BUSINESS_SCHEMA,
         {
           "@context": "https://schema.org",
           "@type": "FAQPage",
@@ -163,43 +220,52 @@ const PAGES: Record<string, () => string> = {
               name: "What is puppy yoga?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "Puppy yoga is a guided yoga class where adorable puppies roam freely around the studio while you practice. At AfroPuppyYoga, we combine Afro-beat rhythms with yoga and playful puppies for a unique wellness experience.",
+                text: "Puppy yoga is a guided yoga class where adorable, well-socialized puppies roam freely among participants. Classes are led by a certified instructor and include Afro-beat inspired music for a unique wellness experience.",
               },
             },
             {
               "@type": "Question",
-              name: "Where are AfroPuppyYoga classes held?",
+              name: "Where are your classes held?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "We hold classes in Hamilton (Colibri Studio, 2751 Barton St E), Kitchener (TenC Dance Studio, 329 King St E), and Oakville, Ontario.",
+                text: "AfroPuppyYoga currently runs classes in Kitchener-Waterloo (TenC Dance Studio, 329 King St E), Hamilton (Colibri Studio, 2751 Barton St E), and Oakville. Check our booking page for upcoming dates at each location.",
               },
             },
             {
               "@type": "Question",
-              name: "How much does a puppy yoga class cost?",
+              name: "How do I book a class?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "Classes start at $45 for early bird tickets. Regular tickets are $46. Bring-a-friend packages and group of 3 packages are also available. Memberships offer discounted monthly access.",
+                text: "All classes are booked through our Luma page. Visit afropuppyyoga.ca and click 'Book a Class' to see all upcoming sessions and reserve your spot.",
               },
             },
             {
               "@type": "Question",
-              name: "Are the puppies safe and ethically sourced?",
+              name: "What happens if my class is cancelled?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "Yes. All puppies at AfroPuppyYoga come from ethical, registered breeders. We have strict welfare standards — puppies are never stressed, sessions are kept short, and their wellbeing is our top priority.",
+                text: "We never want to cancel a class. If we do, it is always due to circumstances outside our control. We do not issue cash refunds — instead, you will receive a non-expiring class credit as a coupon code that can be transferred to another person.",
               },
             },
             {
               "@type": "Question",
-              name: "Can I book a private puppy yoga event?",
+              name: "Are the puppies safe and ethical?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "Absolutely! We offer private puppy yoga events for birthdays, bachelorette parties, corporate team-building, and more. Visit our Private Events page to request a quote.",
+                text: "Yes. We partner only with vetted, ethical breeders and registered rescues. All puppies are at least 6 weeks old, veterinarian-cleared, and supervised by dedicated Puppy Monitors throughout every class. Puppies have Calm Zones and are never forced to interact.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Can I book a private event?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Yes! We offer private puppy yoga events for corporate wellness days, birthdays, bachelorette parties, and more. Get an instant quote at afropuppyyoga.ca/private-events/quote.",
               },
             },
           ],
         },
+        breadcrumb(),
       ],
       body: `
 <header>
@@ -212,6 +278,7 @@ const PAGES: Record<string, () => string> = {
     <a href="/partnerships">Partnerships</a>
     <a href="/loyalty">Loyalty Program</a>
     <a href="/ethics">Ethical Standards</a>
+    <a href="/private-events/quote">Private Event Quote</a>
   </nav>
 </header>
 
@@ -304,7 +371,7 @@ const PAGES: Record<string, () => string> = {
       <dd>Yes. All puppies come from ethical, registered breeders. We have strict welfare standards — puppies are never stressed, sessions are kept short, and their wellbeing is our top priority.</dd>
 
       <dt>Can I book a private event?</dt>
-      <dd>Yes! We offer private puppy yoga events for birthdays, bachelorette parties, corporate team-building, and more. Visit our Private Events page to request a quote.</dd>
+      <dd>Yes! We offer private puppy yoga events for birthdays, bachelorette parties, corporate team-building, and more. <a href="/private-events/quote">Get an instant quote here.</a></dd>
 
       <dt>Do I need yoga experience?</dt>
       <dd>No experience needed! Our classes are designed for all levels, from complete beginners to experienced yogis.</dd>
@@ -316,7 +383,7 @@ const PAGES: Record<string, () => string> = {
 
   <section id="contact">
     <h2>Contact Us</h2>
-    <p>Email: <a href="mailto:info@afropuppyyoga.ca">info@afropuppyyoga.ca</a></p>
+    <p>Email: <a href="mailto:afropuppyyogaofficial@gmail.com">afropuppyyogaofficial@gmail.com</a></p>
     <p>Phone: <a href="tel:+12897881885">289-788-1885</a></p>
     <p>Instagram: <a href="https://www.instagram.com/afropuppyyoga">@afropuppyyoga</a></p>
     <p>TikTok: <a href="https://www.tiktok.com/@afropuppyyoga">@afropuppyyoga</a></p>
@@ -326,6 +393,14 @@ const PAGES: Record<string, () => string> = {
 <footer>
   <p>&copy; 2025 AfroPuppyYoga. All rights reserved.</p>
   <p>Canada's #1 Puppy Yoga Studio | Hamilton | Kitchener | Oakville | Ontario</p>
+  <nav>
+    <a href="/birthday">Birthday Packages</a> |
+    <a href="/partnerships">Partnerships</a> |
+    <a href="/loyalty">Loyalty Program</a> |
+    <a href="/ethics">Ethical Standards</a> |
+    <a href="/careers">Careers</a> |
+    <a href="/private-events/quote">Private Event Quote</a>
+  </nav>
 </footer>
 `,
     }),
@@ -336,15 +411,31 @@ const PAGES: Record<string, () => string> = {
       description:
         "Join the AfroPuppyYoga team! We're looking for passionate yoga instructors, event coordinators, and puppy handlers in Hamilton, Kitchener, and Oakville, Ontario.",
       canonical: `${BASE}/careers`,
+      schema: [
+        breadcrumb({ name: "Careers", url: `${BASE}/careers` }),
+      ],
       body: `
-<header><h1>Careers at AfroPuppyYoga</h1></header>
+<header>
+  <h1>Careers at AfroPuppyYoga</h1>
+  <nav><a href="/">Home</a> &rsaquo; <a href="/careers">Careers</a></nav>
+</header>
 <main>
   <h2>Join Our Team</h2>
   <p>AfroPuppyYoga is always looking for passionate, energetic people to join our growing team. We value inclusivity, creativity, and a genuine love for wellness and animals.</p>
   <h3>Open Roles</h3>
-  <p>We hire yoga instructors, event coordinators, and puppy handlers across our Hamilton, Kitchener, and Oakville locations. Submit your application and video introduction to be considered for upcoming openings.</p>
+  <p>We hire yoga instructors, Puppy Monitors, Puppy Specialists, and event coordinators across our Hamilton, Kitchener, and Oakville locations. Submit your application and video introduction to be considered for upcoming openings.</p>
+  <ul>
+    <li>Yoga Instructor — Kitchener-Waterloo</li>
+    <li>Yoga Instructor — Hamilton / Brantford</li>
+    <li>Puppy Monitor — Kitchener-Waterloo</li>
+    <li>Puppy Monitor — Hamilton</li>
+  </ul>
   <p>To apply, visit our <a href="/careers">Careers page</a> and submit your application.</p>
+  <p>Learn more about <a href="/partnerships">Breeder Partnerships</a> or explore our <a href="/ethics">Ethical Standards</a>.</p>
 </main>
+<footer>
+  <a href="/">Home</a> | <a href="/birthday">Birthday Packages</a> | <a href="/partnerships">Partnerships</a> | <a href="/ethics">Ethical Standards</a>
+</footer>
 `,
     }),
 
@@ -354,21 +445,67 @@ const PAGES: Record<string, () => string> = {
       description:
         "Celebrate your birthday with a private puppy yoga party! AfroPuppyYoga offers unforgettable birthday experiences in Hamilton, Kitchener, and Oakville, Ontario.",
       canonical: `${BASE}/birthday`,
+      schema: [
+        breadcrumb({ name: "Birthday Packages", url: `${BASE}/birthday` }),
+        {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: [
+            {
+              "@type": "Question",
+              name: "How far in advance should I book a birthday puppy yoga party?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "We recommend booking at least 2–3 weeks in advance to secure your preferred date and location. Popular dates fill up quickly, especially on weekends.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "How many people can attend a birthday puppy yoga party?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Our birthday packages accommodate groups of up to 20 guests for the Classic package. Larger groups can be accommodated with our Premium or Deluxe packages.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Can I bring a birthday cake?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Yes! You are welcome to bring a birthday cake or other treats for your group. Please let us know in advance so we can plan accordingly.",
+              },
+            },
+          ],
+        },
+      ],
       body: `
-<header><h1>Birthday Puppy Yoga Parties — AfroPuppyYoga</h1></header>
+<header>
+  <h1>Birthday Puppy Yoga Parties — AfroPuppyYoga</h1>
+  <nav><a href="/">Home</a> &rsaquo; <a href="/birthday">Birthday Packages</a></nav>
+</header>
 <main>
   <h2>Make Your Birthday Unforgettable</h2>
   <p>Celebrate your special day with a private puppy yoga party from AfroPuppyYoga! Our birthday packages include a guided yoga session, Afro-beat music, and a litter of adorable puppies — plus a dedicated host to make your event seamless.</p>
+  <h3>Birthday Package Tiers</h3>
+  <ul>
+    <li><strong>Basic Package ($600):</strong> Up to 10 guests, 45-minute session, studio venue</li>
+    <li><strong>Premium Package ($900):</strong> Up to 15 guests, 60-minute session, studio venue, photography add-on</li>
+    <li><strong>Deluxe Package ($1,200+):</strong> Up to 20 guests, 75-minute session, custom experience, merchandise</li>
+  </ul>
   <h3>What's Included</h3>
   <ul>
-    <li>60-minute private puppy yoga session</li>
+    <li>Private guided puppy yoga session</li>
     <li>Dedicated event host</li>
     <li>Afro-beat music soundtrack</li>
-    <li>Ethically sourced puppies</li>
+    <li>Ethically sourced puppies from registered breeders</li>
     <li>Available in Hamilton, Kitchener, and Oakville</li>
   </ul>
-  <p><a href="/birthday">Request a Birthday Package</a></p>
+  <p><a href="/birthday">Request a Birthday Package</a> | <a href="/private-events/quote">Get an Instant Quote</a></p>
+  <p>Also explore our <a href="/loyalty">Loyalty Program</a> for returning guests.</p>
 </main>
+<footer>
+  <a href="/">Home</a> | <a href="/partnerships">Partnerships</a> | <a href="/ethics">Ethical Standards</a> | <a href="/private-events/quote">Private Event Quote</a>
+</footer>
 `,
     }),
 
@@ -378,13 +515,31 @@ const PAGES: Record<string, () => string> = {
       description:
         "Partner with AfroPuppyYoga for corporate events, brand collaborations, and community wellness initiatives in Ontario. Contact us to explore partnership opportunities.",
       canonical: `${BASE}/partnerships`,
+      schema: [
+        breadcrumb({ name: "Partnerships", url: `${BASE}/partnerships` }),
+      ],
       body: `
-<header><h1>Partnerships — AfroPuppyYoga</h1></header>
+<header>
+  <h1>Partnerships — AfroPuppyYoga</h1>
+  <nav><a href="/">Home</a> &rsaquo; <a href="/partnerships">Partnerships</a></nav>
+</header>
 <main>
   <h2>Partner With Us</h2>
   <p>AfroPuppyYoga partners with brands, studios, and organizations that share our values of wellness, inclusivity, and community. We offer co-branded events, corporate wellness packages, and community collaboration opportunities.</p>
+  <h3>Partnership Categories</h3>
+  <ul>
+    <li><strong>Breeder Partners:</strong> Ethical breeders who supply puppies for our classes</li>
+    <li><strong>Corporate Wellness:</strong> Companies booking team wellness events</li>
+    <li><strong>Studio Partners:</strong> Yoga and fitness studios hosting our events</li>
+    <li><strong>Brand Collaborations:</strong> Wellness, lifestyle, and pet brands</li>
+    <li><strong>Community Organizations:</strong> Non-profits and community groups</li>
+  </ul>
   <p><a href="/partnerships">Apply for a Partnership</a></p>
+  <p>Interested in hosting a private event? <a href="/private-events/quote">Get an instant quote.</a></p>
 </main>
+<footer>
+  <a href="/">Home</a> | <a href="/birthday">Birthday Packages</a> | <a href="/ethics">Ethical Standards</a> | <a href="/careers">Careers</a>
+</footer>
 `,
     }),
 
@@ -394,13 +549,30 @@ const PAGES: Record<string, () => string> = {
       description:
         "Earn points with every AfroPuppyYoga class and redeem them for free sessions, merchandise, and exclusive perks. Join our loyalty program today.",
       canonical: `${BASE}/loyalty`,
+      schema: [
+        breadcrumb({ name: "Loyalty Program", url: `${BASE}/loyalty` }),
+      ],
       body: `
-<header><h1>AfroPuppyYoga Loyalty Program</h1></header>
+<header>
+  <h1>AfroPuppyYoga Loyalty Program</h1>
+  <nav><a href="/">Home</a> &rsaquo; <a href="/loyalty">Loyalty Program</a></nav>
+</header>
 <main>
   <h2>Earn Rewards for Every Class</h2>
   <p>The AfroPuppyYoga loyalty program rewards our most dedicated community members. Earn points with every class you attend and redeem them for free sessions, exclusive merchandise, and special perks.</p>
+  <h3>How It Works</h3>
+  <ul>
+    <li>Earn points for every class you attend</li>
+    <li>Earn bonus points for referring friends</li>
+    <li>Redeem points for free classes, merchandise, and exclusive experiences</li>
+    <li>Points never expire as long as your account is active</li>
+  </ul>
   <p><a href="/loyalty">Join the Loyalty Program</a></p>
+  <p>Book your next class: <a href="https://lu.ma/afropuppyyoga">View upcoming sessions</a></p>
 </main>
+<footer>
+  <a href="/">Home</a> | <a href="/birthday">Birthday Packages</a> | <a href="/partnerships">Partnerships</a> | <a href="/ethics">Ethical Standards</a>
+</footer>
 `,
     }),
 
@@ -410,22 +582,178 @@ const PAGES: Record<string, () => string> = {
       description:
         "AfroPuppyYoga is committed to the highest standards of puppy welfare. All our puppies come from ethical, registered breeders and are treated with the utmost care.",
       canonical: `${BASE}/ethics`,
+      schema: [
+        breadcrumb({ name: "Ethical Standards", url: `${BASE}/ethics` }),
+        {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: [
+            {
+              "@type": "Question",
+              name: "How old are the puppies at your classes?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "All puppies must be at least six weeks old and have received veterinary clearance and age-appropriate vaccinations before attending any AfroPuppyYoga event.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Do you work with puppy mills or commercial breeders?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Absolutely not. We partner exclusively with responsible, ethical breeders and registered local rescue organizations. We will never work with puppy mills or high-volume commercial breeding facilities.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Are the puppies tired or stressed after a class?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Puppy welfare is our top priority. Classes are structured with built-in rest periods. Designated Calm Zones are always available. Our Puppy Monitors watch for signs of fatigue and remove any puppy that needs a break.",
+              },
+            },
+          ],
+        },
+      ],
       body: `
-<header><h1>Our Ethical Standards — AfroPuppyYoga</h1></header>
+<header>
+  <h1>Our Ethical Standards — AfroPuppyYoga</h1>
+  <nav><a href="/">Home</a> &rsaquo; <a href="/ethics">Ethical Standards</a></nav>
+</header>
 <main>
   <h2>Puppy Welfare is Our Top Priority</h2>
-  <p>At AfroPuppyYoga, we take the welfare of our puppies extremely seriously. Every puppy that participates in our sessions comes from a registered, ethical breeder who meets our strict welfare criteria.</p>
-  <h3>Our Commitments</h3>
+  <p>At AfroPuppyYoga, we take the welfare of our puppies extremely seriously. Every puppy that participates in our sessions comes from a registered, ethical breeder who meets our strict welfare criteria. We never work with puppy mills or high-volume commercial breeders.</p>
+  <h3>Our Four Core Commitments</h3>
   <ul>
-    <li>All puppies sourced from registered, ethical breeders</li>
-    <li>Sessions kept short to prevent fatigue or stress</li>
-    <li>Puppies are never forced to interact with participants</li>
-    <li>Health monitored before and after every event</li>
-    <li>Puppies have designated rest areas during sessions</li>
-    <li>No puppy participates more than once per day</li>
+    <li><strong>Ethical Sourcing:</strong> We partner only with responsible breeders and registered rescues — never puppy mills.</li>
+    <li><strong>Puppy-Centered Classes:</strong> Calm Zones, rest breaks, and pet-safe sanitization ensure every pup is comfortable.</li>
+    <li><strong>Supervised Interactions:</strong> Dedicated Puppy Monitors observe every class. Gentle handling rules are strictly enforced.</li>
+    <li><strong>Responsible Socialization:</strong> Our controlled environment supports healthy development during the critical socialization window.</li>
   </ul>
-  <p><a href="/ethics">Read our full Ethical Standards</a></p>
+  <h3>Frequently Asked Questions</h3>
+  <dl>
+    <dt>How old are the puppies at your classes?</dt>
+    <dd>All puppies must be at least six weeks old and have received veterinary clearance and age-appropriate vaccinations before attending any AfroPuppyYoga event.</dd>
+    <dt>Do you work with puppy mills?</dt>
+    <dd>Absolutely not. We partner exclusively with responsible, ethical breeders and registered local rescue organizations.</dd>
+    <dt>Are the puppies tired or stressed after a class?</dt>
+    <dd>Puppy welfare is our top priority. Classes are structured with built-in rest periods. Designated Calm Zones are always available. Our Puppy Monitors watch for signs of fatigue and remove any puppy that needs a break.</dd>
+  </dl>
+  <p>Questions about our practices? <a href="/#contact">Contact us</a>.</p>
+  <p>Want to become a breeder partner? <a href="/partnerships">Learn about our Breeder Partnership program.</a></p>
+  <p><a href="/">Back to Home</a> | <a href="/careers">Join Our Team</a></p>
 </main>
+<footer>
+  <a href="/">Home</a> | <a href="/birthday">Birthday Packages</a> | <a href="/partnerships">Partnerships</a> | <a href="/loyalty">Loyalty Program</a> | <a href="/careers">Careers</a>
+</footer>
+`,
+    }),
+
+  "/private-events/quote": () =>
+    buildHtml({
+      title: "Private Puppy Yoga Event Quote | AfroPuppyYoga",
+      description:
+        "Get an instant quote for a private puppy yoga event with AfroPuppyYoga. Perfect for corporate wellness days, bachelorette parties, birthdays, and team events across Ontario.",
+      canonical: `${BASE}/private-events/quote`,
+      schema: [
+        breadcrumb(
+          { name: "Private Events", url: `${BASE}/#private-events` },
+          { name: "Get a Quote", url: `${BASE}/private-events/quote` }
+        ),
+        {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: [
+            {
+              "@type": "Question",
+              name: "How much does a private puppy yoga event cost?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Private puppy yoga events start at $1,200 for up to 20 guests at a studio location in Kitchener-Waterloo. Pricing varies based on guest count, location, package tier (Classic, Signature, or Luxury), and any travel fees for offsite events. Use our instant quote tool to get an accurate estimate.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Where can you host a private puppy yoga event?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "We host private events at our studio locations in Kitchener-Waterloo, Hamilton, and Oakville. We also offer offsite events at your chosen venue across the Greater Toronto Area and surrounding regions. A travel fee applies for offsite locations.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "What is included in a private puppy yoga event?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "All private events include a guided yoga session with certified instructors, ethically sourced puppies supervised by trained Puppy Monitors, Afro-beat music, all mats and props, and a dedicated event host. Add-ons such as photography, refreshments, and merchandise are available.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "How far in advance should I book a private event?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "We recommend booking at least 3–4 weeks in advance to ensure puppy and venue availability. For large corporate events or events requiring travel, 4–6 weeks is preferred.",
+              },
+            },
+          ],
+        },
+      ],
+      body: `
+<header>
+  <h1>Private Puppy Yoga Event Quote — AfroPuppyYoga</h1>
+  <nav><a href="/">Home</a> &rsaquo; Private Events &rsaquo; <a href="/private-events/quote">Get a Quote</a></nav>
+</header>
+<main>
+  <h2>Get an Instant Quote for Your Private Puppy Yoga Event</h2>
+  <p>AfroPuppyYoga offers fully customized private puppy yoga events for corporate wellness days, birthday parties, bachelorette parties, baby showers, and team-building events across Ontario. Use our instant quote tool to get an accurate price estimate based on your group size, location, and package preferences.</p>
+
+  <h3>Why Book a Private Event?</h3>
+  <ul>
+    <li>Exclusive session — just your group and the puppies</li>
+    <li>Flexible scheduling, including weekdays for corporate events</li>
+    <li>Available at our studios in Kitchener, Hamilton, and Oakville, or offsite at your venue</li>
+    <li>Certified yoga instructors and trained Puppy Monitors included</li>
+    <li>Customizable packages: Classic, Signature, and Luxury tiers</li>
+    <li>Add-ons available: photography, refreshments, branded merchandise</li>
+  </ul>
+
+  <h3>Private Event Packages</h3>
+  <ul>
+    <li><strong>Classic ($1,200–$1,500):</strong> Up to 20 guests, 60-minute session, studio venue in Kitchener-Waterloo</li>
+    <li><strong>Signature:</strong> Extended session, premium add-ons, larger group capacity</li>
+    <li><strong>Luxury / Custom:</strong> Fully bespoke experience for 40+ guests or special requirements</li>
+  </ul>
+
+  <h3>Who Books Private Events?</h3>
+  <p>Our private events are popular with:</p>
+  <ul>
+    <li>Corporate teams and HR departments (mental health days, team appreciation)</li>
+    <li>Bachelorette and bridal parties</li>
+    <li>Birthday celebrations</li>
+    <li>Baby showers and gender reveals</li>
+    <li>School and community groups</li>
+    <li>Fitness studios and wellness brands looking for co-branded events</li>
+  </ul>
+
+  <h3>Frequently Asked Questions</h3>
+  <dl>
+    <dt>How much does a private event cost?</dt>
+    <dd>Events start at $1,200 for up to 20 guests at a studio location. Pricing varies by guest count, location, and package tier. Use the quote tool on our website for an accurate estimate.</dd>
+    <dt>Where can you host a private event?</dt>
+    <dd>We host events at our studios in Kitchener-Waterloo, Hamilton, and Oakville, and offsite across the GTA and surrounding regions. A travel fee applies for offsite events.</dd>
+    <dt>What is included?</dt>
+    <dd>All events include certified instructors, ethically sourced puppies, Puppy Monitors, Afro-beat music, mats, props, and a dedicated event host. Add-ons are available.</dd>
+    <dt>How far in advance should I book?</dt>
+    <dd>We recommend 3–4 weeks for studio events and 4–6 weeks for offsite or large corporate events.</dd>
+  </dl>
+
+  <p><a href="/private-events/quote">Get Your Instant Quote</a></p>
+  <p>Also explore our <a href="/birthday">Birthday Packages</a> or <a href="/partnerships">Corporate Partnership</a> options.</p>
+</main>
+<footer>
+  <a href="/">Home</a> | <a href="/birthday">Birthday Packages</a> | <a href="/partnerships">Partnerships</a> | <a href="/loyalty">Loyalty Program</a> | <a href="/ethics">Ethical Standards</a> | <a href="/careers">Careers</a>
+</footer>
 `,
     }),
 };
