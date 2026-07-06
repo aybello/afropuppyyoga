@@ -179,6 +179,246 @@
     }
     </script>
 
+    <!-- EventSeries schema — recurring puppy yoga classes at 3 locations -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "AfroPuppyYoga Recurring Classes",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "item": {
+            "@type": "Event",
+            "name": "AfroPuppyYoga — Kitchener-Waterloo",
+            "description": "Guided yoga with adorable puppies and Afro-beat music. Every Saturday and Sunday at TenC Dance Studio, Kitchener.",
+            "eventSchedule": {
+              "@type": "Schedule",
+              "repeatFrequency": "P1W",
+              "byDay": ["https://schema.org/Saturday", "https://schema.org/Sunday"]
+            },
+            "eventStatus": "https://schema.org/EventScheduled",
+            "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+            "location": {
+              "@type": "Place",
+              "name": "TenC Dance Studio",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "329 King St E",
+                "addressLocality": "Kitchener",
+                "addressRegion": "ON",
+                "postalCode": "N2G 2L3",
+                "addressCountry": "CA"
+              }
+            },
+            "organizer": { "@id": "https://afropuppyyoga.ca/#business" },
+            "url": "https://lu.ma/afropuppyyoga",
+            "image": "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/og-image_139020fe.png",
+            "offers": {
+              "@type": "Offer",
+              "url": "https://lu.ma/afropuppyyoga",
+              "priceCurrency": "CAD",
+              "availability": "https://schema.org/InStock"
+            }
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "item": {
+            "@type": "Event",
+            "name": "AfroPuppyYoga — Hamilton",
+            "description": "Guided yoga with adorable puppies and Afro-beat music. Regular sessions at Colibri Studio, Hamilton.",
+            "eventSchedule": {
+              "@type": "Schedule",
+              "repeatFrequency": "P1W",
+              "byDay": ["https://schema.org/Saturday", "https://schema.org/Sunday"]
+            },
+            "eventStatus": "https://schema.org/EventScheduled",
+            "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+            "location": {
+              "@type": "Place",
+              "name": "Colibri Studio",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "2751 Barton St E",
+                "addressLocality": "Hamilton",
+                "addressRegion": "ON",
+                "addressCountry": "CA"
+              }
+            },
+            "organizer": { "@id": "https://afropuppyyoga.ca/#business" },
+            "url": "https://lu.ma/afropuppyyoga",
+            "image": "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/og-image_139020fe.png",
+            "offers": {
+              "@type": "Offer",
+              "url": "https://lu.ma/afropuppyyoga",
+              "priceCurrency": "CAD",
+              "availability": "https://schema.org/InStock"
+            }
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "item": {
+            "@type": "Event",
+            "name": "AfroPuppyYoga — Oakville",
+            "description": "Guided yoga with adorable puppies and Afro-beat music. Regular sessions in Oakville, Ontario.",
+            "eventSchedule": {
+              "@type": "Schedule",
+              "repeatFrequency": "P1W",
+              "byDay": ["https://schema.org/Saturday", "https://schema.org/Sunday"]
+            },
+            "eventStatus": "https://schema.org/EventScheduled",
+            "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+            "location": {
+              "@type": "Place",
+              "name": "Oakville",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Oakville",
+                "addressRegion": "ON",
+                "addressCountry": "CA"
+              }
+            },
+            "organizer": { "@id": "https://afropuppyyoga.ca/#business" },
+            "url": "https://lu.ma/afropuppyyoga",
+            "image": "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/og-image_139020fe.png",
+            "offers": {
+              "@type": "Offer",
+              "url": "https://lu.ma/afropuppyyoga",
+              "priceCurrency": "CAD",
+              "availability": "https://schema.org/InStock"
+            }
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- Review schema — 6 verified guest reviews -->
+    <script type="application/ld+json">
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "Review",
+        "itemReviewed": { "@id": "https://afropuppyyoga.ca/#business" },
+        "author": { "@type": "Person", "name": "Sheila Soares" },
+        "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5" },
+        "reviewBody": "So fun and well run! Highly recommend this experience. The puppies were adorable and the yoga instructor was amazing. Will definitely be back!",
+        "datePublished": "2025-06-01"
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "Review",
+        "itemReviewed": { "@id": "https://afropuppyyoga.ca/#business" },
+        "author": { "@type": "Person", "name": "Cameron T." },
+        "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5" },
+        "reviewBody": "Absolutely incredible experience! The Afro-beat music, the puppies, the yoga — everything was perfectly curated. I've never felt so relaxed and happy at the same time.",
+        "datePublished": "2025-05-01"
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "Review",
+        "itemReviewed": { "@id": "https://afropuppyyoga.ca/#business" },
+        "author": { "@type": "Person", "name": "Priya M." },
+        "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5" },
+        "reviewBody": "Brought my whole friend group for a birthday celebration and everyone LOVED it. The staff were so welcoming and the puppies were pure joy. 10/10 would recommend!",
+        "datePublished": "2025-04-01"
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "Review",
+        "itemReviewed": { "@id": "https://afropuppyyoga.ca/#business" },
+        "author": { "@type": "Person", "name": "Jessica L." },
+        "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5" },
+        "reviewBody": "I was nervous as a yoga beginner but the instructor made it so accessible and fun. The puppies kept interrupting my poses in the best way possible. Laughed the whole time!",
+        "datePublished": "2025-04-01"
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "Review",
+        "itemReviewed": { "@id": "https://afropuppyyoga.ca/#business" },
+        "author": { "@type": "Person", "name": "Marcus R." },
+        "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5" },
+        "reviewBody": "Took my partner here for our anniversary. The vibe was immaculate — Afro beats, cute puppies, good energy. We're already planning our next visit.",
+        "datePublished": "2025-03-01"
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "Review",
+        "itemReviewed": { "@id": "https://afropuppyyoga.ca/#business" },
+        "author": { "@type": "Person", "name": "Aisha B." },
+        "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5" },
+        "reviewBody": "As someone who does yoga regularly, this was such a refreshing twist. The cultural element with the music and the warmth of the instructors made it feel truly special.",
+        "datePublished": "2025-02-01"
+      }
+    ]
+    </script>
+
+    <!-- VideoObject schema — 2 customer review reels + 3 entertainment reels -->
+    <script type="application/ld+json">
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoObject",
+        "name": "AfroPuppyYoga Guest Review — What Our Guests Are Saying",
+        "description": "A guest shares their experience at AfroPuppyYoga puppy yoga class in Ontario.",
+        "thumbnailUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/reel_review1_thumb_37c4bc42.jpg",
+        "contentUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/reel_review1_e70c52a3.mp4",
+        "embedUrl": "https://www.instagram.com/reel/DV99b-vDPCy/",
+        "uploadDate": "2025-05-01",
+        "publisher": { "@id": "https://afropuppyyoga.ca/#business" }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoObject",
+        "name": "AfroPuppyYoga Guest Review — Another Happy Guest",
+        "description": "Another happy guest shares their AfroPuppyYoga experience.",
+        "thumbnailUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/review2_thumb_54739e6e.jpg",
+        "contentUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/review2_h264_d7d03926.mp4",
+        "embedUrl": "https://www.instagram.com/reel/DVKKYGIEa4-/",
+        "uploadDate": "2025-04-01",
+        "publisher": { "@id": "https://afropuppyyoga.ca/#business" }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoObject",
+        "name": "AfroPuppyYoga — Relatable Puppy Yoga Moments",
+        "description": "Relatable and funny moments from AfroPuppyYoga classes. #puppyyoga #relatable",
+        "thumbnailUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/reel_relatable_thumb_cff0f6f0.jpg",
+        "contentUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/reel_relatable_a42ed4d9.mp4",
+        "embedUrl": "https://www.instagram.com/reel/DWU4taXDNKg/",
+        "uploadDate": "2025-05-15",
+        "publisher": { "@id": "https://afropuppyyoga.ca/#business" }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoObject",
+        "name": "AfroPuppyYoga — Okay With It Though! Puppy Yoga Vibes",
+        "description": "Fun and lighthearted moments from a puppy yoga class. #puppyyoga",
+        "thumbnailUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/reel_okay_thumb_8adc1726.jpg",
+        "contentUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/reel_okay_fcc176dd.mp4",
+        "embedUrl": "https://www.instagram.com/reel/DWaCFHXEXYy/",
+        "uploadDate": "2025-05-20",
+        "publisher": { "@id": "https://afropuppyyoga.ca/#business" }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoObject",
+        "name": "AfroPuppyYoga — Fun Times at Puppy Yoga",
+        "description": "Fun times at puppy yoga. #puppyyoga #fyp",
+        "thumbnailUrl": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/YsmvRsuruPouMOgB.jpg",
+        "contentUrl": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/ywRUsSmgYoqYPJOZ.mp4",
+        "embedUrl": "https://www.instagram.com/reel/DZ7SyjbRYPb/",
+        "uploadDate": "2025-06-15",
+        "publisher": { "@id": "https://afropuppyyoga.ca/#business" }
+      }
+    ]
+    </script>
+
     <!-- Meta Pixel Code -->
     <script>
     !function(f,b,e,v,n,t,s)
