@@ -331,6 +331,13 @@ export default function InvoiceDashboard() {
       return sum + Math.max(0, total - paid);
     }, 0);
 
+  // Total paid = sum of amountPaidCents for paid invoices in the current view (used on Paid tab)
+  const totalPaid = filteredInvoices
+    .filter((i) => i.status === "paid")
+    .reduce((sum, i) => {
+      return sum + (i.amountPaidCents ?? 0) / 100;
+    }, 0);
+
   // Tab counts always use the full invoice list so the pill numbers don’t change when you switch tabs
   const tabs: { id: TabId; label: string; count: number }[] = [
     { id: "all", label: "All", count: invoices?.length ?? 0 },
@@ -386,10 +393,21 @@ export default function InvoiceDashboard() {
             <p className="font-display font-bold text-3xl text-red-600">{overdueCount}</p>
           </div>
           <div className="bg-white rounded-2xl p-5 border border-[#F0D0DC]">
-            <p className="font-body text-xs text-[#1A0A12] mb-1">Outstanding</p>
-            <p className="font-display font-bold text-3xl text-[#8B2252]">
-              ${totalOutstanding.toFixed(2)}
-            </p>
+            {activeTab === "paid" ? (
+              <>
+                <p className="font-body text-xs text-emerald-600 mb-1">Total Paid</p>
+                <p className="font-display font-bold text-3xl text-emerald-600">
+                  ${totalPaid.toFixed(2)}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="font-body text-xs text-[#1A0A12] mb-1">Outstanding</p>
+                <p className="font-display font-bold text-3xl text-[#8B2252]">
+                  ${totalOutstanding.toFixed(2)}
+                </p>
+              </>
+            )}
           </div>
         </div>
 
