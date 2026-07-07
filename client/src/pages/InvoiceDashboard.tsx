@@ -310,20 +310,6 @@ export default function InvoiceDashboard() {
     );
   }
 
-  // ── Derived stats ────────────────────────────────────────────────────────────
-  const pendingCount = invoices?.filter((i) => i.status === "pending").length ?? 0;
-  const partialCount = invoices?.filter((i) => i.status === "partial").length ?? 0;
-  const overdueCount = invoices?.filter((i) => i.urgency === "overdue" && i.status !== "paid").length ?? 0;
-
-  // Total outstanding = sum of (invoiceTotal - amountPaid) for all non-paid invoices
-  const totalOutstanding = invoices
-    ?.filter((i) => i.status !== "paid")
-    .reduce((sum, i) => {
-      const total = parseAmount(i.payAmount);
-      const paid = (i.amountPaidCents ?? 0) / 100;
-      return sum + Math.max(0, total - paid);
-    }, 0) ?? 0;
-
   // ── Tab filtering ────────────────────────────────────────────────────────────
   const filteredInvoices = invoices?.filter((i) => {
     if (activeTab === "remaining") return i.status === "pending" || i.status === "partial";
@@ -331,9 +317,24 @@ export default function InvoiceDashboard() {
     return true; // "all"
   }) ?? [];
 
+  // ── Derived stats — always based on filteredInvoices so they update with the active tab ──
+  const pendingCount = filteredInvoices.filter((i) => i.status === "pending").length;
+  const partialCount = filteredInvoices.filter((i) => i.status === "partial").length;
+  const overdueCount = filteredInvoices.filter((i) => i.urgency === "overdue" && i.status !== "paid").length;
+
+  // Outstanding balance = sum of (invoiceTotal - amountPaid) for non-paid invoices in the current view
+  const totalOutstanding = filteredInvoices
+    .filter((i) => i.status !== "paid")
+    .reduce((sum, i) => {
+      const total = parseAmount(i.payAmount);
+      const paid = (i.amountPaidCents ?? 0) / 100;
+      return sum + Math.max(0, total - paid);
+    }, 0);
+
+  // Tab counts always use the full invoice list so the pill numbers don’t change when you switch tabs
   const tabs: { id: TabId; label: string; count: number }[] = [
     { id: "all", label: "All", count: invoices?.length ?? 0 },
-    { id: "remaining", label: "Remaining", count: (pendingCount + partialCount) },
+    { id: "remaining", label: "Remaining", count: invoices?.filter((i) => i.status === "pending" || i.status === "partial").length ?? 0 },
     { id: "paid", label: "Paid", count: invoices?.filter((i) => i.status === "paid").length ?? 0 },
   ];
 
