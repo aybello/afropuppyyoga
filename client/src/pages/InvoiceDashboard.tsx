@@ -322,25 +322,32 @@ export default function InvoiceDashboard() {
   const partialCount = filteredInvoices.filter((i) => i.status === "partial").length;
   const overdueCount = filteredInvoices.filter((i) => i.urgency === "overdue" && i.status !== "paid").length;
 
-  // Outstanding balance = sum of (invoiceTotal - amountPaid) for non-paid invoices in the current view
-  const totalOutstanding = filteredInvoices
+  // (outstanding is now computed as totalOutstandingFixed below, after totalPaid)
+
+  // Total paid = for paid invoices, use amountPaidCents if recorded via payment modal,
+  // otherwise fall back to the full payAmount (invoice was marked paid via status dropdown)
+  const totalPaid = filteredInvoices
+    .filter((i) => i.status === "paid")
+    .reduce((sum, i) => {
+      const recorded = (i.amountPaidCents ?? 0) / 100;
+      const invoiceTotal = parseAmount(i.payAmount);
+      // If payment was recorded via modal use that; otherwise assume full amount was paid
+      return sum + (recorded > 0 ? recorded : invoiceTotal);
+    }, 0);
+
+  // Total invoiced = gross sum of all invoice amounts in the current view (used on All tab)
+  const totalInvoiced = filteredInvoices
+    .reduce((sum, i) => sum + parseAmount(i.payAmount), 0);
+
+  // Outstanding = sum of (invoiceTotal - amountPaid) for non-paid invoices in current view
+  // Paid invoices are excluded entirely so they never inflate the outstanding figure
+  const totalOutstandingFixed = filteredInvoices
     .filter((i) => i.status !== "paid")
     .reduce((sum, i) => {
       const total = parseAmount(i.payAmount);
       const paid = (i.amountPaidCents ?? 0) / 100;
       return sum + Math.max(0, total - paid);
     }, 0);
-
-  // Total paid = sum of amountPaidCents for paid invoices in the current view (used on Paid tab)
-  const totalPaid = filteredInvoices
-    .filter((i) => i.status === "paid")
-    .reduce((sum, i) => {
-      return sum + (i.amountPaidCents ?? 0) / 100;
-    }, 0);
-
-  // Total invoiced = gross sum of all invoice amounts in the current view (used on All tab)
-  const totalInvoiced = filteredInvoices
-    .reduce((sum, i) => sum + parseAmount(i.payAmount), 0);
 
   // Tab counts always use the full invoice list so the pill numbers don’t change when you switch tabs
   const tabs: { id: TabId; label: string; count: number }[] = [
@@ -415,7 +422,7 @@ export default function InvoiceDashboard() {
               <>
                 <p className="font-body text-xs text-[#1A0A12] mb-1">Outstanding</p>
                 <p className="font-display font-bold text-3xl text-[#8B2252]">
-                  ${totalOutstanding.toFixed(2)}
+                  ${totalOutstandingFixed.toFixed(2)}
                 </p>
               </>
             )}
