@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Users, Loader2, Video, Mail, Phone, Star, Eye, XCircle, Inbox,
-  Calendar, CheckCircle, Send, Trash2, FileText, Play, PartyPopper,
+  Calendar, CheckCircle, Send, Trash2, FileText, Play, PartyPopper, VideoIcon,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -610,6 +610,16 @@ function ApplicationDetailModal({
     },
   });
 
+
+  const requestVideo = trpc.careers.requestVideo.useMutation({
+    onSuccess: () => {
+      toast.success(`Video request sent to ${app.name}! 🎥`);
+    },
+    onError: (err) => {
+      toast.error(`Failed to send video request: ${err.message}`);
+    },
+  });
+
   const handleResend = () => {
     resendOnboarding.mutate({
       id: app.id,
@@ -723,6 +733,26 @@ function ApplicationDetailModal({
                   className="font-body text-sm text-white bg-green-600 hover:bg-green-700"
                 >
                   <CheckCircle className="w-4 h-4 mr-2" /> Send Offer Letter
+                </Button>
+                <Button
+                  onClick={() => {
+                    requestVideo.mutate({
+                      id: app.id,
+                      applicantName: app.name,
+                      applicantEmail: app.email,
+                      role: app.role,
+                      location: app.location,
+                    });
+                  }}
+                  disabled={requestVideo.isPending}
+                  variant="outline"
+                  className="font-body text-sm border-orange-200 text-orange-600 hover:bg-orange-50"
+                >
+                  {requestVideo.isPending ? (
+                    <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Sending...</>
+                  ) : (
+                    <><VideoIcon className="w-4 h-4 mr-2" /> Request Video</>
+                  )}
                 </Button>
                 <Button
                   onClick={() => { onClose(); setShowRejectionModal(true); }}
@@ -848,6 +878,14 @@ export default function ApplicationsDashboard() {
       setDeleteConfirmId(null);
     },
     onError: (err) => toast.error(`Failed to delete: ${err.message}`),
+  });
+  const requestVideoMain = trpc.careers.requestVideo.useMutation({
+    onSuccess: (_, vars) => {
+      toast.success(`Video request sent! 🎥`);
+    },
+    onError: (err) => {
+      toast.error(`Failed to send video request: ${err.message}`);
+    },
   });
 
   if (loading) {
@@ -1119,6 +1157,14 @@ export default function ApplicationsDashboard() {
                             title="Send offer letter"
                           >
                             <CheckCircle className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() => requestVideoMain.mutate({ id: app.id, applicantName: app.name, applicantEmail: app.email, role: app.role, location: app.location })}
+                            disabled={requestVideoMain.isPending}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-orange-50 border border-orange-200 rounded-lg font-body text-xs font-semibold text-orange-600 hover:bg-orange-100 transition-colors"
+                            title="Request intro video"
+                          >
+                            <VideoIcon className="w-3 h-3" />
                           </button>
                           <button
                             onClick={() => { setSelectedApp(app as Application); setShowRejectionModal(true); }}

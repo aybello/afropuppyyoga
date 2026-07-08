@@ -411,4 +411,61 @@ export const careersRouter = router({
 
       return { success: true };
     }),
+
+  /**
+   * Admin-only: request applicant to submit or re-submit their intro video
+   */
+  requestVideo: staffProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        applicantName: z.string(),
+        applicantEmail: z.string().email(),
+        role: z.string(),
+        location: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const firstName = input.applicantName.split(" ")[0];
+      const subject = `${firstName}, we still need your intro video`;
+      const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#fefaf4;font-family:'Helvetica Neue',Arial,sans-serif;color:#1a0a12;">
+  <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.07);">
+    <div style="background:linear-gradient(135deg,#8B2252,#C2185B);padding:32px 40px;text-align:center;">
+      <h1 style="margin:0;color:#fff;font-size:22px;font-weight:700;">We Still Need Your Intro Video</h1>
+      <p style="margin:8px 0 0;color:#fce4ec;font-size:14px;">AfroPuppyYoga Careers</p>
+    </div>
+    <div style="padding:36px 40px;">
+      <p style="margin:0 0 18px;font-size:16px;line-height:1.7;">Hi ${escapeHtml(firstName)},</p>
+      <p style="margin:0 0 18px;font-size:15px;line-height:1.7;">Thank you for applying for the <strong>${escapeHtml(input.role)}</strong> position at AfroPuppyYoga (${escapeHtml(input.location)}). We are excited to learn more about you!</p>
+      <p style="margin:0 0 18px;font-size:15px;line-height:1.7;">We noticed we do not have your intro video on file yet. A short video (1 to 2 minutes) is an important part of your application and helps us get to know you before we move forward.</p>
+      <div style="background:#fef3f7;border-left:4px solid #C2185B;border-radius:8px;padding:18px 22px;margin:24px 0;">
+        <p style="margin:0 0 10px;font-weight:700;color:#8B2252;font-size:15px;">What to include in your video:</p>
+        <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.8;color:#3a1a2a;">
+          <li>A quick introduction (your name, where you are based)</li>
+          <li>Why you want to work with AfroPuppyYoga</li>
+          <li>Any relevant experience with animals, yoga, or events</li>
+          <li>Your personality and energy (we love enthusiasm!)</li>
+        </ul>
+      </div>
+      <p style="margin:0 0 18px;font-size:15px;line-height:1.7;">Please upload your video to YouTube, Google Drive, or Loom and reply to this email with the link. You can also email it directly to <a href="mailto:afropuppyyogaofficial@gmail.com" style="color:#C2185B;">afropuppyyogaofficial@gmail.com</a>.</p>
+      <p style="margin:0 0 18px;font-size:15px;line-height:1.7;">We look forward to hearing from you!</p>
+      <p style="margin:32px 0 0;font-size:14px;color:#8B6070;">Warm regards,<br/><strong>The AfroPuppyYoga Team</strong></p>
+    </div>
+    <div style="background:#fef3f7;padding:20px 40px;text-align:center;border-top:1px solid #f0d0dc;">
+      <p style="margin:0;font-size:12px;color:#a07080;">AfroPuppyYoga &mdash; Ontario, Canada &bull; <a href="https://afropuppyyoga.ca" style="color:#C2185B;">afropuppyyoga.ca</a></p>
+    </div>
+  </div>
+</body>
+</html>`;
+      const text = `Hi ${firstName},\n\nThank you for applying for the ${input.role} position at AfroPuppyYoga (${input.location}).\n\nWe noticed we do not have your intro video on file yet. Please record a short 1-2 minute video introducing yourself and reply to this email with a link (YouTube, Google Drive, or Loom).\n\nWarm regards,\nThe AfroPuppyYoga Team`;
+      await sendEmail({ to: input.applicantEmail, subject, html, text });
+      await notifyOwner({
+        title: `Video Requested: ${input.applicantName}`,
+        content: `Video request email sent to ${input.applicantName} (${input.applicantEmail}) for ${input.role} (${input.location}).`,
+      });
+      return { success: true };
+    }),
 });
