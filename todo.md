@@ -237,5 +237,11 @@
 - [x] TypeScript check: 0 errors
 - [x] Production build: successful
 - [x] Tests: 17/19 passing (2 failures are LUMA_API_KEY not set — expected, key needs to be added as secret)
-- [ ] Add GMAIL_APP_PASSWORD secret (email notifications)
-- [ ] Add LUMA_API_KEY secret (Luma calendar proxy)
+- [x] Add GMAIL_APP_PASSWORD secret (email notifications)
+- [x] Add LUMA_API_KEY secret (Luma calendar proxy)
+
+## Sprint 1 — Revenue + Conversion Cleanup (Jul 9, 2026)
+- [x] Task 1: Standardize "Ontario's #1 Puppy Yoga Experience" across index.html, Navbar, Footer, Hero, Home.tsx, Partnerships.tsx, email.ts, signing.ts, seoRenderer.ts
+- [x] Task 2: Add trust line to hero CTA area ("Trusted by universities, brands, and wellness communities across Ontario")
+- [x] Task 3: Improve /private-events/quote page — package labels (Classic/Signature/Luxury), "Best for" labels, "What happens next" section, corporate CTA
+- [x] Task 4: Fix backend quote recalculation — server calculates estimatedMin/estimatedMax from event type, guest count, location, package type

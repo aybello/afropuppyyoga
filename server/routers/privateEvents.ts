@@ -126,11 +126,45 @@ export const privateEventsRouter = router({
         packageType: z.enum(["classic", "signature", "luxury"]),
         preferredDate: z.string().optional().default(""),
         notes: z.string().optional().default(""),
-        estimatedMin: z.number(),
-        estimatedMax: z.number(),
+        // estimatedMin/Max from client are ignored — server recalculates below
+        estimatedMin: z.number().optional(),
+        estimatedMax: z.number().optional(),
       })
     )
     .mutation(async ({ input }) => {
+      // ── Server-side quote recalculation (source of truth) ──────────────
+      const BASE_MIN = 1200, BASE_MAX = 1500;
+      const SECOND_SESSION_MIN = 800, SECOND_SESSION_MAX = 1000;
+      const SIGNATURE_UPGRADE = 750;
+      const LUXURY_MIN = 2500;
+      const TRAVEL_FEES: Record<string, number> = {
+        kitchener: 0, waterloo: 0, cambridge: 0, hamilton: 0,
+        guelph: 75, burlington: 100, oakville: 150,
+        mississauga: 175, toronto: 200, brampton: 175, markham: 225, other: 200,
+      };
+      // Derive location key from the label string (lowercase first word)
+      const locationKey = input.location.toLowerCase().split(/[\s,(]/)[0];
+      const travelFee = TRAVEL_FEES[locationKey] ?? 200;
+
+      // Corporate/brand events get a 20% uplift on Signature/Luxury
+      const isCorporate = ["Corporate Wellness", "Brand Activation", "Team Building"].includes(input.eventType);
+
+      let serverMin: number, serverMax: number;
+      if (input.packageType === "luxury" || input.guests > 40) {
+        serverMin = LUXURY_MIN;
+        serverMax = LUXURY_MIN + 2500;
+        if (isCorporate) { serverMin = Math.round(serverMin * 1.2); serverMax = Math.round(serverMax * 1.2); }
+      } else {
+        const sessions = input.guests > 20 ? 2 : 1;
+        serverMin = BASE_MIN + (sessions === 2 ? SECOND_SESSION_MIN : 0) + travelFee;
+        serverMax = BASE_MAX + (sessions === 2 ? SECOND_SESSION_MAX : 0) + travelFee;
+        if (input.packageType === "signature") {
+          serverMin += SIGNATURE_UPGRADE;
+          serverMax += SIGNATURE_UPGRADE;
+        }
+      }
+      // ── End recalculation ───────────────────────────────────────────────
+
       const packageLabel =
         input.packageType === "classic"
           ? "Classic Experience ($1,200-$1,500)"
@@ -139,8 +173,8 @@ export const privateEventsRouter = router({
           : "Luxury Experience ($2,500+)";
 
       const estimateStr =
-        input.estimatedMin > 0
-          ? `$${input.estimatedMin.toLocaleString()} - $${input.estimatedMax.toLocaleString()} CAD`
+        serverMin > 0
+          ? `$${serverMin.toLocaleString()} - $${serverMax.toLocaleString()} CAD`
           : "Custom Luxury quote";
 
       // 1. Save to database first (source of truth)
@@ -156,9 +190,8 @@ export const privateEventsRouter = router({
         packageType: input.packageType,
         preferredDate: input.preferredDate || null,
         notes: input.notes || null,
-        estimatedMin: input.estimatedMin,
-        estimatedMax: input.estimatedMax,
-        status: "new",
+        estimatedMin: serverMin,
+        estimatedMax: serverMax,
       });
 
       // 2. Send branded email to APY inbox

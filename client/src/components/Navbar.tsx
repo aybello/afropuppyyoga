@@ -101,7 +101,7 @@ export default function Navbar() {
                   AfroPuppyYoga
                 </span>
                 <span className={`text-[10px] font-body tracking-widest uppercase transition-colors duration-300 ${scrolled || isSubPage ? "text-[#8B2252]" : "text-[#F2A0B8]"}`}>
-                  Canada's #1 Puppy Yoga
+                  Ontario's #1 Puppy Yoga
                 </span>
               </div>
             </a>

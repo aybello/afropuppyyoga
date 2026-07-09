@@ -51,7 +51,7 @@ export default function Footer() {
               />
               <div>
                 <div className="font-display font-bold text-lg text-white">AfroPuppyYoga</div>
-                <div className="font-body text-xs text-[#F2A0B8] tracking-widest uppercase">Canada's #1 Puppy Yoga</div>
+                <div className="font-body text-xs text-[#F2A0B8] tracking-widest uppercase">Ontario's #1 Puppy Yoga</div>
               </div>
             </div>
             <p className="font-body text-white/50 text-sm leading-relaxed mb-6 max-w-xs">

@@ -129,7 +129,7 @@ const LOCAL_BUSINESS_SCHEMA = {
   "@id": `${BASE}/#business`,
   name: "AfroPuppyYoga",
   description:
-    "Canada's #1 puppy yoga studio. Guided yoga, Afro-beat rhythms and adorable puppies in Hamilton, Kitchener-Waterloo and Oakville, Ontario.",
+    "Ontario's #1 puppy yoga studio. Guided yoga, Afro-beat rhythms and adorable puppies in Hamilton, Kitchener-Waterloo and Oakville, Ontario.",
   url: BASE,
   logo: {
     "@type": "ImageObject",
@@ -207,7 +207,7 @@ const PAGES: Record<string, () => string> = {
     buildHtml({
       title: "AfroPuppyYoga | Ontario's #1 Puppy Yoga Experience",
       description:
-        "Canada's #1 puppy yoga studio. Guided yoga, Afro-beat rhythms & adorable puppies in Hamilton, Kitchener-Waterloo & Oakville, Ontario. Book your class today!",
+        "Ontario's #1 puppy yoga studio. Guided yoga, Afro-beat rhythms & adorable puppies in Hamilton, Kitchener-Waterloo & Oakville, Ontario. Book your class today!",
       canonical: `${BASE}/`,
       schema: [
         LOCAL_BUSINESS_SCHEMA,
@@ -300,7 +300,7 @@ const PAGES: Record<string, () => string> = {
 <main>
   <section id="hero">
     <h2>Guided yoga, Afro-beat rhythms, and adorable puppies — all in one unforgettable session.</h2>
-    <p>Serving Hamilton, Kitchener-Waterloo &amp; Oakville, Ontario. Canada's #1 puppy yoga studio.</p>
+    <p>Serving Hamilton, Kitchener-Waterloo &amp; Oakville, Ontario. Ontario's #1 puppy yoga studio.</p>
     <p><a href="https://lu.ma/afropuppyyoga">Book a Class</a></p>
   </section>
 
@@ -348,7 +348,7 @@ const PAGES: Record<string, () => string> = {
   <section id="about">
     <h2>About AfroPuppyYoga</h2>
     <p>AfroPuppyYoga was founded to create a unique wellness space that celebrates Black culture, community, and joy. We blend the ancient practice of yoga with the infectious energy of Afro-beat music and the undeniable happiness that puppies bring. Our studio is a safe, inclusive, and uplifting space for everyone.</p>
-    <p>We are proud to be Canada's #1 puppy yoga studio, with over 494 five-star reviews and thousands of happy participants across Ontario.</p>
+    <p>We are proud to be Ontario's #1 puppy yoga studio, with over 494 five-star reviews and thousands of happy participants across Ontario.</p>
   </section>
 
   <section id="private-events">
@@ -407,7 +407,7 @@ const PAGES: Record<string, () => string> = {
 
 <footer>
   <p>&copy; 2025 AfroPuppyYoga. All rights reserved.</p>
-  <p>Canada's #1 Puppy Yoga Studio | Hamilton | Kitchener | Oakville | Ontario</p>
+  <p>Ontario's #1 Puppy Yoga Studio | Hamilton | Kitchener | Oakville | Ontario</p>
   <nav>
     <a href="/birthday">Birthday Packages</a> |
     <a href="/partnerships">Partnerships</a> |
