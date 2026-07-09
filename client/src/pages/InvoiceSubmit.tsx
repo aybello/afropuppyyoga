@@ -16,6 +16,7 @@ export default function InvoiceSubmit() {
   const [dragOver, setDragOver] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
 
@@ -24,9 +25,11 @@ export default function InvoiceSubmit() {
       setSubmitted(true);
       setFile(null);
       setError(null);
+      setUploading(false);
     },
     onError: (err) => {
       setError(err.message || "Something went wrong. Please try again.");
+      setUploading(false);
     },
   });
 
@@ -54,12 +57,23 @@ export default function InvoiceSubmit() {
   const handleSubmit = async () => {
     if (!file) return;
     setError(null);
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = (reader.result as string).split(",")[1];
-      submitMutation.mutate({ fileBase64: base64, filename: file.name });
-    };
-    reader.readAsDataURL(file);
+    setUploading(true);
+    try {
+      // Step 1: upload the PDF via multipart to avoid base64 body-size issues on the platform
+      const formData = new FormData();
+      formData.append("invoice", file);
+      const uploadRes = await fetch("/api/upload-invoice", { method: "POST", body: formData });
+      if (!uploadRes.ok) {
+        const errData = await uploadRes.json().catch(() => ({}));
+        throw new Error(errData.error ?? `Storage upload failed (${uploadRes.status})`);
+      }
+      const { url: fileUrl, key: fileKey } = await uploadRes.json();
+      // Step 2: register the invoice in the DB and trigger AI extraction
+      submitMutation.mutate({ fileUrl, fileKey, filename: file.name });
+    } catch (err: any) {
+      setError(err.message ?? "Upload failed. Please try again.");
+      setUploading(false);
+    }
   };
 
   if (submitted) {
@@ -200,11 +214,11 @@ export default function InvoiceSubmit() {
           {/* Submit button */}
           <button
             onClick={handleSubmit}
-            disabled={!file || submitMutation.isPending}
+            disabled={!file || uploading || submitMutation.isPending}
             className="mt-6 w-full inline-flex items-center justify-center gap-2 px-6 py-4 font-body font-semibold text-base rounded-full text-white transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             style={{ background: "linear-gradient(135deg, #e91e8c, #c2410c)" }}
           >
-            {submitMutation.isPending ? (
+            {(uploading || submitMutation.isPending) ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
                 Uploading...

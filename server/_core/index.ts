@@ -35,7 +35,7 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 // Rate limiters
 const formLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5,
+  max: 20, // raised from 5 — was blocking all users in production due to shared load-balancer IP
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Too many submissions. Please try again in 15 minutes." },
@@ -55,6 +55,9 @@ const chatbotLimiter = rateLimit({
 async function startServer() {
   const app = express();
   const server = createServer(app);
+  // Trust the platform's reverse proxy so rate limiting uses the real client IP, not the load balancer IP.
+  // Without this, all users in production share one IP and hit the rate limit together.
+  app.set("trust proxy", 1);
   // Redirect manus.space domains to the canonical custom domain
   app.use((req, res, next) => {
     const host = req.headers.host || "";

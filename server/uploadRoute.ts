@@ -110,4 +110,42 @@ router.post("/api/upload-resume", (req: any, res: any, next: any) => {
   }
 });
 
+/**
+ * POST /api/upload-invoice
+ * Accepts multipart/form-data with a single "invoice" field (PDF only, max 16MB).
+ * Uploads to S3 and returns { url, key, filename }.
+ * Used by InvoiceSubmit page instead of base64-over-tRPC to avoid body-size limits on the platform.
+ */
+const invoiceUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 16 * 1024 * 1024 }, // 16MB max
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype === "application/pdf" || file.originalname.toLowerCase().endsWith(".pdf")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only PDF files are allowed for invoices"));
+    }
+  },
+});
+
+router.post("/api/upload-invoice", (req: any, res: any, next: any) => {
+  invoiceUpload.single("invoice")(req, res, (err) => {
+    if (err) return handleMulterError(err, req, res, next);
+    next();
+  });
+}, async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No invoice file provided" });
+    }
+    const randomSuffix = Math.random().toString(36).slice(2, 10);
+    const key = `invoices/${Date.now()}-${randomSuffix}.pdf`;
+    const { url } = await storagePut(key, req.file.buffer, "application/pdf");
+    return res.json({ url, key, filename: req.file.originalname });
+  } catch (err: any) {
+    console.error("[upload-invoice] Error:", err);
+    return res.status(500).json({ error: err.message ?? "Upload failed" });
+  }
+});
+
 export default router;

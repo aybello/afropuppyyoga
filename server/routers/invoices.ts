@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { adminProcedure, staffProcedure, publicProcedure, router } from "../_core/trpc";
 import { invokeLLM } from "../_core/llm";
-import { storagePut } from "../storage";
 import { createInvoice, deleteInvoice, getAllInvoices, updateInvoice } from "../db";
 
 function randomSuffix() {
@@ -11,28 +10,23 @@ function randomSuffix() {
 export const invoicesRouter = router({
   /**
    * Staff submits an invoice PDF.
-   * Accepts base64-encoded PDF, uploads to S3, then runs AI extraction.
+   * The PDF is uploaded first via POST /api/upload-invoice (multipart).
+   * This procedure receives the resulting S3 URL + key and runs AI extraction.
    * Public so staff don't need to log in.
    */
   submit: publicProcedure
     .input(
       z.object({
-        fileBase64: z.string(), // base64-encoded PDF
+        fileUrl: z.string().url(), // S3 URL from /api/upload-invoice
+        fileKey: z.string(),       // S3 key from /api/upload-invoice
         filename: z.string(),
       })
     )
     .mutation(async ({ input }) => {
-      // Decode base64 to buffer
-      const buffer = Buffer.from(input.fileBase64, "base64");
-
-      // Upload to S3
-      const fileKey = `invoices/${Date.now()}-${randomSuffix()}.pdf`;
-      const { url: fileUrl } = await storagePut(fileKey, buffer, "application/pdf");
-
-      // Create initial DB record
+      // Create initial DB record (file already uploaded via /api/upload-invoice)
       await createInvoice({
-        fileUrl,
-        fileKey,
+        fileUrl: input.fileUrl,
+        fileKey: input.fileKey,
         originalFilename: input.filename,
         extractionStatus: "pending",
         status: "pending",
@@ -43,7 +37,7 @@ export const invoicesRouter = router({
       const newInvoice = allInvoices[0]; // most recent
 
       // Run AI extraction asynchronously (fire and forget with error handling)
-      extractInvoiceData(newInvoice.id, fileUrl, buffer).catch((err) => {
+      extractInvoiceData(newInvoice.id, input.fileUrl, null).catch((err) => {
         console.error("[Invoice] Extraction failed for invoice", newInvoice.id, err);
       });
 
@@ -144,7 +138,7 @@ export const invoicesRouter = router({
  * Uses LLM to extract invoice data from the PDF URL.
  * Sends the PDF as a file_url to the multimodal LLM.
  */
-async function extractInvoiceData(invoiceId: number, fileUrl: string, _buffer: Buffer) {
+async function extractInvoiceData(invoiceId: number, fileUrl: string, _buffer: Buffer | null) {
   try {
     const response = await invokeLLM({
       messages: [
