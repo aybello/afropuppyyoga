@@ -7,6 +7,27 @@
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
+  <!-- Kitchener Location Page -->
+  <url>
+    <loc>https://afropuppyyoga.ca/kitchener</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <!-- Hamilton Location Page -->
+  <url>
+    <loc>https://afropuppyyoga.ca/hamilton</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <!-- Oakville Location Page (Coming Soon) -->
+  <url>
+    <loc>https://afropuppyyoga.ca/oakville</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
   <!-- Birthday Packages -->
   <url>
     <loc>https://afropuppyyoga.ca/birthday</loc>

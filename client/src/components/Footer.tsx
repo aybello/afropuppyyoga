@@ -5,6 +5,14 @@ import { BOOK_URL, LOGO_URL  } from "@/const";
 
 const navGroups = [
   {
+    heading: "Locations",
+    links: [
+      { label: "Kitchener", href: "/kitchener", isPage: true },
+      { label: "Hamilton", href: "/hamilton", isPage: true },
+      { label: "Oakville (Soon)", href: "/oakville", isPage: true },
+    ],
+  },
+  {
     heading: "Classes & Events",
     links: [
       { label: "Book a Class", href: BOOK_URL, isExternal: true },
@@ -67,8 +75,8 @@ export default function Footer() {
             </a>
           </div>
 
-          {/* Navigation — two grouped columns */}
-          <div className="md:col-span-1 grid grid-cols-2 gap-8">
+          {/* Navigation — three grouped columns */}
+          <div className="md:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-8">
             {navGroups.map((group) => (
               <div key={group.heading}>
                 <h4 className="font-display font-bold text-xs text-white/40 uppercase tracking-widest mb-4">{group.heading}</h4>

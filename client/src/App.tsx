@@ -31,6 +31,9 @@ const RefundTracker = lazy(() => import("./pages/RefundTracker"));
 const BreederAvailability = lazy(() => import("./pages/BreederAvailability"));
 const PuppySchedule = lazy(() => import("./pages/PuppySchedule"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Kitchener = lazy(() => import("./pages/Kitchener"));
+const Hamilton = lazy(() => import("./pages/Hamilton"));
+const Oakville = lazy(() => import("./pages/Oakville"));
 
 function PageLoader() {
   return (
@@ -67,6 +70,9 @@ function Router() {
         <Route path="/breeder-availability" component={BreederAvailability} />
         <Route path="/loyalty" component={Loyalty} />
         <Route path="/ethics" component={Ethics} />
+        <Route path="/kitchener" component={Kitchener} />
+        <Route path="/hamilton" component={Hamilton} />
+        <Route path="/oakville" component={Oakville} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>

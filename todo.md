@@ -245,3 +245,25 @@
 - [x] Task 2: Add trust line to hero CTA area ("Trusted by universities, brands, and wellness communities across Ontario")
 - [x] Task 3: Improve /private-events/quote page — package labels (Classic/Signature/Luxury), "Best for" labels, "What happens next" section, corporate CTA
 - [x] Task 4: Fix backend quote recalculation — server calculates estimatedMin/estimatedMax from event type, guest count, location, package type
+
+## Sprint 2 — Location SEO Pages (Jul 9, 2026)
+- [ ] Build shared LocationPage component (hero, about, schedule embed, FAQ, CTA, structured data)
+- [ ] Create /kitchener page with Kitchener-specific copy, TenC Dance Studio details, LocalBusiness schema
+- [ ] Create /hamilton page with Hamilton-specific copy, Colibri Studio details, LocalBusiness schema
+- [ ] Create /oakville page with Oakville-specific copy, "coming soon" framing, LocalBusiness schema
+- [ ] Register all 3 routes in App.tsx with React.lazy
+- [ ] Add "Locations" section to Footer navGroups
+- [ ] Add Locations dropdown to Navbar More menu
+- [ ] Update sitemap.xml with 3 new location URLs
+- [ ] Update robots.txt to allow location pages
+- [ ] Add internal links from homepage Experience section to location pages
+
+## Sprint 2 — Location SEO Pages (Jul 9, 2026)
+- [x] Build shared LocationPage component (hero, about, experience features, Luma calendar embed, FAQ accordion, CTA, cross-location links, JSON-LD structured data)
+- [x] Create /kitchener page — unique copy, TenC Dance Studio venue, 6 FAQs, LocalBusiness schema
+- [x] Create /hamilton page — unique copy, Colibri Studio venue, 6 FAQs, LocalBusiness schema
+- [x] Create /oakville page — coming soon state, follow CTA, redirect to KW/Hamilton, 4 FAQs
+- [x] Wire routes in App.tsx (lazy-loaded)
+- [x] Add Locations column to Footer (Kitchener, Hamilton, Oakville Soon)
+- [x] Add location links to Navbar More dropdown
+- [x] Update sitemap.xml with all three location URLs
