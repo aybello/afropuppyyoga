@@ -167,6 +167,23 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // Keep framer-motion in its own chunk so pages that don't use it
+          // (Careers, admin pages, etc.) don't have to download it
+          if (id.includes('framer-motion')) return 'framer-motion';
+          // Keep streamdown (2MB markdown renderer) separate — only used in chatbot
+          if (id.includes('streamdown')) return 'streamdown';
+          // Core React runtime
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) return 'react-core';
+          // tRPC + tanstack query
+          if (id.includes('@trpc') || id.includes('@tanstack')) return 'trpc-query';
+          // Radix UI components
+          if (id.includes('@radix-ui')) return 'radix-ui';
+        },
+      },
+    },
   },
   server: {
     host: true,

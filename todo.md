@@ -228,3 +228,14 @@
 - [x] Add FAQPage schema to index.html (6 questions matching homepage FAQ)
 - [x] Add BreadcrumbList schema to index.html
 - [x] Consolidate duplicate google-site-verification meta tags in index.html
+
+## Account Migration (Jul 9, 2026)
+- [x] Clone repo from https://github.com/aybello/afropuppyyoga.git
+- [x] Restore all source files from repo (client, server, drizzle, shared, vite config, server/_core)
+- [x] Install missing packages (pdfkit, pdfjs-dist, http-proxy-middleware)
+- [x] Migrate database from old account (16 tables, all row counts verified)
+- [x] TypeScript check: 0 errors
+- [x] Production build: successful
+- [x] Tests: 17/19 passing (2 failures are LUMA_API_KEY not set — expected, key needs to be added as secret)
+- [ ] Add GMAIL_APP_PASSWORD secret (email notifications)
+- [ ] Add LUMA_API_KEY secret (Luma calendar proxy)
