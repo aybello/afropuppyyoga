@@ -3,26 +3,26 @@ import LocationPage, { type LocationConfig } from "@/components/LocationPage";
 const config: LocationConfig = {
   slug: "oakville",
   city: "Oakville",
-  pageTitle: "Puppy Yoga Oakville | AfroPuppyYoga — Coming Soon to Oakville, Ontario",
+  pageTitle: "Puppy Yoga Oakville | AfroPuppyYoga — Oakville, Ontario",
   metaDescription:
-    "AfroPuppyYoga is coming to Oakville, Ontario! Ontario's #1 puppy yoga studio — guided yoga, Afrobeats music, and adorable puppies. Follow us to be first to know when we launch.",
-  heroHeadline: "Puppy Yoga Coming to Oakville",
+    "AfroPuppyYoga is now in Oakville, Ontario! Ontario's #1 puppy yoga studio — guided yoga, Afrobeats music, and adorable puppies at 1670 North Service Rd E. Book your spot today.",
+  heroHeadline: "Puppy Yoga in Oakville",
   heroSubline:
-    "AfroPuppyYoga is expanding to Oakville. Be the first in your community to experience Ontario's #1 puppy yoga studio.",
+    "Guided yoga, Afrobeats rhythms, and the most adorable puppies — right here in Oakville at 1670 North Service Rd E.",
   heroBg:
     "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/og_image_apy.jpg",
-  venueName: "Venue TBA",
-  venueAddress: "Oakville, ON",
-  venueArea: "Halton Region",
+  venueName: "1670 North Service Rd E",
+  venueAddress: "1670 North Service Rd E, Oakville, ON",
+  venueArea: "Oakville · Halton Region",
   aboutParagraph:
-    "Oakville is next on the AfroPuppyYoga map. We're bringing our signature blend of guided yoga, Afrobeats music, and ethically sourced puppies to the Halton Region. We're currently finalising our venue partner — follow us on Instagram to be the first to know when Oakville sessions go live. In the meantime, join us in Kitchener or Hamilton.",
-  scheduleDescription: "Launching soon — follow for updates",
-  comingSoon: true,
+    "AfroPuppyYoga has arrived in Oakville — bringing our signature blend of guided yoga, Afrobeats music, and ethically sourced puppies to the Halton Region. Located at 1670 North Service Rd E, our Oakville sessions deliver the same unforgettable 60-minute experience that has made APY Ontario's #1 puppy yoga studio. Whether you're a yoga veteran or a complete beginner, all you need is a love of puppies and a willingness to smile.",
+  scheduleDescription: "Regular sessions — check calendar for dates",
+  comingSoon: false,
   faqs: [
     {
-      question: "When will Oakville sessions start?",
+      question: "Where exactly is the Oakville class held?",
       answer:
-        "We're actively working on securing a venue in Oakville. Follow @afropuppyyoga on Instagram for the official launch announcement — subscribers will get early access to book.",
+        "Our Oakville sessions are held at 1670 North Service Rd E, Oakville, ON. It's easily accessible from the QEW and has parking available nearby.",
     },
     {
       question: "Can I book a private event in Oakville now?",
@@ -30,9 +30,9 @@ const config: LocationConfig = {
         "Private events in Oakville may be possible before public sessions launch. Fill out our Private Event Quote form and mention Oakville — we'll reach out to discuss options.",
     },
     {
-      question: "Where can I do puppy yoga near Oakville right now?",
+      question: "Is parking available at the Oakville location?",
       answer:
-        "Our Hamilton location is the closest active studio to Oakville. You can also join us in Kitchener-Waterloo. Both locations have regular sessions — check the Luma calendar to book.",
+        "Yes — parking is available near 1670 North Service Rd E. We recommend arriving 10 minutes early to get settled before class begins.",
     },
     {
       question: "What is AfroPuppyYoga?",
@@ -41,10 +41,10 @@ const config: LocationConfig = {
     },
   ],
   schemaAddress: {
-    streetAddress: "",
+    streetAddress: "1670 North Service Rd E",
     addressLocality: "Oakville",
     addressRegion: "ON",
-    postalCode: "L6H",
+    postalCode: "L6H 7N9",
   },
   lat: 43.4675,
   lng: -79.6877,
