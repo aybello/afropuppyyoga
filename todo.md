@@ -267,3 +267,24 @@
 - [x] Add Locations column to Footer (Kitchener, Hamilton, Oakville Soon)
 - [x] Add location links to Navbar More dropdown
 - [x] Update sitemap.xml with all three location URLs
+
+## Sprint 2 Remaining — More SEO Pages (Jul 9, 2026)
+- [x] Create /puppy-yoga-waterloo page (students, tech teams, founders angle)
+- [x] Create /private-puppy-yoga-events page (private events SEO landing)
+- [x] Wire both routes in App.tsx
+- [x] Add to sitemap.xml
+- [x] Add to Navbar More dropdown and Footer
+
+## Sprint 3 — Membership + Loyalty Funnel (Jul 9, 2026)
+- [x] Update Memberships.tsx: add "Best for" labels, savings explanation, cross-city note, rollover policy, early access / priority booking perks
+- [x] Update Loyalty.tsx: simplify promise to "Attend 3 classes, get your 4th free", add cross-city FAQ, add "Ask us after class" CTA
+
+## Sprint 4 — Corporate Sales Page (Jul 9, 2026)
+- [x] Build /corporate-puppy-yoga dedicated page (hero, who it's for, why it works, packages, trust logos, FAQ, CTA)
+- [x] Wire route in App.tsx
+- [x] Add to Navbar More dropdown and Footer
+- [x] Add to sitemap.xml
+
+## Sprint 2/4 Cleanup
+- [x] Fix Navbar "Oakville (Soon)" label → "Oakville"
+- [x] Fix Footer "Oakville (Soon)" label → "Oakville"

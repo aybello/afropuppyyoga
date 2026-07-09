@@ -62,6 +62,14 @@ const faqs = [
     a: "Yes — the cycle repeats indefinitely. Every 3 classes earns you 1 free class, forever.",
   },
   {
+    q: "Does the loyalty program work across all APY locations?",
+    a: "Yes. Your attendance is tracked by email address across all APY locations — Kitchener, Waterloo, Hamilton, and Oakville. A class in any city counts the same.",
+  },
+  {
+    q: "How do I know how many classes I've attended?",
+    a: "You'll receive an email update after each class. You can also ask us after any class and we'll check your progress on the spot.",
+  },
+  {
     q: "What if I book with different email addresses?",
     a: "Your attendance is tracked by email address. Always use the same email when booking to ensure your classes are counted correctly.",
   },
@@ -99,17 +107,28 @@ export default function Loyalty() {
             <h1 className="font-display text-5xl md:text-6xl font-bold text-[#1A0A12] mb-6 leading-tight">
               APY Rewards Program
             </h1>
-            <p className="font-body text-[#1A0A12]/65 text-xl leading-relaxed mb-10 max-w-2xl mx-auto">
-              Attend 3 classes. Get 1 free. Automatically. No apps, no punch cards, no forms — just show up and we take care of the rest.
+            <p className="font-body text-[#1A0A12]/65 text-xl leading-relaxed mb-4 max-w-2xl mx-auto">
+              Attend 3 classes. Get your 4th free. Automatically. No apps, no punch cards, no forms — just show up and we take care of the rest.
             </p>
-            <a
-              href={BOOK_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center px-10 py-4 bg-[#8B2252] text-white font-body font-semibold text-base rounded-full hover:bg-[#6B1A3F] transition-all duration-200 shadow-md"
-            >
-              Book a Class to Start
-            </a>
+            <p className="font-body text-[#8B2252] text-sm font-semibold mb-8">
+              ✅ Works across all APY locations — Kitchener, Waterloo, Hamilton & Oakville
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a
+                href={BOOK_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-10 py-4 bg-[#8B2252] text-white font-body font-semibold text-base rounded-full hover:bg-[#6B1A3F] transition-all duration-200 shadow-md"
+              >
+                Book a Class to Start
+              </a>
+              <a
+                href="mailto:afropuppyyogaofficial@gmail.com?subject=Loyalty%20Program%20-%20Check%20My%20Progress"
+                className="inline-flex items-center px-10 py-4 border-2 border-[#8B2252] text-[#8B2252] font-body font-semibold text-base rounded-full hover:bg-[#8B2252] hover:text-white transition-all duration-200"
+              >
+                Ask Us to Track Your Visits
+              </a>
+            </div>
           </motion.div>
         </div>
       </section>
@@ -212,8 +231,11 @@ export default function Loyalty() {
           <h2 className="font-display text-3xl md:text-4xl font-bold text-[#1A0A12] mb-4">
             Your next free class is 3 sessions away.
           </h2>
-          <p className="font-body text-[#1A0A12]/60 text-base mb-8">
+          <p className="font-body text-[#1A0A12]/60 text-base mb-4">
             Book your first class today. We'll handle the rest.
+          </p>
+          <p className="font-body text-[#1A0A12]/50 text-sm mb-8">
+            Already attended a few classes? Ask us after your next session and we'll check your progress on the spot.
           </p>
           <a
             href={BOOK_URL}

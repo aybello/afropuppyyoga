@@ -25,7 +25,9 @@ const loyaltyLink = { label: "🐾 Rewards", href: "/loyalty", isPage: true };
 const moreLinks = [
   { label: "📍 Kitchener", href: "/kitchener", isPage: true },
   { label: "📍 Hamilton", href: "/hamilton", isPage: true },
-  { label: "📍 Oakville (Soon)", href: "/oakville", isPage: true },
+  { label: "📍 Oakville", href: "/oakville", isPage: true },
+  { label: "📍 Waterloo", href: "/puppy-yoga-waterloo", isPage: true },
+  { label: "🏢 Corporate Events", href: "/corporate-puppy-yoga", isPage: true },
   { label: "🎂 Birthday Packages", href: "/birthday", isPage: true },
   { label: "🤝 Partnerships", href: "/partnerships", isPage: true },
   { label: "🐶 Private Event Quote", href: "/private-events/quote", isPage: true },

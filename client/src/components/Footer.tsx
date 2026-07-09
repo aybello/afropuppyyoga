@@ -9,7 +9,9 @@ const navGroups = [
     links: [
       { label: "Kitchener", href: "/kitchener", isPage: true },
       { label: "Hamilton", href: "/hamilton", isPage: true },
-      { label: "Oakville (Soon)", href: "/oakville", isPage: true },
+      { label: "Oakville", href: "/oakville", isPage: true },
+      { label: "Waterloo", href: "/puppy-yoga-waterloo", isPage: true },
+      { label: "Corporate Events", href: "/corporate-puppy-yoga", isPage: true },
     ],
   },
   {
@@ -142,7 +144,7 @@ export default function Footer() {
               <div>
                 <div className="font-body text-xs text-white/30 uppercase tracking-wide mb-1">Locations</div>
                 <div className="font-body text-sm text-white/60">
-                  Hamilton · Kitchener · Oakville
+                  Hamilton · Kitchener · Waterloo · Oakville
                 </div>
               </div>
             </div>

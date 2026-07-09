@@ -34,6 +34,9 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Kitchener = lazy(() => import("./pages/Kitchener"));
 const Hamilton = lazy(() => import("./pages/Hamilton"));
 const Oakville = lazy(() => import("./pages/Oakville"));
+const Waterloo = lazy(() => import("./pages/Waterloo"));
+const Corporate = lazy(() => import("./pages/Corporate"));
+const PrivatePuppyYogaEvents = lazy(() => import("./pages/PrivatePuppyYogaEvents"));
 
 function PageLoader() {
   return (
@@ -73,6 +76,9 @@ function Router() {
         <Route path="/kitchener" component={Kitchener} />
         <Route path="/hamilton" component={Hamilton} />
         <Route path="/oakville" component={Oakville} />
+        <Route path="/puppy-yoga-waterloo" component={Waterloo} />
+        <Route path="/corporate-puppy-yoga" component={Corporate} />
+        <Route path="/private-puppy-yoga-events" component={PrivatePuppyYogaEvents} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>
