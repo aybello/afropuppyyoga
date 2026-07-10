@@ -10,7 +10,7 @@ const config: LocationConfig = {
   heroSubline:
     "Birthdays, bachelorettes, corporate wellness days, and more — AfroPuppyYoga brings the puppies, the yoga, and the Afrobeats to your private event across Ontario.",
   heroBg:
-    "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/og_image_apy.jpg",
+    "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/apy_hero_bg-aDMPriKGFaJ3ZgQKWVBv5n.webp",
   venueName: "Your Venue or Ours",
   venueAddress: "Available across Ontario",
   venueArea: "Kitchener · Hamilton · Oakville · Toronto · Guelph · Waterloo",

@@ -10,7 +10,7 @@ const config: LocationConfig = {
   heroSubline:
     "Premium wellness meets puppy joy. AfroPuppyYoga brings guided yoga, Afrobeats, and adorable puppies to Oakville — the perfect lifestyle experience.",
   heroBg:
-    "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/og_image_apy.jpg",
+    "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/apy_hero_bg-aDMPriKGFaJ3ZgQKWVBv5n.webp",
   venueName: "1670 North Service Rd E",
   venueAddress: "1670 North Service Rd E, Oakville, ON",
   venueArea: "Oakville · Halton Region",

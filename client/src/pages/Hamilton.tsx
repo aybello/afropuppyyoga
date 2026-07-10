@@ -10,7 +10,7 @@ const config: LocationConfig = {
   heroSubline:
     "Your Sunday wellness ritual just got a whole lot cuter. Guided yoga, Afrobeats, and adorable puppies at Colibri Studio in Hamilton.",
   heroBg:
-    "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/og_image_apy.jpg",
+    "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/apy_hero_bg-aDMPriKGFaJ3ZgQKWVBv5n.webp",
   venueName: "Colibri Studio",
   venueAddress: "Hamilton, ON",
   venueArea: "Hamilton, Ontario",
