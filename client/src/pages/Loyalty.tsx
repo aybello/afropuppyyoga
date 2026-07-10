@@ -63,7 +63,7 @@ const faqs = [
   },
   {
     q: "Does the loyalty program work across all APY locations?",
-    a: "Yes. Your attendance is tracked by email address across all APY locations — Kitchener, Waterloo, Hamilton, and Oakville. A class in any city counts the same.",
+    a: "Yes. Your attendance is tracked by email address across all APY locations — Kitchener, Hamilton, and Oakville. A class in any city counts the same.",
   },
   {
     q: "How do I know how many classes I've attended?",
@@ -111,7 +111,7 @@ export default function Loyalty() {
               Attend 3 classes. Get your 4th free. Automatically. No apps, no punch cards, no forms — just show up and we take care of the rest.
             </p>
             <p className="font-body text-[#8B2252] text-sm font-semibold mb-8">
-              ✅ Works across all APY locations — Kitchener, Waterloo, Hamilton & Oakville
+              ✅ Works across all APY locations — Kitchener, Hamilton & Oakville
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a

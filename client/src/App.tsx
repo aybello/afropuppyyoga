@@ -34,7 +34,6 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Kitchener = lazy(() => import("./pages/Kitchener"));
 const Hamilton = lazy(() => import("./pages/Hamilton"));
 const Oakville = lazy(() => import("./pages/Oakville"));
-const Waterloo = lazy(() => import("./pages/Waterloo"));
 const Corporate = lazy(() => import("./pages/Corporate"));
 const PrivatePuppyYogaEvents = lazy(() => import("./pages/PrivatePuppyYogaEvents"));
 
@@ -77,7 +76,6 @@ function Router() {
         <Route path="/puppy-yoga-kitchener" component={Kitchener} />
         <Route path="/puppy-yoga-hamilton" component={Hamilton} />
         <Route path="/puppy-yoga-oakville" component={Oakville} />
-        <Route path="/puppy-yoga-waterloo" component={Waterloo} />
         {/* Legacy redirects — old slugs forward to new SEO slugs */}
         <Route path="/kitchener">{() => { window.location.replace("/puppy-yoga-kitchener"); return null; }}</Route>
         <Route path="/hamilton">{() => { window.location.replace("/puppy-yoga-hamilton"); return null; }}</Route>

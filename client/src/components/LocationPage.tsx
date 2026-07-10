@@ -630,11 +630,6 @@ export default function LocationPage({ config }: Props) {
                   Oakville →
                 </a>
               )}
-              {config.slug !== "puppy-yoga-waterloo" && (
-                <a href="/puppy-yoga-waterloo" className="font-body text-sm text-white/60 hover:text-[#F2A0B8] transition-colors">
-                  Waterloo →
-                </a>
-              )}
             </div>
           </div>
         </div>

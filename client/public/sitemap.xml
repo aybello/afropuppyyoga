@@ -28,13 +28,6 @@
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
-  <!-- Waterloo Location Page -->
-  <url>
-    <loc>https://afropuppyyoga.ca/puppy-yoga-waterloo</loc>
-    <lastmod>2026-07-09</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
   <!-- Corporate Puppy Yoga Events -->
   <url>
     <loc>https://afropuppyyoga.ca/corporate-puppy-yoga</loc>

@@ -26,7 +26,6 @@ const moreLinks = [
   { label: "📍 Kitchener", href: "/puppy-yoga-kitchener", isPage: true },
   { label: "📍 Hamilton", href: "/puppy-yoga-hamilton", isPage: true },
   { label: "📍 Oakville", href: "/puppy-yoga-oakville", isPage: true },
-  { label: "📍 Waterloo", href: "/puppy-yoga-waterloo", isPage: true },
   { label: "🏢 Corporate Events", href: "/corporate-puppy-yoga", isPage: true },
   { label: "🎂 Birthday Packages", href: "/birthday", isPage: true },
   { label: "🤝 Partnerships", href: "/partnerships", isPage: true },
