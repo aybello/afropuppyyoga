@@ -246,17 +246,17 @@
 - [x] Task 3: Improve /private-events/quote page — package labels (Classic/Signature/Luxury), "Best for" labels, "What happens next" section, corporate CTA
 - [x] Task 4: Fix backend quote recalculation — server calculates estimatedMin/estimatedMax from event type, guest count, location, package type
 
-## Sprint 2 — Location SEO Pages (Jul 9, 2026)
-- [ ] Build shared LocationPage component (hero, about, schedule embed, FAQ, CTA, structured data)
-- [ ] Create /kitchener page with Kitchener-specific copy, TenC Dance Studio details, LocalBusiness schema
-- [ ] Create /hamilton page with Hamilton-specific copy, Colibri Studio details, LocalBusiness schema
-- [ ] Create /oakville page with Oakville-specific copy, "coming soon" framing, LocalBusiness schema
-- [ ] Register all 3 routes in App.tsx with React.lazy
-- [ ] Add "Locations" section to Footer navGroups
-- [ ] Add Locations dropdown to Navbar More menu
-- [ ] Update sitemap.xml with 3 new location URLs
-- [ ] Update robots.txt to allow location pages
-- [ ] Add internal links from homepage Experience section to location pages
+## Sprint 2 — Location SEO Pages (Jul 9, 2026) [superseded by second Sprint 2 block below]
+- [x] Build shared LocationPage component (hero, about, schedule embed, FAQ, CTA, structured data)
+- [x] Create /kitchener page with Kitchener-specific copy, TenC Dance Studio details, LocalBusiness schema
+- [x] Create /hamilton page with Hamilton-specific copy, Colibri Studio details, LocalBusiness schema
+- [x] Create /oakville page with Oakville-specific copy, "coming soon" framing, LocalBusiness schema
+- [x] Register all 3 routes in App.tsx with React.lazy
+- [x] Add "Locations" section to Footer navGroups
+- [x] Add Locations dropdown to Navbar More menu
+- [x] Update sitemap.xml with 3 new location URLs
+- [x] Update robots.txt to allow location pages
+- [x] Add internal links from homepage Experience section to location pages
 
 ## Sprint 2 — Location SEO Pages (Jul 9, 2026)
 - [x] Build shared LocationPage component (hero, about, experience features, Luma calendar embed, FAQ accordion, CTA, cross-location links, JSON-LD structured data)
@@ -288,3 +288,19 @@
 ## Sprint 2/4 Cleanup
 - [x] Fix Navbar "Oakville (Soon)" label → "Oakville"
 - [x] Fix Footer "Oakville (Soon)" label → "Oakville"
+
+## Sprint 2 Rebuild — City Pages (Plan-Exact, Jul 10 2026) [COMPLETE]
+- [x] Read Reviews.tsx, OurValues.tsx, const.ts for inspiration assets
+- [x] Rebuild LocationPage.tsx with all plan-required sections: Why try puppy yoga in [city]?, reviews/testimonials, complete structure
+- [x] Rebuild /puppy-yoga-kitchener page (correct slug, all sections, Kitchener-specific copy)
+- [x] Rebuild /puppy-yoga-hamilton page (correct slug, all sections, Hamilton-specific copy)
+- [x] Rebuild /puppy-yoga-oakville page (correct slug, all sections, Oakville-specific copy)
+- [x] Rebuild /puppy-yoga-waterloo page (correct slug, all sections, Waterloo-specific copy)
+- [x] Rebuild /private-puppy-yoga-events page (correct slug, all sections)
+- [x] Add trust logos section to /corporate-puppy-yoga Corporate.tsx
+- [x] Update App.tsx routes: /puppy-yoga-kitchener, /puppy-yoga-hamilton, /puppy-yoga-oakville
+- [x] Add redirect routes for old slugs (/kitchener → /puppy-yoga-kitchener, etc.)
+- [x] Update Navbar moreLinks with correct slugs
+- [x] Update Footer navGroups with correct slugs
+- [x] Update sitemap.xml with correct slugs
+- [x] Update LocationPage.tsx internal cross-links with correct slugs

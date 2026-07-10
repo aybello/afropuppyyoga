@@ -73,10 +73,15 @@ function Router() {
         <Route path="/breeder-availability" component={BreederAvailability} />
         <Route path="/loyalty" component={Loyalty} />
         <Route path="/ethics" component={Ethics} />
-        <Route path="/kitchener" component={Kitchener} />
-        <Route path="/hamilton" component={Hamilton} />
-        <Route path="/oakville" component={Oakville} />
+        {/* City SEO pages — plan-specified slugs */}
+        <Route path="/puppy-yoga-kitchener" component={Kitchener} />
+        <Route path="/puppy-yoga-hamilton" component={Hamilton} />
+        <Route path="/puppy-yoga-oakville" component={Oakville} />
         <Route path="/puppy-yoga-waterloo" component={Waterloo} />
+        {/* Legacy redirects — old slugs forward to new SEO slugs */}
+        <Route path="/kitchener">{() => { window.location.replace("/puppy-yoga-kitchener"); return null; }}</Route>
+        <Route path="/hamilton">{() => { window.location.replace("/puppy-yoga-hamilton"); return null; }}</Route>
+        <Route path="/oakville">{() => { window.location.replace("/puppy-yoga-oakville"); return null; }}</Route>
         <Route path="/corporate-puppy-yoga" component={Corporate} />
         <Route path="/private-puppy-yoga-events" component={PrivatePuppyYogaEvents} />
         <Route path={"/404"} component={NotFound} />

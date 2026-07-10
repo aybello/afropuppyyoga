@@ -1,24 +1,66 @@
 import LocationPage, { type LocationConfig } from "@/components/LocationPage";
 
 const config: LocationConfig = {
-  slug: "hamilton",
+  slug: "puppy-yoga-hamilton",
   city: "Hamilton",
-  pageTitle: "Puppy Yoga Hamilton | AfroPuppyYoga — Ontario's #1 Puppy Yoga Studio",
+  pageTitle: "Puppy Yoga Hamilton | AfroPuppyYoga",
   metaDescription:
     "Experience puppy yoga in Hamilton at Colibri Studio with AfroPuppyYoga. Guided yoga, Afrobeats music, and adorable puppies in the heart of Hamilton, Ontario. Book your spot now.",
   heroHeadline: "Puppy Yoga in Hamilton",
   heroSubline:
-    "AfroPuppyYoga has arrived in Hamilton — guided yoga with Afrobeats energy and the cutest puppies, hosted at Colibri Studio.",
+    "Your Sunday wellness ritual just got a whole lot cuter. Guided yoga, Afrobeats, and adorable puppies at Colibri Studio in Hamilton.",
   heroBg:
     "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/og_image_apy.jpg",
   venueName: "Colibri Studio",
   venueAddress: "Hamilton, ON",
-  venueArea: "Downtown Hamilton",
+  venueArea: "Hamilton, Ontario",
   aboutParagraph:
-    "AfroPuppyYoga's Hamilton location brings the full experience to the Steel City. Hosted at Colibri Studio in downtown Hamilton, each session combines a beginner-friendly yoga flow, an Afrobeats soundtrack, and a carefully curated group of puppies from our trusted local breeder network. Hamilton's vibrant wellness community has embraced APY with open arms — and we're here to stay.",
+    "AfroPuppyYoga brings its signature experience to Hamilton at Colibri Studio — a beautiful, welcoming space that sets the perfect tone for a Sunday wellness session. Each class blends beginner-friendly yoga with a live Afrobeats soundtrack and ethically sourced puppies, creating an atmosphere that's warm, joyful, and unlike anything else in the city. Hamilton is a city that values community and self-care, and APY fits right in.",
   scheduleDescription: "Regular sessions — check calendar for dates",
   lumaTag: "hamilton",
   comingSoon: false,
+  whyReasons: [
+    {
+      icon: "🌿",
+      title: "Sunday Wellness Ritual",
+      desc: "Hamilton's APY sessions are the perfect way to reset before the week begins — yoga, puppies, and good vibes to carry you through.",
+    },
+    {
+      icon: "💑",
+      title: "Unique Date Idea",
+      desc: "Tired of the same dinner-and-movie routine? Puppy yoga in Hamilton is the most talked-about date idea in the city right now.",
+    },
+    {
+      icon: "🧘",
+      title: "Self-Care for Everyone",
+      desc: "No yoga experience needed. APY Hamilton sessions are designed to be accessible, fun, and deeply relaxing for all fitness levels.",
+    },
+    {
+      icon: "👯",
+      title: "Friend Group Activity",
+      desc: "Bring your crew for a girls' day, birthday celebration, or just a spontaneous weekend activity that everyone will be talking about.",
+    },
+  ],
+  reviews: [
+    {
+      name: "Jessica L.",
+      avatar: "JL",
+      text: "I was nervous as a yoga beginner but the instructor made it so accessible and fun. The puppies kept interrupting my poses in the best way possible. Laughed the whole time!",
+      date: "3 months ago",
+    },
+    {
+      name: "Marcus R.",
+      avatar: "MR",
+      text: "Took my partner here for our anniversary. The vibe was immaculate — Afro beats, cute puppies, good energy. We're already planning our next visit.",
+      date: "4 months ago",
+    },
+    {
+      name: "Aisha B.",
+      avatar: "AB",
+      text: "As someone who does yoga regularly, this was such a refreshing twist. The cultural element with the music and the warmth of the instructors made it feel truly special.",
+      date: "5 months ago",
+    },
+  ],
   faqs: [
     {
       question: "Where is the Hamilton class held?",

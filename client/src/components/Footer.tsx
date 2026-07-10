@@ -7,9 +7,9 @@ const navGroups = [
   {
     heading: "Locations",
     links: [
-      { label: "Kitchener", href: "/kitchener", isPage: true },
-      { label: "Hamilton", href: "/hamilton", isPage: true },
-      { label: "Oakville", href: "/oakville", isPage: true },
+      { label: "Kitchener", href: "/puppy-yoga-kitchener", isPage: true },
+      { label: "Hamilton", href: "/puppy-yoga-hamilton", isPage: true },
+      { label: "Oakville", href: "/puppy-yoga-oakville", isPage: true },
       { label: "Waterloo", href: "/puppy-yoga-waterloo", isPage: true },
       { label: "Corporate Events", href: "/corporate-puppy-yoga", isPage: true },
     ],

@@ -18,6 +18,48 @@ const config: LocationConfig = {
     "AfroPuppyYoga's private events are Ontario's most unique group wellness experience. Whether you're celebrating a birthday, planning a bachelorette, rewarding your team, or activating your brand — we bring the certified yoga instructor, the ethically sourced puppies, the Afrobeats playlist, and everything else you need. We serve Kitchener, Hamilton, Oakville, Toronto, Guelph, Waterloo, and surrounding areas. Groups from 6 to 50+ welcome. Starting at $1,200.",
   scheduleDescription: "Available across Ontario — contact us to check your date",
   comingSoon: false,
+  whyReasons: [
+    {
+      icon: "🎂",
+      title: "Birthdays & Bachelorettes",
+      desc: "Make it unforgettable. Puppy yoga is the most talked-about birthday and bachelorette activity in Ontario — your guests will be raving about it for months.",
+    },
+    {
+      icon: "💼",
+      title: "Corporate Wellness Days",
+      desc: "Employee appreciation, team-building, and stress relief in one session. HR teams across Ontario choose APY for events their teams actually look forward to.",
+    },
+    {
+      icon: "🎓",
+      title: "Student Group Events",
+      desc: "Student clubs, orientation events, and stress-relief sessions. APY is the go-to group activity for universities and colleges across Ontario.",
+    },
+    {
+      icon: "📍",
+      title: "Your Venue or Ours",
+      desc: "We come to you, or you come to us. APY serves Kitchener, Hamilton, Oakville, Toronto, Guelph, Waterloo, and surrounding areas across Ontario.",
+    },
+  ],
+  reviews: [
+    {
+      name: "Priya M.",
+      avatar: "PM",
+      text: "Brought my whole friend group for a birthday celebration and everyone LOVED it. The staff were so welcoming and the puppies were pure joy. 10/10 would recommend!",
+      date: "3 months ago",
+    },
+    {
+      name: "Cameron T.",
+      avatar: "CT",
+      text: "Absolutely incredible experience! The Afro-beat music, the puppies, the yoga — everything was perfectly curated. I've never felt so relaxed and happy at the same time.",
+      date: "2 months ago",
+    },
+    {
+      name: "Aisha B.",
+      avatar: "AB",
+      text: "As someone who does yoga regularly, this was such a refreshing twist. The cultural element with the music and the warmth of the instructors made it feel truly special.",
+      date: "5 months ago",
+    },
+  ],
   faqs: [
     {
       question: "What types of private events do you host?",

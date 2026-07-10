@@ -320,6 +320,39 @@ export default function Corporate() {
         </div>
       </section>
 
+      {/* Trust — Partner & Client Logos */}
+      <section className="py-16 px-6 bg-white border-t border-b border-[#f9a8d4]/40">
+        <div className="max-w-5xl mx-auto">
+          <p className="text-center font-body text-xs font-bold tracking-[0.2em] uppercase text-black/40 mb-6">
+            Trusted By
+          </p>
+          <div className="relative overflow-hidden">
+            <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+            <div className="flex items-center animate-[marquee_28s_linear_infinite] gap-0 min-w-max">
+              {[
+                { name: "Wilfrid Laurier University", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/laurier_logo_61911be5.webp", height: 30 },
+                { name: "University of Waterloo", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/waterloo_fixed_a91debfb.png", height: 36 },
+                { name: "McMaster University", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/mcmaster_dedf4891.png", height: 38 },
+                { name: "University of Guelph", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/guelph_fixed_39bf0fba.png", height: 36 },
+                { name: "Brock University", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/brock_university_a69cc38d.png", height: 52 },
+                { name: "Manulife", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/manulife_logo_cropped_ecd0a51b.png", height: 40 },
+                { name: "Brock Solutions", src: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/dwXWkrdWFpxsxxJF.png", height: 72 },
+                { name: "F45 Training", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/f45_fixed_f11e0ba3.png", height: 34 },
+                { name: "Girl Guides of Canada", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/girl-guides-canada-logo_307ab2f6.png", height: 80 },
+                { name: "Artemis Canada", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/artemis_canada_logo_b5401a15.jpg", height: 36 },
+                { name: "Kitchener Lady Rangers", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/lady_rangers_logo_787e1b41.jpg", height: 56 },
+                { name: "MMSA Lang Guelph", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/mmsa_lang_logo_46c62a49.webp", height: 56 },
+              ].flatMap((org) => [org, { ...org, key: org.name + "-2" }]).map((org, i) => (
+                <div key={`${org.name}-${i}`} className="flex items-center px-8 border-r border-black/10 last:border-r-0 shrink-0">
+                  <img src={org.src} alt={org.name} style={{ height: org.height }} className="w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* FAQ */}
       <section className="py-20 px-6" style={{ background: "#fff5f8" }}>
         <div className="max-w-3xl mx-auto">

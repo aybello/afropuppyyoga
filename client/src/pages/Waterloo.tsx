@@ -3,7 +3,7 @@ import LocationPage, { type LocationConfig } from "@/components/LocationPage";
 const config: LocationConfig = {
   slug: "puppy-yoga-waterloo",
   city: "Waterloo",
-  pageTitle: "Puppy Yoga Waterloo | AfroPuppyYoga — Waterloo-Region, Ontario",
+  pageTitle: "Puppy Yoga Waterloo | AfroPuppyYoga",
   metaDescription:
     "Puppy yoga in Waterloo, Ontario. AfroPuppyYoga brings guided yoga, Afrobeats music, and adorable puppies to the Waterloo Region. Perfect for students, tech teams, and wellness seekers. Book now.",
   heroHeadline: "Puppy Yoga in Waterloo",
@@ -18,6 +18,48 @@ const config: LocationConfig = {
     "Waterloo is part of the Kitchener-Waterloo Region — and AfroPuppyYoga's flagship studio at TenC Dance Studio (329 King St E, Kitchener) is just minutes away. Whether you're a student at Waterloo or Laurier, a founder at a local tech startup, or simply looking for a genuinely different wellness experience, APY is your spot. Our 60-minute sessions blend beginner-friendly yoga, an Afrobeats soundtrack, and ethically sourced puppies into something you'll want to come back for every week.",
   scheduleDescription: "Regular sessions in Kitchener — minutes from Waterloo",
   comingSoon: false,
+  whyReasons: [
+    {
+      icon: "🎓",
+      title: "Perfect for Students",
+      desc: "UW, Laurier, and Conestoga students love APY for stress relief during midterms and finals. It's the most fun you'll have off campus.",
+    },
+    {
+      icon: "💻",
+      title: "Tech Teams & Founders",
+      desc: "Waterloo's tech community uses APY for team wellness days, employee appreciation events, and startup culture moments that actually stick.",
+    },
+    {
+      icon: "🌊",
+      title: "Wellness Pop-Ups & Group Events",
+      desc: "From student clubs to brand activations, APY is the go-to wellness pop-up for Waterloo Region groups who want something genuinely different.",
+    },
+    {
+      icon: "📍",
+      title: "Minutes from Waterloo",
+      desc: "Our studio at TenC Dance Studio (329 King St E, Kitchener) is a short drive or bus ride from anywhere in Waterloo — easy to get to, impossible to forget.",
+    },
+  ],
+  reviews: [
+    {
+      name: "Priya M.",
+      avatar: "PM",
+      text: "Brought my whole friend group for a birthday celebration and everyone LOVED it. The staff were so welcoming and the puppies were pure joy. 10/10 would recommend!",
+      date: "3 months ago",
+    },
+    {
+      name: "Cameron T.",
+      avatar: "CT",
+      text: "Absolutely incredible experience! The Afro-beat music, the puppies, the yoga — everything was perfectly curated. I've never felt so relaxed and happy at the same time.",
+      date: "2 months ago",
+    },
+    {
+      name: "Aisha B.",
+      avatar: "AB",
+      text: "As someone who does yoga regularly, this was such a refreshing twist. The cultural element with the music and the warmth of the instructors made it feel truly special.",
+      date: "5 months ago",
+    },
+  ],
   faqs: [
     {
       question: "Is AfroPuppyYoga in Waterloo itself?",
