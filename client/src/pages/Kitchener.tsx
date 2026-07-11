@@ -19,6 +19,12 @@ const config: LocationConfig = {
   scheduleDescription: "Weekly sessions — check calendar for dates",
   lumaTag: "kitchener",
   comingSoon: false,
+  photos: [
+    { src: "/manus-storage/kitchener_1_2a351bee.jpg", alt: "Woman smiling while holding a Rottweiler puppy at AfroPuppyYoga Kitchener" },
+    { src: "/manus-storage/kitchener_2_4e59e53b.jpg", alt: "Two women laughing together with puppies at AfroPuppyYoga Kitchener" },
+    { src: "/manus-storage/kitchener_3_71fbfcea.jpg", alt: "Three guests each holding Rottweiler puppies at AfroPuppyYoga Kitchener" },
+    { src: "/manus-storage/kitchener_4_b07bc256.jpg", alt: "Couple smiling with a puppy at AfroPuppyYoga Kitchener" },
+  ],
   whyReasons: [
     {
       icon: "🏠",

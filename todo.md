@@ -304,3 +304,12 @@
 - [x] Update Footer navGroups with correct slugs
 - [x] Update sitemap.xml with correct slugs
 - [x] Update LocationPage.tsx internal cross-links with correct slugs
+
+## Real Photo Integration — Kitchener & Hamilton (Jul 11 2026)
+- [x] Browse APY Google Drive 2026 folder for Kitchener and Hamilton session photos
+- [x] Select 4 best photos per city (Kitchener: May 16th session; Hamilton: Apr 25th session)
+- [x] Convert HEIC photos to JPEG and upload to webdev CDN
+- [x] Add photos prop to LocationConfig interface in LocationPage.tsx
+- [x] Add "From Our Classes" photo gallery section to LocationPage.tsx (featured large + 3 smaller)
+- [x] Add Kitchener photos to Kitchener.tsx config
+- [x] Add Hamilton photos to Hamilton.tsx config

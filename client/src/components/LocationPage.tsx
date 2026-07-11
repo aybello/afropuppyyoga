@@ -73,6 +73,8 @@ export interface LocationConfig {
   lumaTag?: string;
   /** Whether this location is "coming soon" */
   comingSoon?: boolean;
+  /** City-specific real photos — up to 4 items. Each has src and alt. */
+  photos?: { src: string; alt: string }[];
   /** FAQ items specific to this location */
   faqs: LocationFAQ[];
   /** Schema.org address for LocalBusiness */
@@ -363,6 +365,40 @@ export default function LocationPage({ config }: Props) {
           </div>
         </div>
       </section>
+
+      {/* ── 3b. Real Photo Gallery (city-specific) ───────────────── */}
+      {config.photos && config.photos.length > 0 && (
+        <section className="py-16 bg-[#FFF5F8]">
+          <div className="container max-w-5xl">
+            <div className="flex items-center justify-center gap-3 mb-10">
+              <div className="w-8 h-0.5 bg-[#8B2252]" />
+              <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">From Our Classes</span>
+              <div className="w-8 h-0.5 bg-[#8B2252]" />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {config.photos.map((photo, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, scale: 0.97 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.08, duration: 0.45 }}
+                  className={`relative overflow-hidden rounded-2xl shadow-sm ${
+                    i === 0 ? "col-span-2 row-span-2 aspect-square" : "aspect-square"
+                  }`}
+                >
+                  <img
+                    src={photo.src}
+                    alt={photo.alt}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── 4. Upcoming Classes CTA (Luma embed) ────────────────────── */}
       {!config.comingSoon && (

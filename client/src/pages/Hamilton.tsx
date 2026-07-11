@@ -19,6 +19,12 @@ const config: LocationConfig = {
   scheduleDescription: "Regular sessions — check calendar for dates",
   lumaTag: "hamilton",
   comingSoon: false,
+  photos: [
+    { src: "/manus-storage/hamilton_1_5e77d697.jpg", alt: "Full group of guests with Weimaraner puppies at AfroPuppyYoga Hamilton, Colibri Studio" },
+    { src: "/manus-storage/hamilton_2_e7f5a6f6.jpg", alt: "Three women smiling with a puppy at AfroPuppyYoga Hamilton" },
+    { src: "/manus-storage/hamilton_3_d20bfe84.jpg", alt: "Three women with a Weimaraner puppy at Colibri Studio Hamilton" },
+    { src: "/manus-storage/hamilton_4_277b4ff6.jpg", alt: "Two women holding Weimaraner puppies at AfroPuppyYoga Hamilton" },
+  ],
   whyReasons: [
     {
       icon: "🌿",
