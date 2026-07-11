@@ -439,7 +439,7 @@ export default function LocationPage({ config }: Props) {
         <div className="container max-w-4xl">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <p className="font-body text-xs text-[#F2A0B8] tracking-widest uppercase mb-3">Private Events</p>
+              <p className="font-body text-xs text-[#F2A0B8] tracking-widest uppercase mb-5">Private Events</p>
               <h2 className="font-display font-black text-[#1A0A12] text-4xl leading-tight mb-4">
                 Host a Private Event<br />
                 <span className="italic text-[#8B2252]">in {config.city}</span>
