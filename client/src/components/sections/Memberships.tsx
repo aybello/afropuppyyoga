@@ -75,7 +75,7 @@ export default function Memberships() {
         </div>
 
         {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
           {passes.map((pass) => (
             <div
               key={pass.name}
