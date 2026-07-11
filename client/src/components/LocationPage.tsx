@@ -278,18 +278,18 @@ export default function LocationPage({ config }: Props) {
       </section>
 
       {/* ── 2. About This Location ───────────────────────────────────── */}
-      <section className="py-20 bg-[#FEFAF4]">
+      <section className="py-20 bg-[#FFF5F8]">
         <div className="container max-w-4xl">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <p className="font-body text-xs text-[#D4708A] tracking-widest uppercase mb-3">About This Location</p>
+              <p className="font-body text-xs text-[#8B2252] tracking-widest uppercase mb-3">About This Location</p>
               <h2 className="font-display font-black text-[#1A0A12] text-4xl leading-tight mb-6">
                 Puppy Yoga in {config.city}
               </h2>
               <p className="font-body text-[#3D1A2E]/80 text-base leading-relaxed mb-6">
                 {config.aboutParagraph}
               </p>
-              <div className="bg-[#F9F0F4] rounded-2xl p-5 border border-[#F2A0B8]/30">
+              <div className="bg-white rounded-2xl p-5 border border-[#F2A0B8]/30 shadow-sm">
                 <div className="font-body text-xs text-[#D4708A] uppercase tracking-widest mb-2">Venue</div>
                 <div className="font-display font-bold text-[#1A0A12] text-base mb-1">{config.venueName}</div>
                 <div className="font-body text-sm text-[#3D1A2E]/70">{config.venueAddress}</div>
@@ -317,10 +317,10 @@ export default function LocationPage({ config }: Props) {
       </section>
 
       {/* ── 3. Why Try Puppy Yoga in [City]? ────────────────────────── */}
-      <section className="py-20 bg-[#FFF5F8]">
+      <section className="py-20 bg-white">
         <div className="container max-w-4xl">
           <div className="text-center mb-12">
-            <p className="font-body text-xs text-[#D4708A] tracking-widest uppercase mb-3">Why {config.city}?</p>
+            <p className="font-body text-xs text-[#8B2252] tracking-widest uppercase mb-3">Why {config.city}?</p>
             <h2 className="font-display font-black text-[#1A0A12] text-4xl md:text-5xl leading-tight">
               Why Try Puppy Yoga<br />
               <span className="italic text-[#8B2252]">in {config.city}?</span>
@@ -343,7 +343,7 @@ export default function LocationPage({ config }: Props) {
             ))}
           </div>
           {/* What's included checklist */}
-          <div className="mt-10 bg-[#F9F0F4] rounded-2xl p-8 border border-[#F2A0B8]/30">
+          <div className="mt-10 bg-[#FFF5F8] rounded-2xl p-8 border border-[#F2A0B8]/30">
             <h3 className="font-display font-bold text-[#1A0A12] text-xl mb-5">What's Included in Every Session</h3>
             <div className="grid sm:grid-cols-2 gap-3">
               {[
@@ -366,22 +366,31 @@ export default function LocationPage({ config }: Props) {
 
       {/* ── 4. Upcoming Classes CTA (Luma embed) ────────────────────── */}
       {!config.comingSoon && (
-        <section className="py-20 bg-[#FEFAF4]">
+        <section className="py-20 bg-[#FFF5F8]">
           <div className="container max-w-4xl text-center">
-            <p className="font-body text-xs text-[#D4708A] tracking-widest uppercase mb-3">Upcoming Classes</p>
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-8 h-0.5 bg-[#8B2252]" />
+              <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">Upcoming Classes</span>
+              <div className="w-8 h-0.5 bg-[#8B2252]" />
+            </div>
             <h2 className="font-display font-black text-[#1A0A12] text-4xl mb-4">
               Book Your Spot in {config.city}
             </h2>
             <p className="font-body text-[#3D1A2E]/70 text-base mb-10 max-w-xl mx-auto">
               Sessions fill up fast — reserve your mat today. All skill levels welcome.
             </p>
-            <div className="rounded-2xl overflow-hidden shadow-lg border border-[#F2A0B8]/20 bg-white">
+            <div className="rounded-2xl overflow-hidden shadow-lg border border-[#F2A0B8]/30 bg-white relative">
+              {/* Fallback shown while iframe loads */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#FFF5F8] pointer-events-none z-0">
+                <div className="text-3xl">🐾</div>
+                <p className="font-body text-sm text-[#3D1A2E]/60">Loading upcoming classes…</p>
+              </div>
               <iframe
                 src={`https://lu.ma/embed/calendar/cal-Z474jeIbvUXskHE/events?theme=light&lt=light${config.lumaTag ? `&tag=${encodeURIComponent(config.lumaTag)}` : ""}`}
                 width="100%"
                 height="500"
                 frameBorder="0"
-                style={{ border: "none" }}
+                style={{ border: "none", position: "relative", zIndex: 1 }}
                 allowFullScreen
                 aria-hidden="false"
                 title={`AfroPuppyYoga ${config.city} class schedule`}
@@ -403,7 +412,7 @@ export default function LocationPage({ config }: Props) {
 
       {/* Coming Soon block */}
       {config.comingSoon && (
-        <section className="py-20 bg-[#FEFAF4]">
+        <section className="py-20 bg-[#FFF5F8]">
           <div className="container max-w-2xl text-center">
             <div className="text-5xl mb-6">🐾</div>
             <h2 className="font-display font-black text-[#1A0A12] text-4xl mb-4">
@@ -435,11 +444,14 @@ export default function LocationPage({ config }: Props) {
       )}
 
       {/* ── 5. Private Events CTA ────────────────────────────────────── */}
-      <section className="py-20 bg-[#FFF5F8] border-y border-[#F2A0B8]/20">
+      <section className="py-20 bg-white border-y border-[#F2A0B8]/20">
         <div className="container max-w-4xl">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <p className="font-body text-xs text-[#F2A0B8] tracking-widest uppercase mb-5">Private Events</p>
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-8 h-0.5 bg-[#8B2252]" />
+                <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">Private Events</span>
+              </div>
               <h2 className="font-display font-black text-[#1A0A12] text-4xl leading-tight mb-4">
                 Host a Private Event<br />
                 <span className="italic text-[#8B2252]">in {config.city}</span>
@@ -491,7 +503,7 @@ export default function LocationPage({ config }: Props) {
       </section>
 
       {/* ── 6. Reviews / Testimonials ───────────────────────────────── */}
-      <section className="py-20 bg-[#FFF5F8]">
+      <section className="py-20 bg-[#FFF5F8] border-t border-[#F2A0B8]/20">
         <div className="container max-w-4xl">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12 gap-6">
             <div>
@@ -559,13 +571,17 @@ export default function LocationPage({ config }: Props) {
       </section>
 
       {/* ── 7. FAQ ───────────────────────────────────────────────────── */}
-      <section className="py-20 bg-[#FEFAF4]">
+      <section className="py-20 bg-white">
         <div className="container max-w-2xl">
-          <p className="font-body text-xs text-[#D4708A] tracking-widest uppercase mb-3 text-center">Questions</p>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="w-8 h-0.5 bg-[#8B2252]" />
+            <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">Questions</span>
+            <div className="w-8 h-0.5 bg-[#8B2252]" />
+          </div>
           <h2 className="font-display font-black text-[#1A0A12] text-4xl text-center mb-10">
             FAQs — {config.city}
           </h2>
-          <div className="bg-white rounded-2xl border border-[#F2A0B8]/20 shadow-sm px-6 py-2">
+          <div className="bg-[#FFF5F8] rounded-2xl border border-[#F2A0B8]/30 shadow-sm px-6 py-2">
             {config.faqs.map((faq) => (
               <FAQItem key={faq.question} faq={faq} />
             ))}
@@ -574,7 +590,7 @@ export default function LocationPage({ config }: Props) {
       </section>
 
       {/* ── 8. Final Luma Booking CTA ────────────────────────────────── */}
-      <section className="py-20 bg-[#3D1A2E] text-center">
+      <section className="py-20 bg-[#1A0A12] text-center">
         <div className="container max-w-2xl">
           <div className="text-4xl mb-4">🐶</div>
           <h2 className="font-display font-black text-white text-4xl mb-4">
