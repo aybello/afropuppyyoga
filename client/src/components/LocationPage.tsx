@@ -377,7 +377,7 @@ export default function LocationPage({ config }: Props) {
             </p>
             <div className="rounded-2xl overflow-hidden shadow-lg border border-[#F2A0B8]/20 bg-white">
               <iframe
-                src={`https://lu.ma/embed/calendar/evt-afropuppyyoga?lt=light${config.lumaTag ? `&tag=${encodeURIComponent(config.lumaTag)}` : ""}`}
+                src={`https://lu.ma/embed/calendar/cal-Z474jeIbvUXskHE/events?theme=light&lt=light${config.lumaTag ? `&tag=${encodeURIComponent(config.lumaTag)}` : ""}`}
                 width="100%"
                 height="500"
                 frameBorder="0"
