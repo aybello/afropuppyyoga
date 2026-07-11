@@ -458,13 +458,13 @@ export default function LocationPage({ config }: Props) {
               <div className="flex flex-col sm:flex-row gap-3">
                 <a
                   href="/private-events/quote"
-                  className="inline-flex items-center justify-center px-8 py-3.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm rounded-full hover:bg-[#D4708A] transition-all active:scale-[0.97]"
+                  className="inline-flex items-center justify-center px-8 py-3.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm rounded-full hover:bg-[#D4708A] transition-all active:scale-[0.97] whitespace-nowrap"
                 >
                   Get a Private Event Quote
                 </a>
                 <a
                   href="/corporate-puppy-yoga"
-                  className="inline-flex items-center justify-center px-8 py-3.5 bg-transparent border border-[#8B2252] text-[#8B2252] font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] hover:text-white transition-all"
+                  className="inline-flex items-center justify-center px-8 py-3.5 bg-transparent border border-[#8B2252] text-[#8B2252] font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] hover:text-white transition-all whitespace-nowrap"
                 >
                   Corporate Events →
                 </a>
