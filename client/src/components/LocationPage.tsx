@@ -435,23 +435,23 @@ export default function LocationPage({ config }: Props) {
       )}
 
       {/* ── 5. Private Events CTA ────────────────────────────────────── */}
-      <section className="py-20 bg-[#1A0A12]">
+      <section className="py-20 bg-[#FFF5F8] border-y border-[#F2A0B8]/20">
         <div className="container max-w-4xl">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <p className="font-body text-xs text-[#F2A0B8] tracking-widest uppercase mb-3">Private Events</p>
-              <h2 className="font-display font-black text-white text-4xl leading-tight mb-4">
+              <h2 className="font-display font-black text-[#1A0A12] text-4xl leading-tight mb-4">
                 Host a Private Event<br />
-                <span className="italic text-[#F2A0B8]">in {config.city}</span>
+                <span className="italic text-[#8B2252]">in {config.city}</span>
               </h2>
-              <p className="font-body text-white/70 text-base leading-relaxed mb-6">
+              <p className="font-body text-[#3D1A2E]/70 text-base leading-relaxed mb-6">
                 Birthdays, bachelorettes, corporate wellness days, team-building events — AfroPuppyYoga brings the puppies, the yoga, and the Afrobeats to your private event. Groups from 6 to 50+ welcome.
               </p>
               <ul className="space-y-2 mb-8">
                 {["Birthday parties & bachelorettes", "Corporate wellness & team-building", "Student group events & brand activations", "Custom packages starting at $1,200"].map((item) => (
                   <li key={item} className="flex items-center gap-3">
                     <Check className="w-4 h-4 text-[#F2A0B8] flex-shrink-0" />
-                    <span className="font-body text-sm text-white/70">{item}</span>
+                    <span className="font-body text-sm text-[#3D1A2E]/70">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -464,7 +464,7 @@ export default function LocationPage({ config }: Props) {
                 </a>
                 <a
                   href="/corporate-puppy-yoga"
-                  className="inline-flex items-center justify-center px-8 py-3.5 bg-white/10 border border-white/30 text-white font-body font-semibold text-sm rounded-full hover:bg-white/20 transition-all"
+                  className="inline-flex items-center justify-center px-8 py-3.5 bg-transparent border border-[#8B2252] text-[#8B2252] font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] hover:text-white transition-all"
                 >
                   Corporate Events →
                 </a>
@@ -477,11 +477,11 @@ export default function LocationPage({ config }: Props) {
                 { icon: "🥂", label: "Bachelorette & Celebrations", desc: "The most unique bachelorette activity in Ontario." },
                 { icon: "🎓", label: "Student Group Events", desc: "Perfect for clubs, orientation events, and stress-relief sessions." },
               ].map((item) => (
-                <div key={item.label} className="flex gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                <div key={item.label} className="flex gap-4 p-4 bg-white rounded-xl border border-[#F2A0B8]/30 shadow-sm">
                   <div className="text-2xl flex-shrink-0">{item.icon}</div>
                   <div>
-                    <div className="font-display font-bold text-white text-sm mb-0.5">{item.label}</div>
-                    <div className="font-body text-xs text-white/60 leading-relaxed">{item.desc}</div>
+                    <div className="font-display font-bold text-[#1A0A12] text-sm mb-0.5">{item.label}</div>
+                    <div className="font-body text-xs text-[#3D1A2E]/60 leading-relaxed">{item.desc}</div>
                   </div>
                 </div>
               ))}
