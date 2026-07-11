@@ -70,7 +70,7 @@ export default function Memberships() {
             Members get guaranteed class credits, exclusive perks, and priority access every month — across all APY locations.
           </p>
           <p className="text-sm mt-2" style={{ color: "#9d6b7a" }}>
-            ✅ Valid at Kitchener, Waterloo, Hamilton & Oakville
+            ✅ Valid at Kitchener, Hamilton & Oakville
           </p>
         </div>
 
@@ -172,7 +172,7 @@ export default function Memberships() {
             🗺️ Use your membership at any APY location
           </p>
           <p className="text-sm" style={{ color: "#7c3f5e" }}>
-            Your Puppy Pass or Wellness Pack is valid at Kitchener, Waterloo, Hamilton, and Oakville. One membership, four cities.
+            Your Puppy Pass or Wellness Pack is valid at Kitchener, Hamilton, and Oakville. One membership, three cities.
           </p>
         </div>
         <p className="text-center text-sm mt-4" style={{ color: "#9d6b7a" }}>

@@ -48,7 +48,6 @@ const LUXURY_MIN = 2500;
 // Travel fees by city (one-way distance from KW studio)
 const TRAVEL_FEES: Record<string, number> = {
   kitchener: 0,
-  waterloo: 0,
   cambridge: 0,
   hamilton: 0,
   guelph: 75,
@@ -73,7 +72,6 @@ const EVENT_TYPES = [
 
 const LOCATIONS = [
   { value: "kitchener", label: "Kitchener (APY Studio)" },
-  { value: "waterloo", label: "Waterloo" },
   { value: "cambridge", label: "Cambridge" },
   { value: "guelph", label: "Guelph" },
   { value: "hamilton", label: "Hamilton (APY Studio)" },

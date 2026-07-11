@@ -85,7 +85,7 @@ const faqs = [
   },
   {
     q: "Where can you host corporate events?",
-    a: "We operate across Ontario including Kitchener, Hamilton, Oakville, Toronto, Guelph, Waterloo, and surrounding areas. We can come to your office or arrange space at one of our partner studios.",
+    a: "We operate across Ontario including Kitchener, Hamilton, Oakville, Toronto, Guelph, and surrounding areas. We can come to your office or arrange space at one of our partner studios.",
   },
   {
     q: "Are the puppies safe for a corporate setting?",

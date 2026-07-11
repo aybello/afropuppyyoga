@@ -13,9 +13,9 @@ const config: LocationConfig = {
     "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/apy_hero_bg-aDMPriKGFaJ3ZgQKWVBv5n.webp",
   venueName: "Your Venue or Ours",
   venueAddress: "Available across Ontario",
-  venueArea: "Kitchener · Hamilton · Oakville · Toronto · Guelph · Waterloo",
+  venueArea: "Kitchener · Hamilton · Oakville · Toronto · Guelph",
   aboutParagraph:
-    "AfroPuppyYoga's private events are Ontario's most unique group wellness experience. Whether you're celebrating a birthday, planning a bachelorette, rewarding your team, or activating your brand — we bring the certified yoga instructor, the ethically sourced puppies, the Afrobeats playlist, and everything else you need. We serve Kitchener, Hamilton, Oakville, Toronto, Guelph, Waterloo, and surrounding areas. Groups from 6 to 50+ welcome. Starting at $1,200.",
+    "AfroPuppyYoga's private events are Ontario's most unique group wellness experience. Whether you're celebrating a birthday, planning a bachelorette, rewarding your team, or activating your brand — we bring the certified yoga instructor, the ethically sourced puppies, the Afrobeats playlist, and everything else you need. We serve Kitchener, Hamilton, Oakville, Toronto, Guelph, and surrounding areas. Groups from 6 to 50+ welcome. Starting at $1,200.",
   scheduleDescription: "Available across Ontario — contact us to check your date",
   comingSoon: false,
   whyReasons: [
@@ -37,7 +37,7 @@ const config: LocationConfig = {
     {
       icon: "📍",
       title: "Your Venue or Ours",
-      desc: "We come to you, or you come to us. APY serves Kitchener, Hamilton, Oakville, Toronto, Guelph, Waterloo, and surrounding areas across Ontario.",
+      desc: "We come to you, or you come to us. APY serves Kitchener, Hamilton, Oakville, Toronto, Guelph, and surrounding areas across Ontario.",
     },
   ],
   reviews: [
@@ -74,7 +74,7 @@ const config: LocationConfig = {
     {
       question: "Where can you host private events?",
       answer:
-        "We operate across Ontario including Kitchener, Hamilton, Oakville, Toronto, Guelph, Waterloo, and surrounding areas. We can come to your venue or arrange space at one of our partner studios.",
+        "We operate across Ontario including Kitchener, Hamilton, Oakville, Toronto, Guelph, and surrounding areas. We can come to your venue or arrange space at one of our partner studios.",
     },
     {
       question: "What is included in a private event?",
