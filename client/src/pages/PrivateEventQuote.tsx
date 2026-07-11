@@ -109,7 +109,7 @@ function calculateQuote(
   }
 
   const breakdown: string[] = [];
-  breakdown.push(`Classic package (up to 20 guests, 60-min session, drinks & photos included): $${BASE_MIN}-$${BASE_MAX}`);
+  breakdown.push(`Classic package (up to 20 guests, 60-min session (40 min yoga + 20 min puppy play), drinks & photos included): $${BASE_MIN}-$${BASE_MAX}`);
   if (sessions === 2) {
     breakdown.push(`Second session for ${guests} guests: +$${SECOND_SESSION_MIN}-$${SECOND_SESSION_MAX}`);
   }
@@ -221,7 +221,7 @@ export default function PrivateEventQuote() {
                 color: "border-[#8B2252]/30",
                 badge: "bg-[#8B2252]/10 text-[#8B2252]",
                 items: [
-                  { emoji: "\u2728", text: "60-min beginner-friendly Puppy Yoga session" },
+                  { emoji: "✨", text: "60-min session: 40 min guided yoga + 20 min puppy playtime" },
                   { emoji: "\uD83D\uDC36", text: "Puppies + dedicated puppy handlers" },
                   { emoji: "\uD83E\uDDD8", text: "Professional yoga instructor" },
                   { emoji: "\uD83D\uDCF8", text: "Group photo + puppy playtime" },

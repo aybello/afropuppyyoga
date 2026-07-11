@@ -15,7 +15,7 @@ const config: LocationConfig = {
   venueAddress: "1670 North Service Rd E, Oakville, ON",
   venueArea: "Oakville · Halton Region",
   aboutParagraph:
-    "AfroPuppyYoga has arrived in Oakville — bringing our signature blend of guided yoga, Afrobeats music, and ethically sourced puppies to the Halton Region. Located at 1670 North Service Rd E, our Oakville sessions deliver the same unforgettable 60-minute experience that has made APY Ontario's #1 puppy yoga studio. Whether you're a yoga veteran or a complete beginner, all you need is a love of puppies and a willingness to smile.",
+    "AfroPuppyYoga has arrived in Oakville — bringing our signature blend of guided yoga, Afrobeats music, and ethically sourced puppies to the Halton Region. Located at 1670 North Service Rd E, our Oakville sessions deliver the same unforgettable 60-minute experience (40 min guided yoga + 20 min puppy playtime) that has made APY Ontario's #1 puppy yoga studio. Whether you're a yoga veteran or a complete beginner, all you need is a love of puppies and a willingness to smile.",
   scheduleDescription: "Regular sessions — check calendar for dates",
   comingSoon: false,
   whyReasons: [
@@ -79,7 +79,7 @@ const config: LocationConfig = {
     {
       question: "What is AfroPuppyYoga?",
       answer:
-        "AfroPuppyYoga is Ontario's #1 puppy yoga studio. We combine beginner-friendly yoga, an Afrobeats soundtrack, and adorable puppies from our ethical breeder network into a 60-minute experience unlike anything else in Ontario.",
+        "AfroPuppyYoga is Ontario's #1 puppy yoga studio. We combine 40 minutes of beginner-friendly yoga and 20 minutes of puppy playtime, with an Afrobeats soundtrack and ethically sourced puppies — an experience unlike anything else in Ontario.",
     },
   ],
   schemaAddress: {

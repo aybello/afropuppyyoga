@@ -298,8 +298,8 @@ export default function LocationPage({ config }: Props) {
             </div>
             <div className="space-y-4">
               {[
-                { icon: "🧘", title: "60-Min Guided Yoga", desc: "Beginner-friendly flow led by a certified instructor to a live Afrobeats soundtrack." },
-                { icon: "🐶", title: "Puppy Playtime", desc: "Ethically sourced puppies from vetted local breeders join you on the mat for cuddles and play." },
+                { icon: "🧘", title: "40-Min Guided Yoga", desc: "Beginner-friendly flow led by a certified instructor to a live Afrobeats soundtrack." },
+                { icon: "🐶", title: "20-Min Puppy Play", desc: "Free-roam puppy playtime — cuddle, pet, and take photos with the adorable pups after class." },
                 { icon: "📸", title: "Photo Moments", desc: "Group photo at the end — the perfect content for your feed." },
                 { icon: "🎶", title: "Afrobeats Soundtrack", desc: "Every session is set to an Afrobeats playlist that makes the energy unlike any other yoga class." },
               ].map((item) => (
