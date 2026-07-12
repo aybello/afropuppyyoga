@@ -236,7 +236,7 @@ export default function LocationPage({ config }: Props) {
                   href={BOOK_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center px-8 py-3.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm rounded-full hover:bg-[#D4708A] transition-all duration-200 active:scale-[0.97]"
+                  className="inline-flex items-center justify-center px-8 py-3.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm rounded-full hover:bg-[#F2A0B8]/90 transition-all duration-200 active:scale-[0.97]"
                 >
                   Book a Class in {config.city}
                 </a>
@@ -256,7 +256,7 @@ export default function LocationPage({ config }: Props) {
       </section>
 
       {/* Quick Facts Strip */}
-      <section className="bg-[#3D1A2E] py-5">
+      <section className="bg-[#8B2252] py-5">
         <div className="container">
           <div className="flex flex-wrap justify-center gap-8 md:gap-16">
             <div className="flex items-center gap-2.5 text-white/80">
@@ -435,7 +435,7 @@ export default function LocationPage({ config }: Props) {
                 href={BOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#D4708A] text-white font-body font-bold text-sm rounded-full hover:bg-[#B85A72] transition-all duration-200 active:scale-[0.97]"
+                className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm rounded-full hover:bg-[#F2A0B8]/90 transition-all duration-200 active:scale-[0.97]"
               >
                 View All {config.city} Classes →
               </a>
@@ -460,7 +460,7 @@ export default function LocationPage({ config }: Props) {
                 href="https://www.instagram.com/afropuppyyoga"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center px-8 py-3.5 bg-[#D4708A] text-white font-body font-bold text-sm rounded-full hover:bg-[#B85A72] transition-all"
+                className="inline-flex items-center justify-center px-8 py-3.5 bg-[#8B2252] text-white font-body font-bold text-sm rounded-full hover:bg-[#6B1A3F] transition-all"
               >
                 Follow on Instagram
               </a>
@@ -468,7 +468,7 @@ export default function LocationPage({ config }: Props) {
                 href={BOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center px-8 py-3.5 border-2 border-[#D4708A] text-[#D4708A] font-body font-bold text-sm rounded-full hover:bg-[#D4708A] hover:text-white transition-all"
+                className="inline-flex items-center justify-center px-8 py-3.5 border-2 border-[#8B2252] text-[#8B2252] font-body font-bold text-sm rounded-full hover:bg-[#8B2252] hover:text-white transition-all"
               >
                 Book in KW or Hamilton
               </a>
@@ -504,7 +504,7 @@ export default function LocationPage({ config }: Props) {
               <div className="flex flex-col sm:flex-row gap-3">
                 <a
                   href="/private-events/quote"
-                  className="inline-flex items-center justify-center px-8 py-3.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm rounded-full hover:bg-[#D4708A] transition-all active:scale-[0.97] whitespace-nowrap"
+                  className="inline-flex items-center justify-center px-8 py-3.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm rounded-full hover:bg-[#F2A0B8]/90 transition-all active:scale-[0.97] whitespace-nowrap"
                 >
                   Get a Private Event Quote
                 </a>
@@ -638,7 +638,7 @@ export default function LocationPage({ config }: Props) {
               href={BOOK_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm rounded-full hover:bg-[#D4708A] transition-all active:scale-[0.97]"
+              className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm rounded-full hover:bg-[#F2A0B8]/90 transition-all active:scale-[0.97]"
             >
               Book in KW or Hamilton While You Wait
             </a>
@@ -648,7 +648,7 @@ export default function LocationPage({ config }: Props) {
                 href={BOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm rounded-full hover:bg-[#D4708A] transition-all active:scale-[0.97]"
+                className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm rounded-full hover:bg-[#F2A0B8]/90 transition-all active:scale-[0.97]"
               >
                 Book a Class in {config.city}
               </a>

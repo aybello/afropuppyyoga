@@ -313,3 +313,12 @@
 - [x] Add "From Our Classes" photo gallery section to LocationPage.tsx (featured large + 3 smaller)
 - [x] Add Kitchener photos to Kitchener.tsx config
 - [x] Add Hamilton photos to Hamilton.tsx config
+
+## Color Audit — City Pages (Jul 12 2026)
+- [x] Fix Quick Facts strip background: bg-[#3D1A2E] → bg-[#8B2252] (matches brand primary deep rose)
+- [x] Fix "View All {city} Classes →" button: bg-[#D4708A] → bg-[#F2A0B8] text-[#1A0A12] (matches homepage hero/BookingBanner CTA pattern)
+- [x] Fix "Book a Class in {city}" hero button hover state: hover:bg-[#D4708A] → hover:bg-[#F2A0B8]/90
+- [x] Fix "Get a Private Event Quote" button hover state: hover:bg-[#D4708A] → hover:bg-[#F2A0B8]/90
+- [x] Fix bottom CTA "Book a Class in {city}" hover state: hover:bg-[#D4708A] → hover:bg-[#F2A0B8]/90
+- [x] Fix Coming Soon "Follow on Instagram" button: bg-[#D4708A] → bg-[#8B2252] (dark rose on light bg)
+- [x] Fix Coming Soon "Book in KW or Hamilton" outline button: border-[#D4708A] → border-[#8B2252]
