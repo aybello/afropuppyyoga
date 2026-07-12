@@ -322,3 +322,10 @@
 - [x] Fix bottom CTA "Book a Class in {city}" hover state: hover:bg-[#D4708A] → hover:bg-[#F2A0B8]/90
 - [x] Fix Coming Soon "Follow on Instagram" button: bg-[#D4708A] → bg-[#8B2252] (dark rose on light bg)
 - [x] Fix Coming Soon "Book in KW or Hamilton" outline button: border-[#D4708A] → border-[#8B2252]
+
+## Oakville Page Launch (Jul 12 2026)
+- [x] Find Oakville session folder in Google Drive (50_Sat,June 6th_Oakville, folder ID 1inHGu-p5bFEHrFCecPK3GVE8zmuZGLZn)
+- [x] Download 15 HEIC photos from Oakville June 6th session
+- [x] Convert HEIC to JPEG and select best 9 photos
+- [x] Upload 9 Oakville photos to webdev CDN
+- [x] Update Oakville.tsx: add photos array, add lumaTag "oakville", expand FAQs to 6, update private events FAQ to reflect launched status
