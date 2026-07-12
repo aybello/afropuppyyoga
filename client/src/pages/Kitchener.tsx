@@ -20,10 +20,15 @@ const config: LocationConfig = {
   lumaTag: "kitchener",
   comingSoon: false,
   photos: [
-    { src: "/manus-storage/kitchener_1_2a351bee.jpg", alt: "Woman smiling while holding a Rottweiler puppy at AfroPuppyYoga Kitchener" },
-    { src: "/manus-storage/kitchener_2_4e59e53b.jpg", alt: "Two women laughing together with puppies at AfroPuppyYoga Kitchener" },
-    { src: "/manus-storage/kitchener_3_71fbfcea.jpg", alt: "Three guests each holding Rottweiler puppies at AfroPuppyYoga Kitchener" },
-    { src: "/manus-storage/kitchener_4_b07bc256.jpg", alt: "Couple smiling with a puppy at AfroPuppyYoga Kitchener" },
+    { src: "/manus-storage/IMG_0657_84447a5e.jpg", alt: "Guest smiling while holding a brown puppy at AfroPuppyYoga Kitchener" },
+    { src: "/manus-storage/IMG_0678_3441ad46.jpg", alt: "Guest in hijab holding a brown puppy at AfroPuppyYoga Kitchener" },
+    { src: "/manus-storage/IMG_1121_59eac423.jpg", alt: "Guest holding a French Bulldog puppy at AfroPuppyYoga Kitchener" },
+    { src: "/manus-storage/IMG_0892_6bf1345a.jpg", alt: "Guest seated cross-legged holding a Golden puppy at AfroPuppyYoga Kitchener" },
+    { src: "/manus-storage/IMG_0865_5d67a419.jpg", alt: "Guest holding a Golden puppy with the full class visible behind at AfroPuppyYoga Kitchener" },
+    { src: "/manus-storage/IMG_9003_901821b0.jpg", alt: "Family group with a puppy at AfroPuppyYoga Kitchener" },
+    { src: "/manus-storage/IMG_8944_79a0d5de.jpg", alt: "Guest holding a German Shepherd puppy at AfroPuppyYoga Kitchener" },
+    { src: "/manus-storage/IMG_8613_744d02c1.jpg", alt: "Two guests each holding a white Samoyed puppy at AfroPuppyYoga Kitchener" },
+    { src: "/manus-storage/IMG_8573_464bace7.jpg", alt: "Two friends holding white Samoyed puppies at AfroPuppyYoga Kitchener" },
   ],
   whyReasons: [
     {
