@@ -624,7 +624,7 @@ export default function LocationPage({ config }: Props) {
       </section>
 
       {/* ── 8. Final Luma Booking CTA ────────────────────────────────── */}
-      <section className="py-20 bg-[#1A0A12] text-center">
+      <section className="py-20 bg-[#8B2252] text-center">
         <div className="container max-w-2xl">
           <div className="text-4xl mb-4">🐶</div>
           <h2 className="font-display font-black text-white text-4xl mb-4">
