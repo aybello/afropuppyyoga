@@ -169,14 +169,13 @@ export default function Corporate() {
       <section
         className="relative pt-28 pb-24 px-6 overflow-hidden"
         style={{
-          background: "linear-gradient(135deg, rgba(26,10,18,0.60) 0%, rgba(61,26,46,0.50) 55%, rgba(139,34,82,0.55) 100%)",
-          backgroundImage: `linear-gradient(135deg, rgba(26,10,18,0.60) 0%, rgba(61,26,46,0.50) 55%, rgba(139,34,82,0.55) 100%), url('/manus-storage/corporate_hero_95e52cfc.jpg')`,
+          backgroundImage: `url('/manus-storage/corporate_hero_95e52cfc.jpg')`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
       >
-        {/* subtle texture overlay */}
-        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }} />
+        {/* bottom-weighted scrim for text legibility */}
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.45) 100%)" }} />
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
