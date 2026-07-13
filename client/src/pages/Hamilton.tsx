@@ -20,10 +20,15 @@ const config: LocationConfig = {
   lumaTag: "hamilton",
   comingSoon: false,
   photos: [
-    { src: "/manus-storage/hamilton_1_5e77d697.jpg", alt: "Full group of guests with Weimaraner puppies at AfroPuppyYoga Hamilton, Colibri Studio" },
-    { src: "/manus-storage/hamilton_2_e7f5a6f6.jpg", alt: "Three women smiling with a puppy at AfroPuppyYoga Hamilton" },
-    { src: "/manus-storage/hamilton_3_d20bfe84.jpg", alt: "Three women with a Weimaraner puppy at Colibri Studio Hamilton" },
-    { src: "/manus-storage/hamilton_4_277b4ff6.jpg", alt: "Two women holding Weimaraner puppies at AfroPuppyYoga Hamilton" },
+    { src: "/manus-storage/ham_oak_IMG_3209_d7f2d0c0.jpg", alt: "Two guests smiling with a white golden retriever puppy at AfroPuppyYoga" },
+    { src: "/manus-storage/ham_oak_IMG_2020_bb38b4e3.jpg", alt: "Two guests holding a brown doodle puppy at AfroPuppyYoga" },
+    { src: "/manus-storage/ham_oak_IMG_7923_87d8073f.jpg", alt: "Two guests with a fox-red labrador puppy at AfroPuppyYoga" },
+    { src: "/manus-storage/ham_oak_IMG_3785_6a9e3699.jpg", alt: "Guest seated cross-legged holding a golden doodle puppy at AfroPuppyYoga" },
+    { src: "/manus-storage/ham_oak_IMG_4663_bee61155.jpg", alt: "Two guests sitting on the floor with a spaniel puppy at AfroPuppyYoga" },
+    { src: "/manus-storage/ham_oak_IMG_3338_bcc391a0.jpg", alt: "Guest holding a white puppy with autumn leaf wall decor at AfroPuppyYoga" },
+    { src: "/manus-storage/ham_oak_IMG_6465_25b2d5a8.jpg", alt: "Two guests smiling with a Bernese mountain dog puppy at AfroPuppyYoga" },
+    { src: "/manus-storage/ham_oak_SAM06140_bdf088f2.jpg", alt: "Guest holding a white fluffy puppy under warm string lights at AfroPuppyYoga" },
+    { src: "/manus-storage/ham_oak_IMG_3627_6584a1af.jpg", alt: "Guest in pink holding a red doodle puppy at AfroPuppyYoga Halloween session" },
   ],
   whyReasons: [
     {
