@@ -51,7 +51,7 @@ const whyItWorks = [
   {
     icon: "🎵",
     title: "Culturally Fresh",
-    desc: "Afrobeats soundtrack, warm inclusive energy, and a vibe that feels premium without being stiff.",
+    desc: "Feel-good curated soundtrack, warm inclusive energy, and a vibe that feels premium without being stiff.",
   },
   {
     icon: "📸",
@@ -72,7 +72,7 @@ const packages = [
     bestFor: "Teams of 6–25",
     desc: "We host your group at one of our partner studios in Kitchener, Hamilton, or Oakville. Fully private, fully branded to APY. Includes instructor, puppies, mats, and props.",
     price: "Starting at $1,200",
-    includes: ["Certified yoga instructor", "Ethically sourced puppies + handlers", "All mats & props", "Custom Afrobeats playlist"],
+    includes: ["Certified yoga instructor", "Ethically sourced puppies + handlers", "All mats & props", "Custom curated playlist"],
     cta: "Get a Quote",
   },
   {
@@ -115,7 +115,7 @@ const faqs = [
   },
   {
     q: "What is included in the price?",
-    a: "Every corporate package includes a certified yoga instructor and event host, ethically sourced puppies and handlers, all mats and props, setup and cleanup, a custom Afrobeats playlist, and a branded APY experience. Add-ons like photography, refreshments, and branded merchandise are available.",
+    a: "Every corporate package includes a certified yoga instructor and event host, ethically sourced puppies and handlers, all mats and props, setup and cleanup, a custom curated playlist, and a branded APY experience. Add-ons like photography, refreshments, and branded merchandise are available.",
   },
   {
     q: "How far in advance do I need to book?",
@@ -192,7 +192,7 @@ export default function Corporate() {
               <span className="italic text-[#F2A0B8]">Actually Works</span>
             </h1>
             <p className="font-body text-white/70 text-lg leading-relaxed mb-10 max-w-2xl mx-auto">
-              Ontario's #1 puppy yoga studio brings the puppies, the yoga, and the Afrobeats to your team. Available across Ontario for groups of 6 to 50+.
+              Ontario's #1 puppy yoga studio brings the puppies, the yoga, and the good vibes to your team. Available across Ontario for groups of 6 to 50+.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/private-events/quote">
