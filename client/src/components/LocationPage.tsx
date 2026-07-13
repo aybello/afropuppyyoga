@@ -480,7 +480,7 @@ export default function LocationPage({ config }: Props) {
       {/* ── 5. Private Events CTA ────────────────────────────────────── */}
       <section className="py-20 bg-white border-y border-[#F2A0B8]/20">
         <div className="container max-w-4xl">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="grid md:grid-cols-2 gap-12 items-start">
             <div>
               <div className="flex items-center gap-3 mb-5">
                 <div className="w-8 h-0.5 bg-[#8B2252]" />
@@ -501,16 +501,16 @@ export default function LocationPage({ config }: Props) {
                   </li>
                 ))}
               </ul>
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col gap-3 w-full">
                 <a
                   href="/private-events/quote"
-                  className="inline-flex items-center justify-center px-8 py-3.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm rounded-full hover:bg-[#F2A0B8]/90 transition-all active:scale-[0.97] whitespace-nowrap"
+                  className="inline-flex items-center justify-center px-8 py-3.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm rounded-full hover:bg-[#F2A0B8]/90 transition-all active:scale-[0.97]"
                 >
                   Get a Private Event Quote
                 </a>
                 <a
                   href="/corporate-puppy-yoga"
-                  className="inline-flex items-center justify-center px-8 py-3.5 bg-transparent border border-[#8B2252] text-[#8B2252] font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] hover:text-white transition-all whitespace-nowrap"
+                  className="inline-flex items-center justify-center px-8 py-3.5 bg-transparent border border-[#8B2252] text-[#8B2252] font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] hover:text-white transition-all"
                 >
                   Corporate Events →
                 </a>
