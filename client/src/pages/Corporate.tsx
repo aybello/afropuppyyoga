@@ -169,8 +169,8 @@ export default function Corporate() {
       <section
         className="relative pt-28 pb-24 px-6 overflow-hidden"
         style={{
-          background: "linear-gradient(135deg, rgba(26,10,18,0.82) 0%, rgba(61,26,46,0.75) 55%, rgba(139,34,82,0.70) 100%)",
-          backgroundImage: `linear-gradient(135deg, rgba(26,10,18,0.82) 0%, rgba(61,26,46,0.75) 55%, rgba(139,34,82,0.70) 100%), url('/manus-storage/corporate_hero_95e52cfc.jpg')`,
+          background: "linear-gradient(135deg, rgba(26,10,18,0.60) 0%, rgba(61,26,46,0.50) 55%, rgba(139,34,82,0.55) 100%)",
+          backgroundImage: `linear-gradient(135deg, rgba(26,10,18,0.60) 0%, rgba(61,26,46,0.50) 55%, rgba(139,34,82,0.55) 100%), url('/manus-storage/corporate_hero_95e52cfc.jpg')`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
