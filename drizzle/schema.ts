@@ -433,3 +433,56 @@ export const puppySchedule = mysqlTable("puppySchedule", {
 ]);
 export type PuppySchedule = typeof puppySchedule.$inferSelect;
 export type InsertPuppySchedule = typeof puppySchedule.$inferInsert;
+
+// ─── Meta Conversions API ─────────────────────────────────────────────────────
+/**
+ * One row per Luma guest registration that needs to be (or has been) sent
+ * to the Meta Conversions API as a Purchase event.
+ *
+ * Lifecycle: pending → sent (on success) | failed (on CAPI error, retried up to 3×)
+ * Idempotency key: lumaGuestId — the poller will INSERT IGNORE on this column.
+ */
+export const metaConversionEvents = mysqlTable("metaConversionEvents", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Luma guest API ID — unique, used as idempotency key */
+  lumaGuestId: varchar("lumaGuestId", { length: 128 }).notNull().unique(),
+  /** Luma event API ID */
+  lumaEventId: varchar("lumaEventId", { length: 128 }).notNull(),
+  /** Luma event name (snapshot for debugging) */
+  lumaEventName: varchar("lumaEventName", { length: 255 }),
+  /** Ticket amount in cents as returned by Luma (e.g. 5500 = $55.00 CAD) */
+  amountCents: int("amountCents").notNull(),
+  /** Currency code (lowercase, e.g. 'cad') */
+  currency: varchar("currency", { length: 10 }).notNull().default("cad"),
+  /** UTC ms timestamp of when the guest registered in Luma */
+  lumaRegisteredAt: bigint("lumaRegisteredAt", { mode: "number" }).notNull(),
+  /** SHA-256 hash of lowercased trimmed email */
+  hashedEmail: varchar("hashedEmail", { length: 64 }),
+  /** SHA-256 hash of E.164-normalised phone (digits only, no +) */
+  hashedPhone: varchar("hashedPhone", { length: 64 }),
+  /** SHA-256 hash of lowercased trimmed first name */
+  hashedFirstName: varchar("hashedFirstName", { length: 64 }),
+  /** SHA-256 hash of lowercased trimmed last name */
+  hashedLastName: varchar("hashedLastName", { length: 64 }),
+  /** UTM source from Luma guest record (may be null) */
+  utmSource: varchar("utmSource", { length: 255 }),
+  /** Processing status */
+  status: mysqlEnum("metaStatus", ["pending", "sent", "failed", "skipped"]).default("pending").notNull(),
+  /** Number of send attempts */
+  attempts: int("attempts").default(0).notNull(),
+  /** Meta event ID returned on success (for deduplication) */
+  metaEventId: varchar("metaEventId", { length: 255 }),
+  /** Error message from last failed attempt */
+  lastError: text("lastError"),
+  /** When the CAPI send was completed */
+  sentAt: timestamp("sentAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (t) => [
+  index("idx_meta_status").on(t.status),
+  index("idx_meta_lumaEventId").on(t.lumaEventId),
+  index("idx_meta_lumaRegisteredAt").on(t.lumaRegisteredAt),
+]);
+
+export type MetaConversionEvent = typeof metaConversionEvents.$inferSelect;
+export type InsertMetaConversionEvent = typeof metaConversionEvents.$inferInsert;

@@ -7,6 +7,7 @@ import ChatbotWidget from "@/components/ChatbotWidget";
 import ScrollToTop from "@/components/ScrollToTop";
 import { MapPin, Clock, Users, Star, ChevronDown, Quote, Check } from "lucide-react";
 import { motion } from "framer-motion";
+import { useMetaPixel } from "@/hooks/useMetaPixel";
 
 /* ============================================================
    LocationPage — Shared template for all city SEO pages.
@@ -125,6 +126,7 @@ const avatarColors = [
 
 export default function LocationPage({ config }: Props) {
   const canonicalUrl = `https://afropuppyyoga.ca/${config.slug}`;
+  const { track } = useMetaPixel();
 
   useSeoMeta({
     title: config.pageTitle,
@@ -236,6 +238,7 @@ export default function LocationPage({ config }: Props) {
                   href={BOOK_URL}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => track("InitiateCheckout", { content_name: `Book Class — ${config.city}` })}
                   className="inline-flex items-center justify-center px-8 py-3.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm rounded-full hover:bg-[#F2A0B8]/90 transition-all duration-200 active:scale-[0.97]"
                 >
                   Book a Class in {config.city}
@@ -435,6 +438,7 @@ export default function LocationPage({ config }: Props) {
                 href={BOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => track("InitiateCheckout", { content_name: `View Classes — ${config.city}` })}
                 className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm rounded-full hover:bg-[#F2A0B8]/90 transition-all duration-200 active:scale-[0.97]"
               >
                 View All {config.city} Classes →
@@ -638,6 +642,7 @@ export default function LocationPage({ config }: Props) {
               href={BOOK_URL}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => track("InitiateCheckout", { content_name: `Book Class — ${config.city} (Coming Soon)` })}
               className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm rounded-full hover:bg-[#F2A0B8]/90 transition-all active:scale-[0.97]"
             >
               Book in KW or Hamilton While You Wait
@@ -648,6 +653,7 @@ export default function LocationPage({ config }: Props) {
                 href={BOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => track("InitiateCheckout", { content_name: `Book Class CTA — ${config.city}` })}
                 className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm rounded-full hover:bg-[#F2A0B8]/90 transition-all active:scale-[0.97]"
               >
                 Book a Class in {config.city}

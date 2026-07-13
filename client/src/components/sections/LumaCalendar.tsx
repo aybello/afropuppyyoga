@@ -8,10 +8,12 @@
 import { useEffect, useRef, useState } from "react";
 import { CalendarDays, ExternalLink } from "lucide-react";
 import { trackCTAClick } from "@/hooks/useAnalytics";
+import { useMetaPixel } from "@/hooks/useMetaPixel";
 
 export default function LumaCalendar() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [loaded, setLoaded] = useState(false);
+  const { track } = useMetaPixel();
 
   useEffect(() => {
     // Luma's embed script — initializes checkout widgets if any are present
@@ -57,7 +59,10 @@ export default function LumaCalendar() {
             href="https://luma.com/AfroPuppyYoga?k=c"
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => trackCTAClick("Open Full Calendar — Classes")}
+            onClick={() => {
+              trackCTAClick("Open Full Calendar — Classes");
+              track("InitiateCheckout", { content_name: "AfroPuppyYoga Calendar" });
+            }}
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold transition-all hover:scale-105 shrink-0"
             style={{
               background: "#e91e8c",

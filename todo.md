@@ -329,3 +329,17 @@
 - [x] Convert HEIC to JPEG and select best 9 photos
 - [x] Upload 9 Oakville photos to webdev CDN
 - [x] Update Oakville.tsx: add photos array, add lumaTag "oakville", expand FAQs to 6, update private events FAQ to reflect launched status
+
+## Meta Conversions API Integration (Jul 12 2026)
+
+- [x] Schema: add meta_conversion_events table to drizzle/schema.ts
+- [x] Schema: run migration via webdev_execute_sql
+- [x] Backend: direct Luma polling helper (server-to-server, not via /api/luma proxy)
+- [x] Backend: Luma polling heartbeat job (every 10 min) — find new paid guests, insert pending rows
+- [x] Backend: Meta CAPI sender heartbeat job (every 10 min, offset 5 min) — hash PII, POST to Meta
+- [x] Security: fix /api/luma P0 proxy (restrict to allowlist or remove)
+- [x] Frontend: InitiateCheckout pixel event on Luma button click
+- [x] Tests: hashing correctness (em, ph, fn, ln)
+- [x] Tests: no-hash fields assertion (fbc, fbp, ip, ua sent in plaintext)
+- [x] Tests: poller idempotency (same guest → exactly one row)
+- [x] Secrets: META_PIXEL_ID, META_CAPI_ACCESS_TOKEN, META_TEST_EVENT_CODE, META_CAPI_ENABLED

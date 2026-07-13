@@ -12,6 +12,7 @@ import chunkedUploadRouter from "../chunkedUploadRoute";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import rateLimit from "express-rate-limit";
 import { storageGet } from "../storage";
+import { lumaPoller, capiSender } from "../metaCapi";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -173,23 +174,33 @@ async function startServer() {
     }
   });
 
-  // Luma API proxy — forwards /api/luma/* to https://api.lu.ma with API key injected
+  // Luma API proxy — forwards /api/luma/* to https://api.lu.ma with API key injected.
+  // SECURITY: restricted to a read-only allowlist of safe Luma endpoints.
+  // Only calendar/list-events and event/get-guests are permitted.
   const LUMA_API_KEY = process.env.LUMA_API_KEY || "";
-  app.use(
-    "/api/luma",
-    createProxyMiddleware({
-      target: "https://api.lu.ma",
-      changeOrigin: true,
-      pathRewrite: { "^/api/luma": "" },
-      on: {
-        proxyReq: (proxyReq) => {
-          proxyReq.setHeader("x-luma-api-key", LUMA_API_KEY);
-          // Remove any forwarded host headers that could confuse Luma
-          proxyReq.removeHeader("x-forwarded-host");
-        },
+  const LUMA_ALLOWED_PATHS = [
+    "/public/v1/calendar/list-events",
+    "/public/v1/event/get-guests",
+    "/public/v1/event/get",
+  ];
+  app.use("/api/luma", (req, res, next) => {
+    const requestedPath = req.path;
+    const isAllowed = LUMA_ALLOWED_PATHS.some(allowed => requestedPath.startsWith(allowed));
+    if (!isAllowed) {
+      return res.status(403).json({ error: "Luma proxy: path not allowed" });
+    }
+    next();
+  }, createProxyMiddleware({
+    target: "https://api.lu.ma",
+    changeOrigin: true,
+    pathRewrite: { "^/api/luma": "" },
+    on: {
+      proxyReq: (proxyReq) => {
+        proxyReq.setHeader("x-luma-api-key", LUMA_API_KEY);
+        proxyReq.removeHeader("x-forwarded-host");
       },
-    })
-  );
+    },
+  }));
 
   // Keep-alive ping endpoint — called by scheduled heartbeat every 5 min to prevent cold starts
   app.get("/api/ping", (_req, res) => {
@@ -197,6 +208,31 @@ async function startServer() {
   });
   app.post("/api/scheduled/ping", (_req, res) => {
     res.json({ ok: true, ts: Date.now() });
+  });
+
+  // ─── Meta CAPI Scheduled Jobs ─────────────────────────────────────────────
+  // POST /api/scheduled/luma-poll — called by heartbeat every 10 min
+  // Polls all Luma events and inserts new paid guest registrations as pending rows.
+  app.post("/api/scheduled/luma-poll", async (_req, res) => {
+    try {
+      const result = await lumaPoller();
+      res.json({ ok: true, ...result });
+    } catch (err) {
+      console.error("[MetaCAPI] Luma poller error:", err);
+      res.status(500).json({ ok: false, error: String(err) });
+    }
+  });
+
+  // POST /api/scheduled/meta-capi-send — called by heartbeat every 10 min (offset 5 min)
+  // Picks up pending rows and sends them to Meta CAPI.
+  app.post("/api/scheduled/meta-capi-send", async (_req, res) => {
+    try {
+      const result = await capiSender();
+      res.json({ ok: true, ...result });
+    } catch (err) {
+      console.error("[MetaCAPI] CAPI sender error:", err);
+      res.status(500).json({ ok: false, error: String(err) });
+    }
   });
 
   // tRPC API

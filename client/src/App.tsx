@@ -1,10 +1,11 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { lazy, Suspense } from "react";
-import { Route, Switch } from "wouter";
+import { lazy, Suspense, useEffect } from "react";
+import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { Loader2 } from "lucide-react";
+import { useMetaPixel } from "./hooks/useMetaPixel";
 
 // Lazy load all pages so each page only loads its own code on demand
 const Home = lazy(() => import("./pages/Home"));
@@ -45,9 +46,20 @@ function PageLoader() {
   );
 }
 
+function PixelPageView() {
+  const { track } = useMetaPixel();
+  const [location] = useLocation();
+  useEffect(() => {
+    // Fire PageView on every client-side route change
+    track("PageView");
+  }, [location, track]);
+  return null;
+}
+
 function Router() {
   return (
     <Suspense fallback={<PageLoader />}>
+      <PixelPageView />
       <Switch>
         <Route path={"/"} component={Home} />
         <Route path={"/predictor"} component={FillRatePredictor} />
