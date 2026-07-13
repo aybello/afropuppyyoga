@@ -1,10 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useSeoMeta } from "@/hooks/useSeoMeta";
-import { Button } from "@/components/ui/button";
+import { Check, ChevronDown } from "lucide-react";
 
 const audiences = [
   { icon: "🏢", label: "HR Teams" },
@@ -57,6 +57,7 @@ const packages = [
     bestFor: "Teams of 6–25",
     desc: "We host your group at one of our partner studios in Kitchener, Hamilton, or Oakville. Fully private, fully branded to APY. Includes instructor, puppies, mats, and props.",
     price: "Starting at $1,200",
+    includes: ["Certified yoga instructor", "Ethically sourced puppies + handlers", "All mats & props", "Custom Afrobeats playlist"],
     cta: "Get a Quote",
   },
   {
@@ -65,6 +66,7 @@ const packages = [
     bestFor: "Teams of 15–50+",
     desc: "We bring the experience to your office, venue, or event space. Ideal for employee appreciation days, wellness weeks, and large-group activations.",
     price: "Starting at $2,000",
+    includes: ["Everything in Studio +", "Full setup & teardown at your venue", "Event coordination", "Branded APY experience"],
     cta: "Get a Quote",
     badge: "Most Requested",
   },
@@ -74,6 +76,7 @@ const packages = [
     bestFor: "Brand activations & partnerships",
     desc: "Co-branded puppy yoga events for product launches, influencer campaigns, and wellness brand partnerships. Custom packages available.",
     price: "Custom pricing",
+    includes: ["Co-branded event design", "Influencer & media coordination", "Custom merchandise options", "Dedicated account manager"],
     cta: "Contact Us",
   },
 ];
@@ -109,6 +112,28 @@ const faqs = [
   },
 ];
 
+function FAQItem({ faq }: { faq: { q: string; a: string } }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div
+      className="border border-[#F2A0B8]/30 rounded-2xl overflow-hidden bg-white cursor-pointer"
+      onClick={() => setOpen(!open)}
+    >
+      <div className="flex items-center justify-between px-6 py-5 gap-4">
+        <span className="font-display font-bold text-[#1A0A12] text-sm md:text-base">{faq.q}</span>
+        <ChevronDown
+          className={`w-5 h-5 text-[#8B2252] flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        />
+      </div>
+      {open && (
+        <div className="px-6 pb-5 border-t border-[#F2A0B8]/20">
+          <p className="font-body text-sm text-[#3D1A2E]/70 leading-relaxed pt-4">{faq.a}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Corporate() {
   useSeoMeta({
     title: "Corporate Puppy Yoga Ontario | Team Wellness & Employee Appreciation | AfroPuppyYoga",
@@ -125,66 +150,77 @@ export default function Corporate() {
     <div className="min-h-screen bg-[#FEFAF4]">
       <Navbar />
 
-      {/* Hero */}
+      {/* ── Hero ─────────────────────────────────────────────────── */}
       <section
         className="relative pt-28 pb-24 px-6 overflow-hidden"
-        style={{
-          background: "linear-gradient(135deg, #1a0a0f 0%, #3d1030 50%, #8B2252 100%)",
-        }}
+        style={{ background: "linear-gradient(135deg, #1A0A12 0%, #3D1A2E 55%, #8B2252 100%)" }}
       >
+        {/* subtle texture overlay */}
+        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }} />
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <span className="inline-block text-xs font-bold tracking-widest uppercase mb-5 px-4 py-1.5 rounded-full bg-white/10 text-white/80">
-              Corporate Wellness
-            </span>
-            <h1
-              className="text-4xl md:text-6xl font-black text-white mb-6 leading-tight"
-              style={{ fontFamily: "'Playfair Display', serif" }}
-            >
-              Corporate Puppy Yoga for Team Wellness, Employee Appreciation & Stress Relief
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <div className="w-8 h-0.5 bg-[#F2A0B8]" />
+              <span className="text-[#F2A0B8] font-body text-xs font-semibold tracking-widest uppercase">Corporate Wellness</span>
+              <div className="w-8 h-0.5 bg-[#F2A0B8]" />
+            </div>
+            <h1 className="font-display font-black text-white text-4xl md:text-6xl leading-tight mb-6">
+              Team Wellness That<br />
+              <span className="italic text-[#F2A0B8]">Actually Works</span>
             </h1>
-            <p className="text-white/70 text-xl leading-relaxed mb-10 max-w-2xl mx-auto">
+            <p className="font-body text-white/70 text-lg leading-relaxed mb-10 max-w-2xl mx-auto">
               Ontario's #1 puppy yoga studio brings the puppies, the yoga, and the Afrobeats to your team. Available across Ontario for groups of 6 to 50+.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/private-events/quote">
-                <Button
-                  size="lg"
-                  className="px-10 py-6 text-base font-bold rounded-full text-white"
-                  style={{ background: "#e91e8c", border: "none" }}
-                >
+                <button className="inline-flex items-center justify-center px-10 py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm rounded-full hover:bg-[#F2A0B8]/90 transition-all active:scale-[0.97]">
                   Get a Corporate Quote
-                </Button>
+                </button>
               </Link>
               <a href="mailto:afropuppyyogaofficial@gmail.com?subject=Corporate%20Puppy%20Yoga%20Inquiry">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="px-10 py-6 text-base font-bold rounded-full border-white text-white hover:bg-white hover:text-[#8B2252]"
-                >
+                <button className="inline-flex items-center justify-center px-10 py-4 bg-transparent border border-white/40 text-white font-body font-semibold text-sm rounded-full hover:bg-white/10 transition-all">
                   Email Us Directly
-                </Button>
+                </button>
               </a>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Who It's For */}
+      {/* ── Quick Stats Strip ─────────────────────────────────────── */}
+      <section className="bg-[#8B2252] py-5 px-6">
+        <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+          {[
+            { stat: "6–50+", label: "Group sizes" },
+            { stat: "3+", label: "Ontario locations" },
+            { stat: "$1,200", label: "Starting price" },
+            { stat: "4.9★", label: "Average rating" },
+          ].map((item) => (
+            <div key={item.label}>
+              <div className="font-display font-black text-white text-xl">{item.stat}</div>
+              <div className="font-body text-white/70 text-xs mt-0.5">{item.label}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Who It's For ─────────────────────────────────────────── */}
       <section className="py-20 px-6 bg-[#FEFAF4]">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2
-              className="text-3xl md:text-4xl font-black mb-3"
-              style={{ fontFamily: "'Playfair Display', serif", color: "#1a0a0f" }}
-            >
-              Who It's For
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-8 h-0.5 bg-[#8B2252]" />
+              <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">Who It's For</span>
+              <div className="w-8 h-0.5 bg-[#8B2252]" />
+            </div>
+            <h2 className="font-display font-black text-[#1A0A12] text-3xl md:text-4xl mb-3">
+              Built for Every Kind of Team
             </h2>
-            <p className="text-lg" style={{ color: "#7c3f5e" }}>
+            <p className="font-body text-[#3D1A2E]/60 text-base max-w-xl mx-auto">
               We work with organizations of all sizes across Ontario.
             </p>
           </div>
@@ -196,30 +232,29 @@ export default function Corporate() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.05 }}
-                className="flex flex-col items-center gap-2 p-5 rounded-2xl text-center"
-                style={{ background: "#fff5fa", border: "1.5px solid #f9a8d4" }}
+                className="flex flex-col items-center gap-2 p-5 rounded-2xl text-center bg-white border border-[#F2A0B8]/30 shadow-sm hover:shadow-md hover:border-[#F2A0B8]/60 transition-all"
               >
                 <span className="text-3xl">{a.icon}</span>
-                <span className="font-semibold text-sm" style={{ color: "#1a0a0f" }}>
-                  {a.label}
-                </span>
+                <span className="font-body font-semibold text-sm text-[#1A0A12]">{a.label}</span>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Why It Works */}
-      <section className="py-20 px-6" style={{ background: "#fff5f8" }}>
+      {/* ── Why It Works ─────────────────────────────────────────── */}
+      <section className="py-20 px-6 bg-[#FFF5F8]">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2
-              className="text-3xl md:text-4xl font-black mb-3"
-              style={{ fontFamily: "'Playfair Display', serif", color: "#1a0a0f" }}
-            >
-              Why It Works
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-8 h-0.5 bg-[#8B2252]" />
+              <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">Why It Works</span>
+              <div className="w-8 h-0.5 bg-[#8B2252]" />
+            </div>
+            <h2 className="font-display font-black text-[#1A0A12] text-3xl md:text-4xl mb-3">
+              More Than a Fun Activity
             </h2>
-            <p className="text-lg" style={{ color: "#7c3f5e" }}>
+            <p className="font-body text-[#3D1A2E]/60 text-base max-w-xl mx-auto">
               Puppy yoga isn't just fun — it's effective team wellness.
             </p>
           </div>
@@ -231,37 +266,31 @@ export default function Corporate() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.08 }}
-                className="bg-white rounded-2xl p-6 shadow-sm"
-                style={{ border: "1.5px solid #f9a8d4" }}
+                className="bg-white rounded-2xl p-6 border border-[#F2A0B8]/30 shadow-sm"
               >
                 <div className="text-3xl mb-3">{item.icon}</div>
-                <h3
-                  className="font-bold text-lg mb-2"
-                  style={{ fontFamily: "'Playfair Display', serif", color: "#1a0a0f" }}
-                >
-                  {item.title}
-                </h3>
-                <p className="text-sm leading-relaxed" style={{ color: "#7c3f5e" }}>
-                  {item.desc}
-                </p>
+                <h3 className="font-display font-bold text-[#1A0A12] text-base mb-2">{item.title}</h3>
+                <p className="font-body text-sm text-[#3D1A2E]/65 leading-relaxed">{item.desc}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Packages */}
+      {/* ── Packages ─────────────────────────────────────────────── */}
       <section className="py-20 px-6 bg-[#FEFAF4]">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2
-              className="text-3xl md:text-4xl font-black mb-3"
-              style={{ fontFamily: "'Playfair Display', serif", color: "#1a0a0f" }}
-            >
-              Corporate Packages
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-8 h-0.5 bg-[#8B2252]" />
+              <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">Corporate Packages</span>
+              <div className="w-8 h-0.5 bg-[#8B2252]" />
+            </div>
+            <h2 className="font-display font-black text-[#1A0A12] text-3xl md:text-4xl mb-3">
+              Choose Your Format
             </h2>
-            <p className="text-lg" style={{ color: "#7c3f5e" }}>
-              Choose the format that fits your team.
+            <p className="font-body text-[#3D1A2E]/60 text-base max-w-xl mx-auto">
+              Every package includes our instructor, ethically sourced puppies, and the full APY experience.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -272,47 +301,40 @@ export default function Corporate() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.1 }}
-                className="relative rounded-3xl p-7 flex flex-col"
-                style={{
-                  background: "#fff5fa",
-                  border: `2px solid ${pkg.badge ? "#e91e8c" : "#f9a8d4"}`,
-                  boxShadow: pkg.badge ? "0 8px 32px rgba(233,30,140,0.15)" : "0 4px 16px rgba(0,0,0,0.06)",
-                }}
+                className={`relative rounded-3xl p-7 flex flex-col border ${
+                  pkg.badge
+                    ? "border-[#8B2252] shadow-[0_8px_32px_rgba(139,34,82,0.15)]"
+                    : "border-[#F2A0B8]/40 shadow-sm"
+                } bg-white`}
               >
                 {pkg.badge && (
-                  <div
-                    className="absolute -top-4 left-1/2 -translate-x-1/2 text-white text-xs font-bold tracking-widest uppercase px-5 py-1.5 rounded-full"
-                    style={{ background: "#e91e8c" }}
-                  >
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#8B2252] text-white text-xs font-body font-bold tracking-widest uppercase px-5 py-1.5 rounded-full whitespace-nowrap">
                     {pkg.badge}
                   </div>
                 )}
                 <div className="text-3xl mb-3">{pkg.icon}</div>
-                <span
-                  className="inline-block text-xs font-semibold px-3 py-1 rounded-full mb-3"
-                  style={{ background: "#fce7f3", color: "#be185d" }}
-                >
+                <span className="inline-block font-body text-xs font-semibold px-3 py-1 rounded-full bg-[#FFF0F5] text-[#8B2252] mb-3 self-start">
                   {pkg.bestFor}
                 </span>
-                <h3
-                  className="text-xl font-black mb-3"
-                  style={{ fontFamily: "'Playfair Display', serif", color: "#1a0a0f" }}
-                >
-                  {pkg.name}
-                </h3>
-                <p className="text-sm leading-relaxed mb-4 flex-1" style={{ color: "#7c3f5e" }}>
-                  {pkg.desc}
-                </p>
-                <p className="font-bold text-lg mb-5" style={{ color: "#8B2252" }}>
-                  {pkg.price}
-                </p>
+                <h3 className="font-display font-black text-[#1A0A12] text-xl mb-3">{pkg.name}</h3>
+                <p className="font-body text-sm text-[#3D1A2E]/65 leading-relaxed mb-4 flex-1">{pkg.desc}</p>
+                <ul className="space-y-1.5 mb-5">
+                  {pkg.includes.map((item) => (
+                    <li key={item} className="flex items-center gap-2">
+                      <Check className="w-3.5 h-3.5 text-[#F2A0B8] flex-shrink-0" />
+                      <span className="font-body text-xs text-[#3D1A2E]/70">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="font-display font-bold text-[#8B2252] text-lg mb-5">{pkg.price}</p>
                 <Link href="/private-events/quote">
-                  <Button
-                    className="w-full py-5 font-bold rounded-2xl text-white"
-                    style={{ background: "linear-gradient(135deg, #e91e8c, #8B2252)", border: "none" }}
-                  >
+                  <button className={`w-full py-3.5 font-body font-bold text-sm rounded-2xl transition-all active:scale-[0.97] ${
+                    pkg.badge
+                      ? "bg-[#8B2252] text-white hover:bg-[#8B2252]/90"
+                      : "bg-[#F2A0B8] text-[#1A0A12] hover:bg-[#F2A0B8]/90"
+                  }`}>
                     {pkg.cta} →
-                  </Button>
+                  </button>
                 </Link>
               </motion.div>
             ))}
@@ -320,10 +342,10 @@ export default function Corporate() {
         </div>
       </section>
 
-      {/* Trust — Partner & Client Logos */}
-      <section className="py-16 px-6 bg-white border-t border-b border-[#f9a8d4]/40">
+      {/* ── Trust Logos ──────────────────────────────────────────── */}
+      <section className="py-16 px-6 bg-white border-t border-b border-[#F2A0B8]/20">
         <div className="max-w-5xl mx-auto">
-          <p className="text-center font-body text-xs font-bold tracking-[0.2em] uppercase text-black/40 mb-6">
+          <p className="text-center font-body text-xs font-bold tracking-[0.2em] uppercase text-[#3D1A2E]/40 mb-8">
             Trusted By
           </p>
           <div className="relative overflow-hidden">
@@ -335,7 +357,7 @@ export default function Corporate() {
                 { name: "University of Waterloo", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/waterloo_fixed_a91debfb.png", height: 36 },
                 { name: "McMaster University", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/mcmaster_dedf4891.png", height: 38 },
                 { name: "University of Guelph", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/guelph_fixed_39bf0fba.png", height: 36 },
-                { name: "Brock University", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/brock_university_a69cc38d.png", height: 52 },
+                { name: "Brock University", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/brock_university_a69cc38d.png", height: 36 },
                 { name: "Manulife", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/manulife_logo_cropped_ecd0a51b.png", height: 40 },
                 { name: "Brock Solutions", src: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/dwXWkrdWFpxsxxJF.png", height: 72 },
                 { name: "F45 Training", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/f45_fixed_f11e0ba3.png", height: 34 },
@@ -345,7 +367,7 @@ export default function Corporate() {
                 { name: "MMSA Lang Guelph", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/mmsa_lang_logo_46c62a49.webp", height: 56 },
               ].flatMap((org) => [org, { ...org, key: org.name + "-2" }]).map((org, i) => (
                 <div key={`${org.name}-${i}`} className="flex items-center px-8 border-r border-black/10 last:border-r-0 shrink-0">
-                  <img src={org.src} alt={org.name} style={{ height: org.height }} className="w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" />
+                  <img src={org.src} alt={org.name} style={{ height: org.height }} className="w-auto object-contain opacity-60 hover:opacity-100 transition-opacity" />
                 </div>
               ))}
             </div>
@@ -353,18 +375,20 @@ export default function Corporate() {
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-20 px-6" style={{ background: "#fff5f8" }}>
+      {/* ── FAQ ──────────────────────────────────────────────────── */}
+      <section className="py-20 px-6 bg-[#FFF5F8]">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
-            <h2
-              className="text-3xl md:text-4xl font-black mb-3"
-              style={{ fontFamily: "'Playfair Display', serif", color: "#1a0a0f" }}
-            >
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-8 h-0.5 bg-[#8B2252]" />
+              <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">FAQ</span>
+              <div className="w-8 h-0.5 bg-[#8B2252]" />
+            </div>
+            <h2 className="font-display font-black text-[#1A0A12] text-3xl md:text-4xl">
               Corporate FAQ
             </h2>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {faqs.map((faq, i) => (
               <motion.div
                 key={i}
@@ -372,55 +396,35 @@ export default function Corporate() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.06 }}
-                className="bg-white rounded-xl px-7 py-6 shadow-sm"
-                style={{ border: "1.5px solid #f9a8d4" }}
               >
-                <h3 className="font-semibold text-base mb-2" style={{ color: "#1a0a0f" }}>
-                  {faq.q}
-                </h3>
-                <p className="text-sm leading-relaxed" style={{ color: "#7c3f5e" }}>
-                  {faq.a}
-                </p>
+                <FAQItem faq={faq} />
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Bottom CTA */}
-      <section
-        className="py-20 px-6 text-center"
-        style={{ background: "linear-gradient(135deg, #1a0a0f 0%, #8B2252 100%)" }}
-      >
+      {/* ── Bottom CTA ───────────────────────────────────────────── */}
+      <section className="py-20 px-6 text-center bg-[#8B2252]">
         <div className="max-w-2xl mx-auto">
           <div className="text-4xl mb-4">🐾</div>
-          <h2
-            className="text-3xl md:text-4xl font-black text-white mb-4"
-            style={{ fontFamily: "'Playfair Display', serif" }}
-          >
-            Ready to book a team wellness day your team will actually remember?
+          <h2 className="font-display font-black text-white text-3xl md:text-4xl mb-4 leading-tight">
+            Ready to book a team wellness day<br />
+            <span className="italic text-[#F2A0B8]">your team will actually remember?</span>
           </h2>
-          <p className="text-white/70 text-base mb-8">
+          <p className="font-body text-white/70 text-base mb-8 leading-relaxed">
             Fill out our quote form and we'll follow up within 24–48 hours with availability, pricing, and next steps.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/private-events/quote">
-              <Button
-                size="lg"
-                className="px-10 py-6 text-base font-bold rounded-full text-white"
-                style={{ background: "#e91e8c", border: "none" }}
-              >
+              <button className="inline-flex items-center justify-center px-10 py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm rounded-full hover:bg-[#F2A0B8]/90 transition-all active:scale-[0.97]">
                 Get a Corporate Quote
-              </Button>
+              </button>
             </Link>
             <a href="mailto:afropuppyyogaofficial@gmail.com?subject=Corporate%20Puppy%20Yoga%20Inquiry">
-              <Button
-                size="lg"
-                variant="outline"
-                className="px-10 py-6 text-base font-bold rounded-full border-white text-white hover:bg-white hover:text-[#8B2252]"
-              >
+              <button className="inline-flex items-center justify-center px-10 py-4 bg-transparent border border-white/40 text-white font-body font-semibold text-sm rounded-full hover:bg-white/10 transition-all">
                 Email Us Directly
-              </Button>
+              </button>
             </a>
           </div>
         </div>
