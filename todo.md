@@ -368,3 +368,13 @@
 - [x] SCHEDULED_JOB_SECRET set in production secrets
 - [x] Heartbeat jobs registered: apy-luma-poll (every 10 min) + apy-meta-capi-send (offset 5 min)
 - [x] 38/38 tests passing after all changes
+
+## Security Audit Priorities 1–6 (Jul 13 2026)
+
+- [x] Priority 6 quick wins: deleted SECURITY_AUDIT_NOTES.md from GitHub, fixed rating (4.9) / price ($55) / reviews (494) across index.html and seoRenderer.ts
+- [x] Priority 1: Archived orphaned DROP TABLE migration files, fixed _journal.json snapshot chain collision, drizzle-kit generate now works cleanly
+- [x] Priority 2: Rate limiting on all upload routes, magic-bytes file signature check, crypto.randomBytes IDs, duplicate completion prevention, chunk validation, upload session expiry
+- [x] Priority 3: Video proxy restricted to approved CDN hostname only, invoice submit now accepts fileKey only (URL resolved server-side — prevents SSRF)
+- [x] Priority 4: Meta CAPI token moved to Authorization header (not URL param), atomic row claiming (pending→processing→sent) prevents double-sends, 'processing' status added to DB enum
+- [x] Priority 5: Staff JWT TTL reduced from 1 year to 7 days
+- [x] 38/38 tests passing after all changes

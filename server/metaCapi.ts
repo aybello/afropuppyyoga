@@ -14,7 +14,7 @@
 import crypto from "crypto";
 import { getDb } from "./db";
 import { metaConversionEvents } from "../drizzle/schema";
-import { eq, and, lt } from "drizzle-orm";
+import { eq, and, lt, inArray } from "drizzle-orm";
 
 // ─── PII Hashing ─────────────────────────────────────────────────────────────
 
@@ -231,6 +231,13 @@ export async function lumaPoller(): Promise<{ inserted: number; skipped: number;
 const META_CAPI_URL = "https://graph.facebook.com/v19.0";
 const MAX_ATTEMPTS = 3;
 
+// Status values used in the DB
+// pending    → not yet claimed by any sender run
+// processing → claimed by this run (prevents double-send if two runs overlap)
+// sent       → successfully sent to Meta
+// failed     → exhausted MAX_ATTEMPTS retries
+// skipped    → free ticket or event_time too old
+
 interface MetaCapiPayload {
   data: Array<{
     event_name: string;
@@ -283,11 +290,40 @@ export async function capiSender(): Promise<{ sent: number; failed: number; skip
     )
     .limit(50);
 
+  if (pendingRows.length === 0) {
+    return { sent: 0, failed: 0, skipped: 0 };
+  }
+
+  // Atomic claim: mark all fetched rows as 'processing' before sending.
+  // We UPDATE only the exact IDs we fetched AND where status is still 'pending'.
+  // If two sender runs overlap, the second UPDATE will match 0 rows (already claimed)
+  // and the subsequent re-fetch will return an empty set — preventing double-sends.
+  const pendingIds = pendingRows.map(r => r.id);
+  await dbInst
+    .update(metaConversionEvents)
+    .set({ status: "processing" as any, updatedAt: new Date() })
+    .where(
+      and(
+        inArray(metaConversionEvents.id, pendingIds),
+        eq(metaConversionEvents.status, "pending")
+      )
+    );
+  // Re-fetch only the rows we successfully claimed (status is now 'processing')
+  const claimedRows = await dbInst
+    .select()
+    .from(metaConversionEvents)
+    .where(
+      and(
+        inArray(metaConversionEvents.id, pendingIds),
+        eq(metaConversionEvents.status, "processing" as any)
+      )
+    );
+
   let sent = 0;
   let failed = 0;
   let skipped = 0;
 
-  for (const row of pendingRows) {
+  for (const row of claimedRows) {
     // Build user_data — only hashed fields (no plaintext PII ever sent)
     const userData: Record<string, string | null | undefined> = {};
     if (row.hashedEmail) userData.em = row.hashedEmail;
@@ -342,11 +378,16 @@ export async function capiSender(): Promise<{ sent: number; failed: number; skip
     }
 
     try {
+      // Security: send token in Authorization header, not as a URL query param.
+      // URL query params appear in server logs, CDN logs, and browser history.
       const res = await fetch(
-        `${META_CAPI_URL}/${pixelId}/events?access_token=${accessToken}`,
+        `${META_CAPI_URL}/${pixelId}/events`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${accessToken}`,
+          },
           body: JSON.stringify(payload),
         }
       );

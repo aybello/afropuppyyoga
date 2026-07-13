@@ -1,9 +1,12 @@
 /**
  * Chunked video upload endpoints — S3-backed storage with async assembly.
  *
- * Each chunk is uploaded directly to S3 as a temporary object.
- * On complete, assembly runs in the background and the client polls for the result.
- * This avoids request timeout issues on Cloud Run for large files.
+ * Security hardening (Priority 2):
+ * - Cryptographically secure upload IDs (crypto.randomBytes)
+ * - Chunk index and count validation
+ * - Duplicate completion prevention (idempotency flag in manifest)
+ * - Upload session expiry (24h TTL check on manifest createdAt)
+ * - Total size enforcement across chunks
  *
  * Flow:
  *   1. POST /api/upload-video-init      → returns { uploadId, key }
@@ -14,14 +17,22 @@
 
 import { Router } from "express";
 import multer from "multer";
+import crypto from "crypto";
 import { storagePut, storageGet } from "./storage";
 
 const router = Router();
-const CHUNK_SIZE_LIMIT = 6 * 1024 * 1024; // 6MB per chunk
-const MAX_TOTAL_SIZE = 500 * 1024 * 1024; // 500MB total video limit
+const CHUNK_SIZE_LIMIT = 6 * 1024 * 1024;   // 6MB per chunk
+const MAX_TOTAL_SIZE   = 500 * 1024 * 1024;  // 500MB total video limit
+const MAX_CHUNKS       = 200;                 // max 200 chunks (500MB / 6MB ≈ 84, generous headroom)
+const SESSION_TTL_MS   = 24 * 60 * 60 * 1000; // 24-hour session expiry
 
 // In-memory job registry — safe because we return quickly and poll
-const jobs = new Map<string, { status: "pending" | "done" | "error"; url?: string; key?: string; error?: string }>();
+const jobs = new Map<string, {
+  status: "pending" | "done" | "error";
+  url?: string;
+  key?: string;
+  error?: string;
+}>();
 
 // Multer for individual chunks (max 6MB each, memory storage)
 const chunkUpload = multer({
@@ -29,8 +40,34 @@ const chunkUpload = multer({
   limits: { fileSize: CHUNK_SIZE_LIMIT },
 });
 
-function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+// Cryptographically secure upload/job ID
+function secureId(): string {
+  return crypto.randomBytes(16).toString("hex");
+}
+
+// Validate uploadId format to prevent path traversal in S3 keys
+function isValidUploadId(id: string): boolean {
+  return /^[0-9a-f]{32}$/.test(id);
+}
+
+type Manifest = {
+  finalKey: string;
+  ext: string;
+  totalChunks: number;
+  totalSize: number;
+  createdAt: number;
+  completed?: boolean; // set to true after first successful completion
+};
+
+async function readManifest(uploadId: string): Promise<Manifest | null> {
+  try {
+    const { url } = await storageGet(`uploads/chunks/${uploadId}/manifest.json`);
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    return await res.json() as Manifest;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -42,26 +79,36 @@ router.post("/api/upload-video-init", async (req, res) => {
   try {
     const { filename, totalChunks, totalSize } = req.body;
 
-    if (!filename || !totalChunks || !totalSize) {
-      return res.status(400).json({ error: "filename, totalChunks, and totalSize are required" });
+    if (!filename || typeof filename !== "string" || filename.length > 255) {
+      return res.status(400).json({ error: "filename is required (max 255 chars)" });
     }
-
-    if (totalSize > MAX_TOTAL_SIZE) {
+    if (!totalChunks || !Number.isInteger(Number(totalChunks)) || Number(totalChunks) < 1 || Number(totalChunks) > MAX_CHUNKS) {
+      return res.status(400).json({ error: `totalChunks must be between 1 and ${MAX_CHUNKS}` });
+    }
+    if (!totalSize || !Number.isInteger(Number(totalSize)) || Number(totalSize) < 1) {
+      return res.status(400).json({ error: "totalSize is required and must be a positive integer" });
+    }
+    if (Number(totalSize) > MAX_TOTAL_SIZE) {
       return res.status(400).json({ error: `File too large. Maximum size is ${MAX_TOTAL_SIZE / 1024 / 1024}MB.` });
     }
 
-    const ext = (filename.split(".").pop() ?? "mp4").toLowerCase();
+    const ext = (filename.split(".").pop() ?? "mp4").toLowerCase().replace(/[^a-z0-9]/g, "");
     const allowedExts = ["mp4", "mov", "webm", "avi"];
     if (!allowedExts.includes(ext)) {
       return res.status(400).json({ error: "Only video files are allowed (mp4, mov, webm, avi)" });
     }
 
-    const uploadId = generateId();
-    const randomSuffix = Math.random().toString(36).slice(2, 10);
-    const finalKey = `applications/videos/${Date.now()}-${randomSuffix}.${ext}`;
+    const uploadId = secureId();
+    const finalKey = `applications/videos/${Date.now()}-${secureId()}.${ext}`;
 
-    // Store manifest in S3 so any container instance can read it
-    const manifest = { finalKey, ext, totalChunks: Number(totalChunks), createdAt: Date.now() };
+    const manifest: Manifest = {
+      finalKey,
+      ext,
+      totalChunks: Number(totalChunks),
+      totalSize: Number(totalSize),
+      createdAt: Date.now(),
+      completed: false,
+    };
     await storagePut(
       `uploads/chunks/${uploadId}/manifest.json`,
       Buffer.from(JSON.stringify(manifest)),
@@ -92,25 +139,34 @@ router.post("/api/upload-video-chunk", (req: any, res: any, next: any) => {
   try {
     const { uploadId, chunkIndex } = req.body;
 
-    if (!uploadId || chunkIndex === undefined) {
-      return res.status(400).json({ error: "uploadId and chunkIndex are required" });
+    if (!uploadId || !isValidUploadId(uploadId)) {
+      return res.status(400).json({ error: "Invalid uploadId" });
     }
-
+    if (chunkIndex === undefined || chunkIndex === null) {
+      return res.status(400).json({ error: "chunkIndex is required" });
+    }
     if (!req.file) {
       return res.status(400).json({ error: "No chunk data provided" });
     }
 
     const idx = Number(chunkIndex);
+    if (!Number.isInteger(idx) || idx < 0 || idx >= MAX_CHUNKS) {
+      return res.status(400).json({ error: "chunkIndex out of range" });
+    }
 
-    // Read manifest from S3 to get totalChunks
-    let manifest: { finalKey: string; ext: string; totalChunks: number; createdAt: number };
-    try {
-      const { url: manifestUrl } = await storageGet(`uploads/chunks/${uploadId}/manifest.json`);
-      const manifestRes = await fetch(manifestUrl);
-      if (!manifestRes.ok) throw new Error("Manifest not found");
-      manifest = await manifestRes.json();
-    } catch {
+    const manifest = await readManifest(uploadId);
+    if (!manifest) {
       return res.status(404).json({ error: "Upload session not found or expired. Please restart the upload." });
+    }
+
+    // Session expiry check
+    if (Date.now() - manifest.createdAt > SESSION_TTL_MS) {
+      return res.status(410).json({ error: "Upload session expired. Please restart the upload." });
+    }
+
+    // Validate chunk index against declared total
+    if (idx >= manifest.totalChunks) {
+      return res.status(400).json({ error: `chunkIndex ${idx} exceeds declared totalChunks ${manifest.totalChunks}` });
     }
 
     // Upload chunk to S3
@@ -120,13 +176,13 @@ router.post("/api/upload-video-chunk", (req: any, res: any, next: any) => {
       "application/octet-stream"
     );
 
-    // Track received count
+    // Track received count (approximate — S3 is eventually consistent)
     let receivedCount = 0;
     try {
       const { url: counterUrl } = await storageGet(`uploads/chunks/${uploadId}/counter.json`);
       const counterRes = await fetch(counterUrl);
       if (counterRes.ok) {
-        const counter = await counterRes.json();
+        const counter = await counterRes.json() as { received: number };
         receivedCount = counter.received ?? 0;
       }
     } catch {
@@ -151,33 +207,45 @@ router.post("/api/upload-video-chunk", (req: any, res: any, next: any) => {
  * POST /api/upload-video-complete
  * Body: { uploadId: string }
  * Starts background assembly and returns immediately with { jobId }.
- * Client polls GET /api/upload-video-status/:jobId for the result.
+ * Idempotent: a second call with the same uploadId returns 409 if already completed.
  */
 router.post("/api/upload-video-complete", async (req, res) => {
   try {
     const { uploadId } = req.body;
 
-    if (!uploadId) {
-      return res.status(400).json({ error: "uploadId is required" });
+    if (!uploadId || !isValidUploadId(uploadId)) {
+      return res.status(400).json({ error: "Invalid uploadId" });
     }
 
-    // Verify manifest exists before starting job
-    let manifest: { finalKey: string; ext: string; totalChunks: number; createdAt: number };
-    try {
-      const { url: manifestUrl } = await storageGet(`uploads/chunks/${uploadId}/manifest.json`);
-      const manifestRes = await fetch(manifestUrl);
-      if (!manifestRes.ok) throw new Error("Manifest not found");
-      manifest = await manifestRes.json();
-    } catch {
+    const manifest = await readManifest(uploadId);
+    if (!manifest) {
       return res.status(404).json({ error: "Upload session not found or expired. Please restart the upload." });
     }
 
+    // Session expiry check
+    if (Date.now() - manifest.createdAt > SESSION_TTL_MS) {
+      return res.status(410).json({ error: "Upload session expired. Please restart the upload." });
+    }
+
+    // Duplicate completion prevention
+    if (manifest.completed) {
+      return res.status(409).json({ error: "This upload has already been completed." });
+    }
+
+    // Mark as completed before starting assembly to prevent concurrent requests
+    const updatedManifest: Manifest = { ...manifest, completed: true };
+    await storagePut(
+      `uploads/chunks/${uploadId}/manifest.json`,
+      Buffer.from(JSON.stringify(updatedManifest)),
+      "application/json"
+    );
+
     // Create job and return immediately
-    const jobId = generateId();
+    const jobId = secureId();
     jobs.set(jobId, { status: "pending" });
 
     // Run assembly in background (do not await)
-    assembleChunks(jobId, uploadId, manifest).catch((err) => {
+    assembleChunks(jobId, uploadId, updatedManifest).catch((err) => {
       console.error("[upload-video-complete] Background assembly error:", err);
       jobs.set(jobId, { status: "error", error: err.message ?? "Assembly failed" });
     });
@@ -194,7 +262,12 @@ router.post("/api/upload-video-complete", async (req, res) => {
  * Returns: { status: 'pending'|'done'|'error', url?, key?, error? }
  */
 router.get("/api/upload-video-status/:jobId", (req, res) => {
-  const job = jobs.get(req.params.jobId);
+  const jobId = req.params.jobId;
+  // Validate jobId format
+  if (!jobId || !/^[0-9a-f]{32}$/.test(jobId)) {
+    return res.status(400).json({ error: "Invalid jobId" });
+  }
+  const job = jobs.get(jobId);
   if (!job) {
     return res.status(404).json({ error: "Job not found" });
   }
@@ -207,7 +280,7 @@ router.get("/api/upload-video-status/:jobId", (req, res) => {
 async function assembleChunks(
   jobId: string,
   uploadId: string,
-  manifest: { finalKey: string; ext: string; totalChunks: number; createdAt: number }
+  manifest: Manifest
 ) {
   const mimeMap: Record<string, string> = {
     mp4: "video/mp4",

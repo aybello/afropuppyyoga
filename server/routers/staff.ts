@@ -15,7 +15,7 @@ import {
 import { sendStaffInviteEmail } from "../email";
 import { sdk } from "../_core/sdk";
 import { getSessionCookieOptions } from "../_core/cookies";
-import { COOKIE_NAME, ONE_YEAR_MS } from "../../shared/const";
+import { COOKIE_NAME, SEVEN_DAYS_MS } from "../../shared/const";
 
 export const staffRouter = router({
   /**
@@ -105,13 +105,14 @@ export const staffRouter = router({
       });
 
       // Create a real session cookie (same mechanism as Manus OAuth).
+      // Staff sessions expire after 7 days — shorter TTL limits exposure if access is revoked.
       const sessionToken = await sdk.createSessionToken(staffOpenId, {
         name: invite.name,
-        expiresInMs: ONE_YEAR_MS,
+        expiresInMs: SEVEN_DAYS_MS,
       });
 
       const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+      ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: SEVEN_DAYS_MS });
 
       return {
         id: invite.id,

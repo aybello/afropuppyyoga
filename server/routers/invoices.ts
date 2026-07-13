@@ -2,32 +2,35 @@ import { z } from "zod";
 import { adminProcedure, staffProcedure, publicProcedure, router } from "../_core/trpc";
 import { invokeLLM } from "../_core/llm";
 import { createInvoice, deleteInvoice, getAllInvoices, updateInvoice } from "../db"; // getAllInvoices still used by list procedure
-
-function randomSuffix() {
-  return Math.random().toString(36).substring(2, 10);
-}
+import { storageGet } from "../storage";
 
 export const invoicesRouter = router({
   /**
    * Staff submits an invoice PDF.
    * The PDF is uploaded first via POST /api/upload-invoice (multipart).
-   * This procedure receives the resulting S3 URL + key and runs AI extraction.
-   * Public so staff don't need to log in.
+   * This procedure receives the resulting S3 key and runs AI extraction.
+   *
+   * Security (Priority 3): Only accepts a storage key that begins with 'invoices/'.
+   * The presigned URL is resolved server-side — the client never supplies a URL.
+   * This prevents SSRF: an attacker cannot point the AI extractor at an arbitrary URL.
    */
   submit: publicProcedure
     .input(
       z.object({
-        fileUrl: z.string().url(), // S3 URL from /api/upload-invoice
-        fileKey: z.string(),       // S3 key from /api/upload-invoice
-        filename: z.string(),
+        // Storage key from /api/upload-invoice — must start with 'invoices/'
+        fileKey: z.string().regex(/^invoices\/[^/].+\.pdf$/i, "Invalid invoice key"),
+        filename: z.string().max(255),
       })
     )
     .mutation(async ({ input }) => {
+      // Resolve the presigned URL server-side — never trust a client-supplied URL
+      const { url: fileUrl } = await storageGet(input.fileKey);
+
       // Phase 7 (security hardening): createInvoice now returns the inserted row ID directly
       // (via MySQL insertId), eliminating the race condition where getAllInvoices()[0] could
       // return a different row inserted by a concurrent request.
       const invoiceId = await createInvoice({
-        fileUrl: input.fileUrl,
+        fileUrl,
         fileKey: input.fileKey,
         originalFilename: input.filename,
         extractionStatus: "pending",
@@ -35,7 +38,7 @@ export const invoicesRouter = router({
       });
 
       // Run AI extraction asynchronously (fire and forget with error handling)
-      extractInvoiceData(invoiceId, input.fileUrl, null).catch((err) => {
+      extractInvoiceData(invoiceId, fileUrl, null).catch((err) => {
         console.error("[Invoice] Extraction failed for invoice", invoiceId, err);
       });
 

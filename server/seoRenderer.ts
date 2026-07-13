@@ -268,9 +268,9 @@ const PAGES: Record<string, () => string> = {
         },
         breadcrumb(),
         // Event schema — 3 top-level Event objects (Google rich results compatible)
-        { "@context": "https://schema.org", "@type": "Event", name: "AfroPuppyYoga \u2014 Kitchener-Waterloo", description: "Guided yoga with adorable puppies and Afro-beat music. Every Saturday and Sunday at TenC Dance Studio, Kitchener.", startDate: "2026-07-19T10:00:00-04:00", endDate: "2026-07-19T11:30:00-04:00", eventStatus: "https://schema.org/EventScheduled", eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode", location: { "@type": "Place", name: "TenC Dance Studio", address: { "@type": "PostalAddress", streetAddress: "329 King St E", addressLocality: "Kitchener", addressRegion: "ON", postalCode: "N2G 2L3", addressCountry: "CA" } }, organizer: { "@type": "Organization", name: "AfroPuppyYoga", url: BASE }, url: "https://lu.ma/afropuppyyoga", image: OG_IMAGE, offers: { "@type": "Offer", url: "https://lu.ma/afropuppyyoga", priceCurrency: "CAD", price: "45", availability: "https://schema.org/InStock", validFrom: "2026-01-01" } },
-        { "@context": "https://schema.org", "@type": "Event", name: "AfroPuppyYoga \u2014 Hamilton", description: "Guided yoga with adorable puppies and Afro-beat music. Regular sessions at Colibri Studio, Hamilton.", startDate: "2026-07-19T10:00:00-04:00", endDate: "2026-07-19T11:30:00-04:00", eventStatus: "https://schema.org/EventScheduled", eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode", location: { "@type": "Place", name: "Colibri Studio", address: { "@type": "PostalAddress", streetAddress: "2751 Barton St E", addressLocality: "Hamilton", addressRegion: "ON", addressCountry: "CA" } }, organizer: { "@type": "Organization", name: "AfroPuppyYoga", url: BASE }, url: "https://lu.ma/afropuppyyoga", image: OG_IMAGE, offers: { "@type": "Offer", url: "https://lu.ma/afropuppyyoga", priceCurrency: "CAD", price: "45", availability: "https://schema.org/InStock", validFrom: "2026-01-01" } },
-        { "@context": "https://schema.org", "@type": "Event", name: "AfroPuppyYoga \u2014 Oakville", description: "Guided yoga with adorable puppies and Afro-beat music. Regular sessions in Oakville, Ontario.", startDate: "2026-07-20T10:00:00-04:00", endDate: "2026-07-20T11:30:00-04:00", eventStatus: "https://schema.org/EventScheduled", eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode", location: { "@type": "Place", name: "Oakville", address: { "@type": "PostalAddress", addressLocality: "Oakville", addressRegion: "ON", addressCountry: "CA" } }, organizer: { "@type": "Organization", name: "AfroPuppyYoga", url: BASE }, url: "https://lu.ma/afropuppyyoga", image: OG_IMAGE, offers: { "@type": "Offer", url: "https://lu.ma/afropuppyyoga", priceCurrency: "CAD", price: "45", availability: "https://schema.org/InStock", validFrom: "2026-01-01" } },
+        { "@context": "https://schema.org", "@type": "Event", name: "AfroPuppyYoga \u2014 Kitchener-Waterloo", description: "Guided yoga with adorable puppies and Afro-beat music. Every Saturday and Sunday at TenC Dance Studio, Kitchener.", startDate: "2026-07-19T10:00:00-04:00", endDate: "2026-07-19T11:30:00-04:00", eventStatus: "https://schema.org/EventScheduled", eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode", location: { "@type": "Place", name: "TenC Dance Studio", address: { "@type": "PostalAddress", streetAddress: "329 King St E", addressLocality: "Kitchener", addressRegion: "ON", postalCode: "N2G 2L3", addressCountry: "CA" } }, organizer: { "@type": "Organization", name: "AfroPuppyYoga", url: BASE }, url: "https://lu.ma/afropuppyyoga", image: OG_IMAGE, offers: { "@type": "Offer", url: "https://lu.ma/afropuppyyoga", priceCurrency: "CAD", price: "55", availability: "https://schema.org/InStock", validFrom: "2026-01-01" } },
+        { "@context": "https://schema.org", "@type": "Event", name: "AfroPuppyYoga \u2014 Hamilton", description: "Guided yoga with adorable puppies and Afro-beat music. Regular sessions at Colibri Studio, Hamilton.", startDate: "2026-07-19T10:00:00-04:00", endDate: "2026-07-19T11:30:00-04:00", eventStatus: "https://schema.org/EventScheduled", eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode", location: { "@type": "Place", name: "Colibri Studio", address: { "@type": "PostalAddress", streetAddress: "2751 Barton St E", addressLocality: "Hamilton", addressRegion: "ON", addressCountry: "CA" } }, organizer: { "@type": "Organization", name: "AfroPuppyYoga", url: BASE }, url: "https://lu.ma/afropuppyyoga", image: OG_IMAGE, offers: { "@type": "Offer", url: "https://lu.ma/afropuppyyoga", priceCurrency: "CAD", price: "55", availability: "https://schema.org/InStock", validFrom: "2026-01-01" } },
+        { "@context": "https://schema.org", "@type": "Event", name: "AfroPuppyYoga \u2014 Oakville", description: "Guided yoga with adorable puppies and Afro-beat music. Regular sessions in Oakville, Ontario.", startDate: "2026-07-20T10:00:00-04:00", endDate: "2026-07-20T11:30:00-04:00", eventStatus: "https://schema.org/EventScheduled", eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode", location: { "@type": "Place", name: "Oakville", address: { "@type": "PostalAddress", addressLocality: "Oakville", addressRegion: "ON", addressCountry: "CA" } }, organizer: { "@type": "Organization", name: "AfroPuppyYoga", url: BASE }, url: "https://lu.ma/afropuppyyoga", image: OG_IMAGE, offers: { "@type": "Offer", url: "https://lu.ma/afropuppyyoga", priceCurrency: "CAD", price: "55", availability: "https://schema.org/InStock", validFrom: "2026-01-01" } },
         // Review schema — 6 verified guest reviews
         { "@context": "https://schema.org", "@type": "Review", itemReviewed: { "@type": "LocalBusiness", name: "AfroPuppyYoga", url: BASE }, author: { "@type": "Person", name: "Sheila Soares" }, reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" }, reviewBody: "So fun and well run! Highly recommend this experience. The puppies were adorable and the yoga instructor was amazing. Will definitely be back!", datePublished: "2025-06-01" },
         { "@context": "https://schema.org", "@type": "Review", itemReviewed: { "@type": "LocalBusiness", name: "AfroPuppyYoga", url: BASE }, author: { "@type": "Person", name: "Cameron T." }, reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" }, reviewBody: "Absolutely incredible experience! The Afro-beat music, the puppies, the yoga \u2014 everything was perfectly curated. I've never felt so relaxed and happy at the same time.", datePublished: "2025-05-01" },
@@ -321,10 +321,10 @@ const PAGES: Record<string, () => string> = {
     <h2>Memberships &amp; Pricing</h2>
     <p>Join our community with a monthly membership or book individual classes.</p>
     <ul>
-      <li><strong>Early Bird Ticket:</strong> $45</li>
-      <li><strong>Regular Ticket:</strong> $46</li>
-      <li><strong>Bring a Friend Package:</strong> $86 for 2</li>
-      <li><strong>Group of 3 Package:</strong> $125 for 3</li>
+      <li><strong>Early Bird Ticket:</strong> $55</li>
+      <li><strong>Regular Ticket:</strong> $55</li>
+      <li><strong>Bring a Friend Package:</strong> $55 per person</li>
+      <li><strong>Group of 3 Package:</strong> $55 per person</li>
       <li><strong>Monthly Membership:</strong> Unlimited classes at a discounted rate</li>
     </ul>
     <p><a href="https://lu.ma/afropuppyyoga">Book your class on Luma</a></p>
@@ -381,7 +381,7 @@ const PAGES: Record<string, () => string> = {
       <dd>We hold classes in Hamilton (Colibri Studio, 2751 Barton St E), Kitchener (TenC Dance Studio, 329 King St E), and Oakville, Ontario.</dd>
 
       <dt>How much does a class cost?</dt>
-      <dd>Classes start at $45 for early bird tickets. Regular tickets are $46. Bring-a-friend and group packages are also available.</dd>
+      <dd>Classes start at $55. Bring-a-friend and group packages are also available.</dd>
 
       <dt>Are the puppies ethically sourced?</dt>
       <dd>Yes. All puppies come from ethical, registered breeders. We have strict welfare standards — puppies are never stressed, sessions are kept short, and their wellbeing is our top priority.</dd>
@@ -998,7 +998,7 @@ const PAGES: Record<string, () => string> = {
               name: "How much does puppy yoga in Kitchener cost?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "Puppy yoga classes in Kitchener start at $45 for early bird tickets. Regular tickets are $46. Bring-a-friend packages ($86 for 2) and group of 3 packages ($125) are also available. All tickets are booked through Luma.",
+                text: "Puppy yoga classes in Kitchener start at $55. All tickets are booked through Luma.",
               },
             },
             {
@@ -1042,10 +1042,10 @@ const PAGES: Record<string, () => string> = {
 
   <h3>Pricing</h3>
   <ul>
-    <li><strong>Early Bird Ticket:</strong> $45</li>
-    <li><strong>Regular Ticket:</strong> $46</li>
-    <li><strong>Bring a Friend (2 tickets):</strong> $86</li>
-    <li><strong>Group of 3:</strong> $125</li>
+    <li><strong>Early Bird Ticket:</strong> $55</li>
+    <li><strong>Regular Ticket:</strong> $55</li>
+    <li><strong>Bring a Friend (2 tickets):</strong> $55 per person</li>
+    <li><strong>Group of 3:</strong> $55 per person</li>
   </ul>
 
   <h3>Location</h3>
@@ -1061,7 +1061,7 @@ const PAGES: Record<string, () => string> = {
     <dt>Where is AfroPuppyYoga in Kitchener?</dt>
     <dd>TenC Dance Studio, 329 King St E, Kitchener, ON N2G 2L3.</dd>
     <dt>How much does it cost?</dt>
-    <dd>Classes start at $45 for early bird tickets. Regular tickets are $46.</dd>
+    <dd>Classes start at $55.</dd>
     <dt>When are classes?</dt>
     <dd>Regular weekend classes. Check lu.ma/afropuppyyoga for the latest schedule.</dd>
     <dt>Do I need yoga experience?</dt>
@@ -1127,7 +1127,7 @@ const PAGES: Record<string, () => string> = {
               name: "How much does puppy yoga in Hamilton cost?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "Puppy yoga classes in Hamilton start at $45 for early bird tickets. Regular tickets are $46. Bring-a-friend packages ($86 for 2) and group of 3 packages ($125) are also available.",
+                text: "Puppy yoga classes in Hamilton start at $55. .",
               },
             },
             {
@@ -1162,10 +1162,10 @@ const PAGES: Record<string, () => string> = {
 
   <h3>Pricing</h3>
   <ul>
-    <li><strong>Early Bird Ticket:</strong> $45</li>
-    <li><strong>Regular Ticket:</strong> $46</li>
-    <li><strong>Bring a Friend (2 tickets):</strong> $86</li>
-    <li><strong>Group of 3:</strong> $125</li>
+    <li><strong>Early Bird Ticket:</strong> $55</li>
+    <li><strong>Regular Ticket:</strong> $55</li>
+    <li><strong>Bring a Friend (2 tickets):</strong> $55 per person</li>
+    <li><strong>Group of 3:</strong> $55 per person</li>
   </ul>
 
   <h3>Location</h3>
@@ -1181,7 +1181,7 @@ const PAGES: Record<string, () => string> = {
     <dt>Where is AfroPuppyYoga in Hamilton?</dt>
     <dd>Colibri Studio, 2751 Barton St E, Hamilton, ON.</dd>
     <dt>How much does it cost?</dt>
-    <dd>Classes start at $45 for early bird tickets. Regular tickets are $46.</dd>
+    <dd>Classes start at $55.</dd>
     <dt>When are classes?</dt>
     <dd>Regular classes in Hamilton. Check lu.ma/afropuppyyoga for the latest schedule.</dd>
     <dt>Do I need yoga experience?</dt>
@@ -1247,7 +1247,7 @@ const PAGES: Record<string, () => string> = {
               name: "How much does puppy yoga in Oakville cost?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "Puppy yoga classes in Oakville start at $45 for early bird tickets. Regular tickets are $46. Bring-a-friend packages ($86 for 2) and group of 3 packages ($125) are also available.",
+                text: "Puppy yoga classes in Oakville start at $55. .",
               },
             },
             {
@@ -1290,10 +1290,10 @@ const PAGES: Record<string, () => string> = {
 
   <h3>Pricing</h3>
   <ul>
-    <li><strong>Early Bird Ticket:</strong> $45</li>
-    <li><strong>Regular Ticket:</strong> $46</li>
-    <li><strong>Bring a Friend (2 tickets):</strong> $86</li>
-    <li><strong>Group of 3:</strong> $125</li>
+    <li><strong>Early Bird Ticket:</strong> $55</li>
+    <li><strong>Regular Ticket:</strong> $55</li>
+    <li><strong>Bring a Friend (2 tickets):</strong> $55 per person</li>
+    <li><strong>Group of 3:</strong> $55 per person</li>
   </ul>
 
   <h3>Location</h3>
@@ -1308,7 +1308,7 @@ const PAGES: Record<string, () => string> = {
     <dt>Where is AfroPuppyYoga in Oakville?</dt>
     <dd>1670 North Service Rd E, Oakville, ON. Check Luma for the exact venue for each upcoming session.</dd>
     <dt>How much does it cost?</dt>
-    <dd>Classes start at $45 for early bird tickets. Regular tickets are $46.</dd>
+    <dd>Classes start at $55.</dd>
     <dt>When are classes?</dt>
     <dd>Regular classes in Oakville. Check lu.ma/afropuppyyoga for the latest schedule.</dd>
     <dt>Is this a new location?</dt>

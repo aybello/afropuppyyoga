@@ -97,10 +97,14 @@ async function startServer() {
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
 
-  // Phase 3: Apply upload rate limiter BEFORE Multer on chunked upload init and chunk endpoints
-  // These are public (careers flow) but must be rate-limited to prevent body-parsing DoS
+  // Phase 3 / Priority 2: Apply upload rate limiter BEFORE Multer on ALL upload endpoints
+  // This prevents body-parsing DoS — the limiter fires before any file data is read
+  app.use("/api/upload-video", uploadLimiter);
+  app.use("/api/upload-resume", uploadLimiter);
+  app.use("/api/upload-invoice", uploadLimiter);
   app.use("/api/upload-video-init", uploadLimiter);
   app.use("/api/upload-video-chunk", uploadLimiter);
+  app.use("/api/upload-video-complete", uploadLimiter);
 
   // Video upload endpoint (multipart, bypasses JSON body limit)
   app.use(uploadRouter);
@@ -134,10 +138,19 @@ async function startServer() {
   });
 
   // Phase 2: Protect video proxy — only staff/admin can proxy applicant videos
+  // Approved CDN hostname for applicant media (S3-backed CloudFront distribution)
+  const APPROVED_CDN_HOST = "d2xsxph8kpxj0f.cloudfront.net";
+
   app.get("/api/video-proxy", requireStaffOrAdmin, async (req, res) => {
     const url = req.query.url as string;
-    if (!url || !url.startsWith("https://")) {
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(url);
+    } catch {
       return res.status(400).json({ error: "Invalid URL" });
+    }
+    if (parsedUrl.hostname !== APPROVED_CDN_HOST) {
+      return res.status(400).json({ error: "URL not from approved CDN" });
     }
     try {
       const rangeHeader = req.headers.range;

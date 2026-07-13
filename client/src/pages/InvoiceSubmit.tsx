@@ -67,9 +67,10 @@ export default function InvoiceSubmit() {
         const errData = await uploadRes.json().catch(() => ({}));
         throw new Error(errData.error ?? `Storage upload failed (${uploadRes.status})`);
       }
-      const { url: fileUrl, key: fileKey } = await uploadRes.json();
+      const { key: fileKey } = await uploadRes.json();
       // Step 2: register the invoice in the DB and trigger AI extraction
-      submitMutation.mutate({ fileUrl, fileKey, filename: file.name });
+      // fileUrl is resolved server-side from the key — we never send an arbitrary URL
+      submitMutation.mutate({ fileKey, filename: file.name });
     } catch (err: any) {
       setError(err.message ?? "Upload failed. Please try again.");
       setUploading(false);

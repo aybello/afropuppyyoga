@@ -467,7 +467,8 @@ export const metaConversionEvents = mysqlTable("metaConversionEvents", {
   /** UTM source from Luma guest record (may be null) */
   utmSource: varchar("utmSource", { length: 255 }),
   /** Processing status */
-  status: mysqlEnum("metaStatus", ["pending", "sent", "failed", "skipped"]).default("pending").notNull(),
+  // 'processing' = atomically claimed by a sender run (prevents double-send if two runs overlap)
+  status: mysqlEnum("metaStatus", ["pending", "processing", "sent", "failed", "skipped"]).default("pending").notNull(),
   /** Number of send attempts */
   attempts: int("attempts").default(0).notNull(),
   /** Meta event ID returned on success (for deduplication) */
