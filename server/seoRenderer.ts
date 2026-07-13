@@ -664,6 +664,665 @@ const PAGES: Record<string, () => string> = {
 `,
     }),
 
+  "/corporate-puppy-yoga": () =>
+    buildHtml({
+      title: "Corporate Puppy Yoga in Ontario | Team Wellness Events | AfroPuppyYoga",
+      description:
+        "Book a corporate puppy yoga event with AfroPuppyYoga. Team-building, employee appreciation, and wellness days with guided yoga and adorable puppies across Ontario. Groups from 6 to 50+.",
+      canonical: `${BASE}/corporate-puppy-yoga`,
+      schema: [
+        breadcrumb({ name: "Corporate Puppy Yoga", url: `${BASE}/corporate-puppy-yoga` }),
+        {
+          "@context": "https://schema.org",
+          "@type": "Service",
+          "@id": `${BASE}/corporate-puppy-yoga#service`,
+          name: "Corporate Puppy Yoga",
+          description: "Guided puppy yoga sessions for corporate teams. Employee appreciation, team-building, and stress relief in one session. Groups from 6 to 50+ across Ontario.",
+          provider: { "@type": "LocalBusiness", name: "AfroPuppyYoga", url: BASE },
+          areaServed: { "@type": "State", name: "Ontario" },
+          url: `${BASE}/corporate-puppy-yoga`,
+          offers: {
+            "@type": "Offer",
+            url: `${BASE}/private-events/quote`,
+            priceCurrency: "CAD",
+            price: "1200",
+            priceSpecification: { "@type": "PriceSpecification", minPrice: 1200, priceCurrency: "CAD" },
+            availability: "https://schema.org/InStock",
+          },
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: [
+            {
+              "@type": "Question",
+              name: "What is corporate puppy yoga?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Corporate puppy yoga is a guided yoga session with ethically sourced puppies, designed for workplace teams. It combines stress relief, light movement, and the proven mood-boosting effects of interacting with puppies — making it one of the most memorable and effective team wellness activities available.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "How many people can attend a corporate puppy yoga event?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "AfroPuppyYoga accommodates corporate groups from 6 to 50+ guests. We scale the number of puppies, instructors, and Puppy Monitors to match your group size.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Can you come to our office for a corporate puppy yoga event?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Yes. We offer offsite corporate events at your office, boardroom, or any suitable space across the Greater Toronto Area, Hamilton, Kitchener-Waterloo, and Oakville. A travel fee applies for offsite events.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "How much does a corporate puppy yoga event cost?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Corporate puppy yoga events start at $1,200 for groups of up to 20 at a studio location. Pricing scales with group size, location, and package tier. Use our instant quote tool at afropuppyyoga.ca/private-events/quote for an accurate estimate.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Is yoga experience required for a corporate puppy yoga event?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "No experience is needed. Our certified instructors design every session to be accessible for all fitness levels, including complete beginners. The focus is on fun, connection, and stress relief — not athletic performance.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "What companies have done corporate puppy yoga with AfroPuppyYoga?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "AfroPuppyYoga has hosted corporate wellness events for teams from Manulife, Wilfrid Laurier University, University of Waterloo, McMaster University, University of Guelph, Brock University, F45 Training, and Scribenote, among others.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Does the music have to be Afrobeats for a corporate event?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "No. While AfroPuppyYoga's public classes feature Afro-beat inspired music, corporate events can use a custom curated playlist suited to your team's preferences. We work with you to create the right atmosphere.",
+              },
+            },
+          ],
+        },
+      ],
+      body: `
+<header>
+  <h1>Corporate Puppy Yoga — AfroPuppyYoga</h1>
+  <nav><a href="/">Home</a> &rsaquo; <a href="/corporate-puppy-yoga">Corporate Puppy Yoga</a></nav>
+</header>
+<main>
+  <h2>Ontario's Most Unique Corporate Wellness Activity</h2>
+  <p>AfroPuppyYoga brings guided yoga, adorable ethically-sourced puppies, and a feel-good curated soundtrack directly to your team. Whether you're planning an employee appreciation day, a mental health initiative, a team-building retreat, or a company milestone celebration — a corporate puppy yoga session is an experience your team will talk about for years.</p>
+  <p>We have hosted corporate wellness events for teams from Manulife, Wilfrid Laurier University, University of Waterloo, McMaster University, University of Guelph, Brock University, F45 Training, and Scribenote. Groups from 6 to 50+ welcome.</p>
+
+  <h3>Why Corporate Puppy Yoga Works</h3>
+  <ul>
+    <li><strong>Proven stress relief:</strong> Interacting with puppies measurably reduces cortisol and increases oxytocin — backed by peer-reviewed research.</li>
+    <li><strong>No experience required:</strong> Sessions are designed for all fitness levels, from complete beginners to active yogis.</li>
+    <li><strong>Inclusive and memorable:</strong> Unlike typical team activities, puppy yoga creates genuine shared joy across diverse teams.</li>
+    <li><strong>Flexible format:</strong> Studio sessions in Kitchener, Hamilton, or Oakville, or we come to your office or venue.</li>
+    <li><strong>Fully managed:</strong> Certified instructors, trained Puppy Monitors, all equipment, and a dedicated event host included.</li>
+  </ul>
+
+  <h3>Corporate Package Options</h3>
+  <ul>
+    <li><strong>Team Wellness Session ($1,200–$1,800):</strong> Up to 20 guests, 60-minute guided session, studio venue, dedicated host</li>
+    <li><strong>Company Event Package ($2,000–$3,500):</strong> Up to 40 guests, extended session, custom playlist, photography add-on available</li>
+    <li><strong>Premium Brand Collaboration:</strong> Custom experience for 40+ guests, offsite or studio, fully bespoke — contact us for pricing</li>
+  </ul>
+
+  <h3>What's Included</h3>
+  <ul>
+    <li>Certified yoga instructor</li>
+    <li>Ethically sourced puppies from registered breeders</li>
+    <li>Trained Puppy Monitors throughout the session</li>
+    <li>Custom curated playlist</li>
+    <li>All yoga mats and props</li>
+    <li>Dedicated event host</li>
+    <li>Flexible scheduling including weekdays</li>
+  </ul>
+
+  <h3>Trusted by Ontario's Leading Organizations</h3>
+  <p>Manulife · Wilfrid Laurier University · University of Waterloo · McMaster University · University of Guelph · Brock University · F45 Training · Scribenote</p>
+
+  <h3>Frequently Asked Questions</h3>
+  <dl>
+    <dt>What is corporate puppy yoga?</dt>
+    <dd>A guided yoga session with ethically sourced puppies, designed for workplace teams. It combines stress relief, light movement, and the proven mood-boosting effects of puppy interaction.</dd>
+    <dt>How many people can attend?</dt>
+    <dd>Groups from 6 to 50+. We scale puppies, instructors, and monitors to match your group size.</dd>
+    <dt>Can you come to our office?</dt>
+    <dd>Yes. We offer offsite events across the GTA, Hamilton, Kitchener-Waterloo, and Oakville. A travel fee applies.</dd>
+    <dt>How much does it cost?</dt>
+    <dd>Events start at $1,200 for up to 20 guests at a studio location. Use our instant quote tool for an accurate estimate.</dd>
+    <dt>Is yoga experience required?</dt>
+    <dd>No. Sessions are designed for all fitness levels. The focus is on fun and stress relief, not athletic performance.</dd>
+    <dt>Does the music have to be Afrobeats?</dt>
+    <dd>No. Corporate events use a custom curated playlist suited to your team's preferences.</dd>
+  </dl>
+
+  <p><a href="/private-events/quote">Get an Instant Corporate Quote</a> | <a href="/partnerships">Explore Partnership Options</a></p>
+</main>
+<footer>
+  <a href="/">Home</a> | <a href="/private-events/quote">Private Event Quote</a> | <a href="/partnerships">Partnerships</a> | <a href="/puppy-yoga-kitchener">Kitchener</a> | <a href="/puppy-yoga-hamilton">Hamilton</a> | <a href="/puppy-yoga-oakville">Oakville</a>
+</footer>
+`,
+    }),
+
+  "/private-puppy-yoga-events": () =>
+    buildHtml({
+      title: "Private Puppy Yoga Events in Ontario | AfroPuppyYoga",
+      description:
+        "Book a private puppy yoga event with AfroPuppyYoga. Birthdays, bachelorettes, corporate wellness days, and team-building events with guided yoga and adorable puppies across Ontario.",
+      canonical: `${BASE}/private-puppy-yoga-events`,
+      schema: [
+        breadcrumb({ name: "Private Puppy Yoga Events", url: `${BASE}/private-puppy-yoga-events` }),
+        {
+          "@context": "https://schema.org",
+          "@type": "Service",
+          name: "Private Puppy Yoga Events",
+          description: "Private puppy yoga events for birthdays, bachelorettes, corporate wellness, and team-building. Available across Ontario with groups from 6 to 50+.",
+          provider: { "@type": "LocalBusiness", name: "AfroPuppyYoga", url: BASE },
+          areaServed: { "@type": "State", name: "Ontario" },
+          url: `${BASE}/private-puppy-yoga-events`,
+          offers: {
+            "@type": "Offer",
+            url: `${BASE}/private-events/quote`,
+            priceCurrency: "CAD",
+            price: "1200",
+            availability: "https://schema.org/InStock",
+          },
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: [
+            {
+              "@type": "Question",
+              name: "What types of private puppy yoga events does AfroPuppyYoga offer?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "AfroPuppyYoga offers private puppy yoga events for birthdays, bachelorette parties, bridal showers, corporate wellness days, team-building events, baby showers, student group events, and brand activations. All events include a certified yoga instructor, ethically sourced puppies, and a dedicated event host.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "How much does a private puppy yoga event cost in Ontario?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Private puppy yoga events start at $1,200 for up to 20 guests at a studio location in Kitchener-Waterloo, Hamilton, or Oakville. Pricing varies based on group size, location, and package tier. Use the instant quote tool at afropuppyyoga.ca/private-events/quote for an accurate estimate.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "How far in advance do I need to book a private puppy yoga event?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "We recommend booking at least 3–4 weeks in advance for studio events, and 4–6 weeks for offsite or large corporate events. Popular weekend dates fill quickly.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Can AfroPuppyYoga host a private event at my venue?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Yes. We offer offsite private events at your chosen venue across the Greater Toronto Area, Hamilton, Kitchener-Waterloo, and Oakville. A travel fee applies for offsite locations.",
+              },
+            },
+          ],
+        },
+      ],
+      body: `
+<header>
+  <h1>Private Puppy Yoga Events — AfroPuppyYoga</h1>
+  <nav><a href="/">Home</a> &rsaquo; <a href="/private-puppy-yoga-events">Private Events</a></nav>
+</header>
+<main>
+  <h2>Make Any Occasion Unforgettable with a Private Puppy Yoga Event</h2>
+  <p>AfroPuppyYoga brings the puppies, the yoga, and the good vibes directly to your private event. Whether you're celebrating a birthday, planning a bachelorette, organizing a corporate wellness day, or hosting a student group — a private puppy yoga session is an experience your guests will never forget.</p>
+  <p>We serve groups from 6 to 50+ across Hamilton, Kitchener-Waterloo, and Oakville, Ontario. Offsite events available across the Greater Toronto Area.</p>
+
+  <h3>Private Event Types</h3>
+  <ul>
+    <li><strong>Birthday Parties:</strong> Celebrate with puppies, yoga, and your closest friends. All ages welcome.</li>
+    <li><strong>Bachelorette &amp; Bridal Showers:</strong> The most unique bachelorette activity in Ontario.</li>
+    <li><strong>Corporate Wellness Days:</strong> Employee appreciation, team-building, and stress relief in one session.</li>
+    <li><strong>Student Group Events:</strong> Perfect for clubs, orientation events, and stress-relief sessions.</li>
+    <li><strong>Baby Showers &amp; Gender Reveals:</strong> A warm, joyful celebration with puppies.</li>
+    <li><strong>Brand Activations:</strong> Co-branded wellness events for lifestyle and pet brands.</li>
+  </ul>
+
+  <h3>Package Tiers</h3>
+  <ul>
+    <li><strong>Classic ($1,200–$1,500):</strong> Up to 20 guests, 60-minute session, studio venue</li>
+    <li><strong>Signature:</strong> Extended session, premium add-ons, larger group capacity</li>
+    <li><strong>Luxury / Custom:</strong> Fully bespoke experience for 40+ guests or special requirements</li>
+  </ul>
+
+  <h3>What's Included in Every Private Event</h3>
+  <ul>
+    <li>Certified yoga instructor</li>
+    <li>Ethically sourced puppies from registered breeders</li>
+    <li>Trained Puppy Monitors throughout the session</li>
+    <li>Afro-beat inspired music soundtrack</li>
+    <li>All yoga mats and props</li>
+    <li>Dedicated event host</li>
+  </ul>
+
+  <h3>Locations</h3>
+  <ul>
+    <li>Kitchener-Waterloo — TenC Dance Studio, 329 King St E, Kitchener</li>
+    <li>Hamilton — Colibri Studio, 2751 Barton St E, Hamilton</li>
+    <li>Oakville — 1670 North Service Rd E, Oakville</li>
+    <li>Offsite — your venue across the GTA and surrounding regions (travel fee applies)</li>
+  </ul>
+
+  <h3>Frequently Asked Questions</h3>
+  <dl>
+    <dt>What types of private events do you offer?</dt>
+    <dd>Birthdays, bachelorettes, corporate wellness days, team-building, baby showers, student group events, and brand activations.</dd>
+    <dt>How much does a private event cost?</dt>
+    <dd>Events start at $1,200 for up to 20 guests at a studio location. Use our instant quote tool for an accurate estimate.</dd>
+    <dt>How far in advance should I book?</dt>
+    <dd>3–4 weeks for studio events, 4–6 weeks for offsite or large corporate events.</dd>
+    <dt>Can you come to my venue?</dt>
+    <dd>Yes. We offer offsite events across the GTA, Hamilton, Kitchener-Waterloo, and Oakville. A travel fee applies.</dd>
+  </dl>
+
+  <p><a href="/private-events/quote">Get an Instant Quote</a> | <a href="/corporate-puppy-yoga">Corporate Events</a> | <a href="/birthday">Birthday Packages</a></p>
+</main>
+<footer>
+  <a href="/">Home</a> | <a href="/private-events/quote">Get a Quote</a> | <a href="/corporate-puppy-yoga">Corporate</a> | <a href="/birthday">Birthday</a> | <a href="/puppy-yoga-kitchener">Kitchener</a> | <a href="/puppy-yoga-hamilton">Hamilton</a> | <a href="/puppy-yoga-oakville">Oakville</a>
+</footer>
+`,
+    }),
+
+  "/puppy-yoga-kitchener": () =>
+    buildHtml({
+      title: "Puppy Yoga Kitchener-Waterloo | AfroPuppyYoga",
+      description:
+        "Join AfroPuppyYoga for puppy yoga in Kitchener-Waterloo at TenC Dance Studio, 329 King St E. Guided yoga with adorable puppies and Afro-beat music every weekend. Book your class today!",
+      canonical: `${BASE}/puppy-yoga-kitchener`,
+      schema: [
+        breadcrumb({ name: "Puppy Yoga Kitchener", url: `${BASE}/puppy-yoga-kitchener` }),
+        {
+          "@context": "https://schema.org",
+          "@type": "LocalBusiness",
+          "@id": `${BASE}/puppy-yoga-kitchener#business`,
+          name: "AfroPuppyYoga — Kitchener-Waterloo",
+          description: "Puppy yoga classes in Kitchener-Waterloo at TenC Dance Studio. Guided yoga with adorable puppies and Afro-beat music every weekend.",
+          url: `${BASE}/puppy-yoga-kitchener`,
+          telephone: "+12897881885",
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: "329 King St E",
+            addressLocality: "Kitchener",
+            addressRegion: "ON",
+            postalCode: "N2G 2L3",
+            addressCountry: "CA",
+          },
+          geo: { "@type": "GeoCoordinates", latitude: 43.4516, longitude: -80.4925 },
+          image: OG_IMAGE,
+          aggregateRating: { "@type": "AggregateRating", ratingValue: "4.6", reviewCount: "494", bestRating: "5" },
+          openingHoursSpecification: [
+            { "@type": "OpeningHoursSpecification", dayOfWeek: "Saturday", opens: "09:00", closes: "18:00" },
+            { "@type": "OpeningHoursSpecification", dayOfWeek: "Sunday", opens: "09:00", closes: "18:00" },
+          ],
+          priceRange: "$$",
+          servesCuisine: "Wellness",
+          sameAs: ["https://www.instagram.com/afropuppyyoga", "https://www.tiktok.com/@afropuppyyoga"],
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: [
+            {
+              "@type": "Question",
+              name: "Where is AfroPuppyYoga in Kitchener?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "AfroPuppyYoga Kitchener classes are held at TenC Dance Studio, 329 King St E, Kitchener, ON N2G 2L3. The studio is located in downtown Kitchener with parking available nearby.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "How much does puppy yoga in Kitchener cost?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Puppy yoga classes in Kitchener start at $45 for early bird tickets. Regular tickets are $46. Bring-a-friend packages ($86 for 2) and group of 3 packages ($125) are also available. All tickets are booked through Luma.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "When are puppy yoga classes in Kitchener?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "AfroPuppyYoga runs regular weekend classes in Kitchener-Waterloo. Check our Luma calendar at lu.ma/afropuppyyoga for the latest schedule and to book your spot.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Is AfroPuppyYoga Kitchener good for beginners?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Yes! All AfroPuppyYoga classes are designed for all levels, from complete beginners to experienced yogis. No yoga experience is required — just bring comfortable clothes and an open mind.",
+              },
+            },
+          ],
+        },
+      ],
+      body: `
+<header>
+  <h1>Puppy Yoga Kitchener-Waterloo — AfroPuppyYoga</h1>
+  <nav><a href="/">Home</a> &rsaquo; <a href="/puppy-yoga-kitchener">Puppy Yoga Kitchener</a></nav>
+</header>
+<main>
+  <h2>Ontario's #1 Puppy Yoga Experience — Now in Kitchener-Waterloo</h2>
+  <p>AfroPuppyYoga brings guided yoga, Afro-beat rhythms, and a litter of adorable puppies to downtown Kitchener every weekend. Whether you're a seasoned yogi or a complete beginner, our classes are designed to be joyful, accessible, and deeply relaxing.</p>
+  <p>Classes are held at <strong>TenC Dance Studio, 329 King St E, Kitchener, ON N2G 2L3</strong>.</p>
+
+  <h3>What to Expect</h3>
+  <ul>
+    <li>60-minute guided yoga session with a certified instructor</li>
+    <li>Afro-beat inspired music soundtrack</li>
+    <li>A litter of ethically sourced puppies roaming freely</li>
+    <li>Dedicated Puppy Monitors ensuring puppy welfare throughout</li>
+    <li>All yoga mats and props provided</li>
+    <li>All levels welcome — no experience required</li>
+  </ul>
+
+  <h3>Pricing</h3>
+  <ul>
+    <li><strong>Early Bird Ticket:</strong> $45</li>
+    <li><strong>Regular Ticket:</strong> $46</li>
+    <li><strong>Bring a Friend (2 tickets):</strong> $86</li>
+    <li><strong>Group of 3:</strong> $125</li>
+  </ul>
+
+  <h3>Location</h3>
+  <address>
+    TenC Dance Studio<br />
+    329 King St E<br />
+    Kitchener, ON N2G 2L3
+  </address>
+  <p>Located in downtown Kitchener, easily accessible from Waterloo, Cambridge, and Guelph.</p>
+
+  <h3>Frequently Asked Questions</h3>
+  <dl>
+    <dt>Where is AfroPuppyYoga in Kitchener?</dt>
+    <dd>TenC Dance Studio, 329 King St E, Kitchener, ON N2G 2L3.</dd>
+    <dt>How much does it cost?</dt>
+    <dd>Classes start at $45 for early bird tickets. Regular tickets are $46.</dd>
+    <dt>When are classes?</dt>
+    <dd>Regular weekend classes. Check lu.ma/afropuppyyoga for the latest schedule.</dd>
+    <dt>Do I need yoga experience?</dt>
+    <dd>No. All levels welcome — complete beginners to experienced yogis.</dd>
+  </dl>
+
+  <p><a href="https://lu.ma/afropuppyyoga">Book a Class in Kitchener</a> | <a href="/private-events/quote">Book a Private Event</a></p>
+  <p>Also available in <a href="/puppy-yoga-hamilton">Hamilton</a> and <a href="/puppy-yoga-oakville">Oakville</a>.</p>
+</main>
+<footer>
+  <a href="/">Home</a> | <a href="/puppy-yoga-hamilton">Hamilton</a> | <a href="/puppy-yoga-oakville">Oakville</a> | <a href="/private-events/quote">Private Events</a> | <a href="/corporate-puppy-yoga">Corporate</a>
+</footer>
+`,
+    }),
+
+  "/puppy-yoga-hamilton": () =>
+    buildHtml({
+      title: "Puppy Yoga Hamilton Ontario | AfroPuppyYoga",
+      description:
+        "Join AfroPuppyYoga for puppy yoga in Hamilton at Colibri Studio, 2751 Barton St E. Guided yoga with adorable puppies and Afro-beat music. Book your Hamilton class today!",
+      canonical: `${BASE}/puppy-yoga-hamilton`,
+      schema: [
+        breadcrumb({ name: "Puppy Yoga Hamilton", url: `${BASE}/puppy-yoga-hamilton` }),
+        {
+          "@context": "https://schema.org",
+          "@type": "LocalBusiness",
+          "@id": `${BASE}/puppy-yoga-hamilton#business`,
+          name: "AfroPuppyYoga — Hamilton",
+          description: "Puppy yoga classes in Hamilton at Colibri Studio. Guided yoga with adorable puppies and Afro-beat music.",
+          url: `${BASE}/puppy-yoga-hamilton`,
+          telephone: "+12897881885",
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: "2751 Barton St E",
+            addressLocality: "Hamilton",
+            addressRegion: "ON",
+            addressCountry: "CA",
+          },
+          geo: { "@type": "GeoCoordinates", latitude: 43.2255, longitude: -79.7747 },
+          image: OG_IMAGE,
+          aggregateRating: { "@type": "AggregateRating", ratingValue: "4.6", reviewCount: "494", bestRating: "5" },
+          openingHoursSpecification: [
+            { "@type": "OpeningHoursSpecification", dayOfWeek: "Saturday", opens: "09:00", closes: "18:00" },
+            { "@type": "OpeningHoursSpecification", dayOfWeek: "Sunday", opens: "09:00", closes: "18:00" },
+          ],
+          priceRange: "$$",
+          sameAs: ["https://www.instagram.com/afropuppyyoga", "https://www.tiktok.com/@afropuppyyoga"],
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: [
+            {
+              "@type": "Question",
+              name: "Where is AfroPuppyYoga in Hamilton?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "AfroPuppyYoga Hamilton classes are held at Colibri Studio, 2751 Barton St E, Hamilton, ON. The studio is located in east Hamilton with parking available on site.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "How much does puppy yoga in Hamilton cost?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Puppy yoga classes in Hamilton start at $45 for early bird tickets. Regular tickets are $46. Bring-a-friend packages ($86 for 2) and group of 3 packages ($125) are also available.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "When are puppy yoga classes in Hamilton?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "AfroPuppyYoga runs regular classes in Hamilton. Check our Luma calendar at lu.ma/afropuppyyoga for the latest Hamilton schedule and to book your spot.",
+              },
+            },
+          ],
+        },
+      ],
+      body: `
+<header>
+  <h1>Puppy Yoga Hamilton — AfroPuppyYoga</h1>
+  <nav><a href="/">Home</a> &rsaquo; <a href="/puppy-yoga-hamilton">Puppy Yoga Hamilton</a></nav>
+</header>
+<main>
+  <h2>Puppy Yoga in Hamilton, Ontario</h2>
+  <p>AfroPuppyYoga brings guided yoga, Afro-beat rhythms, and a litter of adorable puppies to Hamilton. Classes are held at <strong>Colibri Studio, 2751 Barton St E, Hamilton, ON</strong>.</p>
+  <p>Whether you're a seasoned yogi or a complete beginner, our Hamilton classes are designed to be joyful, accessible, and deeply relaxing. All levels welcome — no yoga experience required.</p>
+
+  <h3>What to Expect</h3>
+  <ul>
+    <li>60-minute guided yoga session with a certified instructor</li>
+    <li>Afro-beat inspired music soundtrack</li>
+    <li>A litter of ethically sourced puppies roaming freely</li>
+    <li>Dedicated Puppy Monitors ensuring puppy welfare throughout</li>
+    <li>All yoga mats and props provided</li>
+  </ul>
+
+  <h3>Pricing</h3>
+  <ul>
+    <li><strong>Early Bird Ticket:</strong> $45</li>
+    <li><strong>Regular Ticket:</strong> $46</li>
+    <li><strong>Bring a Friend (2 tickets):</strong> $86</li>
+    <li><strong>Group of 3:</strong> $125</li>
+  </ul>
+
+  <h3>Location</h3>
+  <address>
+    Colibri Studio<br />
+    2751 Barton St E<br />
+    Hamilton, ON
+  </address>
+  <p>Easily accessible from Burlington, Stoney Creek, and the greater Hamilton area.</p>
+
+  <h3>Frequently Asked Questions</h3>
+  <dl>
+    <dt>Where is AfroPuppyYoga in Hamilton?</dt>
+    <dd>Colibri Studio, 2751 Barton St E, Hamilton, ON.</dd>
+    <dt>How much does it cost?</dt>
+    <dd>Classes start at $45 for early bird tickets. Regular tickets are $46.</dd>
+    <dt>When are classes?</dt>
+    <dd>Regular classes in Hamilton. Check lu.ma/afropuppyyoga for the latest schedule.</dd>
+    <dt>Do I need yoga experience?</dt>
+    <dd>No. All levels welcome.</dd>
+  </dl>
+
+  <p><a href="https://lu.ma/afropuppyyoga">Book a Class in Hamilton</a> | <a href="/private-events/quote">Book a Private Event</a></p>
+  <p>Also available in <a href="/puppy-yoga-kitchener">Kitchener-Waterloo</a> and <a href="/puppy-yoga-oakville">Oakville</a>.</p>
+</main>
+<footer>
+  <a href="/">Home</a> | <a href="/puppy-yoga-kitchener">Kitchener</a> | <a href="/puppy-yoga-oakville">Oakville</a> | <a href="/private-events/quote">Private Events</a> | <a href="/corporate-puppy-yoga">Corporate</a>
+</footer>
+`,
+    }),
+
+  "/puppy-yoga-oakville": () =>
+    buildHtml({
+      title: "Puppy Yoga Oakville Ontario | AfroPuppyYoga",
+      description:
+        "Join AfroPuppyYoga for puppy yoga in Oakville, Ontario. Guided yoga with adorable puppies and Afro-beat music. Book your Oakville class today!",
+      canonical: `${BASE}/puppy-yoga-oakville`,
+      schema: [
+        breadcrumb({ name: "Puppy Yoga Oakville", url: `${BASE}/puppy-yoga-oakville` }),
+        {
+          "@context": "https://schema.org",
+          "@type": "LocalBusiness",
+          "@id": `${BASE}/puppy-yoga-oakville#business`,
+          name: "AfroPuppyYoga — Oakville",
+          description: "Puppy yoga classes in Oakville, Ontario. Guided yoga with adorable puppies and Afro-beat music.",
+          url: `${BASE}/puppy-yoga-oakville`,
+          telephone: "+12897881885",
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: "1670 North Service Rd E",
+            addressLocality: "Oakville",
+            addressRegion: "ON",
+            addressCountry: "CA",
+          },
+          geo: { "@type": "GeoCoordinates", latitude: 43.4675, longitude: -79.6877 },
+          image: OG_IMAGE,
+          aggregateRating: { "@type": "AggregateRating", ratingValue: "4.6", reviewCount: "494", bestRating: "5" },
+          openingHoursSpecification: [
+            { "@type": "OpeningHoursSpecification", dayOfWeek: "Saturday", opens: "09:00", closes: "18:00" },
+            { "@type": "OpeningHoursSpecification", dayOfWeek: "Sunday", opens: "09:00", closes: "18:00" },
+          ],
+          priceRange: "$$",
+          sameAs: ["https://www.instagram.com/afropuppyyoga", "https://www.tiktok.com/@afropuppyyoga"],
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: [
+            {
+              "@type": "Question",
+              name: "Where is AfroPuppyYoga in Oakville?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "AfroPuppyYoga Oakville classes are held at 1670 North Service Rd E, Oakville, ON. Check our Luma calendar for the exact venue for each upcoming session.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "How much does puppy yoga in Oakville cost?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Puppy yoga classes in Oakville start at $45 for early bird tickets. Regular tickets are $46. Bring-a-friend packages ($86 for 2) and group of 3 packages ($125) are also available.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "When are puppy yoga classes in Oakville?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "AfroPuppyYoga runs regular classes in Oakville. Check our Luma calendar at lu.ma/afropuppyyoga for the latest Oakville schedule and to book your spot.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Is Oakville a new AfroPuppyYoga location?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Yes. AfroPuppyYoga launched in Oakville in June 2026, making it our third Ontario location alongside Kitchener-Waterloo and Hamilton. We are excited to bring puppy yoga to the Oakville and Halton Region community.",
+              },
+            },
+          ],
+        },
+      ],
+      body: `
+<header>
+  <h1>Puppy Yoga Oakville — AfroPuppyYoga</h1>
+  <nav><a href="/">Home</a> &rsaquo; <a href="/puppy-yoga-oakville">Puppy Yoga Oakville</a></nav>
+</header>
+<main>
+  <h2>Puppy Yoga in Oakville, Ontario</h2>
+  <p>AfroPuppyYoga has launched in Oakville! Join us for guided yoga, Afro-beat rhythms, and a litter of adorable puppies at our newest Ontario location. Classes are held at <strong>1670 North Service Rd E, Oakville, ON</strong>.</p>
+  <p>Whether you're a seasoned yogi or a complete beginner, our Oakville classes are designed to be joyful, accessible, and deeply relaxing. All levels welcome — no yoga experience required.</p>
+
+  <h3>What to Expect</h3>
+  <ul>
+    <li>60-minute guided yoga session with a certified instructor</li>
+    <li>Afro-beat inspired music soundtrack</li>
+    <li>A litter of ethically sourced puppies roaming freely</li>
+    <li>Dedicated Puppy Monitors ensuring puppy welfare throughout</li>
+    <li>All yoga mats and props provided</li>
+  </ul>
+
+  <h3>Pricing</h3>
+  <ul>
+    <li><strong>Early Bird Ticket:</strong> $45</li>
+    <li><strong>Regular Ticket:</strong> $46</li>
+    <li><strong>Bring a Friend (2 tickets):</strong> $86</li>
+    <li><strong>Group of 3:</strong> $125</li>
+  </ul>
+
+  <h3>Location</h3>
+  <address>
+    1670 North Service Rd E<br />
+    Oakville, ON
+  </address>
+  <p>Conveniently located in Oakville, accessible from Mississauga, Burlington, and the Halton Region.</p>
+
+  <h3>Frequently Asked Questions</h3>
+  <dl>
+    <dt>Where is AfroPuppyYoga in Oakville?</dt>
+    <dd>1670 North Service Rd E, Oakville, ON. Check Luma for the exact venue for each upcoming session.</dd>
+    <dt>How much does it cost?</dt>
+    <dd>Classes start at $45 for early bird tickets. Regular tickets are $46.</dd>
+    <dt>When are classes?</dt>
+    <dd>Regular classes in Oakville. Check lu.ma/afropuppyyoga for the latest schedule.</dd>
+    <dt>Is this a new location?</dt>
+    <dd>Yes. AfroPuppyYoga launched in Oakville in June 2026 — our third Ontario location.</dd>
+  </dl>
+
+  <p><a href="https://lu.ma/afropuppyyoga">Book a Class in Oakville</a> | <a href="/private-events/quote">Book a Private Event</a></p>
+  <p>Also available in <a href="/puppy-yoga-kitchener">Kitchener-Waterloo</a> and <a href="/puppy-yoga-hamilton">Hamilton</a>.</p>
+</main>
+<footer>
+  <a href="/">Home</a> | <a href="/puppy-yoga-kitchener">Kitchener</a> | <a href="/puppy-yoga-hamilton">Hamilton</a> | <a href="/private-events/quote">Private Events</a> | <a href="/corporate-puppy-yoga">Corporate</a>
+</footer>
+`,
+    }),
+
   "/private-events/quote": () =>
     buildHtml({
       title: "Private Puppy Yoga Event Quote | AfroPuppyYoga",
