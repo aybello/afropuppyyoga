@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { protectedProcedure, router } from "../_core/trpc";
+import { staffProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { puppySchedule } from "../../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
@@ -8,15 +8,15 @@ const LOCATIONS = ["Kitchener", "Hamilton", "Oakville"] as const;
 const DAYS = ["Saturday", "Sunday"] as const;
 
 export const puppyScheduleRouter = router({
-  /** List all schedule entries, newest first */
-  list: protectedProcedure.query(async () => {
+  /** List all schedule entries, newest first — staff/admin only */
+  list: staffProcedure.query(async () => {
     const db = await getDb();
     if (!db) return [];
     return db.select().from(puppySchedule).orderBy(desc(puppySchedule.classDate));
   }),
 
-  /** Create a new schedule entry */
-  create: protectedProcedure
+  /** Create a new schedule entry — staff/admin only */
+  create: staffProcedure
     .input(
       z.object({
         classDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD"),
@@ -43,8 +43,8 @@ export const puppyScheduleRouter = router({
       return { success: true };
     }),
 
-  /** Update an existing schedule entry */
-  update: protectedProcedure
+  /** Update an existing schedule entry — staff/admin only */
+  update: staffProcedure
     .input(
       z.object({
         id: z.number().int().positive(),
@@ -65,8 +65,8 @@ export const puppyScheduleRouter = router({
       return { success: true };
     }),
 
-  /** Delete a schedule entry */
-  delete: protectedProcedure
+  /** Delete a schedule entry — staff/admin only */
+  delete: staffProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ input }) => {
       const db = await getDb();
