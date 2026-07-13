@@ -343,3 +343,17 @@
 - [x] Tests: no-hash fields assertion (fbc, fbp, ip, ua sent in plaintext)
 - [x] Tests: poller idempotency (same guest → exactly one row)
 - [x] Secrets: META_PIXEL_ID, META_CAPI_ACCESS_TOKEN, META_TEST_EVENT_CODE, META_CAPI_ENABLED
+
+## Security Hardening (Branch: security/hardening — Jul 13 2026)
+
+- [x] Phase 1: Lock down Luma API proxy — require staff auth, allowlist paths, rate limit, fail-safe on missing key
+- [x] Phase 2: Protect applicant video/résumé/invoice/document routes — require staff/admin auth middleware
+- [x] Phase 3: Harden public and chunked upload routes — rate limit before Multer, magic bytes, traversal protection
+- [x] Phase 4: Staff session revocation — revokeStaff now demotes user role to 'user' so existing sessions fail immediately
+- [x] Phase 5: Puppy schedule auth — replaced protectedProcedure with staffProcedure (admin + staff only)
+- [x] Phase 6: Fix rate limiter wiring — corrected birthday.submitInquiry and partnership.submitInquiry paths
+- [x] Phase 7: Invoice submission atomic — createInvoice returns MySQL insertId directly (no race condition)
+- [x] Phase 8: Repair pnpm lockfile — removed package-lock.json, ran pnpm audit --fix, 0 known vulnerabilities
+- [x] Phase 9: Fix structured data claims — updated ratingValue 4.6→4.9, price $35→$45, updated event dates
+- [x] Phase 10: GitHub Actions CI workflow — .github/workflows/ci.yml with frozen install, tsc, tests, build, audit
+- [x] All phases: 35/35 tests passing after all changes

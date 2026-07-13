@@ -170,7 +170,8 @@ const LOCAL_BUSINESS_SCHEMA = {
   ],
   aggregateRating: {
     "@type": "AggregateRating",
-    ratingValue: "4.6",
+    // Phase 9 (security hardening): updated to match client-side values (LocationPage.tsx, Reviews.tsx)
+    ratingValue: "4.9",
     reviewCount: "494",
     bestRating: "5",
     worstRating: "1",
@@ -267,9 +268,9 @@ const PAGES: Record<string, () => string> = {
         },
         breadcrumb(),
         // Event schema — 3 top-level Event objects (Google rich results compatible)
-        { "@context": "https://schema.org", "@type": "Event", name: "AfroPuppyYoga \u2014 Kitchener-Waterloo", description: "Guided yoga with adorable puppies and Afro-beat music. Every Saturday and Sunday at TenC Dance Studio, Kitchener.", startDate: "2026-07-12T10:00:00-04:00", endDate: "2026-07-12T11:30:00-04:00", eventStatus: "https://schema.org/EventScheduled", eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode", location: { "@type": "Place", name: "TenC Dance Studio", address: { "@type": "PostalAddress", streetAddress: "329 King St E", addressLocality: "Kitchener", addressRegion: "ON", postalCode: "N2G 2L3", addressCountry: "CA" } }, organizer: { "@type": "Organization", name: "AfroPuppyYoga", url: BASE }, url: "https://lu.ma/afropuppyyoga", image: OG_IMAGE, offers: { "@type": "Offer", url: "https://lu.ma/afropuppyyoga", priceCurrency: "CAD", price: "35", availability: "https://schema.org/InStock", validFrom: "2026-01-01" } },
-        { "@context": "https://schema.org", "@type": "Event", name: "AfroPuppyYoga \u2014 Hamilton", description: "Guided yoga with adorable puppies and Afro-beat music. Regular sessions at Colibri Studio, Hamilton.", startDate: "2026-07-12T10:00:00-04:00", endDate: "2026-07-12T11:30:00-04:00", eventStatus: "https://schema.org/EventScheduled", eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode", location: { "@type": "Place", name: "Colibri Studio", address: { "@type": "PostalAddress", streetAddress: "2751 Barton St E", addressLocality: "Hamilton", addressRegion: "ON", addressCountry: "CA" } }, organizer: { "@type": "Organization", name: "AfroPuppyYoga", url: BASE }, url: "https://lu.ma/afropuppyyoga", image: OG_IMAGE, offers: { "@type": "Offer", url: "https://lu.ma/afropuppyyoga", priceCurrency: "CAD", price: "35", availability: "https://schema.org/InStock", validFrom: "2026-01-01" } },
-        { "@context": "https://schema.org", "@type": "Event", name: "AfroPuppyYoga \u2014 Oakville", description: "Guided yoga with adorable puppies and Afro-beat music. Regular sessions in Oakville, Ontario.", startDate: "2026-07-13T10:00:00-04:00", endDate: "2026-07-13T11:30:00-04:00", eventStatus: "https://schema.org/EventScheduled", eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode", location: { "@type": "Place", name: "Oakville", address: { "@type": "PostalAddress", addressLocality: "Oakville", addressRegion: "ON", addressCountry: "CA" } }, organizer: { "@type": "Organization", name: "AfroPuppyYoga", url: BASE }, url: "https://lu.ma/afropuppyyoga", image: OG_IMAGE, offers: { "@type": "Offer", url: "https://lu.ma/afropuppyyoga", priceCurrency: "CAD", price: "35", availability: "https://schema.org/InStock", validFrom: "2026-01-01" } },
+        { "@context": "https://schema.org", "@type": "Event", name: "AfroPuppyYoga \u2014 Kitchener-Waterloo", description: "Guided yoga with adorable puppies and Afro-beat music. Every Saturday and Sunday at TenC Dance Studio, Kitchener.", startDate: "2026-07-19T10:00:00-04:00", endDate: "2026-07-19T11:30:00-04:00", eventStatus: "https://schema.org/EventScheduled", eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode", location: { "@type": "Place", name: "TenC Dance Studio", address: { "@type": "PostalAddress", streetAddress: "329 King St E", addressLocality: "Kitchener", addressRegion: "ON", postalCode: "N2G 2L3", addressCountry: "CA" } }, organizer: { "@type": "Organization", name: "AfroPuppyYoga", url: BASE }, url: "https://lu.ma/afropuppyyoga", image: OG_IMAGE, offers: { "@type": "Offer", url: "https://lu.ma/afropuppyyoga", priceCurrency: "CAD", price: "45", availability: "https://schema.org/InStock", validFrom: "2026-01-01" } },
+        { "@context": "https://schema.org", "@type": "Event", name: "AfroPuppyYoga \u2014 Hamilton", description: "Guided yoga with adorable puppies and Afro-beat music. Regular sessions at Colibri Studio, Hamilton.", startDate: "2026-07-19T10:00:00-04:00", endDate: "2026-07-19T11:30:00-04:00", eventStatus: "https://schema.org/EventScheduled", eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode", location: { "@type": "Place", name: "Colibri Studio", address: { "@type": "PostalAddress", streetAddress: "2751 Barton St E", addressLocality: "Hamilton", addressRegion: "ON", addressCountry: "CA" } }, organizer: { "@type": "Organization", name: "AfroPuppyYoga", url: BASE }, url: "https://lu.ma/afropuppyyoga", image: OG_IMAGE, offers: { "@type": "Offer", url: "https://lu.ma/afropuppyyoga", priceCurrency: "CAD", price: "45", availability: "https://schema.org/InStock", validFrom: "2026-01-01" } },
+        { "@context": "https://schema.org", "@type": "Event", name: "AfroPuppyYoga \u2014 Oakville", description: "Guided yoga with adorable puppies and Afro-beat music. Regular sessions in Oakville, Ontario.", startDate: "2026-07-20T10:00:00-04:00", endDate: "2026-07-20T11:30:00-04:00", eventStatus: "https://schema.org/EventScheduled", eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode", location: { "@type": "Place", name: "Oakville", address: { "@type": "PostalAddress", addressLocality: "Oakville", addressRegion: "ON", addressCountry: "CA" } }, organizer: { "@type": "Organization", name: "AfroPuppyYoga", url: BASE }, url: "https://lu.ma/afropuppyyoga", image: OG_IMAGE, offers: { "@type": "Offer", url: "https://lu.ma/afropuppyyoga", priceCurrency: "CAD", price: "45", availability: "https://schema.org/InStock", validFrom: "2026-01-01" } },
         // Review schema — 6 verified guest reviews
         { "@context": "https://schema.org", "@type": "Review", itemReviewed: { "@type": "LocalBusiness", name: "AfroPuppyYoga", url: BASE }, author: { "@type": "Person", name: "Sheila Soares" }, reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" }, reviewBody: "So fun and well run! Highly recommend this experience. The puppies were adorable and the yoga instructor was amazing. Will definitely be back!", datePublished: "2025-06-01" },
         { "@context": "https://schema.org", "@type": "Review", itemReviewed: { "@type": "LocalBusiness", name: "AfroPuppyYoga", url: BASE }, author: { "@type": "Person", name: "Cameron T." }, reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" }, reviewBody: "Absolutely incredible experience! The Afro-beat music, the puppies, the yoga \u2014 everything was perfectly curated. I've never felt so relaxed and happy at the same time.", datePublished: "2025-05-01" },
@@ -971,7 +972,7 @@ const PAGES: Record<string, () => string> = {
           },
           geo: { "@type": "GeoCoordinates", latitude: 43.4516, longitude: -80.4925 },
           image: OG_IMAGE,
-          aggregateRating: { "@type": "AggregateRating", ratingValue: "4.6", reviewCount: "494", bestRating: "5" },
+          aggregateRating: { "@type": "AggregateRating", ratingValue: "4.9", reviewCount: "494", bestRating: "5" },
           openingHoursSpecification: [
             { "@type": "OpeningHoursSpecification", dayOfWeek: "Saturday", opens: "09:00", closes: "18:00" },
             { "@type": "OpeningHoursSpecification", dayOfWeek: "Sunday", opens: "09:00", closes: "18:00" },
@@ -1101,7 +1102,7 @@ const PAGES: Record<string, () => string> = {
           },
           geo: { "@type": "GeoCoordinates", latitude: 43.2255, longitude: -79.7747 },
           image: OG_IMAGE,
-          aggregateRating: { "@type": "AggregateRating", ratingValue: "4.6", reviewCount: "494", bestRating: "5" },
+          aggregateRating: { "@type": "AggregateRating", ratingValue: "4.9", reviewCount: "494", bestRating: "5" },
           openingHoursSpecification: [
             { "@type": "OpeningHoursSpecification", dayOfWeek: "Saturday", opens: "09:00", closes: "18:00" },
             { "@type": "OpeningHoursSpecification", dayOfWeek: "Sunday", opens: "09:00", closes: "18:00" },
@@ -1221,7 +1222,7 @@ const PAGES: Record<string, () => string> = {
           },
           geo: { "@type": "GeoCoordinates", latitude: 43.4675, longitude: -79.6877 },
           image: OG_IMAGE,
-          aggregateRating: { "@type": "AggregateRating", ratingValue: "4.6", reviewCount: "494", bestRating: "5" },
+          aggregateRating: { "@type": "AggregateRating", ratingValue: "4.9", reviewCount: "494", bestRating: "5" },
           openingHoursSpecification: [
             { "@type": "OpeningHoursSpecification", dayOfWeek: "Saturday", opens: "09:00", closes: "18:00" },
             { "@type": "OpeningHoursSpecification", dayOfWeek: "Sunday", opens: "09:00", closes: "18:00" },
