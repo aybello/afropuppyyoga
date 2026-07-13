@@ -5,6 +5,15 @@ import { BOOK_URL, LOGO_URL  } from "@/const";
 
 const navGroups = [
   {
+    heading: "Locations",
+    links: [
+      { label: "Kitchener", href: "/puppy-yoga-kitchener", isPage: true },
+      { label: "Hamilton", href: "/puppy-yoga-hamilton", isPage: true },
+      { label: "Oakville", href: "/puppy-yoga-oakville", isPage: true },
+      { label: "Corporate Events", href: "/corporate-puppy-yoga", isPage: true },
+    ],
+  },
+  {
     heading: "Classes & Events",
     links: [
       { label: "Book a Class", href: BOOK_URL, isExternal: true },
@@ -51,11 +60,11 @@ export default function Footer() {
               />
               <div>
                 <div className="font-display font-bold text-lg text-white">AfroPuppyYoga</div>
-                <div className="font-body text-xs text-[#F2A0B8] tracking-widest uppercase">Canada's #1 Puppy Yoga</div>
+                <div className="font-body text-xs text-[#F2A0B8] tracking-widest uppercase">Ontario's #1 Puppy Yoga</div>
               </div>
             </div>
             <p className="font-body text-white/50 text-sm leading-relaxed mb-6 max-w-xs">
-              Where wellness meets culture and puppy love. Serving Hamilton, Kitchener-Waterloo, and Oakville with joy, movement, and adorable puppies.
+              Where wellness meets culture and puppy love. Serving Hamilton, Kitchener, and Oakville with joy, movement, and adorable puppies.
             </p>
             <a
               href={BOOK_URL}
@@ -67,8 +76,8 @@ export default function Footer() {
             </a>
           </div>
 
-          {/* Navigation — two grouped columns */}
-          <div className="md:col-span-1 grid grid-cols-2 gap-8">
+          {/* Navigation — three grouped columns */}
+          <div className="md:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-8">
             {navGroups.map((group) => (
               <div key={group.heading}>
                 <h4 className="font-display font-bold text-xs text-white/40 uppercase tracking-widest mb-4">{group.heading}</h4>

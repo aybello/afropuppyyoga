@@ -237,5 +237,123 @@
 - [x] TypeScript check: 0 errors
 - [x] Production build: successful
 - [x] Tests: 17/19 passing (2 failures are LUMA_API_KEY not set — expected, key needs to be added as secret)
-- [ ] Add GMAIL_APP_PASSWORD secret (email notifications)
-- [ ] Add LUMA_API_KEY secret (Luma calendar proxy)
+- [x] Add GMAIL_APP_PASSWORD secret (email notifications)
+- [x] Add LUMA_API_KEY secret (Luma calendar proxy)
+
+## Sprint 1 — Revenue + Conversion Cleanup (Jul 9, 2026)
+- [x] Task 1: Standardize "Ontario's #1 Puppy Yoga Experience" across index.html, Navbar, Footer, Hero, Home.tsx, Partnerships.tsx, email.ts, signing.ts, seoRenderer.ts
+- [x] Task 2: Add trust line to hero CTA area ("Trusted by universities, brands, and wellness communities across Ontario")
+- [x] Task 3: Improve /private-events/quote page — package labels (Classic/Signature/Luxury), "Best for" labels, "What happens next" section, corporate CTA
+- [x] Task 4: Fix backend quote recalculation — server calculates estimatedMin/estimatedMax from event type, guest count, location, package type
+
+## Sprint 2 — Location SEO Pages (Jul 9, 2026) [superseded by second Sprint 2 block below]
+- [x] Build shared LocationPage component (hero, about, schedule embed, FAQ, CTA, structured data)
+- [x] Create /kitchener page with Kitchener-specific copy, TenC Dance Studio details, LocalBusiness schema
+- [x] Create /hamilton page with Hamilton-specific copy, Colibri Studio details, LocalBusiness schema
+- [x] Create /oakville page with Oakville-specific copy, "coming soon" framing, LocalBusiness schema
+- [x] Register all 3 routes in App.tsx with React.lazy
+- [x] Add "Locations" section to Footer navGroups
+- [x] Add Locations dropdown to Navbar More menu
+- [x] Update sitemap.xml with 3 new location URLs
+- [x] Update robots.txt to allow location pages
+- [x] Add internal links from homepage Experience section to location pages
+
+## Sprint 2 — Location SEO Pages (Jul 9, 2026)
+- [x] Build shared LocationPage component (hero, about, experience features, Luma calendar embed, FAQ accordion, CTA, cross-location links, JSON-LD structured data)
+- [x] Create /kitchener page — unique copy, TenC Dance Studio venue, 6 FAQs, LocalBusiness schema
+- [x] Create /hamilton page — unique copy, Colibri Studio venue, 6 FAQs, LocalBusiness schema
+- [x] Create /oakville page — coming soon state, follow CTA, redirect to KW/Hamilton, 4 FAQs
+- [x] Wire routes in App.tsx (lazy-loaded)
+- [x] Add Locations column to Footer (Kitchener, Hamilton, Oakville Soon)
+- [x] Add location links to Navbar More dropdown
+- [x] Update sitemap.xml with all three location URLs
+
+## Sprint 2 Remaining — More SEO Pages (Jul 9, 2026)
+- [x] Create /puppy-yoga-waterloo page (students, tech teams, founders angle)
+- [x] Create /private-puppy-yoga-events page (private events SEO landing)
+- [x] Wire both routes in App.tsx
+- [x] Add to sitemap.xml
+- [x] Add to Navbar More dropdown and Footer
+
+## Sprint 3 — Membership + Loyalty Funnel (Jul 9, 2026)
+- [x] Update Memberships.tsx: add "Best for" labels, savings explanation, cross-city note, rollover policy, early access / priority booking perks
+- [x] Update Loyalty.tsx: simplify promise to "Attend 3 classes, get your 4th free", add cross-city FAQ, add "Ask us after class" CTA
+
+## Sprint 4 — Corporate Sales Page (Jul 9, 2026)
+- [x] Build /corporate-puppy-yoga dedicated page (hero, who it's for, why it works, packages, trust logos, FAQ, CTA)
+- [x] Wire route in App.tsx
+- [x] Add to Navbar More dropdown and Footer
+- [x] Add to sitemap.xml
+
+## Sprint 2/4 Cleanup
+- [x] Fix Navbar "Oakville (Soon)" label → "Oakville"
+- [x] Fix Footer "Oakville (Soon)" label → "Oakville"
+
+## Sprint 2 Rebuild — City Pages (Plan-Exact, Jul 10 2026) [COMPLETE]
+- [x] Read Reviews.tsx, OurValues.tsx, const.ts for inspiration assets
+- [x] Rebuild LocationPage.tsx with all plan-required sections: Why try puppy yoga in [city]?, reviews/testimonials, complete structure
+- [x] Rebuild /puppy-yoga-kitchener page (correct slug, all sections, Kitchener-specific copy)
+- [x] Rebuild /puppy-yoga-hamilton page (correct slug, all sections, Hamilton-specific copy)
+- [x] Rebuild /puppy-yoga-oakville page (correct slug, all sections, Oakville-specific copy)
+- [x] Rebuild /puppy-yoga-waterloo page (correct slug, all sections, Waterloo-specific copy)
+- [x] Rebuild /private-puppy-yoga-events page (correct slug, all sections)
+- [x] Add trust logos section to /corporate-puppy-yoga Corporate.tsx
+- [x] Update App.tsx routes: /puppy-yoga-kitchener, /puppy-yoga-hamilton, /puppy-yoga-oakville
+- [x] Add redirect routes for old slugs (/kitchener → /puppy-yoga-kitchener, etc.)
+- [x] Update Navbar moreLinks with correct slugs
+- [x] Update Footer navGroups with correct slugs
+- [x] Update sitemap.xml with correct slugs
+- [x] Update LocationPage.tsx internal cross-links with correct slugs
+
+## Real Photo Integration — Kitchener & Hamilton (Jul 11 2026)
+- [x] Browse APY Google Drive 2026 folder for Kitchener and Hamilton session photos
+- [x] Select 4 best photos per city (Kitchener: May 16th session; Hamilton: Apr 25th session)
+- [x] Convert HEIC photos to JPEG and upload to webdev CDN
+- [x] Add photos prop to LocationConfig interface in LocationPage.tsx
+- [x] Add "From Our Classes" photo gallery section to LocationPage.tsx (featured large + 3 smaller)
+- [x] Add Kitchener photos to Kitchener.tsx config
+- [x] Add Hamilton photos to Hamilton.tsx config
+
+## Color Audit — City Pages (Jul 12 2026)
+- [x] Fix Quick Facts strip background: bg-[#3D1A2E] → bg-[#8B2252] (matches brand primary deep rose)
+- [x] Fix "View All {city} Classes →" button: bg-[#D4708A] → bg-[#F2A0B8] text-[#1A0A12] (matches homepage hero/BookingBanner CTA pattern)
+- [x] Fix "Book a Class in {city}" hero button hover state: hover:bg-[#D4708A] → hover:bg-[#F2A0B8]/90
+- [x] Fix "Get a Private Event Quote" button hover state: hover:bg-[#D4708A] → hover:bg-[#F2A0B8]/90
+- [x] Fix bottom CTA "Book a Class in {city}" hover state: hover:bg-[#D4708A] → hover:bg-[#F2A0B8]/90
+- [x] Fix Coming Soon "Follow on Instagram" button: bg-[#D4708A] → bg-[#8B2252] (dark rose on light bg)
+- [x] Fix Coming Soon "Book in KW or Hamilton" outline button: border-[#D4708A] → border-[#8B2252]
+
+## Oakville Page Launch (Jul 12 2026)
+- [x] Find Oakville session folder in Google Drive (50_Sat,June 6th_Oakville, folder ID 1inHGu-p5bFEHrFCecPK3GVE8zmuZGLZn)
+- [x] Download 15 HEIC photos from Oakville June 6th session
+- [x] Convert HEIC to JPEG and select best 9 photos
+- [x] Upload 9 Oakville photos to webdev CDN
+- [x] Update Oakville.tsx: add photos array, add lumaTag "oakville", expand FAQs to 6, update private events FAQ to reflect launched status
+
+## Meta Conversions API Integration (Jul 12 2026)
+
+- [x] Schema: add meta_conversion_events table to drizzle/schema.ts
+- [x] Schema: run migration via webdev_execute_sql
+- [x] Backend: direct Luma polling helper (server-to-server, not via /api/luma proxy)
+- [x] Backend: Luma polling heartbeat job (every 10 min) — find new paid guests, insert pending rows
+- [x] Backend: Meta CAPI sender heartbeat job (every 10 min, offset 5 min) — hash PII, POST to Meta
+- [x] Security: fix /api/luma P0 proxy (restrict to allowlist or remove)
+- [x] Frontend: InitiateCheckout pixel event on Luma button click
+- [x] Tests: hashing correctness (em, ph, fn, ln)
+- [x] Tests: no-hash fields assertion (fbc, fbp, ip, ua sent in plaintext)
+- [x] Tests: poller idempotency (same guest → exactly one row)
+- [x] Secrets: META_PIXEL_ID, META_CAPI_ACCESS_TOKEN, META_TEST_EVENT_CODE, META_CAPI_ENABLED
+
+## Security Hardening (Branch: security/hardening — Jul 13 2026)
+
+- [x] Phase 1: Lock down Luma API proxy — require staff auth, allowlist paths, rate limit, fail-safe on missing key
+- [x] Phase 2: Protect applicant video/résumé/invoice/document routes — require staff/admin auth middleware
+- [x] Phase 3: Harden public and chunked upload routes — rate limit before Multer, magic bytes, traversal protection
+- [x] Phase 4: Staff session revocation — revokeStaff now demotes user role to 'user' so existing sessions fail immediately
+- [x] Phase 5: Puppy schedule auth — replaced protectedProcedure with staffProcedure (admin + staff only)
+- [x] Phase 6: Fix rate limiter wiring — corrected birthday.submitInquiry and partnership.submitInquiry paths
+- [x] Phase 7: Invoice submission atomic — createInvoice returns MySQL insertId directly (no race condition)
+- [x] Phase 8: Repair pnpm lockfile — removed package-lock.json, ran pnpm audit --fix, 0 known vulnerabilities
+- [x] Phase 9: Fix structured data claims — updated ratingValue 4.6→4.9, price $35→$45, updated event dates
+- [x] Phase 10: GitHub Actions CI workflow — .github/workflows/ci.yml with frozen install, tsc, tests, build, audit
+- [x] All phases: 35/35 tests passing after all changes

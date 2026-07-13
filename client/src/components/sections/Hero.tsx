@@ -84,7 +84,7 @@ export default function Hero() {
           >
             <div className="w-8 h-0.5 bg-[#F2A0B8]" />
             <span className="text-[#F2A0B8] font-body text-sm font-semibold tracking-widest uppercase">
-              Canada's #1 Puppy Yoga Studio
+              Ontario's #1 Puppy Yoga Studio
             </span>
           </motion.div>
 
@@ -144,6 +144,17 @@ export default function Hero() {
               Private Events
             </a>
           </motion.div>
+
+          {/* Trust line */}
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.85 }}
+            className="font-body text-white/60 text-xs sm:text-sm mt-5"
+            style={{ textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}
+          >
+            Trusted by universities, brands, and wellness communities across Ontario.
+          </motion.p>
         </div>
       </div>
 

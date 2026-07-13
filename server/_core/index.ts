@@ -12,6 +12,8 @@ import chunkedUploadRouter from "../chunkedUploadRoute";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import rateLimit from "express-rate-limit";
 import { storageGet } from "../storage";
+import { lumaPoller, capiSender } from "../metaCapi";
+import { requireStaffOrAdmin } from "./requireStaff";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -51,6 +53,26 @@ const chatbotLimiter = rateLimit({
   skip: () => process.env.NODE_ENV === "development",
 });
 
+// Phase 3: Rate limiter for public upload endpoints (applied BEFORE Multer to prevent body-parsing DoS)
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // 10 upload initiations per IP per 15 min
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many upload requests. Please try again in 15 minutes." },
+  skip: () => process.env.NODE_ENV === "development",
+});
+
+// Phase 1: Rate limiter for Luma proxy
+const lumaProxyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many Luma proxy requests. Please try again later." },
+  skip: () => process.env.NODE_ENV === "development",
+});
+
 
 async function startServer() {
   const app = express();
@@ -75,6 +97,11 @@ async function startServer() {
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
 
+  // Phase 3: Apply upload rate limiter BEFORE Multer on chunked upload init and chunk endpoints
+  // These are public (careers flow) but must be rate-limited to prevent body-parsing DoS
+  app.use("/api/upload-video-init", uploadLimiter);
+  app.use("/api/upload-video-chunk", uploadLimiter);
+
   // Video upload endpoint (multipart, bypasses JSON body limit)
   app.use(uploadRouter);
   // Chunked video upload endpoints (for large files that exceed hosting body size limit)
@@ -84,18 +111,16 @@ async function startServer() {
   // We target specific procedure paths to avoid limiting admin/auth calls
   app.use("/api/trpc/careers.submitApplication", formLimiter);
   app.use("/api/trpc/privateEvents.submitInquiry", formLimiter);
-  app.use("/api/trpc/birthday.submit", formLimiter);
-  app.use("/api/trpc/partnership.submit", formLimiter);
+  // Phase 6: Fixed procedure path — birthday uses submitInquiry not submit
+  app.use("/api/trpc/birthday.submitInquiry", formLimiter);
+  // Phase 6: Fixed procedure path — partnership uses submitInquiry not submit
+  app.use("/api/trpc/partnership.submitInquiry", formLimiter);
   app.use("/api/trpc/invoices.submit", formLimiter);
   app.use("/api/trpc/chatbot.chat", chatbotLimiter);
 
-  // Video proxy — for Range requests (browser seeking), proxy the bytes with correct Content-Type.
-  // For full-file requests (new tab), redirect directly to CloudFront which has CORS + accept-ranges.
-  // This avoids the platform response-body-size limit that kills full 40MB streams.
-  // GET /api/video-url?key=<storageKey>
-  // Generates a fresh presigned URL for a video stored in Manus storage.
-  // Used by the admin dashboard to play applicant videos that may have expired URLs.
-  app.get("/api/video-url", async (req, res) => {
+  // Phase 2: Protect applicant media routes — only staff/admin can access these
+  // These endpoints are only called from ApplicationsDashboard (admin/staff only)
+  app.get("/api/video-url", requireStaffOrAdmin, async (req, res) => {
     const key = req.query.key as string;
     if (!key || key.includes("..") || !key.startsWith("applications/")) {
       return res.status(400).json({ error: "Invalid key" });
@@ -108,10 +133,8 @@ async function startServer() {
     }
   });
 
-  // GET /api/video-proxy?url=<presignedUrl>
-  // Proxies range requests for video seeking with correct Content-Type headers.
-  // For full-file requests, redirects directly to the presigned URL.
-  app.get("/api/video-proxy", async (req, res) => {
+  // Phase 2: Protect video proxy — only staff/admin can proxy applicant videos
+  app.get("/api/video-proxy", requireStaffOrAdmin, async (req, res) => {
     const url = req.query.url as string;
     if (!url || !url.startsWith("https://")) {
       return res.status(400).json({ error: "Invalid URL" });
@@ -154,8 +177,8 @@ async function startServer() {
     }
   });
 
-  // PDF proxy — serves CDN PDFs with CORS headers so PDF.js can render them
-  app.get("/api/pdf-proxy", async (req, res) => {
+  // Phase 2: Protect PDF proxy — only staff/admin can access applicant PDFs
+  app.get("/api/pdf-proxy", requireStaffOrAdmin, async (req, res) => {
     const url = req.query.url as string;
     if (!url || !url.startsWith("https://d2xsxph8kpxj0f.cloudfront.net/")) {
       return res.status(400).send("Invalid URL");
@@ -173,10 +196,30 @@ async function startServer() {
     }
   });
 
-  // Luma API proxy — forwards /api/luma/* to https://api.lu.ma with API key injected
+  // Phase 1: Luma API proxy — requires staff/admin auth + rate limiting + allowlist
+  // SECURITY: auth gate added, restricted to read-only allowlist of safe Luma endpoints.
   const LUMA_API_KEY = process.env.LUMA_API_KEY || "";
+  const LUMA_ALLOWED_PATHS = [
+    "/public/v1/calendar/list-events",
+    "/public/v1/event/get-guests",
+    "/public/v1/event/get",
+  ];
   app.use(
     "/api/luma",
+    requireStaffOrAdmin,
+    lumaProxyLimiter,
+    (req, res, next) => {
+      // Fail-safe: if LUMA_API_KEY is not configured, return 503 instead of forwarding without auth
+      if (!LUMA_API_KEY) {
+        return res.status(503).json({ error: "Luma integration not configured" });
+      }
+      const requestedPath = req.path;
+      const isAllowed = LUMA_ALLOWED_PATHS.some(allowed => requestedPath.startsWith(allowed));
+      if (!isAllowed) {
+        return res.status(403).json({ error: "Luma proxy: path not allowed" });
+      }
+      next();
+    },
     createProxyMiddleware({
       target: "https://api.lu.ma",
       changeOrigin: true,
@@ -184,7 +227,6 @@ async function startServer() {
       on: {
         proxyReq: (proxyReq) => {
           proxyReq.setHeader("x-luma-api-key", LUMA_API_KEY);
-          // Remove any forwarded host headers that could confuse Luma
           proxyReq.removeHeader("x-forwarded-host");
         },
       },
@@ -197,6 +239,31 @@ async function startServer() {
   });
   app.post("/api/scheduled/ping", (_req, res) => {
     res.json({ ok: true, ts: Date.now() });
+  });
+
+  // ─── Meta CAPI Scheduled Jobs ─────────────────────────────────────────────
+  // POST /api/scheduled/luma-poll — called by heartbeat every 10 min
+  // Polls all Luma events and inserts new paid guest registrations as pending rows.
+  app.post("/api/scheduled/luma-poll", async (_req, res) => {
+    try {
+      const result = await lumaPoller();
+      res.json({ ok: true, ...result });
+    } catch (err) {
+      console.error("[MetaCAPI] Luma poller error:", err);
+      res.status(500).json({ ok: false, error: String(err) });
+    }
+  });
+
+  // POST /api/scheduled/meta-capi-send — called by heartbeat every 10 min (offset 5 min)
+  // Picks up pending rows and sends them to Meta CAPI.
+  app.post("/api/scheduled/meta-capi-send", async (_req, res) => {
+    try {
+      const result = await capiSender();
+      res.json({ ok: true, ...result });
+    } catch (err) {
+      console.error("[MetaCAPI] CAPI sender error:", err);
+      res.status(500).json({ ok: false, error: String(err) });
+    }
   });
 
   // tRPC API

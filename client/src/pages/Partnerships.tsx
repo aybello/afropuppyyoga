@@ -40,7 +40,7 @@ const CATEGORIES = [
     type: "Brand Collaboration" as PartnershipType,
     icon: Sparkles,
     title: "Brand Collaboration",
-    tagline: "Align with Canada's #1 puppy yoga brand",
+    tagline: "Align with Ontario's #1 puppy yoga brand",
     description:
       "Partner with AfroPuppyYoga to reach a highly engaged wellness audience. We work with brands in pet care, apparel, food and beverage, wellness products, and lifestyle. Our audience is 80% women aged 22–40.",
     benefits: [
@@ -111,7 +111,7 @@ type FormState = {
 export default function Partnerships() {
   useSeoMeta({
     title: "Partner With AfroPuppyYoga | Corporate Wellness, Brand Collaborations & More",
-    description: "Partner with Canada's #1 puppy yoga studio. We offer corporate wellness sessions, brand collaborations, media partnerships, and local business cross-promotions across Ontario.",
+    description: "Partner with Ontario's #1 puppy yoga studio. We offer corporate wellness sessions, brand collaborations, media partnerships, and local business cross-promotions across Ontario.",
     canonical: "https://afropuppyyoga.ca/partnerships",
   });
   const [form, setForm] = useState<FormState>({

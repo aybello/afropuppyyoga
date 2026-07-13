@@ -9,6 +9,8 @@ import {
   revokeStaffInvite,
   updateStaffInvite,
   upsertUser,
+  getUserByOpenId,
+  getDb,
 } from "../db";
 import { sendStaffInviteEmail } from "../email";
 import { sdk } from "../_core/sdk";
@@ -171,6 +173,11 @@ export const staffRouter = router({
 
   /**
    * Owner-only: revoke a staff member's access.
+   *
+   * Phase 4 (security hardening): also demotes the user row from role='staff' to role='user'
+   * so existing session cookies are rejected on the next authenticateRequest call.
+   * The session token itself is still valid in the JWT sense, but getUserByOpenId will
+   * return a user with role='user', causing staffProcedure/requireStaffOrAdmin to reject them.
    */
   revokeStaff: protectedProcedure
     .input(z.object({ id: z.number() }))
@@ -178,7 +185,31 @@ export const staffRouter = router({
       if (ctx.user.role !== "admin") {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
+
+      // 1. Mark the invite as inactive (prevents future magic link logins)
       await revokeStaffInvite(input.id);
+
+      // 2. Look up the revoked invite's email to find the associated user row
+      const drizzleDb = await getDb();
+      if (drizzleDb) {
+        const { staffInvites } = await import("../../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const rows = await drizzleDb
+          .select({ email: staffInvites.email })
+          .from(staffInvites)
+          .where(eq(staffInvites.id, input.id))
+          .limit(1);
+
+        if (rows.length > 0) {
+          const staffOpenId = `staff:${rows[0].email}`;
+          const existingUser = await getUserByOpenId(staffOpenId);
+          if (existingUser && existingUser.role === "staff") {
+            // Demote to 'user' — existing session cookies will fail staffProcedure checks
+            await upsertUser({ openId: staffOpenId, role: "user" });
+          }
+        }
+      }
+
       return { success: true };
     }),
 });

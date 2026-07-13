@@ -176,7 +176,7 @@ function buildSigningEmail(opts: { applicantName: string; role: string; location
             <td style="background:#FFF0F5;padding:28px 32px 20px;text-align:center;border-bottom:1px solid #F8D7E3;">
               <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png" alt="AfroPuppyYoga" width="56" height="56" style="display:block;margin:0 auto 10px;border-radius:12px;" />
               <p style="margin:0;font-family:Georgia,serif;font-size:18px;font-weight:bold;color:#8B1A4A;letter-spacing:0.5px;">AfroPuppyYoga</p>
-              <p style="margin:4px 0 0;font-size:11px;color:#C47A9A;letter-spacing:2px;text-transform:uppercase;">Canada's #1 Puppy Yoga Studio</p>
+              <p style="margin:4px 0 0;font-size:11px;color:#C47A9A;letter-spacing:2px;text-transform:uppercase;">Ontario's #1 Puppy Yoga Studio</p>
             </td>
           </tr>
 
@@ -276,7 +276,7 @@ function buildSigningConfirmationEmail(opts: { applicantName: string; role: stri
             <td style="background:#FFF0F5;padding:24px 32px 18px;text-align:center;border-bottom:1px solid #F8D7E3;">
               <img src="${APY_LOGO}" alt="AfroPuppyYoga" width="52" height="52" style="display:block;margin:0 auto 8px;border-radius:12px;" />
               <p style="margin:0;font-family:Georgia,serif;font-size:17px;font-weight:bold;color:#8B1A4A;letter-spacing:0.5px;">AfroPuppyYoga</p>
-              <p style="margin:3px 0 0;font-size:10px;color:#C47A9A;letter-spacing:2px;text-transform:uppercase;">Canada's #1 Puppy Yoga Studio</p>
+              <p style="margin:3px 0 0;font-size:10px;color:#C47A9A;letter-spacing:2px;text-transform:uppercase;">Ontario's #1 Puppy Yoga Studio</p>
             </td>
           </tr>
           <tr>

@@ -1,10 +1,11 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { lazy, Suspense } from "react";
-import { Route, Switch } from "wouter";
+import { lazy, Suspense, useEffect } from "react";
+import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { Loader2 } from "lucide-react";
+import { useMetaPixel } from "./hooks/useMetaPixel";
 
 // Lazy load all pages so each page only loads its own code on demand
 const Home = lazy(() => import("./pages/Home"));
@@ -31,6 +32,11 @@ const RefundTracker = lazy(() => import("./pages/RefundTracker"));
 const BreederAvailability = lazy(() => import("./pages/BreederAvailability"));
 const PuppySchedule = lazy(() => import("./pages/PuppySchedule"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Kitchener = lazy(() => import("./pages/Kitchener"));
+const Hamilton = lazy(() => import("./pages/Hamilton"));
+const Oakville = lazy(() => import("./pages/Oakville"));
+const Corporate = lazy(() => import("./pages/Corporate"));
+const PrivatePuppyYogaEvents = lazy(() => import("./pages/PrivatePuppyYogaEvents"));
 
 function PageLoader() {
   return (
@@ -40,9 +46,20 @@ function PageLoader() {
   );
 }
 
+function PixelPageView() {
+  const { track } = useMetaPixel();
+  const [location] = useLocation();
+  useEffect(() => {
+    // Fire PageView on every client-side route change
+    track("PageView");
+  }, [location, track]);
+  return null;
+}
+
 function Router() {
   return (
     <Suspense fallback={<PageLoader />}>
+      <PixelPageView />
       <Switch>
         <Route path={"/"} component={Home} />
         <Route path={"/predictor"} component={FillRatePredictor} />
@@ -67,6 +84,16 @@ function Router() {
         <Route path="/breeder-availability" component={BreederAvailability} />
         <Route path="/loyalty" component={Loyalty} />
         <Route path="/ethics" component={Ethics} />
+        {/* City SEO pages — plan-specified slugs */}
+        <Route path="/puppy-yoga-kitchener" component={Kitchener} />
+        <Route path="/puppy-yoga-hamilton" component={Hamilton} />
+        <Route path="/puppy-yoga-oakville" component={Oakville} />
+        {/* Legacy redirects — old slugs forward to new SEO slugs */}
+        <Route path="/kitchener">{() => { window.location.replace("/puppy-yoga-kitchener"); return null; }}</Route>
+        <Route path="/hamilton">{() => { window.location.replace("/puppy-yoga-hamilton"); return null; }}</Route>
+        <Route path="/oakville">{() => { window.location.replace("/puppy-yoga-oakville"); return null; }}</Route>
+        <Route path="/corporate-puppy-yoga" component={Corporate} />
+        <Route path="/private-puppy-yoga-events" component={PrivatePuppyYogaEvents} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>

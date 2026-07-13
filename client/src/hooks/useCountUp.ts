@@ -5,9 +5,9 @@ export function useCountUp(end: number, duration = 2000, startOnView = true) {
   const [hasStarted, setHasStarted] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  // For small numbers, multiply duration so each step is clearly visible.
-  // e.g. end=3 → 3 * 600 = 1800ms, similar feel to large counters.
-  const effectiveDuration = end <= 20 ? Math.max(duration, end * 600) : duration;
+  // For small numbers, use a shorter duration so the counter snaps quickly.
+  // e.g. end=3 → 600ms total, feels snappy and doesn't linger on 0.
+  const effectiveDuration = end <= 20 ? Math.min(duration, end * 200) : duration;
 
   useEffect(() => {
     if (!startOnView) {
@@ -21,7 +21,7 @@ export function useCountUp(end: number, duration = 2000, startOnView = true) {
           setHasStarted(true);
         }
       },
-      { threshold: 0.3 }
+      { threshold: 0.1 }
     );
 
     if (ref.current) observer.observe(ref.current);

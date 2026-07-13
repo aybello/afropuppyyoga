@@ -23,6 +23,10 @@ const primaryLinks = [
 const loyaltyLink = { label: "🐾 Rewards", href: "/loyalty", isPage: true };
 
 const moreLinks = [
+  { label: "📍 Kitchener", href: "/puppy-yoga-kitchener", isPage: true },
+  { label: "📍 Hamilton", href: "/puppy-yoga-hamilton", isPage: true },
+  { label: "📍 Oakville", href: "/puppy-yoga-oakville", isPage: true },
+  { label: "🏢 Corporate Events", href: "/corporate-puppy-yoga", isPage: true },
   { label: "🎂 Birthday Packages", href: "/birthday", isPage: true },
   { label: "🤝 Partnerships", href: "/partnerships", isPage: true },
   { label: "🐶 Private Event Quote", href: "/private-events/quote", isPage: true },
@@ -101,7 +105,7 @@ export default function Navbar() {
                   AfroPuppyYoga
                 </span>
                 <span className={`text-[10px] font-body tracking-widest uppercase transition-colors duration-300 ${scrolled || isSubPage ? "text-[#8B2252]" : "text-[#F2A0B8]"}`}>
-                  Canada's #1 Puppy Yoga
+                  Ontario's #1 Puppy Yoga
                 </span>
               </div>
             </a>

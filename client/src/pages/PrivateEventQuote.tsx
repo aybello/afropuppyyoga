@@ -48,7 +48,6 @@ const LUXURY_MIN = 2500;
 // Travel fees by city (one-way distance from KW studio)
 const TRAVEL_FEES: Record<string, number> = {
   kitchener: 0,
-  waterloo: 0,
   cambridge: 0,
   hamilton: 0,
   guelph: 75,
@@ -73,7 +72,6 @@ const EVENT_TYPES = [
 
 const LOCATIONS = [
   { value: "kitchener", label: "Kitchener (APY Studio)" },
-  { value: "waterloo", label: "Waterloo" },
   { value: "cambridge", label: "Cambridge" },
   { value: "guelph", label: "Guelph" },
   { value: "hamilton", label: "Hamilton (APY Studio)" },
@@ -111,7 +109,7 @@ function calculateQuote(
   }
 
   const breakdown: string[] = [];
-  breakdown.push(`Classic package (up to 20 guests, 60-min session, drinks & photos included): $${BASE_MIN}-$${BASE_MAX}`);
+  breakdown.push(`Classic package (up to 20 guests, 60-min session (40 min yoga + 20 min puppy play), drinks & photos included): $${BASE_MIN}-$${BASE_MAX}`);
   if (sessions === 2) {
     breakdown.push(`Second session for ${guests} guests: +$${SECOND_SESSION_MIN}-$${SECOND_SESSION_MAX}`);
   }
@@ -213,16 +211,17 @@ export default function PrivateEventQuote() {
       <section className="py-10 bg-white border-b border-[#F2A0B8]/20">
         <div className="container">
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {[
+              {[
               {
                 emoji: "\uD83D\uDC3E",
                 name: "Classic Experience",
                 price: "$1,200-$1,500",
+                bestFor: "Birthdays, girls' days & intimate private events",
                 desc: "Perfect for birthdays, girls' days & intimate wellness experiences.",
                 color: "border-[#8B2252]/30",
                 badge: "bg-[#8B2252]/10 text-[#8B2252]",
                 items: [
-                  { emoji: "\u2728", text: "60-min beginner-friendly Puppy Yoga session" },
+                  { emoji: "✨", text: "60-min session: 40 min guided yoga + 20 min puppy playtime" },
                   { emoji: "\uD83D\uDC36", text: "Puppies + dedicated puppy handlers" },
                   { emoji: "\uD83E\uDDD8", text: "Professional yoga instructor" },
                   { emoji: "\uD83D\uDCF8", text: "Group photo + puppy playtime" },
@@ -236,6 +235,7 @@ export default function PrivateEventQuote() {
                 emoji: "\u2728",
                 name: "Signature Experience",
                 price: "$1,500-$2,250",
+                bestFor: "Bachelorettes, elevated celebrations & premium content",
                 desc: "Our most popular - for bachelorettes, celebrations & elevated social experiences.",
                 color: "border-[#F2A0B8] ring-2 ring-[#F2A0B8]/30",
                 badge: "bg-[#F2A0B8]/20 text-[#8B2252]",
@@ -253,6 +253,7 @@ export default function PrivateEventQuote() {
                 emoji: "\uD83D\uDC8E",
                 name: "Luxury Experience",
                 price: "$2,500+",
+                bestFor: "Corporate wellness, brand activations & large groups",
                 desc: "For corporate events, large activations & fully customized luxury experiences.",
                 color: "border-[#8B2252]/30",
                 badge: "bg-[#1A0A12]/10 text-[#1A0A12]",
@@ -279,6 +280,10 @@ export default function PrivateEventQuote() {
                   {pkg.emoji} {pkg.name}
                 </div>
                 <div className="font-display text-2xl font-bold text-[#1A0A12] mb-1">{pkg.price}</div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#F2A0B8]/15 rounded-full mb-2">
+                  <span className="font-body text-[10px] font-bold text-[#8B2252] uppercase tracking-wide">Best for:</span>
+                  <span className="font-body text-[10px] text-[#3D1A2E]/70">{(pkg as any).bestFor}</span>
+                </div>
                 <p className="font-body text-[#3D1A2E]/55 text-xs mb-4 leading-relaxed">{pkg.desc}</p>
                 <ul className="space-y-2">
                   {pkg.items.map((item) => (
@@ -294,11 +299,27 @@ export default function PrivateEventQuote() {
           <p className="text-center font-body text-[#3D1A2E]/50 text-xs mt-4">
             * Prices shown are for studio location (KW). Travel fees apply for offsite events. Second session required for 21+ guests.
           </p>
+
+          {/* Corporate CTA */}
+          <div className="mt-8 max-w-2xl mx-auto bg-[#3D1A2E] rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+            <div className="text-3xl shrink-0">🏢</div>
+            <div className="flex-1">
+              <p className="font-display font-bold text-white text-lg mb-1">Planning a team wellness day?</p>
+              <p className="font-body text-white/60 text-sm">We work with HR teams, universities, law firms, tech companies & wellness committees across Ontario.</p>
+            </div>
+            <a
+              href="#quote-form"
+              onClick={(e) => { e.preventDefault(); document.querySelector('#quote-form')?.scrollIntoView({ behavior: 'smooth' }); }}
+              className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm rounded-full hover:bg-[#F2A0B8]/90 transition-colors whitespace-nowrap"
+            >
+              Request a Corporate Quote
+            </a>
+          </div>
         </div>
       </section>
 
       {/* Quote generator */}
-      <section className="py-16">
+      <section className="py-16" id="quote-form">
         <div className="container max-w-3xl">
           <AnimatePresence mode="wait">
             {step === "submitted" ? (
@@ -337,6 +358,16 @@ export default function PrivateEventQuote() {
                   <p className="font-body text-[#3D1A2E]/60">
                     Fill in the details below to see your estimated price range instantly.
                   </p>
+
+                  {/* What happens next */}
+                  <div className="mt-4 bg-[#F2A0B8]/10 border border-[#F2A0B8]/25 rounded-xl px-5 py-4 text-left">
+                    <p className="font-body text-xs font-bold text-[#8B2252] uppercase tracking-wider mb-2">What happens after you submit?</p>
+                    <ul className="space-y-1.5">
+                      <li className="flex items-start gap-2 font-body text-sm text-[#3D1A2E]/70"><span className="text-[#8B2252] font-bold shrink-0">1.</span> You'll receive a confirmation email right away.</li>
+                      <li className="flex items-start gap-2 font-body text-sm text-[#3D1A2E]/70"><span className="text-[#8B2252] font-bold shrink-0">2.</span> We'll follow up within 24–48 hours with a formal quote and availability.</li>
+                      <li className="flex items-start gap-2 font-body text-sm text-[#3D1A2E]/70"><span className="text-[#8B2252] font-bold shrink-0">3.</span> Final pricing depends on date, location, puppy availability, group size, and add-ons.</li>
+                    </ul>
+                  </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-8">

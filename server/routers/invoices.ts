@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { adminProcedure, staffProcedure, publicProcedure, router } from "../_core/trpc";
 import { invokeLLM } from "../_core/llm";
-import { createInvoice, deleteInvoice, getAllInvoices, updateInvoice } from "../db";
+import { createInvoice, deleteInvoice, getAllInvoices, updateInvoice } from "../db"; // getAllInvoices still used by list procedure
 
 function randomSuffix() {
   return Math.random().toString(36).substring(2, 10);
@@ -23,8 +23,10 @@ export const invoicesRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      // Create initial DB record (file already uploaded via /api/upload-invoice)
-      await createInvoice({
+      // Phase 7 (security hardening): createInvoice now returns the inserted row ID directly
+      // (via MySQL insertId), eliminating the race condition where getAllInvoices()[0] could
+      // return a different row inserted by a concurrent request.
+      const invoiceId = await createInvoice({
         fileUrl: input.fileUrl,
         fileKey: input.fileKey,
         originalFilename: input.filename,
@@ -32,16 +34,12 @@ export const invoicesRouter = router({
         status: "pending",
       });
 
-      // Get the inserted invoice id by fetching the latest
-      const allInvoices = await getAllInvoices();
-      const newInvoice = allInvoices[0]; // most recent
-
       // Run AI extraction asynchronously (fire and forget with error handling)
-      extractInvoiceData(newInvoice.id, input.fileUrl, null).catch((err) => {
-        console.error("[Invoice] Extraction failed for invoice", newInvoice.id, err);
+      extractInvoiceData(invoiceId, input.fileUrl, null).catch((err) => {
+        console.error("[Invoice] Extraction failed for invoice", invoiceId, err);
       });
 
-      return { success: true, invoiceId: newInvoice.id };
+      return { success: true, invoiceId };
     }),
 
   /**

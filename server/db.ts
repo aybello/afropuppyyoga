@@ -91,11 +91,16 @@ export async function getUserByOpenId(openId: string) {
 
 // TODO: add feature queries here as your schema grows.
 
-export async function createInvoice(data: InsertInvoice) {
+export async function createInvoice(data: InsertInvoice): Promise<number> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
+  // Phase 7 (security hardening): use insertId from MySQL result instead of fetching all rows
+  // to avoid the race condition where getAllInvoices()[0] could return a different concurrent insert.
   const result = await db.insert(invoices).values(data);
-  return result;
+  // Drizzle mysql2 driver returns [ResultSetHeader, ...] — insertId is on [0]
+  const insertId = (result as any)[0]?.insertId ?? null;
+  if (!insertId) throw new Error("Failed to retrieve inserted invoice ID");
+  return insertId as number;
 }
 
 export async function getAllInvoices() {
