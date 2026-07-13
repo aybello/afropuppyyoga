@@ -168,7 +168,12 @@ export default function Corporate() {
       {/* ── Hero ─────────────────────────────────────────────────── */}
       <section
         className="relative pt-28 pb-24 px-6 overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #1A0A12 0%, #3D1A2E 55%, #8B2252 100%)" }}
+        style={{
+          background: "linear-gradient(135deg, rgba(26,10,18,0.82) 0%, rgba(61,26,46,0.75) 55%, rgba(139,34,82,0.70) 100%)",
+          backgroundImage: `linear-gradient(135deg, rgba(26,10,18,0.82) 0%, rgba(61,26,46,0.75) 55%, rgba(139,34,82,0.70) 100%), url('/manus-storage/corporate_hero_95e52cfc.jpg')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
       >
         {/* subtle texture overlay */}
         <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }} />
