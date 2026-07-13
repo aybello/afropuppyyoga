@@ -34,14 +34,23 @@ describe("hashUserData", () => {
     expect(result.hashedLastName).toBe(sha256("doe"));
   });
 
-  it("normalises a 10-digit phone number", () => {
+  // Meta's matching spec hashes phones WITH the country code.
+  // "4165551234" and "14165551234" produce different digests; only the
+  // latter matches Meta's stored hashes for North American users.
+  it("adds country code 1 to a bare 10-digit NANP number", () => {
     const result = hashUserData({ phone: "416-555-1234" });
-    expect(result.hashedPhone).toBe(sha256("4165551234"));
+    expect(result.hashedPhone).toBe(sha256("14165551234"));
   });
 
-  it("strips leading 1 from 11-digit North American phone numbers", () => {
+  it("keeps the country code on 11-digit North American numbers", () => {
     const result = hashUserData({ phone: "+1 416 555 1234" });
-    expect(result.hashedPhone).toBe(sha256("4165551234"));
+    expect(result.hashedPhone).toBe(sha256("14165551234"));
+  });
+
+  it("hashes 10-digit and +1-prefixed forms of the same number identically", () => {
+    const bare = hashUserData({ phone: "4165551234" });
+    const prefixed = hashUserData({ phone: "+1 (416) 555-1234" });
+    expect(bare.hashedPhone).toBe(prefixed.hashedPhone);
   });
 
   it("returns null for phone numbers shorter than 7 digits", () => {
@@ -77,7 +86,7 @@ describe("hashUserData", () => {
       lastName: "Bello",
     });
     expect(result.hashedEmail).toBe(sha256("ay@afropuppyyoga.ca"));
-    expect(result.hashedPhone).toBe(sha256("2895551234"));
+    expect(result.hashedPhone).toBe(sha256("12895551234"));
     expect(result.hashedFirstName).toBe(sha256("ay"));
     expect(result.hashedLastName).toBe(sha256("bello"));
   });

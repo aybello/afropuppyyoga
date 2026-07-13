@@ -30,15 +30,20 @@ function sha256(value: string | null | undefined): string | null {
 }
 
 /**
- * Normalise a phone number to E.164 digits-only (no +, no spaces, no dashes).
+ * Normalise a phone number to digits-only WITH country code, per Meta's
+ * customer-information matching spec (e.g. "14165551234", never "4165551234").
+ * Meta hashes phones including the country code; hashing without it produces
+ * a different digest and the phone signal silently never matches.
+ * 10-digit numbers are assumed North American and prefixed with "1".
  * Returns null if the result is fewer than 7 digits.
  */
 function normalisePhone(phone: string | null | undefined): string | null {
   if (!phone) return null;
   const digits = phone.replace(/\D/g, "");
-  // Strip leading country code 1 for North American numbers if 11 digits
-  const normalised = digits.length === 11 && digits.startsWith("1") ? digits.slice(1) : digits;
-  return normalised.length >= 7 ? normalised : null;
+  if (digits.length < 7) return null;
+  // Add NANP country code to bare 10-digit numbers; keep it if already present
+  const normalised = digits.length === 10 ? `1${digits}` : digits;
+  return normalised;
 }
 
 export function hashUserData(guest: {
@@ -78,13 +83,32 @@ interface LumaGuest {
   } | null;
 }
 
+/** Meta rejects Purchase events with event_time older than 7 days. */
+const META_EVENT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
 async function fetchLumaEvents(apiKey: string): Promise<LumaEvent[]> {
-  const res = await fetch("https://api.lu.ma/public/v1/calendar/list-events?pagination_limit=100", {
+  // Only fetch events starting within the last 7 days or in the future.
+  // Without this window, the first production run ingests the entire event
+  // history, and the sender then submits months-old purchases that Meta
+  // rejects one by one — burning every retry and filling the table with
+  // `failed` rows before the first real sale ever sends.
+  const after = new Date(Date.now() - META_EVENT_MAX_AGE_MS).toISOString();
+  const url = new URL("https://api.lu.ma/public/v1/calendar/list-events");
+  url.searchParams.set("pagination_limit", "100");
+  url.searchParams.set("after", after);
+
+  const res = await fetch(url.toString(), {
     headers: { "x-luma-api-key": apiKey },
   });
   if (!res.ok) throw new Error(`Luma list-events failed: ${res.status}`);
   const data = await res.json() as { entries: Array<{ id: string; name: string; start_at: string }> };
-  return data.entries ?? [];
+
+  // Defence in depth: re-filter locally in case the API ignores `after`.
+  const cutoff = Date.now() - META_EVENT_MAX_AGE_MS;
+  return (data.entries ?? []).filter(e => {
+    const startMs = Date.parse(e.start_at);
+    return Number.isNaN(startMs) ? false : startMs >= cutoff;
+  });
 }
 
 async function fetchLumaGuests(apiKey: string, eventId: string): Promise<LumaGuest[]> {
@@ -270,6 +294,18 @@ export async function capiSender(): Promise<{ sent: number; failed: number; skip
     if (row.hashedPhone) userData.ph = row.hashedPhone;
     if (row.hashedFirstName) userData.fn = row.hashedFirstName;
     if (row.hashedLastName) userData.ln = row.hashedLastName;
+
+    // Meta rejects event_time older than 7 days. A guest can pass the event
+    // window but still have registered weeks ago (early-bird ticket for an
+    // upcoming class). Mark those skipped instead of burning retries.
+    if (Date.now() - row.lumaRegisteredAt > META_EVENT_MAX_AGE_MS) {
+      await dbInst
+        .update(metaConversionEvents)
+        .set({ status: "skipped", lastError: "event_time older than Meta 7-day limit", updatedAt: new Date() })
+        .where(eq(metaConversionEvents.id, row.id));
+      skipped++;
+      continue;
+    }
 
     // Skip if we have no identity signals at all
     if (!userData.em && !userData.ph) {

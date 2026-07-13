@@ -357,3 +357,14 @@
 - [x] Phase 9: Fix structured data claims — updated ratingValue 4.6→4.9, price $35→$45, updated event dates
 - [x] Phase 10: GitHub Actions CI workflow — .github/workflows/ci.yml with frozen install, tsc, tests, build, audit
 - [x] All phases: 35/35 tests passing after all changes
+
+## CAPI Hardening Patch (Claude audit — Jul 13 2026)
+
+- [x] Remove /api/luma proxy (PII leak) — replaced with 410 tombstone, regression test added
+- [x] Fix phone hashing to Meta spec — country code now included (14165551234 not 4165551234)
+- [x] 7-day event window on Luma poller — prevents ingesting old history on first run
+- [x] 7-day guard in capiSender — marks early-bird registrations as skipped instead of failing
+- [x] Cron auth on scheduled job endpoints — x-manus-cron-task-uid + optional SCHEDULED_JOB_SECRET
+- [x] SCHEDULED_JOB_SECRET set in production secrets
+- [x] Heartbeat jobs registered: apy-luma-poll (every 10 min) + apy-meta-capi-send (offset 5 min)
+- [x] 38/38 tests passing after all changes

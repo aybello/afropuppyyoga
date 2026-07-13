@@ -9,11 +9,11 @@ import { serveStatic, setupVite } from "./vite";
 import { seoRenderMiddleware } from "../seoRenderer";
 import uploadRouter from "../uploadRoute";
 import chunkedUploadRouter from "../chunkedUploadRoute";
-import { createProxyMiddleware } from "http-proxy-middleware";
 import rateLimit from "express-rate-limit";
 import { storageGet } from "../storage";
 import { lumaPoller, capiSender } from "../metaCapi";
 import { requireStaffOrAdmin } from "./requireStaff";
+import crypto from "crypto";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -196,42 +196,17 @@ async function startServer() {
     }
   });
 
-  // Phase 1: Luma API proxy — requires staff/admin auth + rate limiting + allowlist
-  // SECURITY: auth gate added, restricted to read-only allowlist of safe Luma endpoints.
-  const LUMA_API_KEY = process.env.LUMA_API_KEY || "";
-  const LUMA_ALLOWED_PATHS = [
-    "/public/v1/calendar/list-events",
-    "/public/v1/event/get-guests",
-    "/public/v1/event/get",
-  ];
-  app.use(
-    "/api/luma",
-    requireStaffOrAdmin,
-    lumaProxyLimiter,
-    (req, res, next) => {
-      // Fail-safe: if LUMA_API_KEY is not configured, return 503 instead of forwarding without auth
-      if (!LUMA_API_KEY) {
-        return res.status(503).json({ error: "Luma integration not configured" });
-      }
-      const requestedPath = req.path;
-      const isAllowed = LUMA_ALLOWED_PATHS.some(allowed => requestedPath.startsWith(allowed));
-      if (!isAllowed) {
-        return res.status(403).json({ error: "Luma proxy: path not allowed" });
-      }
-      next();
-    },
-    createProxyMiddleware({
-      target: "https://api.lu.ma",
-      changeOrigin: true,
-      pathRewrite: { "^/api/luma": "" },
-      on: {
-        proxyReq: (proxyReq) => {
-          proxyReq.setHeader("x-luma-api-key", LUMA_API_KEY);
-          proxyReq.removeHeader("x-forwarded-host");
-        },
-      },
-    })
-  );
+  // /api/luma proxy REMOVED (2026-07-13).
+  // Even with a path allowlist, /public/v1/event/get-guests returns attendee
+  // names, emails, and phone numbers to unauthenticated callers. The endpoint
+  // has zero callers in the codebase — all server-side Luma access goes through
+  // server/metaCapi.ts, server-to-server, with the key never reachable from
+  // the public internet. Tombstone returns 410 so any unknown external caller
+  // fails loudly instead of falling through to the SPA.
+  // DO NOT re-add this proxy. See server/lumaProxyRemoved.test.ts.
+  app.use("/api/luma", (_req, res) => {
+    res.status(410).json({ error: "Gone. This endpoint has been removed." });
+  });
 
   // Keep-alive ping endpoint — called by scheduled heartbeat every 5 min to prevent cold starts
   app.get("/api/ping", (_req, res) => {
@@ -242,9 +217,32 @@ async function startServer() {
   });
 
   // ─── Meta CAPI Scheduled Jobs ─────────────────────────────────────────────
+  // The Manus platform gateway restricts /api/scheduled/* to cron callers only
+  // (it injects x-manus-cron-task-uid on every trigger). We validate that header
+  // is present as a defence-in-depth check. If SCHEDULED_JOB_SECRET is also set,
+  // we do a timing-safe comparison against x-scheduled-secret for extra hardening.
+  const requireCronAuth = (req: express.Request, res: express.Response): boolean => {
+    // Platform injects this header on every cron trigger — absent means not a cron call
+    const taskUid = req.get("x-manus-cron-task-uid");
+    if (!taskUid) {
+      // Also accept calls with a valid SCHEDULED_JOB_SECRET (for local dev / manual triggers)
+      const secret = process.env.SCHEDULED_JOB_SECRET;
+      if (secret) {
+        const provided = req.get("x-scheduled-secret") ?? "";
+        const a = Buffer.from(provided);
+        const b = Buffer.from(secret);
+        if (a.length === b.length && crypto.timingSafeEqual(a, b)) return true;
+      }
+      res.status(401).json({ ok: false, error: "Unauthorized" });
+      return false;
+    }
+    return true;
+  };
+
   // POST /api/scheduled/luma-poll — called by heartbeat every 10 min
-  // Polls all Luma events and inserts new paid guest registrations as pending rows.
-  app.post("/api/scheduled/luma-poll", async (_req, res) => {
+  // Polls recent/upcoming Luma events and inserts new paid registrations as pending rows.
+  app.post("/api/scheduled/luma-poll", async (req, res) => {
+    if (!requireCronAuth(req, res)) return;
     try {
       const result = await lumaPoller();
       res.json({ ok: true, ...result });
@@ -256,7 +254,8 @@ async function startServer() {
 
   // POST /api/scheduled/meta-capi-send — called by heartbeat every 10 min (offset 5 min)
   // Picks up pending rows and sends them to Meta CAPI.
-  app.post("/api/scheduled/meta-capi-send", async (_req, res) => {
+  app.post("/api/scheduled/meta-capi-send", async (req, res) => {
+    if (!requireCronAuth(req, res)) return;
     try {
       const result = await capiSender();
       res.json({ ok: true, ...result });
