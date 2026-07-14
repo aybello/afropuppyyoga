@@ -193,11 +193,12 @@ router.post("/api/upload-resume", (req: any, res: any, next: any) => {
 
 /**
  * POST /api/upload-invoice
- * Requires staff/admin auth — invoices contain financial data.
+ * Public — staff submit invoices without a Manus account.
+ * Security: rate limited, PDF magic-bytes check, cryptographically random storage key.
  * Accepts multipart/form-data with a single "invoice" field (PDF only, max 16MB).
  * Uploads to S3 and returns { url, key, filename }.
  */
-router.post("/api/upload-invoice", requireStaffOrAdmin, (req: any, res: any, next: any) => {
+router.post("/api/upload-invoice", (req: any, res: any, next: any) => {
   invoiceUpload.single("invoice")(req, res, (err) => {
     if (err) return handleMulterError(err, req, res, next);
     next();
