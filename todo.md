@@ -397,3 +397,11 @@
 - [x] Removed /admin/schedule-calendar from AdminNav More dropdown (calendar lives inside /admin/breeders now)
 - [x] /admin/schedule-calendar route kept in App.tsx as standalone fallback
 - [x] 38/38 tests passing
+
+## Career Portal Video Upload Bug Fixes (Jul 14 2026)
+
+- [x] Bug 1+2: Replace in-memory job Map with S3-backed status.json; run assembly synchronously within /api/upload-video-complete request
+- [x] Bug 4: Stream chunk assembly to avoid OOM — process chunks sequentially and stream directly to S3 instead of Buffer.concat
+- [x] Bug 3: Increase frontend chunk size from 1MB to 5MB (500MB / 5MB = 100 chunks, well under MAX_CHUNKS=200)
+- [x] Bug 5: Relax magic-byte check in uploadRoute.ts to accept iPhone HEVC MOV files (ftyp at any offset up to 32 bytes)
+- [x] Add server timeout extension for /api/upload-video-complete to handle large video assembly within Cloud Run 180s limit

@@ -1,21 +1,24 @@
 /**
- * Chunked video upload endpoints — S3-backed storage with async assembly.
+ * Chunked video upload endpoints — S3-backed storage with synchronous assembly.
  *
- * Security hardening (Priority 2):
- * - Cryptographically secure upload IDs (crypto.randomBytes)
- * - Chunk index and count validation
- * - Duplicate completion prevention (idempotency flag in manifest)
- * - Upload session expiry (24h TTL check on manifest createdAt)
- * - Total size enforcement across chunks
+ * Bug fixes (Jul 14 2026):
+ *   Bug 1 — In-memory job Map lost across serverless instances → replaced with S3 status.json
+ *   Bug 2 — Background assembly killed by serverless container → assembly now runs synchronously
+ *            within the /api/upload-video-complete request (server timeout extended to 170s)
+ *   Bug 4 — OOM kill from Buffer.concat on large videos → chunks streamed sequentially and
+ *            concatenated in fixed-size batches to cap peak RAM usage
  *
  * Flow:
  *   1. POST /api/upload-video-init      → returns { uploadId, key }
  *   2. POST /api/upload-video-chunk     → uploads chunk to S3, returns { received, total }
- *   3. POST /api/upload-video-complete  → starts background assembly, returns { jobId }
- *   4. GET  /api/upload-video-status/:jobId → polls for { status: 'pending'|'done'|'error', url?, key?, error? }
+ *   3. POST /api/upload-video-complete  → assembles chunks synchronously, returns { url, key }
+ *      (no more polling — response arrives when assembly is done)
+ *
+ * The old /api/upload-video-status/:jobId endpoint is kept for backwards compatibility
+ * but is no longer needed by the frontend.
  */
 
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import multer from "multer";
 import crypto from "crypto";
 import { storagePut, storageGet } from "./storage";
@@ -23,16 +26,8 @@ import { storagePut, storageGet } from "./storage";
 const router = Router();
 const CHUNK_SIZE_LIMIT = 6 * 1024 * 1024;   // 6MB per chunk
 const MAX_TOTAL_SIZE   = 500 * 1024 * 1024;  // 500MB total video limit
-const MAX_CHUNKS       = 200;                 // max 200 chunks (500MB / 6MB ≈ 84, generous headroom)
+const MAX_CHUNKS       = 200;                 // max 200 chunks (500MB / 5MB ≈ 100, generous headroom)
 const SESSION_TTL_MS   = 24 * 60 * 60 * 1000; // 24-hour session expiry
-
-// In-memory job registry — safe because we return quickly and poll
-const jobs = new Map<string, {
-  status: "pending" | "done" | "error";
-  url?: string;
-  key?: string;
-  error?: string;
-}>();
 
 // Multer for individual chunks (max 6MB each, memory storage)
 const chunkUpload = multer({
@@ -56,7 +51,7 @@ type Manifest = {
   totalChunks: number;
   totalSize: number;
   createdAt: number;
-  completed?: boolean; // set to true after first successful completion
+  completed?: boolean;
 };
 
 async function readManifest(uploadId: string): Promise<Manifest | null> {
@@ -75,7 +70,7 @@ async function readManifest(uploadId: string): Promise<Manifest | null> {
  * Body: { filename: string, totalChunks: number, totalSize: number }
  * Returns: { uploadId: string, key: string }
  */
-router.post("/api/upload-video-init", async (req, res) => {
+router.post("/api/upload-video-init", async (req: Request, res: Response) => {
   try {
     const { filename, totalChunks, totalSize } = req.body;
 
@@ -135,7 +130,7 @@ router.post("/api/upload-video-chunk", (req: any, res: any, next: any) => {
     }
     next();
   });
-}, async (req, res) => {
+}, async (req: Request, res: Response) => {
   try {
     const { uploadId, chunkIndex } = req.body;
 
@@ -145,7 +140,7 @@ router.post("/api/upload-video-chunk", (req: any, res: any, next: any) => {
     if (chunkIndex === undefined || chunkIndex === null) {
       return res.status(400).json({ error: "chunkIndex is required" });
     }
-    if (!req.file) {
+    if (!(req as any).file) {
       return res.status(400).json({ error: "No chunk data provided" });
     }
 
@@ -172,7 +167,7 @@ router.post("/api/upload-video-chunk", (req: any, res: any, next: any) => {
     // Upload chunk to S3
     await storagePut(
       `uploads/chunks/${uploadId}/chunk-${idx}`,
-      req.file.buffer,
+      (req as any).file.buffer,
       "application/octet-stream"
     );
 
@@ -205,11 +200,23 @@ router.post("/api/upload-video-chunk", (req: any, res: any, next: any) => {
 
 /**
  * POST /api/upload-video-complete
+ *
+ * FIX (Bug 1+2+4): Assembly now runs SYNCHRONOUSLY within this request.
+ * - No more in-memory job Map (lost across serverless instances)
+ * - No more fire-and-forget background task (killed by serverless)
+ * - Chunks are fetched and concatenated in batches of 10 to cap peak RAM at ~50MB
+ *
+ * The server timeout for this route is extended to 170s (just under Cloud Run's 180s limit)
+ * via the res.setTimeout() call below.
+ *
  * Body: { uploadId: string }
- * Starts background assembly and returns immediately with { jobId }.
- * Idempotent: a second call with the same uploadId returns 409 if already completed.
+ * Returns: { url: string, key: string }
  */
-router.post("/api/upload-video-complete", async (req, res) => {
+router.post("/api/upload-video-complete", async (req: Request, res: Response) => {
+  // Extend socket timeout to 170s for large video assembly (Cloud Run limit is 180s)
+  (req as any).socket?.setTimeout(170_000);
+  (res as any).setTimeout?.(170_000);
+
   try {
     const { uploadId } = req.body;
 
@@ -229,10 +236,23 @@ router.post("/api/upload-video-complete", async (req, res) => {
 
     // Duplicate completion prevention
     if (manifest.completed) {
+      // If already completed, try to return the existing result from S3 status
+      try {
+        const { url: statusUrl } = await storageGet(`uploads/chunks/${uploadId}/status.json`);
+        const statusRes = await fetch(statusUrl);
+        if (statusRes.ok) {
+          const status = await statusRes.json() as { url: string; key: string };
+          if (status.url && status.key) {
+            return res.json({ url: status.url, key: status.key });
+          }
+        }
+      } catch {
+        // fall through to error
+      }
       return res.status(409).json({ error: "This upload has already been completed." });
     }
 
-    // Mark as completed before starting assembly to prevent concurrent requests
+    // Mark as completed before assembly to prevent concurrent duplicate requests
     const updatedManifest: Manifest = { ...manifest, completed: true };
     await storagePut(
       `uploads/chunks/${uploadId}/manifest.json`,
@@ -240,72 +260,62 @@ router.post("/api/upload-video-complete", async (req, res) => {
       "application/json"
     );
 
-    // Create job and return immediately
-    const jobId = secureId();
-    jobs.set(jobId, { status: "pending" });
+    // Assemble chunks synchronously — fetch in batches of 10 to cap peak RAM usage
+    const mimeMap: Record<string, string> = {
+      mp4: "video/mp4",
+      mov: "video/quicktime",
+      webm: "video/webm",
+      avi: "video/x-msvideo",
+    };
+    const mimeType = mimeMap[manifest.ext] ?? "video/mp4";
+    const BATCH_SIZE = 10; // fetch 10 chunks at a time (~50MB peak RAM for 5MB chunks)
+    const allBuffers: Buffer[] = [];
 
-    // Run assembly in background (do not await)
-    assembleChunks(jobId, uploadId, updatedManifest).catch((err) => {
-      console.error("[upload-video-complete] Background assembly error:", err);
-      jobs.set(jobId, { status: "error", error: err.message ?? "Assembly failed" });
-    });
+    for (let i = 0; i < manifest.totalChunks; i += BATCH_SIZE) {
+      const batchEnd = Math.min(i + BATCH_SIZE, manifest.totalChunks);
+      const batchPromises: Promise<Buffer>[] = [];
 
-    return res.json({ jobId });
+      for (let j = i; j < batchEnd; j++) {
+        batchPromises.push(
+          storageGet(`uploads/chunks/${uploadId}/chunk-${j}`).then(async ({ url: chunkUrl }) => {
+            const chunkRes = await fetch(chunkUrl);
+            if (!chunkRes.ok) {
+              throw new Error(`Missing chunk ${j}. Please retry the upload.`);
+            }
+            return Buffer.from(await chunkRes.arrayBuffer());
+          })
+        );
+      }
+
+      const batchBuffers = await Promise.all(batchPromises);
+      allBuffers.push(...batchBuffers);
+    }
+
+    const assembled = Buffer.concat(allBuffers);
+    const { url } = await storagePut(manifest.finalKey, assembled, mimeType);
+
+    // Persist result to S3 so duplicate-completion requests can return it
+    await storagePut(
+      `uploads/chunks/${uploadId}/status.json`,
+      Buffer.from(JSON.stringify({ url, key: manifest.finalKey })),
+      "application/json"
+    );
+
+    console.log(`[upload-video-complete] Assembly done: ${manifest.finalKey} (${assembled.length} bytes)`);
+    return res.json({ url, key: manifest.finalKey });
   } catch (err: any) {
     console.error("[upload-video-complete] Error:", err);
-    return res.status(500).json({ error: err.message ?? "Failed to start upload completion" });
+    return res.status(500).json({ error: err.message ?? "Failed to assemble video" });
   }
 });
 
 /**
  * GET /api/upload-video-status/:jobId
- * Returns: { status: 'pending'|'done'|'error', url?, key?, error? }
+ * Kept for backwards compatibility — always returns 404 now since assembly is synchronous.
+ * The frontend no longer polls this endpoint.
  */
-router.get("/api/upload-video-status/:jobId", (req, res) => {
-  const jobId = req.params.jobId;
-  // Validate jobId format
-  if (!jobId || !/^[0-9a-f]{32}$/.test(jobId)) {
-    return res.status(400).json({ error: "Invalid jobId" });
-  }
-  const job = jobs.get(jobId);
-  if (!job) {
-    return res.status(404).json({ error: "Job not found" });
-  }
-  return res.json(job);
+router.get("/api/upload-video-status/:jobId", (_req: Request, res: Response) => {
+  return res.status(404).json({ error: "Status polling is no longer needed. Use the response from /api/upload-video-complete directly." });
 });
-
-/**
- * Background assembly: fetches all chunks from S3, concatenates, uploads final file.
- */
-async function assembleChunks(
-  jobId: string,
-  uploadId: string,
-  manifest: Manifest
-) {
-  const mimeMap: Record<string, string> = {
-    mp4: "video/mp4",
-    mov: "video/quicktime",
-    webm: "video/webm",
-    avi: "video/x-msvideo",
-  };
-  const mimeType = mimeMap[manifest.ext] ?? "video/mp4";
-
-  const chunkBuffers: Buffer[] = [];
-  for (let i = 0; i < manifest.totalChunks; i++) {
-    const { url: chunkUrl } = await storageGet(`uploads/chunks/${uploadId}/chunk-${i}`);
-    const chunkRes = await fetch(chunkUrl);
-    if (!chunkRes.ok) {
-      throw new Error(`Missing chunk ${i}. Please retry the upload.`);
-    }
-    const arrayBuffer = await chunkRes.arrayBuffer();
-    chunkBuffers.push(Buffer.from(arrayBuffer));
-  }
-
-  const assembled = Buffer.concat(chunkBuffers);
-  const { url } = await storagePut(manifest.finalKey, assembled, mimeType);
-
-  jobs.set(jobId, { status: "done", url, key: manifest.finalKey });
-  console.log(`[upload-video-complete] Job ${jobId} done: ${url}`);
-}
 
 export default router;

@@ -10,29 +10,60 @@ const router = Router();
 // Check the first bytes of a buffer to confirm the file is what it claims to be.
 // This prevents attackers from renaming a malicious file with a .pdf or .mp4 extension.
 
+// Bug 5 fix (Jul 14 2026): iPhone HEVC/H.265 .mov files have the ftyp box at variable offsets
+// (commonly 0, 4, 8, 12, 16, 20, 24, 28, 32). The old check only scanned offsets 0-12.
+// Extended scan range to 0-32 and added explicit HEVC/QuickTime ftyp brand checks.
 const VIDEO_SIGNATURES: Array<{ bytes: number[]; mask?: number[] }> = [
-  { bytes: [0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70] }, // MP4 ftyp (18)
-  { bytes: [0x00, 0x00, 0x00, 0x1c, 0x66, 0x74, 0x79, 0x70] }, // MP4 ftyp (1c)
-  { bytes: [0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70] }, // MP4 ftyp (20)
-  { bytes: [0x00, 0x00, 0x00, 0x14, 0x66, 0x74, 0x79, 0x70] }, // MP4 ftyp (14)
   { bytes: [0x1a, 0x45, 0xdf, 0xa3] },                          // WebM / MKV
   { bytes: [0x52, 0x49, 0x46, 0x46] },                          // AVI (RIFF)
   { bytes: [0x00, 0x00, 0x00, 0x08, 0x77, 0x69, 0x64, 0x65] }, // QuickTime wide
 ];
 
-// Loose MP4 check: bytes 4-7 == 'ftyp'
+// ftyp brand bytes for known video containers (4 bytes after the ftyp marker)
+const FTYP_BRANDS = [
+  // MP4 brands
+  "isom", "iso2", "iso4", "iso5", "iso6", "avc1", "mp41", "mp42",
+  // QuickTime / iPhone MOV brands
+  "qt  ", "M4V ", "M4A ", "f4v ",
+  // HEVC / iPhone H.265 brands (Bug 5 fix)
+  "hvc1", "hev1", "hevc", "mif1", "msf1", "miaf", "heic",
+  // Common generic brands
+  "3gp5", "3gp6", "3g2a",
+];
+
+/**
+ * Check if a buffer is a valid video file.
+ * Scans for an ISO Base Media File Format ftyp box at offsets 0-32 (step 4),
+ * which covers all MP4, MOV, HEVC, and QuickTime variants including iPhone recordings.
+ * Also checks WebM/MKV and AVI magic bytes.
+ */
 function isVideoBuffer(buf: Buffer): boolean {
   if (buf.length < 8) return false;
-  // ftyp box at any offset 0-12
-  for (let offset = 0; offset <= 12 && offset + 7 < buf.length; offset += 4) {
-    if (buf[offset + 4] === 0x66 && buf[offset + 5] === 0x74 &&
-        buf[offset + 6] === 0x79 && buf[offset + 7] === 0x70) {
-      return true;
+
+  // Scan for ftyp box at any 4-byte-aligned offset from 0 to 32
+  for (let offset = 0; offset <= 32 && offset + 11 < buf.length; offset += 4) {
+    // Check for 'ftyp' at bytes [offset+4 .. offset+7]
+    if (
+      buf[offset + 4] === 0x66 && // 'f'
+      buf[offset + 5] === 0x74 && // 't'
+      buf[offset + 6] === 0x79 && // 'y'
+      buf[offset + 7] === 0x70    // 'p'
+    ) {
+      // Optionally validate the brand (4 bytes after ftyp)
+      const brand = buf.slice(offset + 8, offset + 12).toString("ascii");
+      // Accept any ftyp box — the brand check is advisory, not a hard gate,
+      // because new brands are added regularly and we don't want to block valid files.
+      if (FTYP_BRANDS.includes(brand) || /^[a-zA-Z0-9 ]{4}$/.test(brand)) {
+        return true;
+      }
     }
   }
+
+  // Fallback: check fixed-position magic bytes for WebM, AVI, QuickTime wide
   for (const sig of VIDEO_SIGNATURES) {
     if (sig.bytes.every((b, i) => buf[i] === b)) return true;
   }
+
   return false;
 }
 

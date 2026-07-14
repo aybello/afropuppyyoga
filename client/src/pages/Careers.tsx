@@ -411,9 +411,11 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       });
     };
 
-    // Chunked upload for video — splits file into 1MB pieces to bypass hosting proxy body size limit
+    // Chunked upload for video — splits file into 5MB pieces
+    // Bug 3 fix: was 1MB → 500MB video = 500 chunks > MAX_CHUNKS=200 → init rejected
+    // Bug 1+2 fix: /api/upload-video-complete now assembles synchronously and returns { url, key } directly
     const uploadVideoChunked = async (file: File): Promise<{ url: string; key: string }> => {
-      const CHUNK_SIZE = 1 * 1024 * 1024; // 1MB per chunk (keeps each request under proxy timeout)
+      const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB per chunk → 500MB / 5MB = 100 chunks (well under 200)
       const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
       // 1. Initiate upload session
@@ -435,7 +437,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
         const end = Math.min(start + CHUNK_SIZE, file.size);
         const chunk = file.slice(start, end);
 
-        const pct = Math.round(((i + 1) / totalChunks) * 90); // reserve last 10% for assembly
+        const pct = Math.round(((i + 1) / totalChunks) * 85); // reserve last 15% for assembly
         setUploadProgress(pct);
         setUploadStatus(`Uploading video... ${pct}% (part ${i + 1} of ${totalChunks})`);
 
@@ -451,40 +453,26 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
         }
       }
 
-      // 3. Trigger background assembly — returns immediately with a jobId
-      setUploadProgress(95);
-      setUploadStatus("Processing video...");
+      // 3. Synchronous assembly — server assembles all chunks and returns { url, key } directly.
+      // No polling needed. The request may take up to 2 minutes for large files.
+      setUploadProgress(90);
+      setUploadStatus("Processing video... (this may take up to 2 minutes for large files)");
       const completeRes = await fetch("/api/upload-video-complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ uploadId }),
+        signal: AbortSignal.timeout(170_000), // 170s — matches server-side socket timeout
       });
       if (!completeRes.ok) {
         const err = await completeRes.json().catch(() => ({}));
-        throw new Error(err.error ?? "Failed to start video processing");
+        throw new Error(err.error ?? "Failed to process video. Please try again.");
       }
-      const { jobId } = await completeRes.json();
-
-      // 4. Poll for assembly result (up to 5 minutes)
-      const MAX_POLLS = 150; // 150 x 2s = 5 minutes
-      for (let poll = 0; poll < MAX_POLLS; poll++) {
-        await new Promise((r) => setTimeout(r, 2000));
-        const statusRes = await fetch(`/api/upload-video-status/${jobId}`);
-        if (!statusRes.ok) throw new Error("Failed to check video processing status");
-        const status = await statusRes.json();
-        if (status.status === "done") {
-          setUploadProgress(100);
-          return { url: status.url, key: status.key };
-        }
-        if (status.status === "error") {
-          throw new Error(status.error ?? "Video processing failed");
-        }
-        // Still pending — update progress indicator
-        const processPct = 95 + Math.min(4, Math.floor((poll / MAX_POLLS) * 5));
-        setUploadProgress(processPct);
-        setUploadStatus(`Processing video... (${poll + 1}s)`);
+      const result = await completeRes.json();
+      if (!result.url || !result.key) {
+        throw new Error("Video processing returned an unexpected response. Please try again.");
       }
-      throw new Error("Video processing timed out. Please try again.");
+      setUploadProgress(100);
+      return { url: result.url, key: result.key };
     };
 
     setIsUploading(true);
