@@ -378,3 +378,14 @@
 - [x] Priority 4: Meta CAPI token moved to Authorization header (not URL param), atomic row claiming (pending→processing→sent) prevents double-sends, 'processing' status added to DB enum
 - [x] Priority 5: Staff JWT TTL reduced from 1 year to 7 days
 - [x] 38/38 tests passing after all changes
+
+## Weekend Scheduling Calendar (Breeder Tool — Jul 14 2026)
+
+- [ ] DB schema: class_schedule table (id, date, location, startTime, breederId, notes, type: regular/private, createdAt)
+- [ ] Migration: generate and apply to production
+- [ ] tRPC procedures: listByMonth, createSlot, updateSlot, deleteSlot (all staffProcedure)
+- [ ] Frontend: ScheduleCalendar page — month view, Sat/Sun highlighted, weekday private event slots
+- [ ] Add/edit modal: date, location dropdown (Kitchener/Hamilton/Oakville), time picker, breeder dropdown, notes
+- [ ] Location colour coding: Kitchener (pink), Hamilton (purple), Oakville (teal)
+- [ ] Wire into BreedersDashboard nav as "Schedule" tab
+- [ ] Tests for new tRPC procedures

@@ -422,6 +422,12 @@ export const puppySchedule = mysqlTable("puppySchedule", {
   breederId: int("breederId").notNull(),
   /** Breeder name snapshot for display without join */
   breederName: varchar("breederName", { length: 255 }).notNull(),
+  /** Start time in HH:MM 24h format e.g. "09:00" */
+  startTime: varchar("startTime", { length: 5 }).notNull().default("09:00"),
+  /** End time in HH:MM 24h format e.g. "15:00" */
+  endTime: varchar("endTime", { length: 5 }).notNull().default("15:00"),
+  /** Class type — regular weekend class or private event (can be any weekday) */
+  classType: mysqlEnum("classType", ["regular", "private"]).notNull().default("regular"),
   /** Optional notes e.g. number of puppies, special instructions */
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
