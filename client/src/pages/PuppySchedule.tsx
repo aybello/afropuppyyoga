@@ -51,9 +51,11 @@ const DAY_COLORS: Record<string, string> = {
   Sunday: "bg-green-50 text-green-700 border-green-200",
 };
 
+type DayOfWeek = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
+
 const EMPTY_FORM = {
   classDate: "",
-  dayOfWeek: "" as "Saturday" | "Sunday" | "",
+  dayOfWeek: "" as DayOfWeek | "",
   location: "" as Location | "",
   breed: "",
   breederId: 0,

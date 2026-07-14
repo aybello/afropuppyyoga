@@ -381,11 +381,11 @@
 
 ## Weekend Scheduling Calendar (Breeder Tool — Jul 14 2026)
 
-- [ ] DB schema: class_schedule table (id, date, location, startTime, breederId, notes, type: regular/private, createdAt)
-- [ ] Migration: generate and apply to production
-- [ ] tRPC procedures: listByMonth, createSlot, updateSlot, deleteSlot (all staffProcedure)
-- [ ] Frontend: ScheduleCalendar page — month view, Sat/Sun highlighted, weekday private event slots
-- [ ] Add/edit modal: date, location dropdown (Kitchener/Hamilton/Oakville), time picker, breeder dropdown, notes
-- [ ] Location colour coding: Kitchener (pink), Hamilton (purple), Oakville (teal)
-- [ ] Wire into BreedersDashboard nav as "Schedule" tab
-- [ ] Tests for new tRPC procedures
+- [x] DB schema: added startTime, endTime, classType columns to existing puppySchedule table
+- [x] Migration: ALTER TABLE applied to production DB (startTime, endTime, classType, dayOfWeek enum expanded to 7 days)
+- [x] tRPC procedures: listByMonth, createSlot, updateSlot, deleteSlot (all staffProcedure)
+- [x] Frontend: ScheduleCalendar page — month view, Sat/Sun highlighted, weekday private event slots
+- [x] Add/edit modal: date, location dropdown (Kitchener/Hamilton/Oakville), time picker, breeder dropdown, notes
+- [x] Location colour coding: Kitchener (pink), Hamilton (purple), Oakville (teal)
+- [x] Wire into AdminNav More dropdown as "Schedule Calendar" at /admin/schedule-calendar
+- [x] 38/38 tests passing after changes

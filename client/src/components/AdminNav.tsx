@@ -37,7 +37,7 @@ const MORE_ITEMS = [
   { href: "/admin/partnerships",   label: "Partnerships",    icon: Handshake,    adminOnly: false },
   { href: "/admin/private-events", label: "Private Events",  icon: Sparkles,     adminOnly: false },
   { href: "/admin/birthday",       label: "Birthday",        icon: Cake,         adminOnly: false },
-  { href: "/admin/puppy-schedule", label: "Puppy Schedule",  icon: CalendarDays, adminOnly: false },
+  { href: "/admin/schedule-calendar", label: "Schedule Calendar", icon: CalendarDays, adminOnly: false },
 ];
 
 export default function AdminNav() {

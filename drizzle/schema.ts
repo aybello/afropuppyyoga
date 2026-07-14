@@ -412,8 +412,8 @@ export const puppySchedule = mysqlTable("puppySchedule", {
   id: int("id").autoincrement().primaryKey(),
   /** ISO date string e.g. "2026-07-12" — must be a Saturday or Sunday */
   classDate: varchar("classDate", { length: 10 }).notNull(),
-  /** Day of week — enforced in app logic */
-  dayOfWeek: mysqlEnum("dayOfWeek", ["Saturday", "Sunday"]).notNull(),
+  /** Day of week — Saturday/Sunday for regular classes; any day for private events */
+  dayOfWeek: mysqlEnum("dayOfWeek", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]).notNull(),
   /** Location */
   location: mysqlEnum("schedLocation", ["Kitchener", "Hamilton", "Oakville"]).notNull(),
   /** Breed attending this class */
