@@ -34,7 +34,27 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   throw new Error(`No available port found starting from ${startPort}`);
 }
 
-// Chatbot rate limiter (kept — prevents AI cost abuse)
+// Form rate limiter — 200 submissions per IP per hour (blocks bots, invisible to real users)
+const formLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many submissions. Please try again later." },
+  skip: () => process.env.NODE_ENV === "development",
+});
+
+// Upload rate limiter — 100 uploads per IP per hour (blocks bots, invisible to real applicants)
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many upload requests. Please try again later." },
+  skip: () => process.env.NODE_ENV === "development",
+});
+
+// Chatbot rate limiter — prevents AI cost abuse
 const chatbotLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 30,
@@ -78,14 +98,25 @@ async function startServer() {
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
 
-  // Upload routes (no rate limiting — traffic volume doesn't warrant it yet)
+  // Upload rate limiters applied BEFORE Multer to prevent body-parsing DoS
+  app.use("/api/upload-video", uploadLimiter);
+  app.use("/api/upload-resume", uploadLimiter);
+  app.use("/api/upload-invoice", uploadLimiter);
+  app.use("/api/upload-video-init", uploadLimiter);
+  app.use("/api/upload-video-chunk", uploadLimiter);
+  app.use("/api/upload-video-complete", uploadLimiter);
 
   // Video upload endpoint (multipart, bypasses JSON body limit)
   app.use(uploadRouter);
   // Chunked video upload endpoints (for large files that exceed hosting body size limit)
   app.use(chunkedUploadRouter);
 
-  // Chatbot rate limiter only — prevents AI cost abuse
+  // Form rate limiters on public tRPC mutations
+  app.use("/api/trpc/careers.submitApplication", formLimiter);
+  app.use("/api/trpc/privateEvents.submitInquiry", formLimiter);
+  app.use("/api/trpc/birthday.submitInquiry", formLimiter);
+  app.use("/api/trpc/partnership.submitInquiry", formLimiter);
+  app.use("/api/trpc/invoices.submit", formLimiter);
   app.use("/api/trpc/chatbot.chat", chatbotLimiter);
 
   // Phase 2: Protect applicant media routes — only staff/admin can access these
