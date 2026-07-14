@@ -34,32 +34,13 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   throw new Error(`No available port found starting from ${startPort}`);
 }
 
-// Rate limiters
-const formLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // raised from 5 — was blocking all users in production due to shared load-balancer IP
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: "Too many submissions. Please try again in 15 minutes." },
-  skip: () => process.env.NODE_ENV === "development",
-});
-
+// Chatbot rate limiter (kept — prevents AI cost abuse)
 const chatbotLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 30,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Too many messages. Please try again in 15 minutes." },
-  skip: () => process.env.NODE_ENV === "development",
-});
-
-// Phase 3: Rate limiter for public upload endpoints (applied BEFORE Multer to prevent body-parsing DoS)
-const uploadLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // 10 upload initiations per IP per 15 min
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: "Too many upload requests. Please try again in 15 minutes." },
   skip: () => process.env.NODE_ENV === "development",
 });
 
@@ -97,29 +78,14 @@ async function startServer() {
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
 
-  // Phase 3 / Priority 2: Apply upload rate limiter BEFORE Multer on ALL upload endpoints
-  // This prevents body-parsing DoS — the limiter fires before any file data is read
-  app.use("/api/upload-video", uploadLimiter);
-  app.use("/api/upload-resume", uploadLimiter);
-  app.use("/api/upload-invoice", uploadLimiter);
-  app.use("/api/upload-video-init", uploadLimiter);
-  app.use("/api/upload-video-chunk", uploadLimiter);
-  app.use("/api/upload-video-complete", uploadLimiter);
+  // Upload routes (no rate limiting — traffic volume doesn't warrant it yet)
 
   // Video upload endpoint (multipart, bypasses JSON body limit)
   app.use(uploadRouter);
   // Chunked video upload endpoints (for large files that exceed hosting body size limit)
   app.use(chunkedUploadRouter);
 
-  // Apply form rate limiter to tRPC public mutations
-  // We target specific procedure paths to avoid limiting admin/auth calls
-  app.use("/api/trpc/careers.submitApplication", formLimiter);
-  app.use("/api/trpc/privateEvents.submitInquiry", formLimiter);
-  // Phase 6: Fixed procedure path — birthday uses submitInquiry not submit
-  app.use("/api/trpc/birthday.submitInquiry", formLimiter);
-  // Phase 6: Fixed procedure path — partnership uses submitInquiry not submit
-  app.use("/api/trpc/partnership.submitInquiry", formLimiter);
-  app.use("/api/trpc/invoices.submit", formLimiter);
+  // Chatbot rate limiter only — prevents AI cost abuse
   app.use("/api/trpc/chatbot.chat", chatbotLimiter);
 
   // Phase 2: Protect applicant media routes — only staff/admin can access these
