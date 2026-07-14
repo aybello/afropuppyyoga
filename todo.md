@@ -389,3 +389,11 @@
 - [x] Location colour coding: Kitchener (pink), Hamilton (purple), Oakville (teal)
 - [x] Wire into AdminNav More dropdown as "Schedule Calendar" at /admin/schedule-calendar
 - [x] 38/38 tests passing after changes
+
+## Move Schedule Calendar into Breeders Dashboard (Jul 14 2026)
+
+- [x] Replace the old inline schedule tab in BreedersDashboard with the new ScheduleCalendarPanel component
+- [x] BreedersDashboard tabs: Breeders | Schedule Calendar (removed old list-based schedule UI)
+- [x] Removed /admin/schedule-calendar from AdminNav More dropdown (calendar lives inside /admin/breeders now)
+- [x] /admin/schedule-calendar route kept in App.tsx as standalone fallback
+- [x] 38/38 tests passing

@@ -41,6 +41,7 @@ import {
   ChevronDown, ChevronUp, Send, Eye, History, MapPin, X, Clock,
   CalendarCheck, CheckCircle2, AlertCircle, Loader2, CalendarDays, Dog
 } from "lucide-react";
+import ScheduleCalendarPanel from "@/components/ScheduleCalendarPanel";
 
 type ContractStatus = "No contract yet" | "Contract sent" | "Contract completed";
 
@@ -105,50 +106,6 @@ function getUpcomingMonths() {
   return months;
 }
 
-// ─── Schedule constants ──────────────────────────────────────────────────────
-const SCHED_LOCATIONS = ["Kitchener", "Hamilton", "Oakville"] as const;
-type SchedLocation = typeof SCHED_LOCATIONS[number];
-const SCHED_LOCATION_COLORS: Record<SchedLocation, string> = {
-  Kitchener: "bg-pink-50 text-pink-700 border-pink-200",
-  Hamilton: "bg-purple-50 text-purple-700 border-purple-200",
-  Oakville: "bg-amber-50 text-amber-700 border-amber-200",
-};
-const SCHED_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
-type SchedDay = typeof SCHED_DAYS[number];
-const SCHED_DAY_COLORS: Record<string, string> = {
-  Monday:    "bg-slate-50 text-slate-700 border-slate-200",
-  Tuesday:   "bg-violet-50 text-violet-700 border-violet-200",
-  Wednesday: "bg-cyan-50 text-cyan-700 border-cyan-200",
-  Thursday:  "bg-orange-50 text-orange-700 border-orange-200",
-  Friday:    "bg-yellow-50 text-yellow-700 border-yellow-200",
-  Saturday:  "bg-blue-50 text-blue-700 border-blue-200",
-  Sunday:    "bg-green-50 text-green-700 border-green-200",
-};
-const SCHED_WEEKEND_DAYS = new Set(["Saturday", "Sunday"]);
-const EMPTY_SCHED_FORM = {
-  classDate: "",
-  dayOfWeek: "" as SchedDay | "",
-  location: "" as SchedLocation | "",
-  breed: "",
-  breederId: 0,
-  breederName: "",
-  notes: "",
-};
-/** Returns the next 84 days (all days) */
-function getUpcomingDays(): { date: string; label: string; day: SchedDay }[] {
-  const results: { date: string; label: string; day: SchedDay }[] = [];
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const DOW_NAMES: SchedDay[] = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  for (let i = 0; i < 84; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    const iso = d.toISOString().slice(0, 10);
-    const label = d.toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
-    results.push({ date: iso, label, day: DOW_NAMES[d.getDay()] });
-  }
-  return results;
-}
 
 export default function BreedersDashboard() {
   const utils = trpc.useUtils();
@@ -157,12 +114,6 @@ export default function BreedersDashboard() {
   const [activeView, setActiveView] = useState<"breeders" | "schedule">("breeders");
 
   // Schedule state
-  const weekends = useMemo(() => getUpcomingDays(), []);
-  const [schedForm, setSchedForm] = useState({ ...EMPTY_SCHED_FORM });
-  const [schedEditId, setSchedEditId] = useState<number | null>(null);
-  const [showSchedDialog, setShowSchedDialog] = useState(false);
-  const [schedDeleteId, setSchedDeleteId] = useState<number | null>(null);
-  const [filterSchedLocation, setFilterSchedLocation] = useState<string>("all");
 
   // Breeder list state
   const [search, setSearch] = useState("");
@@ -214,44 +165,7 @@ export default function BreedersDashboard() {
     { enabled: showAvailability !== null }
   );
 
-  // Schedule queries & mutations
-  const { data: schedules = [], isLoading: schedLoading } = trpc.puppySchedule.list.useQuery();
-  const schedCreateMutation = trpc.puppySchedule.create.useMutation({
-    onSuccess: () => { utils.puppySchedule.list.invalidate(); setShowSchedDialog(false); setSchedForm({ ...EMPTY_SCHED_FORM }); },
-    onError: (e: any) => alert(e.message),
-  });
-  const schedUpdateMutation = trpc.puppySchedule.update.useMutation({
-    onSuccess: () => { utils.puppySchedule.list.invalidate(); setShowSchedDialog(false); setSchedEditId(null); setSchedForm({ ...EMPTY_SCHED_FORM }); },
-    onError: (e: any) => alert(e.message),
-  });
-  const schedDeleteMutation = trpc.puppySchedule.delete.useMutation({
-    onSuccess: () => { utils.puppySchedule.list.invalidate(); setSchedDeleteId(null); },
-    onError: (e: any) => alert(e.message),
-  });
-
-  function openSchedAdd() { setSchedForm({ ...EMPTY_SCHED_FORM }); setSchedEditId(null); setShowSchedDialog(true); }
-  function openSchedEdit(s: any) {
-    setSchedForm({ classDate: s.classDate, dayOfWeek: s.dayOfWeek, location: s.location, breed: s.breed, breederId: s.breederId, breederName: s.breederName, notes: s.notes ?? "" });
-    setSchedEditId(s.id); setShowSchedDialog(true);
-  }
-  function handleSchedDateChange(dateStr: string) {
-    const w = weekends.find((w: { date: string; day: SchedDay }) => w.date === dateStr);
-    setSchedForm(f => ({ ...f, classDate: dateStr, dayOfWeek: w?.day ?? "" }));
-  }
-  function handleSchedBreederChange(breederId: string) {
-    const b = (breeders as any[]).find(b => b.id === Number(breederId));
-    setSchedForm(f => ({ ...f, breederId: Number(breederId), breederName: b?.name ?? "", breed: f.breed || b?.breed || "" }));
-  }
-  function handleSchedSubmit() {
-    if (!schedForm.classDate || !schedForm.dayOfWeek || !schedForm.location || !schedForm.breed || !schedForm.breederId) {
-      alert("Please fill in all required fields."); return;
-    }
-    const payload = { classDate: schedForm.classDate, dayOfWeek: schedForm.dayOfWeek as "Saturday" | "Sunday", location: schedForm.location as SchedLocation, breed: schedForm.breed, breederId: schedForm.breederId, breederName: schedForm.breederName, notes: schedForm.notes || undefined };
-    if (schedEditId !== null) schedUpdateMutation.mutate({ id: schedEditId, ...payload });
-    else schedCreateMutation.mutate(payload);
-  }
-
-  // Mutations
+    // Mutations
   const addMutation = trpc.breeders.add.useMutation({
     onSuccess: () => { utils.breeders.list.invalidate(); setShowAddModal(false); setForm({ ...EMPTY_FORM }); },
   });
@@ -442,7 +356,7 @@ export default function BreedersDashboard() {
                 : "text-[#6B4C3B] hover:text-[#C2185B]"
             }`}
           >
-            <CalendarDays size={15} /> Puppy Schedule
+            <CalendarDays size={15} /> Schedule Calendar
           </button>
         </div>
 
@@ -639,172 +553,13 @@ export default function BreedersDashboard() {
         </>
         )}
 
-        {/* ── Schedule View ──────────────────────────────────────────────────────── */}
+        {/* ── Schedule Calendar View ─────────────────────────────────────────────── */}
         {activeView === "schedule" && (
-        <>
-          {/* Schedule action button */}
-          <div className="flex items-center justify-between mb-4">
-            <p className="font-body text-sm text-[#6B4C3B]">Assign breeds and breeders to Saturday &amp; Sunday classes.</p>
-            <Button onClick={openSchedAdd} className="bg-[#C2185B] hover:bg-[#AD1457] text-white font-body font-semibold rounded-full px-5 gap-2">
-              <Plus size={15} /> Schedule Class
-            </Button>
-          </div>
-          {/* Schedule stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            {[
-              { label: "Total Scheduled", value: schedules.length },
-              { label: "Kitchener", value: schedules.filter((s: any) => s.location === "Kitchener").length },
-              { label: "Hamilton", value: schedules.filter((s: any) => s.location === "Hamilton").length },
-              { label: "Oakville", value: schedules.filter((s: any) => s.location === "Oakville").length },
-            ].map(({ label, value }) => (
-              <div key={label} className="bg-white rounded-xl border border-[#F0D0DC] p-4">
-                <div className="font-display text-2xl font-bold text-[#C2185B]">{value}</div>
-                <div className="font-body text-xs text-[#6B4C3B] mt-0.5">{label}</div>
-              </div>
-            ))}
-          </div>
-          {/* Location filter */}
-          <div className="flex gap-2 mb-6 flex-wrap">
-            {["all", ...SCHED_LOCATIONS].map(loc => (
-              <button key={loc} onClick={() => setFilterSchedLocation(loc)}
-                className={`px-4 py-1.5 rounded-full font-body text-sm font-semibold border transition-all ${
-                  filterSchedLocation === loc ? "bg-[#C2185B] text-white border-[#C2185B]" : "bg-white text-[#6B4C3B] border-[#F0D0DC] hover:border-[#C2185B]"
-                }`}>
-                {loc === "all" ? "All Locations" : loc}
-              </button>
-            ))}
-          </div>
-          {/* Schedule list */}
-          {schedLoading ? (
-            <div className="flex items-center justify-center py-20 text-[#6B4C3B]"><Loader2 className="animate-spin mr-2" size={20} /> Loading schedule...</div>
-          ) : (() => {
-            const filtered = filterSchedLocation === "all" ? schedules : schedules.filter((s: any) => s.location === filterSchedLocation);
-            const grouped = (filtered as any[]).reduce<Record<string, any[]>>((acc, s) => { if (!acc[s.classDate]) acc[s.classDate] = []; acc[s.classDate].push(s); return acc; }, {});
-            const sortedDates = Object.keys(grouped).sort();
-            return sortedDates.length === 0 ? (
-              <div className="text-center py-20 bg-white rounded-2xl border border-[#F0D0DC]">
-                <Dog size={48} className="mx-auto text-[#F0D0DC] mb-3" />
-                <p className="font-display text-lg text-[#1A0A12] font-semibold">No classes scheduled yet</p>
-                <p className="font-body text-sm text-[#6B4C3B] mt-1">Click "Schedule Class" to add your first entry.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {sortedDates.map(date => {
-                  const entries = grouped[date];
-                  const d = new Date(date + "T12:00:00");
-                  const dateLabel = d.toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
-                  const dayOfWeek = entries[0].dayOfWeek;
-                  return (
-                    <div key={date} className="bg-white rounded-2xl border border-[#F0D0DC] overflow-hidden">
-                      <div className="flex items-center gap-3 px-5 py-3 bg-[#FFF5F8] border-b border-[#F0D0DC]">
-                        <CalendarDays size={18} className="text-[#C2185B]" />
-                        <span className="font-display font-bold text-[#1A0A12] text-base">{dateLabel}</span>
-                        <Badge className={`text-xs font-body border ${SCHED_DAY_COLORS[dayOfWeek]}`}>{dayOfWeek}</Badge>
-                      </div>
-                      <div className="divide-y divide-[#F0D0DC]">
-                        {entries.map((s: any) => (
-                          <div key={s.id} className="flex items-start gap-4 px-5 py-4">
-                            <div className="w-9 h-9 rounded-full bg-[#FFF0F4] flex items-center justify-center shrink-0 mt-0.5">
-                              <PawPrint size={18} className="text-[#C2185B]" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap mb-1">
-                                <span className="font-body font-semibold text-[#1A0A12]">{s.breed}</span>
-                                <Badge className={`text-xs font-body border ${SCHED_LOCATION_COLORS[s.location as SchedLocation]}`}>
-                                  <MapPin size={10} className="mr-1" />{s.location}
-                                </Badge>
-                              </div>
-                              <div className="font-body text-sm text-[#6B4C3B]">Breeder: <span className="font-semibold text-[#1A0A12]">{s.breederName}</span></div>
-                              {s.notes && <div className="font-body text-xs text-[#9E7B6B] mt-1 italic">{s.notes}</div>}
-                            </div>
-                            <div className="flex gap-2 shrink-0">
-                              <button onClick={() => openSchedEdit(s)} className="p-1.5 rounded-lg hover:bg-[#FFF0F4] text-[#6B4C3B] hover:text-[#C2185B] transition-colors"><Pencil size={15} /></button>
-                              <button onClick={() => setSchedDeleteId(s.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-[#6B4C3B] hover:text-red-600 transition-colors"><Trash2 size={15} /></button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })()}
-        </>
+          <ScheduleCalendarPanel />
         )}
       </div>
 
-      {/* ── Schedule Add/Edit Dialog ──────────────────────────────────────────── */}
-      <Dialog open={showSchedDialog} onOpenChange={setShowSchedDialog}>
-        <DialogContent className="max-w-md bg-[#FEFAF4] border-[#F0D0DC]">
-          <DialogHeader>
-            <DialogTitle className="font-display text-xl text-[#1A0A12]">{schedEditId !== null ? "Edit Scheduled Class" : "Schedule a Class"}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div>
-              <Label className="font-body text-sm text-[#1A0A12] font-semibold">Class Date <span className="text-red-500">*</span></Label>
-              <Select value={schedForm.classDate} onValueChange={handleSchedDateChange}>
-                <SelectTrigger className="mt-1 border-[#F0D0DC] font-body text-sm"><SelectValue placeholder="Select a date" /></SelectTrigger>
-                <SelectContent className="max-h-64">
-                  {weekends.map((w: { date: string; label: string; day: SchedDay }) => (
-                    <SelectItem key={w.date} value={w.date}>
-                      <span className={`inline-block w-24 text-xs font-semibold mr-2 ${SCHED_WEEKEND_DAYS.has(w.day) ? "text-blue-600" : "text-gray-500"}`}>{w.day}</span>{w.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {schedForm.dayOfWeek && <p className="text-xs text-[#6B4C3B] mt-1 font-body">Day: <span className="font-semibold">{schedForm.dayOfWeek}</span></p>}
-            </div>
-            <div>
-              <Label className="font-body text-sm text-[#1A0A12] font-semibold">Location <span className="text-red-500">*</span></Label>
-              <Select value={schedForm.location} onValueChange={v => setSchedForm(f => ({ ...f, location: v as SchedLocation }))}>
-                <SelectTrigger className="mt-1 border-[#F0D0DC] font-body text-sm"><SelectValue placeholder="Select location" /></SelectTrigger>
-                <SelectContent>{SCHED_LOCATIONS.map(loc => <SelectItem key={loc} value={loc}>{loc}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="font-body text-sm text-[#1A0A12] font-semibold">Breeder <span className="text-red-500">*</span></Label>
-              <Select value={schedForm.breederId ? String(schedForm.breederId) : ""} onValueChange={handleSchedBreederChange}>
-                <SelectTrigger className="mt-1 border-[#F0D0DC] font-body text-sm"><SelectValue placeholder="Select breeder" /></SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {(breeders as any[]).filter(b => b.isActive === 1).map((b: any) => (
-                    <SelectItem key={b.id} value={String(b.id)}>{b.name}{b.breed ? ` — ${b.breed}` : ""}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="font-body text-sm text-[#1A0A12] font-semibold">Breed <span className="text-red-500">*</span></Label>
-              <Input className="mt-1 border-[#F0D0DC] font-body text-sm" placeholder="e.g. Golden Retriever, Cavapoo" value={schedForm.breed} onChange={e => setSchedForm(f => ({ ...f, breed: e.target.value }))} />
-              <p className="text-xs text-[#9E7B6B] mt-1 font-body">Auto-filled from breeder profile — edit if different.</p>
-            </div>
-            <div>
-              <Label className="font-body text-sm text-[#1A0A12] font-semibold">Notes <span className="text-[#9E7B6B] font-normal">(optional)</span></Label>
-              <Textarea className="mt-1 border-[#F0D0DC] font-body text-sm resize-none" placeholder="e.g. 4 puppies, drop-off at 9:30 AM" rows={2} value={schedForm.notes} onChange={e => setSchedForm(f => ({ ...f, notes: e.target.value }))} />
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowSchedDialog(false)} className="font-body border-[#F0D0DC]">Cancel</Button>
-            <Button onClick={handleSchedSubmit} disabled={schedCreateMutation.isPending || schedUpdateMutation.isPending} className="bg-[#C2185B] hover:bg-[#AD1457] text-white font-body font-semibold rounded-full px-6">
-              {(schedCreateMutation.isPending || schedUpdateMutation.isPending) && <Loader2 size={14} className="animate-spin mr-2" />}
-              {schedEditId !== null ? "Save Changes" : "Schedule Class"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      {/* ── Schedule Delete Confirmation ──────────────────────────────────────── */}
-      <AlertDialog open={schedDeleteId !== null} onOpenChange={open => !open && setSchedDeleteId(null)}>
-        <AlertDialogContent className="bg-[#FEFAF4] border-[#F0D0DC]">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-[#1A0A12]">Remove from schedule?</AlertDialogTitle>
-            <AlertDialogDescription className="font-body text-[#6B4C3B]">This will remove this class entry. This cannot be undone.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="font-body border-[#F0D0DC]">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => schedDeleteId !== null && schedDeleteMutation.mutate({ id: schedDeleteId })} className="bg-red-600 hover:bg-red-700 text-white font-body">Remove</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+
 
       {/* ── Availability Blast Modal ──────────────────────────────────────────── */}
       <Dialog open={showBlastModal} onOpenChange={(open) => { if (!open) { setShowBlastModal(false); setBlastResult(null); } }}>
