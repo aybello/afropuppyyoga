@@ -415,9 +415,14 @@
 
 ## Breeder Calendar Enhancements (Jul 15 2026)
 
-- [ ] Notify Breeder button on each slot chip — fires confirmation email with date, time, location pre-filled
-- [ ] tRPC procedure: notifyBreeder(slotId) — sends email via Gmail SMTP using existing email helper
-- [ ] Repeat Weekly toggle in Add Slot modal — creates slots for every occurrence of that weekday in the selected month
-- [ ] tRPC procedure: createRecurringSlots(payload, repeatWeekly) — bulk insert for recurring slots
-- [ ] Slot conflict detection — detect same-location same-day duplicates, highlight cell/chip in red with warning badge
-- [ ] Conflict detection runs client-side from slotsByDate map (no extra query needed)
+- [x] Notify Breeder button on each slot chip — fires confirmation email with date, time, location pre-filled
+- [x] tRPC procedure: notifyBreeder(slotId) — sends email via Gmail SMTP using existing email helper
+- [x] Repeat Weekly toggle in Add Slot modal — creates slots for every occurrence of that weekday in the selected month
+- [x] tRPC procedure: createRecurringSlots(payload, repeatWeekly) — bulk insert for recurring slots
+- [x] Slot conflict detection — detect same-location same-day duplicates, highlight cell/chip in red with warning badge
+- [x] Conflict detection runs client-side from slotsByDate map (no extra query needed)
+
+## Breeder Calendar — Polish (Jul 15 2026)
+- [x] Weekend-only toggle: switch at top of calendar that collapses Mon–Fri columns entirely, expands back when toggled off
+- [x] Breeder first name on weekend slot chips: show below breed so you can see who's coming without opening edit modal
+- [x] Today's weekend highlight: if today is Sat or Sun, give that cell a stronger pink ring/border

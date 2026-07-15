@@ -128,6 +128,7 @@ export default function ScheduleCalendarPanel() {
   const [deleteId, setDeleteId]     = useState<number | null>(null);
   const [form, setForm]             = useState({ ...EMPTY_FORM });
   const [notifyingId, setNotifyingId] = useState<number | null>(null);
+  const [weekendOnly, setWeekendOnly] = useState(false);
 
   const utils = trpc.useUtils();
 
@@ -272,6 +273,7 @@ export default function ScheduleCalendarPanel() {
 
   const calendarGrid = useMemo(() => buildCalendarGrid(year, month), [year, month]);
   const todayStr = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+  const todayIsWeekend = today.getDay() === 0 || today.getDay() === 6;
 
   const stats = useMemo(() => ({
     total: slots.length,
@@ -301,12 +303,27 @@ export default function ScheduleCalendarPanel() {
             </p>
           )}
         </div>
-        <Button
-          onClick={() => openAdd()}
-          className="bg-[#C2185B] hover:bg-[#AD1457] text-white font-body font-semibold rounded-full px-5 gap-2"
-        >
-          <Plus size={16} /> Add Slot
-        </Button>
+        <div className="flex items-center gap-3">
+          {/* Weekend-only toggle */}
+          <label className={`flex items-center gap-2 cursor-pointer px-3 py-1.5 rounded-full border transition-colors font-body text-xs font-semibold select-none ${
+            weekendOnly
+              ? "bg-[#FFF0F6] border-[#F0D0DC] text-[#C2185B]"
+              : "bg-white border-[#E8D0D8] text-[#9E7B6B] hover:border-[#F0D0DC]"
+          }`}>
+            <Switch
+              checked={weekendOnly}
+              onCheckedChange={setWeekendOnly}
+              className="data-[state=checked]:bg-[#C2185B] scale-75 origin-left"
+            />
+            Weekends only
+          </label>
+          <Button
+            onClick={() => openAdd()}
+            className="bg-[#C2185B] hover:bg-[#AD1457] text-white font-body font-semibold rounded-full px-5 gap-2"
+          >
+            <Plus size={16} /> Add Slot
+          </Button>
+        </div>
       </div>
 
       {/* ── Stats ─────────────────────────────────────────────────────────── */}
@@ -348,13 +365,14 @@ export default function ScheduleCalendarPanel() {
 
       {/* ── Calendar grid ─────────────────────────────────────────────────── */}
       <div className="bg-white rounded-2xl border border-[#F0D0DC] overflow-hidden shadow-sm">
-        {/* Day-of-week header — asymmetric widths */}
+        {/* Day-of-week header — asymmetric widths; weekday cols hidden in weekendOnly mode */}
         <div
           className="border-b border-[#F0D0DC]"
-          style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 2fr" }}
+          style={{ display: "grid", gridTemplateColumns: weekendOnly ? "1fr 1fr" : "2fr 1fr 1fr 1fr 1fr 1fr 2fr" }}
         >
           {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d, i) => {
             const isWknd = i === 0 || i === 6;
+            if (weekendOnly && !isWknd) return null;
             return (
               <div
                 key={d}
@@ -380,11 +398,13 @@ export default function ScheduleCalendarPanel() {
           <div
             key={ri}
             className="border-b border-[#F0D0DC] last:border-b-0"
-            style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 2fr" }}
+            style={{ display: "grid", gridTemplateColumns: weekendOnly ? "1fr 1fr" : "2fr 1fr 1fr 1fr 1fr 1fr 2fr" }}
           >
             {row.map((dateStr, ci) => {
+              if (weekendOnly && ci !== 0 && ci !== 6) return null;
               const isWeekend = ci === 0 || ci === 6;
               const isToday   = dateStr === todayStr;
+              const isTodayWeekend = isToday && todayIsWeekend;
               const daySlots  = dateStr ? (slotsByDate[dateStr] ?? []) : [];
               const dayNum    = dateStr ? parseInt(dateStr.split("-")[2], 10) : null;
               const hasConflict = daySlots.some(s => conflictSlotIds.has(s.id));
@@ -396,9 +416,11 @@ export default function ScheduleCalendarPanel() {
                       ? "bg-[#FAFAFA]"
                       : hasConflict
                         ? "bg-red-50 hover:bg-red-100 cursor-pointer group"
-                        : isWeekend
-                          ? "bg-[#FFF5F9] hover:bg-[#FFE8F2] cursor-pointer group"
-                          : "bg-white hover:bg-[#FEFAF4] cursor-pointer group"
+                        : isTodayWeekend
+                          ? "bg-[#FFE0EF] hover:bg-[#FFD0E8] cursor-pointer group ring-2 ring-[#C2185B] ring-inset"
+                          : isWeekend
+                            ? "bg-[#FFF5F9] hover:bg-[#FFE8F2] cursor-pointer group"
+                            : "bg-white hover:bg-[#FEFAF4] cursor-pointer group"
                   }`}
                   style={{ minHeight: isWeekend ? "120px" : "88px", padding: isWeekend ? "8px" : "5px" }}
                   onClick={() => dateStr && openAdd(dateStr)}
@@ -412,8 +434,8 @@ export default function ScheduleCalendarPanel() {
                             : hasConflict
                               ? "text-red-600 font-bold"
                               : isWeekend
-                                ? "text-[#C2185B] font-bold"
-                                : "text-[#B0907A]"
+                              ? isTodayWeekend ? "text-white" : "text-[#C2185B] font-bold"
+                              : "text-[#B0907A]"
                         }`}
                         style={{
                           width: isWeekend ? "26px" : "20px",
@@ -470,6 +492,11 @@ export default function ScheduleCalendarPanel() {
                               </span>
                               <span className="block opacity-70 text-[10px]">{fmt12(slot.startTime)}–{fmt12(slot.endTime)}</span>
                               {slot.breed && <span className="block opacity-60 text-[9px] truncate">{slot.breed}</span>}
+                              {slot.breederName && (
+                                <span className="block text-[9px] font-semibold opacity-80 truncate">
+                                  {slot.breederName.split(" ")[0]}
+                                </span>
+                              )}
                             </span>
                             {/* Notify Breeder button */}
                             <button
