@@ -110,8 +110,10 @@ function getUpcomingMonths() {
 export default function BreedersDashboard() {
   const utils = trpc.useUtils();
 
-  // Tab state
-  const [activeView, setActiveView] = useState<"breeders" | "schedule">("breeders");
+  // Tab state — support #schedule hash for direct linking
+  const [activeView, setActiveView] = useState<"breeders" | "schedule">(
+    () => window.location.hash === "#schedule" ? "schedule" : "breeders"
+  );
 
   // Schedule state
 

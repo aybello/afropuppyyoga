@@ -276,19 +276,49 @@ export default function ScheduleCalendarPanel() {
       </div>
 
       {/* ── Calendar grid ─────────────────────────────────────────────────── */}
+      {/*
+        Weekend-focus layout:
+        - CSS grid with custom column template: weekends (Sun=col0, Sat=col6) get 2fr,
+          weekdays (Mon–Fri) get 1fr. This makes weekends ~2× wider than weekdays.
+        - Weekend cells: richer pink background, full slot chips with location + time
+        - Weekday cells: muted/white background, compact colored dot + location only
+        - Both remain fully clickable so weekday private events are still accessible
+      */}
       <div className="bg-white rounded-2xl border border-[#F0D0DC] overflow-hidden shadow-sm">
-        {/* Day-of-week header */}
-        <div className="grid grid-cols-7 border-b border-[#F0D0DC]">
-          {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d, i) => (
-            <div key={d} className={`py-2 text-center font-body text-xs font-bold tracking-wider uppercase ${i === 0 || i === 6 ? "text-[#C2185B] bg-[#FFF5F8]" : "text-[#6B4C3B]"}`}>
-              {d}
-            </div>
-          ))}
+        {/* Day-of-week header — asymmetric widths */}
+        <div
+          className="border-b border-[#F0D0DC]"
+          style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 2fr" }}
+        >
+          {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d, i) => {
+            const isWknd = i === 0 || i === 6;
+            return (
+              <div
+                key={d}
+                className={`py-2.5 text-center font-body text-xs font-bold tracking-wider uppercase border-r border-[#F0D0DC] last:border-r-0 ${
+                  isWknd
+                    ? "text-[#C2185B] bg-[#FFF0F6]"
+                    : "text-[#B0907A] bg-[#FAFAFA]"
+                }`}
+              >
+                {isWknd ? (
+                  <span className="flex flex-col items-center gap-0.5">
+                    <span>{d}</span>
+                    <span className="text-[9px] font-normal text-[#C2185B] opacity-80 tracking-normal normal-case">class day</span>
+                  </span>
+                ) : d}
+              </div>
+            );
+          })}
         </div>
 
         {/* Calendar rows */}
         {calendarGrid.map((row, ri) => (
-          <div key={ri} className="grid grid-cols-7 border-b border-[#F0D0DC] last:border-b-0">
+          <div
+            key={ri}
+            className="border-b border-[#F0D0DC] last:border-b-0"
+            style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 2fr" }}
+          >
             {row.map((dateStr, ci) => {
               const isWeekend = ci === 0 || ci === 6;
               const isToday   = dateStr === todayStr;
@@ -297,45 +327,83 @@ export default function ScheduleCalendarPanel() {
               return (
                 <div
                   key={ci}
-                  className={`min-h-[100px] border-r border-[#F0D0DC] last:border-r-0 p-1.5 flex flex-col transition-colors ${
-                    !dateStr ? "bg-[#FAFAFA]" : isWeekend ? "bg-[#FFF8FB] hover:bg-[#FFF0F6]" : "bg-white hover:bg-[#FEFAF4]"
-                  } ${dateStr ? "cursor-pointer group" : ""}`}
+                  className={`border-r border-[#F0D0DC] last:border-r-0 flex flex-col transition-colors ${
+                    !dateStr
+                      ? "bg-[#FAFAFA]"
+                      : isWeekend
+                        ? "bg-[#FFF5F9] hover:bg-[#FFE8F2] cursor-pointer group"
+                        : "bg-white hover:bg-[#FEFAF4] cursor-pointer group"
+                  }`}
+                  style={{ minHeight: isWeekend ? "120px" : "88px", padding: isWeekend ? "8px" : "5px" }}
                   onClick={() => dateStr && openAdd(dateStr)}
                 >
                   {dayNum !== null && (
-                    <div className="flex items-center justify-between mb-1">
-                      <span className={`font-body text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full ${isToday ? "bg-[#C2185B] text-white" : isWeekend ? "text-[#C2185B]" : "text-[#6B4C3B]"}`}>
+                    <div className={`flex items-center justify-between mb-1 ${ isWeekend ? "" : "" }`}>
+                      <span
+                        className={`font-body font-semibold flex items-center justify-center rounded-full ${
+                          isToday
+                            ? "bg-[#C2185B] text-white"
+                            : isWeekend
+                              ? "text-[#C2185B] font-bold"
+                              : "text-[#B0907A]"
+                        }`}
+                        style={{
+                          width: isWeekend ? "26px" : "20px",
+                          height: isWeekend ? "26px" : "20px",
+                          fontSize: isWeekend ? "13px" : "11px",
+                        }}
+                      >
                         {dayNum}
                       </span>
                       <button
                         onClick={(e) => { e.stopPropagation(); if (dateStr) openAdd(dateStr); }}
-                        className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-full bg-[#C2185B] text-white flex items-center justify-center transition-opacity hover:bg-[#AD1457]"
+                        className={`opacity-0 group-hover:opacity-100 rounded-full bg-[#C2185B] text-white flex items-center justify-center transition-opacity hover:bg-[#AD1457] ${
+                          isWeekend ? "w-5 h-5" : "w-4 h-4"
+                        }`}
                         aria-label="Add slot"
                       >
-                        <Plus size={10} />
+                        <Plus size={isWeekend ? 10 : 8} />
                       </button>
                     </div>
                   )}
+
+                  {/* Slot chips — full on weekends, compact dots on weekdays */}
                   <div className="flex flex-col gap-0.5 flex-1">
                     {daySlots.map(slot => {
                       const loc = slot.location as Location;
                       const c = LOCATION_COLORS[loc];
-                      return (
-                        <div
-                          key={slot.id}
-                          onClick={(e) => { e.stopPropagation(); openEdit(slot); }}
-                          className={`rounded px-1.5 py-0.5 text-[10px] font-body font-medium border cursor-pointer hover:brightness-95 transition-all ${c.bg} ${c.text} ${c.border} flex items-start gap-1`}
-                          title={`${slot.location} · ${slot.breederName} · ${fmt12(slot.startTime)}–${fmt12(slot.endTime)}`}
-                        >
-                          <span className={`mt-0.5 w-1.5 h-1.5 rounded-full shrink-0 ${c.dot}`} />
-                          <span className="leading-tight truncate">
-                            {slot.location}
-                            {slot.classType === "private" && <Lock size={8} className="inline ml-0.5 mb-0.5 opacity-70" />}
-                            <br />
-                            <span className="opacity-70">{fmt12(slot.startTime)}</span>
-                          </span>
-                        </div>
-                      );
+                      if (isWeekend) {
+                        // Full chip: location + time + lock icon
+                        return (
+                          <div
+                            key={slot.id}
+                            onClick={(e) => { e.stopPropagation(); openEdit(slot); }}
+                            className={`rounded-md px-2 py-1 text-[11px] font-body font-semibold border cursor-pointer hover:brightness-95 transition-all ${c.bg} ${c.text} ${c.border} flex items-start gap-1.5`}
+                            title={`${slot.location} · ${slot.breederName} · ${fmt12(slot.startTime)}–${fmt12(slot.endTime)}`}
+                          >
+                            <span className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${c.dot}`} />
+                            <span className="leading-tight min-w-0">
+                              <span className="block truncate">{slot.location}{slot.classType === "private" && <Lock size={9} className="inline ml-0.5 mb-0.5 opacity-70" />}</span>
+                              <span className="block opacity-70 text-[10px]">{fmt12(slot.startTime)}–{fmt12(slot.endTime)}</span>
+                              {slot.breed && <span className="block opacity-60 text-[9px] truncate">{slot.breed}</span>}
+                            </span>
+                          </div>
+                        );
+                      } else {
+                        // Compact dot: colored dot + location abbreviation only
+                        const abbr = loc === "Kitchener" ? "KW" : loc === "Hamilton" ? "HAM" : "OAK";
+                        return (
+                          <div
+                            key={slot.id}
+                            onClick={(e) => { e.stopPropagation(); openEdit(slot); }}
+                            className={`rounded px-1 py-0.5 text-[9px] font-body font-medium border cursor-pointer hover:brightness-95 transition-all ${c.bg} ${c.text} ${c.border} flex items-center gap-1`}
+                            title={`${slot.location} · ${slot.breederName} · ${fmt12(slot.startTime)}–${fmt12(slot.endTime)}`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${c.dot}`} />
+                            <span className="truncate">{abbr}{slot.classType === "private" && <Lock size={7} className="inline ml-0.5 opacity-70" />}</span>
+                          </div>
+                        );
+                      }
                     })}
                   </div>
                 </div>

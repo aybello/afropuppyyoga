@@ -405,3 +405,10 @@
 - [x] Bug 3: Increase frontend chunk size from 1MB to 5MB (500MB / 5MB = 100 chunks, well under MAX_CHUNKS=200)
 - [x] Bug 5: Relax magic-byte check in uploadRoute.ts to accept iPhone HEVC MOV files (ftyp at any offset up to 32 bytes)
 - [x] Add server timeout extension for /api/upload-video-complete to handle large video assembly within Cloud Run 180s limit
+
+## Breeder Calendar — Weekend-Focus Layout (Jul 15 2026)
+
+- [x] Redesign calendar grid: Sat/Sun columns wider + brighter background, Mon–Fri columns narrower + muted
+- [x] Weekend day headers (Sat/Sun) styled with APY pink accent, weekday headers subdued
+- [x] Weekend cells get full slot chips; weekday cells show compact slot indicators
+- [x] Keep all 7 days visible so weekday private events are still accessible
