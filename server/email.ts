@@ -615,6 +615,80 @@ afropuppyyoga.ca`;
   return { subject, html, text };
 }
 
+// ─── Breeder Class Confirmation Email ───────────────────────────────────────────
+
+export function buildBreederConfirmationEmail(opts: {
+  breederName: string;
+  contactName?: string | null;
+  breed: string;
+  classDate: string;   // YYYY-MM-DD
+  dayOfWeek: string;
+  location: string;
+  startTime: string;   // HH:MM 24h
+  endTime: string;     // HH:MM 24h
+  classType: "regular" | "private";
+  notes?: string | null;
+}): { subject: string; html: string; text: string } {
+  const firstName = (opts.contactName ?? opts.breederName).split(" ")[0];
+  const fmt12 = (t: string) => {
+    const [hStr, mStr] = t.split(":");
+    const h = parseInt(hStr, 10);
+    const m = mStr ?? "00";
+    const ampm = h < 12 ? "AM" : "PM";
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    return `${h12}:${m} ${ampm}`;
+  };
+  const displayDate = new Date(opts.classDate + "T12:00:00").toLocaleDateString("en-CA", {
+    weekday: "long", year: "numeric", month: "long", day: "numeric",
+  });
+  const typeLabel = opts.classType === "private" ? "Private Event" : "Regular Class";
+  const subject = `Class Confirmation — ${opts.location} · ${displayDate}`;
+
+  const hero = `
+    <p style="margin:0 0 6px;font-size:12px;font-weight:bold;color:#FFD6E7;letter-spacing:1.5px;text-transform:uppercase;">Class Confirmation</p>
+    <h1 style="margin:0 0 10px;font-family:Georgia,serif;font-size:27px;color:#FFFFFF;line-height:1.25;">You're booked, ${firstName}! 🐾</h1>
+    <p style="margin:0;font-size:14px;color:#FFE4EF;line-height:1.5;"><strong style="color:#fff;">${opts.location}</strong> &middot; <strong style="color:#fff;">${displayDate}</strong></p>
+  `;
+
+  const body = `
+    ${bodyText(`Hi ${firstName}, we're excited to confirm your upcoming class with AfroPuppyYoga. Here are the details:`)}
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;">
+      <tr><td style="padding:20px 24px;">
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr><td style="padding:6px 0;border-bottom:1px solid #F5D0DF;">
+            <span style="font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Date</span><br/>
+            <span style="font-size:15px;color:#1A0A12;font-weight:bold;">📅 ${displayDate}</span>
+          </td></tr>
+          <tr><td style="padding:6px 0;border-bottom:1px solid #F5D0DF;">
+            <span style="font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Location</span><br/>
+            <span style="font-size:15px;color:#1A0A12;font-weight:bold;">📍 ${opts.location}</span>
+          </td></tr>
+          <tr><td style="padding:6px 0;border-bottom:1px solid #F5D0DF;">
+            <span style="font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Time</span><br/>
+            <span style="font-size:15px;color:#1A0A12;font-weight:bold;">🕐 ${fmt12(opts.startTime)} – ${fmt12(opts.endTime)}</span>
+          </td></tr>
+          <tr><td style="padding:6px 0;border-bottom:1px solid #F5D0DF;">
+            <span style="font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Breed</span><br/>
+            <span style="font-size:15px;color:#1A0A12;font-weight:bold;">🐶 ${opts.breed}</span>
+          </td></tr>
+          <tr><td style="padding:6px 0;">
+            <span style="font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Class Type</span><br/>
+            <span style="font-size:15px;color:#1A0A12;font-weight:bold;">${typeLabel}</span>
+          </td></tr>
+        </table>
+      </td></tr>
+    </table>
+    ${opts.notes ? `<table width="100%" cellpadding="0" cellspacing="0" style="background:#FFF8FB;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;"><tr><td style="padding:16px 20px;"><p style="margin:0 0 4px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Notes from APY</p><p style="margin:0;font-size:14px;color:#3D1A2A;line-height:1.6;">${opts.notes}</p></td></tr></table>` : ""}
+    ${bodyText(`Please reply to this email if you have any questions or need to make changes. We look forward to seeing you and the puppies! 🐾`)}
+    ${signoff("The AfroPuppyYoga Team")}
+  `;
+
+  const html = wrapInBrandedLayout(hero, body);
+  const text = `Hi ${firstName},\n\nYour class with AfroPuppyYoga is confirmed!\n\nDate: ${displayDate}\nLocation: ${opts.location}\nTime: ${fmt12(opts.startTime)} – ${fmt12(opts.endTime)}\nBreed: ${opts.breed}\nClass Type: ${typeLabel}\n${opts.notes ? `\nNotes: ${opts.notes}\n` : ""}\nQuestions? Reply to this email.\n\nWith warmth,\nThe AfroPuppyYoga Team\nafropuppyyogaofficial@gmail.com`;
+
+  return { subject, html, text };
+}
+
 // ─── Signing Invite Email ─────────────────────────────────────────────────────
 
 export function buildSigningInviteEmail(opts: {

@@ -412,3 +412,12 @@
 - [x] Weekend day headers (Sat/Sun) styled with APY pink accent, weekday headers subdued
 - [x] Weekend cells get full slot chips; weekday cells show compact slot indicators
 - [x] Keep all 7 days visible so weekday private events are still accessible
+
+## Breeder Calendar Enhancements (Jul 15 2026)
+
+- [ ] Notify Breeder button on each slot chip — fires confirmation email with date, time, location pre-filled
+- [ ] tRPC procedure: notifyBreeder(slotId) — sends email via Gmail SMTP using existing email helper
+- [ ] Repeat Weekly toggle in Add Slot modal — creates slots for every occurrence of that weekday in the selected month
+- [ ] tRPC procedure: createRecurringSlots(payload, repeatWeekly) — bulk insert for recurring slots
+- [ ] Slot conflict detection — detect same-location same-day duplicates, highlight cell/chip in red with warning badge
+- [ ] Conflict detection runs client-side from slotsByDate map (no extra query needed)

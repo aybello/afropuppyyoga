@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { staffProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { puppySchedule } from "../../drizzle/schema";
+import { puppySchedule, breeders } from "../../drizzle/schema";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
+import { sendEmail, buildBreederConfirmationEmail } from "../email";
 
 const LOCATIONS = ["Kitchener", "Hamilton", "Oakville"] as const;
 const ALL_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
@@ -113,6 +114,108 @@ export const puppyScheduleRouter = router({
       if (!db) throw new Error("Database unavailable");
       await db.delete(puppySchedule).where(eq(puppySchedule.id, input.id));
       return { success: true };
+    }),
+
+  /**
+   * Send a class confirmation email to the breeder assigned to a slot.
+   * Looks up the breeder's email from the breeders table.
+   */
+  notifyBreeder: staffProcedure
+    .input(z.object({ slotId: z.number().int().positive() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+
+      // Fetch the slot
+      const [slot] = await db.select().from(puppySchedule).where(eq(puppySchedule.id, input.slotId)).limit(1);
+      if (!slot) throw new Error("Slot not found");
+
+      // Fetch the breeder's email
+      const [breeder] = await db.select().from(breeders).where(eq(breeders.id, slot.breederId)).limit(1);
+      if (!breeder) throw new Error("Breeder not found");
+      if (!breeder.email) throw new Error(`Breeder "${breeder.name}" has no email address on file. Please add one in the Breeder Database first.`);
+
+      const { subject, html, text } = buildBreederConfirmationEmail({
+        breederName: breeder.name,
+        contactName: breeder.contactName,
+        breed: slot.breed,
+        classDate: slot.classDate,
+        dayOfWeek: slot.dayOfWeek,
+        location: slot.location,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        classType: slot.classType as "regular" | "private",
+        notes: slot.notes,
+      });
+
+      await sendEmail({ to: breeder.email, subject, html, text });
+      return { success: true, sentTo: breeder.email };
+    }),
+
+  /**
+   * Create recurring weekly slots for every occurrence of the same weekday
+   * within the given month. Skips dates that already have a slot at the same
+   * location (to avoid duplicates).
+   */
+  createRecurringSlots: staffProcedure
+    .input(slotInputBase.extend({
+      year: z.number().int().min(2024).max(2100),
+      month: z.number().int().min(1).max(12),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+
+      const { year, month, ...slotBase } = input;
+      const pad = (n: number) => String(n).padStart(2, "0");
+
+      // Find all dates in the month that match the same day-of-week as classDate
+      const targetDate = new Date(slotBase.classDate + "T12:00:00");
+      const targetDow = targetDate.getDay(); // 0=Sun … 6=Sat
+      const daysInMonth = new Date(year, month, 0).getDate();
+
+      const datesToCreate: string[] = [];
+      for (let d = 1; d <= daysInMonth; d++) {
+        const candidate = new Date(year, month - 1, d);
+        if (candidate.getDay() === targetDow) {
+          datesToCreate.push(`${year}-${pad(month)}-${pad(d)}`);
+        }
+      }
+
+      // Fetch existing slots for the month to detect conflicts
+      const firstDay = `${year}-${pad(month)}-01`;
+      const lastDay  = `${year}-${pad(month)}-${pad(daysInMonth)}`;
+      const existing = await db
+        .select({ classDate: puppySchedule.classDate, location: puppySchedule.location })
+        .from(puppySchedule)
+        .where(and(gte(puppySchedule.classDate, firstDay), lte(puppySchedule.classDate, lastDay)));
+
+      const existingSet = new Set(existing.map(e => `${e.classDate}::${e.location}`));
+
+      // Insert only dates that don't already have a slot at the same location
+      let created = 0;
+      let skipped = 0;
+      for (const dateStr of datesToCreate) {
+        const key = `${dateStr}::${slotBase.location}`;
+        if (existingSet.has(key)) { skipped++; continue; }
+        const d = new Date(dateStr + "T12:00:00");
+        const DOW_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"] as const;
+        await db.insert(puppySchedule).values({
+          classDate: dateStr,
+          dayOfWeek: DOW_NAMES[d.getDay()],
+          location: slotBase.location,
+          breed: slotBase.breed,
+          breederId: slotBase.breederId,
+          breederName: slotBase.breederName,
+          startTime: slotBase.startTime,
+          endTime: slotBase.endTime,
+          classType: slotBase.classType,
+          notes: slotBase.notes ?? null,
+        });
+        created++;
+      }
+
+      return { success: true, created, skipped };
     }),
 
   // ─── Legacy CRUD (kept for backward compat with BreedersDashboard) ────────

@@ -33,6 +33,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Switch } from "@/components/ui/switch";
 import {
   ChevronLeft,
   ChevronRight,
@@ -42,6 +43,9 @@ import {
   CalendarDays,
   Clock,
   Lock,
+  Mail,
+  AlertTriangle,
+  Repeat,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -109,6 +113,7 @@ const EMPTY_FORM = {
   endTime: "15:00",
   classType: "regular" as "regular" | "private",
   notes: "",
+  repeatWeekly: false,
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -122,6 +127,7 @@ export default function ScheduleCalendarPanel() {
   const [editId, setEditId]         = useState<number | null>(null);
   const [deleteId, setDeleteId]     = useState<number | null>(null);
   const [form, setForm]             = useState({ ...EMPTY_FORM });
+  const [notifyingId, setNotifyingId] = useState<number | null>(null);
 
   const utils = trpc.useUtils();
 
@@ -144,6 +150,15 @@ export default function ScheduleCalendarPanel() {
     onSuccess: () => { invalidate(); toast.success("Class slot added!"); setShowDialog(false); setForm({ ...EMPTY_FORM }); },
     onError: (e) => toast.error(e.message),
   });
+  const recurringMutation = trpc.puppySchedule.createRecurringSlots.useMutation({
+    onSuccess: (data) => {
+      invalidate();
+      toast.success(`${data.created} slot${data.created !== 1 ? "s" : ""} created${data.skipped > 0 ? ` (${data.skipped} skipped — already booked)` : ""}!`);
+      setShowDialog(false);
+      setForm({ ...EMPTY_FORM });
+    },
+    onError: (e) => toast.error(e.message),
+  });
   const updateMutation = trpc.puppySchedule.updateSlot.useMutation({
     onSuccess: () => { invalidate(); toast.success("Slot updated!"); setShowDialog(false); setEditId(null); setForm({ ...EMPTY_FORM }); },
     onError: (e) => toast.error(e.message),
@@ -151,6 +166,16 @@ export default function ScheduleCalendarPanel() {
   const deleteMutation = trpc.puppySchedule.deleteSlot.useMutation({
     onSuccess: () => { invalidate(); toast.success("Slot removed."); setDeleteId(null); },
     onError: (e) => toast.error(e.message),
+  });
+  const notifyMutation = trpc.puppySchedule.notifyBreeder.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Confirmation email sent to ${data.sentTo}!`);
+      setNotifyingId(null);
+    },
+    onError: (e) => {
+      toast.error(e.message);
+      setNotifyingId(null);
+    },
   });
 
   // ─── Navigation ─────────────────────────────────────────────────────────────
@@ -177,6 +202,7 @@ export default function ScheduleCalendarPanel() {
       breederId: slot.breederId, breederName: slot.breederName,
       startTime: slot.startTime, endTime: slot.endTime,
       classType: slot.classType as "regular" | "private", notes: slot.notes ?? "",
+      repeatWeekly: false,
     });
     setEditId(slot.id); setShowDialog(true);
   }
@@ -202,8 +228,19 @@ export default function ScheduleCalendarPanel() {
       startTime: form.startTime, endTime: form.endTime,
       classType: form.classType, notes: form.notes || undefined,
     };
-    if (editId !== null) updateMutation.mutate({ id: editId, ...payload });
-    else createMutation.mutate(payload);
+    if (editId !== null) {
+      updateMutation.mutate({ id: editId, ...payload });
+    } else if (form.repeatWeekly) {
+      recurringMutation.mutate({ ...payload, year, month });
+    } else {
+      createMutation.mutate(payload);
+    }
+  }
+
+  function handleNotify(e: React.MouseEvent, slotId: number) {
+    e.stopPropagation();
+    setNotifyingId(slotId);
+    notifyMutation.mutate({ slotId });
   }
 
   // ─── Derived data ────────────────────────────────────────────────────────────
@@ -214,6 +251,25 @@ export default function ScheduleCalendarPanel() {
     return map;
   }, [slots]);
 
+  /**
+   * Conflict detection: a conflict exists when two or more slots on the same date
+   * share the same location. Returns a Set of slot IDs that are in conflict.
+   */
+  const conflictSlotIds = useMemo(() => {
+    const ids = new Set<number>();
+    for (const dateSlots of Object.values(slotsByDate)) {
+      const locCounts: Record<string, number[]> = {};
+      for (const s of dateSlots) {
+        if (!locCounts[s.location]) locCounts[s.location] = [];
+        locCounts[s.location].push(s.id);
+      }
+      for (const group of Object.values(locCounts)) {
+        if (group.length > 1) group.forEach(id => ids.add(id));
+      }
+    }
+    return ids;
+  }, [slotsByDate]);
+
   const calendarGrid = useMemo(() => buildCalendarGrid(year, month), [year, month]);
   const todayStr = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
 
@@ -223,7 +279,10 @@ export default function ScheduleCalendarPanel() {
     hamilton:  slots.filter(s => s.location === "Hamilton").length,
     oakville:  slots.filter(s => s.location === "Oakville").length,
     private:   slots.filter(s => s.classType === "private").length,
-  }), [slots]);
+    conflicts: conflictSlotIds.size > 0 ? Math.floor(conflictSlotIds.size / 2) : 0,
+  }), [slots, conflictSlotIds]);
+
+  const isPending = createMutation.isPending || updateMutation.isPending || recurringMutation.isPending;
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 
@@ -231,9 +290,17 @@ export default function ScheduleCalendarPanel() {
     <div>
       {/* ── Header row ──────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-        <p className="font-body text-sm text-[#6B4C3B]">
-          Assign breeds and breeders to class slots. Weekends are highlighted.
-        </p>
+        <div>
+          <p className="font-body text-sm text-[#6B4C3B]">
+            Assign breeds and breeders to class slots. Weekends are highlighted.
+          </p>
+          {stats.conflicts > 0 && (
+            <p className="flex items-center gap-1.5 font-body text-xs text-red-600 font-semibold mt-1">
+              <AlertTriangle size={12} />
+              {stats.conflicts} double-booking{stats.conflicts !== 1 ? "s" : ""} detected — same location booked twice on the same day
+            </p>
+          )}
+        </div>
         <Button
           onClick={() => openAdd()}
           className="bg-[#C2185B] hover:bg-[#AD1457] text-white font-body font-semibold rounded-full px-5 gap-2"
@@ -243,17 +310,21 @@ export default function ScheduleCalendarPanel() {
       </div>
 
       {/* ── Stats ─────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-5">
         {[
           { label: "Total Slots",    value: stats.total,     color: "text-[#C2185B]"  },
           { label: "Kitchener",      value: stats.kitchener, color: "text-pink-600"   },
           { label: "Hamilton",       value: stats.hamilton,  color: "text-purple-600" },
           { label: "Oakville",       value: stats.oakville,  color: "text-teal-600"   },
           { label: "Private Events", value: stats.private,   color: "text-amber-600"  },
+          { label: "Conflicts",      value: stats.conflicts, color: stats.conflicts > 0 ? "text-red-600" : "text-green-600" },
         ].map(({ label, value, color }) => (
-          <div key={label} className="bg-white rounded-xl border border-[#F0D0DC] p-4">
+          <div key={label} className={`bg-white rounded-xl border p-4 ${label === "Conflicts" && stats.conflicts > 0 ? "border-red-200 bg-red-50" : "border-[#F0D0DC]"}`}>
             <div className={`font-display text-2xl font-bold ${color}`}>{value}</div>
-            <div className="font-body text-xs text-[#6B4C3B] mt-0.5">{label}</div>
+            <div className="font-body text-xs text-[#6B4C3B] mt-0.5 flex items-center gap-1">
+              {label === "Conflicts" && stats.conflicts > 0 && <AlertTriangle size={10} className="text-red-500" />}
+              {label}
+            </div>
           </div>
         ))}
       </div>
@@ -276,14 +347,6 @@ export default function ScheduleCalendarPanel() {
       </div>
 
       {/* ── Calendar grid ─────────────────────────────────────────────────── */}
-      {/*
-        Weekend-focus layout:
-        - CSS grid with custom column template: weekends (Sun=col0, Sat=col6) get 2fr,
-          weekdays (Mon–Fri) get 1fr. This makes weekends ~2× wider than weekdays.
-        - Weekend cells: richer pink background, full slot chips with location + time
-        - Weekday cells: muted/white background, compact colored dot + location only
-        - Both remain fully clickable so weekday private events are still accessible
-      */}
       <div className="bg-white rounded-2xl border border-[#F0D0DC] overflow-hidden shadow-sm">
         {/* Day-of-week header — asymmetric widths */}
         <div
@@ -324,28 +387,33 @@ export default function ScheduleCalendarPanel() {
               const isToday   = dateStr === todayStr;
               const daySlots  = dateStr ? (slotsByDate[dateStr] ?? []) : [];
               const dayNum    = dateStr ? parseInt(dateStr.split("-")[2], 10) : null;
+              const hasConflict = daySlots.some(s => conflictSlotIds.has(s.id));
               return (
                 <div
                   key={ci}
                   className={`border-r border-[#F0D0DC] last:border-r-0 flex flex-col transition-colors ${
                     !dateStr
                       ? "bg-[#FAFAFA]"
-                      : isWeekend
-                        ? "bg-[#FFF5F9] hover:bg-[#FFE8F2] cursor-pointer group"
-                        : "bg-white hover:bg-[#FEFAF4] cursor-pointer group"
+                      : hasConflict
+                        ? "bg-red-50 hover:bg-red-100 cursor-pointer group"
+                        : isWeekend
+                          ? "bg-[#FFF5F9] hover:bg-[#FFE8F2] cursor-pointer group"
+                          : "bg-white hover:bg-[#FEFAF4] cursor-pointer group"
                   }`}
                   style={{ minHeight: isWeekend ? "120px" : "88px", padding: isWeekend ? "8px" : "5px" }}
                   onClick={() => dateStr && openAdd(dateStr)}
                 >
                   {dayNum !== null && (
-                    <div className={`flex items-center justify-between mb-1 ${ isWeekend ? "" : "" }`}>
+                    <div className="flex items-center justify-between mb-1">
                       <span
                         className={`font-body font-semibold flex items-center justify-center rounded-full ${
                           isToday
                             ? "bg-[#C2185B] text-white"
-                            : isWeekend
-                              ? "text-[#C2185B] font-bold"
-                              : "text-[#B0907A]"
+                            : hasConflict
+                              ? "text-red-600 font-bold"
+                              : isWeekend
+                                ? "text-[#C2185B] font-bold"
+                                : "text-[#B0907A]"
                         }`}
                         style={{
                           width: isWeekend ? "26px" : "20px",
@@ -355,15 +423,22 @@ export default function ScheduleCalendarPanel() {
                       >
                         {dayNum}
                       </span>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); if (dateStr) openAdd(dateStr); }}
-                        className={`opacity-0 group-hover:opacity-100 rounded-full bg-[#C2185B] text-white flex items-center justify-center transition-opacity hover:bg-[#AD1457] ${
-                          isWeekend ? "w-5 h-5" : "w-4 h-4"
-                        }`}
-                        aria-label="Add slot"
-                      >
-                        <Plus size={isWeekend ? 10 : 8} />
-                      </button>
+                      <div className="flex items-center gap-0.5">
+                        {hasConflict && (
+                          <span title="Double-booking: same location booked twice">
+                            <AlertTriangle size={11} className="text-red-500" />
+                          </span>
+                        )}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); if (dateStr) openAdd(dateStr); }}
+                          className={`opacity-0 group-hover:opacity-100 rounded-full bg-[#C2185B] text-white flex items-center justify-center transition-opacity hover:bg-[#AD1457] ${
+                            isWeekend ? "w-5 h-5" : "w-4 h-4"
+                          }`}
+                          aria-label="Add slot"
+                        >
+                          <Plus size={isWeekend ? 10 : 8} />
+                        </button>
+                      </div>
                     </div>
                   )}
 
@@ -372,21 +447,47 @@ export default function ScheduleCalendarPanel() {
                     {daySlots.map(slot => {
                       const loc = slot.location as Location;
                       const c = LOCATION_COLORS[loc];
+                      const isConflict = conflictSlotIds.has(slot.id);
                       if (isWeekend) {
-                        // Full chip: location + time + lock icon
+                        // Full chip: location + time + notify button + conflict indicator
                         return (
                           <div
                             key={slot.id}
                             onClick={(e) => { e.stopPropagation(); openEdit(slot); }}
-                            className={`rounded-md px-2 py-1 text-[11px] font-body font-semibold border cursor-pointer hover:brightness-95 transition-all ${c.bg} ${c.text} ${c.border} flex items-start gap-1.5`}
-                            title={`${slot.location} · ${slot.breederName} · ${fmt12(slot.startTime)}–${fmt12(slot.endTime)}`}
+                            className={`rounded-md px-2 py-1 text-[11px] font-body font-semibold border cursor-pointer hover:brightness-95 transition-all flex items-start gap-1.5 ${
+                              isConflict
+                                ? "bg-red-50 text-red-800 border-red-300"
+                                : `${c.bg} ${c.text} ${c.border}`
+                            }`}
+                            title={`${slot.location} · ${slot.breederName} · ${fmt12(slot.startTime)}–${fmt12(slot.endTime)}${isConflict ? " ⚠ Double-booking!" : ""}`}
                           >
-                            <span className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${c.dot}`} />
-                            <span className="leading-tight min-w-0">
-                              <span className="block truncate">{slot.location}{slot.classType === "private" && <Lock size={9} className="inline ml-0.5 mb-0.5 opacity-70" />}</span>
+                            <span className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${isConflict ? "bg-red-400" : c.dot}`} />
+                            <span className="leading-tight min-w-0 flex-1">
+                              <span className="block truncate">
+                                {slot.location}
+                                {slot.classType === "private" && <Lock size={9} className="inline ml-0.5 mb-0.5 opacity-70" />}
+                                {isConflict && <AlertTriangle size={9} className="inline ml-0.5 mb-0.5 text-red-500" />}
+                              </span>
                               <span className="block opacity-70 text-[10px]">{fmt12(slot.startTime)}–{fmt12(slot.endTime)}</span>
                               {slot.breed && <span className="block opacity-60 text-[9px] truncate">{slot.breed}</span>}
                             </span>
+                            {/* Notify Breeder button */}
+                            <button
+                              onClick={(e) => handleNotify(e, slot.id)}
+                              disabled={notifyingId === slot.id}
+                              className={`shrink-0 mt-0.5 rounded p-0.5 transition-colors ${
+                                isConflict
+                                  ? "text-red-400 hover:bg-red-100"
+                                  : "text-current opacity-50 hover:opacity-100 hover:bg-white/60"
+                              }`}
+                              title="Send confirmation email to breeder"
+                              aria-label="Notify breeder"
+                            >
+                              {notifyingId === slot.id
+                                ? <Loader2 size={11} className="animate-spin" />
+                                : <Mail size={11} />
+                              }
+                            </button>
                           </div>
                         );
                       } else {
@@ -396,11 +497,19 @@ export default function ScheduleCalendarPanel() {
                           <div
                             key={slot.id}
                             onClick={(e) => { e.stopPropagation(); openEdit(slot); }}
-                            className={`rounded px-1 py-0.5 text-[9px] font-body font-medium border cursor-pointer hover:brightness-95 transition-all ${c.bg} ${c.text} ${c.border} flex items-center gap-1`}
-                            title={`${slot.location} · ${slot.breederName} · ${fmt12(slot.startTime)}–${fmt12(slot.endTime)}`}
+                            className={`rounded px-1 py-0.5 text-[9px] font-body font-medium border cursor-pointer hover:brightness-95 transition-all flex items-center gap-1 ${
+                              isConflict
+                                ? "bg-red-50 text-red-700 border-red-300"
+                                : `${c.bg} ${c.text} ${c.border}`
+                            }`}
+                            title={`${slot.location} · ${slot.breederName} · ${fmt12(slot.startTime)}–${fmt12(slot.endTime)}${isConflict ? " ⚠ Double-booking!" : ""}`}
                           >
-                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${c.dot}`} />
-                            <span className="truncate">{abbr}{slot.classType === "private" && <Lock size={7} className="inline ml-0.5 opacity-70" />}</span>
+                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isConflict ? "bg-red-400" : c.dot}`} />
+                            <span className="truncate">
+                              {abbr}
+                              {slot.classType === "private" && <Lock size={7} className="inline ml-0.5 opacity-70" />}
+                              {isConflict && <AlertTriangle size={7} className="inline ml-0.5 text-red-500" />}
+                            </span>
                           </div>
                         );
                       }
@@ -430,6 +539,12 @@ export default function ScheduleCalendarPanel() {
         <span className="flex items-center gap-1.5 font-body text-xs font-semibold px-2.5 py-1 rounded-full border bg-[#FFF5F8] text-[#C2185B] border-[#F0D0DC]">
           Weekend
         </span>
+        <span className="flex items-center gap-1.5 font-body text-xs font-semibold px-2.5 py-1 rounded-full border bg-red-50 text-red-700 border-red-200">
+          <AlertTriangle size={10} /> Conflict
+        </span>
+        <span className="flex items-center gap-1.5 font-body text-xs font-semibold px-2.5 py-1 rounded-full border bg-white text-[#6B4C3B] border-[#F0D0DC]">
+          <Mail size={10} /> Notify Breeder
+        </span>
       </div>
 
       {/* ── Add / Edit Dialog ──────────────────────────────────────────────── */}
@@ -452,6 +567,37 @@ export default function ScheduleCalendarPanel() {
                 </p>
               )}
             </div>
+
+            {/* Repeat Weekly toggle — only show when adding (not editing) */}
+            {editId === null && (
+              <div className={`rounded-xl border p-3 transition-colors ${form.repeatWeekly ? "bg-[#FFF0F6] border-[#F0D0DC]" : "bg-white border-[#F0D0DC]"}`}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="font-body text-sm text-[#1A0A12] font-semibold flex items-center gap-2 cursor-pointer">
+                      <Repeat size={14} className="text-[#C2185B]" />
+                      Repeat Weekly
+                    </Label>
+                    <p className="font-body text-xs text-[#6B4C3B] mt-0.5">
+                      {form.repeatWeekly
+                        ? `Creates a slot on every ${form.dayOfWeek || "selected weekday"} in ${MONTH_NAMES[month - 1]} ${year}`
+                        : "Create this slot once, or toggle to fill the whole month"}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={form.repeatWeekly}
+                    onCheckedChange={v => setForm(f => ({ ...f, repeatWeekly: v }))}
+                    className="data-[state=checked]:bg-[#C2185B]"
+                  />
+                </div>
+                {form.repeatWeekly && form.dayOfWeek && (
+                  <p className="font-body text-xs text-[#C2185B] font-semibold mt-2 flex items-center gap-1">
+                    <Repeat size={11} />
+                    Will create slots for all {form.dayOfWeek}s in {MONTH_NAMES[month - 1]} — existing bookings at the same location will be skipped automatically.
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Class Type */}
             <div>
               <Label className="font-body text-sm text-[#1A0A12] font-semibold">Class Type</Label>
@@ -525,9 +671,9 @@ export default function ScheduleCalendarPanel() {
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => { setShowDialog(false); setEditId(null); setForm({ ...EMPTY_FORM }); }} className="font-body border-[#F0D0DC]">Cancel</Button>
-            <Button onClick={handleSubmit} disabled={createMutation.isPending || updateMutation.isPending} className="bg-[#C2185B] hover:bg-[#AD1457] text-white font-body font-semibold rounded-full px-6">
-              {(createMutation.isPending || updateMutation.isPending) && <Loader2 size={14} className="animate-spin mr-2" />}
-              {editId !== null ? "Save Changes" : "Add Slot"}
+            <Button onClick={handleSubmit} disabled={isPending} className="bg-[#C2185B] hover:bg-[#AD1457] text-white font-body font-semibold rounded-full px-6">
+              {isPending && <Loader2 size={14} className="animate-spin mr-2" />}
+              {editId !== null ? "Save Changes" : form.repeatWeekly ? "Create All Slots" : "Add Slot"}
             </Button>
           </DialogFooter>
         </DialogContent>
