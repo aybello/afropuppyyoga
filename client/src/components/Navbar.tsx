@@ -184,6 +184,16 @@ export default function Navbar() {
             {/* CTA + Mobile Toggle */}
             <div className="flex items-center gap-3">
               <a
+                href="/admin-login"
+                className={`hidden lg:inline-flex items-center px-4 py-2 text-xs font-body font-semibold rounded-full border transition-all duration-200 hover:-translate-y-0.5 ${
+                  scrolled || isSubPage
+                    ? "border-[#8B2252] text-[#8B2252] hover:bg-[#8B2252]/10"
+                    : "border-white/60 text-white/90 hover:bg-white/10"
+                }`}
+              >
+                Staff Portal
+              </a>
+              <a
                 href={BOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -259,6 +269,13 @@ export default function Navbar() {
               </li>
             ))}
             <li className="pt-4">
+              <a
+                href="/admin-login"
+                onClick={() => setMenuOpen(false)}
+                className="block text-center px-5 py-3 mb-2 border border-[#8B2252] text-[#8B2252] font-body font-semibold rounded-full hover:bg-[#8B2252]/10 transition-colors"
+              >
+                Staff Portal
+              </a>
               <a
                 href={BOOK_URL}
                 target="_blank"

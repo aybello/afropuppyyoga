@@ -202,7 +202,7 @@ export default function StaffPortal() {
               <p className="font-body text-sm font-semibold text-amber-800">Some tools require login</p>
               <p className="font-body text-xs text-amber-700 mt-0.5">
                 Admin tools are restricted to authorized staff.{" "}
-                <a href={getLoginUrl()} className="underline hover:no-underline">
+                <a href="/admin-login" className="underline hover:no-underline">
                   Sign in
                 </a>{" "}
                 to access all features.

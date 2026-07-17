@@ -426,3 +426,7 @@
 - [x] Weekend-only toggle: switch at top of calendar that collapses Mon–Fri columns entirely, expands back when toggled off
 - [x] Breeder first name on weekend slot chips: show below breed so you can see who's coming without opening edit modal
 - [x] Today's weekend highlight: if today is Sat or Sun, give that cell a stronger pink ring/border
+
+## Admin Direct Login (Jul 17, 2026)
+- [x] Add direct admin username/password login (admin / afropuppyyoga) — bypass Manus OAuth for admin access, issue JWT session
+- [x] Move Staff Portal link/button to top of homepage (above the fold / near navbar)

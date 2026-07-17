@@ -15,7 +15,7 @@ import {
 import { sendStaffInviteEmail } from "../email";
 import { sdk } from "../_core/sdk";
 import { getSessionCookieOptions } from "../_core/cookies";
-import { COOKIE_NAME, SEVEN_DAYS_MS } from "../../shared/const";
+import { COOKIE_NAME, SEVEN_DAYS_MS, ONE_YEAR_MS } from "../../shared/const";
 
 export const staffRouter = router({
   /**
@@ -212,5 +212,44 @@ export const staffRouter = router({
       }
 
       return { success: true };
+    }),
+
+  /**
+   * Public: direct admin login with hardcoded credentials.
+   * Issues a real session cookie with role 'admin' — no Manus OAuth required.
+   */
+  adminLogin: publicProcedure
+    .input(z.object({ username: z.string(), password: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const ADMIN_USERNAME = "admin";
+      const ADMIN_PASSWORD = "afropuppyyoga";
+
+      if (input.username !== ADMIN_USERNAME || input.password !== ADMIN_PASSWORD) {
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid username or password" });
+      }
+
+      const adminOpenId = "admin:local";
+      const now = new Date();
+
+      // Ensure the admin user exists in DB with role 'admin'
+      await upsertUser({
+        openId: adminOpenId,
+        name: "Admin",
+        email: "admin@afropuppyyoga.ca",
+        loginMethod: "password",
+        role: "admin",
+        lastSignedIn: now,
+      });
+
+      // Create a real session cookie (same mechanism as Manus OAuth / magic link)
+      const sessionToken = await sdk.createSessionToken(adminOpenId, {
+        name: "Admin",
+        expiresInMs: ONE_YEAR_MS,
+      });
+
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+
+      return { success: true, name: "Admin" };
     }),
 });
