@@ -4,12 +4,12 @@
    ============================================================ */
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { Building2, PartyPopper, Users, MapPin } from "lucide-react";
+import { Building2, PartyPopper, Users, MapPin, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import { trackCTAClick } from "@/hooks/useAnalytics";
 
 const EVENTS_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/apy_private_events-Nb3wGnpKGLiacEq7DDkbgp.webp";
-const BOOK_URL = "https://luma.com/mb93ov9f";
+
 
 const eventTypes = [
   {
@@ -157,27 +157,20 @@ export default function PrivateEvents() {
         {/* CTA */}
         <FadeUp delay={0.4}>
           <div className="text-center">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                href="/private-events/quote"
-                onClick={() => trackCTAClick("Get a Quote — Private Events")}
-                className="inline-flex items-center px-10 py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-base rounded-full hover:bg-[#F2A0B8] transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1"
-              >
-                Get an Instant Quote
-              </Link>
-              <a
-                href={BOOK_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackCTAClick("Book Your Private Event — Private Events")}
-                className="inline-flex items-center px-10 py-4 bg-transparent border-2 border-white/30 text-white font-body font-bold text-base rounded-full hover:border-white/60 transition-all duration-200"
-              >
-                Book Your Private Event
-              </a>
-            </div>
-            <p className="font-body text-white/40 text-sm mt-4">
-              Contact us at{" "}
-              <a href="mailto:afropuppyyogaofficial@gmail.com" className="text-[#F2A0B8]/70 hover:text-[#F2A0B8] transition-colors">
+            <Link
+              href="/private-events/quote"
+              onClick={() => trackCTAClick("Book Your Private Event — Private Events")}
+              className="inline-flex items-center gap-3 px-12 py-5 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-lg rounded-full hover:bg-[#F2A0B8]/90 transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1"
+            >
+              <Sparkles size={20} />
+              Book Your Private Event
+            </Link>
+            <p className="font-body text-white/40 text-sm mt-5">
+              Get an instant quote in 60 seconds — no commitment required.
+            </p>
+            <p className="font-body text-white/30 text-xs mt-2">
+              Questions?{" "}
+              <a href="mailto:afropuppyyogaofficial@gmail.com" className="text-[#F2A0B8]/60 hover:text-[#F2A0B8] transition-colors">
                 afropuppyyogaofficial@gmail.com
               </a>
             </p>

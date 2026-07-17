@@ -54,16 +54,14 @@ const faqs: { q: string; a: ReactNode }[] = [
     q: "How do I book a private event?",
     a: (
       <>
-        Fill out our{" "}
+        Book directly on our site using our{" "}
         <a
-          href="https://luma.com/mb93ov9f"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="/private-events/quote"
           className="text-[#8B2252] underline underline-offset-2 hover:text-[#6B1A3F] transition-colors"
         >
-          private event booking form
+          instant quote tool
         </a>
-        {" "}with your event details — date, number of guests, location preference, and any special requests. Our team will follow up within 24–48 hours with availability, pricing, and next steps.
+        . Enter your event details, get a price estimate in seconds, and submit your inquiry. Our team will follow up within 24 hours with availability and next steps.
       </>
     ),
   },
