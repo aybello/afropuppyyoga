@@ -192,20 +192,42 @@ export default function PrivateEventQuote() {
         />
         <div className="absolute top-8 right-16 w-32 h-32 rounded-full opacity-10" style={{ background: "#8B2252" }} />
         <div className="absolute bottom-4 left-12 w-20 h-20 rounded-full opacity-10" style={{ background: "#F2A0B8" }} />
-        <div className="relative container text-center">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-8 h-0.5 bg-[#8B2252]/40" />
-            <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">
-              Private Events
-            </span>
-            <div className="w-8 h-0.5 bg-[#8B2252]/40" />
+        <div className="relative container">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-14">
+            {/* Text side */}
+            <div className="text-center md:text-left max-w-lg">
+              <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
+                <div className="w-8 h-0.5 bg-[#8B2252]/40" />
+                <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">
+                  Private Events
+                </span>
+                <div className="w-8 h-0.5 bg-[#8B2252]/40" />
+              </div>
+              <h1 className="font-display text-4xl md:text-5xl font-bold text-[#1A0A12] mb-4">
+                Get an Instant Quote
+              </h1>
+              <p className="font-body text-[#3D1A2E]/65 text-lg">
+                Tell us about your event and we'll give you a price estimate in seconds. No commitment required.
+              </p>
+            </div>
+            {/* Hero image */}
+            <div className="shrink-0 relative">
+              <div className="w-52 h-52 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-white shadow-2xl">
+                <img
+                  src="/manus-storage/apy-quote-hero_e5bfb507.png"
+                  alt="Private puppy yoga event — group of guests enjoying a session with adorable puppies"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              {/* Decorative ring */}
+              <div className="absolute -inset-2 rounded-full border-2 border-[#F2A0B8]/40 pointer-events-none" />
+              {/* Floating badge */}
+              <div className="absolute -bottom-3 -right-3 bg-white rounded-full px-3 py-1.5 shadow-lg border border-[#F2A0B8]/30 flex items-center gap-1.5">
+                <span className="text-base">🐾</span>
+                <span className="font-body text-xs font-bold text-[#8B2252]">Private Events</span>
+              </div>
+            </div>
           </div>
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-[#1A0A12] mb-4">
-            Get an Instant Quote
-          </h1>
-          <p className="font-body text-[#3D1A2E]/65 text-lg max-w-xl mx-auto">
-            Tell us about your event and we'll give you a price estimate in seconds. No commitment required.
-          </p>
         </div>
       </section>
 

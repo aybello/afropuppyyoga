@@ -113,6 +113,103 @@ function buildInquiryEmailHtml(input: {
 </html>`;
 }
 
+function buildCustomerConfirmationHtml(input: {
+  name: string;
+  eventType: string;
+  guests: number;
+  location: string;
+  packageLabel: string;
+  preferredDate: string;
+  estimateStr: string;
+}): string {
+  return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8" /></head>
+<body style="margin:0;padding:0;background:#FFF5F8;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#FFF5F8;padding:32px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <!-- Header -->
+        <tr>
+          <td style="background:#8B2252;padding:36px 40px;text-align:center;">
+            <p style="margin:0 0 6px;font-size:12px;color:#F2A0B8;letter-spacing:2px;text-transform:uppercase;font-weight:600;">AfroPuppyYoga</p>
+            <h1 style="margin:0;font-size:26px;color:#ffffff;font-weight:800;">We've Got Your Inquiry! 🐾</h1>
+          </td>
+        </tr>
+        <!-- Body -->
+        <tr>
+          <td style="padding:36px 40px;">
+            <p style="margin:0 0 20px;font-size:16px;color:#3D1A2E;">Hi <strong>${escapeHtml(input.name)}</strong>,</p>
+            <p style="margin:0 0 24px;font-size:15px;color:#4A2535;line-height:1.6;">Thanks for reaching out about a private puppy yoga event! We've received your inquiry and will be in touch within <strong>24 hours</strong> with availability and a formal quote.</p>
+
+            <!-- Estimate highlight -->
+            <div style="margin:0 0 28px;background:#FFF0F5;border-left:4px solid #8B2252;border-radius:8px;padding:20px 24px;">
+              <p style="margin:0 0 4px;font-size:12px;color:#9B6B7A;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;">Your Estimate</p>
+              <p style="margin:0;font-size:28px;font-weight:800;color:#1A0A12;">${input.estimateStr}</p>
+              <p style="margin:4px 0 0;font-size:12px;color:#9B6B7A;">This is an estimate based on the details you provided. Final pricing confirmed upon booking.</p>
+            </div>
+
+            <!-- Summary table -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:28px;">
+              <tr><td colspan="2" style="padding-bottom:10px;font-size:13px;font-weight:700;color:#8B2252;text-transform:uppercase;letter-spacing:1px;">Your Event Details</td></tr>
+              <tr>
+                <td style="padding:8px 0;border-bottom:1px solid #F5E6EC;font-size:13px;color:#9B6B7A;width:40%;font-weight:600;">Event Type</td>
+                <td style="padding:8px 0;border-bottom:1px solid #F5E6EC;font-size:13px;color:#1A0A12;">${escapeHtml(input.eventType)}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0;border-bottom:1px solid #F5E6EC;font-size:13px;color:#9B6B7A;font-weight:600;">Guests</td>
+                <td style="padding:8px 0;border-bottom:1px solid #F5E6EC;font-size:13px;color:#1A0A12;">${input.guests}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0;border-bottom:1px solid #F5E6EC;font-size:13px;color:#9B6B7A;font-weight:600;">Location</td>
+                <td style="padding:8px 0;border-bottom:1px solid #F5E6EC;font-size:13px;color:#1A0A12;">${escapeHtml(input.location)}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0;border-bottom:1px solid #F5E6EC;font-size:13px;color:#9B6B7A;font-weight:600;">Package</td>
+                <td style="padding:8px 0;border-bottom:1px solid #F5E6EC;font-size:13px;color:#1A0A12;">${escapeHtml(input.packageLabel)}</td>
+              </tr>
+              ${input.preferredDate ? `<tr>
+                <td style="padding:8px 0;border-bottom:1px solid #F5E6EC;font-size:13px;color:#9B6B7A;font-weight:600;">Preferred Date</td>
+                <td style="padding:8px 0;border-bottom:1px solid #F5E6EC;font-size:13px;color:#1A0A12;">${escapeHtml(input.preferredDate)}</td>
+              </tr>` : ""}
+            </table>
+
+            <!-- What happens next -->
+            <div style="background:#FFF5F9;border-radius:12px;padding:20px 24px;margin-bottom:28px;">
+              <p style="margin:0 0 14px;font-size:13px;font-weight:700;color:#8B2252;text-transform:uppercase;letter-spacing:1px;">What Happens Next</p>
+              <div style="display:flex;align-items:flex-start;margin-bottom:10px;">
+                <span style="display:inline-block;width:22px;height:22px;background:#8B2252;color:#fff;border-radius:50%;text-align:center;line-height:22px;font-size:11px;font-weight:700;margin-right:10px;flex-shrink:0;">1</span>
+                <span style="font-size:14px;color:#4A2535;">We review your event details &amp; check availability</span>
+              </div>
+              <div style="display:flex;align-items:flex-start;margin-bottom:10px;">
+                <span style="display:inline-block;width:22px;height:22px;background:#8B2252;color:#fff;border-radius:50%;text-align:center;line-height:22px;font-size:11px;font-weight:700;margin-right:10px;flex-shrink:0;">2</span>
+                <span style="font-size:14px;color:#4A2535;">We confirm puppy &amp; instructor availability</span>
+              </div>
+              <div style="display:flex;align-items:flex-start;">
+                <span style="display:inline-block;width:22px;height:22px;background:#8B2252;color:#fff;border-radius:50%;text-align:center;line-height:22px;font-size:11px;font-weight:700;margin-right:10px;flex-shrink:0;">3</span>
+                <span style="font-size:14px;color:#4A2535;">You receive a formal quote &amp; booking link within 24 hrs</span>
+              </div>
+            </div>
+
+            <p style="margin:0 0 8px;font-size:14px;color:#4A2535;">Questions in the meantime? Reply to this email or reach us at:</p>
+            <p style="margin:0;font-size:14px;"><a href="mailto:afropuppyyogaofficial@gmail.com" style="color:#8B2252;font-weight:600;">afropuppyyogaofficial@gmail.com</a></p>
+          </td>
+        </tr>
+        <!-- Footer -->
+        <tr>
+          <td style="background:#FFF5F8;padding:20px 40px;text-align:center;border-top:1px solid #F5E6EC;">
+            <p style="margin:0 0 4px;font-size:12px;color:#C4A0B0;">AfroPuppyYoga &bull; Ontario's #1 Puppy Yoga Experience</p>
+            <p style="margin:0;font-size:12px;color:#C4A0B0;"><a href="https://afropuppyyoga.ca" style="color:#D4708A;">afropuppyyoga.ca</a></p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 export const privateEventsRouter = router({
   submitInquiry: publicProcedure
     .input(
@@ -235,7 +332,44 @@ export const privateEventsRouter = router({
         // Don't throw — inquiry is already saved to DB
       }
 
-      // 3. Also send Manus owner notification as backup
+      // 3. Send branded confirmation email to the customer
+      try {
+        await sendEmail({
+          to: input.email,
+          subject: `Your AfroPuppyYoga Private Event Inquiry — ${estimateStr}`,
+          html: buildCustomerConfirmationHtml({
+            name: input.name,
+            eventType: input.eventType,
+            guests: input.guests,
+            location: input.location,
+            packageLabel,
+            preferredDate: input.preferredDate,
+            estimateStr,
+          }),
+          text: [
+            `Hi ${input.name},`,
+            ``,
+            `Thanks for reaching out about a private puppy yoga event! We've received your inquiry and will be in touch within 24 hours.`,
+            ``,
+            `YOUR ESTIMATE: ${estimateStr}`,
+            ``,
+            `Event Type: ${input.eventType}`,
+            `Guests: ${input.guests}`,
+            `Location: ${input.location}`,
+            `Package: ${packageLabel}`,
+            input.preferredDate ? `Preferred Date: ${input.preferredDate}` : "",
+            ``,
+            `Questions? Reply to this email or reach us at afropuppyyogaofficial@gmail.com`,
+            ``,
+            `— The AfroPuppyYoga Team`,
+          ].filter(Boolean).join("\n"),
+        });
+      } catch (e) {
+        console.error("Failed to send customer confirmation email:", e);
+        // Don't throw — inquiry is already saved to DB
+      }
+
+      // 4. Also send Manus owner notification as backup
       try {
         await notifyOwner({
           title: `Private Event Inquiry — ${input.name} (${input.guests} guests, ${input.location})`,
