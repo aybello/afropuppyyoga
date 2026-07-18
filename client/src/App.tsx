@@ -17,14 +17,12 @@ const ApplicationsDashboard = lazy(() => import("./pages/ApplicationsDashboard")
 const PartnershipsDashboard = lazy(() => import("./pages/PartnershipsDashboard"));
 const Careers = lazy(() => import("./pages/Careers"));
 const StaffPortal = lazy(() => import("./pages/StaffPortal"));
-const Birthday = lazy(() => import("./pages/Birthday"));
 const Partnerships = lazy(() => import("./pages/Partnerships"));
 const StaffLogin = lazy(() => import("./pages/StaffLogin"));
 const StaffManagement = lazy(() => import("./pages/StaffManagement"));
 const SignDocuments = lazy(() => import("./pages/SignDocuments"));
 const PrivateEventQuote = lazy(() => import("./pages/PrivateEventQuote"));
 const PrivateEventsDashboard = lazy(() => import("./pages/PrivateEventsDashboard"));
-const BirthdayDashboard = lazy(() => import("./pages/BirthdayDashboard"));
 const Loyalty = lazy(() => import("./pages/Loyalty"));
 const Ethics = lazy(() => import("./pages/Ethics"));
 const BreedersDashboard = lazy(() => import("./pages/BreedersDashboard"));
@@ -72,14 +70,13 @@ function Router() {
         <Route path="/admin/partnerships" component={PartnershipsDashboard} />
         <Route path={"/careers"} component={Careers} />
         <Route path={"/staff"} component={StaffPortal} />
-        <Route path={"/birthday"} component={Birthday} />
+        <Route path={"/birthday"}>{() => { window.location.replace("/private-events/quote"); return null; }}</Route>
         <Route path={"/partnerships"} component={Partnerships} />
         <Route path={"/staff-login"} component={StaffLogin} />
         <Route path={"/admin/staff"} component={StaffManagement} />
         <Route path={"/sign"} component={SignDocuments} />
         <Route path={"/private-events/quote"} component={PrivateEventQuote} />
         <Route path="/admin/private-events" component={PrivateEventsDashboard} />
-        <Route path="/admin/birthday" component={BirthdayDashboard} />
         <Route path="/admin/breeders" component={BreedersDashboard} />
         <Route path="/admin/puppy-schedule" component={PuppySchedule} />
         <Route path="/admin/schedule-calendar" component={ScheduleCalendar} />

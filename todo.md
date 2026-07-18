@@ -430,3 +430,10 @@
 ## Admin Direct Login (Jul 17, 2026)
 - [x] Add direct admin username/password login (admin / afropuppyyoga) — bypass Manus OAuth for admin access, issue JWT session
 - [x] Move Staff Portal link/button to top of homepage (above the fold / near navbar)
+
+## Birthday Page Consolidation (Jul 18, 2026)
+- [x] Remove standalone Birthday page (/birthday) and Birthday dashboard (/admin/birthday)
+- [x] Redirect /birthday links site-wide to /private-events/quote
+- [x] Remove Birthday nav links from Navbar, Footer, AdminNav, StaffPortal
+- [x] Update BirthdayBanner homepage section to link to /private-events/quote
+- [x] Update seoRenderer.ts to remove birthday nav links and redirect canonical

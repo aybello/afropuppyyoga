@@ -2,7 +2,7 @@ import { LOGO_URL } from "@/const";
 /* ============================================================
    AdminNav — Shared navigation bar for all APY admin pages
    Primary tabs: Invoices, Applications, Breeders, Refunds
-   More dropdown: Partnerships, Private Events, Birthday
+   More dropdown: Partnerships, Private Events
    Staff tab is only visible to admin role (not staff role)
    ============================================================ */
 import { Link, useLocation } from "wouter";
@@ -14,7 +14,6 @@ import {
   Handshake,
   Sparkles,
   LayoutGrid,
-  Cake,
   PawPrint,
   RotateCcw,
   ChevronDown,
@@ -36,7 +35,6 @@ const PRIMARY_ITEMS = [
 const MORE_ITEMS = [
   { href: "/admin/partnerships",   label: "Partnerships",    icon: Handshake,    adminOnly: false },
   { href: "/admin/private-events", label: "Private Events",  icon: Sparkles,     adminOnly: false },
-  { href: "/admin/birthday",       label: "Birthday",        icon: Cake,         adminOnly: false },
   { href: "/admin/schedule-calendar", label: "Schedule Calendar", icon: CalendarDays, adminOnly: false },
 ];
 

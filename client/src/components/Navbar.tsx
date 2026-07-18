@@ -3,7 +3,7 @@ import { BOOK_URL, LOGO_URL  } from "@/const";
    Navbar — Warm Afro-Wellness Editorial
    Transparent on hero, solid ivory on scroll
    Primary links: Home, Experience, Memberships, Private Events, Gallery, Careers, Loyalty
-   Secondary links (More ▾): Birthday, Partnerships
+   Secondary links (More ▾): Partnerships
    ============================================================ */
 import { useState, useEffect, useRef } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
@@ -27,7 +27,6 @@ const moreLinks = [
   { label: "📍 Hamilton", href: "/puppy-yoga-hamilton", isPage: true },
   { label: "📍 Oakville", href: "/puppy-yoga-oakville", isPage: true },
   { label: "🏢 Corporate Events", href: "/corporate-puppy-yoga", isPage: true },
-  { label: "🎂 Birthday Packages", href: "/birthday", isPage: true },
   { label: "🤝 Partnerships", href: "/partnerships", isPage: true },
   { label: "🐶 Private Event Quote", href: "/private-events/quote", isPage: true },
   { label: "🌿 Ethical Standards", href: "/ethics", isPage: true },

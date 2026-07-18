@@ -290,7 +290,6 @@ const PAGES: Record<string, () => string> = {
   <nav>
     <a href="/">Home</a>
     <a href="/careers">Careers</a>
-    <a href="/birthday">Birthday Events</a>
     <a href="/partnerships">Partnerships</a>
     <a href="/loyalty">Loyalty Program</a>
     <a href="/ethics">Ethical Standards</a>
@@ -410,7 +409,6 @@ const PAGES: Record<string, () => string> = {
   <p>&copy; 2025 AfroPuppyYoga. All rights reserved.</p>
   <p>Ontario's #1 Puppy Yoga Studio | Hamilton | Kitchener | Oakville | Ontario</p>
   <nav>
-    <a href="/birthday">Birthday Packages</a> |
     <a href="/partnerships">Partnerships</a> |
     <a href="/loyalty">Loyalty Program</a> |
     <a href="/ethics">Ethical Standards</a> |
@@ -450,7 +448,7 @@ const PAGES: Record<string, () => string> = {
   <p>Learn more about <a href="/partnerships">Breeder Partnerships</a> or explore our <a href="/ethics">Ethical Standards</a>.</p>
 </main>
 <footer>
-  <a href="/">Home</a> | <a href="/birthday">Birthday Packages</a> | <a href="/partnerships">Partnerships</a> | <a href="/ethics">Ethical Standards</a>
+  <a href="/">Home</a> | <a href="/partnerships">Partnerships</a> | <a href="/ethics">Ethical Standards</a>
 </footer>
 `,
     }),
@@ -460,7 +458,7 @@ const PAGES: Record<string, () => string> = {
       title: "Birthday Puppy Yoga Parties | AfroPuppyYoga",
       description:
         "Celebrate your birthday with a private puppy yoga party! AfroPuppyYoga offers unforgettable birthday experiences in Hamilton, Kitchener, and Oakville, Ontario.",
-      canonical: `${BASE}/birthday`,
+      canonical: `${BASE}/private-events/quote`,
       schema: [
         breadcrumb({ name: "Birthday Packages", url: `${BASE}/birthday` }),
         {
@@ -587,7 +585,7 @@ const PAGES: Record<string, () => string> = {
   <p>Book your next class: <a href="https://lu.ma/afropuppyyoga">View upcoming sessions</a></p>
 </main>
 <footer>
-  <a href="/">Home</a> | <a href="/birthday">Birthday Packages</a> | <a href="/partnerships">Partnerships</a> | <a href="/ethics">Ethical Standards</a>
+  <a href="/">Home</a> | <a href="/partnerships">Partnerships</a> | <a href="/ethics">Ethical Standards</a>
 </footer>
 `,
     }),

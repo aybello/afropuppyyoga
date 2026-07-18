@@ -26,12 +26,12 @@ export default function BirthdayBanner() {
               Make your birthday unforgettable. Bring your crew, cuddle some puppies, and create memories that last a lifetime. Three packages available — from reserved sections to full private sessions.
             </p>
             <a
-              href="/birthday"
+              href="/private-events/quote"
               onClick={() => trackCTAClick("Explore Birthday Packages — Homepage Banner")}
               className="inline-flex items-center gap-2 px-8 py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-base rounded-full hover:bg-[#F2A0B8] transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1"
             >
               <Cake size={18} />
-              Explore Birthday Packages
+              Book a Birthday Event
             </a>
           </div>
 
@@ -44,7 +44,7 @@ export default function BirthdayBanner() {
             ].map((pkg) => (
               <a
                 key={pkg.name}
-                href="/birthday"
+                href="/private-events/quote"
                 onClick={() => trackCTAClick(`Birthday Package ${pkg.name} — Homepage Banner`)}
                 className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 hover:border-[#F2A0B8]/40 hover:bg-white/8 transition-all duration-200 group"
               >
