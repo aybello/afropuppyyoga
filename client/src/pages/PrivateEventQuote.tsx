@@ -186,22 +186,24 @@ export default function PrivateEventQuote() {
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-28 pb-12 bg-[#3D1A2E] relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: "radial-gradient(circle at 70% 50%, #F2A0B8 0%, transparent 60%)" }}
+      <section className="pt-28 pb-14 relative overflow-hidden" style={{ background: "linear-gradient(135deg, #FFF5F9 0%, #FDE8EF 50%, #FAD9E8 100%)" }}>
+        <div className="absolute inset-0 opacity-20"
+          style={{ backgroundImage: "radial-gradient(circle at 80% 20%, #F2A0B8 0%, transparent 55%), radial-gradient(circle at 20% 80%, #E8A0C0 0%, transparent 50%)" }}
         />
+        <div className="absolute top-8 right-16 w-32 h-32 rounded-full opacity-10" style={{ background: "#8B2252" }} />
+        <div className="absolute bottom-4 left-12 w-20 h-20 rounded-full opacity-10" style={{ background: "#F2A0B8" }} />
         <div className="relative container text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-8 h-0.5 bg-[#F2A0B8]" />
-            <span className="text-[#F2A0B8] font-body text-xs font-semibold tracking-widest uppercase">
+            <div className="w-8 h-0.5 bg-[#8B2252]/40" />
+            <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">
               Private Events
             </span>
-            <div className="w-8 h-0.5 bg-[#F2A0B8]" />
+            <div className="w-8 h-0.5 bg-[#8B2252]/40" />
           </div>
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-white mb-4">
+          <h1 className="font-display text-4xl md:text-5xl font-bold text-[#1A0A12] mb-4">
             Get an Instant Quote
           </h1>
-          <p className="font-body text-white/60 text-lg max-w-xl mx-auto">
+          <p className="font-body text-[#3D1A2E]/65 text-lg max-w-xl mx-auto">
             Tell us about your event and we'll give you a price estimate in seconds. No commitment required.
           </p>
         </div>
@@ -325,25 +327,59 @@ export default function PrivateEventQuote() {
             {step === "submitted" ? (
               <motion.div
                 key="submitted"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center py-16"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+                className="text-center py-16 px-4"
               >
-                <div className="w-20 h-20 rounded-full bg-[#F2A0B8]/20 flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle2 size={40} className="text-[#8B2252]" />
-                </div>
-                <h2 className="font-display text-3xl font-bold text-[#1A0A12] mb-3">
-                  Inquiry Received!
-                </h2>
-                <p className="font-body text-[#3D1A2E]/70 text-lg max-w-md mx-auto mb-8">
-                  We'll review your details and get back to you within 24 hours with a formal quote and availability.
-                </p>
-                <a
-                  href="/"
-                  className="inline-flex items-center gap-2 px-8 py-3 bg-[#8B2252] text-white font-body font-semibold rounded-full hover:bg-[#6B1A3F] transition-colors"
+                {/* Animated checkmark circle */}
+                <motion.div
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.1, duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+                  className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
+                  style={{ background: "linear-gradient(135deg, #8B2252, #C05080)" }}
                 >
-                  Back to Home
-                </a>
+                  <CheckCircle2 size={44} className="text-white" strokeWidth={2} />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25, duration: 0.4 }}
+                >
+                  <h2 className="font-display text-3xl md:text-4xl font-bold text-[#1A0A12] mb-3">
+                    Inquiry Received! 🎉
+                  </h2>
+                  <p className="font-body text-[#3D1A2E]/70 text-lg max-w-md mx-auto mb-2">
+                    We've received your event details and will be in touch within <strong>24 hours</strong> with a formal quote and availability.
+                  </p>
+                  <p className="font-body text-[#3D1A2E]/50 text-sm max-w-sm mx-auto mb-10">
+                    Check your inbox — a confirmation has been sent to <strong>{email}</strong>.
+                  </p>
+
+                  {/* What happens next */}
+                  <div className="max-w-sm mx-auto rounded-2xl border border-[#F2A0B8]/30 bg-[#FFF5F9] p-6 text-left mb-8 space-y-3">
+                    <p className="font-body font-semibold text-[#8B2252] text-sm uppercase tracking-wide mb-1">What happens next</p>
+                    {[
+                      { step: "1", text: "We review your event details" },
+                      { step: "2", text: "We confirm puppy & instructor availability" },
+                      { step: "3", text: "You receive a formal quote within 24 hrs" },
+                    ].map((item) => (
+                      <div key={item.step} className="flex items-center gap-3">
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-white text-xs font-bold" style={{ background: "#8B2252" }}>{item.step}</div>
+                        <span className="font-body text-sm text-[#3D1A2E]/70">{item.text}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <a
+                    href="/"
+                    className="inline-flex items-center gap-2 px-8 py-3 bg-[#8B2252] text-white font-body font-semibold rounded-full hover:bg-[#6B1A3F] transition-colors active:scale-[0.97]"
+                  >
+                    Back to Home
+                  </a>
+                </motion.div>
               </motion.div>
             ) : (
               <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -616,10 +652,21 @@ export default function PrivateEventQuote() {
                   <Button
                     type="submit"
                     disabled={!quoteReady || !name || !email || submitInquiry.isPending}
-                    className="w-full py-4 bg-[#8B2252] hover:bg-[#6B1A3F] text-white font-body font-bold text-base rounded-full transition-all"
+                    className="w-full py-4 bg-[#8B2252] hover:bg-[#6B1A3F] text-white font-body font-bold text-base rounded-full transition-all active:scale-[0.98] disabled:opacity-60"
                   >
-                    {submitInquiry.isPending ? "Sending..." : "Send My Inquiry"}
-                    {!submitInquiry.isPending && <ChevronRight size={18} className="ml-1" />}
+                    {submitInquiry.isPending ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        Sending your inquiry…
+                      </span>
+                    ) : (
+                      <span className="flex items-center justify-center gap-1">
+                        Send My Inquiry <ChevronRight size={18} />
+                      </span>
+                    )}
                   </Button>
 
                   <p className="text-center font-body text-[#3D1A2E]/40 text-xs">
