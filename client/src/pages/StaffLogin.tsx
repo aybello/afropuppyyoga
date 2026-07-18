@@ -101,7 +101,7 @@ export default function StaffLogin() {
             <p style={{ color: "#1A0A12", fontSize: "14px", marginBottom: "24px" }}>
               {errorMessage}
             </p>
-            <p style={{ color: "#9E7B8A", fontSize: "13px" }}>
+            <p style={{ color: "#C4A0B0", fontSize: "13px" }}>
               Please contact your manager to request a new invite link, or email us at{" "}
               <a
                 href="mailto:afropuppyyogaofficial@gmail.com"

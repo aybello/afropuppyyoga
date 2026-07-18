@@ -26,8 +26,8 @@ function getOfferLetterContent(
 
   if (isYogaInstructor) {
     return (
-      <div className="space-y-4 text-sm text-[#2A1018] leading-relaxed">
-        <p className="text-xs text-[#9E7B8A]">{today}</p>
+      <div className="space-y-4 text-sm text-[#1A0A12] leading-relaxed">
+        <p className="text-xs text-[#C4A0B0]">{today}</p>
         <p>Dear <strong>{applicantName}</strong>,</p>
         <p>
           We are excited to formally offer you the position of <strong>Yoga Instructor</strong> with{" "}
@@ -36,14 +36,14 @@ function getOfferLetterContent(
         </p>
 
         <div className="border-t border-[#F0D0DC] pt-4">
-          <p className="font-bold text-[#8B1A4A] uppercase text-xs tracking-wide mb-2">Position Details</p>
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Position Details</p>
           <p><strong>Position:</strong> Yoga Instructor</p>
           <p><strong>Location:</strong> {location}</p>
           <p><strong>Compensation:</strong> $22.00 per hour for teaching yoga classes</p>
         </div>
 
         <div className="border-t border-[#F0D0DC] pt-4">
-          <p className="font-bold text-[#8B1A4A] uppercase text-xs tracking-wide mb-2">Key Responsibilities</p>
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Key Responsibilities</p>
           <ul className="list-disc pl-5 space-y-1">
             <li>Lead engaging and safe yoga sessions tailored to participants' needs</li>
             <li>Incorporate AfroPuppyYoga's mission into class delivery, ensuring a joyful experience for all attendees</li>
@@ -52,7 +52,7 @@ function getOfferLetterContent(
         </div>
 
         <div className="border-t border-[#F0D0DC] pt-4">
-          <p className="font-bold text-[#8B1A4A] uppercase text-xs tracking-wide mb-2">Schedule and Hours</p>
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Schedule and Hours</p>
           <p>
             Class scheduling will be determined based on APY's event calendar. Flexibility, punctuality,
             and adaptability are essential to maintaining the quality of our client experience.
@@ -60,7 +60,7 @@ function getOfferLetterContent(
         </div>
 
         <div className="border-t border-[#F0D0DC] pt-4">
-          <p className="font-bold text-[#8B1A4A] uppercase text-xs tracking-wide mb-2">Terms and Conditions</p>
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Terms and Conditions</p>
           <p><strong>Probation Period:</strong> A probationary period of 4 months will apply to assess performance and alignment with APY's goals.</p>
           <p className="mt-2"><strong>Confidentiality:</strong> You will be required to sign a Non-Disclosure Agreement (NDA) to protect AfroPuppyYoga's proprietary information.</p>
           <p className="mt-2"><strong>Performance Reviews:</strong> Class feedback and team collaboration will be reviewed periodically.</p>
@@ -73,7 +73,7 @@ function getOfferLetterContent(
           </p>
           <p className="mt-3">Warm regards,</p>
           <p className="font-bold">The AfroPuppyYoga Team</p>
-          <p className="text-xs text-[#9E7B8A]">afropuppyyogaofficial@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
+          <p className="text-xs text-[#C4A0B0]">afropuppyyogaofficial@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
         </div>
       </div>
     );
@@ -82,8 +82,8 @@ function getOfferLetterContent(
   // Puppy Specialist
   if (isPuppySpecialist) {
     return (
-      <div className="space-y-4 text-sm text-[#2A1018] leading-relaxed">
-        <p className="text-xs text-[#9E7B8A]">{today}</p>
+      <div className="space-y-4 text-sm text-[#1A0A12] leading-relaxed">
+        <p className="text-xs text-[#C4A0B0]">{today}</p>
         <p>Dear <strong>{applicantName}</strong>,</p>
         <p>
           On behalf of the entire AfroPuppyYoga team, we are thrilled to offer you the position of{" "}
@@ -93,14 +93,14 @@ function getOfferLetterContent(
         </p>
 
         <div className="border-t border-[#F0D0DC] pt-4">
-          <p className="font-bold text-[#8B1A4A] uppercase text-xs tracking-wide mb-2">Position Details</p>
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Position Details</p>
           <p><strong>Position:</strong> Puppy Specialist</p>
           <p><strong>Location:</strong> {location}</p>
           <p><strong>Compensation:</strong> $18.00 per hour</p>
         </div>
 
         <div className="border-t border-[#F0D0DC] pt-4">
-          <p className="font-bold text-[#8B1A4A] uppercase text-xs tracking-wide mb-2">Key Responsibilities</p>
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Key Responsibilities</p>
           <ul className="list-disc pl-5 space-y-1">
             <li>Serve as the primary caretaker and handler for puppies during all APY sessions</li>
             <li>Monitor puppy health, behaviour, and stress levels throughout each class</li>
@@ -112,7 +112,7 @@ function getOfferLetterContent(
         </div>
 
         <div className="border-t border-[#F0D0DC] pt-4">
-          <p className="font-bold text-[#8B1A4A] uppercase text-xs tracking-wide mb-2">Schedule and Hours</p>
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Schedule and Hours</p>
           <p>
             Scheduling will be determined based on APY's event calendar. Flexibility and availability
             on weekends are essential for this role.
@@ -120,7 +120,7 @@ function getOfferLetterContent(
         </div>
 
         <div className="border-t border-[#F0D0DC] pt-4">
-          <p className="font-bold text-[#8B1A4A] uppercase text-xs tracking-wide mb-2">Terms and Conditions</p>
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Terms and Conditions</p>
           <p><strong>Probation Period:</strong> A probationary period of 4 months will apply to assess performance and alignment with APY's standards.</p>
           <p className="mt-2"><strong>Confidentiality:</strong> You will be required to sign a Non-Disclosure Agreement (NDA) to protect AfroPuppyYoga's proprietary information.</p>
           <p className="mt-2"><strong>Dress Code:</strong> Black yoga attire and grippy socks are required for all sessions.</p>
@@ -134,7 +134,7 @@ function getOfferLetterContent(
           </p>
           <p className="mt-3">Warmly,</p>
           <p className="font-bold">Ay &amp; The AfroPuppyYoga Team</p>
-          <p className="text-xs text-[#9E7B8A]">afropuppyyogaofficial@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
+          <p className="text-xs text-[#C4A0B0]">afropuppyyogaofficial@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
         </div>
       </div>
     );
@@ -142,8 +142,8 @@ function getOfferLetterContent(
 
   // Puppy Monitor (KW or Hamilton)
   return (
-    <div className="space-y-4 text-sm text-[#2A1018] leading-relaxed">
-      <p className="text-xs text-[#9E7B8A]">{today}</p>
+    <div className="space-y-4 text-sm text-[#1A0A12] leading-relaxed">
+      <p className="text-xs text-[#C4A0B0]">{today}</p>
       <p>Dear <strong>{applicantName}</strong>,</p>
       <p>
         On behalf of the entire AfroPuppyYoga team, we are thrilled to offer you the volunteer position of{" "}
@@ -155,14 +155,14 @@ function getOfferLetterContent(
       </p>
 
       <div className="border-t border-[#F0D0DC] pt-4">
-        <p className="font-bold text-[#8B1A4A] uppercase text-xs tracking-wide mb-2">Position Details</p>
+        <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Position Details</p>
         <p><strong>Position:</strong> Puppy Monitor</p>
         <p><strong>Location:</strong> {location}</p>
         <p><strong>Compensation:</strong> $50.00 per shift</p>
       </div>
 
       <div className="border-t border-[#F0D0DC] pt-4">
-        <p className="font-bold text-[#8B1A4A] uppercase text-xs tracking-wide mb-2">Key Responsibilities</p>
+        <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Key Responsibilities</p>
         <ul className="list-disc pl-5 space-y-1">
           <li>Assist with class setup and breakdown before and after each session</li>
           <li>Monitor puppy welfare and safety throughout the class</li>
@@ -173,7 +173,7 @@ function getOfferLetterContent(
       </div>
 
       <div className="border-t border-[#F0D0DC] pt-4">
-        <p className="font-bold text-[#8B1A4A] uppercase text-xs tracking-wide mb-2">Terms and Conditions</p>
+        <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Terms and Conditions</p>
         <p><strong>Probation Period:</strong> A probationary period of 4 months will apply.</p>
         <p className="mt-2"><strong>Confidentiality:</strong> You will be required to sign a Non-Disclosure Agreement (NDA) to protect AfroPuppyYoga's proprietary information.</p>
         <p className="mt-2"><strong>Dress Code:</strong> Black yoga attire and grippy socks are required for all sessions.</p>
@@ -186,7 +186,7 @@ function getOfferLetterContent(
         </p>
         <p className="mt-3">Warmly,</p>
         <p className="font-bold">Ay &amp; The AfroPuppyYoga Team</p>
-        <p className="text-xs text-[#9E7B8A]">afropuppyyogaofficial@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
+        <p className="text-xs text-[#C4A0B0]">afropuppyyogaofficial@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
       </div>
     </div>
   );
@@ -201,9 +201,9 @@ function getNDAContent(applicantName: string, role: string) {
   });
 
   return (
-    <div className="space-y-4 text-sm text-[#2A1018] leading-relaxed">
-      <p className="text-center font-bold text-base text-[#8B1A4A]">NON-DISCLOSURE AGREEMENT</p>
-      <p className="text-xs text-[#9E7B8A] text-center">{today}</p>
+    <div className="space-y-4 text-sm text-[#1A0A12] leading-relaxed">
+      <p className="text-center font-bold text-base text-[#8B2252]">NON-DISCLOSURE AGREEMENT</p>
+      <p className="text-xs text-[#C4A0B0] text-center">{today}</p>
 
       <p>
         This Non-Disclosure Agreement ("Agreement") is entered into between{" "}
@@ -212,7 +212,7 @@ function getNDAContent(applicantName: string, role: string) {
       </p>
 
       <div className="border-t border-[#F0D0DC] pt-4">
-        <p className="font-bold text-[#8B1A4A] uppercase text-xs tracking-wide mb-2">1. Confidential Information</p>
+        <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">1. Confidential Information</p>
         <p>
           "Confidential Information" means any non-public information disclosed by the Company to the
           Recipient, including but not limited to: business operations, class formats, pricing, client
@@ -222,7 +222,7 @@ function getNDAContent(applicantName: string, role: string) {
       </div>
 
       <div className="border-t border-[#F0D0DC] pt-4">
-        <p className="font-bold text-[#8B1A4A] uppercase text-xs tracking-wide mb-2">2. Obligations</p>
+        <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">2. Obligations</p>
         <p>The Recipient agrees to:</p>
         <ul className="list-disc pl-5 space-y-1 mt-2">
           <li>Keep all Confidential Information strictly confidential</li>
@@ -233,7 +233,7 @@ function getNDAContent(applicantName: string, role: string) {
       </div>
 
       <div className="border-t border-[#F0D0DC] pt-4">
-        <p className="font-bold text-[#8B1A4A] uppercase text-xs tracking-wide mb-2">3. Social Media and Brand Representation</p>
+        <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">3. Social Media and Brand Representation</p>
         <p>
           The Recipient agrees not to post, share, or publish any content related to AfroPuppyYoga's
           operations, internal processes, client information, or proprietary materials on social media
@@ -242,7 +242,7 @@ function getNDAContent(applicantName: string, role: string) {
       </div>
 
       <div className="border-t border-[#F0D0DC] pt-4">
-        <p className="font-bold text-[#8B1A4A] uppercase text-xs tracking-wide mb-2">4. Duration</p>
+        <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">4. Duration</p>
         <p>
           This Agreement shall remain in effect during the Recipient's engagement with AfroPuppyYoga
           and for a period of <strong>2 years</strong> following the termination of such engagement.
@@ -250,7 +250,7 @@ function getNDAContent(applicantName: string, role: string) {
       </div>
 
       <div className="border-t border-[#F0D0DC] pt-4">
-        <p className="font-bold text-[#8B1A4A] uppercase text-xs tracking-wide mb-2">5. Remedies</p>
+        <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">5. Remedies</p>
         <p>
           The Recipient acknowledges that any breach of this Agreement may cause irreparable harm to
           AfroPuppyYoga and that the Company shall be entitled to seek equitable relief, including
@@ -259,7 +259,7 @@ function getNDAContent(applicantName: string, role: string) {
       </div>
 
       <div className="border-t border-[#F0D0DC] pt-4">
-        <p className="font-bold text-[#8B1A4A] uppercase text-xs tracking-wide mb-2">6. Governing Law</p>
+        <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">6. Governing Law</p>
         <p>
           This Agreement shall be governed by the laws of the Province of Ontario, Canada.
         </p>
@@ -301,7 +301,7 @@ function DocumentCard({
         </div>
         <div>
           <p className="font-bold text-[#1A0A12] text-sm">{title}</p>
-          <p className="text-xs text-[#9E7B8A]">{subtitle}</p>
+          <p className="text-xs text-[#C4A0B0]">{subtitle}</p>
         </div>
       </div>
 
@@ -319,7 +319,7 @@ function DocumentCard({
           onChange={(e) => onChange(e.target.checked)}
           className="w-4 h-4 accent-[#8B2252] cursor-pointer"
         />
-        <label htmlFor={`check-${title}`} className="text-sm text-[#3D1A2A] cursor-pointer select-none">
+        <label htmlFor={`check-${title}`} className="text-sm text-[#3D1A2E] cursor-pointer select-none">
           {checkLabel}
         </label>
       </div>
@@ -349,7 +349,7 @@ function CheckboxItem({
         onChange={(e) => onChange(e.target.checked)}
         className="w-4 h-4 mt-0.5 accent-[#8B2252] cursor-pointer flex-shrink-0"
       />
-      <label htmlFor={id} className="text-sm text-[#3D1A2A] cursor-pointer select-none leading-snug">
+      <label htmlFor={id} className="text-sm text-[#3D1A2E] cursor-pointer select-none leading-snug">
         {label}
       </label>
     </div>
@@ -367,7 +367,7 @@ function ErrorState({ message }: { message: string }) {
         </div>
         <h2 className="font-body text-xl font-bold text-[#1A0A12] mb-3">Unable to Load Documents</h2>
         <p className="text-sm text-[#1A0A12] leading-relaxed mb-6">{message}</p>
-        <p className="text-xs text-[#9E7B8A]">
+        <p className="text-xs text-[#C4A0B0]">
           Need help? Contact us at{" "}
           <a href="mailto:afropuppyyogaofficial@gmail.com" className="text-[#8B2252] hover:underline">
             afropuppyyogaofficial@gmail.com
@@ -447,7 +447,7 @@ export default function SignDocuments() {
           <div className="bg-white rounded-2xl border border-[#F0D0DC] p-10 shadow-sm">
             <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-6" />
             <h1 className="font-body text-2xl font-bold text-[#1A0A12] mb-3">Documents Signed!</h1>
-            <p className="text-[#3D1A2A] text-sm leading-relaxed mb-6">
+            <p className="text-[#3D1A2E] text-sm leading-relaxed mb-6">
               Thank you{data.signedName ? `, ${data.signedName}` : ""}! Your Offer Letter and NDA
               have been signed and received by AfroPuppyYoga. We'll be in touch shortly with your
               onboarding details.
@@ -496,11 +496,11 @@ export default function SignDocuments() {
           <h1 className="font-body text-2xl font-bold text-[#1A0A12] mb-2">
             Hi {data.applicantName}! 👋
           </h1>
-          <p className="text-[#3D1A2A] text-sm leading-relaxed">
+          <p className="text-[#3D1A2E] text-sm leading-relaxed">
             Please read both documents below carefully, check the boxes to confirm you have read and
             understood each one, then sign at the bottom. This takes about 2 minutes.
           </p>
-          <div className="mt-3 flex items-center gap-2 text-xs text-[#9E7B8A]">
+          <div className="mt-3 flex items-center gap-2 text-xs text-[#C4A0B0]">
             <span>📋</span>
             <span>
               <strong>{data.role}</strong> — {data.location}
@@ -543,7 +543,7 @@ export default function SignDocuments() {
             </div>
             <div>
               <h2 className="font-body text-lg font-bold text-[#1A0A12]">Digital Signature</h2>
-              <p className="text-xs text-[#9E7B8A]">Type your full legal name to sign both documents</p>
+              <p className="text-xs text-[#C4A0B0]">Type your full legal name to sign both documents</p>
             </div>
           </div>
 
@@ -551,7 +551,7 @@ export default function SignDocuments() {
             <div>
               <Label
                 htmlFor="signedName"
-                className="text-sm font-semibold text-[#3D1A2A] mb-2 block"
+                className="text-sm font-semibold text-[#3D1A2E] mb-2 block"
               >
                 Full Legal Name <span className="text-[#8B2252]">*</span>
               </Label>
@@ -563,7 +563,7 @@ export default function SignDocuments() {
                 className="border-[#F0D0DC] focus:border-[#8B2252] focus:ring-[#8B2252]/20 text-[#1A0A12] font-body text-lg h-12"
                 required
               />
-              <p className="text-xs text-[#9E7B8A] mt-1.5">
+              <p className="text-xs text-[#C4A0B0] mt-1.5">
                 By typing your name above, you are providing a legally binding digital signature for
                 both documents.
               </p>
@@ -600,7 +600,7 @@ export default function SignDocuments() {
                 !hasReadNDA ||
                 !isAdult
               }
-              className="w-full h-12 bg-gradient-to-r from-[#8B2252] to-[#8B2252] hover:from-[#AD1457] hover:to-[#7B1D47] text-white font-bold text-base rounded-xl"
+              className="w-full h-12 bg-gradient-to-r from-[#8B2252] to-[#8B2252] hover:from-[#8B2252] hover:to-[#8B2252] text-white font-bold text-base rounded-xl"
             >
               {submitMutation.isPending ? (
                 <>
@@ -612,7 +612,7 @@ export default function SignDocuments() {
               )}
             </Button>
 
-            <p className="text-xs text-center text-[#9E7B8A]">
+            <p className="text-xs text-center text-[#C4A0B0]">
               By clicking "Sign & Submit", you agree to the terms of both documents. This action is
               recorded with a timestamp and cannot be undone.
             </p>
@@ -622,7 +622,7 @@ export default function SignDocuments() {
 
       {/* Footer */}
       <div className="text-center py-8 border-t border-[#F0D0DC] mt-4">
-        <p className="text-xs text-[#9E7B8A]">
+        <p className="text-xs text-[#C4A0B0]">
           AfroPuppyYoga · Kitchener-Waterloo &amp; Hamilton, Ontario ·{" "}
           <a href="https://afropuppyyoga.ca" className="text-[#8B2252] hover:underline">
             afropuppyyoga.ca

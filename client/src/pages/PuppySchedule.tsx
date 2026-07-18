@@ -214,8 +214,8 @@ export default function PuppySchedule() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-1 h-6 bg-[#C2185B] rounded-full" />
-              <span className="text-[#C2185B] font-body text-xs font-bold tracking-widest uppercase">Admin</span>
+              <div className="w-1 h-6 bg-[#8B2252] rounded-full" />
+              <span className="text-[#8B2252] font-body text-xs font-bold tracking-widest uppercase">Admin</span>
             </div>
             <h1 className="font-display text-3xl font-bold text-[#1A0A12]">Puppy Class Schedule</h1>
             <p className="font-body text-sm text-[#6B4C3B] mt-1">
@@ -224,7 +224,7 @@ export default function PuppySchedule() {
           </div>
           <Button
             onClick={openAdd}
-            className="bg-[#C2185B] hover:bg-[#AD1457] text-white font-body font-semibold rounded-full px-5"
+            className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body font-semibold rounded-full px-5"
           >
             <Plus size={16} className="mr-1" /> Schedule Class
           </Button>
@@ -239,7 +239,7 @@ export default function PuppySchedule() {
             { label: "Oakville", value: schedules.filter(s => s.location === "Oakville").length },
           ].map(({ label, value }) => (
             <div key={label} className="bg-white rounded-xl border border-[#F0D0DC] p-4">
-              <div className="font-display text-2xl font-bold text-[#C2185B]">{value}</div>
+              <div className="font-display text-2xl font-bold text-[#8B2252]">{value}</div>
               <div className="font-body text-xs text-[#6B4C3B] mt-0.5">{label}</div>
             </div>
           ))}
@@ -253,8 +253,8 @@ export default function PuppySchedule() {
               onClick={() => setFilterLocation(loc)}
               className={`px-4 py-1.5 rounded-full font-body text-sm font-semibold border transition-all ${
                 filterLocation === loc
-                  ? "bg-[#C2185B] text-white border-[#C2185B]"
-                  : "bg-white text-[#6B4C3B] border-[#F0D0DC] hover:border-[#C2185B]"
+                  ? "bg-[#8B2252] text-white border-[#8B2252]"
+                  : "bg-white text-[#6B4C3B] border-[#F0D0DC] hover:border-[#8B2252]"
               }`}
             >
               {loc === "all" ? "All Locations" : loc}
@@ -284,7 +284,7 @@ export default function PuppySchedule() {
                 <div key={date} className="bg-white rounded-2xl border border-[#F0D0DC] overflow-hidden">
                   {/* Date header */}
                   <div className="flex items-center gap-3 px-5 py-3 bg-[#FFF5F8] border-b border-[#F0D0DC]">
-                    <CalendarDays size={18} className="text-[#C2185B]" />
+                    <CalendarDays size={18} className="text-[#8B2252]" />
                     <span className="font-display font-bold text-[#1A0A12] text-base">{dateLabel}</span>
                     <Badge className={`text-xs font-body border ${DAY_COLORS[dayOfWeek]}`}>{dayOfWeek}</Badge>
                   </div>
@@ -293,7 +293,7 @@ export default function PuppySchedule() {
                     {entries.map(s => (
                       <div key={s.id} className="flex items-start gap-4 px-5 py-4">
                         <div className="w-9 h-9 rounded-full bg-[#FFF0F4] flex items-center justify-center shrink-0 mt-0.5">
-                          <PawPrint size={18} className="text-[#C2185B]" />
+                          <PawPrint size={18} className="text-[#8B2252]" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -306,13 +306,13 @@ export default function PuppySchedule() {
                             Breeder: <span className="font-semibold text-[#1A0A12]">{s.breederName}</span>
                           </div>
                           {s.notes && (
-                            <div className="font-body text-xs text-[#9E7B6B] mt-1 italic">{s.notes}</div>
+                            <div className="font-body text-xs text-[#C4A0B0] mt-1 italic">{s.notes}</div>
                           )}
                         </div>
                         <div className="flex gap-2 shrink-0">
                           <button
                             onClick={() => openEdit(s)}
-                            className="p-1.5 rounded-lg hover:bg-[#FFF0F4] text-[#6B4C3B] hover:text-[#C2185B] transition-colors"
+                            className="p-1.5 rounded-lg hover:bg-[#FFF0F4] text-[#6B4C3B] hover:text-[#8B2252] transition-colors"
                           >
                             <Pencil size={15} />
                           </button>
@@ -406,12 +406,12 @@ export default function PuppySchedule() {
                 value={form.breed}
                 onChange={e => setForm(f => ({ ...f, breed: e.target.value }))}
               />
-              <p className="text-xs text-[#9E7B6B] mt-1 font-body">Auto-filled from breeder profile — edit if different.</p>
+              <p className="text-xs text-[#C4A0B0] mt-1 font-body">Auto-filled from breeder profile — edit if different.</p>
             </div>
 
             {/* Notes */}
             <div>
-              <Label className="font-body text-sm text-[#1A0A12] font-semibold">Notes <span className="text-[#9E7B6B] font-normal">(optional)</span></Label>
+              <Label className="font-body text-sm text-[#1A0A12] font-semibold">Notes <span className="text-[#C4A0B0] font-normal">(optional)</span></Label>
               <Textarea
                 className="mt-1 border-[#F0D0DC] font-body text-sm resize-none"
                 placeholder="e.g. 4 puppies, drop-off at 9:30 AM"
@@ -428,7 +428,7 @@ export default function PuppySchedule() {
             <Button
               onClick={handleSubmit}
               disabled={createMutation.isPending || updateMutation.isPending}
-              className="bg-[#C2185B] hover:bg-[#AD1457] text-white font-body font-semibold rounded-full px-6"
+              className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body font-semibold rounded-full px-6"
             >
               {(createMutation.isPending || updateMutation.isPending) && <Loader2 size={14} className="animate-spin mr-2" />}
               {editId !== null ? "Save Changes" : "Schedule Class"}

@@ -107,7 +107,7 @@ export default function BirthdayDashboard() {
       <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
         <div className="text-center">
           <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Login Required</h2>
-          <p className="font-body text-sm text-[#5A3040] mb-4">Please sign in to access the Birthday Dashboard.</p>
+          <p className="font-body text-sm text-[#3D1A2E] mb-4">Please sign in to access the Birthday Dashboard.</p>
           <a href={getLoginUrl()} className="inline-flex items-center gap-2 px-4 py-2 bg-[#8B2252] text-white rounded-full font-body font-semibold text-sm">
             Sign In
           </a>
@@ -121,7 +121,7 @@ export default function BirthdayDashboard() {
       <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
         <div className="text-center">
           <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Access Denied</h2>
-          <p className="font-body text-sm text-[#5A3040]">You do not have permission to view this page.</p>
+          <p className="font-body text-sm text-[#3D1A2E]">You do not have permission to view this page.</p>
         </div>
       </div>
     );
@@ -156,7 +156,7 @@ export default function BirthdayDashboard() {
             <Cake className="w-7 h-7 text-[#8B2252]" />
             <h1 className="font-display font-bold text-3xl text-[#1A0A12]">Birthday Inquiries</h1>
           </div>
-          <p className="font-body text-sm text-[#5A3040]">
+          <p className="font-body text-sm text-[#3D1A2E]">
             Review and manage all incoming birthday package inquiries.
           </p>
         </div>
@@ -170,7 +170,7 @@ export default function BirthdayDashboard() {
             { label: "Cancelled", value: counts.cancelled, color: "text-red-500" },
           ].map((stat) => (
             <div key={stat.label} className="bg-white border border-[#F0D0DC] rounded-2xl p-4">
-              <p className="font-body text-xs text-[#8B6070] mb-1">{stat.label}</p>
+              <p className="font-body text-xs text-[#3D1A2E] mb-1">{stat.label}</p>
               <p className={`font-display font-bold text-2xl ${stat.color}`}>{stat.value}</p>
             </div>
           ))}
@@ -222,7 +222,7 @@ export default function BirthdayDashboard() {
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Inbox className="w-12 h-12 text-[#C4A0B0] mb-4" />
             <p className="font-display font-bold text-lg text-[#1A0A12] mb-1">No inquiries found</p>
-            <p className="font-body text-sm text-[#8B6070]">
+            <p className="font-body text-sm text-[#3D1A2E]">
               {counts.total === 0 ? "No birthday inquiries have been submitted yet." : "Try adjusting your filters."}
             </p>
           </div>
@@ -249,7 +249,7 @@ export default function BirthdayDashboard() {
                     >
                       <td className="px-5 py-4">
                         <p className="font-body font-semibold text-sm text-[#1A0A12]">{inq.name}</p>
-                        <p className="font-body text-xs text-[#8B6070]">{inq.email}</p>
+                        <p className="font-body text-xs text-[#3D1A2E]">{inq.email}</p>
                       </td>
                       <td className="px-5 py-4">
                         <span className={`px-2 py-0.5 text-xs font-body font-semibold rounded-full border ${TIER_COLORS[inq.tier] ?? "bg-gray-50 text-gray-600 border-gray-200"}`}>
@@ -305,7 +305,7 @@ export default function BirthdayDashboard() {
                 <Cake className="w-5 h-5 text-[#8B2252]" />
                 Birthday Inquiry — {selectedInquiry.name}
               </DialogTitle>
-              <DialogDescription className="font-body text-sm text-[#8B6070]">
+              <DialogDescription className="font-body text-sm text-[#3D1A2E]">
                 Submitted {new Date(selectedInquiry.createdAt).toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" })}
               </DialogDescription>
             </DialogHeader>
@@ -331,21 +331,21 @@ export default function BirthdayDashboard() {
                 <p className="font-body text-xs font-semibold text-[#8B2252] uppercase tracking-wider mb-3">Event Details</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <p className="font-body text-xs text-[#8B6070]">Package Tier</p>
+                    <p className="font-body text-xs text-[#3D1A2E]">Package Tier</p>
                     <span className={`px-2 py-0.5 text-xs font-body font-semibold rounded-full border ${TIER_COLORS[selectedInquiry.tier]}`}>
                       {selectedInquiry.tier}
                     </span>
                   </div>
                   <div>
-                    <p className="font-body text-xs text-[#8B6070]">Location</p>
+                    <p className="font-body text-xs text-[#3D1A2E]">Location</p>
                     <p className="font-body text-sm font-semibold text-[#1A0A12]">{selectedInquiry.location === "KW" ? "Kitchener-Waterloo" : "Hamilton"}</p>
                   </div>
                   <div>
-                    <p className="font-body text-xs text-[#8B6070]">Preferred Date</p>
+                    <p className="font-body text-xs text-[#3D1A2E]">Preferred Date</p>
                     <p className="font-body text-sm font-semibold text-[#1A0A12]">{selectedInquiry.preferredDate}</p>
                   </div>
                   <div>
-                    <p className="font-body text-xs text-[#8B6070]">Group Size</p>
+                    <p className="font-body text-xs text-[#3D1A2E]">Group Size</p>
                     <p className="font-body text-sm font-semibold text-[#1A0A12]">{selectedInquiry.groupSize} guests</p>
                   </div>
                 </div>
@@ -371,7 +371,7 @@ export default function BirthdayDashboard() {
                       className={`px-3 py-1.5 text-xs font-body font-semibold rounded-full border transition-colors ${
                         selectedInquiry.status === s
                           ? STATUS_COLORS[s] + " opacity-100"
-                          : "bg-white text-[#8B6070] border-[#E0C0CC] hover:bg-[#FFF5F8]"
+                          : "bg-white text-[#3D1A2E] border-[#F0D0DC] hover:bg-[#FFF5F8]"
                       }`}
                     >
                       {updateStatusMutation.isPending && updateStatusMutation.variables?.status === s ? (

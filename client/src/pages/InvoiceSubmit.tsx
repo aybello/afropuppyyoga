@@ -102,7 +102,7 @@ export default function InvoiceSubmit() {
           <button
             onClick={() => setSubmitted(false)}
             className="inline-flex items-center px-6 py-3 font-body font-semibold text-sm rounded-full text-white transition-all duration-200 hover:-translate-y-0.5"
-            style={{ background: "linear-gradient(135deg, #e91e8c, #c2410c)" }}
+            style={{ background: "linear-gradient(135deg, #8B2252, #c2410c)" }}
           >
             Submit Another Invoice
           </button>
@@ -217,7 +217,7 @@ export default function InvoiceSubmit() {
             onClick={handleSubmit}
             disabled={!file || uploading || submitMutation.isPending}
             className="mt-6 w-full inline-flex items-center justify-center gap-2 px-6 py-4 font-body font-semibold text-base rounded-full text-white transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
-            style={{ background: "linear-gradient(135deg, #e91e8c, #c2410c)" }}
+            style={{ background: "linear-gradient(135deg, #8B2252, #c2410c)" }}
           >
             {(uploading || submitMutation.isPending) ? (
               <>

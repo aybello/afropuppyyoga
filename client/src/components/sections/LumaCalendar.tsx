@@ -33,20 +33,20 @@ export default function LumaCalendar() {
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <div className="h-px w-8" style={{ background: "#c2185b" }} />
+              <div className="h-px w-8" style={{ background: "#8B2252" }} />
               <span
                 className="text-xs font-semibold tracking-widest uppercase"
-                style={{ color: "#c2185b" }}
+                style={{ color: "#8B2252" }}
               >
                 Book a Class
               </span>
             </div>
             <h2
               className="text-4xl md:text-5xl font-bold leading-tight"
-              style={{ fontFamily: "'Fraunces', serif", color: "#1a0a0f" }}
+              style={{ fontFamily: "'Fraunces', serif", color: "#1A0A12" }}
             >
               Upcoming{" "}
-              <em className="not-italic" style={{ color: "#e91e8c" }}>
+              <em className="not-italic" style={{ color: "#8B2252" }}>
                 Classes
               </em>
             </h2>
@@ -65,7 +65,7 @@ export default function LumaCalendar() {
             }}
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold transition-all hover:scale-105 shrink-0"
             style={{
-              background: "#e91e8c",
+              background: "#8B2252",
               color: "#fff",
               boxShadow: "0 4px 20px rgba(233,30,140,0.3)",
             }}
@@ -122,7 +122,7 @@ export default function LumaCalendar() {
                   <div className="skeleton-shimmer w-20 h-8 rounded-full shrink-0" />
                 </div>
               ))}
-              <p className="text-center text-xs mt-4" style={{ color: "#c2185b" }}>Loading upcoming classes…</p>
+              <p className="text-center text-xs mt-4" style={{ color: "#8B2252" }}>Loading upcoming classes…</p>
             </div>
           )}
 
@@ -158,7 +158,7 @@ export default function LumaCalendar() {
             target="_blank"
             rel="noopener noreferrer"
             className="underline underline-offset-2 hover:opacity-70 transition-opacity"
-            style={{ color: "#c2185b" }}
+            style={{ color: "#8B2252" }}
           >
             Luma
           </a>{" "}

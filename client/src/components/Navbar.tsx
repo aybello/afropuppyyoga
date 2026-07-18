@@ -119,7 +119,7 @@ export default function Navbar() {
                       href={isSubPage ? "/#memberships" : link.href}
                       onClick={(e) => handleNavClick(e, link.href)}
                       className="px-3 py-1.5 text-sm font-body font-bold rounded-full transition-all duration-200 text-white"
-                      style={{ background: "linear-gradient(135deg, #e91e8c, #8B2252)", boxShadow: "0 2px 8px rgba(233,30,140,0.35)" }}
+                      style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)", boxShadow: "0 2px 8px rgba(233,30,140,0.35)" }}
                     >
                       {link.label}
                     </a>
@@ -149,7 +149,7 @@ export default function Navbar() {
                   href={loyaltyLink.href}
                   onClick={() => { setMenuOpen(false); setMoreOpen(false); }}
                   className="px-3 py-1.5 text-sm font-body font-bold rounded-full transition-all duration-200 text-white"
-                  style={{ background: "linear-gradient(135deg, #e91e8c, #8B2252)", boxShadow: "0 2px 8px rgba(233,30,140,0.35)" }}
+                  style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)", boxShadow: "0 2px 8px rgba(233,30,140,0.35)" }}
                 >
                   {loyaltyLink.label}
                 </a>
@@ -198,7 +198,7 @@ export default function Navbar() {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackCTAClick("Book a Class — Navbar")}
-                className="inline-flex items-center px-4 py-2 sm:px-5 sm:py-2.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-semibold text-xs sm:text-sm rounded-full hover:bg-[#D4708A] transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5"
+                className="inline-flex items-center px-4 py-2 sm:px-5 sm:py-2.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-semibold text-xs sm:text-sm rounded-full hover:bg-[#F2A0B8] transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5"
               >
                 Book a Class
               </a>
@@ -236,7 +236,7 @@ export default function Navbar() {
                     href={isSubPage ? "/#memberships" : link.href}
                     onClick={(e) => { handleNavClick(e, link.href); setMenuOpen(false); }}
                     className="block px-4 py-3 font-body font-bold rounded-lg text-white transition-colors"
-                    style={{ background: "linear-gradient(135deg, #e91e8c, #8B2252)" }}
+                    style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}
                   >
                     {link.label}
                   </a>
@@ -245,7 +245,7 @@ export default function Navbar() {
                     href={link.href}
                     onClick={() => setMenuOpen(false)}
                     className="block px-4 py-3 font-body font-bold rounded-lg text-white transition-colors"
-                    style={{ background: "linear-gradient(135deg, #e91e8c, #8B2252)" }}
+                    style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}
                   >
                     {link.label}
                   </a>
@@ -281,7 +281,7 @@ export default function Navbar() {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackCTAClick("Book a Class — Mobile Menu")}
-                className="block text-center px-5 py-3 bg-[#F2A0B8] text-[#1A0A12] font-body font-semibold rounded-full hover:bg-[#D4708A] transition-colors"
+                className="block text-center px-5 py-3 bg-[#F2A0B8] text-[#1A0A12] font-body font-semibold rounded-full hover:bg-[#F2A0B8] transition-colors"
               >
                 Book a Class
               </a>

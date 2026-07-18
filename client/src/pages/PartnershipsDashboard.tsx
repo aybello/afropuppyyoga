@@ -109,7 +109,7 @@ export default function PartnershipsDashboard() {
       <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
         <div className="text-center">
           <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Login Required</h2>
-          <p className="font-body text-sm text-[#5A3040] mb-4">Please sign in to access the Partnerships Dashboard.</p>
+          <p className="font-body text-sm text-[#3D1A2E] mb-4">Please sign in to access the Partnerships Dashboard.</p>
           <a href={getLoginUrl()} className="inline-flex items-center gap-2 px-4 py-2 bg-[#8B2252] text-white rounded-full font-body font-semibold text-sm">
             Sign In
           </a>
@@ -123,7 +123,7 @@ export default function PartnershipsDashboard() {
       <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
         <div className="text-center">
           <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Access Denied</h2>
-          <p className="font-body text-sm text-[#5A3040]">You do not have permission to view this page.</p>
+          <p className="font-body text-sm text-[#3D1A2E]">You do not have permission to view this page.</p>
         </div>
       </div>
     );
@@ -157,7 +157,7 @@ export default function PartnershipsDashboard() {
             <Handshake className="w-7 h-7 text-[#8B2252]" />
             <h1 className="font-display font-bold text-3xl text-[#1A0A12]">Partnership Inquiries</h1>
           </div>
-          <p className="font-body text-sm text-[#5A3040]">
+          <p className="font-body text-sm text-[#3D1A2E]">
             Review and manage all incoming partnership inquiries.
           </p>
         </div>
@@ -171,7 +171,7 @@ export default function PartnershipsDashboard() {
             { label: "Declined", value: counts.declined, color: "text-red-500" },
           ].map((stat) => (
             <div key={stat.label} className="bg-white border border-[#F0D0DC] rounded-2xl p-4">
-              <p className="font-body text-xs text-[#8B6070] mb-1">{stat.label}</p>
+              <p className="font-body text-xs text-[#3D1A2E] mb-1">{stat.label}</p>
               <p className={`font-display font-bold text-2xl ${stat.color}`}>{stat.value}</p>
             </div>
           ))}
@@ -215,7 +215,7 @@ export default function PartnershipsDashboard() {
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Inbox className="w-12 h-12 text-[#C4A0B0] mb-4" />
             <p className="font-display font-bold text-lg text-[#1A0A12] mb-1">No inquiries found</p>
-            <p className="font-body text-sm text-[#8B6070]">
+            <p className="font-body text-sm text-[#3D1A2E]">
               {counts.total === 0 ? "No partnership inquiries have been submitted yet." : "Try adjusting your filters."}
             </p>
           </div>
@@ -252,14 +252,14 @@ export default function PartnershipsDashboard() {
                       </td>
                       <td className="px-5 py-4">
                         <p className="font-body text-sm text-[#1A0A12]">{inq.contactName}</p>
-                        <p className="font-body text-xs text-[#8B6070]">{inq.email}</p>
+                        <p className="font-body text-xs text-[#3D1A2E]">{inq.email}</p>
                       </td>
                       <td className="px-5 py-4">
                         <span className={`px-2 py-0.5 text-xs font-body font-semibold rounded-full border ${STATUS_COLORS[inq.status]}`}>
                           {STATUS_LABELS[inq.status]}
                         </span>
                       </td>
-                      <td className="px-5 py-4 font-body text-xs text-[#8B6070]">
+                      <td className="px-5 py-4 font-body text-xs text-[#3D1A2E]">
                         {new Date(inq.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-5 py-4">
@@ -289,7 +289,7 @@ export default function PartnershipsDashboard() {
               <DialogTitle className="font-display font-bold text-xl text-[#1A0A12]">
                 {selectedInquiry.organizationName}
               </DialogTitle>
-              <DialogDescription className="font-body text-sm text-[#5A3040]">
+              <DialogDescription className="font-body text-sm text-[#3D1A2E]">
                 {selectedInquiry.partnershipType} inquiry
               </DialogDescription>
             </DialogHeader>
@@ -300,14 +300,14 @@ export default function PartnershipsDashboard() {
                 <div className="flex items-start gap-2">
                   <User className="w-4 h-4 text-[#C4A0B0] mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-body text-xs text-[#8B6070]">Contact</p>
+                    <p className="font-body text-xs text-[#3D1A2E]">Contact</p>
                     <p className="font-body text-sm font-semibold text-[#1A0A12]">{selectedInquiry.contactName}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <Mail className="w-4 h-4 text-[#C4A0B0] mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-body text-xs text-[#8B6070]">Email</p>
+                    <p className="font-body text-xs text-[#3D1A2E]">Email</p>
                     <a href={`mailto:${selectedInquiry.email}`} className="font-body text-sm font-semibold text-[#8B2252] hover:underline">
                       {selectedInquiry.email}
                     </a>
@@ -317,7 +317,7 @@ export default function PartnershipsDashboard() {
                   <div className="flex items-start gap-2">
                     <Phone className="w-4 h-4 text-[#C4A0B0] mt-0.5 shrink-0" />
                     <div>
-                      <p className="font-body text-xs text-[#8B6070]">Phone</p>
+                      <p className="font-body text-xs text-[#3D1A2E]">Phone</p>
                       <p className="font-body text-sm font-semibold text-[#1A0A12]">{selectedInquiry.phone}</p>
                     </div>
                   </div>
@@ -326,7 +326,7 @@ export default function PartnershipsDashboard() {
                   <div className="flex items-start gap-2">
                     <Globe className="w-4 h-4 text-[#C4A0B0] mt-0.5 shrink-0" />
                     <div>
-                      <p className="font-body text-xs text-[#8B6070]">Website</p>
+                      <p className="font-body text-xs text-[#3D1A2E]">Website</p>
                       <a
                         href={selectedInquiry.website}
                         target="_blank"
@@ -342,7 +342,7 @@ export default function PartnershipsDashboard() {
 
               {/* Proposal */}
               <div>
-                <p className="font-body text-xs font-semibold text-[#8B6070] uppercase tracking-wider mb-2">Proposal</p>
+                <p className="font-body text-xs font-semibold text-[#3D1A2E] uppercase tracking-wider mb-2">Proposal</p>
                 <div className="bg-[#FFF5F8] border border-[#F0D0DC] rounded-xl p-4">
                   <p className="font-body text-sm text-[#1A0A12] leading-relaxed whitespace-pre-wrap">{selectedInquiry.proposal}</p>
                 </div>
@@ -350,7 +350,7 @@ export default function PartnershipsDashboard() {
 
               {/* Status update */}
               <div>
-                <p className="font-body text-xs font-semibold text-[#8B6070] uppercase tracking-wider mb-2">Update Status</p>
+                <p className="font-body text-xs font-semibold text-[#3D1A2E] uppercase tracking-wider mb-2">Update Status</p>
                 <div className="flex items-center gap-3">
                   <Select
                     value={selectedInquiry.status}

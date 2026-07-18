@@ -555,7 +555,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
               <CheckCircle size={32} className="text-[#8B2252]" />
             </div>
             <h3 className="font-display font-bold text-2xl text-[#1A0A12] mb-3">Application Received!</h3>
-            <p className="font-body text-[#5A3040] text-base leading-relaxed mb-6">
+            <p className="font-body text-[#3D1A2E] text-base leading-relaxed mb-6">
               Thank you for applying to join the AfroPuppyYoga family. We'll review your application and reach out if you're a great fit.
             </p>
             <button
@@ -576,7 +576,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
             {/* Personal Info */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block font-body text-xs font-semibold text-[#5A3040] uppercase tracking-wide mb-1.5">
+                <label className="block font-body text-xs font-semibold text-[#3D1A2E] uppercase tracking-wide mb-1.5">
                   Full Name <span className="text-[#8B2252]">*</span>
                 </label>
                 <input
@@ -588,7 +588,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                 />
               </div>
               <div>
-                <label className="block font-body text-xs font-semibold text-[#5A3040] uppercase tracking-wide mb-1.5">
+                <label className="block font-body text-xs font-semibold text-[#3D1A2E] uppercase tracking-wide mb-1.5">
                   Email <span className="text-[#8B2252]">*</span>
                 </label>
                 <input
@@ -602,7 +602,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
             </div>
 
             <div>
-              <label className="block font-body text-xs font-semibold text-[#5A3040] uppercase tracking-wide mb-1.5">
+              <label className="block font-body text-xs font-semibold text-[#3D1A2E] uppercase tracking-wide mb-1.5">
                 Phone Number
               </label>
               <input
@@ -615,7 +615,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
             </div>
 
             <div>
-              <label className="block font-body text-xs font-semibold text-[#5A3040] uppercase tracking-wide mb-1.5">
+              <label className="block font-body text-xs font-semibold text-[#3D1A2E] uppercase tracking-wide mb-1.5">
                 Why do you want to join AfroPuppyYoga?
               </label>
               <textarea
@@ -628,7 +628,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
             </div>
 
             <div>
-              <label className="block font-body text-xs font-semibold text-[#5A3040] uppercase tracking-wide mb-1.5">
+              <label className="block font-body text-xs font-semibold text-[#3D1A2E] uppercase tracking-wide mb-1.5">
                 Relevant Experience
               </label>
               <textarea
@@ -642,10 +642,10 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
 
             {/* Resume Upload */}
             <div>
-              <label className="block font-body text-xs font-semibold text-[#5A3040] uppercase tracking-wide mb-1.5">
+              <label className="block font-body text-xs font-semibold text-[#3D1A2E] uppercase tracking-wide mb-1.5">
                 Resume <span className="text-[#8B2252]">*</span> <span className="text-[#8B2252] font-normal">(PDF or Word, Max 10MB)</span>
               </label>
-              <p className="font-body text-xs text-[#8B6070] mb-3">
+              <p className="font-body text-xs text-[#3D1A2E] mb-3">
                 Upload your most recent resume or CV.
               </p>
               <input
@@ -662,7 +662,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                   <button
                     type="button"
                     onClick={() => { setResumeFile(null); if (resumeInputRef.current) resumeInputRef.current.value = ""; }}
-                    className="p-1 hover:bg-[#F0D0DC] rounded-full transition-colors text-[#5A3040]"
+                    className="p-1 hover:bg-[#F0D0DC] rounded-full transition-colors text-[#3D1A2E]"
                   >
                     <X size={14} />
                   </button>
@@ -674,7 +674,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                   className="w-full flex flex-col items-center gap-2 p-6 border-2 border-dashed border-[#F0D0DC] rounded-xl hover:border-[#8B2252] hover:bg-[#FFF5F8] transition-colors group"
                 >
                   <Upload size={24} className="text-[#C4A0B0] group-hover:text-[#8B2252] transition-colors" />
-                  <span className="font-body text-sm text-[#8B6070] group-hover:text-[#8B2252] transition-colors">
+                  <span className="font-body text-sm text-[#3D1A2E] group-hover:text-[#8B2252] transition-colors">
                     Click to upload your resume
                   </span>
                   <span className="font-body text-xs text-[#C4A0B0]">PDF, DOC, DOCX — Max 10MB</span>
@@ -684,10 +684,10 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
 
             {/* Video Introduction — Required */}
             <div>
-              <label className="block font-body text-xs font-semibold text-[#5A3040] uppercase tracking-wide mb-1.5">
+              <label className="block font-body text-xs font-semibold text-[#3D1A2E] uppercase tracking-wide mb-1.5">
                 Video Introduction <span className="text-[#8B2252]">*</span>
               </label>
-              <p className="font-body text-xs text-[#8B6070] mb-3">
+              <p className="font-body text-xs text-[#3D1A2E] mb-3">
                 Record a short 1-2 minute video introducing yourself. Tell us your name, why you love what you do, and why APY feels like the right fit. Be yourself!
               </p>
               {/* Tab toggle: Upload vs Link */}
@@ -698,7 +698,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                   className={`flex-1 flex items-center justify-center gap-2 py-2.5 font-body text-xs font-semibold transition-colors ${
                     videoMode === "upload"
                       ? "bg-[#8B2252] text-white"
-                      : "bg-white text-[#8B6070] hover:bg-[#FFF5F8]"
+                      : "bg-white text-[#3D1A2E] hover:bg-[#FFF5F8]"
                   }`}
                 >
                   <Upload size={14} />
@@ -710,7 +710,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                   className={`flex-1 flex items-center justify-center gap-2 py-2.5 font-body text-xs font-semibold transition-colors ${
                     videoMode === "link"
                       ? "bg-[#8B2252] text-white"
-                      : "bg-white text-[#8B6070] hover:bg-[#FFF5F8]"
+                      : "bg-white text-[#3D1A2E] hover:bg-[#FFF5F8]"
                   }`}
                 >
                   <LinkIcon size={14} />
@@ -732,7 +732,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                     <button
                       type="button"
                       onClick={() => { setVideoFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
-                      className="p-1 hover:bg-[#F0D0DC] rounded-full transition-colors text-[#5A3040]"
+                      className="p-1 hover:bg-[#F0D0DC] rounded-full transition-colors text-[#3D1A2E]"
                     >
                       <X size={14} />
                     </button>
@@ -744,7 +744,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                     className="w-full flex flex-col items-center gap-2 p-6 border-2 border-dashed border-[#F0D0DC] rounded-xl hover:border-[#8B2252] hover:bg-[#FFF5F8] transition-colors group"
                   >
                     <Video size={24} className="text-[#C4A0B0] group-hover:text-[#8B2252] transition-colors" />
-                    <span className="font-body text-sm text-[#8B6070] group-hover:text-[#8B2252] transition-colors">
+                    <span className="font-body text-sm text-[#3D1A2E] group-hover:text-[#8B2252] transition-colors">
                       Click to upload your video
                     </span>
                     <span className="font-body text-xs text-[#C4A0B0]">MP4, MOV, WebM — Max 500MB</span>
@@ -759,13 +759,13 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                     placeholder="https://youtube.com/... or Google Drive / Dropbox link"
                     className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#8B2252] focus:ring-1 focus:ring-[#8B2252]/30 transition-colors"
                   />
-                  <p className="font-body text-xs text-[#8B6070]">
+                  <p className="font-body text-xs text-[#3D1A2E]">
                     Accepted: YouTube, Google Drive, Dropbox, or any direct video link. Make sure sharing is set to "Anyone with the link".
                   </p>
                   {videoLink.trim() && (() => { try { new URL(videoLink.trim()); return true; } catch { return false; } })() && (
                     <div className="flex items-center gap-2 p-2.5 bg-[#F9E4EE] border border-[#F0D0DC] rounded-xl">
                       <CheckCircle size={16} className="text-[#8B2252] shrink-0" />
-                      <span className="font-body text-xs text-[#5A3040]">Link looks good!</span>
+                      <span className="font-body text-xs text-[#3D1A2E]">Link looks good!</span>
                     </div>
                   )}
                 </div>
@@ -872,7 +872,7 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
                 <span className="flex items-center gap-1 font-body text-xs text-[#8B2252]">
                   <MapPin size={11} /> {job.location}
                 </span>
-                <span className="flex items-center gap-1 font-body text-xs text-[#5A3040]">
+                <span className="flex items-center gap-1 font-body text-xs text-[#3D1A2E]">
                   <Clock size={11} /> {job.type}
                 </span>
                 {(job as any).badge && (
@@ -886,7 +886,7 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
                   </span>
                 )}
                 {(job as any).pay && (
-                  <span className="px-2 py-0.5 bg-[#FEFAF4] text-[#8B6010] font-body text-[10px] font-semibold rounded-full border border-[#F0D080]">
+                  <span className="px-2 py-0.5 bg-[#FEFAF4] text-[#8B6010] font-body text-[10px] font-semibold rounded-full border border-[#F0D0DC]">
                     {(job as any).pay}
                   </span>
                 )}
@@ -907,7 +907,7 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
               {shareOpen && (
                 <div className="absolute right-0 top-full mt-2 w-44 bg-white border border-[#F0D0DC] rounded-2xl shadow-lg z-20 overflow-hidden">
                   <div className="px-3 py-2 border-b border-[#F0D0DC]">
-                    <p className="font-body text-[10px] font-semibold text-[#5A3040] uppercase tracking-wide">Share this role</p>
+                    <p className="font-body text-[10px] font-semibold text-[#3D1A2E] uppercase tracking-wide">Share this role</p>
                   </div>
                   {shareLinks.map((s) =>
                     s.href ? (
@@ -964,7 +964,7 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
           </div>
         </div>
 
-        <p className="font-body text-sm text-[#5A3040] leading-relaxed mb-4">{job.description}</p>
+        <p className="font-body text-sm text-[#3D1A2E] leading-relaxed mb-4">{job.description}</p>
 
         <button
           onClick={onToggle}
@@ -980,7 +980,7 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
               <h4 className="font-body text-xs font-bold text-[#1A0A12] uppercase tracking-wide mb-2">Responsibilities</h4>
               <ul className="space-y-1.5">
                 {job.responsibilities.map((r, i) => (
-                  <li key={i} className="flex items-start gap-2 font-body text-sm text-[#5A3040]">
+                  <li key={i} className="flex items-start gap-2 font-body text-sm text-[#3D1A2E]">
                     <span className="text-[#8B2252] mt-0.5 shrink-0">•</span> {r}
                   </li>
                 ))}
@@ -990,7 +990,7 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
               <h4 className="font-body text-xs font-bold text-[#1A0A12] uppercase tracking-wide mb-2">Requirements</h4>
               <ul className="space-y-1.5">
                 {job.requirements.map((r, i) => (
-                  <li key={i} className="flex items-start gap-2 font-body text-sm text-[#5A3040]">
+                  <li key={i} className="flex items-start gap-2 font-body text-sm text-[#3D1A2E]">
                     <span className="text-[#8B2252] mt-0.5 shrink-0">•</span> {r}
                   </li>
                 ))}
@@ -1000,7 +1000,7 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
               <h4 className="font-body text-xs font-bold text-[#1A0A12] uppercase tracking-wide mb-2">Perks</h4>
               <ul className="space-y-1.5">
                 {job.perks.map((p, i) => (
-                  <li key={i} className="flex items-start gap-2 font-body text-sm text-[#5A3040]">
+                  <li key={i} className="flex items-start gap-2 font-body text-sm text-[#3D1A2E]">
                     <Heart size={12} className="text-[#8B2252] mt-0.5 shrink-0" /> {p}
                   </li>
                 ))}
@@ -1076,7 +1076,7 @@ export default function Careers() {
             ].map((v) => (
               <div key={v.label} className="flex flex-col items-center gap-2">
                 <span className="text-2xl">{v.icon}</span>
-                <span className="font-body text-xs font-semibold text-[#5A3040] uppercase tracking-wide">{v.label}</span>
+                <span className="font-body text-xs font-semibold text-[#3D1A2E] uppercase tracking-wide">{v.label}</span>
               </div>
             ))}
           </div>
@@ -1091,7 +1091,7 @@ export default function Careers() {
             <h2 className="font-display font-bold text-3xl md:text-4xl text-[#1A0A12]">
               We're Hiring
             </h2>
-            <p className="font-body text-sm text-[#5A3040] mt-3 max-w-xl">
+            <p className="font-body text-sm text-[#3D1A2E] mt-3 max-w-xl">
               All roles at AfroPuppyYoga are part-time given the nature of our event-based business. Perfect for passionate people who want flexibility without sacrificing impact.
             </p>
           </div>
@@ -1122,7 +1122,7 @@ export default function Careers() {
           </p>
           <a
             href="mailto:afropuppyyogaofficial@gmail.com"
-            className="inline-flex items-center px-6 py-3 bg-[#8B2252] text-white font-body font-semibold text-sm rounded-full hover:bg-[#6B1A3F] transition-colors"
+            className="inline-flex items-center px-6 py-3 bg-[#8B2252] text-white font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] transition-colors"
           >
             Say Hello
           </a>

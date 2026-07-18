@@ -105,7 +105,7 @@ export default function StaffManagement() {
         <button
           onClick={() => (window.location.href = getLoginUrl())}
           className="inline-flex items-center px-6 py-3 font-body font-semibold text-sm rounded-full text-white transition-all duration-200 hover:-translate-y-0.5"
-          style={{ background: "linear-gradient(135deg, #e91e8c, #c2410c)" }}
+          style={{ background: "linear-gradient(135deg, #8B2252, #c2410c)" }}
         >
           Log In
         </button>

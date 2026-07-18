@@ -338,8 +338,8 @@ export default function ScheduleCalendar() {
         <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-1 h-6 bg-[#C2185B] rounded-full" />
-              <span className="text-[#C2185B] font-body text-xs font-bold tracking-widest uppercase">Admin</span>
+              <div className="w-1 h-6 bg-[#8B2252] rounded-full" />
+              <span className="text-[#8B2252] font-body text-xs font-bold tracking-widest uppercase">Admin</span>
             </div>
             <h1 className="font-display text-3xl font-bold text-[#1A0A12]">Schedule Calendar</h1>
             <p className="font-body text-sm text-[#6B4C3B] mt-1">
@@ -348,7 +348,7 @@ export default function ScheduleCalendar() {
           </div>
           <Button
             onClick={() => openAdd()}
-            className="bg-[#C2185B] hover:bg-[#AD1457] text-white font-body font-semibold rounded-full px-5 gap-2"
+            className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body font-semibold rounded-full px-5 gap-2"
           >
             <Plus size={16} /> Add Slot
           </Button>
@@ -357,7 +357,7 @@ export default function ScheduleCalendar() {
         {/* ── Stats ─────────────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
           {[
-            { label: "Total Slots", value: stats.total, color: "text-[#C2185B]" },
+            { label: "Total Slots", value: stats.total, color: "text-[#8B2252]" },
             { label: "Kitchener", value: stats.kitchener, color: "text-pink-600" },
             { label: "Hamilton", value: stats.hamilton, color: "text-purple-600" },
             { label: "Oakville", value: stats.oakville, color: "text-teal-600" },
@@ -374,21 +374,21 @@ export default function ScheduleCalendar() {
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={prevMonth}
-            className="p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#F0D0DC] text-[#6B4C3B] hover:text-[#C2185B] transition-all"
+            className="p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#F0D0DC] text-[#6B4C3B] hover:text-[#8B2252] transition-all"
             aria-label="Previous month"
           >
             <ChevronLeft size={20} />
           </button>
           <div className="flex items-center gap-3">
-            <CalendarDays size={20} className="text-[#C2185B]" />
+            <CalendarDays size={20} className="text-[#8B2252]" />
             <h2 className="font-display text-xl font-bold text-[#1A0A12]">
               {MONTH_NAMES[month - 1]} {year}
             </h2>
-            {isLoading && <Loader2 size={16} className="animate-spin text-[#C2185B]" />}
+            {isLoading && <Loader2 size={16} className="animate-spin text-[#8B2252]" />}
           </div>
           <button
             onClick={nextMonth}
-            className="p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#F0D0DC] text-[#6B4C3B] hover:text-[#C2185B] transition-all"
+            className="p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#F0D0DC] text-[#6B4C3B] hover:text-[#8B2252] transition-all"
             aria-label="Next month"
           >
             <ChevronRight size={20} />
@@ -404,7 +404,7 @@ export default function ScheduleCalendar() {
                 key={d}
                 className={`py-2 text-center font-body text-xs font-bold tracking-wider uppercase ${
                   i === 0 || i === 6
-                    ? "text-[#C2185B] bg-[#FFF5F8]"
+                    ? "text-[#8B2252] bg-[#FFF5F8]"
                     : "text-[#6B4C3B]"
                 }`}
               >
@@ -440,9 +440,9 @@ export default function ScheduleCalendar() {
                         <span
                           className={`font-body text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full ${
                             isToday
-                              ? "bg-[#C2185B] text-white"
+                              ? "bg-[#8B2252] text-white"
                               : isWeekend
-                              ? "text-[#C2185B]"
+                              ? "text-[#8B2252]"
                               : "text-[#6B4C3B]"
                           }`}
                         >
@@ -454,7 +454,7 @@ export default function ScheduleCalendar() {
                             e.stopPropagation();
                             if (dateStr) openAdd(dateStr);
                           }}
-                          className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-full bg-[#C2185B] text-white flex items-center justify-center transition-opacity hover:bg-[#AD1457]"
+                          className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-full bg-[#8B2252] text-white flex items-center justify-center transition-opacity hover:bg-[#8B2252]"
                           aria-label="Add slot"
                         >
                           <Plus size={10} />
@@ -499,7 +499,7 @@ export default function ScheduleCalendar() {
 
         {/* ── Legend ────────────────────────────────────────────────────────── */}
         <div className="flex flex-wrap gap-4 mt-4 items-center">
-          <span className="font-body text-xs text-[#9E7B6B] font-semibold uppercase tracking-wider">Legend:</span>
+          <span className="font-body text-xs text-[#C4A0B0] font-semibold uppercase tracking-wider">Legend:</span>
           {LOCATIONS.map((loc) => {
             const c = LOCATION_COLORS[loc];
             return (
@@ -512,7 +512,7 @@ export default function ScheduleCalendar() {
           <span className="flex items-center gap-1.5 font-body text-xs font-semibold px-2.5 py-1 rounded-full border bg-amber-50 text-amber-700 border-amber-200">
             <Lock size={10} /> Private Event
           </span>
-          <span className="flex items-center gap-1.5 font-body text-xs font-semibold px-2.5 py-1 rounded-full border bg-[#FFF5F8] text-[#C2185B] border-[#F0D0DC]">
+          <span className="flex items-center gap-1.5 font-body text-xs font-semibold px-2.5 py-1 rounded-full border bg-[#FFF5F8] text-[#8B2252] border-[#F0D0DC]">
             Weekend
           </span>
         </div>
@@ -543,7 +543,7 @@ export default function ScheduleCalendar() {
                 <p className="text-xs text-[#6B4C3B] mt-1 font-body">
                   Day: <span className="font-semibold">{form.dayOfWeek}</span>
                   {(form.dayOfWeek === "Saturday" || form.dayOfWeek === "Sunday") && (
-                    <span className="ml-1 text-[#C2185B]">· Weekend class</span>
+                    <span className="ml-1 text-[#8B2252]">· Weekend class</span>
                   )}
                 </p>
               )}
@@ -616,7 +616,7 @@ export default function ScheduleCalendar() {
                 />
               </div>
             </div>
-            <p className="text-xs text-[#9E7B6B] font-body -mt-2">
+            <p className="text-xs text-[#C4A0B0] font-body -mt-2">
               3 classes: 9 AM–3 PM · 4 classes: 9 AM–4:30 PM
             </p>
 
@@ -653,7 +653,7 @@ export default function ScheduleCalendar() {
                 value={form.breed}
                 onChange={(e) => setForm((f) => ({ ...f, breed: e.target.value }))}
               />
-              <p className="text-xs text-[#9E7B6B] mt-1 font-body">
+              <p className="text-xs text-[#C4A0B0] mt-1 font-body">
                 Auto-filled from breeder profile — edit if different.
               </p>
             </div>
@@ -661,7 +661,7 @@ export default function ScheduleCalendar() {
             {/* Notes */}
             <div>
               <Label className="font-body text-sm text-[#1A0A12] font-semibold">
-                Notes <span className="text-[#9E7B6B] font-normal">(optional)</span>
+                Notes <span className="text-[#C4A0B0] font-normal">(optional)</span>
               </Label>
               <Textarea
                 className="mt-1 border-[#F0D0DC] font-body text-sm resize-none"
@@ -697,7 +697,7 @@ export default function ScheduleCalendar() {
             <Button
               onClick={handleSubmit}
               disabled={createMutation.isPending || updateMutation.isPending}
-              className="bg-[#C2185B] hover:bg-[#AD1457] text-white font-body font-semibold rounded-full px-6"
+              className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body font-semibold rounded-full px-6"
             >
               {(createMutation.isPending || updateMutation.isPending) && (
                 <Loader2 size={14} className="animate-spin mr-2" />

@@ -186,9 +186,9 @@ export default function PrivateEventQuote() {
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-28 pb-14 relative overflow-hidden" style={{ background: "linear-gradient(135deg, #FFF5F9 0%, #FDE8EF 50%, #FAD9E8 100%)" }}>
+      <section className="pt-28 pb-14 relative overflow-hidden" style={{ background: "linear-gradient(135deg, #FFF5F9 0%, #FFF5F8 50%, #FFF5F8 100%)" }}>
         <div className="absolute inset-0 opacity-20"
-          style={{ backgroundImage: "radial-gradient(circle at 80% 20%, #F2A0B8 0%, transparent 55%), radial-gradient(circle at 20% 80%, #E8A0C0 0%, transparent 50%)" }}
+          style={{ backgroundImage: "radial-gradient(circle at 80% 20%, #F2A0B8 0%, transparent 55%), radial-gradient(circle at 20% 80%, #F2A0B8 0%, transparent 50%)" }}
         />
         <div className="absolute top-8 right-16 w-32 h-32 rounded-full opacity-10" style={{ background: "#8B2252" }} />
         <div className="absolute bottom-4 left-12 w-20 h-20 rounded-full opacity-10" style={{ background: "#F2A0B8" }} />
@@ -360,7 +360,7 @@ export default function PrivateEventQuote() {
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.1, duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
                   className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
-                  style={{ background: "linear-gradient(135deg, #8B2252, #C05080)" }}
+                  style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}
                 >
                   <CheckCircle2 size={44} className="text-white" strokeWidth={2} />
                 </motion.div>
@@ -397,7 +397,7 @@ export default function PrivateEventQuote() {
 
                   <a
                     href="/"
-                    className="inline-flex items-center gap-2 px-8 py-3 bg-[#8B2252] text-white font-body font-semibold rounded-full hover:bg-[#6B1A3F] transition-colors active:scale-[0.97]"
+                    className="inline-flex items-center gap-2 px-8 py-3 bg-[#8B2252] text-white font-body font-semibold rounded-full hover:bg-[#8B2252] transition-colors active:scale-[0.97]"
                   >
                     Back to Home
                   </a>
@@ -674,7 +674,7 @@ export default function PrivateEventQuote() {
                   <Button
                     type="submit"
                     disabled={!quoteReady || !name || !email || submitInquiry.isPending}
-                    className="w-full py-4 bg-[#8B2252] hover:bg-[#6B1A3F] text-white font-body font-bold text-base rounded-full transition-all active:scale-[0.98] disabled:opacity-60"
+                    className="w-full py-4 bg-[#8B2252] hover:bg-[#8B2252] text-white font-body font-bold text-base rounded-full transition-all active:scale-[0.98] disabled:opacity-60"
                   >
                     {submitInquiry.isPending ? (
                       <span className="flex items-center justify-center gap-2">

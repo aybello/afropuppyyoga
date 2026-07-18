@@ -112,7 +112,7 @@ const TOOLS = [
     description: "Manage and track your breeder relationships — contact info, breeds, litter timelines, rates, and contract status.",
     href: "/admin/breeders",
     icon: PawPrint,
-    color: "#C2185B",
+    color: "#8B2252",
     bg: "#FFF0F4",
     border: "#F0D0DC",
     badge: "Admin",
@@ -136,7 +136,7 @@ const TOOLS = [
     description: "View and manage all birthday package inquiries. Filter by tier, location, and status.",
     href: "/admin/birthday",
     icon: Cake,
-    color: "#C2185B",
+    color: "#8B2252",
     bg: "#FFF0F4",
     border: "#F0D0DC",
     badge: "Admin",
@@ -166,7 +166,7 @@ export default function StaffPortal() {
             </div>
             <div>
               <p className="font-display font-bold text-sm text-[#1A0A12] leading-none">AfroPuppyYoga</p>
-              <p className="font-body text-[10px] text-[#8B6070] leading-none mt-0.5">Staff Portal</p>
+              <p className="font-body text-[10px] text-[#3D1A2E] leading-none mt-0.5">Staff Portal</p>
             </div>
           </Link>
           <Link
@@ -189,7 +189,7 @@ export default function StaffPortal() {
           <h1 className="font-display font-bold text-4xl text-[#1A0A12] mb-3">
             Staff Portal
           </h1>
-          <p className="font-body text-base text-[#5A3040] max-w-xl">
+          <p className="font-body text-base text-[#3D1A2E] max-w-xl">
             Everything you need to manage AfroPuppyYoga operations — invoices, applications, forecasting, and more.
           </p>
         </div>
@@ -256,7 +256,7 @@ export default function StaffPortal() {
                             <Lock size={11} className="text-[#C4A0B0]" />
                           )}
                         </div>
-                        <p className="font-body text-sm text-[#5A3040] leading-relaxed">
+                        <p className="font-body text-sm text-[#3D1A2E] leading-relaxed">
                           {tool.description}
                         </p>
                       </div>

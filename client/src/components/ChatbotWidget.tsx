@@ -188,7 +188,7 @@ export default function ChatbotWidget() {
                         overflowWrap: "anywhere",
                         ...(msg.role === "user"
                           ? {
-                              background: "linear-gradient(135deg, #e91e8c, #c2410c)",
+                              background: "linear-gradient(135deg, #8B2252, #c2410c)",
                               color: "#ffffff",
                               borderBottomRightRadius: "4px",
                             }
@@ -209,7 +209,7 @@ export default function ChatbotWidget() {
                                   href={href}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  style={{ color: "#e91e8c", textDecoration: "underline" }}
+                                  style={{ color: "#8B2252", textDecoration: "underline" }}
                                   {...props}
                                 >
                                   {children}
@@ -245,15 +245,15 @@ export default function ChatbotWidget() {
                       <div className="flex gap-1 items-center py-1">
                         <span
                           className="w-2 h-2 rounded-full animate-bounce"
-                          style={{ background: "#e91e8c", animationDelay: "0ms" }}
+                          style={{ background: "#8B2252", animationDelay: "0ms" }}
                         />
                         <span
                           className="w-2 h-2 rounded-full animate-bounce"
-                          style={{ background: "#e91e8c", animationDelay: "150ms" }}
+                          style={{ background: "#8B2252", animationDelay: "150ms" }}
                         />
                         <span
                           className="w-2 h-2 rounded-full animate-bounce"
-                          style={{ background: "#e91e8c", animationDelay: "300ms" }}
+                          style={{ background: "#8B2252", animationDelay: "300ms" }}
                         />
                       </div>
                     </div>
@@ -294,7 +294,7 @@ export default function ChatbotWidget() {
               onClick={() => sendMessage(input)}
               disabled={!input.trim() || chatMutation.isPending}
               className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-opacity disabled:opacity-40"
-              style={{ background: "linear-gradient(135deg, #e91e8c, #c2410c)" }}
+              style={{ background: "linear-gradient(135deg, #8B2252, #c2410c)" }}
             >
               {chatMutation.isPending ? (
                 <Loader2 size={16} className="text-white animate-spin" />
@@ -326,7 +326,7 @@ export default function ChatbotWidget() {
           borderRadius: "50%",
           background: isOpen
             ? "#8B2252"
-            : "linear-gradient(135deg, #e91e8c 0%, #c2410c 100%)",
+            : "linear-gradient(135deg, #8B2252 0%, #c2410c 100%)",
           border: "none",
           cursor: "pointer",
         }}

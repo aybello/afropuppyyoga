@@ -10,7 +10,7 @@ const passes = [
     bestFor: "Casual monthly self-care",
     tagline: "One class a month, zero excuses. Great for beginners and anyone building a wellness habit.",
     badge: null,
-    accentColor: "#e91e8c",
+    accentColor: "#8B2252",
     bgColor: "#fff5fa",
     borderColor: "#f9a8d4",
     lumaLink: BOOK_URL,
@@ -56,20 +56,20 @@ export default function Memberships() {
         <div className="text-center mb-14">
           <span
             className="inline-block text-xs font-bold tracking-widest uppercase mb-4 px-4 py-1.5 rounded-full"
-            style={{ background: "#fce7f3", color: "#be185d" }}
+            style={{ background: "#fce7f3", color: "#8B2252" }}
           >
             Membership Passes
           </span>
           <h2
             className="text-4xl md:text-5xl font-black mb-4 leading-tight"
-            style={{ fontFamily: "'Playfair Display', serif", color: "#1a0a0f" }}
+            style={{ fontFamily: "'Playfair Display', serif", color: "#1A0A12" }}
           >
             Save More. Show Up More.
           </h2>
-          <p className="text-lg max-w-xl mx-auto" style={{ color: "#7c3f5e" }}>
+          <p className="text-lg max-w-xl mx-auto" style={{ color: "#8B2252" }}>
             Members get guaranteed class credits, exclusive perks, and priority access every month — across all APY locations.
           </p>
-          <p className="text-sm mt-2" style={{ color: "#9d6b7a" }}>
+          <p className="text-sm mt-2" style={{ color: "#3D1A2E" }}>
             ✅ Valid at Kitchener, Hamilton & Oakville
           </p>
         </div>
@@ -100,7 +100,7 @@ export default function Memberships() {
               <div className="mb-3">
                 <span
                   className="inline-block text-xs font-semibold px-3 py-1 rounded-full"
-                  style={{ background: "#fce7f3", color: "#be185d" }}
+                  style={{ background: "#fce7f3", color: "#8B2252" }}
                 >
                   Best for: {pass.bestFor}
                 </span>
@@ -110,11 +110,11 @@ export default function Memberships() {
               <div className="mb-6">
                 <h3
                   className="text-2xl font-black mb-1"
-                  style={{ fontFamily: "'Playfair Display', serif", color: "#1a0a0f" }}
+                  style={{ fontFamily: "'Playfair Display', serif", color: "#1A0A12" }}
                 >
                   {pass.name}
                 </h3>
-                <p className="text-sm mb-4" style={{ color: "#7c3f5e" }}>
+                <p className="text-sm mb-4" style={{ color: "#8B2252" }}>
                   {pass.tagline}
                 </p>
                 <div className="flex items-end gap-1 mb-1">
@@ -124,7 +124,7 @@ export default function Memberships() {
                   >
                     {pass.price}
                   </span>
-                  <span className="text-lg pb-2" style={{ color: "#9d6b7a" }}>
+                  <span className="text-lg pb-2" style={{ color: "#3D1A2E" }}>
                     {pass.period}
                   </span>
                 </div>
@@ -141,7 +141,7 @@ export default function Memberships() {
                 {pass.perks.map((perk, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <span className="text-xl mt-0.5 shrink-0">{perk.icon}</span>
-                    <span className="font-semibold text-sm" style={{ color: "#1a0a0f" }}>
+                    <span className="font-semibold text-sm" style={{ color: "#1A0A12" }}>
                       {perk.text}
                     </span>
                   </li>
@@ -149,7 +149,7 @@ export default function Memberships() {
               </ul>
 
               {/* Rollover footnote */}
-              <p className="text-xs mb-6 italic" style={{ color: "#9d6b7a" }}>
+              <p className="text-xs mb-6 italic" style={{ color: "#3D1A2E" }}>
                 ⚠️ {pass.footnote}
               </p>
 
@@ -157,7 +157,7 @@ export default function Memberships() {
               <a href={pass.lumaLink} target="_blank" rel="noopener noreferrer">
                 <Button
                   className="w-full py-6 text-base font-bold rounded-2xl text-white transition-all"
-                  style={{ background: "linear-gradient(135deg, #e91e8c, #8B2252)", border: "none", boxShadow: "0 2px 8px rgba(233,30,140,0.3)" }}
+                  style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)", border: "none", boxShadow: "0 2px 8px rgba(233,30,140,0.3)" }}
                 >
                   Join {pass.name} →
                 </Button>
@@ -171,11 +171,11 @@ export default function Memberships() {
           <p className="font-semibold mb-1" style={{ color: "#8B2252" }}>
             🗺️ Use your membership at any APY location
           </p>
-          <p className="text-sm" style={{ color: "#7c3f5e" }}>
+          <p className="text-sm" style={{ color: "#8B2252" }}>
             Your Puppy Pass or Wellness Pack is valid at Kitchener, Hamilton, and Oakville. One membership, three cities.
           </p>
         </div>
-        <p className="text-center text-sm mt-4" style={{ color: "#9d6b7a" }}>
+        <p className="text-center text-sm mt-4" style={{ color: "#3D1A2E" }}>
           3-month minimum commitment. Cancel anytime after that. Memberships are managed through Luma.{" "}
           <Link href="/loyalty" className="underline hover:text-pink-700">
             See our loyalty program →

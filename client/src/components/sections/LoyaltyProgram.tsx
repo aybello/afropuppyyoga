@@ -122,7 +122,7 @@ export default function LoyaltyProgram() {
             href={BOOK_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center px-8 py-4 bg-[#8B2252] text-white font-body font-semibold text-base rounded-full hover:bg-[#6B1A3F] transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5"
+            className="inline-flex items-center px-8 py-4 bg-[#8B2252] text-white font-body font-semibold text-base rounded-full hover:bg-[#8B2252] transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5"
           >
             Book a Class
           </a>

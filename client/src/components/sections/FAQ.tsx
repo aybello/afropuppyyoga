@@ -57,7 +57,7 @@ const faqs: { q: string; a: ReactNode }[] = [
         Book directly on our site using our{" "}
         <a
           href="/private-events/quote"
-          className="text-[#8B2252] underline underline-offset-2 hover:text-[#6B1A3F] transition-colors"
+          className="text-[#8B2252] underline underline-offset-2 hover:text-[#8B2252] transition-colors"
         >
           instant quote tool
         </a>
@@ -78,7 +78,7 @@ const faqs: { q: string; a: ReactNode }[] = [
           href="https://luma.com/15iajebr"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[#8B2252] underline underline-offset-2 hover:text-[#6B1A3F] transition-colors"
+          className="text-[#8B2252] underline underline-offset-2 hover:text-[#8B2252] transition-colors"
         >
           Luma gift card page
         </a>
@@ -200,7 +200,7 @@ export default function FAQ() {
             </p>
             <a
               href="mailto:afropuppyyogaofficial@gmail.com"
-              className="inline-flex items-center px-8 py-3.5 bg-[#8B2252] text-white font-body font-semibold rounded-full hover:bg-[#6B1A3F] transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5"
+              className="inline-flex items-center px-8 py-3.5 bg-[#8B2252] text-white font-body font-semibold rounded-full hover:bg-[#8B2252] transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5"
             >
               Contact Us
             </a>

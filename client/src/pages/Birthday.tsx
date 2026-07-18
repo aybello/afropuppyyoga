@@ -33,7 +33,7 @@ const TIERS = [
     price: "$900",
     tagline: "The Full Experience",
     color: "#8B2252",
-    bgColor: "#FDF0F7",
+    bgColor: "#FFF5F8",
     borderColor: "#8B2252",
     minGuests: 8,
     maxGuests: 10,
@@ -54,9 +54,9 @@ const TIERS = [
     name: "Deluxe",
     price: "$1,200",
     tagline: "The Private Celebration",
-    color: "#C4556A",
+    color: "#8B2252",
     bgColor: "#FFF5F8",
-    borderColor: "#C4556A",
+    borderColor: "#8B2252",
     minGuests: 10,
     maxGuests: 20,
     format: "Private session — the whole class is yours",
@@ -141,12 +141,12 @@ export default function Birthday() {
             <h2 className="font-display text-4xl font-bold text-[#1A0A12] mb-4">
               Inquiry Received! 🎂
             </h2>
-            <p className="font-body text-[#5C3347] text-lg leading-relaxed mb-8">
+            <p className="font-body text-[#8B2252] text-lg leading-relaxed mb-8">
               Thank you for choosing AfroPuppyYoga for your celebration! We'll review your request and get back to you within 24 hours to confirm availability and next steps.
             </p>
             <a
               href="/"
-              className="inline-flex items-center px-8 py-3 bg-[#8B2252] text-white font-body font-semibold rounded-full hover:bg-[#6B1A3F] transition-colors"
+              className="inline-flex items-center px-8 py-3 bg-[#8B2252] text-white font-body font-semibold rounded-full hover:bg-[#8B2252] transition-colors"
             >
               Back to Home
             </a>
@@ -175,7 +175,7 @@ export default function Birthday() {
             <br />
             <span className="italic text-[#8B2252]">With Puppies</span>
           </h1>
-          <p className="font-body text-[#5C3347] text-lg leading-relaxed max-w-2xl mx-auto">
+          <p className="font-body text-[#8B2252] text-lg leading-relaxed max-w-2xl mx-auto">
             Make your birthday unforgettable. Bring your crew, cuddle some puppies, and create memories that last a lifetime. Choose the package that's right for your group.
           </p>
         </div>
@@ -197,7 +197,7 @@ export default function Birthday() {
                 </div>
                 <div className="font-body text-xs font-bold tracking-widest text-[#F2A0B8] uppercase mb-1">Step {item.step}</div>
                 <h3 className="font-display font-bold text-[#1A0A12] mb-2">{item.title}</h3>
-                <p className="font-body text-[#5C3347] text-sm leading-relaxed">{item.desc}</p>
+                <p className="font-body text-[#8B2252] text-sm leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -210,7 +210,7 @@ export default function Birthday() {
           <h2 className="font-display text-3xl md:text-4xl font-bold text-[#1A0A12] text-center mb-4">
             Choose Your Package
           </h2>
-          <p className="font-body text-[#5C3347] text-center mb-10">
+          <p className="font-body text-[#8B2252] text-center mb-10">
             All packages include a reserved spot for your group. Guests purchase their own tickets through Luma.
           </p>
           <div className="grid md:grid-cols-3 gap-6">
@@ -239,16 +239,16 @@ export default function Birthday() {
                 )}
                 <div className="mb-4">
                   <h3 className="font-display text-2xl font-bold text-[#1A0A12]">{tier.name}</h3>
-                  <p className="font-body text-sm text-[#5C3347]">{tier.tagline}</p>
+                  <p className="font-body text-sm text-[#8B2252]">{tier.tagline}</p>
                 </div>
                 <div className="mb-4">
                   <span className="font-display text-4xl font-bold" style={{ color: tier.color }}>{tier.price}</span>
-                  <span className="font-body text-sm text-[#5C3347] ml-1">package fee</span>
+                  <span className="font-body text-sm text-[#8B2252] ml-1">package fee</span>
                 </div>
                 <div className="mb-4 px-3 py-2 bg-white/60 rounded-lg">
                   <p className="font-body text-xs font-semibold text-[#8B2252] uppercase tracking-wide mb-0.5">Format</p>
                   <p className="font-body text-sm text-[#1A0A12]">{tier.format}</p>
-                  <p className="font-body text-xs text-[#5C3347] mt-0.5">Group: {tier.minGuests}–{tier.maxGuests} people</p>
+                  <p className="font-body text-xs text-[#8B2252] mt-0.5">Group: {tier.minGuests}–{tier.maxGuests} people</p>
                 </div>
                 <ul className="space-y-2">
                   {tier.includes.map((item) => (
@@ -430,7 +430,7 @@ export default function Birthday() {
             ].map((item) => (
               <div key={item.q} className="border border-[#F2A0B8]/30 rounded-xl p-5">
                 <h3 className="font-display font-bold text-[#1A0A12] mb-2">{item.q}</h3>
-                <p className="font-body text-[#5C3347] text-sm leading-relaxed">{item.a}</p>
+                <p className="font-body text-[#8B2252] text-sm leading-relaxed">{item.a}</p>
               </div>
             ))}
           </div>

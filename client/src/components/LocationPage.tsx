@@ -102,11 +102,11 @@ function FAQItem({ faq }: { faq: LocationFAQ }) {
         onClick={() => setOpen(!open)}
         aria-expanded={open}
       >
-        <span className="font-display font-semibold text-[#1A0A12] text-base group-hover:text-[#D4708A] transition-colors">
+        <span className="font-display font-semibold text-[#1A0A12] text-base group-hover:text-[#F2A0B8] transition-colors">
           {faq.question}
         </span>
         <ChevronDown
-          className={`w-5 h-5 text-[#D4708A] flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`w-5 h-5 text-[#F2A0B8] flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         />
       </button>
       {open && (
@@ -120,7 +120,7 @@ function FAQItem({ faq }: { faq: LocationFAQ }) {
 
 const avatarColors = [
   "bg-[#8B2252]",
-  "bg-[#D4708A]",
+  "bg-[#F2A0B8]",
   "bg-[#8B2252]",
 ];
 
@@ -295,7 +295,7 @@ export default function LocationPage({ config }: Props) {
                 {config.aboutParagraph}
               </p>
               <div className="bg-white rounded-2xl p-5 border border-[#F2A0B8]/30 shadow-sm">
-                <div className="font-body text-xs text-[#D4708A] uppercase tracking-widest mb-2">Venue</div>
+                <div className="font-body text-xs text-[#F2A0B8] uppercase tracking-widest mb-2">Venue</div>
                 <div className="font-display font-bold text-[#1A0A12] text-base mb-1">{config.venueName}</div>
                 <div className="font-body text-sm text-[#3D1A2E]/70">{config.venueAddress}</div>
                 <div className="font-body text-xs text-[#3D1A2E]/50 mt-1">{config.venueArea}</div>
@@ -464,7 +464,7 @@ export default function LocationPage({ config }: Props) {
                 href="https://www.instagram.com/afropuppyyoga"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center px-8 py-3.5 bg-[#8B2252] text-white font-body font-bold text-sm rounded-full hover:bg-[#6B1A3F] transition-all"
+                className="inline-flex items-center justify-center px-8 py-3.5 bg-[#8B2252] text-white font-body font-bold text-sm rounded-full hover:bg-[#8B2252] transition-all"
               >
                 Follow on Instagram
               </a>

@@ -16,17 +16,17 @@ export default function RewardsStrip() {
       style={{ background: "linear-gradient(90deg, #fce7f3 0%, #fdf2f8 50%, #fce7f3 100%)", borderBottom: "1px solid #f9a8d4" }}
       onClick={scrollToRewards}
     >
-      <Sparkles size={16} style={{ color: "#be185d" }} />
-      <p className="text-sm font-semibold text-center" style={{ color: "#7c3f5e" }}>
-        🐾 <span style={{ color: "#be185d" }}>Earn rewards</span> with every class —{" "}
+      <Sparkles size={16} style={{ color: "#8B2252" }} />
+      <p className="text-sm font-semibold text-center" style={{ color: "#8B2252" }}>
+        🐾 <span style={{ color: "#8B2252" }}>Earn rewards</span> with every class —{" "}
         <span
           className="underline underline-offset-2"
-          style={{ color: "#be185d" }}
+          style={{ color: "#8B2252" }}
         >
           Join the loyalty program
         </span>
       </p>
-      <Sparkles size={16} style={{ color: "#be185d" }} />
+      <Sparkles size={16} style={{ color: "#8B2252" }} />
     </div>
   );
 }

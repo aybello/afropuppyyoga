@@ -41,7 +41,7 @@ export default function BreederAvailability() {
   if (tokenLoading) {
     return (
       <div className="min-h-screen bg-[#FFF5F8] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#C2185B]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#8B2252]" />
       </div>
     );
   }
@@ -62,7 +62,7 @@ export default function BreederAvailability() {
           <p className="font-body text-[#6B4C3B] leading-relaxed">
             We have received your availability for <strong>{tokenData.monthLabel}</strong>. Our team will be in touch soon to confirm dates.
           </p>
-          <div className="mt-6 flex items-center justify-center gap-2 text-[#C2185B]">
+          <div className="mt-6 flex items-center justify-center gap-2 text-[#8B2252]">
             <Heart className="w-4 h-4 fill-current" />
             <span className="font-body text-sm">The AfroPuppyYoga Team</span>
           </div>
@@ -82,7 +82,7 @@ export default function BreederAvailability() {
           <img src={APY_LOGO} alt="AfroPuppyYoga" className="w-14 h-14 rounded-full mx-auto mb-4 object-contain" />
           <h1 className="font-display text-2xl text-[#1A0A12] mb-3">Already Submitted</h1>
           <p className="font-body text-[#6B4C3B] leading-relaxed">
-            We already received your availability for <strong>{tokenData.monthLabel}</strong>. If you need to make changes, please email us at <a href="mailto:afropuppyyogaofficial@gmail.com" className="text-[#C2185B] underline">afropuppyyogaofficial@gmail.com</a>.
+            We already received your availability for <strong>{tokenData.monthLabel}</strong>. If you need to make changes, please email us at <a href="mailto:afropuppyyogaofficial@gmail.com" className="text-[#8B2252] underline">afropuppyyogaofficial@gmail.com</a>.
           </p>
         </div>
       </div>
@@ -95,7 +95,7 @@ export default function BreederAvailability() {
     <div className="min-h-screen bg-[#FFF5F8] flex items-center justify-center p-6">
       <div className="bg-white rounded-2xl shadow-lg max-w-lg w-full overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#C2185B] to-[#8B2252] px-8 py-8 text-center">
+        <div className="bg-gradient-to-r from-[#8B2252] to-[#8B2252] px-8 py-8 text-center">
           <img src={APY_LOGO} alt="AfroPuppyYoga" className="w-14 h-14 rounded-full mx-auto mb-3 object-contain" />
           <h1 className="font-display text-white text-xl font-bold">Availability Check</h1>
           <p className="text-white/80 text-sm mt-1">{tokenData.monthLabel}</p>
@@ -117,10 +117,10 @@ export default function BreederAvailability() {
                 value={availabilityText}
                 onChange={(e) => setAvailabilityText(e.target.value)}
                 placeholder={`e.g. July 5 (morning), July 12 (any time), July 19 (afternoon only)`}
-                className="mt-2 border-[#F0D0DC] font-body text-sm min-h-[100px] focus:ring-[#C2185B]/30"
+                className="mt-2 border-[#F0D0DC] font-body text-sm min-h-[100px] focus:ring-[#8B2252]/30"
                 rows={4}
               />
-              <p className="text-xs text-[#8B6070] mt-1 font-body">List the dates and times that work best for you.</p>
+              <p className="text-xs text-[#3D1A2E] mt-1 font-body">List the dates and times that work best for you.</p>
             </div>
 
             <div>
@@ -146,7 +146,7 @@ export default function BreederAvailability() {
             <Button
               onClick={() => submitMutation.mutate({ token, availabilityText, responseNotes: responseNotes || undefined })}
               disabled={!availabilityText.trim() || submitMutation.isPending}
-              className="w-full bg-[#C2185B] hover:bg-[#8B2252] text-white font-body rounded-full py-3 text-base"
+              className="w-full bg-[#8B2252] hover:bg-[#8B2252] text-white font-body rounded-full py-3 text-base"
             >
               {submitMutation.isPending ? (
                 <><Loader2 className="w-4 h-4 animate-spin mr-2" />Submitting...</>
@@ -156,9 +156,9 @@ export default function BreederAvailability() {
             </Button>
           </div>
 
-          <p className="text-center text-xs text-[#8B6070] font-body mt-6">
+          <p className="text-center text-xs text-[#3D1A2E] font-body mt-6">
             Questions? Email us at{" "}
-            <a href="mailto:afropuppyyogaofficial@gmail.com" className="text-[#C2185B] underline">
+            <a href="mailto:afropuppyyogaofficial@gmail.com" className="text-[#8B2252] underline">
               afropuppyyogaofficial@gmail.com
             </a>
           </p>

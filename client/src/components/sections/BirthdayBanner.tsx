@@ -6,7 +6,7 @@ import { trackCTAClick } from "@/hooks/useAnalytics";
 
 export default function BirthdayBanner() {
   return (
-    <section className="py-16 px-4 bg-gradient-to-br from-[#1A0A12] via-[#2D0F1E] to-[#1A0A12]">
+    <section className="py-16 px-4 bg-gradient-to-br from-[#1A0A12] via-[#3D1A2E] to-[#1A0A12]">
       <div className="max-w-5xl mx-auto">
         <div className="grid md:grid-cols-2 gap-10 items-center">
           {/* Left: Copy */}
@@ -39,7 +39,7 @@ export default function BirthdayBanner() {
           <div className="space-y-3">
             {[
               { name: "Basic", price: "$600", desc: "Reserved section for up to 8 guests", color: "#F2A0B8" },
-              { name: "Premium", price: "$900", desc: "Reserved section + custom playlist + 1 free ticket", color: "#C4556A", badge: "Most Popular" },
+              { name: "Premium", price: "$900", desc: "Reserved section + custom playlist + 1 free ticket", color: "#8B2252", badge: "Most Popular" },
               { name: "Deluxe", price: "$1,200", desc: "Full private session for up to 20 guests", color: "#8B2252" },
             ].map((pkg) => (
               <a

@@ -307,19 +307,19 @@ export default function ScheduleCalendarPanel() {
           {/* Weekend-only toggle */}
           <label className={`flex items-center gap-2 cursor-pointer px-3 py-1.5 rounded-full border transition-colors font-body text-xs font-semibold select-none ${
             weekendOnly
-              ? "bg-[#FFF0F6] border-[#F0D0DC] text-[#C2185B]"
-              : "bg-white border-[#E8D0D8] text-[#9E7B6B] hover:border-[#F0D0DC]"
+              ? "bg-[#FFF0F6] border-[#F0D0DC] text-[#8B2252]"
+              : "bg-white border-[#F0D0DC] text-[#C4A0B0] hover:border-[#F0D0DC]"
           }`}>
             <Switch
               checked={weekendOnly}
               onCheckedChange={setWeekendOnly}
-              className="data-[state=checked]:bg-[#C2185B] scale-75 origin-left"
+              className="data-[state=checked]:bg-[#8B2252] scale-75 origin-left"
             />
             Weekends only
           </label>
           <Button
             onClick={() => openAdd()}
-            className="bg-[#C2185B] hover:bg-[#AD1457] text-white font-body font-semibold rounded-full px-5 gap-2"
+            className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body font-semibold rounded-full px-5 gap-2"
           >
             <Plus size={16} /> Add Slot
           </Button>
@@ -329,7 +329,7 @@ export default function ScheduleCalendarPanel() {
       {/* ── Stats ─────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-5">
         {[
-          { label: "Total Slots",    value: stats.total,     color: "text-[#C2185B]"  },
+          { label: "Total Slots",    value: stats.total,     color: "text-[#8B2252]"  },
           { label: "Kitchener",      value: stats.kitchener, color: "text-pink-600"   },
           { label: "Hamilton",       value: stats.hamilton,  color: "text-purple-600" },
           { label: "Oakville",       value: stats.oakville,  color: "text-teal-600"   },
@@ -348,17 +348,17 @@ export default function ScheduleCalendarPanel() {
 
       {/* ── Month navigation ──────────────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-4">
-        <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#F0D0DC] text-[#6B4C3B] hover:text-[#C2185B] transition-all" aria-label="Previous month">
+        <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#F0D0DC] text-[#6B4C3B] hover:text-[#8B2252] transition-all" aria-label="Previous month">
           <ChevronLeft size={20} />
         </button>
         <div className="flex items-center gap-3">
-          <CalendarDays size={20} className="text-[#C2185B]" />
+          <CalendarDays size={20} className="text-[#8B2252]" />
           <h3 className="font-display text-xl font-bold text-[#1A0A12]">
             {MONTH_NAMES[month - 1]} {year}
           </h3>
-          {isLoading && <Loader2 size={16} className="animate-spin text-[#C2185B]" />}
+          {isLoading && <Loader2 size={16} className="animate-spin text-[#8B2252]" />}
         </div>
-        <button onClick={nextMonth} className="p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#F0D0DC] text-[#6B4C3B] hover:text-[#C2185B] transition-all" aria-label="Next month">
+        <button onClick={nextMonth} className="p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#F0D0DC] text-[#6B4C3B] hover:text-[#8B2252] transition-all" aria-label="Next month">
           <ChevronRight size={20} />
         </button>
       </div>
@@ -378,14 +378,14 @@ export default function ScheduleCalendarPanel() {
                 key={d}
                 className={`py-2.5 text-center font-body text-xs font-bold tracking-wider uppercase border-r border-[#F0D0DC] last:border-r-0 ${
                   isWknd
-                    ? "text-[#C2185B] bg-[#FFF0F6]"
-                    : "text-[#B0907A] bg-[#FAFAFA]"
+                    ? "text-[#8B2252] bg-[#FFF0F6]"
+                    : "text-[#C4A0B0] bg-[#FAFAFA]"
                 }`}
               >
                 {isWknd ? (
                   <span className="flex flex-col items-center gap-0.5">
                     <span>{d}</span>
-                    <span className="text-[9px] font-normal text-[#C2185B] opacity-80 tracking-normal normal-case">class day</span>
+                    <span className="text-[9px] font-normal text-[#8B2252] opacity-80 tracking-normal normal-case">class day</span>
                   </span>
                 ) : d}
               </div>
@@ -417,7 +417,7 @@ export default function ScheduleCalendarPanel() {
                       : hasConflict
                         ? "bg-red-50 hover:bg-red-100 cursor-pointer group"
                         : isTodayWeekend
-                          ? "bg-[#FFE0EF] hover:bg-[#FFD0E8] cursor-pointer group ring-2 ring-[#C2185B] ring-inset"
+                          ? "bg-[#FFE0EF] hover:bg-[#F0D0DC] cursor-pointer group ring-2 ring-[#8B2252] ring-inset"
                           : isWeekend
                             ? "bg-[#FFF5F9] hover:bg-[#FFE8F2] cursor-pointer group"
                             : "bg-white hover:bg-[#FEFAF4] cursor-pointer group"
@@ -430,12 +430,12 @@ export default function ScheduleCalendarPanel() {
                       <span
                         className={`font-body font-semibold flex items-center justify-center rounded-full ${
                           isToday
-                            ? "bg-[#C2185B] text-white"
+                            ? "bg-[#8B2252] text-white"
                             : hasConflict
                               ? "text-red-600 font-bold"
                               : isWeekend
-                              ? isTodayWeekend ? "text-white" : "text-[#C2185B] font-bold"
-                              : "text-[#B0907A]"
+                              ? isTodayWeekend ? "text-white" : "text-[#8B2252] font-bold"
+                              : "text-[#C4A0B0]"
                         }`}
                         style={{
                           width: isWeekend ? "26px" : "20px",
@@ -453,7 +453,7 @@ export default function ScheduleCalendarPanel() {
                         )}
                         <button
                           onClick={(e) => { e.stopPropagation(); if (dateStr) openAdd(dateStr); }}
-                          className={`opacity-0 group-hover:opacity-100 rounded-full bg-[#C2185B] text-white flex items-center justify-center transition-opacity hover:bg-[#AD1457] ${
+                          className={`opacity-0 group-hover:opacity-100 rounded-full bg-[#8B2252] text-white flex items-center justify-center transition-opacity hover:bg-[#8B2252] ${
                             isWeekend ? "w-5 h-5" : "w-4 h-4"
                           }`}
                           aria-label="Add slot"
@@ -551,7 +551,7 @@ export default function ScheduleCalendarPanel() {
 
       {/* ── Legend ────────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap gap-3 mt-4 items-center">
-        <span className="font-body text-xs text-[#9E7B6B] font-semibold uppercase tracking-wider">Legend:</span>
+        <span className="font-body text-xs text-[#C4A0B0] font-semibold uppercase tracking-wider">Legend:</span>
         {LOCATIONS.map(loc => {
           const c = LOCATION_COLORS[loc];
           return (
@@ -563,7 +563,7 @@ export default function ScheduleCalendarPanel() {
         <span className="flex items-center gap-1.5 font-body text-xs font-semibold px-2.5 py-1 rounded-full border bg-amber-50 text-amber-700 border-amber-200">
           <Lock size={10} /> Private Event
         </span>
-        <span className="flex items-center gap-1.5 font-body text-xs font-semibold px-2.5 py-1 rounded-full border bg-[#FFF5F8] text-[#C2185B] border-[#F0D0DC]">
+        <span className="flex items-center gap-1.5 font-body text-xs font-semibold px-2.5 py-1 rounded-full border bg-[#FFF5F8] text-[#8B2252] border-[#F0D0DC]">
           Weekend
         </span>
         <span className="flex items-center gap-1.5 font-body text-xs font-semibold px-2.5 py-1 rounded-full border bg-red-50 text-red-700 border-red-200">
@@ -590,7 +590,7 @@ export default function ScheduleCalendarPanel() {
               {form.dayOfWeek && (
                 <p className="text-xs text-[#6B4C3B] mt-1 font-body">
                   Day: <span className="font-semibold">{form.dayOfWeek}</span>
-                  {(form.dayOfWeek === "Saturday" || form.dayOfWeek === "Sunday") && <span className="ml-1 text-[#C2185B]">· Weekend class</span>}
+                  {(form.dayOfWeek === "Saturday" || form.dayOfWeek === "Sunday") && <span className="ml-1 text-[#8B2252]">· Weekend class</span>}
                 </p>
               )}
             </div>
@@ -601,7 +601,7 @@ export default function ScheduleCalendarPanel() {
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="font-body text-sm text-[#1A0A12] font-semibold flex items-center gap-2 cursor-pointer">
-                      <Repeat size={14} className="text-[#C2185B]" />
+                      <Repeat size={14} className="text-[#8B2252]" />
                       Repeat Weekly
                     </Label>
                     <p className="font-body text-xs text-[#6B4C3B] mt-0.5">
@@ -613,11 +613,11 @@ export default function ScheduleCalendarPanel() {
                   <Switch
                     checked={form.repeatWeekly}
                     onCheckedChange={v => setForm(f => ({ ...f, repeatWeekly: v }))}
-                    className="data-[state=checked]:bg-[#C2185B]"
+                    className="data-[state=checked]:bg-[#8B2252]"
                   />
                 </div>
                 {form.repeatWeekly && form.dayOfWeek && (
-                  <p className="font-body text-xs text-[#C2185B] font-semibold mt-2 flex items-center gap-1">
+                  <p className="font-body text-xs text-[#8B2252] font-semibold mt-2 flex items-center gap-1">
                     <Repeat size={11} />
                     Will create slots for all {form.dayOfWeek}s in {MONTH_NAMES[month - 1]} — existing bookings at the same location will be skipped automatically.
                   </p>
@@ -663,7 +663,7 @@ export default function ScheduleCalendarPanel() {
                 <Input type="time" className="mt-1 border-[#F0D0DC] font-body text-sm" value={form.endTime} onChange={e => setForm(f => ({ ...f, endTime: e.target.value }))} />
               </div>
             </div>
-            <p className="text-xs text-[#9E7B6B] font-body -mt-2">3 classes: 9 AM–3 PM · 4 classes: 9 AM–4:30 PM</p>
+            <p className="text-xs text-[#C4A0B0] font-body -mt-2">3 classes: 9 AM–3 PM · 4 classes: 9 AM–4:30 PM</p>
             {/* Breeder */}
             <div>
               <Label className="font-body text-sm text-[#1A0A12] font-semibold">Breeder <span className="text-red-500">*</span></Label>
@@ -680,11 +680,11 @@ export default function ScheduleCalendarPanel() {
             <div>
               <Label className="font-body text-sm text-[#1A0A12] font-semibold">Breed <span className="text-red-500">*</span></Label>
               <Input className="mt-1 border-[#F0D0DC] font-body text-sm" placeholder="e.g. Golden Retriever, Cavapoo" value={form.breed} onChange={e => setForm(f => ({ ...f, breed: e.target.value }))} />
-              <p className="text-xs text-[#9E7B6B] mt-1 font-body">Auto-filled from breeder profile — edit if different.</p>
+              <p className="text-xs text-[#C4A0B0] mt-1 font-body">Auto-filled from breeder profile — edit if different.</p>
             </div>
             {/* Notes */}
             <div>
-              <Label className="font-body text-sm text-[#1A0A12] font-semibold">Notes <span className="text-[#9E7B6B] font-normal">(optional)</span></Label>
+              <Label className="font-body text-sm text-[#1A0A12] font-semibold">Notes <span className="text-[#C4A0B0] font-normal">(optional)</span></Label>
               <Textarea className="mt-1 border-[#F0D0DC] font-body text-sm resize-none" placeholder="e.g. 4 puppies, drop-off at 9:30 AM" rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
             </div>
             {/* Delete button when editing */}
@@ -698,7 +698,7 @@ export default function ScheduleCalendarPanel() {
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => { setShowDialog(false); setEditId(null); setForm({ ...EMPTY_FORM }); }} className="font-body border-[#F0D0DC]">Cancel</Button>
-            <Button onClick={handleSubmit} disabled={isPending} className="bg-[#C2185B] hover:bg-[#AD1457] text-white font-body font-semibold rounded-full px-6">
+            <Button onClick={handleSubmit} disabled={isPending} className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body font-semibold rounded-full px-6">
               {isPending && <Loader2 size={14} className="animate-spin mr-2" />}
               {editId !== null ? "Save Changes" : form.repeatWeekly ? "Create All Slots" : "Add Slot"}
             </Button>

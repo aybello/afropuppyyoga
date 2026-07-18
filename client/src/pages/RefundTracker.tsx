@@ -290,7 +290,7 @@ export default function RefundTracker() {
           </div>
           <Button
             onClick={openAdd}
-            className="bg-[#C2185B] hover:bg-[#8B2252] text-white font-body font-semibold gap-2"
+            className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body font-semibold gap-2"
           >
             <Plus size={16} />
             Log Refund
@@ -300,7 +300,7 @@ export default function RefundTracker() {
         {/* Stats cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <StatCard
-            icon={<DollarSign size={20} className="text-[#C2185B]" />}
+            icon={<DollarSign size={20} className="text-[#8B2252]" />}
             label="Total Refunds"
             value={stats ? centsToDisplay(stats.totalAmountCents) : "—"}
             sub={`${stats?.total ?? 0} records`}
@@ -401,18 +401,18 @@ export default function RefundTracker() {
                   {filtered.map((r, i) => (
                     <tr
                       key={r.id}
-                      className={`border-b border-[#F9EEF3] hover:bg-[#FFF8FB] transition-colors ${i % 2 === 0 ? "bg-white" : "bg-[#FFFBFD]"}`}
+                      className={`border-b border-[#FFF5F8] hover:bg-[#FFF8FB] transition-colors ${i % 2 === 0 ? "bg-white" : "bg-[#FFFBFD]"}`}
                     >
                       <td className="px-4 py-3">
                         <div className="font-semibold text-[#1A0A12]">{r.customerName}</div>
                         {r.customerEmail && (
-                          <div className="text-xs text-[#9B7080]">{r.customerEmail}</div>
+                          <div className="text-xs text-[#3D1A2E]">{r.customerEmail}</div>
                         )}
                         {r.orderRef && (
                           <div className="text-xs text-[#C4A0B0] font-mono">{r.orderRef}</div>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-[#5A3040]">{r.eventName || <span className="text-[#C4A0B0]">—</span>}</td>
+                      <td className="px-4 py-3 text-[#3D1A2E]">{r.eventName || <span className="text-[#C4A0B0]">—</span>}</td>
                       <td className="px-4 py-3">
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#FFF0F4] text-[#8B2252] border border-[#F0D0DC]">
                           {r.location}
@@ -421,11 +421,11 @@ export default function RefundTracker() {
                       <td className="px-4 py-3 font-semibold text-[#1A0A12]">
                         {centsToDisplay(r.amountCents)}
                       </td>
-                      <td className="px-4 py-3 text-[#5A3040] max-w-[140px]">
+                      <td className="px-4 py-3 text-[#3D1A2E] max-w-[140px]">
                         <span className="truncate block">{r.reason}</span>
                       </td>
-                      <td className="px-4 py-3 text-[#5A3040]">{r.method}</td>
-                      <td className="px-4 py-3 text-[#9B7080] whitespace-nowrap">
+                      <td className="px-4 py-3 text-[#3D1A2E]">{r.method}</td>
+                      <td className="px-4 py-3 text-[#3D1A2E] whitespace-nowrap">
                         {formatDate(r.requestedAt)}
                       </td>
                       <td className="px-4 py-3">{statusBadge(r.status as Status)}</td>
@@ -497,7 +497,7 @@ export default function RefundTracker() {
           <div className="space-y-4 py-2">
             {/* Customer Name */}
             <div className="space-y-1.5">
-              <Label className="font-body font-semibold text-[#5A3040]">Customer Name *</Label>
+              <Label className="font-body font-semibold text-[#3D1A2E]">Customer Name *</Label>
               <Input
                 value={form.customerName}
                 onChange={(e) => setForm({ ...form, customerName: e.target.value })}
@@ -509,7 +509,7 @@ export default function RefundTracker() {
             {/* Email + Order Ref */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="font-body font-semibold text-[#5A3040]">Customer Email</Label>
+                <Label className="font-body font-semibold text-[#3D1A2E]">Customer Email</Label>
                 <Input
                   type="email"
                   value={form.customerEmail}
@@ -519,7 +519,7 @@ export default function RefundTracker() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="font-body font-semibold text-[#5A3040]">Order / Booking Ref</Label>
+                <Label className="font-body font-semibold text-[#3D1A2E]">Order / Booking Ref</Label>
                 <Input
                   value={form.orderRef}
                   onChange={(e) => setForm({ ...form, orderRef: e.target.value })}
@@ -531,7 +531,7 @@ export default function RefundTracker() {
 
             {/* Event Name */}
             <div className="space-y-1.5">
-              <Label className="font-body font-semibold text-[#5A3040]">Event / Class Name</Label>
+              <Label className="font-body font-semibold text-[#3D1A2E]">Event / Class Name</Label>
               <Input
                 value={form.eventName}
                 onChange={(e) => setForm({ ...form, eventName: e.target.value })}
@@ -543,7 +543,7 @@ export default function RefundTracker() {
             {/* Location + Amount */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="font-body font-semibold text-[#5A3040]">Location</Label>
+                <Label className="font-body font-semibold text-[#3D1A2E]">Location</Label>
                 <Select
                   value={form.location}
                   onValueChange={(v) => setForm({ ...form, location: v as Location })}
@@ -557,7 +557,7 @@ export default function RefundTracker() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="font-body font-semibold text-[#5A3040]">Amount ($) *</Label>
+                <Label className="font-body font-semibold text-[#3D1A2E]">Amount ($) *</Label>
                 <Input
                   type="number"
                   min="0.01"
@@ -573,7 +573,7 @@ export default function RefundTracker() {
             {/* Reason + Method */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="font-body font-semibold text-[#5A3040]">Reason</Label>
+                <Label className="font-body font-semibold text-[#3D1A2E]">Reason</Label>
                 <Select
                   value={form.reason}
                   onValueChange={(v) => setForm({ ...form, reason: v as Reason })}
@@ -587,7 +587,7 @@ export default function RefundTracker() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="font-body font-semibold text-[#5A3040]">Refund Method</Label>
+                <Label className="font-body font-semibold text-[#3D1A2E]">Refund Method</Label>
                 <Select
                   value={form.method}
                   onValueChange={(v) => setForm({ ...form, method: v as Method })}
@@ -605,7 +605,7 @@ export default function RefundTracker() {
             {/* Status + Requested Date */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="font-body font-semibold text-[#5A3040]">Status</Label>
+                <Label className="font-body font-semibold text-[#3D1A2E]">Status</Label>
                 <Select
                   value={form.status}
                   onValueChange={(v) => setForm({ ...form, status: v as Status })}
@@ -619,7 +619,7 @@ export default function RefundTracker() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="font-body font-semibold text-[#5A3040]">Date Requested</Label>
+                <Label className="font-body font-semibold text-[#3D1A2E]">Date Requested</Label>
                 <Input
                   type="date"
                   value={form.requestedAt}
@@ -631,7 +631,7 @@ export default function RefundTracker() {
 
             {/* Processed By */}
             <div className="space-y-1.5">
-              <Label className="font-body font-semibold text-[#5A3040]">Processed By</Label>
+              <Label className="font-body font-semibold text-[#3D1A2E]">Processed By</Label>
               <Input
                 value={form.processedBy}
                 onChange={(e) => setForm({ ...form, processedBy: e.target.value })}
@@ -642,7 +642,7 @@ export default function RefundTracker() {
 
             {/* Notes */}
             <div className="space-y-1.5">
-              <Label className="font-body font-semibold text-[#5A3040]">Internal Notes</Label>
+              <Label className="font-body font-semibold text-[#3D1A2E]">Internal Notes</Label>
               <Textarea
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
@@ -664,7 +664,7 @@ export default function RefundTracker() {
             <Button
               onClick={handleSubmit}
               disabled={isSaving}
-              className="bg-[#C2185B] hover:bg-[#8B2252] text-white font-body font-semibold"
+              className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body font-semibold"
             >
               {isSaving ? "Saving…" : editingId !== null ? "Save Changes" : "Add Refund"}
             </Button>
@@ -677,7 +677,7 @@ export default function RefundTracker() {
         <AlertDialogContent className="bg-[#FEFAF4] border-[#F0D0DC]">
           <AlertDialogHeader>
             <AlertDialogTitle className="font-display text-[#1A0A12]">Delete Refund?</AlertDialogTitle>
-            <AlertDialogDescription className="font-body text-[#5A3040]">
+            <AlertDialogDescription className="font-body text-[#3D1A2E]">
               This will permanently remove the refund record. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -717,10 +717,10 @@ function StatCard({
     <div className={`${bg} border ${border} rounded-xl p-4`}>
       <div className="flex items-center gap-2 mb-2">
         {icon}
-        <span className="font-body text-xs font-semibold text-[#5A3040] uppercase tracking-wide">{label}</span>
+        <span className="font-body text-xs font-semibold text-[#3D1A2E] uppercase tracking-wide">{label}</span>
       </div>
       <div className="font-display font-bold text-xl text-[#1A0A12]">{value}</div>
-      <div className="font-body text-xs text-[#9B7080] mt-0.5">{sub}</div>
+      <div className="font-body text-xs text-[#3D1A2E] mt-0.5">{sub}</div>
     </div>
   );
 }

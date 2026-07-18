@@ -111,7 +111,7 @@ export default function EthicalStandards() {
             </p>
             <a
               href="#contact"
-              className="shrink-0 inline-flex items-center gap-2 px-6 py-2.5 bg-[#8B2252] text-white font-body font-semibold text-sm rounded-full hover:bg-[#6B1A3F] transition-colors duration-200"
+              className="shrink-0 inline-flex items-center gap-2 px-6 py-2.5 bg-[#8B2252] text-white font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] transition-colors duration-200"
             >
               Get in Touch
             </a>

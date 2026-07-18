@@ -147,10 +147,10 @@ export default function Ethics() {
                 >
                   <div className="flex items-start gap-4 mb-6">
                     <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-[#F9EDF3] flex items-center justify-center">
-                      <Icon size={22} className="text-[#C97B9A]" />
+                      <Icon size={22} className="text-[#F2A0B8]" />
                     </div>
                     <div>
-                      <span className="font-body text-xs tracking-[0.18em] uppercase text-[#C97B9A]/70 block mb-1">
+                      <span className="font-body text-xs tracking-[0.18em] uppercase text-[#F2A0B8]/70 block mb-1">
                         {pillar.number}
                       </span>
                       <h2 className="font-display text-xl md:text-2xl font-bold text-[#1A0A12] leading-snug">
@@ -161,7 +161,7 @@ export default function Ethics() {
                   <ul className="space-y-4">
                     {pillar.points.map((point) => (
                       <li key={point.label} className="flex gap-3">
-                        <span className="mt-1.5 flex-shrink-0 w-1.5 h-1.5 rounded-full bg-[#E8A0B8]" />
+                        <span className="mt-1.5 flex-shrink-0 w-1.5 h-1.5 rounded-full bg-[#F2A0B8]" />
                         <p className="font-body text-sm text-[#1A0A12]/75 leading-relaxed">
                           <strong className="text-[#1A0A12] font-semibold">{point.label}:</strong>{" "}
                           {point.text}
@@ -240,13 +240,13 @@ export default function Ethics() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
                 href="/#contact"
-                className="inline-block px-7 py-3 rounded-full bg-[#C97B9A] text-white font-body text-sm font-semibold hover:bg-[#8B2252] transition-colors duration-200"
+                className="inline-block px-7 py-3 rounded-full bg-[#F2A0B8] text-white font-body text-sm font-semibold hover:bg-[#8B2252] transition-colors duration-200"
               >
                 Get in Touch
               </a>
               <a
                 href="/"
-                className="inline-block px-7 py-3 rounded-full border-2 border-[#C97B9A] text-[#8B2252] font-body text-sm font-semibold hover:bg-[#F9EDF3] transition-colors duration-200"
+                className="inline-block px-7 py-3 rounded-full border-2 border-[#F2A0B8] text-[#8B2252] font-body text-sm font-semibold hover:bg-[#F9EDF3] transition-colors duration-200"
               >
                 Book a Class
               </a>

@@ -15,7 +15,7 @@ export default function SummerSaleBanner() {
     <div
       className="relative w-full flex items-center justify-center gap-2 px-8 py-2 text-center text-xs sm:text-sm font-semibold"
       style={{
-        background: "linear-gradient(90deg, #be185d 0%, #e91e8c 50%, #f97316 100%)",
+        background: "linear-gradient(90deg, #8B2252 0%, #8B2252 50%, #f97316 100%)",
         color: "#fff",
       }}
     >

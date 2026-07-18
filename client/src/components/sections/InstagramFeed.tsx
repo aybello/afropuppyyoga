@@ -169,7 +169,7 @@ function VideoCard({ reel, index }: { reel: (typeof REELS)[0]; index: number }) 
           className={`inline-block font-body text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full mb-1.5 ${
             reel.tag === "Review"
               ? "bg-[#8B2252]/10 text-[#8B2252]"
-              : "bg-[#F2A0B8]/30 text-[#6B1A3F]"
+              : "bg-[#F2A0B8]/30 text-[#8B2252]"
           }`}
         >
           {reel.tag}

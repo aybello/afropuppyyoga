@@ -234,7 +234,7 @@ function RecordPaymentModal({
             onClick={() => onSave(amountCents, notes)}
             disabled={isSaving || amountCents < 0}
             className="flex-1 px-4 py-2.5 font-body font-semibold text-sm rounded-full text-white transition-all disabled:opacity-50"
-            style={{ background: "linear-gradient(135deg, #e91e8c, #c2410c)" }}
+            style={{ background: "linear-gradient(135deg, #8B2252, #c2410c)" }}
           >
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Save Payment"}
           </button>
@@ -292,7 +292,7 @@ export default function InvoiceDashboard() {
         <button
           onClick={() => window.location.href = getLoginUrl()}
           className="inline-flex items-center px-6 py-3 font-body font-semibold text-sm rounded-full text-white transition-all duration-200 hover:-translate-y-0.5"
-          style={{ background: "linear-gradient(135deg, #e91e8c, #c2410c)" }}
+          style={{ background: "linear-gradient(135deg, #8B2252, #c2410c)" }}
         >
           Log In
         </button>

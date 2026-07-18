@@ -49,7 +49,7 @@ const CATEGORIES = [
       "Sponsored giveaways and featured posts",
       "Exclusive member discount codes for your audience",
     ],
-    accent: "#C4556A",
+    accent: "#8B2252",
   },
   {
     type: "Media & Production" as PartnershipType,
@@ -168,7 +168,7 @@ export default function Partnerships() {
       <Navbar />
 
       {/* Hero */}
-      <section className="relative pt-32 pb-20 px-4 bg-gradient-to-br from-[#1A0A12] via-[#2D0F1E] to-[#1A0A12] overflow-hidden">
+      <section className="relative pt-32 pb-20 px-4 bg-gradient-to-br from-[#1A0A12] via-[#3D1A2E] to-[#1A0A12] overflow-hidden">
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 30% 50%, #F2A0B8 0%, transparent 50%), radial-gradient(circle at 70% 30%, #8B2252 0%, transparent 50%)" }} />
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#F2A0B8]/20 rounded-full mb-6">
@@ -209,7 +209,7 @@ export default function Partnerships() {
               </div>
               <div>
                 <p className="font-display font-bold text-[#1A0A12] text-lg">Club Pilates Guelph</p>
-                <p className="font-body text-[#5A3040] text-sm mt-0.5">Local Business Partner</p>
+                <p className="font-body text-[#3D1A2E] text-sm mt-0.5">Local Business Partner</p>
                 <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-[#8B2252]/10 rounded-full">
                   <CheckCircle size={12} className="text-[#8B2252]" />
                   <span className="font-body text-xs font-semibold text-[#8B2252]">15% off for Club Pilates members</span>
@@ -227,7 +227,7 @@ export default function Partnerships() {
               </div>
               <div>
                 <p className="font-display font-bold text-[#1A0A12] text-lg">Fluffy Glaze</p>
-                <p className="font-body text-[#5A3040] text-sm mt-0.5">Local Business Partner</p>
+                <p className="font-body text-[#3D1A2E] text-sm mt-0.5">Local Business Partner</p>
                 <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-[#8B2252]/10 rounded-full">
                   <CheckCircle size={12} className="text-[#8B2252]" />
                   <span className="font-body text-xs font-semibold text-[#8B2252]">Artisan donuts served at select APY events</span>
@@ -238,7 +238,7 @@ export default function Partnerships() {
             <div className="flex items-center gap-4 text-center md:text-left">
               <div>
                 <p className="font-display font-bold text-[#1A0A12] text-base">Your brand here</p>
-                <p className="font-body text-[#5A3040] text-sm mt-1">Join our growing network of wellness partners</p>
+                <p className="font-body text-[#3D1A2E] text-sm mt-1">Join our growing network of wellness partners</p>
               </div>
               <ArrowRight size={20} className="text-[#8B2252] hidden md:block shrink-0" />
             </div>
@@ -253,7 +253,7 @@ export default function Partnerships() {
             <h2 className="font-display text-4xl font-bold text-[#1A0A12] mb-4">
               Ways to Partner
             </h2>
-            <p className="font-body text-[#5A3040] text-base max-w-xl mx-auto">
+            <p className="font-body text-[#3D1A2E] text-base max-w-xl mx-auto">
               Select the partnership type that fits your goals. Click any category to pre-fill the inquiry form below.
             </p>
           </div>
@@ -280,12 +280,12 @@ export default function Partnerships() {
                   </div>
                   <h3 className="font-display font-bold text-[#1A0A12] text-lg mb-1">{cat.title}</h3>
                   <p className="font-body text-[#8B2252] text-xs font-semibold mb-3">{cat.tagline}</p>
-                  <p className="font-body text-[#5A3040] text-sm leading-relaxed mb-4">{cat.description}</p>
+                  <p className="font-body text-[#3D1A2E] text-sm leading-relaxed mb-4">{cat.description}</p>
                   <ul className="space-y-1.5">
                     {cat.benefits.map((b) => (
                       <li key={b} className="flex items-start gap-2">
                         <CheckCircle size={13} className="text-[#8B2252] mt-0.5 shrink-0" />
-                        <span className="font-body text-[#5A3040] text-xs">{b}</span>
+                        <span className="font-body text-[#3D1A2E] text-xs">{b}</span>
                       </li>
                     ))}
                   </ul>
@@ -310,7 +310,7 @@ export default function Partnerships() {
             <h2 className="font-display text-4xl font-bold text-[#1A0A12] mb-3">
               Submit a Partnership Inquiry
             </h2>
-            <p className="font-body text-[#5A3040] text-base">
+            <p className="font-body text-[#3D1A2E] text-base">
               Tell us about your organization and what you have in mind. We review every inquiry and respond within 3 business days.
             </p>
           </div>
@@ -321,7 +321,7 @@ export default function Partnerships() {
                 <CheckCircle size={32} className="text-[#8B2252]" />
               </div>
               <h3 className="font-display font-bold text-2xl text-[#1A0A12] mb-3">Inquiry Received!</h3>
-              <p className="font-body text-[#5A3040] text-base max-w-sm mx-auto">
+              <p className="font-body text-[#3D1A2E] text-base max-w-sm mx-auto">
                 Thank you for reaching out. Our team will review your proposal and get back to you within 3 business days.
               </p>
             </div>
@@ -341,7 +341,7 @@ export default function Partnerships() {
                       className={`px-3 py-2 rounded-lg text-xs font-body font-semibold border-2 transition-all duration-150 text-left ${
                         form.partnershipType === type
                           ? "border-[#8B2252] bg-[#8B2252]/10 text-[#8B2252]"
-                          : "border-[#F0D0DC] text-[#5A3040] hover:border-[#8B2252]/40"
+                          : "border-[#F0D0DC] text-[#3D1A2E] hover:border-[#8B2252]/40"
                       }`}
                     >
                       {type}
@@ -397,7 +397,7 @@ export default function Partnerships() {
                 </div>
                 <div>
                   <label className="block font-body text-sm font-semibold text-[#1A0A12] mb-1.5">
-                    Phone <span className="text-[#5A3040]/50 font-normal">(optional)</span>
+                    Phone <span className="text-[#3D1A2E]/50 font-normal">(optional)</span>
                   </label>
                   <input
                     type="tel"
@@ -412,10 +412,10 @@ export default function Partnerships() {
               {/* Website */}
               <div>
                 <label className="block font-body text-sm font-semibold text-[#1A0A12] mb-1.5">
-                  Website or Social Media <span className="text-[#5A3040]/50 font-normal">(optional)</span>
+                  Website or Social Media <span className="text-[#3D1A2E]/50 font-normal">(optional)</span>
                 </label>
                 <div className="relative">
-                  <ExternalLink size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5A3040]/40" />
+                  <ExternalLink size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#3D1A2E]/40" />
                   <input
                     type="url"
                     value={form.website}
@@ -440,7 +440,7 @@ export default function Partnerships() {
                   placeholder="Describe your organization, what kind of partnership you're proposing, and what you hope to achieve together..."
                   className="w-full px-4 py-2.5 rounded-lg border border-[#F0D0DC] font-body text-sm text-[#1A0A12] bg-[#FEFAF4] focus:outline-none focus:border-[#8B2252] transition-colors resize-none"
                 />
-                <p className="font-body text-xs text-[#5A3040]/60 mt-1">{form.proposal.length}/2000 characters</p>
+                <p className="font-body text-xs text-[#3D1A2E]/60 mt-1">{form.proposal.length}/2000 characters</p>
               </div>
 
               {error && (
@@ -450,12 +450,12 @@ export default function Partnerships() {
               <button
                 type="submit"
                 disabled={submitMutation.isPending}
-                className="w-full py-4 bg-[#8B2252] text-white font-body font-bold text-base rounded-full hover:bg-[#6B1A3F] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0"
+                className="w-full py-4 bg-[#8B2252] text-white font-body font-bold text-base rounded-full hover:bg-[#8B2252] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0"
               >
                 {submitMutation.isPending ? "Submitting..." : "Submit Partnership Inquiry"}
               </button>
 
-              <p className="font-body text-xs text-center text-[#5A3040]/60">
+              <p className="font-body text-xs text-center text-[#3D1A2E]/60">
                 We respond to all inquiries within 3 business days. For urgent matters, email us at{" "}
                 <a href="mailto:afropuppyyogaofficial@gmail.com" className="text-[#8B2252] underline">
                   afropuppyyogaofficial@gmail.com

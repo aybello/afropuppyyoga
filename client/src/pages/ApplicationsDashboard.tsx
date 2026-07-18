@@ -125,8 +125,8 @@ function FreshVideo({ videoKey, videoUrl }: { videoKey: string | null; videoUrl:
     }
   }, [videoKey, videoUrl]);
 
-  if (loading) return <div className="w-full h-32 rounded-xl border border-[#F0D0DC] bg-[#FFF5F8] flex items-center justify-center"><span className="font-body text-xs text-[#8B6070]">Loading video...</span></div>;
-  if (error || !src) return <div className="w-full h-32 rounded-xl border border-[#F0D0DC] bg-[#FFF5F8] flex items-center justify-center"><span className="font-body text-xs text-[#8B6070]">Video unavailable</span></div>;
+  if (loading) return <div className="w-full h-32 rounded-xl border border-[#F0D0DC] bg-[#FFF5F8] flex items-center justify-center"><span className="font-body text-xs text-[#3D1A2E]">Loading video...</span></div>;
+  if (error || !src) return <div className="w-full h-32 rounded-xl border border-[#F0D0DC] bg-[#FFF5F8] flex items-center justify-center"><span className="font-body text-xs text-[#3D1A2E]">Video unavailable</span></div>;
 
   return (
     <video
@@ -235,7 +235,7 @@ function InterviewInviteModal({
 
         <div className="space-y-4 py-2">
           <div className="bg-[#FFF5F8] border border-[#F0D0DC] rounded-xl p-4">
-            <p className="font-body text-sm text-[#3D1A2A] leading-relaxed">
+            <p className="font-body text-sm text-[#3D1A2E] leading-relaxed">
               The applicant will receive an email with a button to book their interview at their convenience.
             </p>
           </div>
@@ -660,7 +660,7 @@ function ApplicationDetailModal({
             {app.whyAPY && (
               <div>
                 <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-2">Why AfroPuppyYoga?</p>
-                <p className="font-body text-sm text-[#3D1A2A] leading-relaxed bg-white rounded-xl p-4 border border-[#F0D0DC]">{app.whyAPY}</p>
+                <p className="font-body text-sm text-[#3D1A2E] leading-relaxed bg-white rounded-xl p-4 border border-[#F0D0DC]">{app.whyAPY}</p>
               </div>
             )}
 
@@ -668,7 +668,7 @@ function ApplicationDetailModal({
             {app.experience && (
               <div>
                 <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-2">Experience</p>
-                <p className="font-body text-sm text-[#3D1A2A] leading-relaxed bg-white rounded-xl p-4 border border-[#F0D0DC]">{app.experience}</p>
+                <p className="font-body text-sm text-[#3D1A2E] leading-relaxed bg-white rounded-xl p-4 border border-[#F0D0DC]">{app.experience}</p>
               </div>
             )}
 
@@ -686,7 +686,7 @@ function ApplicationDetailModal({
                     <Play className="w-5 h-5 text-[#8B2252] shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="font-body text-sm font-semibold text-[#1A0A12]">Watch Video</p>
-                      <p className="font-body text-xs text-[#8B6070] truncate">{app.videoUrl}</p>
+                      <p className="font-body text-xs text-[#3D1A2E] truncate">{app.videoUrl}</p>
                     </div>
                     <span className="font-body text-xs text-[#8B2252] font-semibold shrink-0">Open ↗</span>
                   </a>
@@ -905,7 +905,7 @@ export default function ApplicationsDashboard() {
         <button
           onClick={() => window.location.href = getLoginUrl()}
           className="inline-flex items-center px-6 py-3 font-body font-semibold text-sm rounded-full text-white transition-all duration-200 hover:-translate-y-0.5"
-          style={{ background: "linear-gradient(135deg, #e91e8c, #c2410c)" }}
+          style={{ background: "linear-gradient(135deg, #8B2252, #c2410c)" }}
         >
           Log In
         </button>

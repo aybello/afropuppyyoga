@@ -57,7 +57,7 @@ export default function AdminLogin() {
           >
             Admin Login
           </h1>
-          <p className="text-sm text-center mt-1" style={{ color: "#9E7B8A" }}>
+          <p className="text-sm text-center mt-1" style={{ color: "#C4A0B0" }}>
             AfroPuppyYoga Staff Portal
           </p>
         </div>
@@ -127,7 +127,7 @@ export default function AdminLogin() {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded"
-                style={{ color: "#9E7B8A" }}
+                style={{ color: "#C4A0B0" }}
                 tabIndex={-1}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}

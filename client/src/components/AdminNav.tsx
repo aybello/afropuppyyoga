@@ -96,7 +96,7 @@ export default function AdminNav() {
                 href={href}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 font-body font-semibold text-sm rounded-full transition-colors whitespace-nowrap ${
                   active
-                    ? "bg-[#C2185B] text-white"
+                    ? "bg-[#8B2252] text-white"
                     : "text-[#8B2252] hover:bg-[#FFF0F4] border border-[#F0D0DC] bg-white"
                 }`}
               >
@@ -113,7 +113,7 @@ export default function AdminNav() {
                 onClick={() => setMoreOpen((o) => !o)}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 font-body font-semibold text-sm rounded-full transition-colors whitespace-nowrap ${
                   moreIsActive
-                    ? "bg-[#C2185B] text-white"
+                    ? "bg-[#8B2252] text-white"
                     : "text-[#8B2252] hover:bg-[#FFF0F4] border border-[#F0D0DC] bg-white"
                 }`}
               >
@@ -132,8 +132,8 @@ export default function AdminNav() {
                         onClick={() => setMoreOpen(false)}
                         className={`flex items-center gap-2.5 px-4 py-2 font-body font-semibold text-sm transition-colors ${
                           active
-                            ? "bg-[#FFF0F4] text-[#C2185B]"
-                            : "text-[#5A3040] hover:bg-[#FFF8FB] hover:text-[#8B2252]"
+                            ? "bg-[#FFF0F4] text-[#8B2252]"
+                            : "text-[#3D1A2E] hover:bg-[#FFF8FB] hover:text-[#8B2252]"
                         }`}
                       >
                         <Icon className="w-4 h-4 shrink-0" />

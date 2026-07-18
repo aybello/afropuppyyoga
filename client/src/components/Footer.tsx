@@ -70,7 +70,7 @@ export default function Footer() {
               href={BOOK_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center px-6 py-2.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-semibold text-sm rounded-full hover:bg-[#D4708A] transition-colors"
+              className="inline-flex items-center px-6 py-2.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-semibold text-sm rounded-full hover:bg-[#F2A0B8] transition-colors"
             >
               Book a Class
             </a>
