@@ -301,7 +301,7 @@ export default function PrivateEventQuote() {
           </p>
 
           {/* Corporate CTA */}
-          <div className="mt-8 max-w-2xl mx-auto rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left" style={{ background: "linear-gradient(135deg, #8B2252, #D4708A)" }}>
+          <div className="mt-8 max-w-2xl mx-auto rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left" style={{ background: "#8B2252" }}>
             <div className="text-3xl shrink-0">🏢</div>
             <div className="flex-1">
               <p className="font-display font-bold text-white text-lg mb-1">Planning a team wellness day?</p>
@@ -485,7 +485,7 @@ export default function PrivateEventQuote() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="rounded-2xl p-8 text-white" style={{ background: "linear-gradient(135deg, #8B2252, #C05080)" }}
+                        className="rounded-2xl p-8 text-white" style={{ background: "#8B2252" }}
                       >
                         <div className="flex items-center gap-2 mb-6">
                           <Calculator size={18} className="text-[#F2A0B8]" />
