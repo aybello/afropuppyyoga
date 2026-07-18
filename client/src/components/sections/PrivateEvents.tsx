@@ -160,7 +160,7 @@ export default function PrivateEvents() {
             <Link
               href="/private-events/quote"
               onClick={() => trackCTAClick("Book Your Private Event — Private Events")}
-              className="inline-flex items-center gap-3 px-12 py-5 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-lg rounded-full hover:bg-[#F2A0B8]/90 transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1"
+              className="inline-flex items-center gap-3 px-12 py-5 bg-[#8B2252] text-white font-body font-bold text-lg rounded-full hover:bg-[#7a1d47] transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1"
             >
               <Sparkles size={20} />
               Book Your Private Event
