@@ -65,7 +65,7 @@ export default function PrivateEvents() {
       </div>
 
       {/* Decorative circles — clipped by section overflow-hidden */}
-      <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-[#F2A0B8]/5 translate-x-1/3 -translate-y-1/3" />
+      <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-[#8B2252]/5 translate-x-1/3 -translate-y-1/3" />
       <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-[#8B2252]/10 -translate-x-1/3 translate-y-1/3" />
 
       <div className="relative container">
@@ -73,11 +73,11 @@ export default function PrivateEvents() {
         <FadeUp>
           <div className="text-center mb-16">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="w-8 h-0.5 bg-[#F2A0B8]" />
-              <span className="text-[#F2A0B8] font-body text-xs font-semibold tracking-widest uppercase">
+              <div className="w-8 h-0.5 bg-[#8B2252]" />
+              <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">
                 Private Events
               </span>
-              <div className="w-8 h-0.5 bg-[#F2A0B8]" />
+              <div className="w-8 h-0.5 bg-[#8B2252]" />
             </div>
             <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
               Host an Experience
@@ -94,13 +94,13 @@ export default function PrivateEvents() {
         <div className="grid md:grid-cols-2 gap-6 mb-12">
           {eventTypes.map((event, i) => (
             <FadeUp key={event.title} delay={i * 0.15}>
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:border-[#F2A0B8]/30 transition-all duration-300 hover:-translate-y-1 group">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:border-[#8B2252]/50 transition-all duration-300 hover:-translate-y-1 group">
                 <div className="flex items-start gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-[#F2A0B8]/20 flex items-center justify-center shrink-0 group-hover:bg-[#F2A0B8]/30 transition-colors">
-                    <event.icon size={22} className="text-[#F2A0B8]" />
+                  <div className="w-12 h-12 rounded-xl bg-[#8B2252]/30 flex items-center justify-center shrink-0 group-hover:bg-[#8B2252]/50 transition-colors">
+                    <event.icon size={22} className="text-white" />
                   </div>
                   <div>
-                    <span className="inline-block px-2.5 py-0.5 bg-[#F2A0B8]/20 text-[#F2A0B8] text-xs font-body font-semibold rounded-full mb-2">
+                    <span className="inline-block px-2.5 py-0.5 bg-[#8B2252]/30 text-white text-xs font-body font-semibold rounded-full mb-2">
                       {event.tag}
                     </span>
                     <h3 className="font-display font-bold text-xl text-white">{event.title}</h3>
@@ -117,13 +117,13 @@ export default function PrivateEvents() {
           <FadeUp delay={0.2}>
             <div className="bg-white/5 rounded-2xl p-8 border border-white/10">
               <div className="flex items-center gap-2 mb-5">
-                <Users size={18} className="text-[#F2A0B8]" />
+                <Users size={18} className="text-[#8B2252]" />
                 <h3 className="font-display font-bold text-lg text-white">What's Included</h3>
               </div>
               <ul className="space-y-3">
                 {includes.map((item) => (
                   <li key={item} className="flex items-start gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#F2A0B8] mt-2 shrink-0" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#8B2252] mt-2 shrink-0" />
                     <span className="font-body text-white/70 text-sm leading-relaxed">{item}</span>
                   </li>
                 ))}
@@ -134,14 +134,14 @@ export default function PrivateEvents() {
           <FadeUp delay={0.3}>
             <div className="bg-white/5 rounded-2xl p-8 border border-white/10">
               <div className="flex items-center gap-2 mb-5">
-                <MapPin size={18} className="text-[#F2A0B8]" />
+                <MapPin size={18} className="text-[#8B2252]" />
                 <h3 className="font-display font-bold text-lg text-white">Available Locations</h3>
               </div>
               <div className="flex flex-wrap gap-3">
                 {locations.map((loc) => (
                   <span
                     key={loc}
-                    className="px-4 py-2 bg-[#F2A0B8]/15 text-white font-body text-sm font-medium rounded-full border border-[#F2A0B8]/30"
+                    className="px-4 py-2 bg-[#8B2252]/25 text-white font-body text-sm font-medium rounded-full border border-[#8B2252]/50"
                   >
                     {loc}
                   </span>
@@ -170,7 +170,7 @@ export default function PrivateEvents() {
             </p>
             <p className="font-body text-white/30 text-xs mt-2">
               Questions?{" "}
-              <a href="mailto:afropuppyyogaofficial@gmail.com" className="text-[#F2A0B8]/60 hover:text-[#F2A0B8] transition-colors">
+              <a href="mailto:afropuppyyogaofficial@gmail.com" className="text-[#8B2252]/70 hover:text-[#8B2252] transition-colors">
                 afropuppyyogaofficial@gmail.com
               </a>
             </p>
