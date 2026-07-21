@@ -475,3 +475,7 @@
 
 ## Operations Specialist Oakville Listing (Jul 21, 2026)
 - [x] Add Operations Specialist (Oakville) job listing to Careers page in exact same format as existing listings ($19/hr, Part-Time, Now Hiring badge, ⚙️ emoji)
+
+## Private Events Quote Page Hero Image Fix (Jul 21, 2026)
+- [x] Replace broken hero circle image (apy-quote-hero_e5bfb507.png no longer on CDN) with ham_oak_IMG_3209_d7f2d0c0.jpg (confirmed live)
+- [x] Switch from img tag to CSS background-image div to prevent alt text bleed-through in the circle

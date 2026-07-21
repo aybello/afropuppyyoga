@@ -212,13 +212,16 @@ export default function PrivateEventQuote() {
             </div>
             {/* Hero image */}
             <div className="shrink-0 relative">
-              <div className="w-52 h-52 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-white shadow-2xl">
-                <img
-                  src="/manus-storage/apy-quote-hero_e5bfb507.png"
-                  alt="Private puppy yoga event — group of guests enjoying a session with adorable puppies"
-                  className="w-full h-full object-cover"
-                />
-              </div>
+              <div
+                className="w-52 h-52 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-white shadow-2xl"
+                style={{
+                  backgroundImage: "url('/manus-storage/ham_oak_IMG_3209_d7f2d0c0.jpg')",
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  backgroundColor: "#F2A0B8",
+                }}
+                aria-hidden="true"
+              />
               {/* Decorative ring */}
               <div className="absolute -inset-2 rounded-full border-2 border-[#F2A0B8]/40 pointer-events-none" />
               {/* Floating badge */}
