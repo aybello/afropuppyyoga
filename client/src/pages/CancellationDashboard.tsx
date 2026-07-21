@@ -8,19 +8,22 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import AdminNav from "@/components/AdminNav";
 import { toast } from "sonner";
-import { PhoneCall, AlertTriangle, CheckCircle2, XCircle, SkipForward, RefreshCw } from "lucide-react";
+import { PhoneCall, MessageSquare, AlertTriangle, CheckCircle2, XCircle, SkipForward, RefreshCw } from "lucide-react";
 
 type CallResult = {
   name: string;
   phone: string;
-  status: string;
+  callStatus: string;
+  smsStatus: string;
   callSid?: string;
+  smsSid?: string;
   error?: string;
 };
 
 type CancellationResult = {
   total: number;
   called: number;
+  texted: number;
   skipped: number;
   failed: number;
   results: CallResult[];
@@ -32,17 +35,21 @@ function statusBadge(status: string) {
     case "initiated":
     case "ringing":
     case "in-progress":
-      return <Badge className="bg-blue-100 text-blue-800 border-blue-200">{status}</Badge>;
+    case "accepted":
+      return <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs">{status}</Badge>;
     case "completed":
-      return <Badge className="bg-green-100 text-green-800 border-green-200">completed</Badge>;
+    case "delivered":
+    case "sent":
+      return <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">{status}</Badge>;
     case "failed":
     case "busy":
     case "no-answer":
-      return <Badge className="bg-red-100 text-red-800 border-red-200">{status}</Badge>;
+    case "undelivered":
+      return <Badge className="bg-red-100 text-red-800 border-red-200 text-xs">{status}</Badge>;
     case "skipped":
-      return <Badge className="bg-gray-100 text-gray-600 border-gray-200">skipped</Badge>;
+      return <Badge className="bg-gray-100 text-gray-600 border-gray-200 text-xs">skipped</Badge>;
     default:
-      return <Badge variant="outline">{status}</Badge>;
+      return <Badge variant="outline" className="text-xs">{status}</Badge>;
   }
 }
 
@@ -59,7 +66,7 @@ export default function CancellationDashboard() {
     onSuccess: (data) => {
       setCancellationResult(data);
       setConfirming(false);
-      toast.success(`Calls initiated: ${data.called} called, ${data.skipped} skipped, ${data.failed} failed`);
+      toast.success(`Done! ${data.called} called, ${data.texted} texted, ${data.skipped} skipped, ${data.failed} failed`);
     },
     onError: (err) => {
       setConfirming(false);
@@ -95,8 +102,6 @@ export default function CancellationDashboard() {
     });
   }
 
-  const selectedEvent = events?.find((e) => e.apiId === selectedEventApiId);
-
   return (
     <div className="min-h-screen bg-[#faf7f2]">
       <AdminNav />
@@ -104,10 +109,10 @@ export default function CancellationDashboard() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-[#2d1b4e] mb-1 flex items-center gap-2">
             <PhoneCall className="w-7 h-7 text-[#8b5cf6]" />
-            Class Cancellation Calls
+            Class Cancellation
           </h1>
           <p className="text-gray-600 text-sm">
-            Select an upcoming class to cancel and automatically call all registered attendees via phone.
+            Select an upcoming class to cancel. Every registered attendee will receive both a <strong>phone call</strong> and an <strong>SMS</strong> simultaneously.
           </p>
         </div>
 
@@ -160,12 +165,12 @@ export default function CancellationDashboard() {
             </CardHeader>
             <CardContent>
               <Label className="text-sm text-gray-600 mb-2 block">
-                Leave blank to use the default cancellation message, or write a custom one below.
+                Leave blank to use the default APY cancellation message. This message is used for both the call and the SMS.
               </Label>
               <Textarea
                 value={customMessage}
                 onChange={(e) => setCustomMessage(e.target.value)}
-                placeholder={`Default: "Hello, this is a message from AfroPuppyYoga. We regret to inform you that your upcoming class, ${selectedEventName}, has been cancelled. We apologize for the inconvenience. Please visit afropuppyyoga.ca or check your email for rebooking options. Thank you for your understanding."`}
+                placeholder={`Default SMS: "Hi from AfroPuppyYoga! Your class "${selectedEventName}" has been cancelled. We're sorry — visit afropuppyyoga.ca to rebook."`}
                 rows={4}
                 className="text-sm"
               />
@@ -184,7 +189,7 @@ export default function CancellationDashboard() {
                     You are about to cancel: <span className="font-bold">{selectedEventName}</span>
                   </p>
                   <p className="text-orange-700 text-xs mt-1">
-                    This will call every registered attendee with a phone number on file. This action cannot be undone.
+                    Every registered attendee with a phone number will receive a <strong>phone call</strong> and an <strong>SMS</strong> simultaneously. This cannot be undone.
                   </p>
                 </div>
               </div>
@@ -192,8 +197,9 @@ export default function CancellationDashboard() {
                 onClick={handleCancelClass}
                 className="mt-4 bg-orange-600 hover:bg-orange-700 text-white"
               >
-                <PhoneCall className="w-4 h-4 mr-2" />
-                Cancel Class & Call Attendees
+                <PhoneCall className="w-4 h-4 mr-1.5" />
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Cancel Class & Notify Attendees
               </Button>
             </CardContent>
           </Card>
@@ -205,7 +211,7 @@ export default function CancellationDashboard() {
             <CardContent className="pt-5">
               <p className="font-bold text-red-800 mb-1">Are you absolutely sure?</p>
               <p className="text-red-700 text-sm mb-4">
-                Calls will be placed immediately to all attendees of <strong>{selectedEventName}</strong>.
+                A phone call <strong>and</strong> SMS will be sent immediately to all attendees of <strong>{selectedEventName}</strong>.
               </p>
               <div className="flex gap-3">
                 <Button
@@ -214,9 +220,9 @@ export default function CancellationDashboard() {
                   className="bg-red-600 hover:bg-red-700 text-white"
                 >
                   {cancelMutation.isPending ? (
-                    <><Spinner className="w-4 h-4 mr-2" /> Calling attendees...</>
+                    <><Spinner className="w-4 h-4 mr-2" /> Calling & texting attendees...</>
                   ) : (
-                    "Yes, Cancel & Call Everyone"
+                    "Yes, Cancel & Notify Everyone"
                   )}
                 </Button>
                 <Button variant="outline" onClick={() => setConfirming(false)} disabled={cancelMutation.isPending}>
@@ -233,20 +239,24 @@ export default function CancellationDashboard() {
             <CardContent className="pt-5">
               <div className="flex items-center gap-2 mb-3">
                 <CheckCircle2 className="w-5 h-5 text-green-600" />
-                <span className="font-bold text-green-800">Calls Initiated</span>
+                <span className="font-bold text-green-800">Notifications Sent</span>
               </div>
-              <div className="grid grid-cols-4 gap-3 mb-4">
+              <div className="grid grid-cols-5 gap-3 mb-4">
                 <div className="text-center bg-white rounded-lg p-3 border border-green-200">
                   <div className="text-2xl font-bold text-[#2d1b4e]">{cancellationResult.total}</div>
-                  <div className="text-xs text-gray-500">Total Guests</div>
+                  <div className="text-xs text-gray-500">Total</div>
                 </div>
                 <div className="text-center bg-white rounded-lg p-3 border border-green-200">
                   <div className="text-2xl font-bold text-blue-600">{cancellationResult.called}</div>
-                  <div className="text-xs text-gray-500">Called</div>
+                  <div className="text-xs text-gray-500 flex items-center justify-center gap-1"><PhoneCall className="w-3 h-3" /> Called</div>
+                </div>
+                <div className="text-center bg-white rounded-lg p-3 border border-green-200">
+                  <div className="text-2xl font-bold text-purple-600">{cancellationResult.texted}</div>
+                  <div className="text-xs text-gray-500 flex items-center justify-center gap-1"><MessageSquare className="w-3 h-3" /> Texted</div>
                 </div>
                 <div className="text-center bg-white rounded-lg p-3 border border-green-200">
                   <div className="text-2xl font-bold text-gray-500">{cancellationResult.skipped}</div>
-                  <div className="text-xs text-gray-500">Skipped (no phone)</div>
+                  <div className="text-xs text-gray-500">Skipped</div>
                 </div>
                 <div className="text-center bg-white rounded-lg p-3 border border-green-200">
                   <div className="text-2xl font-bold text-red-500">{cancellationResult.failed}</div>
@@ -259,9 +269,9 @@ export default function CancellationDashboard() {
                 {cancellationResult.results.map((r, i) => (
                   <div key={i} className="flex items-center justify-between bg-white rounded p-2 border border-green-100 text-sm">
                     <div className="flex items-center gap-2">
-                      {r.status === "skipped" ? (
+                      {r.callStatus === "skipped" ? (
                         <SkipForward className="w-4 h-4 text-gray-400" />
-                      ) : r.status === "failed" ? (
+                      ) : r.callStatus === "failed" ? (
                         <XCircle className="w-4 h-4 text-red-500" />
                       ) : (
                         <PhoneCall className="w-4 h-4 text-blue-500" />
@@ -270,8 +280,11 @@ export default function CancellationDashboard() {
                       <span className="text-gray-400 text-xs">{r.phone}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      {statusBadge(r.status)}
-                      {r.error && <span className="text-xs text-red-500 max-w-40 truncate">{r.error}</span>}
+                      <span className="text-xs text-gray-500">Call:</span>
+                      {statusBadge(r.callStatus)}
+                      <span className="text-xs text-gray-500">SMS:</span>
+                      {statusBadge(r.smsStatus)}
+                      {r.error && <span className="text-xs text-red-500 max-w-32 truncate">{r.error}</span>}
                     </div>
                   </div>
                 ))}
@@ -285,7 +298,7 @@ export default function CancellationDashboard() {
           <Card className="border-[#e8dff5]">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg text-[#2d1b4e]">Call Log History</CardTitle>
+                <CardTitle className="text-lg text-[#2d1b4e]">Notification Log</CardTitle>
                 <button onClick={() => refetchLogs()} className="text-xs text-[#8b5cf6] hover:underline flex items-center gap-1">
                   <RefreshCw className="w-3 h-3" /> Refresh
                 </button>
@@ -298,8 +311,9 @@ export default function CancellationDashboard() {
                     <tr className="border-b border-gray-200">
                       <th className="text-left py-2 px-2 text-gray-500 font-medium">Guest</th>
                       <th className="text-left py-2 px-2 text-gray-500 font-medium">Phone</th>
-                      <th className="text-left py-2 px-2 text-gray-500 font-medium">Status</th>
-                      <th className="text-left py-2 px-2 text-gray-500 font-medium">Called At</th>
+                      <th className="text-left py-2 px-2 text-gray-500 font-medium">Call</th>
+                      <th className="text-left py-2 px-2 text-gray-500 font-medium">SMS</th>
+                      <th className="text-left py-2 px-2 text-gray-500 font-medium">Sent At</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -308,6 +322,7 @@ export default function CancellationDashboard() {
                         <td className="py-2 px-2 font-medium text-[#2d1b4e]">{log.guestName}</td>
                         <td className="py-2 px-2 text-gray-600">{log.phone}</td>
                         <td className="py-2 px-2">{statusBadge(log.status)}</td>
+                        <td className="py-2 px-2">{statusBadge(log.smsStatus ?? "queued")}</td>
                         <td className="py-2 px-2 text-gray-500 text-xs">
                           {new Date(log.calledAt).toLocaleString()}
                         </td>

@@ -1,8 +1,9 @@
 /**
  * Class Cancellation Router
  *
- * Fetches all guests for a given Luma event, calls each one via Twilio
- * with a pre-recorded TTS cancellation message, and logs the results.
+ * Fetches all guests for a given Luma event, then sends BOTH a phone call
+ * (TTS via Twilio) AND an SMS to each attendee simultaneously.
+ * Results and statuses are logged to the callLogs table.
  *
  * Only accessible to admin/staff roles.
  */
@@ -107,13 +108,13 @@ export const cancellationRouter = router({
     }));
   }),
 
-  /** Cancel a class: call all guests with a Twilio TTS message */
+  /** Cancel a class: call AND text all guests simultaneously */
   cancelClass: staffProcedure
     .input(
       z.object({
         eventApiId: z.string().min(1),
         eventName: z.string().min(1),
-        /** Optional custom message override */
+        /** Optional custom message override (used for both call TTS and SMS body) */
         customMessage: z.string().optional(),
       })
     )
@@ -131,10 +132,15 @@ export const cancellationRouter = router({
 
       const client = twilio(accountSid, authToken);
 
-      // Build the TTS message
-      const message =
+      // Voice message (TTS — slightly more formal for spoken delivery)
+      const voiceMessage =
         input.customMessage ??
         `Hello, this is a message from AfroPuppyYoga. We regret to inform you that your upcoming class, ${input.eventName}, has been cancelled. We apologize for the inconvenience. Please visit afropuppyyoga.ca or check your email for rebooking options. Thank you for your understanding.`;
+
+      // SMS message (concise for text)
+      const smsMessage =
+        input.customMessage ??
+        `Hi from AfroPuppyYoga! Your class "${input.eventName}" has been cancelled. We're sorry for the inconvenience — visit afropuppyyoga.ca to rebook. Questions? Email afropuppyyogaofficial@gmail.com`;
 
       // Fetch all guests
       const guests = await fetchLumaGuests(input.eventApiId);
@@ -143,8 +149,10 @@ export const cancellationRouter = router({
       const results: Array<{
         name: string;
         phone: string;
-        status: string;
+        callStatus: string;
+        smsStatus: string;
         callSid?: string;
+        smsSid?: string;
         error?: string;
       }> = [];
 
@@ -160,61 +168,72 @@ export const cancellationRouter = router({
             guestName: guest.name,
             phone: "N/A",
             status: "skipped",
+            smsStatus: "skipped",
             errorMessage: "No phone number on file",
             calledAt: now,
           });
-          results.push({ name: guest.name, phone: "N/A", status: "skipped" });
+          results.push({ name: guest.name, phone: "N/A", callStatus: "skipped", smsStatus: "skipped" });
           continue;
         }
 
-        try {
-          const call = await client.calls.create({
+        // Fire call and SMS in parallel
+        const [callResult, smsResult] = await Promise.allSettled([
+          client.calls.create({
             to: guest.phone,
             from: fromNumber,
-            twiml: `<Response><Say voice="Polly.Joanna">${message}</Say></Response>`,
-          });
+            twiml: `<Response><Say voice="Polly.Joanna">${voiceMessage}</Say></Response>`,
+          }),
+          client.messages.create({
+            to: guest.phone,
+            from: fromNumber,
+            body: smsMessage,
+          }),
+        ]);
 
-          await db.insert(callLogs).values({
-            lumaEventId: input.eventApiId,
-            eventName: input.eventName,
-            guestName: guest.name,
-            phone: guest.phone,
-            callSid: call.sid,
-            status: call.status ?? "queued",
-            calledAt: now,
-          });
+        const callStatus = callResult.status === "fulfilled" ? (callResult.value.status ?? "queued") : "failed";
+        const callSid = callResult.status === "fulfilled" ? callResult.value.sid : undefined;
+        const callError = callResult.status === "rejected"
+          ? (callResult.reason instanceof Error ? callResult.reason.message : String(callResult.reason))
+          : undefined;
 
-          results.push({
-            name: guest.name,
-            phone: guest.phone,
-            status: call.status ?? "queued",
-            callSid: call.sid,
-          });
-        } catch (err: unknown) {
-          const errorMsg = err instanceof Error ? err.message : String(err);
-          await db.insert(callLogs).values({
-            lumaEventId: input.eventApiId,
-            eventName: input.eventName,
-            guestName: guest.name,
-            phone: guest.phone,
-            status: "failed",
-            errorMessage: errorMsg,
-            calledAt: now,
-          });
-          results.push({
-            name: guest.name,
-            phone: guest.phone,
-            status: "failed",
-            error: errorMsg,
-          });
-        }
+        const smsStatus = smsResult.status === "fulfilled" ? (smsResult.value.status ?? "queued") : "failed";
+        const smsSid = smsResult.status === "fulfilled" ? smsResult.value.sid : undefined;
+        const smsError = smsResult.status === "rejected"
+          ? (smsResult.reason instanceof Error ? smsResult.reason.message : String(smsResult.reason))
+          : undefined;
+
+        const combinedError = [callError, smsError].filter(Boolean).join(" | ") || undefined;
+
+        await db.insert(callLogs).values({
+          lumaEventId: input.eventApiId,
+          eventName: input.eventName,
+          guestName: guest.name,
+          phone: guest.phone,
+          callSid,
+          status: callStatus,
+          smsSid,
+          smsStatus,
+          errorMessage: combinedError ?? null,
+          calledAt: now,
+        });
+
+        results.push({
+          name: guest.name,
+          phone: guest.phone,
+          callStatus,
+          smsStatus,
+          callSid,
+          smsSid,
+          error: combinedError,
+        });
       }
 
-      const called = results.filter((r) => r.status !== "skipped" && r.status !== "failed").length;
-      const skipped = results.filter((r) => r.status === "skipped").length;
-      const failed = results.filter((r) => r.status === "failed").length;
+      const called = results.filter((r) => r.callStatus !== "skipped" && r.callStatus !== "failed").length;
+      const texted = results.filter((r) => r.smsStatus !== "skipped" && r.smsStatus !== "failed").length;
+      const skipped = results.filter((r) => r.callStatus === "skipped").length;
+      const failed = results.filter((r) => r.callStatus === "failed" || r.smsStatus === "failed").length;
 
-      return { total: guests.length, called, skipped, failed, results };
+      return { total: guests.length, called, texted, skipped, failed, results };
     }),
 
   /** Get call logs for a specific event */

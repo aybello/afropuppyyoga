@@ -35,7 +35,15 @@ describe("Twilio credentials", () => {
     const { default: twilio } = await import("twilio");
     const client = twilio(sid, token);
     expect(client).toBeTruthy();
-    // client.calls is a function/object in Twilio SDK — just check it exists
+    // client.calls and client.messages are function/objects in Twilio SDK — just check they exist
     expect(client.calls).toBeTruthy();
+    expect(client.messages).toBeTruthy();
+  });
+
+  it("should have callLogs schema with smsSid and smsStatus columns", async () => {
+    const { callLogs } = await import("../drizzle/schema");
+    const columns = Object.keys(callLogs);
+    expect(columns).toContain("smsSid");
+    expect(columns).toContain("smsStatus");
   });
 });

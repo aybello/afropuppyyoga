@@ -503,6 +503,8 @@ export const callLogs = mysqlTable("callLogs", {
   phone: varchar("phone", { length: 30 }).notNull(),
   callSid: varchar("callSid", { length: 64 }),
   status: varchar("status", { length: 32 }).notNull().default("queued"),
+  smsSid: varchar("smsSid", { length: 64 }),
+  smsStatus: varchar("smsStatus", { length: 32 }).notNull().default("queued"),
   errorMessage: text("errorMessage"),
   calledAt: bigint("calledAt", { mode: "number" }).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

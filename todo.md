@@ -445,3 +445,8 @@
 - [x] Add callLogs table to schema (eventId, guestName, phone, status, calledAt)
 - [x] Add Cancel Class UI to admin portal with event selector and call log table
 - [ ] Test end-to-end with verified number
+
+## SMS + Call Cancellation (Both)
+- [x] Update cancellation router to send SMS alongside phone call for each guest
+- [x] Add smsStatus and smsSid fields to callLogs schema
+- [x] Update CancellationDashboard UI to show SMS status column in call log
