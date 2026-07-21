@@ -444,7 +444,7 @@
 - [x] Create server/routers/cancellation.ts with cancelClass procedure
 - [x] Add callLogs table to schema (eventId, guestName, phone, status, calledAt)
 - [x] Add Cancel Class UI to admin portal with event selector and call log table
-- [ ] Test end-to-end with verified number
+- [x] Test end-to-end with verified number
 
 ## SMS + Call Cancellation (Both)
 - [x] Update cancellation router to send SMS alongside phone call for each guest
