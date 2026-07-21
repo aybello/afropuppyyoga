@@ -32,9 +32,11 @@ const faqs: { q: string; a: ReactNode }[] = [
     q: "What is your cancellation and refund policy?",
     a: (
       <>
+        <strong>All ticket purchases are final sale and non-refundable.</strong> We do not offer refunds for change of mind, scheduling conflicts, or missed classes. We kindly ask that you review your schedule before booking.
+        <br /><br />
         We never want to cancel a class. Cancellations cost us just as much as they cost you — we lose revenue, our puppies miss out on socialization, and our team loses a shift. When we do have to cancel, it is always due to circumstances outside our control: puppy availability, instructor emergencies, safety concerns, or venue issues.
         <br /><br />
-        Because of the nature of our business and the stage we are at, issuing cash refunds is not practical for us. Instead, we operate on a <strong>class credit system</strong>. If your class is ever cancelled by us, you will receive a class credit delivered as a coupon code — it never expires, and it can be transferred to another person. We believe this is the fairest way to honour your commitment to us while we honour ours to you.
+        In the rare event that AfroPuppyYoga cancels a class, we operate on a <strong>class credit system</strong>. You will receive a class credit delivered as a coupon code — it never expires, and it can be transferred to another person. We believe this is the fairest way to honour your commitment to us while we honour ours to you.
         <br /><br />
         We are deeply grateful for your kindness and support. It means everything to us.
         <br /><br />
