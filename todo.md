@@ -472,3 +472,6 @@
 - [x] Pull next upcoming Luma event for same location or fallback to generic rebooking message
 - [x] Include rebooking code in email body
 - [x] Include rebooking code in SMS
+
+## Operations Specialist Oakville Listing (Jul 21, 2026)
+- [x] Add Operations Specialist (Oakville) job listing to Careers page in exact same format as existing listings ($19/hr, Part-Time, Now Hiring badge, ⚙️ emoji)

@@ -246,6 +246,42 @@ const JOB_LISTINGS = [
       "Opportunity to shape the growth of a fast-rising wellness brand",
     ],
   },
+  // ── Operations Specialist ───────────────────────────────
+  {
+    id: "operations-specialist-oakville",
+    title: "Operations Specialist",
+    location: "Oakville",
+    locationCode: "OAK",
+    type: "Part-Time",
+    badge: "Now Hiring",
+    emoji: "⚙️",
+    pay: "$19/hr",
+    description:
+      "Do you love puppies and want to help create unforgettable experiences? AfroPuppyYoga is looking for an Operations Specialist to join our Oakville team. You'll be on the ground supporting event-day operations — coordinating instructors, puppy partners, and volunteers to help deliver smooth, joyful sessions for every guest.",
+    responsibilities: [
+      "Support event-day operations and logistics",
+      "Coordinate instructors, puppy partners, and volunteers",
+      "Welcome and check in guests, manage registration lists",
+      "Monitor the space to ensure guest and puppy safety and comfort",
+      "Assist with photography and post-event cleanup",
+      "Communicate feedback and incidents to the management team",
+    ],
+    requirements: [
+      "3rd/4th year university student or recent graduate",
+      "Must have access to a car",
+      "Available on weekends",
+      "Organized, reliable, and calm under pressure",
+      "Incredibly sharp and able to take initiative",
+      "Comfortable and enthusiastic around dogs",
+    ],
+    perks: [
+      "$19/hr",
+      "Free access to APY classes",
+      "Hands-on experience in wellness events and operations",
+      "Be part of a fast-growing, community-loved brand",
+      "Puppies every shift — enough said",
+    ],
+  },
   {
     id: "social-media-intern",
     title: "Social Media Intern",
