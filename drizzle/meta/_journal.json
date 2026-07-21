@@ -127,6 +127,13 @@
       "when": 1778791534134,
       "tag": "0019_fat_millenium_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "5",
+      "when": 1784608868400,
+      "tag": "0020_elite_mephisto",
+      "breakpoints": true
     }
   ]
 }

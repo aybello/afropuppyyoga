@@ -37,6 +37,7 @@ const Oakville = lazy(() => import("./pages/Oakville"));
 const Corporate = lazy(() => import("./pages/Corporate"));
 const PrivatePuppyYogaEvents = lazy(() => import("./pages/PrivatePuppyYogaEvents"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
+const CancellationDashboard = lazy(() => import("./pages/CancellationDashboard"));
 
 function PageLoader() {
   return (
@@ -81,6 +82,7 @@ function Router() {
         <Route path="/admin/puppy-schedule" component={PuppySchedule} />
         <Route path="/admin/schedule-calendar" component={ScheduleCalendar} />
         <Route path="/admin/refunds" component={RefundTracker} />
+        <Route path="/admin/cancellation" component={CancellationDashboard} />
         <Route path="/breeder-availability" component={BreederAvailability} />
         <Route path="/loyalty" component={Loyalty} />
         <Route path="/ethics" component={Ethics} />

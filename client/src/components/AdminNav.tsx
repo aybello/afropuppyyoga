@@ -18,6 +18,7 @@ import {
   RotateCcw,
   ChevronDown,
   CalendarDays,
+  PhoneOff,
 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useState, useRef, useEffect } from "react";
@@ -36,6 +37,7 @@ const MORE_ITEMS = [
   { href: "/admin/partnerships",   label: "Partnerships",    icon: Handshake,    adminOnly: false },
   { href: "/admin/private-events", label: "Private Events",  icon: Sparkles,     adminOnly: false },
   { href: "/admin/schedule-calendar", label: "Schedule Calendar", icon: CalendarDays, adminOnly: false },
+  { href: "/admin/cancellation", label: "Cancel Class", icon: PhoneOff, adminOnly: false },
 ];
 
 export default function AdminNav() {

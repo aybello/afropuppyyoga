@@ -14,6 +14,7 @@ import { privateEventsRouter } from "./routers/privateEvents";
 import { breedersRouter } from "./routers/breeders";
 import { refundsRouter } from "./routers/refunds";
 import { puppyScheduleRouter } from "./routers/puppySchedule";
+import { cancellationRouter } from "./routers/cancellation";
 import { z } from "zod";
 
 const messageSchema = z.object({
@@ -33,6 +34,7 @@ export const appRouter = router({
   breeders: breedersRouter,
   refunds: refundsRouter,
   puppySchedule: puppyScheduleRouter,
+  cancellation: cancellationRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

@@ -493,3 +493,22 @@ export const metaConversionEvents = mysqlTable("metaConversionEvents", {
 
 export type MetaConversionEvent = typeof metaConversionEvents.$inferSelect;
 export type InsertMetaConversionEvent = typeof metaConversionEvents.$inferInsert;
+
+// ─── Call Logs (Twilio class cancellation calls) ────────────────────────────
+export const callLogs = mysqlTable("callLogs", {
+  id: int("id").autoincrement().primaryKey(),
+  lumaEventId: varchar("lumaEventId", { length: 128 }).notNull(),
+  eventName: varchar("eventName", { length: 255 }).notNull(),
+  guestName: varchar("guestName", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 30 }).notNull(),
+  callSid: varchar("callSid", { length: 64 }),
+  status: varchar("status", { length: 32 }).notNull().default("queued"),
+  errorMessage: text("errorMessage"),
+  calledAt: bigint("calledAt", { mode: "number" }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  index("idx_callLogs_lumaEventId").on(t.lumaEventId),
+  index("idx_callLogs_status").on(t.status),
+]);
+export type CallLog = typeof callLogs.$inferSelect;
+export type InsertCallLog = typeof callLogs.$inferInsert;

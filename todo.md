@@ -437,3 +437,11 @@
 - [x] Remove Birthday nav links from Navbar, Footer, AdminNav, StaffPortal
 - [x] Update BirthdayBanner homepage section to link to /private-events/quote
 - [x] Update seoRenderer.ts to remove birthday nav links and redirect canonical
+
+## Twilio Class Cancellation Calling Feature
+- [x] Add TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER as secrets
+- [x] Install twilio npm package
+- [x] Create server/routers/cancellation.ts with cancelClass procedure
+- [x] Add callLogs table to schema (eventId, guestName, phone, status, calledAt)
+- [x] Add Cancel Class UI to admin portal with event selector and call log table
+- [ ] Test end-to-end with verified number
