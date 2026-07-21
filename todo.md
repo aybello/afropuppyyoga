@@ -466,3 +466,9 @@
 - [x] Update cancellation router: every attendee always gets email + SMS + call (not conditional)
 - [x] Update callLogs schema to track emailStatus separately
 - [x] Update UI to show email status column in log
+
+## Cancellation Email/SMS Enhancements
+- [x] Auto-generate rebooking code from cancelled class date (MONTHDDAY format e.g. JULY21)
+- [x] Pull next upcoming Luma event for same location or fallback to generic rebooking message
+- [x] Include rebooking code in email body
+- [x] Include rebooking code in SMS

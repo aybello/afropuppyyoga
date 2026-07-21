@@ -734,13 +734,16 @@ export function buildSigningInviteEmail(opts: {
 // ─── Class Cancellation Email ─────────────────────────────────────────────────
 
 /**
- * Sends a branded class cancellation email to a guest who has no phone number.
- * Used as a fallback when Twilio cannot call/text the attendee.
+ * Sends a branded class cancellation email to every attendee.
+ * Includes a rebooking code (auto-generated from event date) and next class info.
  */
 export async function sendClassCancellationEmail(opts: {
   to: string;
   guestName: string;
   eventName: string;
+  rebookingCode: string;
+  nextClassName?: string;
+  nextClassDate?: string;
   customMessage?: string;
 }): Promise<void> {
   const subject = `Important: Your AfroPuppyYoga class has been cancelled`;
@@ -756,10 +759,29 @@ export async function sendClassCancellationEmail(opts: {
     ? `${bodyText(`<strong>Message from our team:</strong> ${opts.customMessage}`)}`
     : "";
 
+  // Rebooking code block
+  const rebookingBlock = `
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;">
+      <tr>
+        <td style="background:#FFF0F5;border:2px dashed #E91E8C;border-radius:10px;padding:18px 24px;text-align:center;">
+          <p style="margin:0 0 6px;font-size:12px;color:#888;letter-spacing:1px;text-transform:uppercase;">Your Class Credit Code</p>
+          <p style="margin:0;font-size:28px;font-weight:bold;color:#C2185B;letter-spacing:4px;font-family:monospace;">${opts.rebookingCode}</p>
+          <p style="margin:8px 0 0;font-size:12px;color:#666;">Enter this code at checkout when booking any upcoming class</p>
+        </td>
+      </tr>
+    </table>
+  `;
+
+  // Next class block
+  const nextClassText = opts.nextClassName && opts.nextClassDate
+    ? `We'd love to see you at our next class: <strong>${opts.nextClassName}</strong> on <strong>${opts.nextClassDate}</strong>. Use your code above to rebook!`
+    : `We'd love to have you join us at a future session at any of our locations — Hamilton, Kitchener, or Oakville. Use your code above when booking!`;
+
   const body = `
     ${bodyText(`We regret to inform you that your upcoming class <strong>"${opts.eventName}"</strong> has been cancelled. We sincerely apologize for the inconvenience this may cause.`)}
     ${customNote}
-    ${bodyText(`We'd love to have you join us at another session — please visit our booking page to find your next class.`)}
+    ${rebookingBlock}
+    ${bodyText(nextClassText)}
     ${pillButton("https://lu.ma/AfroPuppyYoga", "Browse Upcoming Classes")}
     ${fallbackLink("https://lu.ma/AfroPuppyYoga")}
     ${bodyText(`If you have any questions or need assistance with rebooking, please don't hesitate to reach out to us at <a href="mailto:afropuppyyogaofficial@gmail.com" style="color:#C2185B;">afropuppyyogaofficial@gmail.com</a> or DM us on Instagram <a href="https://instagram.com/afropuppyyoga" style="color:#C2185B;">@afropuppyyoga</a>.`)}
@@ -768,7 +790,11 @@ export async function sendClassCancellationEmail(opts: {
 
   const html = wrapInBrandedLayout(hero, body);
 
-  const text = `Hi ${opts.guestName},\n\nWe regret to inform you that your upcoming class "${opts.eventName}" has been cancelled. We sincerely apologize for the inconvenience.\n\n${opts.customMessage ? `Message from our team: ${opts.customMessage}\n\n` : ""}Please visit https://lu.ma/AfroPuppyYoga to browse and rebook your next class.\n\nIf you have questions, email us at afropuppyyogaofficial@gmail.com or DM @afropuppyyoga on Instagram.\n\nWith warmth,\nThe AfroPuppyYoga Team`;
+  const nextClassLine = opts.nextClassName && opts.nextClassDate
+    ? `We'd love to see you at our next class: ${opts.nextClassName} on ${opts.nextClassDate}.\n\n`
+    : `We'd love to have you join us at a future session at any of our locations.\n\n`;
+
+  const text = `Hi ${opts.guestName},\n\nWe regret to inform you that your upcoming class "${opts.eventName}" has been cancelled. We sincerely apologize for the inconvenience.\n\n${opts.customMessage ? `Message from our team: ${opts.customMessage}\n\n` : ""}Your rebooking code: ${opts.rebookingCode}\nSimply enter this code at checkout when booking any upcoming class.\n\n${nextClassLine}Browse upcoming classes at https://lu.ma/AfroPuppyYoga\n\nIf you have questions, email us at afropuppyyogaofficial@gmail.com or DM @afropuppyyoga on Instagram.\n\nWith warmth,\nThe AfroPuppyYoga Team`;
 
   await sendEmail({ to: opts.to, subject, html, text });
 }

@@ -138,17 +138,42 @@ export const cancellationRouter = router({
 
       const client = twilio(accountSid, authToken);
 
+      // ── Generate rebooking code from event start date (MONTHDDAY format) ──
+      const allEvents = await fetchLumaEvents();
+      const cancelledEvent = allEvents.find((e) => e.api_id === input.eventApiId);
+      const eventDate = cancelledEvent ? new Date(cancelledEvent.start_at) : new Date();
+      const monthNames = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+      const rebookingCode = `${monthNames[eventDate.getMonth()]}${eventDate.getDate()}`;
+
+      // ── Find next upcoming class (any location) ───────────────────────────
+      const nextEvent = allEvents
+        .filter((e) => e.api_id !== input.eventApiId && new Date(e.start_at) > new Date())
+        .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())[0];
+
+      const nextClassName = nextEvent?.name;
+      const nextClassDate = nextEvent
+        ? new Date(nextEvent.start_at).toLocaleDateString("en-CA", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+          })
+        : undefined;
+
       // Voice message (TTS — slightly more formal for spoken delivery)
       const voiceMessage =
         input.customMessage ??
-        `Hello, this is a message from AfroPuppyYoga. We regret to inform you that your upcoming class, ${input.eventName}, has been cancelled. We apologize for the inconvenience. Please visit afropuppyyoga.ca or check your email for rebooking options. Thank you for your understanding.`;
+        `Hello, this is a message from AfroPuppyYoga. We regret to inform you that your upcoming class, ${input.eventName}, has been cancelled. We apologize for the inconvenience. Please check your email for your rebooking credit code. Thank you for your understanding.`;
 
-      // SMS message (concise for text)
+      // SMS message (concise for text — includes rebooking code and next class)
+      const nextClassSmsHint = nextClassName && nextClassDate
+        ? ` Join us next: ${nextClassName} on ${nextClassDate}.`
+        : " Book a future class at any location at afropuppyyoga.ca.";
+
       const smsMessage =
         input.customMessage ??
-        `Hi from AfroPuppyYoga! Your class "${input.eventName}" has been cancelled. We're sorry for the inconvenience — visit afropuppyyoga.ca to rebook. Questions? Email afropuppyyogaofficial@gmail.com`;
+        `Hi from AfroPuppyYoga! Your class "${input.eventName}" has been cancelled. Sorry for the inconvenience! Use code ${rebookingCode} for a credit on your next booking.${nextClassSmsHint}`;
 
-      // Fetch all guests
+      // ── Fetch all guests
       const guests = await fetchLumaGuests(input.eventApiId);
       const now = Date.now();
 
@@ -228,6 +253,9 @@ export const cancellationRouter = router({
               to: guest.email,
               guestName: guest.name,
               eventName: input.eventName,
+              rebookingCode,
+              nextClassName,
+              nextClassDate,
               customMessage: input.customMessage,
             });
             emailStatus = "sent";
