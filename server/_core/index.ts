@@ -12,6 +12,7 @@ import chunkedUploadRouter from "../chunkedUploadRoute";
 import rateLimit from "express-rate-limit";
 import { storageGet } from "../storage";
 import { lumaPoller, capiSender } from "../metaCapi";
+import twilioWebhookRouter from "../twilioWebhook";
 import { requireStaffOrAdmin } from "./requireStaff";
 import crypto from "crypto";
 
@@ -274,6 +275,9 @@ async function startServer() {
       res.status(500).json({ ok: false, error: String(err) });
     }
   });
+
+  // Twilio webhook callbacks — must be registered before tRPC
+  app.use(twilioWebhookRouter);
 
   // tRPC API
   app.use(

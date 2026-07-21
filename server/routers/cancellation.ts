@@ -15,6 +15,7 @@ import { z } from "zod";
 import { getDb } from "../db";
 import { callLogs } from "../../drizzle/schema";
 import { staffProcedure, router } from "../_core/trpc";
+import { sendClassCancellationEmail } from "../email";
 
 const LUMA_BASE = "https://public-api.luma.com/v1";
 
@@ -162,34 +163,65 @@ export const cancellationRouter = router({
 
       for (const guest of guests) {
         if (!guest.phone) {
-          // Log as skipped — no phone number
+          // No phone — send email fallback if email is available
+          let emailStatus = "skipped";
+          let emailError: string | undefined;
+          if (guest.email) {
+            try {
+              await sendClassCancellationEmail({
+                to: guest.email,
+                guestName: guest.name,
+                eventName: input.eventName,
+                customMessage: input.customMessage,
+              });
+              emailStatus = "sent";
+            } catch (err) {
+              emailStatus = "failed";
+              emailError = err instanceof Error ? err.message : String(err);
+            }
+          }
           await db.insert(callLogs).values({
             lumaEventId: input.eventApiId,
             eventName: input.eventName,
             guestName: guest.name,
-            phone: "N/A",
+            phone: guest.email ? `email:${guest.email}` : "N/A",
             status: "skipped",
-            smsStatus: "skipped",
-            errorMessage: "No phone number on file",
+            smsStatus: emailStatus,
+            errorMessage: emailError ?? (guest.email ? null : "No phone or email on file"),
             calledAt: now,
           });
-          results.push({ name: guest.name, phone: "N/A", callStatus: "skipped", smsStatus: "skipped" });
+          results.push({
+            name: guest.name,
+            phone: guest.email ? `email:${guest.email}` : "N/A",
+            callStatus: "skipped",
+            smsStatus: emailStatus,
+            error: emailError,
+          });
           continue;
         }
 
-        // Fire call and SMS in parallel
-        const [callResult, smsResult] = await Promise.allSettled([
-          client.calls.create({
-            to: guest.phone,
-            from: fromNumber,
-            twiml: `<Response><Say voice="Polly.Joanna">${voiceMessage}</Say></Response>`,
-          }),
-          client.messages.create({
-            to: guest.phone,
-            from: fromNumber,
-            body: smsMessage,
-          }),
-        ]);
+      // Build webhook callback URLs for real-time status updates
+      const baseUrl = process.env.NODE_ENV === "production"
+        ? "https://afropuppyyoga.ca"
+        : `http://localhost:${process.env.PORT ?? 3000}`;
+
+      // Fire call and SMS in parallel
+      const [callResult, smsResult] = await Promise.allSettled([
+        client.calls.create({
+          to: guest.phone,
+          from: fromNumber,
+          twiml: `<Response><Say voice="Polly.Joanna">${voiceMessage}</Say></Response>`,
+          statusCallback: `${baseUrl}/api/twilio/call-status`,
+          statusCallbackMethod: "POST",
+          statusCallbackEvent: ["completed", "no-answer", "busy", "failed", "canceled"],
+        }),
+        client.messages.create({
+          to: guest.phone,
+          from: fromNumber,
+          body: smsMessage,
+          statusCallback: `${baseUrl}/api/twilio/sms-status`,
+        }),
+      ]);
 
         const callStatus = callResult.status === "fulfilled" ? (callResult.value.status ?? "queued") : "failed";
         const callSid = callResult.status === "fulfilled" ? callResult.value.sid : undefined;

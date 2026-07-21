@@ -730,3 +730,45 @@ export function buildSigningInviteEmail(opts: {
 
   return wrapInBrandedLayout(hero, body);
 }
+
+// ─── Class Cancellation Email ─────────────────────────────────────────────────
+
+/**
+ * Sends a branded class cancellation email to a guest who has no phone number.
+ * Used as a fallback when Twilio cannot call/text the attendee.
+ */
+export async function sendClassCancellationEmail(opts: {
+  to: string;
+  guestName: string;
+  eventName: string;
+  customMessage?: string;
+}): Promise<void> {
+  const subject = `Important: Your AfroPuppyYoga class has been cancelled`;
+  const firstName = opts.guestName.split(" ")[0] || opts.guestName;
+
+  const hero = `
+    <p style="margin:0 0 6px;font-size:12px;font-weight:bold;color:#FFD6E7;letter-spacing:1.5px;text-transform:uppercase;">Class Update</p>
+    <h1 style="margin:0 0 10px;font-family:Georgia,serif;font-size:27px;color:#FFFFFF;line-height:1.25;">Hi ${firstName},<br/>We're sorry 🐾</h1>
+    <p style="margin:0;font-size:14px;color:#FFE4EF;line-height:1.5;">Your upcoming class has been cancelled</p>
+  `;
+
+  const customNote = opts.customMessage
+    ? `${bodyText(`<strong>Message from our team:</strong> ${opts.customMessage}`)}`
+    : "";
+
+  const body = `
+    ${bodyText(`We regret to inform you that your upcoming class <strong>"${opts.eventName}"</strong> has been cancelled. We sincerely apologize for the inconvenience this may cause.`)}
+    ${customNote}
+    ${bodyText(`We'd love to have you join us at another session — please visit our booking page to find your next class.`)}
+    ${pillButton("https://lu.ma/AfroPuppyYoga", "Browse Upcoming Classes")}
+    ${fallbackLink("https://lu.ma/AfroPuppyYoga")}
+    ${bodyText(`If you have any questions or need assistance with rebooking, please don't hesitate to reach out to us at <a href="mailto:afropuppyyogaofficial@gmail.com" style="color:#C2185B;">afropuppyyogaofficial@gmail.com</a> or DM us on Instagram <a href="https://instagram.com/afropuppyyoga" style="color:#C2185B;">@afropuppyyoga</a>.`)}
+    ${signoff("The AfroPuppyYoga Team")}
+  `;
+
+  const html = wrapInBrandedLayout(hero, body);
+
+  const text = `Hi ${opts.guestName},\n\nWe regret to inform you that your upcoming class "${opts.eventName}" has been cancelled. We sincerely apologize for the inconvenience.\n\n${opts.customMessage ? `Message from our team: ${opts.customMessage}\n\n` : ""}Please visit https://lu.ma/AfroPuppyYoga to browse and rebook your next class.\n\nIf you have questions, email us at afropuppyyogaofficial@gmail.com or DM @afropuppyyoga on Instagram.\n\nWith warmth,\nThe AfroPuppyYoga Team`;
+
+  await sendEmail({ to: opts.to, subject, html, text });
+}

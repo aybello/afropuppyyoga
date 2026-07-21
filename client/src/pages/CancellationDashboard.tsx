@@ -112,7 +112,7 @@ export default function CancellationDashboard() {
             Class Cancellation
           </h1>
           <p className="text-gray-600 text-sm">
-            Select an upcoming class to cancel. Every registered attendee will receive both a <strong>phone call</strong> and an <strong>SMS</strong> simultaneously.
+            Select an upcoming class to cancel. Every registered attendee will receive both a <strong>phone call</strong> and an <strong>SMS</strong> simultaneously. Attendees without a phone number will receive a <strong>cancellation email</strong> as a fallback.
           </p>
         </div>
 
@@ -189,7 +189,7 @@ export default function CancellationDashboard() {
                     You are about to cancel: <span className="font-bold">{selectedEventName}</span>
                   </p>
                   <p className="text-orange-700 text-xs mt-1">
-                    Every registered attendee with a phone number will receive a <strong>phone call</strong> and an <strong>SMS</strong> simultaneously. This cannot be undone.
+                    Every registered attendee with a phone number will receive a <strong>phone call</strong> and an <strong>SMS</strong> simultaneously. Attendees without a phone number will receive a <strong>cancellation email</strong> instead. This cannot be undone.
                   </p>
                 </div>
               </div>
@@ -280,9 +280,13 @@ export default function CancellationDashboard() {
                       <span className="text-gray-400 text-xs">{r.phone}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500">Call:</span>
-                      {statusBadge(r.callStatus)}
-                      <span className="text-xs text-gray-500">SMS:</span>
+                      {r.callStatus !== "skipped" && (
+                        <><span className="text-xs text-gray-500">Call:</span>
+                        {statusBadge(r.callStatus)}</>
+                      )}
+                      <span className="text-xs text-gray-500">
+                        {r.phone.startsWith("email:") ? "Email:" : "SMS:"}
+                      </span>
                       {statusBadge(r.smsStatus)}
                       {r.error && <span className="text-xs text-red-500 max-w-32 truncate">{r.error}</span>}
                     </div>
@@ -320,7 +324,11 @@ export default function CancellationDashboard() {
                     {callLogsData.map((log) => (
                       <tr key={log.id} className="border-b border-gray-100 hover:bg-gray-50">
                         <td className="py-2 px-2 font-medium text-[#2d1b4e]">{log.guestName}</td>
-                        <td className="py-2 px-2 text-gray-600">{log.phone}</td>
+                        <td className="py-2 px-2 text-gray-600">
+                            {log.phone.startsWith("email:") ? (
+                              <span className="text-xs text-blue-600">📧 {log.phone.replace("email:", "")}</span>
+                            ) : log.phone}
+                          </td>
                         <td className="py-2 px-2">{statusBadge(log.status)}</td>
                         <td className="py-2 px-2">{statusBadge(log.smsStatus ?? "queued")}</td>
                         <td className="py-2 px-2 text-gray-500 text-xs">

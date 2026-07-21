@@ -454,3 +454,10 @@
 ## Staff Portal + Luma Fix
 - [x] Add Cancel Class tile to staff portal page
 - [x] Fix Luma listEvents to correctly return upcoming classes from the calendar
+
+## Twilio Webhook + Email Fallback
+- [ ] Add POST /api/twilio/call-status webhook endpoint to update callLogs.status from Twilio callbacks
+- [ ] Add POST /api/twilio/sms-status webhook endpoint to update callLogs.smsStatus from Twilio callbacks
+- [ ] Configure Twilio number to point statusCallback to the deployed webhook URLs
+- [ ] Add email fallback in cancelClass mutation: send Gmail cancellation email to guests with no phone number
+- [ ] Update CancellationDashboard to show email status in results and log
