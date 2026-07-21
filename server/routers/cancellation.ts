@@ -166,8 +166,8 @@ export const cancellationRouter = router({
 
       // SMS message (concise for text — includes rebooking code and next class)
       const nextClassSmsHint = nextClassName && nextClassDate
-        ? ` Join us next: ${nextClassName} on ${nextClassDate}.`
-        : " Book a future class at any location at afropuppyyoga.ca.";
+        ? ` Our next class is ${nextClassName} on ${nextClassDate} — we'd love to see you there!`
+        : " We'd love to see you at a future class at any of our locations — Hamilton, Kitchener & Oakville. Book at afropuppyyoga.ca.";
 
       const smsMessage =
         input.customMessage ??
