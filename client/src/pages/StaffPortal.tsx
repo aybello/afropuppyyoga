@@ -18,6 +18,7 @@ import {
   Sparkles,
   PawPrint,
   RotateCcw,
+  PhoneOff,
 } from "lucide-react";
 
 const TOOLS = [
@@ -114,6 +115,18 @@ const TOOLS = [
     color: "#8B2252",
     bg: "#FFF0F4",
     border: "#F0D0DC",
+    badge: "Admin",
+    adminOnly: true,
+  },
+  {
+    id: "cancellation",
+    title: "Cancel a Class",
+    description: "Cancel an upcoming class and instantly notify all registered attendees via phone call and SMS simultaneously.",
+    href: "/admin/cancellation",
+    icon: PhoneOff,
+    color: "#C0392B",
+    bg: "#FEF2F2",
+    border: "#FECACA",
     badge: "Admin",
     adminOnly: true,
   },

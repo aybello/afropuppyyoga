@@ -76,7 +76,8 @@ async function fetchLumaEvents(): Promise<
   const apiKey = process.env.LUMA_API_KEY;
   if (!apiKey) throw new Error("LUMA_API_KEY is not set");
 
-  const res = await fetch(`${LUMA_BASE}/calendar/list-events?pagination_limit=20`, {
+  const after = new Date().toISOString();
+  const res = await fetch(`${LUMA_BASE}/calendar/list-events?pagination_limit=50&after=${encodeURIComponent(after)}`, {
     headers: { "x-luma-api-key": apiKey },
   });
   if (!res.ok) {

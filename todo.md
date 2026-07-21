@@ -450,3 +450,7 @@
 - [x] Update cancellation router to send SMS alongside phone call for each guest
 - [x] Add smsStatus and smsSid fields to callLogs schema
 - [x] Update CancellationDashboard UI to show SMS status column in call log
+
+## Staff Portal + Luma Fix
+- [x] Add Cancel Class tile to staff portal page
+- [x] Fix Luma listEvents to correctly return upcoming classes from the calendar
