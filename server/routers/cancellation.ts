@@ -1,8 +1,12 @@
 /**
  * Class Cancellation Router
  *
- * Fetches all guests for a given Luma event, then sends BOTH a phone call
- * (TTS via Twilio) AND an SMS to each attendee simultaneously.
+ * When a class is cancelled, EVERY registered attendee receives ALL THREE:
+ *   1. Phone call (TTS via Twilio)
+ *   2. SMS (via Twilio)
+ *   3. Email (via Gmail/Nodemailer)
+ *
+ * All three are fired in parallel per guest.
  * Results and statuses are logged to the callLogs table.
  *
  * Only accessible to admin/staff roles.
@@ -110,13 +114,13 @@ export const cancellationRouter = router({
     }));
   }),
 
-  /** Cancel a class: call AND text all guests simultaneously */
+  /** Cancel a class: send call + SMS + email to EVERY guest simultaneously */
   cancelClass: staffProcedure
     .input(
       z.object({
         eventApiId: z.string().min(1),
         eventName: z.string().min(1),
-        /** Optional custom message override (used for both call TTS and SMS body) */
+        /** Optional custom message override */
         customMessage: z.string().optional(),
       })
     )
@@ -148,11 +152,17 @@ export const cancellationRouter = router({
       const guests = await fetchLumaGuests(input.eventApiId);
       const now = Date.now();
 
+      // Build webhook callback URLs for real-time status updates
+      const baseUrl = process.env.NODE_ENV === "production"
+        ? "https://afropuppyyoga.ca"
+        : `http://localhost:${process.env.PORT ?? 3000}`;
+
       const results: Array<{
         name: string;
         phone: string;
         callStatus: string;
         smsStatus: string;
+        emailStatus: string;
         callSid?: string;
         smsSid?: string;
         error?: string;
@@ -162,99 +172,94 @@ export const cancellationRouter = router({
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       for (const guest of guests) {
-        if (!guest.phone) {
-          // No phone — send email fallback if email is available
-          let emailStatus = "skipped";
-          let emailError: string | undefined;
-          if (guest.email) {
-            try {
-              await sendClassCancellationEmail({
-                to: guest.email,
-                guestName: guest.name,
-                eventName: input.eventName,
-                customMessage: input.customMessage,
-              });
-              emailStatus = "sent";
-            } catch (err) {
-              emailStatus = "failed";
-              emailError = err instanceof Error ? err.message : String(err);
-            }
-          }
-          await db.insert(callLogs).values({
-            lumaEventId: input.eventApiId,
-            eventName: input.eventName,
-            guestName: guest.name,
-            phone: guest.email ? `email:${guest.email}` : "N/A",
-            status: "skipped",
-            smsStatus: emailStatus,
-            errorMessage: emailError ?? (guest.email ? null : "No phone or email on file"),
-            calledAt: now,
-          });
-          results.push({
-            name: guest.name,
-            phone: guest.email ? `email:${guest.email}` : "N/A",
-            callStatus: "skipped",
-            smsStatus: emailStatus,
-            error: emailError,
-          });
-          continue;
+        // ── 1. Phone call (only if phone number available) ──────────────────
+        let callStatus = "skipped";
+        let callSid: string | undefined;
+        let callError: string | undefined;
+
+        if (guest.phone) {
+          const callResult = await Promise.allSettled([
+            client.calls.create({
+              to: guest.phone,
+              from: fromNumber,
+              twiml: `<Response><Say voice="Polly.Joanna">${voiceMessage}</Say></Response>`,
+              statusCallback: `${baseUrl}/api/twilio/call-status`,
+              statusCallbackMethod: "POST",
+              statusCallbackEvent: ["completed", "no-answer", "busy", "failed", "canceled"],
+            }),
+          ]);
+          const r = callResult[0];
+          callStatus = r.status === "fulfilled" ? (r.value.status ?? "queued") : "failed";
+          callSid = r.status === "fulfilled" ? r.value.sid : undefined;
+          callError = r.status === "rejected"
+            ? (r.reason instanceof Error ? r.reason.message : String(r.reason))
+            : undefined;
         }
 
-      // Build webhook callback URLs for real-time status updates
-      const baseUrl = process.env.NODE_ENV === "production"
-        ? "https://afropuppyyoga.ca"
-        : `http://localhost:${process.env.PORT ?? 3000}`;
+        // ── 2. SMS (only if phone number available) ──────────────────────────
+        let smsStatus = "skipped";
+        let smsSid: string | undefined;
+        let smsError: string | undefined;
 
-      // Fire call and SMS in parallel
-      const [callResult, smsResult] = await Promise.allSettled([
-        client.calls.create({
-          to: guest.phone,
-          from: fromNumber,
-          twiml: `<Response><Say voice="Polly.Joanna">${voiceMessage}</Say></Response>`,
-          statusCallback: `${baseUrl}/api/twilio/call-status`,
-          statusCallbackMethod: "POST",
-          statusCallbackEvent: ["completed", "no-answer", "busy", "failed", "canceled"],
-        }),
-        client.messages.create({
-          to: guest.phone,
-          from: fromNumber,
-          body: smsMessage,
-          statusCallback: `${baseUrl}/api/twilio/sms-status`,
-        }),
-      ]);
+        if (guest.phone) {
+          const smsResult = await Promise.allSettled([
+            client.messages.create({
+              to: guest.phone,
+              from: fromNumber,
+              body: smsMessage,
+              statusCallback: `${baseUrl}/api/twilio/sms-status`,
+            }),
+          ]);
+          const r = smsResult[0];
+          smsStatus = r.status === "fulfilled" ? (r.value.status ?? "queued") : "failed";
+          smsSid = r.status === "fulfilled" ? r.value.sid : undefined;
+          smsError = r.status === "rejected"
+            ? (r.reason instanceof Error ? r.reason.message : String(r.reason))
+            : undefined;
+        }
 
-        const callStatus = callResult.status === "fulfilled" ? (callResult.value.status ?? "queued") : "failed";
-        const callSid = callResult.status === "fulfilled" ? callResult.value.sid : undefined;
-        const callError = callResult.status === "rejected"
-          ? (callResult.reason instanceof Error ? callResult.reason.message : String(callResult.reason))
-          : undefined;
+        // ── 3. Email (always sent if email available) ────────────────────────
+        let emailStatus = "skipped";
+        let emailError: string | undefined;
 
-        const smsStatus = smsResult.status === "fulfilled" ? (smsResult.value.status ?? "queued") : "failed";
-        const smsSid = smsResult.status === "fulfilled" ? smsResult.value.sid : undefined;
-        const smsError = smsResult.status === "rejected"
-          ? (smsResult.reason instanceof Error ? smsResult.reason.message : String(smsResult.reason))
-          : undefined;
+        if (guest.email) {
+          try {
+            await sendClassCancellationEmail({
+              to: guest.email,
+              guestName: guest.name,
+              eventName: input.eventName,
+              customMessage: input.customMessage,
+            });
+            emailStatus = "sent";
+          } catch (err) {
+            emailStatus = "failed";
+            emailError = err instanceof Error ? err.message : String(err);
+          }
+        }
 
-        const combinedError = [callError, smsError].filter(Boolean).join(" | ") || undefined;
+        // ── Combine errors ───────────────────────────────────────────────────
+        const combinedError = [callError, smsError, emailError].filter(Boolean).join(" | ") || undefined;
 
         await db.insert(callLogs).values({
           lumaEventId: input.eventApiId,
           eventName: input.eventName,
           guestName: guest.name,
-          phone: guest.phone,
+          phone: guest.phone ?? (guest.email ? `email:${guest.email}` : "N/A"),
           callSid,
           status: callStatus,
           smsSid,
           smsStatus,
+          emailStatus,
           errorMessage: combinedError ?? null,
           calledAt: now,
         });
 
         results.push({
           name: guest.name,
-          phone: guest.phone,
+          phone: guest.phone ?? (guest.email ? `email:${guest.email}` : "N/A"),
           callStatus,
           smsStatus,
+          emailStatus,
           callSid,
           smsSid,
           error: combinedError,
@@ -263,10 +268,12 @@ export const cancellationRouter = router({
 
       const called = results.filter((r) => r.callStatus !== "skipped" && r.callStatus !== "failed").length;
       const texted = results.filter((r) => r.smsStatus !== "skipped" && r.smsStatus !== "failed").length;
-      const skipped = results.filter((r) => r.callStatus === "skipped").length;
-      const failed = results.filter((r) => r.callStatus === "failed" || r.smsStatus === "failed").length;
+      const emailed = results.filter((r) => r.emailStatus === "sent").length;
+      const failed = results.filter((r) =>
+        r.callStatus === "failed" || r.smsStatus === "failed" || r.emailStatus === "failed"
+      ).length;
 
-      return { total: guests.length, called, texted, skipped, failed, results };
+      return { total: guests.length, called, texted, emailed, failed, results };
     }),
 
   /** Get call logs for a specific event */

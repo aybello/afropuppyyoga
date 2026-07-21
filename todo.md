@@ -461,3 +461,8 @@
 - [ ] Configure Twilio number to point statusCallback to the deployed webhook URLs
 - [ ] Add email fallback in cancelClass mutation: send Gmail cancellation email to guests with no phone number
 - [ ] Update CancellationDashboard to show email status in results and log
+
+## Triple Notification on Cancellation
+- [x] Update cancellation router: every attendee always gets email + SMS + call (not conditional)
+- [x] Update callLogs schema to track emailStatus separately
+- [x] Update UI to show email status column in log

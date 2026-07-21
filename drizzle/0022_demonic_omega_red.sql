@@ -1,0 +1,1 @@
+ALTER TABLE `callLogs` ADD `emailStatus` varchar(32) DEFAULT 'queued' NOT NULL;
