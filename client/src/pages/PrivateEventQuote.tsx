@@ -212,16 +212,15 @@ export default function PrivateEventQuote() {
             </div>
             {/* Hero image */}
             <div className="shrink-0 relative">
-              <div
-                className="w-52 h-52 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-white shadow-2xl"
-                style={{
-                  backgroundImage: "url('/manus-storage/private-events-hero_72e6b8e7.jpg')",
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                  backgroundColor: "#F2A0B8",
-                }}
-                aria-hidden="true"
-              />
+              <div className="w-52 h-52 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-white shadow-2xl" style={{ backgroundColor: "#F2A0B8" }}>
+                <img
+                  src="/manus-storage/private-events-hero_72e6b8e7.jpg"
+                  alt=""
+                  aria-hidden="true"
+                  className="w-full h-full object-cover object-center"
+                  style={{ color: 'transparent', fontSize: 0 }}
+                />
+              </div>
               {/* Decorative ring */}
               <div className="absolute -inset-2 rounded-full border-2 border-[#F2A0B8]/40 pointer-events-none" />
               {/* Floating badge */}
