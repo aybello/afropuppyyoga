@@ -14,6 +14,7 @@ import { storageGet } from "../storage";
 import { lumaPoller, capiSender } from "../metaCapi";
 import twilioWebhookRouter from "../twilioWebhook";
 import { requireStaffOrAdmin } from "./requireStaff";
+import { registerStorageProxy } from "./storageProxy";
 import crypto from "crypto";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -98,6 +99,9 @@ async function startServer() {
 
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
+
+  // Storage proxy: serves /manus-storage/* by piping image bytes directly
+  registerStorageProxy(app);
 
   // Upload rate limiters applied BEFORE Multer to prevent body-parsing DoS
   app.use("/api/upload-video", uploadLimiter);
