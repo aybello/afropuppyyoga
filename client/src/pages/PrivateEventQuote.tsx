@@ -215,7 +215,7 @@ export default function PrivateEventQuote() {
               <div
                 className="w-52 h-52 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-white shadow-2xl"
                 style={{
-                  backgroundImage: "url('/manus-storage/ham_oak_IMG_3209_d7f2d0c0.jpg')",
+                  backgroundImage: "url('/manus-storage/private-events-hero_72e6b8e7.jpg')",
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                   backgroundColor: "#F2A0B8",
