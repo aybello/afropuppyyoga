@@ -19,6 +19,7 @@ import {
   PawPrint,
   RotateCcw,
   PhoneOff,
+  MessageSquare,
 } from "lucide-react";
 
 const TOOLS = [
@@ -127,6 +128,18 @@ const TOOLS = [
     color: "#C0392B",
     bg: "#FEF2F2",
     border: "#FECACA",
+    badge: "Admin",
+    adminOnly: true,
+  },
+  {
+    id: "sms-broadcast",
+    title: "SMS Broadcast",
+    description: "Send a text message to one person, a manual list of numbers, or upload a CSV to reach hundreds of contacts at once.",
+    href: "/admin/sms-broadcast",
+    icon: MessageSquare,
+    color: "#8b5cf6",
+    bg: "#F5F0FF",
+    border: "#DDD0F8",
     badge: "Admin",
     adminOnly: true,
   },

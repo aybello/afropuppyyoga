@@ -487,3 +487,13 @@
 ## Test Call Feature (Jul 23, 2026)
 - [x] Add sendTestCall tRPC procedure to cancellation router (staff-only, makes a real Twilio voice call to any number)
 - [x] Add Test Call card to CancellationDashboard UI alongside the Test SMS card
+
+## SMS Broadcast Tool (Jul 23, 2026)
+- [x] Remove Test Call card from CancellationDashboard
+- [x] Remove Test SMS card from CancellationDashboard
+- [x] Create server/routers/smsBroadcast.ts with sendSingle, sendBulk procedures (staffProcedure)
+- [x] Add smsBroadcast router to main router in server/routers.ts
+- [x] Create client/src/pages/SmsBroadcast.tsx — single send, manual multi-number textarea, CSV upload + preview, send all with progress
+- [x] Register /admin/sms-broadcast route in App.tsx
+- [x] Add SMS Broadcast link to AdminNav
+- [x] Add SMS Broadcast tile to StaffPortal

@@ -19,6 +19,7 @@ import {
   ChevronDown,
   CalendarDays,
   PhoneOff,
+  MessageSquare,
 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useState, useRef, useEffect } from "react";
@@ -38,6 +39,7 @@ const MORE_ITEMS = [
   { href: "/admin/private-events", label: "Private Events",  icon: Sparkles,     adminOnly: false },
   { href: "/admin/schedule-calendar", label: "Schedule Calendar", icon: CalendarDays, adminOnly: false },
   { href: "/admin/cancellation", label: "Cancel Class", icon: PhoneOff, adminOnly: false },
+  { href: "/admin/sms-broadcast", label: "SMS Broadcast", icon: MessageSquare, adminOnly: false },
 ];
 
 export default function AdminNav() {
