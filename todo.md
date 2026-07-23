@@ -483,3 +483,7 @@
 ## Test SMS Feature (Jul 23, 2026)
 - [x] Add sendTestSms tRPC procedure to cancellation router (staff-only, sends a test SMS to any number)
 - [x] Add Test SMS card to CancellationDashboard UI with phone input and send button
+
+## Test Call Feature (Jul 23, 2026)
+- [x] Add sendTestCall tRPC procedure to cancellation router (staff-only, makes a real Twilio voice call to any number)
+- [x] Add Test Call card to CancellationDashboard UI alongside the Test SMS card

@@ -66,6 +66,22 @@ export default function CancellationDashboard() {
   const [testMessage, setTestMessage] = useState("");
   const [testResult, setTestResult] = useState<{ success: boolean; sid?: string; status?: string; to?: string; error?: string } | null>(null);
 
+  // Test Call state
+  const [callPhone, setCallPhone] = useState("");
+  const [callMessage, setCallMessage] = useState("");
+  const [callResult, setCallResult] = useState<{ success: boolean; sid?: string; status?: string; to?: string; error?: string } | null>(null);
+
+  const testCallMutation = trpc.cancellation.sendTestCall.useMutation({
+    onSuccess: (data) => {
+      setCallResult({ success: true, sid: data.sid, status: data.status, to: data.to });
+      toast.success(`Test call initiated to ${data.to} — status: ${data.status}`);
+    },
+    onError: (err) => {
+      setCallResult({ success: false, error: err.message });
+      toast.error(`Test call failed: ${err.message}`);
+    },
+  });
+
   const testSmsMutation = trpc.cancellation.sendTestSms.useMutation({
     onSuccess: (data) => {
       setTestResult({ success: true, sid: data.sid, status: data.status, to: data.to });
@@ -398,8 +414,81 @@ export default function CancellationDashboard() {
             </CardContent>
           </Card>
         )}
+        {/* Test Tools — side by side on desktop */}
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        {/* Test Call */}
+        <Card className="border-[#e8dff5]">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg text-[#2d1b4e] flex items-center gap-2">
+              <PhoneCall className="w-5 h-5 text-[#8b5cf6]" />
+              Make Test Call
+            </CardTitle>
+            <p className="text-sm text-gray-500 mt-1">
+              Dial any number to verify Twilio voice calling is working.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 mb-3">
+              <div>
+                <Label className="text-xs text-gray-500 mb-1 block">Phone Number</Label>
+                <input
+                  type="tel"
+                  value={callPhone}
+                  onChange={(e) => { setCallPhone(e.target.value); setCallResult(null); }}
+                  placeholder="e.g. 2897881885"
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-gray-500 mb-1 block">Custom Message (optional)</Label>
+                <input
+                  type="text"
+                  value={callMessage}
+                  onChange={(e) => setCallMessage(e.target.value)}
+                  placeholder="Leave blank for default test message"
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                />
+              </div>
+            </div>
+            <Button
+              onClick={() => testCallMutation.mutate({ phone: callPhone, message: callMessage || undefined })}
+              disabled={testCallMutation.isPending || callPhone.replace(/\D/g, "").length < 10}
+              className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white w-full"
+            >
+              {testCallMutation.isPending ? (
+                <><Spinner className="w-4 h-4 mr-2" /> Calling...</>
+              ) : (
+                <><PhoneCall className="w-4 h-4 mr-2" /> Make Test Call</>
+              )}
+            </Button>
+            {callResult && (
+              <div className={`mt-3 p-3 rounded-lg border text-sm ${
+                callResult.success
+                  ? "bg-green-50 border-green-200 text-green-800"
+                  : "bg-red-50 border-red-200 text-red-800"
+              }`}>
+                {callResult.success ? (
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
+                    <span>
+                      Calling <strong>{callResult.to}</strong> — status: <strong>{callResult.status}</strong>
+                      {callResult.sid && <span className="text-xs text-gray-500 ml-2">SID: {callResult.sid}</span>}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <XCircle className="w-4 h-4 text-red-600 shrink-0" />
+                    <span>{callResult.error}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Test SMS */}
-        <Card className="mt-8 border-[#e8dff5]">
+        <Card className="border-[#e8dff5]">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg text-[#2d1b4e] flex items-center gap-2">
               <Send className="w-5 h-5 text-[#8b5cf6]" />
@@ -468,6 +557,8 @@ export default function CancellationDashboard() {
             )}
           </CardContent>
         </Card>
+
+        </div>{/* end test tools grid */}
 
       </div>
     </div>
