@@ -479,3 +479,7 @@
 ## Private Events Quote Page Hero Image Fix (Jul 21, 2026)
 - [x] Replace broken hero circle image (apy-quote-hero_e5bfb507.png no longer on CDN) with ham_oak_IMG_3209_d7f2d0c0.jpg (confirmed live)
 - [x] Switch from img tag to CSS background-image div to prevent alt text bleed-through in the circle
+
+## Test SMS Feature (Jul 23, 2026)
+- [x] Add sendTestSms tRPC procedure to cancellation router (staff-only, sends a test SMS to any number)
+- [x] Add Test SMS card to CancellationDashboard UI with phone input and send button

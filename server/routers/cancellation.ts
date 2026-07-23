@@ -304,6 +304,48 @@ export const cancellationRouter = router({
       return { total: guests.length, called, texted, emailed, failed, results };
     }),
 
+  /** Send a test SMS to verify Twilio is working */
+  sendTestSms: staffProcedure
+    .input(
+      z.object({
+        phone: z.string().min(10, "Phone number must be at least 10 digits"),
+        message: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const accountSid = process.env.TWILIO_ACCOUNT_SID;
+      const authToken = process.env.TWILIO_AUTH_TOKEN;
+      const fromNumber = process.env.TWILIO_PHONE_NUMBER;
+
+      if (!accountSid || !authToken || !fromNumber) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Twilio credentials are not configured",
+        });
+      }
+
+      const client = twilio(accountSid, authToken);
+
+      // Normalize phone: ensure it starts with +1 for Canadian/US numbers
+      let to = input.phone.replace(/\D/g, "");
+      if (!to.startsWith("1")) to = "1" + to;
+      to = "+" + to;
+
+      const body =
+        input.message?.trim() ||
+        "👋 Test message from AfroPuppyYoga! Your Twilio SMS integration is working correctly. 🐶";
+
+      try {
+        const msg = await client.messages.create({ to, from: fromNumber, body });
+        return { success: true, sid: msg.sid, status: msg.status, to };
+      } catch (err) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }),
+
   /** Get call logs for a specific event */
   getCallLogs: staffProcedure
     .input(z.object({ eventApiId: z.string().optional() }))

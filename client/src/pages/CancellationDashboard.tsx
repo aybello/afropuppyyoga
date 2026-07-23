@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import AdminNav from "@/components/AdminNav";
 import { toast } from "sonner";
-import { PhoneCall, MessageSquare, Mail, AlertTriangle, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
+import { PhoneCall, MessageSquare, Mail, AlertTriangle, CheckCircle2, XCircle, RefreshCw, Send } from "lucide-react";
 
 type CallResult = {
   name: string;
@@ -60,6 +60,22 @@ export default function CancellationDashboard() {
   const [customMessage, setCustomMessage] = useState<string>("");
   const [cancellationResult, setCancellationResult] = useState<CancellationResult | null>(null);
   const [confirming, setConfirming] = useState(false);
+
+  // Test SMS state
+  const [testPhone, setTestPhone] = useState("");
+  const [testMessage, setTestMessage] = useState("");
+  const [testResult, setTestResult] = useState<{ success: boolean; sid?: string; status?: string; to?: string; error?: string } | null>(null);
+
+  const testSmsMutation = trpc.cancellation.sendTestSms.useMutation({
+    onSuccess: (data) => {
+      setTestResult({ success: true, sid: data.sid, status: data.status, to: data.to });
+      toast.success(`Test SMS sent to ${data.to} — status: ${data.status}`);
+    },
+    onError: (err) => {
+      setTestResult({ success: false, error: err.message });
+      toast.error(`Test SMS failed: ${err.message}`);
+    },
+  });
 
   const { data: events, isLoading: eventsLoading, refetch: refetchEvents } = trpc.cancellation.listEvents.useQuery();
 
@@ -382,6 +398,77 @@ export default function CancellationDashboard() {
             </CardContent>
           </Card>
         )}
+        {/* Test SMS */}
+        <Card className="mt-8 border-[#e8dff5]">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg text-[#2d1b4e] flex items-center gap-2">
+              <Send className="w-5 h-5 text-[#8b5cf6]" />
+              Send Test SMS
+            </CardTitle>
+            <p className="text-sm text-gray-500 mt-1">
+              Verify Twilio is working by sending a test message to any phone number.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row gap-3 mb-3">
+              <div className="flex-1">
+                <Label className="text-xs text-gray-500 mb-1 block">Phone Number</Label>
+                <input
+                  type="tel"
+                  value={testPhone}
+                  onChange={(e) => { setTestPhone(e.target.value); setTestResult(null); }}
+                  placeholder="e.g. 2897881885"
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                />
+              </div>
+              <div className="flex-1">
+                <Label className="text-xs text-gray-500 mb-1 block">Custom Message (optional)</Label>
+                <input
+                  type="text"
+                  value={testMessage}
+                  onChange={(e) => setTestMessage(e.target.value)}
+                  placeholder="Leave blank for default test message"
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                />
+              </div>
+            </div>
+            <Button
+              onClick={() => testSmsMutation.mutate({ phone: testPhone, message: testMessage || undefined })}
+              disabled={testSmsMutation.isPending || testPhone.replace(/\D/g, "").length < 10}
+              className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white"
+            >
+              {testSmsMutation.isPending ? (
+                <><Spinner className="w-4 h-4 mr-2" /> Sending...</>
+              ) : (
+                <><Send className="w-4 h-4 mr-2" /> Send Test SMS</>
+              )}
+            </Button>
+
+            {testResult && (
+              <div className={`mt-3 p-3 rounded-lg border text-sm ${
+                testResult.success
+                  ? "bg-green-50 border-green-200 text-green-800"
+                  : "bg-red-50 border-red-200 text-red-800"
+              }`}>
+                {testResult.success ? (
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
+                    <span>
+                      Sent to <strong>{testResult.to}</strong> — status: <strong>{testResult.status}</strong>
+                      {testResult.sid && <span className="text-xs text-gray-500 ml-2">SID: {testResult.sid}</span>}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <XCircle className="w-4 h-4 text-red-600 shrink-0" />
+                    <span>{testResult.error}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
       </div>
     </div>
   );
