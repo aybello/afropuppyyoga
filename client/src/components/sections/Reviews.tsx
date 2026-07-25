@@ -103,7 +103,7 @@ export default function Reviews() {
                     <Star key={i} size={14} className="fill-[#F2A0B8] text-[#F2A0B8]" />
                   ))}
                 </div>
-                <div className="font-body text-xs text-[#1A0A12]/50">Based on 494+ verified reviews</div>
+                <div className="font-body text-xs text-[#1A0A12]/50">Based on 495+ verified reviews</div>
               </div>
               <a
                 href="https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsdiY1GsfLo"
