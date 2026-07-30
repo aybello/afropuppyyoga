@@ -79,7 +79,7 @@ export const careersRouter = router({
         status: "new",
       });
 
-      // Send email notification to afropuppyyogaofficial@gmail.com
+      // Send email notification to afropuppyyoga@gmail.com
       const emailHtml = `
         <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; background: #FEFAF4; padding: 32px; border-radius: 12px;">
           <div style="background: #3D1A2E; padding: 24px; border-radius: 8px; margin-bottom: 24px; text-align: center;">
@@ -103,7 +103,7 @@ export const careersRouter = router({
       `;
 
       await sendEmail({
-        to: "afropuppyyogaofficial@gmail.com",
+        to: "afropuppyyoga@gmail.com",
         subject: `New Application: ${input.name} — ${input.role} (${input.location})`,
         html: emailHtml,
         text: `New job application received!\n\nRole: ${input.role} — ${input.location}\nName: ${input.name}\nEmail: ${input.email}\nPhone: ${input.phone ?? "Not provided"}\n\nWhy APY:\n${input.whyAPY ?? "Not provided"}\n\nExperience:\n${input.experience ?? "Not provided"}\n\nVideo: ${input.videoUrl ?? "Not provided"}\nResume: ${input.resumeUrl}`,
@@ -450,7 +450,7 @@ export const careersRouter = router({
           <li>Your personality and energy (we love enthusiasm!)</li>
         </ul>
       </div>
-      <p style="margin:0 0 18px;font-size:15px;line-height:1.7;">Please upload your video to YouTube, Google Drive, or Loom and reply to this email with the link. You can also email it directly to <a href="mailto:afropuppyyogaofficial@gmail.com" style="color:#C2185B;">afropuppyyogaofficial@gmail.com</a>.</p>
+      <p style="margin:0 0 18px;font-size:15px;line-height:1.7;">Please upload your video to YouTube, Google Drive, or Loom and reply to this email with the link. You can also email it directly to <a href="mailto:afropuppyyoga@gmail.com" style="color:#C2185B;">afropuppyyoga@gmail.com</a>.</p>
       <p style="margin:0 0 18px;font-size:15px;line-height:1.7;">We look forward to hearing from you!</p>
       <p style="margin:32px 0 0;font-size:14px;color:#8B6070;">Warm regards,<br/><strong>The AfroPuppyYoga Team</strong></p>
     </div>

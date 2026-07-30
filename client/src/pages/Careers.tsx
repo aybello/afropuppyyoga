@@ -1157,7 +1157,7 @@ export default function Careers() {
             If you have a skill that could help AfroPuppyYoga grow, reach out. We love hearing from passionate people.
           </p>
           <a
-            href="mailto:afropuppyyogaofficial@gmail.com"
+            href="mailto:afropuppyyoga@gmail.com"
             className="inline-flex items-center px-6 py-3 bg-[#8B2252] text-white font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] transition-colors"
           >
             Say Hello

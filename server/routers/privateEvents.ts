@@ -7,7 +7,7 @@ import { privateEventInquiries } from "../../drizzle/schema";
 import { desc, eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
-const APY_EMAIL = "afropuppyyogaofficial@gmail.com";
+const APY_EMAIL = "afropuppyyoga@gmail.com";
 
 /** Escape user-supplied text before interpolating into HTML email templates */
 function escapeHtml(str: string): string {
@@ -103,7 +103,7 @@ function buildInquiryEmailHtml(input: {
         <!-- Footer -->
         <tr>
           <td style="background:#FFF5F8;padding:20px 40px;text-align:center;border-top:1px solid #F5E6EC;">
-            <p style="margin:0;font-size:12px;color:#C4A0B0;">AfroPuppyYoga &bull; afropuppyyogaofficial@gmail.com</p>
+            <p style="margin:0;font-size:12px;color:#C4A0B0;">AfroPuppyYoga &bull; afropuppyyoga@gmail.com</p>
           </td>
         </tr>
       </table>
@@ -193,7 +193,7 @@ function buildCustomerConfirmationHtml(input: {
             </div>
 
             <p style="margin:0 0 8px;font-size:14px;color:#4A2535;">Questions in the meantime? Reply to this email or reach us at:</p>
-            <p style="margin:0;font-size:14px;"><a href="mailto:afropuppyyogaofficial@gmail.com" style="color:#8B2252;font-weight:600;">afropuppyyogaofficial@gmail.com</a></p>
+            <p style="margin:0;font-size:14px;"><a href="mailto:afropuppyyoga@gmail.com" style="color:#8B2252;font-weight:600;">afropuppyyoga@gmail.com</a></p>
           </td>
         </tr>
         <!-- Footer -->
@@ -359,7 +359,7 @@ export const privateEventsRouter = router({
             `Package: ${packageLabel}`,
             input.preferredDate ? `Preferred Date: ${input.preferredDate}` : "",
             ``,
-            `Questions? Reply to this email or reach us at afropuppyyogaofficial@gmail.com`,
+            `Questions? Reply to this email or reach us at afropuppyyoga@gmail.com`,
             ``,
             `— The AfroPuppyYoga Team`,
           ].filter(Boolean).join("\n"),

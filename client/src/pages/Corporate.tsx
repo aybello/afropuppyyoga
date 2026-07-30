@@ -200,7 +200,7 @@ export default function Corporate() {
                   Get a Corporate Quote
                 </button>
               </Link>
-              <a href="mailto:afropuppyyogaofficial@gmail.com?subject=Corporate%20Puppy%20Yoga%20Inquiry">
+              <a href="mailto:afropuppyyoga@gmail.com?subject=Corporate%20Puppy%20Yoga%20Inquiry">
                 <button className="inline-flex items-center justify-center px-10 py-4 bg-transparent border border-white/40 text-white font-body font-semibold text-sm rounded-full hover:bg-white/10 transition-all">
                   Email Us Directly
                 </button>
@@ -438,7 +438,7 @@ export default function Corporate() {
                 Get a Corporate Quote
               </button>
             </Link>
-            <a href="mailto:afropuppyyogaofficial@gmail.com?subject=Corporate%20Puppy%20Yoga%20Inquiry">
+            <a href="mailto:afropuppyyoga@gmail.com?subject=Corporate%20Puppy%20Yoga%20Inquiry">
               <button className="inline-flex items-center justify-center px-10 py-4 bg-transparent border border-white/40 text-white font-body font-semibold text-sm rounded-full hover:bg-white/10 transition-all">
                 Email Us Directly
               </button>

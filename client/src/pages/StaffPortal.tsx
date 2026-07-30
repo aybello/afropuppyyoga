@@ -288,8 +288,8 @@ export default function StaffPortal() {
         {/* Footer note */}
         <p className="mt-10 font-body text-xs text-[#C4A0B0] text-center">
           AfroPuppyYoga Staff Portal · For access issues contact{" "}
-          <a href="mailto:afropuppyyogaofficial@gmail.com" className="underline hover:no-underline">
-            afropuppyyogaofficial@gmail.com
+          <a href="mailto:afropuppyyoga@gmail.com" className="underline hover:no-underline">
+            afropuppyyoga@gmail.com
           </a>
         </p>
       </main>

@@ -14,7 +14,7 @@ export const INSTAGRAM_URL = "https://www.instagram.com/afropuppyyoga";
 export const TIKTOK_URL = "https://www.tiktok.com/@afropuppyyoga";
 
 /** Contact email */
-export const CONTACT_EMAIL = "afropuppyyogaofficial@gmail.com";
+export const CONTACT_EMAIL = "afropuppyyoga@gmail.com";
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 // Generate login URL at runtime so redirect URI reflects the current origin.

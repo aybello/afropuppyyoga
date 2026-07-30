@@ -156,7 +156,7 @@ export default function PrivateEventQuote() {
       setStep("submitted");
     },
     onError: () => {
-      toast.error("Something went wrong. Please email us directly at afropuppyyogaofficial@gmail.com");
+      toast.error("Something went wrong. Please email us directly at afropuppyyoga@gmail.com");
     },
   });
 

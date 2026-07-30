@@ -147,7 +147,7 @@ export default function LocationPage({ config }: Props) {
       description: config.metaDescription,
       url: canonicalUrl,
       telephone: "",
-      email: "afropuppyyogaofficial@gmail.com",
+      email: "afropuppyyoga@gmail.com",
       image: LOGO_URL,
       logo: { "@type": "ImageObject", url: LOGO_URL },
       address: {

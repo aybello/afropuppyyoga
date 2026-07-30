@@ -67,7 +67,7 @@ export const appRouter = router({
         const response = await invokeLLM({ messages: llmMessages });
         const reply =
           response.choices?.[0]?.message?.content ??
-          "I'm not sure about that one! Reach out to us at afropuppyyogaofficial@gmail.com and we'll help you out.";
+          "I'm not sure about that one! Reach out to us at afropuppyyoga@gmail.com and we'll help you out.";
 
         return { reply };
       }),

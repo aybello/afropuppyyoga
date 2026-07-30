@@ -104,10 +104,10 @@ export default function StaffLogin() {
             <p style={{ color: "#C4A0B0", fontSize: "13px" }}>
               Please contact your manager to request a new invite link, or email us at{" "}
               <a
-                href="mailto:afropuppyyogaofficial@gmail.com"
+                href="mailto:afropuppyyoga@gmail.com"
                 style={{ color: "#8B2252" }}
               >
-                afropuppyyogaofficial@gmail.com
+                afropuppyyoga@gmail.com
               </a>
             </p>
           </>

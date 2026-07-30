@@ -933,7 +933,7 @@ export default function BreedersDashboard() {
 
               <div className="p-3 bg-[#FFF5F8] border border-[#F0D0DC] rounded-lg">
                 <p className="font-body text-xs text-[#6B4C3B]">
-                  Email will be sent from <strong>afropuppyyogaofficial@gmail.com</strong> to <strong>{confirmBreeder?.email || "no email on file"}</strong>
+                  Email will be sent from <strong>afropuppyyoga@gmail.com</strong> to <strong>{confirmBreeder?.email || "no email on file"}</strong>
                 </p>
               </div>
             </div>

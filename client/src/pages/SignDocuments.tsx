@@ -73,7 +73,7 @@ function getOfferLetterContent(
           </p>
           <p className="mt-3">Warm regards,</p>
           <p className="font-bold">The AfroPuppyYoga Team</p>
-          <p className="text-xs text-[#C4A0B0]">afropuppyyogaofficial@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
+          <p className="text-xs text-[#C4A0B0]">afropuppyyoga@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
         </div>
       </div>
     );
@@ -134,7 +134,7 @@ function getOfferLetterContent(
           </p>
           <p className="mt-3">Warmly,</p>
           <p className="font-bold">Ay &amp; The AfroPuppyYoga Team</p>
-          <p className="text-xs text-[#C4A0B0]">afropuppyyogaofficial@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
+          <p className="text-xs text-[#C4A0B0]">afropuppyyoga@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
         </div>
       </div>
     );
@@ -186,7 +186,7 @@ function getOfferLetterContent(
         </p>
         <p className="mt-3">Warmly,</p>
         <p className="font-bold">Ay &amp; The AfroPuppyYoga Team</p>
-        <p className="text-xs text-[#C4A0B0]">afropuppyyogaofficial@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
+        <p className="text-xs text-[#C4A0B0]">afropuppyyoga@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
       </div>
     </div>
   );
@@ -369,8 +369,8 @@ function ErrorState({ message }: { message: string }) {
         <p className="text-sm text-[#1A0A12] leading-relaxed mb-6">{message}</p>
         <p className="text-xs text-[#C4A0B0]">
           Need help? Contact us at{" "}
-          <a href="mailto:afropuppyyogaofficial@gmail.com" className="text-[#8B2252] hover:underline">
-            afropuppyyogaofficial@gmail.com
+          <a href="mailto:afropuppyyoga@gmail.com" className="text-[#8B2252] hover:underline">
+            afropuppyyoga@gmail.com
           </a>{" "}
           or call{" "}
           <a href="tel:2897881885" className="text-[#8B2252] hover:underline">

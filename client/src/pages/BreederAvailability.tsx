@@ -47,7 +47,7 @@ export default function BreederAvailability() {
   }
 
   if (tokenError || !tokenData) {
-    return <ErrorPage message="This link is invalid or has expired. Please contact us at afropuppyyogaofficial@gmail.com." />;
+    return <ErrorPage message="This link is invalid or has expired. Please contact us at afropuppyyoga@gmail.com." />;
   }
 
   if (submitted) {
@@ -82,7 +82,7 @@ export default function BreederAvailability() {
           <img src={APY_LOGO} alt="AfroPuppyYoga" className="w-14 h-14 rounded-full mx-auto mb-4 object-contain" />
           <h1 className="font-display text-2xl text-[#1A0A12] mb-3">Already Submitted</h1>
           <p className="font-body text-[#6B4C3B] leading-relaxed">
-            We already received your availability for <strong>{tokenData.monthLabel}</strong>. If you need to make changes, please email us at <a href="mailto:afropuppyyogaofficial@gmail.com" className="text-[#8B2252] underline">afropuppyyogaofficial@gmail.com</a>.
+            We already received your availability for <strong>{tokenData.monthLabel}</strong>. If you need to make changes, please email us at <a href="mailto:afropuppyyoga@gmail.com" className="text-[#8B2252] underline">afropuppyyoga@gmail.com</a>.
           </p>
         </div>
       </div>
@@ -158,8 +158,8 @@ export default function BreederAvailability() {
 
           <p className="text-center text-xs text-[#3D1A2E] font-body mt-6">
             Questions? Email us at{" "}
-            <a href="mailto:afropuppyyogaofficial@gmail.com" className="text-[#8B2252] underline">
-              afropuppyyogaofficial@gmail.com
+            <a href="mailto:afropuppyyoga@gmail.com" className="text-[#8B2252] underline">
+              afropuppyyoga@gmail.com
             </a>
           </p>
         </div>

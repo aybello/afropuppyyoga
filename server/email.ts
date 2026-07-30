@@ -5,8 +5,8 @@
  */
 import nodemailer from "nodemailer";
 
-const GMAIL_USER = "afropuppyyogaofficial@gmail.com";
-const REPLY_TO = "afropuppyyogaofficial@gmail.com";
+const GMAIL_USER = "afropuppyyoga@gmail.com";
+const REPLY_TO = "afropuppyyoga@gmail.com";
 const APY_LOGO = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
 
 function getTransporter() {
@@ -170,7 +170,7 @@ export function buildInterviewInviteEmail(opts: {
 
   const html = wrapInBrandedLayout(hero, body);
 
-  const text = `Hi ${opts.applicantName},\n\nThank you for applying to join AfroPuppyYoga as a ${opts.role} (${opts.location}). We'd love to meet you!\n\nPlease use the link below to book your interview:\n${opts.bookingLink}\n${opts.additionalNotes ? `\nAdditional Notes: ${opts.additionalNotes}\n` : ""}\nIf you have any questions, feel free to reply. Looking forward to speaking with you!\n\nWith warmth,\nThe AfroPuppyYoga Team\nafropuppyyogaofficial@gmail.com`;
+  const text = `Hi ${opts.applicantName},\n\nThank you for applying to join AfroPuppyYoga as a ${opts.role} (${opts.location}). We'd love to meet you!\n\nPlease use the link below to book your interview:\n${opts.bookingLink}\n${opts.additionalNotes ? `\nAdditional Notes: ${opts.additionalNotes}\n` : ""}\nIf you have any questions, feel free to reply. Looking forward to speaking with you!\n\nWith warmth,\nThe AfroPuppyYoga Team\nafropuppyyoga@gmail.com`;
 
   return { subject, html, text };
 }
@@ -214,7 +214,7 @@ export function buildOfferLetterEmail(opts: {
 
   const html = wrapInBrandedLayout(hero, body);
 
-  const text = `Hi ${opts.applicantName},\n\nWe are thrilled to offer you the position of ${opts.role} at our ${opts.location} location!\n\nYou stood out to us with your energy, passion, and alignment with our mission. We can't wait to have you on the team.\n\n${opts.startDate ? `Proposed Start Date: ${opts.startDate}\n\n` : ""}${opts.additionalNotes ? `${opts.additionalNotes}\n\n` : ""}Please sign both attached documents and reply to this email with the signed copies.\n\nWelcome to the family!\n\nWith excitement,\nThe AfroPuppyYoga Team\nafropuppyyogaofficial@gmail.com`;
+  const text = `Hi ${opts.applicantName},\n\nWe are thrilled to offer you the position of ${opts.role} at our ${opts.location} location!\n\nYou stood out to us with your energy, passion, and alignment with our mission. We can't wait to have you on the team.\n\n${opts.startDate ? `Proposed Start Date: ${opts.startDate}\n\n` : ""}${opts.additionalNotes ? `${opts.additionalNotes}\n\n` : ""}Please sign both attached documents and reply to this email with the signed copies.\n\nWelcome to the family!\n\nWith excitement,\nThe AfroPuppyYoga Team\nafropuppyyoga@gmail.com`;
 
   return { subject, html, text };
 }
@@ -279,7 +279,7 @@ export function buildApplicationConfirmationEmail(opts: {
 
   const html = wrapInBrandedLayout(hero, body);
 
-  const text = `Hi ${opts.applicantName},\n\nThank you for applying for the ${opts.role} position at our ${opts.location} location!\n\nWe've received your application and our team will review it carefully. We'll be in touch within 5 business days if your profile is a great fit.\n\nWhat happens next?\n1. Our team reviews your video and resume\n2. Shortlisted candidates receive an interview invite\n3. Successful applicants join the APY pack!\n\nIf you have any questions, feel free to reply to this email.\n\nWith warmth,\nThe AfroPuppyYoga Team\nafropuppyyogaofficial@gmail.com`;
+  const text = `Hi ${opts.applicantName},\n\nThank you for applying for the ${opts.role} position at our ${opts.location} location!\n\nWe've received your application and our team will review it carefully. We'll be in touch within 5 business days if your profile is a great fit.\n\nWhat happens next?\n1. Our team reviews your video and resume\n2. Shortlisted candidates receive an interview invite\n3. Successful applicants join the APY pack!\n\nIf you have any questions, feel free to reply to this email.\n\nWith warmth,\nThe AfroPuppyYoga Team\nafropuppyyoga@gmail.com`;
 
   return { subject, html, text };
 }
@@ -310,7 +310,7 @@ export function buildRejectionLetterEmail(opts: {
 
   const html = wrapInBrandedLayout(hero, body);
 
-  const text = `Hi ${opts.applicantName},\n\nThank you for applying for the ${opts.role} position at our ${opts.location} location. We appreciate your interest in joining the AfroPuppyYoga family.\n\nAfter careful consideration, we've decided to move forward with another candidate whose experience more closely aligns with our current needs.\n\n${opts.additionalNotes ? `${opts.additionalNotes}\n\n` : ""}We encourage you to keep an eye on our careers page as we grow — we'd love to hear from you again.\n\nThank you again for your time and enthusiasm. We wish you all the best.\n\nWith gratitude,\nThe AfroPuppyYoga Team\nafropuppyyogaofficial@gmail.com`;
+  const text = `Hi ${opts.applicantName},\n\nThank you for applying for the ${opts.role} position at our ${opts.location} location. We appreciate your interest in joining the AfroPuppyYoga family.\n\nAfter careful consideration, we've decided to move forward with another candidate whose experience more closely aligns with our current needs.\n\n${opts.additionalNotes ? `${opts.additionalNotes}\n\n` : ""}We encourage you to keep an eye on our careers page as we grow — we'd love to hear from you again.\n\nThank you again for your time and enthusiasm. We wish you all the best.\n\nWith gratitude,\nThe AfroPuppyYoga Team\nafropuppyyoga@gmail.com`;
 
   return { subject, html, text };
 }
@@ -408,7 +408,7 @@ Thanks again, and welcome to the team!
 
 Warmly,
 Ay & The AfroPuppyYoga Team
-afropuppyyogaofficial@gmail.com`;
+afropuppyyoga@gmail.com`;
 
   return { subject, html, text };
 }
@@ -505,7 +505,7 @@ Thanks again, and welcome to the team!
 
 Warmly,
 Ay & The AfroPuppyYoga Team
-afropuppyyogaofficial@gmail.com`;
+afropuppyyoga@gmail.com`;
 
   return { subject, html, text };
 }
@@ -608,7 +608,7 @@ We are thrilled to welcome you to AfroPuppyYoga and look forward to the positive
 
 Warm regards,
 The AfroPuppyYoga Team
-afropuppyyogaofficial@gmail.com
+afropuppyyoga@gmail.com
 289-788-1885
 afropuppyyoga.ca`;
 
@@ -684,7 +684,7 @@ export function buildBreederConfirmationEmail(opts: {
   `;
 
   const html = wrapInBrandedLayout(hero, body);
-  const text = `Hi ${firstName},\n\nYour class with AfroPuppyYoga is confirmed!\n\nDate: ${displayDate}\nLocation: ${opts.location}\nTime: ${fmt12(opts.startTime)} – ${fmt12(opts.endTime)}\nBreed: ${opts.breed}\nClass Type: ${typeLabel}\n${opts.notes ? `\nNotes: ${opts.notes}\n` : ""}\nQuestions? Reply to this email.\n\nWith warmth,\nThe AfroPuppyYoga Team\nafropuppyyogaofficial@gmail.com`;
+  const text = `Hi ${firstName},\n\nYour class with AfroPuppyYoga is confirmed!\n\nDate: ${displayDate}\nLocation: ${opts.location}\nTime: ${fmt12(opts.startTime)} – ${fmt12(opts.endTime)}\nBreed: ${opts.breed}\nClass Type: ${typeLabel}\n${opts.notes ? `\nNotes: ${opts.notes}\n` : ""}\nQuestions? Reply to this email.\n\nWith warmth,\nThe AfroPuppyYoga Team\nafropuppyyoga@gmail.com`;
 
   return { subject, html, text };
 }
@@ -784,7 +784,7 @@ export async function sendClassCancellationEmail(opts: {
     ${bodyText(nextClassText)}
     ${pillButton("https://lu.ma/AfroPuppyYoga", "Browse Upcoming Classes")}
     ${fallbackLink("https://lu.ma/AfroPuppyYoga")}
-    ${bodyText(`If you have any questions or need assistance with rebooking, please don't hesitate to reach out to us at <a href="mailto:afropuppyyogaofficial@gmail.com" style="color:#C2185B;">afropuppyyogaofficial@gmail.com</a> or DM us on Instagram <a href="https://instagram.com/afropuppyyoga" style="color:#C2185B;">@afropuppyyoga</a>.`)}
+    ${bodyText(`If you have any questions or need assistance with rebooking, please don't hesitate to reach out to us at <a href="mailto:afropuppyyoga@gmail.com" style="color:#C2185B;">afropuppyyoga@gmail.com</a> or DM us on Instagram <a href="https://instagram.com/afropuppyyoga" style="color:#C2185B;">@afropuppyyoga</a>.`)}
     ${signoff("The AfroPuppyYoga Team")}
   `;
 
@@ -794,7 +794,7 @@ export async function sendClassCancellationEmail(opts: {
     ? `We'd love to see you at our next class: ${opts.nextClassName} on ${opts.nextClassDate}.\n\n`
     : `We'd love to have you join us at a future session at any of our locations.\n\n`;
 
-  const text = `Hi ${opts.guestName},\n\nWe regret to inform you that your upcoming class "${opts.eventName}" has been cancelled. We sincerely apologize for the inconvenience.\n\n${opts.customMessage ? `Message from our team: ${opts.customMessage}\n\n` : ""}Your rebooking code: ${opts.rebookingCode}\nSimply enter this code at checkout when booking any upcoming class.\n\n${nextClassLine}Browse upcoming classes at https://lu.ma/AfroPuppyYoga\n\nIf you have questions, email us at afropuppyyogaofficial@gmail.com or DM @afropuppyyoga on Instagram.\n\nWith warmth,\nThe AfroPuppyYoga Team`;
+  const text = `Hi ${opts.guestName},\n\nWe regret to inform you that your upcoming class "${opts.eventName}" has been cancelled. We sincerely apologize for the inconvenience.\n\n${opts.customMessage ? `Message from our team: ${opts.customMessage}\n\n` : ""}Your rebooking code: ${opts.rebookingCode}\nSimply enter this code at checkout when booking any upcoming class.\n\n${nextClassLine}Browse upcoming classes at https://lu.ma/AfroPuppyYoga\n\nIf you have questions, email us at afropuppyyoga@gmail.com or DM @afropuppyyoga on Instagram.\n\nWith warmth,\nThe AfroPuppyYoga Team`;
 
   await sendEmail({ to: opts.to, subject, html, text });
 }

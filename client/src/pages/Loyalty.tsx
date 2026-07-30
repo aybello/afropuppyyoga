@@ -123,7 +123,7 @@ export default function Loyalty() {
                 Book a Class to Start
               </a>
               <a
-                href="mailto:afropuppyyogaofficial@gmail.com?subject=Loyalty%20Program%20-%20Check%20My%20Progress"
+                href="mailto:afropuppyyoga@gmail.com?subject=Loyalty%20Program%20-%20Check%20My%20Progress"
                 className="inline-flex items-center px-10 py-4 border-2 border-[#8B2252] text-[#8B2252] font-body font-semibold text-base rounded-full hover:bg-[#8B2252] hover:text-white transition-all duration-200"
               >
                 Ask Us to Track Your Visits

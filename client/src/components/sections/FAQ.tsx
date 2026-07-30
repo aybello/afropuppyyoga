@@ -201,7 +201,7 @@ export default function FAQ() {
               We're happy to help! Reach out and we'll get back to you within 48 hours.
             </p>
             <a
-              href="mailto:afropuppyyogaofficial@gmail.com"
+              href="mailto:afropuppyyoga@gmail.com"
               className="inline-flex items-center px-8 py-3.5 bg-[#8B2252] text-white font-body font-semibold rounded-full hover:bg-[#8B2252] transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5"
             >
               Contact Us

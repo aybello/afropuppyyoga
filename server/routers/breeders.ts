@@ -103,7 +103,7 @@ function generateConfirmationEmail(opts: {
       <div style="border-top:1px solid #f0d0dc;padding-top:20px;margin-top:8px;">
         <p style="margin:0;font-weight:700;color:#8B2252;font-size:15px;">The AfroPuppyYoga Team</p>
         <p style="margin:4px 0 0;font-size:13px;color:#5a3040;">P: 289-788-1885</p>
-        <p style="margin:2px 0 0;font-size:13px;color:#5a3040;">E: <a href="mailto:afropuppyyogaofficial@gmail.com" style="color:#8B2252;">afropuppyyogaofficial@gmail.com</a></p>
+        <p style="margin:2px 0 0;font-size:13px;color:#5a3040;">E: <a href="mailto:afropuppyyoga@gmail.com" style="color:#8B2252;">afropuppyyoga@gmail.com</a></p>
         <p style="margin:2px 0 0;font-size:13px;color:#5a3040;">W: <a href="https://afropuppyyoga.ca" style="color:#8B2252;">afropuppyyoga.ca</a></p>
       </div>
     </div>
@@ -118,7 +118,7 @@ function generateConfirmationEmail(opts: {
     return `📍 ${ev.city}\nDate: ${formatDateHuman(ev.date)}\n${transport}\nLocation: ${ev.location}\nCompensation: ${ev.compensation} (paid via e-transfer)`;
   }).join("\n\n---\n\n");
 
-  const text = `Hi ${opts.breederFirstName},\n\nWe're excited to be working with you and your puppies for our upcoming AfroPuppyYoga classes.\n\nAs discussed, here are the confirmed details:\n\n${textEvents}\n\nPlease ensure all puppies:\n- Are freshly groomed, clean, and smell pleasant\n- Are up to date on vaccinations\n- Have been dewormed\n\nOur team will supervise the puppies at all times and ensure they receive regular breaks, water, and a safe, controlled environment throughout the events.\n\nFor any dates where APY is handling transportation, please provide the pickup address that works best for you.\n\n${opts.availabilityNote ? `We also wanted to see if you may have availability for ${opts.availabilityNote}. If so, we'd love to discuss potentially adding that date as well.\n\n` : ""}Please confirm that the above dates and times work for you, and we can finalize everything from there.\n\nLooking forward to working together.\n\nBest,\nThe AfroPuppyYoga Team\nP: 289-788-1885\nE: afropuppyyogaofficial@gmail.com\nW: afropuppyyoga.ca`;
+  const text = `Hi ${opts.breederFirstName},\n\nWe're excited to be working with you and your puppies for our upcoming AfroPuppyYoga classes.\n\nAs discussed, here are the confirmed details:\n\n${textEvents}\n\nPlease ensure all puppies:\n- Are freshly groomed, clean, and smell pleasant\n- Are up to date on vaccinations\n- Have been dewormed\n\nOur team will supervise the puppies at all times and ensure they receive regular breaks, water, and a safe, controlled environment throughout the events.\n\nFor any dates where APY is handling transportation, please provide the pickup address that works best for you.\n\n${opts.availabilityNote ? `We also wanted to see if you may have availability for ${opts.availabilityNote}. If so, we'd love to discuss potentially adding that date as well.\n\n` : ""}Please confirm that the above dates and times work for you, and we can finalize everything from there.\n\nLooking forward to working together.\n\nBest,\nThe AfroPuppyYoga Team\nP: 289-788-1885\nE: afropuppyyoga@gmail.com\nW: afropuppyyoga.ca`;
 
   return { html, text };
 }
@@ -413,7 +413,7 @@ export const breedersRouter = router({
           <p style="color:#8B6070;font-size:13px;line-height:1.6;margin:0;">This link is unique to you. If you have any questions, reply to this email or reach us at <a href="tel:289-788-1885" style="color:#C2185B;">289-788-1885</a>.</p>
         </td></tr>
         <tr><td style="background:#FFF5F8;padding:20px 40px;text-align:center;border-top:1px solid #F0D0DC;">
-          <p style="color:#8B6070;font-size:12px;margin:0;">The AfroPuppyYoga Team &nbsp;|&nbsp; afropuppyyogaofficial@gmail.com &nbsp;|&nbsp; afropuppyyoga.ca</p>
+          <p style="color:#8B6070;font-size:12px;margin:0;">The AfroPuppyYoga Team &nbsp;|&nbsp; afropuppyyoga@gmail.com &nbsp;|&nbsp; afropuppyyoga.ca</p>
         </td></tr>
       </table>
     </td></tr>
@@ -426,7 +426,7 @@ export const breedersRouter = router({
             to: breeder.email!,
             subject: `AfroPuppyYoga - Availability Check for ${input.monthLabel}`,
             html,
-            text: `Hi ${firstName},\n\nWe are planning our AfroPuppyYoga classes for ${input.monthLabel} and would love to know your availability!\n\n${input.customMessage ? input.customMessage + "\n\n" : ""}Please share your available dates using this link:\n${responseLink}\n\nThe AfroPuppyYoga Team\nP: 289-788-1885\nE: afropuppyyogaofficial@gmail.com`,
+            text: `Hi ${firstName},\n\nWe are planning our AfroPuppyYoga classes for ${input.monthLabel} and would love to know your availability!\n\n${input.customMessage ? input.customMessage + "\n\n" : ""}Please share your available dates using this link:\n${responseLink}\n\nThe AfroPuppyYoga Team\nP: 289-788-1885\nE: afropuppyyoga@gmail.com`,
           });
           sent++;
         } catch {
@@ -586,7 +586,7 @@ export const breedersRouter = router({
           <p style="color:#8B6070;font-size:13px;line-height:1.6;margin:0;">This link is unique to you. If you have any questions, reply to this email or reach us at <a href="tel:289-788-1885" style="color:#C2185B;">289-788-1885</a>.</p>
         </td></tr>
         <tr><td style="background:#FFF5F8;padding:20px 40px;text-align:center;border-top:1px solid #F0D0DC;">
-          <p style="color:#8B6070;font-size:12px;margin:0;">The AfroPuppyYoga Team &nbsp;|&nbsp; afropuppyyogaofficial@gmail.com &nbsp;|&nbsp; afropuppyyoga.ca</p>
+          <p style="color:#8B6070;font-size:12px;margin:0;">The AfroPuppyYoga Team &nbsp;|&nbsp; afropuppyyoga@gmail.com &nbsp;|&nbsp; afropuppyyoga.ca</p>
         </td></tr>
       </table>
     </td></tr>

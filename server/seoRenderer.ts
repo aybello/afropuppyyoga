@@ -139,7 +139,7 @@ const LOCAL_BUSINESS_SCHEMA = {
   },
   image: OG_IMAGE,
   telephone: "+12897881885",
-  email: "afropuppyyogaofficial@gmail.com",
+  email: "afropuppyyoga@gmail.com",
   priceRange: "$$",
   currenciesAccepted: "CAD",
   paymentAccepted: "Credit Card",
@@ -398,7 +398,7 @@ const PAGES: Record<string, () => string> = {
 
   <section id="contact">
     <h2>Contact Us</h2>
-    <p>Email: <a href="mailto:afropuppyyogaofficial@gmail.com">afropuppyyogaofficial@gmail.com</a></p>
+    <p>Email: <a href="mailto:afropuppyyoga@gmail.com">afropuppyyoga@gmail.com</a></p>
     <p>Phone: <a href="tel:+12897881885">289-788-1885</a></p>
     <p>Instagram: <a href="https://www.instagram.com/afropuppyyoga">@afropuppyyoga</a></p>
     <p>TikTok: <a href="https://www.tiktok.com/@afropuppyyoga">@afropuppyyoga</a></p>
