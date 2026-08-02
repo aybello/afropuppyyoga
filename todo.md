@@ -497,3 +497,6 @@
 - [x] Register /admin/sms-broadcast route in App.tsx
 - [x] Add SMS Broadcast link to AdminNav
 - [x] Add SMS Broadcast tile to StaffPortal
+
+## Cancellation Loop Parallelization
+- [x] Fix sequential guest notification loop in cancellation router — parallelize with Promise.allSettled
