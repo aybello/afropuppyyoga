@@ -42,7 +42,19 @@ import {
   CheckCircle2,
   Copy,
   ExternalLink,
+  Trash2,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
 import AdminNav from "@/components/AdminNav";
@@ -183,6 +195,18 @@ export default function PrivateEventsDashboard() {
     onError: (err) => {
       toast.error(`Failed to send email: ${err.message}`);
       setIsSendingEmail(false);
+    },
+  });
+
+  const deleteLumaEvent = trpc.privateEvents.deleteLumaEvent.useMutation({
+    onSuccess: () => {
+      utils.privateEvents.listInquiries.invalidate();
+      toast.success("Luma event deleted. Link removed.");
+      setGeneratedLink(null);
+      setShowBookingPanel(false);
+    },
+    onError: (err) => {
+      toast.error(`Failed to delete: ${err.message}`);
     },
   });
 
@@ -517,13 +541,44 @@ export default function PrivateEventsDashboard() {
                     </Button>
                   </div>
                   {!showEmailPanel && (
-                    <Button
-                      className="mt-3 bg-[#8B2252] hover:bg-[#6B1A40] text-white font-body font-semibold rounded-full text-sm"
-                      onClick={() => setShowEmailPanel(true)}
-                    >
-                      <Send size={14} className="mr-2" />
-                      Send Quote Email
-                    </Button>
+                    <div className="flex items-center gap-2 mt-3">
+                      <Button
+                        className="bg-[#8B2252] hover:bg-[#6B1A40] text-white font-body font-semibold rounded-full text-sm"
+                        onClick={() => setShowEmailPanel(true)}
+                      >
+                        <Send size={14} className="mr-2" />
+                        Send Quote Email
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-red-300 text-red-600 hover:bg-red-50 rounded-full text-sm"
+                          >
+                            <Trash2 size={14} className="mr-1" />
+                            Delete Event
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Luma Event?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will permanently delete the private event on Luma and remove the booking link. The client will no longer be able to pay. This cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-red-600 hover:bg-red-700 text-white"
+                              onClick={() => deleteLumaEvent.mutate({ inquiryId: selectedInquiry.id })}
+                            >
+                              {deleteLumaEvent.isPending ? "Deleting..." : "Yes, Delete Event"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   )}
                 </div>
               )}

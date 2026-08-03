@@ -13,6 +13,7 @@ import rateLimit from "express-rate-limit";
 import { storageGet } from "../storage";
 import { lumaPoller, capiSender } from "../metaCapi";
 import twilioWebhookRouter from "../twilioWebhook";
+import lumaWebhookRouter from "../lumaWebhook";
 import { requireStaffOrAdmin } from "./requireStaff";
 import { registerStorageProxy } from "./storageProxy";
 import crypto from "crypto";
@@ -282,6 +283,8 @@ async function startServer() {
 
   // Twilio webhook callbacks — must be registered before tRPC
   app.use(twilioWebhookRouter);
+  // Luma webhook for payment/registration notifications
+  app.use(lumaWebhookRouter);
 
   // tRPC API
   app.use(

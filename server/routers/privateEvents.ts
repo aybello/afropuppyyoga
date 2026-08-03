@@ -893,4 +893,49 @@ export const privateEventsRouter = router({
 
       return { success: true };
     }),
+
+  /** Delete a generated Luma event and clear the link from the inquiry */
+  deleteLumaEvent: protectedProcedure
+    .input(z.object({ inquiryId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role !== "admin" && ctx.user.role !== "staff") {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      const [inquiry] = await db
+        .select()
+        .from(privateEventInquiries)
+        .where(eq(privateEventInquiries.id, input.inquiryId));
+      if (!inquiry) throw new TRPCError({ code: "NOT_FOUND", message: "Inquiry not found" });
+      if (!inquiry.lumaEventId) throw new TRPCError({ code: "BAD_REQUEST", message: "No Luma event to delete" });
+
+      const apiKey = process.env.LUMA_API_KEY;
+      if (!apiKey) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "LUMA_API_KEY not set" });
+
+      // Delete the event on Luma
+      const delRes = await fetch(`${LUMA_BASE}/events/delete?event_id=${inquiry.lumaEventId}`, {
+        method: "DELETE",
+        headers: { "x-luma-api-key": apiKey },
+      });
+
+      // Luma returns 404 if already deleted — that's fine
+      if (!delRes.ok && delRes.status !== 404) {
+        const err = await delRes.text();
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `Luma delete failed: ${delRes.status} ${err}` });
+      }
+
+      // Clear the link from the inquiry and revert status
+      await db
+        .update(privateEventInquiries)
+        .set({
+          lumaEventUrl: null,
+          lumaEventId: null,
+          status: "contacted",
+        })
+        .where(eq(privateEventInquiries.id, input.inquiryId));
+
+      return { success: true };
+    }),
 });

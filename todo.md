@@ -523,3 +523,10 @@
 - [x] Auto-remove default 'Standard' free ticket after event creation (POST /events/ticket-types/delete)
 - [x] Add location selector: APY studios (Kitchener, Cambridge, Toronto, Guelph, Hamilton, London) or custom client address
 - [x] Support custom client addresses for on-site events (pass-through to Luma geo_address_json)
+
+## Delete Luma Event + Payment Webhook (Aug 3, 2026)
+- [x] Add deleteLumaEvent tRPC procedure (calls Luma DELETE API, clears lumaEventUrl/lumaEventId from inquiry)
+- [x] Add "Delete Luma Event" button to Private Events Dashboard (with confirmation dialog)
+- [x] Add /api/luma/webhook POST endpoint to receive Luma payment notifications
+- [x] Auto-update inquiry status from "quote_sent" to "booked" when payment webhook fires
+- [x] Send confirmation email to owner when a private event is booked/paid
