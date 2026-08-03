@@ -127,6 +127,7 @@ export default function PrivateEventsDashboard() {
     eventDate: "",
     startTime: "14:00",
     endTime: "15:30",
+    customLocation: "",
   });
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -223,6 +224,7 @@ export default function PrivateEventsDashboard() {
       eventDate: inq.preferredDate || "",
       startTime: "14:00",
       endTime: "15:30",
+      customLocation: "",
     });
   }
 
@@ -258,6 +260,9 @@ export default function PrivateEventsDashboard() {
       eventDate: bookingForm.eventDate,
       startTime: bookingForm.startTime,
       endTime: bookingForm.endTime,
+      customLocation: bookingForm.customLocation.startsWith("__custom__")
+        ? bookingForm.customLocation.replace("__custom__", "") || undefined
+        : bookingForm.customLocation || undefined,
     });
   }
 
@@ -694,6 +699,39 @@ export default function PrivateEventsDashboard() {
                         className="border-[#F2A0B8]/40 font-body text-sm"
                       />
                     </div>
+                  </div>
+
+                  {/* Location */}
+                  <div>
+                    <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Event Location</label>
+                    <select
+                      value={bookingForm.customLocation.startsWith("__custom__") ? "__custom__" : bookingForm.customLocation}
+                      onChange={(e) => {
+                        if (e.target.value === "__custom__") {
+                          setBookingForm({ ...bookingForm, customLocation: "__custom__" });
+                        } else {
+                          setBookingForm({ ...bookingForm, customLocation: e.target.value });
+                        }
+                      }}
+                      className="w-full rounded-md border border-[#F2A0B8]/40 bg-white px-3 py-2 font-body text-sm text-[#3D1A2E]"
+                    >
+                      <option value="">Use inquiry location ({selectedInquiry?.location || "Kitchener"})</option>
+                      <option value="Kitchener, ON">APY Studio — Kitchener</option>
+                      <option value="Cambridge, ON">APY Studio — Cambridge</option>
+                      <option value="Toronto, ON">APY Studio — Toronto</option>
+                      <option value="Guelph, ON">APY Studio — Guelph</option>
+                      <option value="Hamilton, ON">APY Studio — Hamilton</option>
+                      <option value="London, ON">APY Studio — London</option>
+                      <option value="__custom__">Client&apos;s Location (enter below)</option>
+                    </select>
+                    {bookingForm.customLocation.startsWith("__custom__") && (
+                      <Input
+                        value={bookingForm.customLocation.replace("__custom__", "")}
+                        onChange={(e) => setBookingForm({ ...bookingForm, customLocation: "__custom__" + e.target.value })}
+                        placeholder="e.g. 123 Main St, Waterloo, ON"
+                        className="mt-2 border-[#F2A0B8]/40 font-body text-sm"
+                      />
+                    )}
                   </div>
 
                   {/* Generate button */}

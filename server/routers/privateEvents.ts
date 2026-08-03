@@ -13,6 +13,7 @@ const HST_RATE = 0.13;
 /** Locations with their addresses for Luma events */
 const LOCATION_MAP: Record<string, { address: string; lat: number; lng: number }> = {
   kitchener: { address: "Kitchener, ON, Canada", lat: 43.4516, lng: -80.4925 },
+  cambridge: { address: "Cambridge, ON, Canada", lat: 43.3616, lng: -80.3144 },
   toronto: { address: "Toronto, ON, Canada", lat: 43.6532, lng: -79.3832 },
   guelph: { address: "Guelph, ON, Canada", lat: 43.5448, lng: -80.2482 },
   hamilton: { address: "Hamilton, ON, Canada", lat: 43.2557, lng: -79.8711 },
@@ -22,8 +23,8 @@ const LOCATION_MAP: Record<string, { address: string; lat: number; lng: number }
 /** APY branded cover image for private events */
 const APY_PRIVATE_COVER = "https://images.lumacdn.com/event-covers/up/fc92575f-4105-4406-a89b-14105f70e638.jpg";
 
-/** APY brand tint color (warm pink) */
-const APY_TINT_COLOR = "#D4708A";
+/** APY brand tint color (Cranberry) */
+const APY_TINT_COLOR = "#9B2335";
 
 /** Build a personalized Luma event description based on event type */
 function buildEventDescription(params: {
@@ -149,7 +150,10 @@ async function createLumaEvent(params: {
   if (!apiKey) throw new Error("LUMA_API_KEY is not set");
 
   const locKey = params.location.toLowerCase().trim();
-  const loc = LOCATION_MAP[locKey] || LOCATION_MAP.kitchener;
+  const loc = LOCATION_MAP[locKey];
+  // If not a known studio, use the raw address string (client's location)
+  const address = loc ? loc.address : params.location;
+  const coordinate = loc ? { latitude: loc.lat, longitude: loc.lng } : undefined;
 
   // 1. Create the event (private, unlisted)
   const createRes = await fetch(`${LUMA_BASE}/events/create`, {
@@ -165,8 +169,8 @@ async function createLumaEvent(params: {
       timezone: "America/Toronto",
       visibility: "private",
       max_capacity: params.maxCapacity,
-      geo_address_json: { type: "manual", address: loc.address },
-      coordinate: { latitude: loc.lat, longitude: loc.lng },
+      geo_address_json: { type: "manual", address },
+      ...(coordinate ? { coordinate } : {}),
       phone_number_requirement: "required",
       name_requirement: "first-last",
       description_md: params.description,
@@ -213,7 +217,28 @@ async function createLumaEvent(params: {
     throw new Error(`Luma create ticket type failed: ${ticketRes.status} ${err}`);
   }
 
-  // Fetch the actual event URL from Luma (they generate a slug-based URL)
+  // 3. Remove the default "Standard" free ticket that Luma auto-creates
+  try {
+    const listRes = await fetch(`${LUMA_BASE}/events/ticket-types/list?event_id=${eventId}`, {
+      headers: { "x-luma-api-key": apiKey },
+    });
+    if (listRes.ok) {
+      const { entries } = (await listRes.json()) as { entries: Array<{ id: string; type: string; name: string }> };
+      for (const ticket of entries) {
+        if (ticket.type === "free" && ticket.name === "Standard") {
+          await fetch(`${LUMA_BASE}/events/ticket-types/delete`, {
+            method: "POST",
+            headers: { "x-luma-api-key": apiKey, "Content-Type": "application/json" },
+            body: JSON.stringify({ event_ticket_type_id: ticket.id }),
+          });
+        }
+      }
+    }
+  } catch (e) {
+    // Non-critical — the free ticket just stays visible if this fails
+  }
+
+  // 4. Fetch the actual event URL from Luma (they generate a slug-based URL)
   const getRes = await fetch(`${LUMA_BASE}/events/get?event_id=${eventId}`, {
     headers: { "x-luma-api-key": apiKey },
   });
@@ -668,6 +693,7 @@ export const privateEventsRouter = router({
         eventDate: z.string(), // ISO date string e.g. "2026-08-08"
         startTime: z.string().default("14:00"), // HH:mm
         endTime: z.string().default("15:30"), // HH:mm
+        customLocation: z.string().optional(), // Client's address for on-site events
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -699,9 +725,9 @@ export const privateEventsRouter = router({
       // Check if owner approval is needed (discount below estimate or > $3000)
       const needsApproval = input.finalPrice < inquiry.estimatedMin || input.finalPrice > 3000;
 
-      // Build event name — use just the org/person name (matches how real private events appear on Luma)
+      // Build event name
       const orgName = input.organization || inquiry.name;
-      const eventName = orgName;
+      const eventName = "Private PuppyYoga Experience";
 
       // Build ISO timestamps (America/Toronto)
       const startAt = `${input.eventDate}T${input.startTime}:00-04:00`;
@@ -722,7 +748,7 @@ export const privateEventsRouter = router({
         name: eventName,
         startAt,
         endAt,
-        location: inquiry.location,
+        location: input.customLocation || inquiry.location,
         maxCapacity: inquiry.guests,
         description: descLines,
         priceCents: totalCents,

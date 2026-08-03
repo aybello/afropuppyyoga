@@ -516,3 +516,10 @@
 - [x] Add pricing calculator with HST logic and owner-approval flag
 - [x] Auto-update status to "quote_sent" after email sent, "booked" when payment received
 - [x] Improve Luma event page: personalized descriptions by event type, branded cover image, tint color, org-name-only title
+
+## Luma Event Page Improvements (Aug 3, 2026)
+- [x] Update event title to 'Private PuppyYoga Experience'
+- [x] Set Cranberry color (#9B2335) as default tint (note: Luma API ignores tint_color — must be set manually in Luma dashboard)
+- [x] Auto-remove default 'Standard' free ticket after event creation (POST /events/ticket-types/delete)
+- [x] Add location selector: APY studios (Kitchener, Cambridge, Toronto, Guelph, Hamilton, London) or custom client address
+- [x] Support custom client addresses for on-site events (pass-through to Luma geo_address_json)
