@@ -71,7 +71,8 @@ async function createLumaEvent(params: {
     throw new Error(`Luma create event failed: ${createRes.status} ${err}`);
   }
 
-  const { id: eventId } = (await createRes.json()) as { id: string };
+  const createData = (await createRes.json()) as { id: string };
+  const eventId = createData.id;
 
   // 2. Create a paid ticket type
   const ticketRes = await fetch(`${LUMA_BASE}/events/ticket-types/create`, {
@@ -95,8 +96,16 @@ async function createLumaEvent(params: {
     throw new Error(`Luma create ticket type failed: ${ticketRes.status} ${err}`);
   }
 
-  // Construct the event URL from the event ID
-  const eventUrl = `https://lu.ma/${eventId}`;
+  // Fetch the actual event URL from Luma (they generate a slug-based URL)
+  const getRes = await fetch(`${LUMA_BASE}/events/get?event_id=${eventId}`, {
+    headers: { "x-luma-api-key": apiKey },
+  });
+  let eventUrl = `https://luma.com/${eventId}`; // fallback
+  if (getRes.ok) {
+    const eventData = (await getRes.json()) as { url?: string };
+    if (eventData.url) eventUrl = eventData.url;
+  }
+
   return { eventId, eventUrl };
 }
 
