@@ -19,6 +19,119 @@ const LOCATION_MAP: Record<string, { address: string; lat: number; lng: number }
   london: { address: "London, ON, Canada", lat: 42.9849, lng: -81.2453 },
 };
 
+/** APY branded cover image for private events */
+const APY_PRIVATE_COVER = "https://images.lumacdn.com/event-covers/up/fc92575f-4105-4406-a89b-14105f70e638.jpg";
+
+/** APY brand tint color (warm pink) */
+const APY_TINT_COLOR = "#D4708A";
+
+/** Build a personalized Luma event description based on event type */
+function buildEventDescription(params: {
+  eventType: string;
+  orgName: string;
+  guests: number;
+  sessions: number;
+  breed: string;
+}): string {
+  const { eventType, orgName, guests, sessions, breed } = params;
+  const sessionText = sessions > 1 ? `${sessions} sessions` : "a private session";
+
+  // Personalized header and "Why" section based on event type
+  let header: string;
+  let whySection: string;
+
+  switch (eventType.toLowerCase()) {
+    case "birthday party":
+      header = `## \u{1F436}\u2728 Private Puppy Yoga Birthday Experience \u2728\u{1F436}`;
+      whySection = [
+        `\u{1F49B} **Why Puppy Yoga for Birthdays?**`,
+        ``,
+        `Puppy yoga is the ultimate birthday surprise:`,
+        `*   Create unforgettable memories with friends and adorable puppies`,
+        `*   A unique celebration that everyone will be talking about`,
+        `*   Perfect mix of relaxation, laughter, and puppy cuddles`,
+        `*   Amazing photo opportunities for the birthday crew`,
+      ].join("\n");
+      break;
+    case "bachelorette":
+      header = `## \u{1F436}\u2728 Private Puppy Yoga Bachelorette Experience \u2728\u{1F436}`;
+      whySection = [
+        `\u{1F49B} **Why Puppy Yoga for Bachelorettes?**`,
+        ``,
+        `Puppy yoga adds something special to the celebration:`,
+        `*   A unique, Instagram-worthy experience for the whole bridal party`,
+        `*   Relaxing and joyful \u2014 the perfect balance to a busy wedding season`,
+        `*   Adorable puppies bring out genuine smiles and laughter`,
+        `*   A memorable bonding moment before the big day`,
+      ].join("\n");
+      break;
+    case "corporate wellness":
+    case "team building":
+      header = `## \u{1F436}\u2728 Private Puppy Yoga Session \u2014 Designed for ${orgName} \u2728\u{1F436}`;
+      whySection = [
+        `\u{1F49B} **Why Puppy Yoga for Teams?**`,
+        ``,
+        `Puppy yoga helps teams:`,
+        `*   Release tension and reset mentally between busy workdays`,
+        `*   Reduce stress and boost morale in a lighthearted setting`,
+        `*   Strengthen team connection through shared joy`,
+        `*   Create memorable moments that build culture`,
+      ].join("\n");
+      break;
+    case "baby shower":
+      header = `## \u{1F436}\u2728 Private Puppy Yoga Baby Shower Experience \u2728\u{1F436}`;
+      whySection = [
+        `\u{1F49B} **Why Puppy Yoga for Baby Showers?**`,
+        ``,
+        `Puppy yoga makes the perfect baby shower activity:`,
+        `*   A gentle, relaxing experience for the mom-to-be`,
+        `*   Adorable puppies and babies \u2014 the cutest combination`,
+        `*   A unique celebration everyone will remember`,
+        `*   Calming stretches and joyful puppy interactions`,
+      ].join("\n");
+      break;
+    default:
+      header = `## \u{1F436}\u2728 Private Puppy Yoga Experience \u2014 ${orgName} \u2728\u{1F436}`;
+      whySection = [
+        `\u{1F49B} **Why Puppy Yoga?**`,
+        ``,
+        `Puppy yoga brings people together:`,
+        `*   A unique wellness experience that combines movement and joy`,
+        `*   Adorable puppies create an atmosphere of pure happiness`,
+        `*   Perfect for groups looking for something different and memorable`,
+        `*   Relaxing, fun, and guaranteed to leave everyone smiling`,
+      ].join("\n");
+      break;
+  }
+
+  return [
+    header,
+    ``,
+    `Join us for **${sessionText} designed specifically for ${orgName}**, offering the perfect mix of stretching, relaxation, and puppy love.`,
+    ``,
+    `This session blends **gentle yoga**, **playful ${breed}**, and a relaxed, joyful atmosphere \u2014 designed to leave your group feeling refreshed and connected.`,
+    ``,
+    `\u{1F9D8}\u200D\u2640\uFE0F **What to Expect**`,
+    ``,
+    `*   A beginner-friendly yoga flow focused on stretching, mobility, and relaxation`,
+    `*   Plenty of time to interact with **${breed}** \u{1F43E}`,
+    `*   A calm, supportive environment led by an experienced instructor`,
+    `*   A fun, uplifting experience that encourages laughter, connection, and relaxation`,
+    `*   Group photo + puppy playtime after yoga`,
+    ``,
+    whySection,
+    ``,
+    `All puppies are carefully monitored throughout the session to ensure their comfort, safety, and well-being at all times.`,
+    ``,
+    `We\u2019re excited to welcome your group to the mat for a unique wellness experience.`,
+    ``,
+    `\u{1F4DE} **Contact Us**`,
+    `Phone: **+1 (289) 788-1885**`,
+    `Email: **afropuppyyogaofficial@gmail.com**`,
+    `Website: **[afropuppyyoga.ca](https://afropuppyyoga.ca)**`,
+  ].join("\n");
+}
+
 /** Create a private paid event on Luma */
 async function createLumaEvent(params: {
   name: string;
@@ -29,6 +142,8 @@ async function createLumaEvent(params: {
   description: string;
   priceCents: number;
   sessions: number;
+  coverUrl?: string;
+  tintColor?: string;
 }): Promise<{ eventId: string; eventUrl: string }> {
   const apiKey = process.env.LUMA_API_KEY;
   if (!apiKey) throw new Error("LUMA_API_KEY is not set");
@@ -55,6 +170,8 @@ async function createLumaEvent(params: {
       phone_number_requirement: "required",
       name_requirement: "first-last",
       description_md: params.description,
+      cover_url: params.coverUrl || APY_PRIVATE_COVER,
+      tint_color: params.tintColor || APY_TINT_COLOR,
       registration_questions: [
         {
           id: "waiver",
@@ -582,35 +699,23 @@ export const privateEventsRouter = router({
       // Check if owner approval is needed (discount below estimate or > $3000)
       const needsApproval = input.finalPrice < inquiry.estimatedMin || input.finalPrice > 3000;
 
-      // Build event name
+      // Build event name — use just the org/person name (matches how real private events appear on Luma)
       const orgName = input.organization || inquiry.name;
-      const eventName = `Private AfroPuppyYoga Experience | ${orgName}`;
+      const eventName = orgName;
 
       // Build ISO timestamps (America/Toronto)
       const startAt = `${input.eventDate}T${input.startTime}:00-04:00`;
       const endAt = `${input.eventDate}T${input.endTime}:00-04:00`;
 
-      // Build description
-      const descLines = [
-        `## Private AfroPuppyYoga Experience`,
-        ``,
-        `**${orgName}** — ${inquiry.guests} participants`,
-        ``,
-        input.sessions > 1 ? `${input.sessions} sessions of puppy yoga bliss.` : `One exclusive session of puppy yoga bliss.`,
-        ``,
-        input.puppyBreed ? `**Puppy breed:** ${input.puppyBreed}` : "",
-        ``,
-        `### What to expect`,
-        `- Professional yoga instruction`,
-        `- Adorable puppies to cuddle and play with`,
-        `- Photo opportunities`,
-        `- A unique wellness experience`,
-        ``,
-        `### Important`,
-        `- All participants must be 18+`,
-        `- No refunds — this is a private booking`,
-        `- Please arrive 10 minutes early`,
-      ].filter(Boolean).join("\n");
+      // Build personalized description based on event type
+      const breed = input.puppyBreed || "adorable puppies";
+      const descLines = buildEventDescription({
+        eventType: inquiry.eventType,
+        orgName,
+        guests: inquiry.guests,
+        sessions: input.sessions,
+        breed,
+      });
 
       // Create the Luma event
       const { eventId, eventUrl } = await createLumaEvent({

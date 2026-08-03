@@ -515,3 +515,4 @@
 - [x] Extend Private Events Dashboard detail dialog with "Generate Booking Link" panel
 - [x] Add pricing calculator with HST logic and owner-approval flag
 - [x] Auto-update status to "quote_sent" after email sent, "booked" when payment received
+- [x] Improve Luma event page: personalized descriptions by event type, branded cover image, tint color, org-name-only title
