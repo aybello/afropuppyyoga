@@ -1,7 +1,8 @@
 /* ============================================================
    Private Events Inquiries Dashboard — APY Admin Portal
    Design: Warm Afro-Wellness Editorial (matches main site)
-   Features: View all inquiries, update status, add admin notes, filter by status/package
+   Features: View all inquiries, update status, add admin notes, filter by status/package,
+             Generate Luma booking link, send quote email
    Access: admin and staff roles
    ============================================================ */
 import { useState } from "react";
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -33,12 +35,19 @@ import {
   Inbox,
   ChevronRight,
   Sparkles,
+  Link2,
+  Send,
+  DollarSign,
+  AlertTriangle,
+  CheckCircle2,
+  Copy,
+  ExternalLink,
 } from "lucide-react";
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
 import AdminNav from "@/components/AdminNav";
 
-type InquiryStatus = "new" | "contacted" | "confirmed" | "cancelled";
+type InquiryStatus = "new" | "contacted" | "confirmed" | "cancelled" | "quote_sent" | "booked";
 
 type PrivateEventInquiry = {
   id: number;
@@ -55,6 +64,16 @@ type PrivateEventInquiry = {
   estimatedMax: number;
   status: InquiryStatus;
   adminNotes: string | null;
+  finalPriceCents: number | null;
+  hstCents: number | null;
+  pricingType: string | null;
+  sessions: number | null;
+  puppyBreed: string | null;
+  organization: string | null;
+  lumaEventUrl: string | null;
+  lumaEventId: string | null;
+  ownerApproved: boolean | null;
+  quoteSentAt: Date | null;
   createdAt: Date;
 };
 
@@ -63,6 +82,8 @@ const STATUS_LABELS: Record<InquiryStatus, string> = {
   contacted: "Contacted",
   confirmed: "Confirmed",
   cancelled: "Cancelled",
+  quote_sent: "Quote Sent",
+  booked: "Booked",
 };
 
 const STATUS_COLORS: Record<InquiryStatus, string> = {
@@ -70,6 +91,8 @@ const STATUS_COLORS: Record<InquiryStatus, string> = {
   contacted: "bg-amber-50 text-amber-700 border-amber-200",
   confirmed: "bg-green-50 text-green-700 border-green-200",
   cancelled: "bg-red-50 text-red-700 border-red-200",
+  quote_sent: "bg-purple-50 text-purple-700 border-purple-200",
+  booked: "bg-emerald-50 text-emerald-700 border-emerald-200",
 };
 
 const PACKAGE_COLORS: Record<string, string> = {
@@ -93,6 +116,26 @@ export default function PrivateEventsDashboard() {
   const [adminNotes, setAdminNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
+  // Booking link generator state
+  const [showBookingPanel, setShowBookingPanel] = useState(false);
+  const [bookingForm, setBookingForm] = useState({
+    finalPrice: "",
+    pricingType: "plus_hst" as "plus_hst" | "all_in",
+    sessions: "1",
+    puppyBreed: "",
+    organization: "",
+    eventDate: "",
+    startTime: "14:00",
+    endTime: "15:30",
+  });
+  const [generatedLink, setGeneratedLink] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // Quote email state
+  const [showEmailPanel, setShowEmailPanel] = useState(false);
+  const [customMessage, setCustomMessage] = useState("");
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+
   const utils = trpc.useUtils();
   const { data: inquiries, isLoading } = trpc.privateEvents.listInquiries.useQuery(undefined, {
     enabled: isAuthenticated,
@@ -108,6 +151,37 @@ export default function PrivateEventsDashboard() {
     onError: () => {
       toast.error("Failed to update inquiry");
       setIsSaving(false);
+    },
+  });
+
+  const generateBooking = trpc.privateEvents.generateBookingLink.useMutation({
+    onSuccess: (data) => {
+      utils.privateEvents.listInquiries.invalidate();
+      setGeneratedLink(data.eventUrl);
+      setIsGenerating(false);
+      if (data.needsApproval) {
+        toast.info("Booking link generated — Owner approval recommended (discount or large event)");
+      } else {
+        toast.success("Booking link generated successfully!");
+      }
+    },
+    onError: (err) => {
+      toast.error(`Failed to generate link: ${err.message}`);
+      setIsGenerating(false);
+    },
+  });
+
+  const sendQuoteEmail = trpc.privateEvents.sendQuoteEmail.useMutation({
+    onSuccess: () => {
+      utils.privateEvents.listInquiries.invalidate();
+      toast.success("Quote email sent successfully!");
+      setShowEmailPanel(false);
+      setIsSendingEmail(false);
+      setSelectedInquiry(null);
+    },
+    onError: (err) => {
+      toast.error(`Failed to send email: ${err.message}`);
+      setIsSendingEmail(false);
     },
   });
 
@@ -136,6 +210,20 @@ export default function PrivateEventsDashboard() {
     setSelectedInquiry(inq);
     setNewStatus(inq.status);
     setAdminNotes(inq.adminNotes ?? "");
+    setShowBookingPanel(false);
+    setShowEmailPanel(false);
+    setGeneratedLink(inq.lumaEventUrl || null);
+    // Pre-fill booking form from inquiry data
+    setBookingForm({
+      finalPrice: inq.finalPriceCents ? String(inq.finalPriceCents / 100) : String(inq.estimatedMin),
+      pricingType: (inq.pricingType as "plus_hst" | "all_in") || "plus_hst",
+      sessions: String(inq.sessions || 1),
+      puppyBreed: inq.puppyBreed || "",
+      organization: inq.organization || "",
+      eventDate: inq.preferredDate || "",
+      startTime: "14:00",
+      endTime: "15:30",
+    });
   }
 
   function handleSave() {
@@ -147,6 +235,56 @@ export default function PrivateEventsDashboard() {
       adminNotes,
     });
   }
+
+  function handleGenerateLink() {
+    if (!selectedInquiry) return;
+    const price = parseFloat(bookingForm.finalPrice);
+    if (!price || price <= 0) {
+      toast.error("Please enter a valid price");
+      return;
+    }
+    if (!bookingForm.eventDate) {
+      toast.error("Please enter the event date");
+      return;
+    }
+    setIsGenerating(true);
+    generateBooking.mutate({
+      inquiryId: selectedInquiry.id,
+      finalPrice: price,
+      pricingType: bookingForm.pricingType,
+      sessions: parseInt(bookingForm.sessions) || 1,
+      puppyBreed: bookingForm.puppyBreed || undefined,
+      organization: bookingForm.organization || undefined,
+      eventDate: bookingForm.eventDate,
+      startTime: bookingForm.startTime,
+      endTime: bookingForm.endTime,
+    });
+  }
+
+  function handleSendEmail() {
+    if (!selectedInquiry) return;
+    setIsSendingEmail(true);
+    sendQuoteEmail.mutate({
+      inquiryId: selectedInquiry.id,
+      customMessage: customMessage || undefined,
+    });
+  }
+
+  function copyLink() {
+    if (generatedLink) {
+      navigator.clipboard.writeText(generatedLink);
+      toast.success("Link copied to clipboard");
+    }
+  }
+
+  // Calculate HST preview
+  const priceNum = parseFloat(bookingForm.finalPrice) || 0;
+  const hstPreview = bookingForm.pricingType === "plus_hst"
+    ? Math.round(priceNum * 13) / 100
+    : Math.round((priceNum - priceNum / 1.13) * 100) / 100;
+  const totalPreview = bookingForm.pricingType === "plus_hst"
+    ? priceNum + hstPreview
+    : priceNum;
 
   return (
     <div className="min-h-screen bg-[#FEFAF4]">
@@ -166,7 +304,7 @@ export default function PrivateEventsDashboard() {
               Private Event Inquiries
             </h1>
             <p className="font-body text-[#3D1A2E]/55 text-sm mt-1">
-              All inquiries submitted through the quote form — never miss a booking.
+              All inquiries submitted through the quote form — manage, generate booking links, and send quotes.
             </p>
           </div>
           {newCount > 0 && (
@@ -190,6 +328,8 @@ export default function PrivateEventsDashboard() {
               <SelectItem value="new">New</SelectItem>
               <SelectItem value="contacted">Contacted</SelectItem>
               <SelectItem value="confirmed">Confirmed</SelectItem>
+              <SelectItem value="quote_sent">Quote Sent</SelectItem>
+              <SelectItem value="booked">Booked</SelectItem>
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
@@ -243,6 +383,11 @@ export default function PrivateEventsDashboard() {
                       <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-body font-semibold border ${PACKAGE_COLORS[inq.packageType] ?? "bg-gray-50 text-gray-700 border-gray-200"}`}>
                         {PACKAGE_LABELS[inq.packageType] ?? inq.packageType}
                       </span>
+                      {inq.lumaEventUrl && (
+                        <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-body font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200">
+                          Luma Link Ready
+                        </span>
+                      )}
                       <span className="font-body text-xs text-[#3D1A2E]/40">
                         {new Date(inq.createdAt).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}
                       </span>
@@ -274,8 +419,10 @@ export default function PrivateEventsDashboard() {
                   </div>
                   <div className="flex flex-col items-end gap-2 shrink-0">
                     <span className="font-display font-bold text-[#1A0A12] text-lg">
-                      ${inq.estimatedMin.toLocaleString()}
-                      {inq.estimatedMax > inq.estimatedMin ? `–$${inq.estimatedMax.toLocaleString()}` : "+"}
+                      {inq.finalPriceCents
+                        ? `$${(inq.finalPriceCents / 100).toLocaleString()}`
+                        : `$${inq.estimatedMin.toLocaleString()}${inq.estimatedMax > inq.estimatedMin ? `–$${inq.estimatedMax.toLocaleString()}` : "+"}`
+                      }
                     </span>
                     <ChevronRight size={16} className="text-[#F2A0B8] group-hover:translate-x-0.5 transition-transform" />
                   </div>
@@ -288,7 +435,7 @@ export default function PrivateEventsDashboard() {
 
       {/* Detail dialog */}
       <Dialog open={!!selectedInquiry} onOpenChange={(open) => !open && setSelectedInquiry(null)}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display text-xl text-[#1A0A12]">
               {selectedInquiry?.name}
@@ -342,6 +489,228 @@ export default function PrivateEventsDashboard() {
                 </div>
               )}
 
+              {/* Existing Luma Link */}
+              {generatedLink && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle2 size={16} className="text-emerald-600" />
+                    <p className="font-body text-sm font-semibold text-emerald-700">Booking Link Generated</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={generatedLink}
+                      readOnly
+                      className="text-xs font-mono bg-white"
+                    />
+                    <Button size="sm" variant="outline" onClick={copyLink}>
+                      <Copy size={14} />
+                    </Button>
+                    <Button size="sm" variant="outline" asChild>
+                      <a href={generatedLink} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink size={14} />
+                      </a>
+                    </Button>
+                  </div>
+                  {!showEmailPanel && (
+                    <Button
+                      className="mt-3 bg-[#8B2252] hover:bg-[#6B1A40] text-white font-body font-semibold rounded-full text-sm"
+                      onClick={() => setShowEmailPanel(true)}
+                    >
+                      <Send size={14} className="mr-2" />
+                      Send Quote Email
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {/* Send Quote Email Panel */}
+              {showEmailPanel && generatedLink && (
+                <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 space-y-3">
+                  <p className="font-body text-xs font-semibold text-purple-700 uppercase tracking-wider">Send Quote Email</p>
+                  <p className="font-body text-sm text-purple-600">
+                    This will send a branded email to <strong>{selectedInquiry.email}</strong> with the booking link and pricing details.
+                  </p>
+                  <Textarea
+                    value={customMessage}
+                    onChange={(e) => setCustomMessage(e.target.value)}
+                    placeholder="Add a personal message (optional) — e.g. 'It was great chatting with you! Here's your booking link...'"
+                    className="border-purple-200 focus:border-purple-400 font-body text-sm min-h-[60px] resize-none"
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleSendEmail}
+                      disabled={isSendingEmail}
+                      className="bg-[#8B2252] hover:bg-[#6B1A40] text-white font-body font-semibold rounded-full text-sm"
+                    >
+                      {isSendingEmail ? <Loader2 size={14} className="animate-spin mr-2" /> : <Send size={14} className="mr-2" />}
+                      Send Email Now
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowEmailPanel(false)}
+                      className="font-body text-sm rounded-full"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Generate Booking Link Panel */}
+              {!generatedLink && !showBookingPanel && (
+                <Button
+                  className="w-full bg-gradient-to-r from-[#8B2252] to-[#D4708A] hover:from-[#6B1A40] hover:to-[#B85A74] text-white font-body font-bold rounded-full py-3"
+                  onClick={() => setShowBookingPanel(true)}
+                >
+                  <Link2 size={16} className="mr-2" />
+                  Generate Booking Link
+                </Button>
+              )}
+
+              {showBookingPanel && !generatedLink && (
+                <div className="bg-[#FFF5F8] border border-[#F2A0B8]/40 rounded-xl p-5 space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <DollarSign size={16} className="text-[#8B2252]" />
+                    <p className="font-body text-sm font-bold text-[#1A0A12]">Quote & Booking Details</p>
+                  </div>
+
+                  {/* Price + HST */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Final Price (CAD)</label>
+                      <Input
+                        type="number"
+                        value={bookingForm.finalPrice}
+                        onChange={(e) => setBookingForm({ ...bookingForm, finalPrice: e.target.value })}
+                        placeholder="e.g. 2250"
+                        className="border-[#F2A0B8]/40 font-body"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Pricing Type</label>
+                      <Select
+                        value={bookingForm.pricingType}
+                        onValueChange={(v) => setBookingForm({ ...bookingForm, pricingType: v as "plus_hst" | "all_in" })}
+                      >
+                        <SelectTrigger className="border-[#F2A0B8]/40 font-body text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="plus_hst">+ HST (13%)</SelectItem>
+                          <SelectItem value="all_in">All-in (HST included)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Price preview */}
+                  {priceNum > 0 && (
+                    <div className="bg-white rounded-lg p-3 border border-[#F2A0B8]/20">
+                      <div className="flex justify-between text-sm font-body">
+                        <span className="text-[#3D1A2E]/55">Base price</span>
+                        <span className="font-semibold">${bookingForm.pricingType === "plus_hst" ? priceNum.toLocaleString() : (priceNum - hstPreview).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm font-body">
+                        <span className="text-[#3D1A2E]/55">HST (13%)</span>
+                        <span className="font-semibold">${hstPreview.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm font-body font-bold border-t border-[#F2A0B8]/20 pt-2 mt-2">
+                        <span className="text-[#1A0A12]">Total charged</span>
+                        <span className="text-[#8B2252]">${totalPreview.toFixed(2)} CAD</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Approval warning */}
+                  {priceNum > 0 && (priceNum < selectedInquiry.estimatedMin || priceNum > 3000) && (
+                    <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                      <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                      <p className="font-body text-xs text-amber-700">
+                        {priceNum < selectedInquiry.estimatedMin
+                          ? "Price is below the estimated minimum — owner approval recommended."
+                          : "Large event (over $3,000) — owner approval recommended."}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Event date/time */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Event Date</label>
+                      <Input
+                        type="date"
+                        value={bookingForm.eventDate}
+                        onChange={(e) => setBookingForm({ ...bookingForm, eventDate: e.target.value })}
+                        className="border-[#F2A0B8]/40 font-body text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Start Time</label>
+                      <Input
+                        type="time"
+                        value={bookingForm.startTime}
+                        onChange={(e) => setBookingForm({ ...bookingForm, startTime: e.target.value })}
+                        className="border-[#F2A0B8]/40 font-body text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">End Time</label>
+                      <Input
+                        type="time"
+                        value={bookingForm.endTime}
+                        onChange={(e) => setBookingForm({ ...bookingForm, endTime: e.target.value })}
+                        className="border-[#F2A0B8]/40 font-body text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Sessions + Breed + Org */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Sessions</label>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={bookingForm.sessions}
+                        onChange={(e) => setBookingForm({ ...bookingForm, sessions: e.target.value })}
+                        className="border-[#F2A0B8]/40 font-body text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Puppy Breed</label>
+                      <Input
+                        value={bookingForm.puppyBreed}
+                        onChange={(e) => setBookingForm({ ...bookingForm, puppyBreed: e.target.value })}
+                        placeholder="e.g. French Bulldog"
+                        className="border-[#F2A0B8]/40 font-body text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Organization</label>
+                      <Input
+                        value={bookingForm.organization}
+                        onChange={(e) => setBookingForm({ ...bookingForm, organization: e.target.value })}
+                        placeholder="e.g. Laurier Women's Soccer"
+                        className="border-[#F2A0B8]/40 font-body text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Generate button */}
+                  <Button
+                    onClick={handleGenerateLink}
+                    disabled={isGenerating}
+                    className="w-full bg-[#8B2252] hover:bg-[#6B1A40] text-white font-body font-bold rounded-full py-3"
+                  >
+                    {isGenerating ? (
+                      <><Loader2 size={16} className="animate-spin mr-2" /> Creating Luma Event...</>
+                    ) : (
+                      <><Link2 size={16} className="mr-2" /> Generate Private Luma Link</>
+                    )}
+                  </Button>
+                </div>
+              )}
+
               {/* Status update */}
               <div>
                 <p className="font-body text-xs font-semibold text-[#3D1A2E]/50 uppercase tracking-wider mb-2">Update Status</p>
@@ -353,6 +722,8 @@ export default function PrivateEventsDashboard() {
                     <SelectItem value="new">New</SelectItem>
                     <SelectItem value="contacted">Contacted</SelectItem>
                     <SelectItem value="confirmed">Confirmed</SelectItem>
+                    <SelectItem value="quote_sent">Quote Sent</SelectItem>
+                    <SelectItem value="booked">Booked</SelectItem>
                     <SelectItem value="cancelled">Cancelled</SelectItem>
                   </SelectContent>
                 </Select>
@@ -372,7 +743,7 @@ export default function PrivateEventsDashboard() {
               <Button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="w-full bg-[#8B2252] hover:bg-[#8B2252] text-white font-body font-bold rounded-full"
+                className="w-full bg-[#8B2252] hover:bg-[#6B1A40] text-white font-body font-bold rounded-full"
               >
                 {isSaving ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
                 Save Changes

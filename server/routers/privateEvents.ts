@@ -7,6 +7,99 @@ import { privateEventInquiries } from "../../drizzle/schema";
 import { desc, eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
+const LUMA_BASE = "https://public-api.luma.com/v1";
+const HST_RATE = 0.13;
+
+/** Locations with their addresses for Luma events */
+const LOCATION_MAP: Record<string, { address: string; lat: number; lng: number }> = {
+  kitchener: { address: "Kitchener, ON, Canada", lat: 43.4516, lng: -80.4925 },
+  toronto: { address: "Toronto, ON, Canada", lat: 43.6532, lng: -79.3832 },
+  guelph: { address: "Guelph, ON, Canada", lat: 43.5448, lng: -80.2482 },
+  hamilton: { address: "Hamilton, ON, Canada", lat: 43.2557, lng: -79.8711 },
+  london: { address: "London, ON, Canada", lat: 42.9849, lng: -81.2453 },
+};
+
+/** Create a private paid event on Luma */
+async function createLumaEvent(params: {
+  name: string;
+  startAt: string; // ISO 8601
+  endAt: string; // ISO 8601
+  location: string;
+  maxCapacity: number;
+  description: string;
+  priceCents: number;
+  sessions: number;
+}): Promise<{ eventId: string; eventUrl: string }> {
+  const apiKey = process.env.LUMA_API_KEY;
+  if (!apiKey) throw new Error("LUMA_API_KEY is not set");
+
+  const locKey = params.location.toLowerCase().trim();
+  const loc = LOCATION_MAP[locKey] || LOCATION_MAP.kitchener;
+
+  // 1. Create the event (private, unlisted)
+  const createRes = await fetch(`${LUMA_BASE}/events/create`, {
+    method: "POST",
+    headers: {
+      "x-luma-api-key": apiKey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name: params.name,
+      start_at: params.startAt,
+      end_at: params.endAt,
+      timezone: "America/Toronto",
+      visibility: "private",
+      max_capacity: params.maxCapacity,
+      geo_address_json: { type: "manual", address: loc.address },
+      coordinate: { latitude: loc.lat, longitude: loc.lng },
+      phone_number_requirement: "required",
+      name_requirement: "first-last",
+      description_md: params.description,
+      registration_questions: [
+        {
+          id: "waiver",
+          label: "I acknowledge and accept AfroPuppyYoga's waiver and terms of service. Participants must be 18+ years of age.",
+          required: true,
+          question_type: "agree-check",
+        },
+      ],
+    }),
+  });
+
+  if (!createRes.ok) {
+    const err = await createRes.text();
+    throw new Error(`Luma create event failed: ${createRes.status} ${err}`);
+  }
+
+  const { id: eventId } = (await createRes.json()) as { id: string };
+
+  // 2. Create a paid ticket type
+  const ticketRes = await fetch(`${LUMA_BASE}/events/ticket-types/create`, {
+    method: "POST",
+    headers: {
+      "x-luma-api-key": apiKey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      event_id: eventId,
+      name: params.sessions > 1 ? `Private Experience (${params.sessions} sessions)` : "Private Experience",
+      type: "paid",
+      cents: params.priceCents,
+      currency: "cad",
+      max_capacity: 1, // One ticket = entire booking
+    }),
+  });
+
+  if (!ticketRes.ok) {
+    const err = await ticketRes.text();
+    throw new Error(`Luma create ticket type failed: ${ticketRes.status} ${err}`);
+  }
+
+  // Construct the event URL from the event ID
+  const eventUrl = `https://lu.ma/${eventId}`;
+  return { eventId, eventUrl };
+}
+
 const APY_EMAIL = "afropuppyyoga@gmail.com";
 
 /** Escape user-supplied text before interpolating into HTML email templates */
@@ -416,7 +509,7 @@ export const privateEventsRouter = router({
     .input(
       z.object({
         id: z.number(),
-        status: z.enum(["new", "contacted", "confirmed", "cancelled"]),
+        status: z.enum(["new", "contacted", "confirmed", "cancelled", "quote_sent", "booked"]),
         adminNotes: z.string().optional(),
       })
     )
@@ -433,6 +526,231 @@ export const privateEventsRouter = router({
           ...(input.adminNotes !== undefined ? { adminNotes: input.adminNotes } : {}),
         })
         .where(eq(privateEventInquiries.id, input.id));
+      return { success: true };
+    }),
+
+  // Generate a private Luma booking link for an inquiry
+  generateBookingLink: protectedProcedure
+    .input(
+      z.object({
+        inquiryId: z.number(),
+        finalPrice: z.number().min(1), // in dollars (CAD)
+        pricingType: z.enum(["plus_hst", "all_in"]),
+        sessions: z.number().min(1).default(1),
+        puppyBreed: z.string().optional(),
+        organization: z.string().optional(),
+        eventDate: z.string(), // ISO date string e.g. "2026-08-08"
+        startTime: z.string().default("14:00"), // HH:mm
+        endTime: z.string().default("15:30"), // HH:mm
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role !== "admin" && ctx.user.role !== "staff") {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      // Fetch the inquiry
+      const [inquiry] = await db
+        .select()
+        .from(privateEventInquiries)
+        .where(eq(privateEventInquiries.id, input.inquiryId));
+      if (!inquiry) throw new TRPCError({ code: "NOT_FOUND", message: "Inquiry not found" });
+
+      // Calculate pricing
+      let totalCents: number;
+      let hstCents: number;
+      if (input.pricingType === "plus_hst") {
+        hstCents = Math.round(input.finalPrice * 100 * HST_RATE);
+        totalCents = input.finalPrice * 100 + hstCents;
+      } else {
+        // all_in: price already includes HST
+        totalCents = input.finalPrice * 100;
+        hstCents = Math.round(totalCents - totalCents / (1 + HST_RATE));
+      }
+
+      // Check if owner approval is needed (discount below estimate or > $3000)
+      const needsApproval = input.finalPrice < inquiry.estimatedMin || input.finalPrice > 3000;
+
+      // Build event name
+      const orgName = input.organization || inquiry.name;
+      const eventName = `Private AfroPuppyYoga Experience | ${orgName}`;
+
+      // Build ISO timestamps (America/Toronto)
+      const startAt = `${input.eventDate}T${input.startTime}:00-04:00`;
+      const endAt = `${input.eventDate}T${input.endTime}:00-04:00`;
+
+      // Build description
+      const descLines = [
+        `## Private AfroPuppyYoga Experience`,
+        ``,
+        `**${orgName}** — ${inquiry.guests} participants`,
+        ``,
+        input.sessions > 1 ? `${input.sessions} sessions of puppy yoga bliss.` : `One exclusive session of puppy yoga bliss.`,
+        ``,
+        input.puppyBreed ? `**Puppy breed:** ${input.puppyBreed}` : "",
+        ``,
+        `### What to expect`,
+        `- Professional yoga instruction`,
+        `- Adorable puppies to cuddle and play with`,
+        `- Photo opportunities`,
+        `- A unique wellness experience`,
+        ``,
+        `### Important`,
+        `- All participants must be 18+`,
+        `- No refunds — this is a private booking`,
+        `- Please arrive 10 minutes early`,
+      ].filter(Boolean).join("\n");
+
+      // Create the Luma event
+      const { eventId, eventUrl } = await createLumaEvent({
+        name: eventName,
+        startAt,
+        endAt,
+        location: inquiry.location,
+        maxCapacity: inquiry.guests,
+        description: descLines,
+        priceCents: totalCents,
+        sessions: input.sessions,
+      });
+
+      // Update the inquiry record
+      await db
+        .update(privateEventInquiries)
+        .set({
+          finalPriceCents: input.finalPrice * 100,
+          hstCents,
+          pricingType: input.pricingType,
+          sessions: input.sessions,
+          puppyBreed: input.puppyBreed || null,
+          organization: input.organization || null,
+          lumaEventUrl: eventUrl,
+          lumaEventId: eventId,
+          ownerApproved: !needsApproval, // auto-approved if no flag
+          status: "quote_sent",
+        })
+        .where(eq(privateEventInquiries.id, input.inquiryId));
+
+      return {
+        success: true,
+        eventUrl,
+        eventId,
+        totalCents,
+        hstCents,
+        needsApproval,
+      };
+    }),
+
+  // Send the quote email with the Luma booking link
+  sendQuoteEmail: protectedProcedure
+    .input(
+      z.object({
+        inquiryId: z.number(),
+        customMessage: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role !== "admin" && ctx.user.role !== "staff") {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      const [inquiry] = await db
+        .select()
+        .from(privateEventInquiries)
+        .where(eq(privateEventInquiries.id, input.inquiryId));
+      if (!inquiry) throw new TRPCError({ code: "NOT_FOUND" });
+      if (!inquiry.lumaEventUrl) throw new TRPCError({ code: "BAD_REQUEST", message: "No booking link generated yet" });
+
+      const totalDollars = inquiry.finalPriceCents
+        ? (inquiry.finalPriceCents + (inquiry.hstCents || 0)) / 100
+        : 0;
+      const priceLabel = inquiry.pricingType === "plus_hst"
+        ? `$${((inquiry.finalPriceCents || 0) / 100).toLocaleString()} + HST = $${totalDollars.toLocaleString()}`
+        : `$${totalDollars.toLocaleString()} (HST included)`;
+
+      const customMsg = input.customMessage
+        ? `<p style="margin:0 0 16px;font-size:15px;color:#4A2535;">${escapeHtml(input.customMessage)}</p>`
+        : "";
+
+      const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8" /></head>
+<body style="margin:0;padding:0;background:#FFF5F8;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#FFF5F8;padding:32px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#8B2252,#D4708A);padding:32px 40px;text-align:center;">
+            <p style="margin:0;font-size:13px;color:#FFD4E5;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Private Event Booking</p>
+            <h1 style="margin:8px 0 0;font-size:26px;color:#ffffff;font-weight:800;">Your AfroPuppyYoga Experience Awaits</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 40px;">
+            <p style="margin:0 0 20px;font-size:16px;color:#1A0A12;">Hi <strong>${escapeHtml(inquiry.name)}</strong>,</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#4A2535;">We're thrilled to confirm your private puppy yoga experience! Here are the details:</p>
+            ${customMsg}
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;border-collapse:collapse;background:#FFF5F8;border-radius:12px;overflow:hidden;">
+              <tr><td style="padding:12px 20px;border-bottom:1px solid #F5E6EC;font-size:14px;color:#9B6B7A;font-weight:600;">Event</td><td style="padding:12px 20px;border-bottom:1px solid #F5E6EC;font-size:14px;color:#1A0A12;">${escapeHtml(inquiry.organization || inquiry.name)} — Private Experience</td></tr>
+              <tr><td style="padding:12px 20px;border-bottom:1px solid #F5E6EC;font-size:14px;color:#9B6B7A;font-weight:600;">Date</td><td style="padding:12px 20px;border-bottom:1px solid #F5E6EC;font-size:14px;color:#1A0A12;">${inquiry.preferredDate || "TBD"}</td></tr>
+              <tr><td style="padding:12px 20px;border-bottom:1px solid #F5E6EC;font-size:14px;color:#9B6B7A;font-weight:600;">Location</td><td style="padding:12px 20px;border-bottom:1px solid #F5E6EC;font-size:14px;color:#1A0A12;">${escapeHtml(inquiry.location)}</td></tr>
+              <tr><td style="padding:12px 20px;border-bottom:1px solid #F5E6EC;font-size:14px;color:#9B6B7A;font-weight:600;">Participants</td><td style="padding:12px 20px;border-bottom:1px solid #F5E6EC;font-size:14px;color:#1A0A12;">Up to ${inquiry.guests}</td></tr>
+              <tr><td style="padding:12px 20px;border-bottom:1px solid #F5E6EC;font-size:14px;color:#9B6B7A;font-weight:600;">Sessions</td><td style="padding:12px 20px;border-bottom:1px solid #F5E6EC;font-size:14px;color:#1A0A12;">${inquiry.sessions || 1}</td></tr>
+              ${inquiry.puppyBreed ? `<tr><td style="padding:12px 20px;border-bottom:1px solid #F5E6EC;font-size:14px;color:#9B6B7A;font-weight:600;">Puppy Breed</td><td style="padding:12px 20px;border-bottom:1px solid #F5E6EC;font-size:14px;color:#1A0A12;">${escapeHtml(inquiry.puppyBreed)}</td></tr>` : ""}
+              <tr><td style="padding:12px 20px;font-size:14px;color:#9B6B7A;font-weight:600;">Total</td><td style="padding:12px 20px;font-size:16px;color:#1A0A12;font-weight:800;">${priceLabel}</td></tr>
+            </table>
+            <p style="margin:24px 0 16px;font-size:15px;color:#4A2535;">To secure your booking, please complete your registration and payment through the link below:</p>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr><td align="center" style="padding:8px 0 24px;">
+                <a href="${inquiry.lumaEventUrl}" style="display:inline-block;background:#8B2252;color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:50px;">Complete Booking &amp; Pay</a>
+              </td></tr>
+            </table>
+            <p style="margin:0 0 8px;font-size:13px;color:#9B6B7A;">This is a private, unlisted event page created exclusively for your group. No refunds once payment is processed.</p>
+            <p style="margin:16px 0 0;font-size:15px;color:#4A2535;">Questions? Reply to this email or reach us at <a href="mailto:afropuppyyoga@gmail.com" style="color:#D4708A;">afropuppyyoga@gmail.com</a></p>
+            <p style="margin:24px 0 0;font-size:15px;color:#1A0A12;">Can't wait to see you there!</p>
+            <p style="margin:4px 0 0;font-size:15px;color:#1A0A12;font-weight:600;">— The AfroPuppyYoga Team</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+      await sendEmail({
+        to: inquiry.email,
+        subject: `Your Private AfroPuppyYoga Booking — ${priceLabel}`,
+        html,
+        text: [
+          `Hi ${inquiry.name},`,
+          ``,
+          `We're thrilled to confirm your private puppy yoga experience!`,
+          input.customMessage ? `\n${input.customMessage}\n` : "",
+          `Event: ${inquiry.organization || inquiry.name} — Private Experience`,
+          `Date: ${inquiry.preferredDate || "TBD"}`,
+          `Location: ${inquiry.location}`,
+          `Participants: Up to ${inquiry.guests}`,
+          `Total: ${priceLabel}`,
+          ``,
+          `Complete your booking here: ${inquiry.lumaEventUrl}`,
+          ``,
+          `No refunds once payment is processed.`,
+          `Questions? Reply to this email.`,
+          ``,
+          `— The AfroPuppyYoga Team`,
+        ].filter(Boolean).join("\n"),
+      });
+
+      // Update quoteSentAt
+      await db
+        .update(privateEventInquiries)
+        .set({ quoteSentAt: new Date(), status: "quote_sent" })
+        .where(eq(privateEventInquiries.id, input.inquiryId));
+
       return { success: true };
     }),
 });

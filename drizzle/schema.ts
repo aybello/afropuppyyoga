@@ -1,4 +1,4 @@
-import { bigint, index, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { bigint, boolean, index, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -226,9 +226,29 @@ export const privateEventInquiries = mysqlTable("privateEventInquiries", {
   /** Estimated maximum price */
   estimatedMax: int("estimatedMax").notNull(),
   /** Inquiry status */
-  status: mysqlEnum("peStatus", ["new", "contacted", "confirmed", "cancelled"]).default("new").notNull(),
+  status: mysqlEnum("peStatus", ["new", "contacted", "confirmed", "cancelled", "quote_sent", "booked"]).default("new").notNull(),
   /** Internal notes from admin */
   adminNotes: text("adminNotes"),
+  /** Final approved price in cents (CAD) */
+  finalPriceCents: int("finalPriceCents"),
+  /** HST amount in cents */
+  hstCents: int("hstCents"),
+  /** Whether price is plus HST or all-inclusive */
+  pricingType: varchar("pricingType", { length: 20 }),
+  /** Number of sessions */
+  sessions: int("sessions").default(1),
+  /** Puppy breed request */
+  puppyBreed: varchar("puppyBreed", { length: 100 }),
+  /** Organization name (for corporate events) */
+  organization: varchar("organization", { length: 255 }),
+  /** Generated Luma event URL */
+  lumaEventUrl: varchar("lumaEventUrl", { length: 500 }),
+  /** Luma event ID */
+  lumaEventId: varchar("lumaEventId", { length: 100 }),
+  /** Whether owner approval was required and given */
+  ownerApproved: boolean("ownerApproved"),
+  /** Quote email sent timestamp */
+  quoteSentAt: timestamp("quoteSentAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (t) => [index("idx_pe_status").on(t.status)]);

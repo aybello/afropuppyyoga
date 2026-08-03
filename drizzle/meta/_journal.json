@@ -148,6 +148,13 @@
       "when": 1784612552461,
       "tag": "0022_demonic_omega_red",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "5",
+      "when": 1785792765329,
+      "tag": "0023_cold_vindicator",
+      "breakpoints": true
     }
   ]
 }

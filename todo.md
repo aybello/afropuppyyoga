@@ -505,3 +505,13 @@
 ## Cancellation Preview Feature
 - [x] Add previewCancellation tRPC procedure that returns the list of approved guests before sending
 - [x] Update CancellationDashboard UI with a preview/confirmation step showing recipient count and names
+
+## Quote-to-Booking Generator (Private Events Extension)
+- [ ] Research Luma API create-event endpoint and test it
+- [ ] Add new statuses to privateEventInquiries: "quote_sent" and "booked"
+- [ ] Add columns for finalPrice, hstAmount, pricingType (plus_hst/all_in), lumaEventUrl, sessions, puppyBreed
+- [ ] Create backend procedure: generateLumaBookingLink (creates private paid Luma event via API)
+- [ ] Create backend procedure: sendQuoteEmail (drafts and sends email with Luma link via Gmail)
+- [ ] Extend Private Events Dashboard detail dialog with "Generate Booking Link" panel
+- [ ] Add pricing calculator with HST logic and owner-approval flag
+- [ ] Auto-update status to "quote_sent" after email sent, "booked" when payment received
