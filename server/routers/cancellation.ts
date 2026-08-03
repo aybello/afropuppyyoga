@@ -54,12 +54,18 @@ async function fetchLumaGuests(eventApiId: string): Promise<
         email?: string;
         phone_number?: string | null;
         guest?: { phone_number?: string | null };
+        approval_status?: string;
       }>;
       has_more: boolean;
       next_cursor: string | null;
     };
 
     for (const entry of data.entries) {
+      // Only include guests who actually registered (approved).
+      // Skip invited-but-not-registered and declined guests.
+      if (entry.approval_status && entry.approval_status !== "approved") {
+        continue;
+      }
       const phone = entry.phone_number ?? entry.guest?.phone_number ?? null;
       guests.push({
         name: entry.user_name ?? entry.name ?? "Guest",

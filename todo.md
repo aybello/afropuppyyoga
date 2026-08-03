@@ -500,3 +500,4 @@
 
 ## Cancellation Loop Parallelization
 - [x] Fix sequential guest notification loop in cancellation router — parallelize with Promise.allSettled
+- [x] Fix fetchLumaGuests to only include guests with approval_status === 'approved' (exclude invited/declined)
