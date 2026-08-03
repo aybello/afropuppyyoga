@@ -120,6 +120,26 @@ export const cancellationRouter = router({
     }));
   }),
 
+  /** Preview cancellation: fetch approved guests so admin can review before sending */
+  previewCancellation: staffProcedure
+    .input(
+      z.object({
+        eventApiId: z.string().min(1),
+      })
+    )
+    .query(async ({ input }) => {
+      const guests = await fetchLumaGuests(input.eventApiId);
+      return {
+        total: guests.length,
+        guests: guests.map((g) => ({
+          name: g.name,
+          email: g.email,
+          phone: g.phone,
+          hasPhone: !!g.phone,
+        })),
+      };
+    }),
+
   /** Cancel a class: send call + SMS + email to EVERY guest simultaneously */
   cancelClass: staffProcedure
     .input(

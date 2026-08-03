@@ -456,11 +456,11 @@
 - [x] Fix Luma listEvents to correctly return upcoming classes from the calendar
 
 ## Twilio Webhook + Email Fallback
-- [ ] Add POST /api/twilio/call-status webhook endpoint to update callLogs.status from Twilio callbacks
-- [ ] Add POST /api/twilio/sms-status webhook endpoint to update callLogs.smsStatus from Twilio callbacks
-- [ ] Configure Twilio number to point statusCallback to the deployed webhook URLs
-- [ ] Add email fallback in cancelClass mutation: send Gmail cancellation email to guests with no phone number
-- [ ] Update CancellationDashboard to show email status in results and log
+- [x] Add POST /api/twilio/call-status webhook endpoint to update callLogs.status from Twilio callbacks
+- [x] Add POST /api/twilio/sms-status webhook endpoint to update callLogs.smsStatus from Twilio callbacks
+- [x] Configure Twilio number to point statusCallback to the deployed webhook URLs
+- [x] Add email fallback in cancelClass mutation: send Gmail cancellation email to guests with no phone number
+- [x] Update CancellationDashboard to show email status in results and log
 
 ## Triple Notification on Cancellation
 - [x] Update cancellation router: every attendee always gets email + SMS + call (not conditional)
@@ -501,3 +501,7 @@
 ## Cancellation Loop Parallelization
 - [x] Fix sequential guest notification loop in cancellation router — parallelize with Promise.allSettled
 - [x] Fix fetchLumaGuests to only include guests with approval_status === 'approved' (exclude invited/declined)
+
+## Cancellation Preview Feature
+- [x] Add previewCancellation tRPC procedure that returns the list of approved guests before sending
+- [x] Update CancellationDashboard UI with a preview/confirmation step showing recipient count and names

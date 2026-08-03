@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import AdminNav from "@/components/AdminNav";
 import { toast } from "sonner";
-import { PhoneCall, MessageSquare, Mail, AlertTriangle, CheckCircle2, XCircle, RefreshCw, Send } from "lucide-react";
+import { PhoneCall, MessageSquare, Mail, AlertTriangle, CheckCircle2, XCircle, RefreshCw, Send, Users, Eye } from "lucide-react";
 
 type CallResult = {
   name: string;
@@ -59,16 +59,26 @@ export default function CancellationDashboard() {
   const [selectedEventName, setSelectedEventName] = useState<string>("");
   const [customMessage, setCustomMessage] = useState<string>("");
   const [cancellationResult, setCancellationResult] = useState<CancellationResult | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
-  // (Test SMS and Test Call moved to /admin/sms-broadcast)
-
   const { data: events, isLoading: eventsLoading, refetch: refetchEvents } = trpc.cancellation.listEvents.useQuery();
+
+  // Preview query — only runs when showPreview is true and an event is selected
+  const {
+    data: previewData,
+    isLoading: previewLoading,
+    refetch: refetchPreview,
+  } = trpc.cancellation.previewCancellation.useQuery(
+    { eventApiId: selectedEventApiId },
+    { enabled: showPreview && !!selectedEventApiId }
+  );
 
   const cancelMutation = trpc.cancellation.cancelClass.useMutation({
     onSuccess: (data) => {
       setCancellationResult(data as CancellationResult);
       setConfirming(false);
+      setShowPreview(false);
       toast.success(
         `Done! ${data.called} called · ${data.texted} texted · ${data.emailed} emailed · ${data.failed} failed`
       );
@@ -89,23 +99,33 @@ export default function CancellationDashboard() {
     setSelectedEventApiId(apiId);
     setSelectedEventName(event?.name ?? "");
     setCancellationResult(null);
+    setShowPreview(false);
+    setConfirming(false);
   }
 
-  function handleCancelClass() {
+  function handlePreviewRecipients() {
     if (!selectedEventApiId || !selectedEventName) {
       toast.error("Please select an event first");
       return;
     }
+    setShowPreview(true);
+    refetchPreview();
+  }
+
+  function handleConfirmSend() {
     setConfirming(true);
   }
 
-  function handleConfirm() {
+  function handleFinalSend() {
     cancelMutation.mutate({
       eventApiId: selectedEventApiId,
       eventName: selectedEventName,
       customMessage: customMessage.trim() || undefined,
     });
   }
+
+  const withPhone = previewData?.guests.filter((g) => g.hasPhone) ?? [];
+  const emailOnly = previewData?.guests.filter((g) => !g.hasPhone) ?? [];
 
   return (
     <div className="min-h-screen bg-[#faf7f2]">
@@ -117,13 +137,13 @@ export default function CancellationDashboard() {
             Class Cancellation
           </h1>
           <p className="text-gray-600 text-sm">
-            Select an upcoming class to cancel. Every registered attendee will receive a{" "}
-            <strong>phone call</strong>, an <strong>SMS</strong>, and a <strong>cancellation email</strong>{" "}
-            simultaneously. Attendees without a phone number will still receive the email.
+            Select an upcoming class to cancel. You will see a <strong>preview of all recipients</strong>{" "}
+            before any notifications are sent. Every registered attendee will receive a{" "}
+            <strong>phone call</strong>, an <strong>SMS</strong>, and a <strong>cancellation email</strong>.
           </p>
         </div>
 
-        {/* Event Selector */}
+        {/* Step 1: Event Selector */}
         <Card className="mb-6 border-[#e8dff5]">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg text-[#2d1b4e]">1. Select Event to Cancel</CardTitle>
@@ -168,7 +188,7 @@ export default function CancellationDashboard() {
           </CardContent>
         </Card>
 
-        {/* Custom Message */}
+        {/* Step 2: Custom Message */}
         {selectedEventApiId && (
           <Card className="mb-6 border-[#e8dff5]">
             <CardHeader className="pb-3">
@@ -190,67 +210,177 @@ export default function CancellationDashboard() {
           </Card>
         )}
 
-        {/* Cancel Button */}
-        {selectedEventApiId && !confirming && !cancellationResult && (
-          <Card className="mb-6 border-orange-200 bg-orange-50">
+        {/* Step 3: Preview Recipients Button */}
+        {selectedEventApiId && !showPreview && !cancellationResult && (
+          <Card className="mb-6 border-[#e8dff5]">
             <CardContent className="pt-5">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-orange-500 mt-0.5 shrink-0" />
-                <div className="flex-1">
-                  <p className="font-medium text-orange-800 text-sm">
-                    You are about to cancel:{" "}
-                    <span className="font-bold">{selectedEventName}</span>
-                  </p>
-                  <p className="text-orange-700 text-xs mt-1">
-                    Every registered attendee will receive a <strong>phone call</strong>,{" "}
-                    <strong>SMS</strong>, and <strong>email</strong> simultaneously. This cannot be undone.
-                  </p>
-                </div>
-              </div>
               <Button
-                onClick={handleCancelClass}
-                className="mt-4 bg-orange-600 hover:bg-orange-700 text-white"
+                onClick={handlePreviewRecipients}
+                className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white"
               >
-                <PhoneCall className="w-4 h-4 mr-1.5" />
-                <MessageSquare className="w-4 h-4 mr-1.5" />
-                <Mail className="w-4 h-4 mr-2" />
-                Cancel Class &amp; Notify Attendees
+                <Eye className="w-4 h-4 mr-2" />
+                Preview Recipients Before Sending
               </Button>
+              <p className="text-xs text-gray-500 mt-2">
+                This will fetch the list of registered attendees from Luma so you can review before sending any notifications.
+              </p>
             </CardContent>
           </Card>
         )}
 
-        {/* Confirmation Step */}
-        {confirming && (
-          <Card className="mb-6 border-red-300 bg-red-50">
-            <CardContent className="pt-5">
-              <p className="font-bold text-red-800 mb-1">Are you absolutely sure?</p>
-              <p className="text-red-700 text-sm mb-4">
-                A <strong>phone call</strong>, <strong>SMS</strong>, and <strong>email</strong> will be
-                sent immediately to all attendees of <strong>{selectedEventName}</strong>.
-              </p>
-              <div className="flex gap-3">
-                <Button
-                  onClick={handleConfirm}
-                  disabled={cancelMutation.isPending}
-                  className="bg-red-600 hover:bg-red-700 text-white"
-                >
-                  {cancelMutation.isPending ? (
-                    <>
-                      <Spinner className="w-4 h-4 mr-2" /> Notifying attendees...
-                    </>
-                  ) : (
-                    "Yes, Cancel & Notify Everyone"
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setConfirming(false)}
-                  disabled={cancelMutation.isPending}
-                >
-                  Go Back
-                </Button>
+        {/* Step 3b: Preview Panel — shows exact recipients */}
+        {showPreview && !cancellationResult && (
+          <Card className="mb-6 border-[#8b5cf6] bg-[#faf5ff]">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg text-[#2d1b4e] flex items-center gap-2">
+                  <Users className="w-5 h-5 text-[#8b5cf6]" />
+                  3. Review Recipients
+                </CardTitle>
+                {previewData && (
+                  <Badge className="bg-[#8b5cf6] text-white text-sm px-3 py-1">
+                    {previewData.total} recipient{previewData.total !== 1 ? "s" : ""}
+                  </Badge>
+                )}
               </div>
+            </CardHeader>
+            <CardContent>
+              {previewLoading ? (
+                <div className="flex items-center gap-2 text-gray-500 py-4">
+                  <Spinner className="w-4 h-4" /> Fetching registered attendees from Luma...
+                </div>
+              ) : previewData && previewData.total === 0 ? (
+                <div className="text-center py-6">
+                  <XCircle className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-600 font-medium">No registered attendees found</p>
+                  <p className="text-gray-500 text-sm mt-1">
+                    There are no approved guests for this event. No notifications will be sent.
+                  </p>
+                </div>
+              ) : previewData ? (
+                <>
+                  {/* Summary badges */}
+                  <div className="flex flex-wrap gap-3 mb-4">
+                    <div className="flex items-center gap-1.5 bg-white rounded-lg px-3 py-2 border border-[#e8dff5]">
+                      <PhoneCall className="w-4 h-4 text-blue-500" />
+                      <span className="text-sm font-medium text-[#2d1b4e]">{withPhone.length}</span>
+                      <span className="text-xs text-gray-500">will get call + SMS + email</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 bg-white rounded-lg px-3 py-2 border border-[#e8dff5]">
+                      <Mail className="w-4 h-4 text-green-500" />
+                      <span className="text-sm font-medium text-[#2d1b4e]">{emailOnly.length}</span>
+                      <span className="text-xs text-gray-500">will get email only (no phone)</span>
+                    </div>
+                  </div>
+
+                  {/* Recipient list */}
+                  <div className="bg-white rounded-lg border border-[#e8dff5] overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-200 bg-gray-50">
+                          <th className="text-left py-2 px-3 text-gray-500 font-medium text-xs">#</th>
+                          <th className="text-left py-2 px-3 text-gray-500 font-medium text-xs">Name</th>
+                          <th className="text-left py-2 px-3 text-gray-500 font-medium text-xs">Email</th>
+                          <th className="text-left py-2 px-3 text-gray-500 font-medium text-xs">Phone</th>
+                          <th className="text-left py-2 px-3 text-gray-500 font-medium text-xs">Channels</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {previewData.guests.map((g, i) => (
+                          <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
+                            <td className="py-2 px-3 text-gray-400 text-xs">{i + 1}</td>
+                            <td className="py-2 px-3 font-medium text-[#2d1b4e]">{g.name}</td>
+                            <td className="py-2 px-3 text-gray-600 text-xs">{g.email}</td>
+                            <td className="py-2 px-3 text-gray-600 text-xs">
+                              {g.phone || <span className="text-gray-400 italic">none</span>}
+                            </td>
+                            <td className="py-2 px-3">
+                              <div className="flex items-center gap-1">
+                                {g.hasPhone ? (
+                                  <>
+                                    <PhoneCall className="w-3.5 h-3.5 text-blue-500" />
+                                    <MessageSquare className="w-3.5 h-3.5 text-purple-500" />
+                                    <Mail className="w-3.5 h-3.5 text-green-500" />
+                                  </>
+                                ) : (
+                                  <Mail className="w-3.5 h-3.5 text-green-500" />
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Action buttons */}
+                  {!confirming ? (
+                    <div className="mt-4 flex items-start gap-3">
+                      <div className="flex-1 bg-orange-50 border border-orange-200 rounded-lg p-3">
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="w-4 h-4 text-orange-500 mt-0.5 shrink-0" />
+                          <div>
+                            <p className="text-sm font-medium text-orange-800">
+                              Ready to notify <strong>{previewData.total}</strong> attendee{previewData.total !== 1 ? "s" : ""} of{" "}
+                              <strong>{selectedEventName}</strong>
+                            </p>
+                            <p className="text-xs text-orange-700 mt-1">
+                              This will send phone calls, SMS messages, and emails. This action cannot be undone.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Button
+                          onClick={handleConfirmSend}
+                          className="bg-orange-600 hover:bg-orange-700 text-white"
+                        >
+                          <Send className="w-4 h-4 mr-1.5" />
+                          Proceed to Send
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setShowPreview(false)}
+                          className="text-sm"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-4 bg-red-50 border border-red-300 rounded-lg p-4">
+                      <p className="font-bold text-red-800 mb-1">Final confirmation</p>
+                      <p className="text-red-700 text-sm mb-3">
+                        You are about to send <strong>phone calls</strong>, <strong>SMS messages</strong>, and{" "}
+                        <strong>emails</strong> to <strong>{previewData.total}</strong> attendee{previewData.total !== 1 ? "s" : ""}.
+                        This cannot be undone.
+                      </p>
+                      <div className="flex gap-3">
+                        <Button
+                          onClick={handleFinalSend}
+                          disabled={cancelMutation.isPending}
+                          className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                          {cancelMutation.isPending ? (
+                            <>
+                              <Spinner className="w-4 h-4 mr-2" /> Notifying {previewData.total} attendees...
+                            </>
+                          ) : (
+                            <>Yes, Cancel &amp; Notify {previewData.total} Attendee{previewData.total !== 1 ? "s" : ""}</>
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setConfirming(false)}
+                          disabled={cancelMutation.isPending}
+                        >
+                          Go Back
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : null}
             </CardContent>
           </Card>
         )}
@@ -384,7 +514,6 @@ export default function CancellationDashboard() {
             </CardContent>
           </Card>
         )}
-
 
       </div>
     </div>
