@@ -574,3 +574,15 @@
 
 ## Onboarding Email Bug Fix (Aug 4, 2026)
 - [x] Fix OnboardingEmailModal not rendering in main ApplicationsDashboard (modal was only in sub-component, not in main render tree when triggered from table row button)
+
+## Soft-Delete for Applications (Aug 4, 2026)
+- [x] Add deletedAt column to jobApplications schema (nullable timestamp)
+- [x] Run migration for deletedAt column
+- [x] Update deleteApplication mutation to set deletedAt instead of hard delete
+- [x] Filter out soft-deleted records from careers.list query
+- [x] Add listArchived procedure to return only soft-deleted applications
+- [x] Add restoreApplication procedure to clear deletedAt
+- [x] Add permanentlyDelete procedure (admin-only) for true deletion
+- [x] Add "Archived" tab to ApplicationsDashboard showing soft-deleted records
+- [x] Add "Restore" button on archived records
+- [x] Update delete confirmation dialog to say "Archive" instead of "Delete"

@@ -26,7 +26,7 @@ const safeResumeUrl = z
   .string()
   .url()
   .refine((url) => url.startsWith("https://"), "Must be an https:// URL");
-import { createJobApplication, getAllJobApplications, updateJobApplication, deleteJobApplication, createSigningToken } from "../db";
+import { createJobApplication, getAllJobApplications, updateJobApplication, deleteJobApplication, getArchivedJobApplications, restoreJobApplication, permanentlyDeleteJobApplication, createSigningToken } from "../db";
 import { notifyOwner } from "../_core/notification";
 import {
   sendEmail,
@@ -275,6 +275,33 @@ export const careersRouter = router({
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
       await deleteJobApplication(input.id);
+      return { success: true };
+    }),
+
+  /**
+   * Staff: list archived (soft-deleted) applications
+   */
+  listArchived: staffProcedure.query(async () => {
+    return getArchivedJobApplications();
+  }),
+
+  /**
+   * Staff: restore a soft-deleted application
+   */
+  restoreApplication: staffProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      await restoreJobApplication(input.id);
+      return { success: true };
+    }),
+
+  /**
+   * Admin-only: permanently delete an archived application (no recovery)
+   */
+  permanentlyDelete: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      await permanentlyDeleteJobApplication(input.id);
       return { success: true };
     }),
 

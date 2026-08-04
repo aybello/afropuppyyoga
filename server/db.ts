@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, isNull, isNotNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertInvoice, InsertJobApplication, InsertUser, InsertBirthdayInquiry, InsertPartnershipInquiry, InsertStaffInvite, InsertSigningToken, invoices, jobApplications, users, birthdayInquiries, partnershipInquiries, staffInvites, signingTokens } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -138,7 +138,7 @@ export async function createJobApplication(data: InsertJobApplication) {
 export async function getAllJobApplications() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const apps = await db.select().from(jobApplications).orderBy(desc(jobApplications.createdAt));
+  const apps = await db.select().from(jobApplications).where(isNull(jobApplications.deletedAt)).orderBy(desc(jobApplications.createdAt));
   // Enrich each application with signing status from signingTokens
   const enriched = await Promise.all(
     apps.map(async (app) => {
@@ -170,6 +170,47 @@ export async function updateJobApplication(id: number, data: Partial<InsertJobAp
 }
 
 export async function deleteJobApplication(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Soft-delete: set deletedAt timestamp instead of removing the row
+  await db.update(jobApplications).set({ deletedAt: new Date() }).where(eq(jobApplications.id, id));
+}
+
+export async function getArchivedJobApplications() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const apps = await db.select().from(jobApplications).where(isNotNull(jobApplications.deletedAt)).orderBy(desc(jobApplications.deletedAt));
+  // Enrich with signing status
+  const enriched = await Promise.all(
+    apps.map(async (app) => {
+      const signingRecord = await db
+        .select()
+        .from(signingTokens)
+        .where(eq(signingTokens.applicationId, app.id))
+        .limit(1);
+      const signing = signingRecord[0];
+      return {
+        ...app,
+        signingStatus: signing
+          ? signing.signed === 1
+            ? "signed"
+            : "pending_signature"
+          : null,
+        signedName: signing?.signedName ?? null,
+        signedAt: signing?.signedAt ?? null,
+      };
+    })
+  );
+  return enriched;
+}
+
+export async function restoreJobApplication(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(jobApplications).set({ deletedAt: null }).where(eq(jobApplications.id, id));
+}
+
+export async function permanentlyDeleteJobApplication(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(jobApplications).where(eq(jobApplications.id, id));

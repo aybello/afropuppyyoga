@@ -87,6 +87,8 @@ export const jobApplications = mysqlTable("jobApplications", {
   /** Application status */
   status: mysqlEnum("appStatus", ["new", "reviewed", "shortlisted", "interview_scheduled", "accepted", "rejected", "onboarded"]).default("new").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
+  /** Soft-delete timestamp — null means active, non-null means archived */
+  deletedAt: timestamp("deletedAt"),
 }, (t) => [index("idx_jobapps_status").on(t.status), index("idx_jobapps_email").on(t.email)]);
 
 export type JobApplication = typeof jobApplications.$inferSelect;

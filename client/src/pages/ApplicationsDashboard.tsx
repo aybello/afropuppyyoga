@@ -873,11 +873,25 @@ export default function ApplicationsDashboard() {
 
   const deleteApplication = trpc.careers.deleteApplication.useMutation({
     onSuccess: () => {
-      toast.success("Application deleted");
+      toast.success("Application archived");
       utils.careers.list.invalidate();
+      utils.careers.listArchived.invalidate();
       setDeleteConfirmId(null);
     },
-    onError: (err) => toast.error(`Failed to delete: ${err.message}`),
+    onError: (err) => toast.error(`Failed to archive: ${err.message}`),
+  });
+
+  const [showArchived, setShowArchived] = useState(false);
+  const { data: archivedApps, isLoading: archivedLoading } = trpc.careers.listArchived.useQuery(undefined, {
+    enabled: showArchived,
+  });
+  const restoreApplication = trpc.careers.restoreApplication.useMutation({
+    onSuccess: () => {
+      toast.success("Application restored");
+      utils.careers.list.invalidate();
+      utils.careers.listArchived.invalidate();
+    },
+    onError: (err) => toast.error(`Failed to restore: ${err.message}`),
   });
   const requestVideoMain = trpc.careers.requestVideo.useMutation({
     onSuccess: (_, vars) => {
@@ -934,13 +948,23 @@ export default function ApplicationsDashboard() {
 
       <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
         {/* Page title */}
-        <div>
-          <div className="inline-flex items-center gap-2 mb-2">
-            <span className="h-px w-6 bg-[#8B2252]" />
-            <span className="font-body text-xs font-semibold tracking-widest uppercase text-[#8B2252]">Admin</span>
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="inline-flex items-center gap-2 mb-2">
+              <span className="h-px w-6 bg-[#8B2252]" />
+              <span className="font-body text-xs font-semibold tracking-widest uppercase text-[#8B2252]">Admin</span>
+            </div>
+            <h1 className="font-display font-bold text-3xl text-[#1A0A12]">Job Applications</h1>
+            <p className="font-body text-sm text-[#1A0A12] mt-1">Review and manage applicants for all open positions</p>
           </div>
-          <h1 className="font-display font-bold text-3xl text-[#1A0A12]">Job Applications</h1>
-          <p className="font-body text-sm text-[#1A0A12] mt-1">Review and manage applicants for all open positions</p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-[#F0D0DC] text-[#8B2252] hover:bg-[#FFF5F8] font-body"
+            onClick={() => setShowArchived(true)}
+          >
+            <Inbox className="w-4 h-4 mr-1.5" /> Archived
+          </Button>
         </div>
 
         {/* Summary cards */}
@@ -1236,30 +1260,72 @@ export default function ApplicationsDashboard() {
           onClose={() => { setShowOnboardingModal(false); setSelectedApp(null); }}
         />
       )}
-      {/* Delete Confirmation Dialog */}
+      {/* Archive Confirmation Dialog */}
       <AlertDialog open={deleteConfirmId !== null} onOpenChange={(v) => !v && setDeleteConfirmId(null)}>
         <AlertDialogContent className="bg-[#FEFAF4] border-[#F0D0DC]">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-xl text-[#1A0A12]">Delete Application?</AlertDialogTitle>
+            <AlertDialogTitle className="font-display text-xl text-[#1A0A12]">Archive Application?</AlertDialogTitle>
             <AlertDialogDescription className="font-body text-sm text-[#1A0A12]">
-              This will permanently delete the application and cannot be undone.
+              This will move the application to the archive. You can restore it later from the Archived tab.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="font-body border-[#F0D0DC]">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteConfirmId !== null && deleteApplication.mutate({ id: deleteConfirmId })}
-              className="font-body bg-red-600 hover:bg-red-700 text-white"
+              className="font-body bg-amber-600 hover:bg-amber-700 text-white"
             >
               {deleteApplication.isPending ? (
-                <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Deleting...</>
+                <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Archiving...</>
               ) : (
-                "Delete"
+                "Archive"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Archived Applications Dialog */}
+      <Dialog open={showArchived} onOpenChange={setShowArchived}>
+        <DialogContent className="bg-[#FEFAF4] border-[#F0D0DC] max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl text-[#1A0A12]">Archived Applications</DialogTitle>
+            <DialogDescription className="font-body text-sm text-[#1A0A12]">
+              These applications were archived and can be restored at any time.
+            </DialogDescription>
+          </DialogHeader>
+          {archivedLoading ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 className="w-6 h-6 animate-spin text-[#8B2252]" />
+            </div>
+          ) : !archivedApps || archivedApps.length === 0 ? (
+            <div className="text-center py-10">
+              <Inbox className="w-10 h-10 mx-auto text-gray-300 mb-3" />
+              <p className="font-body text-sm text-gray-500">No archived applications</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {archivedApps.map((app) => (
+                <div key={app.id} className="flex items-center justify-between bg-white rounded-xl p-4 border border-[#F0D0DC]">
+                  <div>
+                    <p className="font-body font-semibold text-[#1A0A12]">{app.name}</p>
+                    <p className="font-body text-xs text-gray-500">{app.role} • {app.location} • Archived {app.deletedAt ? new Date(app.deletedAt).toLocaleDateString() : ''}</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                    onClick={() => restoreApplication.mutate({ id: app.id })}
+                    disabled={restoreApplication.isPending}
+                  >
+                    {restoreApplication.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "Restore"}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
