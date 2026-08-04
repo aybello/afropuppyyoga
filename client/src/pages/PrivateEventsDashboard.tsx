@@ -160,6 +160,7 @@ export default function PrivateEventsDashboard() {
   // Quick Booking Link standalone state
   const [quickForm, setQuickForm] = useState({
     clientName: "",
+    clientEmail: "",
     organization: "",
     eventType: "Team Building",
     eventDate: "",
@@ -665,7 +666,8 @@ export default function PrivateEventsDashboard() {
 
                     const fullEmail = `Subject: ${subject}\n\n${body}`;
 
-                    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                    const toParam = quickForm.clientEmail ? `&to=${encodeURIComponent(quickForm.clientEmail)}` : "";
+                    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1${toParam}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
                     return (
                       <div className="bg-white rounded-2xl border border-[#F2A0B8]/20 p-5 shadow-sm">
@@ -690,7 +692,7 @@ export default function PrivateEventsDashboard() {
                     );
                   })()}
 
-                  <Button variant="outline" className="font-body border-[#F2A0B8]/40 hover:bg-[#FFF5F8]" onClick={() => { setQuickGeneratedLink(null); setQuickForm({ clientName: "", organization: "", eventType: "Team Building", eventDate: "", sessions: "1", maxCapacity: "20", finalPrice: "", pricingType: "plus_hst", puppyBreed: "", location: "hamilton", customLocation: "", notes: "", sessionSchedule: [{ startTime: "11:00", endTime: "12:00" }] }); }}>
+                  <Button variant="outline" className="font-body border-[#F2A0B8]/40 hover:bg-[#FFF5F8]" onClick={() => { setQuickGeneratedLink(null); setQuickForm({ clientName: "", clientEmail: "", organization: "", eventType: "Team Building", eventDate: "", sessions: "1", maxCapacity: "20", finalPrice: "", pricingType: "plus_hst", puppyBreed: "", location: "hamilton", customLocation: "", notes: "", sessionSchedule: [{ startTime: "11:00", endTime: "12:00" }] }); }}>
                     <Sparkles size={14} className="mr-2" /> Generate Another Link
                   </Button>
                 </div>
@@ -704,6 +706,10 @@ export default function PrivateEventsDashboard() {
                         <Input value={quickForm.clientName} onChange={(e) => setQuickForm({ ...quickForm, clientName: e.target.value })} placeholder="e.g. Sidney Thompson" className="border-[#F2A0B8]/30 font-body bg-[#FAFAFA] focus:bg-white transition-colors" />
                       </div>
                       <div>
+                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">Client Email</label>
+                        <Input type="email" value={quickForm.clientEmail} onChange={(e) => setQuickForm({ ...quickForm, clientEmail: e.target.value })} placeholder="e.g. samantha@email.com" className="border-[#F2A0B8]/30 font-body bg-[#FAFAFA] focus:bg-white transition-colors" />
+                      </div>
+                      <div className="col-span-2">
                         <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">Organization</label>
                         <Input value={quickForm.organization} onChange={(e) => setQuickForm({ ...quickForm, organization: e.target.value })} placeholder="e.g. Hamilton Girls Flag Football" className="border-[#F2A0B8]/30 font-body bg-[#FAFAFA] focus:bg-white transition-colors" />
                       </div>

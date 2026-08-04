@@ -565,3 +565,6 @@
 ## Send via Gmail + Template Variants (Aug 4, 2026)
 - [x] Add "Send via Gmail" button that opens a pre-filled Gmail compose window (mailto: or Gmail URL) with subject and body
 - [x] Add event-type-specific template variants (Birthday, Bachelorette, Corporate, Team Building) with different intro wording
+
+## Client Email Field (Aug 4, 2026)
+- [x] Add optional client email field to Quick Booking Link form so Gmail compose auto-fills the "To" field
