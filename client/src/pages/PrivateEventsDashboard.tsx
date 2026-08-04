@@ -696,9 +696,9 @@ export default function PrivateEventsDashboard() {
                           <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#8B2252] to-[#D4708A] flex items-center justify-center shrink-0">
                             <span className="text-white text-[10px] font-bold">{idx + 1}</span>
                           </div>
-                          <Input type="time" value={session.startTime} onChange={(e) => updateSession(idx, "startTime", e.target.value)} className="border-[#F2A0B8]/30 font-body text-sm w-28 bg-white" />
+                          <Input type="time" value={session.startTime} onChange={(e) => updateSession(idx, "startTime", e.target.value)} className="border-[#F2A0B8]/30 font-body text-sm w-36 bg-white" />
                           <span className="font-body text-xs text-[#3D1A2E]/40 font-medium">to</span>
-                          <Input type="time" value={session.endTime} onChange={(e) => updateSession(idx, "endTime", e.target.value)} className="border-[#F2A0B8]/30 font-body text-sm w-28 bg-white" />
+                          <Input type="time" value={session.endTime} onChange={(e) => updateSession(idx, "endTime", e.target.value)} className="border-[#F2A0B8]/30 font-body text-sm w-36 bg-white" />
                           {quickForm.sessionSchedule.length > 1 && (
                             <Button type="button" variant="ghost" size="sm" className="text-red-400 hover:text-red-600 hover:bg-red-50 text-xs px-2 rounded-full ml-auto" onClick={() => removeSession(idx)}>Remove</Button>
                           )}
