@@ -561,3 +561,7 @@
 
 ## Email Template Update (Aug 4, 2026)
 - [x] Update email template to match new format: location as address block, puppy breed in bullet, "Venue, setup and cleanup", shorter closing, no future-confirmation disclaimer
+
+## Send via Gmail + Template Variants (Aug 4, 2026)
+- [x] Add "Send via Gmail" button that opens a pre-filled Gmail compose window (mailto: or Gmail URL) with subject and body
+- [x] Add event-type-specific template variants (Birthday, Bachelorette, Corporate, Team Building) with different intro wording
