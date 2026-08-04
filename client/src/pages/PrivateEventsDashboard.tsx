@@ -988,37 +988,104 @@ export default function PrivateEventsDashboard() {
               )}
 
               {/* Send Quote Email Panel */}
-              {showEmailPanel && generatedLink && (
-                <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 space-y-3">
-                  <p className="font-body text-xs font-semibold text-purple-700 uppercase tracking-wider">Send Quote Email</p>
-                  <p className="font-body text-sm text-purple-600">
-                    This will send a branded email to <strong>{selectedInquiry.email}</strong> with the booking link and pricing details.
-                  </p>
-                  <Textarea
-                    value={customMessage}
-                    onChange={(e) => setCustomMessage(e.target.value)}
-                    placeholder="Add a personal message (optional) — e.g. 'It was great chatting with you! Here's your booking link...'"
-                    className="border-purple-200 focus:border-purple-400 font-body text-sm min-h-[60px] resize-none"
-                  />
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={handleSendEmail}
-                      disabled={isSendingEmail}
-                      className="bg-[#8B2252] hover:bg-[#6B1A40] text-white font-body font-semibold rounded-full text-sm"
-                    >
-                      {isSendingEmail ? <Loader2 size={14} className="animate-spin mr-2" /> : <Send size={14} className="mr-2" />}
-                      Send Email Now
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowEmailPanel(false)}
-                      className="font-body text-sm rounded-full"
-                    >
-                      Cancel
-                    </Button>
+              {showEmailPanel && generatedLink && (() => {
+                const firstName = selectedInquiry.name.split(" ")[0] || "[Name]";
+                const locationAddresses: Record<string, { street: string; city: string }> = {
+                  kitchener: { street: "329 King Street East", city: "Kitchener, ON" },
+                  hamilton: { street: "2751 Barton Street East", city: "Hamilton, ON" },
+                  oakville: { street: "1670 North Service Road East", city: "Oakville, ON" },
+                  Kitchener: { street: "329 King Street East", city: "Kitchener, ON" },
+                  Hamilton: { street: "2751 Barton Street East", city: "Hamilton, ON" },
+                  Oakville: { street: "1670 North Service Road East", city: "Oakville, ON" },
+                };
+                const locationStudioNames: Record<string, string> = { kitchener: "Kitchener", hamilton: "Hamilton", oakville: "Oakville", Kitchener: "Kitchener", Hamilton: "Hamilton", Oakville: "Oakville" };
+                const locAddr = locationAddresses[selectedInquiry.location] || null;
+                const formattedDate = selectedInquiry.preferredDate || "[DATE]";
+                const guests = String(selectedInquiry.guests);
+                const sessions = selectedInquiry.sessions || 1;
+                const breed = selectedInquiry.puppyBreed ? `${selectedInquiry.puppyBreed} puppies` : "Puppies";
+                const eventType = selectedInquiry.eventType || "Other";
+
+                const eventIntros: Record<string, string> = {
+                  "Team Building": "We would love to host your group for a private AfroPuppyYoga experience",
+                  "Birthday": "We would love to help you celebrate with a private AfroPuppyYoga birthday experience",
+                  "Bachelorette": "We would love to host your bride-to-be and crew for a private AfroPuppyYoga experience",
+                  "Corporate": "We would love to host your team for a private AfroPuppyYoga corporate wellness experience",
+                  "Baby Shower": "We would love to host your group for a private AfroPuppyYoga baby shower experience",
+                  "School/Youth Group": "We would love to host your group for a private AfroPuppyYoga experience",
+                  "Other": "We would love to host your group for a private AfroPuppyYoga experience",
+                };
+                const intro = eventIntros[eventType] || eventIntros["Other"];
+
+                const sessionDescriptions: Record<string, string> = {
+                  "Birthday": sessions > 1 ? `${sessions} private puppy yoga birthday sessions` : "A private one-hour puppy yoga birthday experience",
+                  "Bachelorette": sessions > 1 ? `${sessions} private puppy yoga sessions` : "A private one-hour puppy yoga experience",
+                  "Corporate": sessions > 1 ? `${sessions} private puppy yoga wellness sessions` : "A private one-hour puppy yoga wellness experience",
+                };
+                const sessionDesc = sessionDescriptions[eventType] || (sessions > 1 ? `${sessions} private puppy yoga sessions` : "A private one-hour puppy yoga experience");
+
+                let locationBlock = "";
+                if (locAddr) {
+                  locationBlock = `\n\nThe event will take place at our ${locationStudioNames[selectedInquiry.location]} studio:\n\n${locAddr.street}\n${locAddr.city}`;
+                } else if (selectedInquiry.location && selectedInquiry.location !== "TBD") {
+                  locationBlock = `\n\nThe event will take place at:\n\n${selectedInquiry.location}`;
+                }
+
+                const subject = `Private AfroPuppyYoga Experience | ${formattedDate} \uD83D\uDC36`;
+                const body = `Hi ${firstName},\n\nThank you for reaching out! ${intro} on ${formattedDate}.${locationBlock}\n\nThe Classic Experience for your group of ${guests} guests includes:\n\n\uD83D\uDC36 ${sessionDesc}\n\uD83E\uDDD8 Beginner-friendly guided yoga instruction\n\uD83D\uDC3E ${breed} and dedicated puppy handlers\n\uD83D\uDC9B Supervised puppy interaction and playtime\n\uD83E\uDDD8 Yoga mats for participants\n\uD83C\uDFB6 Curated music\n\uD83E\uDDF4 Venue, setup and cleanup\n\nYou can secure the event using the private booking link below:\n\n${generatedLink}\n\nThe booking will be confirmed once payment has been completed. The puppy breed and final venue details will be confirmed closer to the event based on availability.\n\nWarmly,`;
+                const fullEmail = `Subject: ${subject}\n\n${body}`;
+                const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(selectedInquiry.email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+                return (
+                  <div className="bg-white border border-[#F2A0B8]/30 rounded-xl p-5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Mail size={14} className="text-[#8B2252]" />
+                        <p className="font-body text-xs font-semibold text-[#8B2252] uppercase tracking-wider">Email Template</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" variant="outline" className="border-[#F2A0B8]/40 hover:bg-[#FFF5F8] font-body text-xs rounded-full" onClick={() => { navigator.clipboard.writeText(fullEmail); toast.success("Email copied to clipboard!"); }}>
+                          <Copy size={12} className="mr-1" /> Copy
+                        </Button>
+                        <Button size="sm" className="bg-[#8B2252] hover:bg-[#6B1A3F] text-white font-body text-xs rounded-full" onClick={() => { window.open(gmailUrl, "_blank"); }}>
+                          <Send size={12} className="mr-1" /> Send via Gmail
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="bg-[#FAFAFA] rounded-xl border border-[#F2A0B8]/10 p-4 font-body text-xs text-[#3D1A2E]/70 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
+                      {fullEmail}
+                    </div>
+                    <div className="border-t border-[#F2A0B8]/20 pt-3 space-y-2">
+                      <p className="font-body text-xs text-[#3D1A2E]/50">Or send the branded HTML email directly:</p>
+                      <Textarea
+                        value={customMessage}
+                        onChange={(e) => setCustomMessage(e.target.value)}
+                        placeholder="Add a personal message (optional)"
+                        className="border-[#F2A0B8]/20 focus:border-[#F2A0B8] font-body text-sm min-h-[50px] resize-none"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={handleSendEmail}
+                          disabled={isSendingEmail}
+                          size="sm"
+                          className="bg-gradient-to-r from-[#8B2252] to-[#D4708A] hover:from-[#6B1A40] hover:to-[#B85A74] text-white font-body font-semibold rounded-full text-xs"
+                        >
+                          {isSendingEmail ? <Loader2 size={12} className="animate-spin mr-1" /> : <Send size={12} className="mr-1" />}
+                          Send Branded Email
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowEmailPanel(false)}
+                          className="font-body text-xs rounded-full"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Generate Booking Link Panel */}
               {!generatedLink && !showBookingPanel && (

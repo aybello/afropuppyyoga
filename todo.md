@@ -568,3 +568,6 @@
 
 ## Client Email Field (Aug 4, 2026)
 - [x] Add optional client email field to Quick Booking Link form so Gmail compose auto-fills the "To" field
+
+## Inquiry Send Quote Email Update (Aug 4, 2026)
+- [x] Update the Inquiries tab "Send Quote Email" to use the same email template with event-type variants, Gmail compose, and client email auto-fill
