@@ -938,4 +938,97 @@ export const privateEventsRouter = router({
 
       return { success: true };
     }),
+
+  /** Standalone Quick Booking Link — creates a Luma event without an existing inquiry */
+  generateQuickBookingLink: protectedProcedure
+    .input(
+      z.object({
+        clientName: z.string().min(1),
+        organization: z.string().optional(),
+        eventType: z.string().default("Private Event"),
+        eventDate: z.string(), // ISO date e.g. "2026-09-19"
+        sessions: z.number().min(1).default(1),
+        sessionSchedule: z.array(z.object({
+          startTime: z.string(), // HH:mm
+          endTime: z.string(),   // HH:mm
+        })).min(1),
+        location: z.string().default("kitchener"),
+        customLocation: z.string().optional(),
+        maxCapacity: z.number().min(1).default(20),
+        finalPrice: z.number().min(1), // in dollars (CAD)
+        pricingType: z.enum(["plus_hst", "all_in"]),
+        puppyBreed: z.string().optional(),
+        notes: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role !== "admin" && ctx.user.role !== "staff") {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      // Calculate pricing
+      let totalCents: number;
+      let hstCents: number;
+      if (input.pricingType === "plus_hst") {
+        hstCents = Math.round(input.finalPrice * 100 * HST_RATE);
+        totalCents = input.finalPrice * 100 + hstCents;
+      } else {
+        totalCents = input.finalPrice * 100;
+        hstCents = Math.round(totalCents - totalCents / (1 + HST_RATE));
+      }
+
+      // Use first session start and last session end for the Luma event times
+      const firstSession = input.sessionSchedule[0];
+      const lastSession = input.sessionSchedule[input.sessionSchedule.length - 1];
+      const startAt = `${input.eventDate}T${firstSession.startTime}:00-04:00`;
+      const endAt = `${input.eventDate}T${lastSession.endTime}:00-04:00`;
+
+      // Build personalized description
+      const orgName = input.organization || input.clientName;
+      const breed = input.puppyBreed || "adorable puppies";
+      const descLines = buildEventDescription({
+        eventType: input.eventType,
+        orgName,
+        guests: input.maxCapacity,
+        sessions: input.sessions,
+        breed,
+      });
+
+      // Add session schedule to description if multi-session
+      let fullDescription = descLines;
+      if (input.sessions > 1 && input.sessionSchedule.length > 1) {
+        const scheduleLines = input.sessionSchedule.map((s, i) => 
+          `\n\u{1F436} **Session ${i + 1}:** ${s.startTime} to ${s.endTime}`
+        ).join("");
+        fullDescription = `${descLines}\n\n---\n\n## \u{1F4C5} Schedule\n${scheduleLines}`;
+      }
+
+      // Create the Luma event
+      const { eventId, eventUrl } = await createLumaEvent({
+        name: "Private PuppyYoga Experience",
+        startAt,
+        endAt,
+        location: input.customLocation || input.location,
+        maxCapacity: input.maxCapacity,
+        description: fullDescription,
+        priceCents: totalCents,
+        sessions: input.sessions,
+      });
+
+      // Notify owner
+      await notifyOwner({
+        title: "\u{1F517} Quick Booking Link Generated",
+        content: `Event for ${orgName} on ${input.eventDate} — $${(totalCents / 100).toFixed(2)} CAD\n${eventUrl}`,
+      });
+
+      return {
+        success: true,
+        eventUrl,
+        eventId,
+        totalCents,
+        hstCents,
+        clientName: input.clientName,
+        organization: input.organization,
+      };
+    }),
 });

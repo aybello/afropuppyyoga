@@ -530,3 +530,9 @@
 - [x] Add /api/luma/webhook POST endpoint to receive Luma payment notifications
 - [x] Auto-update inquiry status from "quote_sent" to "booked" when payment webhook fires
 - [x] Send confirmation email to owner when a private event is booked/paid
+
+## Quick Booking Link Generator (Standalone — Aug 4, 2026)
+- [x] Add generateQuickBookingLink tRPC procedure (creates Luma event without an inquiry)
+- [x] Add "Quick Booking Link" tab to Private Events Dashboard with standalone form
+- [ ] Support multi-session events (e.g., 2 sessions with break in between)
+- [ ] Include all fields: client name, org, event type, date, sessions, times, location, price, HST, breed, notes

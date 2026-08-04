@@ -58,6 +58,7 @@ import {
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
 import AdminNav from "@/components/AdminNav";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type InquiryStatus = "new" | "contacted" | "confirmed" | "cancelled" | "quote_sent" | "booked";
 
@@ -128,6 +129,9 @@ export default function PrivateEventsDashboard() {
   const [adminNotes, setAdminNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
+  // Page-level tab state
+  const [activeTab, setActiveTab] = useState<"inquiries" | "quick-link">("inquiries");
+
   // Booking link generator state
   const [showBookingPanel, setShowBookingPanel] = useState(false);
   const [bookingForm, setBookingForm] = useState({
@@ -143,6 +147,25 @@ export default function PrivateEventsDashboard() {
   });
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // Quick Booking Link standalone state
+  const [quickForm, setQuickForm] = useState({
+    clientName: "",
+    organization: "",
+    eventType: "Team Building",
+    eventDate: "",
+    sessions: "1",
+    maxCapacity: "20",
+    finalPrice: "",
+    pricingType: "plus_hst" as "plus_hst" | "all_in",
+    puppyBreed: "",
+    location: "hamilton",
+    customLocation: "",
+    notes: "",
+    sessionSchedule: [{ startTime: "11:00", endTime: "12:00" }] as Array<{ startTime: string; endTime: string }>,
+  });
+  const [quickGeneratedLink, setQuickGeneratedLink] = useState<string | null>(null);
+  const [isQuickGenerating, setIsQuickGenerating] = useState(false);
 
   // Quote email state
   const [showEmailPanel, setShowEmailPanel] = useState(false);
@@ -195,6 +218,18 @@ export default function PrivateEventsDashboard() {
     onError: (err) => {
       toast.error(`Failed to send email: ${err.message}`);
       setIsSendingEmail(false);
+    },
+  });
+
+  const generateQuickLink = trpc.privateEvents.generateQuickBookingLink.useMutation({
+    onSuccess: (data) => {
+      setQuickGeneratedLink(data.eventUrl);
+      setIsQuickGenerating(false);
+      toast.success("Booking link generated!");
+    },
+    onError: (err) => {
+      toast.error(`Failed: ${err.message}`);
+      setIsQuickGenerating(false);
     },
   });
 
@@ -306,6 +341,56 @@ export default function PrivateEventsDashboard() {
     }
   }
 
+  // Quick link handler
+  function handleQuickGenerate() {
+    if (!quickForm.clientName.trim()) { toast.error("Please enter the client name"); return; }
+    if (!quickForm.eventDate) { toast.error("Please enter the event date"); return; }
+    const price = parseFloat(quickForm.finalPrice);
+    if (!price || price <= 0) { toast.error("Please enter a valid price"); return; }
+    setIsQuickGenerating(true);
+    generateQuickLink.mutate({
+      clientName: quickForm.clientName,
+      organization: quickForm.organization || undefined,
+      eventType: quickForm.eventType,
+      eventDate: quickForm.eventDate,
+      sessions: parseInt(quickForm.sessions) || 1,
+      sessionSchedule: quickForm.sessionSchedule,
+      location: quickForm.location,
+      customLocation: quickForm.customLocation.startsWith("__custom__")
+        ? quickForm.customLocation.replace("__custom__", "") || undefined
+        : quickForm.customLocation || undefined,
+      maxCapacity: parseInt(quickForm.maxCapacity) || 20,
+      finalPrice: price,
+      pricingType: quickForm.pricingType,
+      puppyBreed: quickForm.puppyBreed || undefined,
+      notes: quickForm.notes || undefined,
+    });
+  }
+
+  function addSession() {
+    const last = quickForm.sessionSchedule[quickForm.sessionSchedule.length - 1];
+    // Default: 30 min break after last session end
+    const [h, m] = last.endTime.split(":").map(Number);
+    const breakEnd = `${String(h).padStart(2, "0")}:${String(m + 30).padStart(2, "0")}`;
+    const newEnd = `${String(h + 1).padStart(2, "0")}:${String(m + 30).padStart(2, "0")}`;
+    setQuickForm({
+      ...quickForm,
+      sessions: String(quickForm.sessionSchedule.length + 1),
+      sessionSchedule: [...quickForm.sessionSchedule, { startTime: breakEnd, endTime: newEnd }],
+    });
+  }
+
+  function removeSession(idx: number) {
+    const updated = quickForm.sessionSchedule.filter((_, i) => i !== idx);
+    setQuickForm({ ...quickForm, sessions: String(updated.length), sessionSchedule: updated });
+  }
+
+  function updateSession(idx: number, field: "startTime" | "endTime", value: string) {
+    const updated = [...quickForm.sessionSchedule];
+    updated[idx] = { ...updated[idx], [field]: value };
+    setQuickForm({ ...quickForm, sessionSchedule: updated });
+  }
+
   // Calculate HST preview
   const priceNum = parseFloat(bookingForm.finalPrice) || 0;
   const hstPreview = bookingForm.pricingType === "plus_hst"
@@ -345,6 +430,19 @@ export default function PrivateEventsDashboard() {
             </div>
           )}
         </div>
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "inquiries" | "quick-link")} className="mb-6">
+          <TabsList className="bg-[#F2A0B8]/10 border border-[#F2A0B8]/20">
+            <TabsTrigger value="inquiries" className="font-body text-sm data-[state=active]:bg-[#8B2252] data-[state=active]:text-white">
+              Inquiries
+            </TabsTrigger>
+            <TabsTrigger value="quick-link" className="font-body text-sm data-[state=active]:bg-[#8B2252] data-[state=active]:text-white">
+              Quick Booking Link
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="inquiries">
 
         {/* Filters */}
         <div className="flex flex-wrap gap-3 mb-6">
@@ -460,6 +558,203 @@ export default function PrivateEventsDashboard() {
             ))}
           </div>
         )}
+
+          </TabsContent>
+
+          <TabsContent value="quick-link">
+            <div className="bg-white rounded-2xl border border-[#F2A0B8]/20 p-6 space-y-5">
+              <div className="flex items-center gap-2 mb-2">
+                <Link2 size={18} className="text-[#8B2252]" />
+                <h2 className="font-display text-lg font-bold text-[#1A0A12]">Quick Booking Link Generator</h2>
+              </div>
+              <p className="font-body text-sm text-[#3D1A2E]/55">
+                Generate a private Luma booking link for events that came in through email, DMs, or phone — no inquiry needed.
+              </p>
+
+              {quickGeneratedLink ? (
+                <div className="space-y-4">
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <CheckCircle2 size={18} className="text-emerald-600" />
+                      <p className="font-body font-bold text-emerald-800">Booking Link Ready!</p>
+                    </div>
+                    <div className="flex items-center gap-2 bg-white rounded-lg border border-emerald-200 p-3">
+                      <a href={quickGeneratedLink} target="_blank" rel="noopener noreferrer" className="flex-1 font-body text-sm text-[#8B2252] underline truncate">
+                        {quickGeneratedLink}
+                      </a>
+                      <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(quickGeneratedLink); toast.success("Copied!"); }}>
+                        <Copy size={14} className="mr-1" /> Copy
+                      </Button>
+                      <Button size="sm" variant="outline" asChild>
+                        <a href={quickGeneratedLink} target="_blank" rel="noopener noreferrer"><ExternalLink size={14} /></a>
+                      </Button>
+                    </div>
+                  </div>
+                  <Button variant="outline" className="font-body" onClick={() => { setQuickGeneratedLink(null); setQuickForm({ clientName: "", organization: "", eventType: "Team Building", eventDate: "", sessions: "1", maxCapacity: "20", finalPrice: "", pricingType: "plus_hst", puppyBreed: "", location: "hamilton", customLocation: "", notes: "", sessionSchedule: [{ startTime: "11:00", endTime: "12:00" }] }); }}>
+                    Generate Another Link
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Client Info */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Client Name *</label>
+                      <Input value={quickForm.clientName} onChange={(e) => setQuickForm({ ...quickForm, clientName: e.target.value })} placeholder="e.g. Sidney Thompson" className="border-[#F2A0B8]/40 font-body" />
+                    </div>
+                    <div>
+                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Organization</label>
+                      <Input value={quickForm.organization} onChange={(e) => setQuickForm({ ...quickForm, organization: e.target.value })} placeholder="e.g. Hamilton Girls Flag Football" className="border-[#F2A0B8]/40 font-body" />
+                    </div>
+                  </div>
+
+                  {/* Event Type + Breed */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Event Type</label>
+                      <Select value={quickForm.eventType} onValueChange={(v) => setQuickForm({ ...quickForm, eventType: v })}>
+                        <SelectTrigger className="border-[#F2A0B8]/40 font-body text-sm"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Team Building">Team Building</SelectItem>
+                          <SelectItem value="Birthday">Birthday</SelectItem>
+                          <SelectItem value="Bachelorette">Bachelorette</SelectItem>
+                          <SelectItem value="Corporate">Corporate</SelectItem>
+                          <SelectItem value="Baby Shower">Baby Shower</SelectItem>
+                          <SelectItem value="School/Youth Group">School/Youth Group</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Puppy Breed</label>
+                      <Input value={quickForm.puppyBreed} onChange={(e) => setQuickForm({ ...quickForm, puppyBreed: e.target.value })} placeholder="e.g. French Bulldog" className="border-[#F2A0B8]/40 font-body" />
+                    </div>
+                  </div>
+
+                  {/* Date + Capacity */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Event Date *</label>
+                      <Input type="date" value={quickForm.eventDate} onChange={(e) => setQuickForm({ ...quickForm, eventDate: e.target.value })} className="border-[#F2A0B8]/40 font-body text-sm" />
+                    </div>
+                    <div>
+                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Max Capacity</label>
+                      <Input type="number" min="1" value={quickForm.maxCapacity} onChange={(e) => setQuickForm({ ...quickForm, maxCapacity: e.target.value })} className="border-[#F2A0B8]/40 font-body text-sm" />
+                    </div>
+                  </div>
+
+                  {/* Session Schedule */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60">Session Schedule</label>
+                      <Button type="button" variant="ghost" size="sm" className="text-[#8B2252] font-body text-xs" onClick={addSession}>+ Add Session</Button>
+                    </div>
+                    <div className="space-y-2">
+                      {quickForm.sessionSchedule.map((session, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <span className="font-body text-xs text-[#3D1A2E]/50 w-20">Session {idx + 1}</span>
+                          <Input type="time" value={session.startTime} onChange={(e) => updateSession(idx, "startTime", e.target.value)} className="border-[#F2A0B8]/40 font-body text-sm w-28" />
+                          <span className="font-body text-xs text-[#3D1A2E]/40">to</span>
+                          <Input type="time" value={session.endTime} onChange={(e) => updateSession(idx, "endTime", e.target.value)} className="border-[#F2A0B8]/40 font-body text-sm w-28" />
+                          {quickForm.sessionSchedule.length > 1 && (
+                            <Button type="button" variant="ghost" size="sm" className="text-red-500 text-xs px-2" onClick={() => removeSession(idx)}>Remove</Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Location */}
+                  <div>
+                    <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Event Location</label>
+                    <select
+                      value={quickForm.location === "__custom__" ? "__custom__" : quickForm.location}
+                      onChange={(e) => {
+                        if (e.target.value === "__custom__") {
+                          setQuickForm({ ...quickForm, location: "__custom__", customLocation: "" });
+                        } else {
+                          setQuickForm({ ...quickForm, location: e.target.value, customLocation: "" });
+                        }
+                      }}
+                      className="w-full rounded-md border border-[#F2A0B8]/40 bg-white px-3 py-2 font-body text-sm text-[#3D1A2E]"
+                    >
+                      <option value="kitchener">APY Studio — Kitchener</option>
+                      <option value="cambridge">APY Studio — Cambridge</option>
+                      <option value="toronto">APY Studio — Toronto</option>
+                      <option value="guelph">APY Studio — Guelph</option>
+                      <option value="hamilton">APY Studio — Hamilton</option>
+                      <option value="london">APY Studio — London</option>
+                      <option value="__custom__">Client&apos;s Location (enter below)</option>
+                    </select>
+                    {quickForm.location === "__custom__" && (
+                      <Input
+                        value={quickForm.customLocation}
+                        onChange={(e) => setQuickForm({ ...quickForm, customLocation: e.target.value })}
+                        placeholder="e.g. 2751 Barton Street East, Hamilton, ON"
+                        className="mt-2 border-[#F2A0B8]/40 font-body text-sm"
+                      />
+                    )}
+                  </div>
+
+                  {/* Pricing */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Total Price (CAD) *</label>
+                      <Input type="number" value={quickForm.finalPrice} onChange={(e) => setQuickForm({ ...quickForm, finalPrice: e.target.value })} placeholder="e.g. 3000" className="border-[#F2A0B8]/40 font-body" />
+                    </div>
+                    <div>
+                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Pricing Type</label>
+                      <Select value={quickForm.pricingType} onValueChange={(v) => setQuickForm({ ...quickForm, pricingType: v as "plus_hst" | "all_in" })}>
+                        <SelectTrigger className="border-[#F2A0B8]/40 font-body text-sm"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="plus_hst">+ HST (13%)</SelectItem>
+                          <SelectItem value="all_in">All-in (HST included)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* HST Preview */}
+                  {parseFloat(quickForm.finalPrice) > 0 && (
+                    <div className="bg-[#FFF5F8] rounded-lg p-3 border border-[#F2A0B8]/20">
+                      <div className="flex justify-between text-sm font-body">
+                        <span className="text-[#3D1A2E]/55">Base price</span>
+                        <span className="font-semibold">${quickForm.pricingType === "plus_hst" ? parseFloat(quickForm.finalPrice).toLocaleString() : (parseFloat(quickForm.finalPrice) / 1.13).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm font-body">
+                        <span className="text-[#3D1A2E]/55">HST (13%)</span>
+                        <span className="font-semibold">${quickForm.pricingType === "plus_hst" ? (parseFloat(quickForm.finalPrice) * 0.13).toFixed(2) : (parseFloat(quickForm.finalPrice) - parseFloat(quickForm.finalPrice) / 1.13).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm font-body font-bold border-t border-[#F2A0B8]/20 pt-2 mt-2">
+                        <span className="text-[#1A0A12]">Total charged to client</span>
+                        <span className="text-[#8B2252]">${quickForm.pricingType === "plus_hst" ? (parseFloat(quickForm.finalPrice) * 1.13).toFixed(2) : parseFloat(quickForm.finalPrice).toFixed(2)} CAD</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Notes */}
+                  <div>
+                    <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Internal Notes (optional)</label>
+                    <Textarea value={quickForm.notes} onChange={(e) => setQuickForm({ ...quickForm, notes: e.target.value })} placeholder="Any extra details about this event..." className="border-[#F2A0B8]/40 font-body text-sm" rows={2} />
+                  </div>
+
+                  {/* Generate */}
+                  <Button
+                    onClick={handleQuickGenerate}
+                    disabled={isQuickGenerating}
+                    className="w-full bg-gradient-to-r from-[#8B2252] to-[#D4708A] hover:from-[#6B1A40] hover:to-[#B85A74] text-white font-body font-bold rounded-full py-3"
+                  >
+                    {isQuickGenerating ? (
+                      <><Loader2 size={16} className="animate-spin mr-2" /> Creating Luma Event...</>
+                    ) : (
+                      <><Link2 size={16} className="mr-2" /> Generate Private Luma Link</>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Detail dialog */}
