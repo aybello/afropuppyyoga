@@ -536,3 +536,15 @@
 - [x] Add "Quick Booking Link" tab to Private Events Dashboard with standalone form
 - [x] Support multi-session events (e.g., 2 sessions with break in between)
 - [x] Include all fields: client name, org, event type, date, sessions, times, location, price, HST, breed, notes
+
+## Quick Booking Link Form UI Redesign (Aug 4, 2026)
+- [x] Redesign form with card-based layout (6 distinct cards: Client Info, Event Details, Schedule, Location, Pricing, Notes)
+- [x] Add section header icons with branded pink icon containers
+- [x] Replace dropdown location selector with radio-button style location cards
+- [x] Add gradient header banner with Zap icon
+- [x] Improve success state with better spacing and helper text
+- [x] Add $ prefix to price input, subtle bg transitions on focus
+- [x] Add numbered session badges with gradient circles
+- [x] Add "30-min puppy rest break" helper text for multi-session events
+- [x] Add URL param support (?tab=quick-link) for direct linking to the tab
+- [x] Larger CTA button with shadow and active:scale micro-interaction

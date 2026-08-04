@@ -43,6 +43,12 @@ import {
   Copy,
   ExternalLink,
   Trash2,
+  Clock,
+  Building2,
+  PawPrint,
+  StickyNote,
+  Zap,
+  UserCircle,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -129,8 +135,11 @@ export default function PrivateEventsDashboard() {
   const [adminNotes, setAdminNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  // Page-level tab state
-  const [activeTab, setActiveTab] = useState<"inquiries" | "quick-link">("inquiries");
+  // Page-level tab state (support ?tab=quick-link URL param)
+  const [activeTab, setActiveTab] = useState<"inquiries" | "quick-link">(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("tab") === "quick-link" ? "quick-link" : "inquiries";
+  });
 
   // Booking link generator state
   const [showBookingPanel, setShowBookingPanel] = useState(false);
@@ -562,189 +571,284 @@ export default function PrivateEventsDashboard() {
           </TabsContent>
 
           <TabsContent value="quick-link">
-            <div className="bg-white rounded-2xl border border-[#F2A0B8]/20 p-6 space-y-5">
-              <div className="flex items-center gap-2 mb-2">
-                <Link2 size={18} className="text-[#8B2252]" />
-                <h2 className="font-display text-lg font-bold text-[#1A0A12]">Quick Booking Link Generator</h2>
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="bg-gradient-to-br from-[#8B2252]/5 via-white to-[#D4708A]/5 rounded-2xl border border-[#F2A0B8]/25 p-6">
+                <div className="flex items-center gap-3 mb-1">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#8B2252] to-[#D4708A] flex items-center justify-center shadow-sm">
+                    <Zap size={16} className="text-white" />
+                  </div>
+                  <div>
+                    <h2 className="font-display text-lg font-bold text-[#1A0A12]">Quick Booking Link</h2>
+                    <p className="font-body text-xs text-[#3D1A2E]/50">Generate a private Luma event for deals via email, DMs, or phone</p>
+                  </div>
+                </div>
               </div>
-              <p className="font-body text-sm text-[#3D1A2E]/55">
-                Generate a private Luma booking link for events that came in through email, DMs, or phone — no inquiry needed.
-              </p>
 
               {quickGeneratedLink ? (
                 <div className="space-y-4">
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5">
-                    <div className="flex items-center gap-2 mb-3">
-                      <CheckCircle2 size={18} className="text-emerald-600" />
-                      <p className="font-body font-bold text-emerald-800">Booking Link Ready!</p>
+                  <div className="bg-emerald-50/80 border border-emerald-200/60 rounded-2xl p-6 shadow-sm">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                        <CheckCircle2 size={16} className="text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="font-body font-bold text-emerald-800">Booking Link Ready!</p>
+                        <p className="font-body text-xs text-emerald-600/70">Share this with the client to complete their booking</p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 bg-white rounded-lg border border-emerald-200 p-3">
+                    <div className="flex items-center gap-2 bg-white rounded-xl border border-emerald-200/60 p-3 shadow-sm">
                       <a href={quickGeneratedLink} target="_blank" rel="noopener noreferrer" className="flex-1 font-body text-sm text-[#8B2252] underline truncate">
                         {quickGeneratedLink}
                       </a>
-                      <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(quickGeneratedLink); toast.success("Copied!"); }}>
+                      <Button size="sm" variant="outline" className="shrink-0 border-emerald-200 hover:bg-emerald-50" onClick={() => { navigator.clipboard.writeText(quickGeneratedLink); toast.success("Copied!"); }}>
                         <Copy size={14} className="mr-1" /> Copy
                       </Button>
-                      <Button size="sm" variant="outline" asChild>
+                      <Button size="sm" variant="outline" className="shrink-0 border-emerald-200 hover:bg-emerald-50" asChild>
                         <a href={quickGeneratedLink} target="_blank" rel="noopener noreferrer"><ExternalLink size={14} /></a>
                       </Button>
                     </div>
                   </div>
-                  <Button variant="outline" className="font-body" onClick={() => { setQuickGeneratedLink(null); setQuickForm({ clientName: "", organization: "", eventType: "Team Building", eventDate: "", sessions: "1", maxCapacity: "20", finalPrice: "", pricingType: "plus_hst", puppyBreed: "", location: "hamilton", customLocation: "", notes: "", sessionSchedule: [{ startTime: "11:00", endTime: "12:00" }] }); }}>
-                    Generate Another Link
+                  <Button variant="outline" className="font-body border-[#F2A0B8]/40 hover:bg-[#FFF5F8]" onClick={() => { setQuickGeneratedLink(null); setQuickForm({ clientName: "", organization: "", eventType: "Team Building", eventDate: "", sessions: "1", maxCapacity: "20", finalPrice: "", pricingType: "plus_hst", puppyBreed: "", location: "hamilton", customLocation: "", notes: "", sessionSchedule: [{ startTime: "11:00", endTime: "12:00" }] }); }}>
+                    <Sparkles size={14} className="mr-2" /> Generate Another Link
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {/* Client Info */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Client Name *</label>
-                      <Input value={quickForm.clientName} onChange={(e) => setQuickForm({ ...quickForm, clientName: e.target.value })} placeholder="e.g. Sidney Thompson" className="border-[#F2A0B8]/40 font-body" />
+                <div className="space-y-5">
+                  {/* Card 1: Client Info */}
+                  <div className="bg-white rounded-2xl border border-[#F2A0B8]/20 p-5 shadow-sm">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-7 h-7 rounded-lg bg-[#FFF5F8] flex items-center justify-center">
+                        <UserCircle size={14} className="text-[#8B2252]" />
+                      </div>
+                      <h3 className="font-display text-sm font-bold text-[#1A0A12]">Client Information</h3>
                     </div>
-                    <div>
-                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Organization</label>
-                      <Input value={quickForm.organization} onChange={(e) => setQuickForm({ ...quickForm, organization: e.target.value })} placeholder="e.g. Hamilton Girls Flag Football" className="border-[#F2A0B8]/40 font-body" />
-                    </div>
-                  </div>
-
-                  {/* Event Type + Breed */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Event Type</label>
-                      <Select value={quickForm.eventType} onValueChange={(v) => setQuickForm({ ...quickForm, eventType: v })}>
-                        <SelectTrigger className="border-[#F2A0B8]/40 font-body text-sm"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Team Building">Team Building</SelectItem>
-                          <SelectItem value="Birthday">Birthday</SelectItem>
-                          <SelectItem value="Bachelorette">Bachelorette</SelectItem>
-                          <SelectItem value="Corporate">Corporate</SelectItem>
-                          <SelectItem value="Baby Shower">Baby Shower</SelectItem>
-                          <SelectItem value="School/Youth Group">School/Youth Group</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Puppy Breed</label>
-                      <Input value={quickForm.puppyBreed} onChange={(e) => setQuickForm({ ...quickForm, puppyBreed: e.target.value })} placeholder="e.g. French Bulldog" className="border-[#F2A0B8]/40 font-body" />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1.5 block">Client Name *</label>
+                        <Input value={quickForm.clientName} onChange={(e) => setQuickForm({ ...quickForm, clientName: e.target.value })} placeholder="e.g. Sidney Thompson" className="border-[#F2A0B8]/30 font-body bg-[#FAFAFA] focus:bg-white transition-colors" />
+                      </div>
+                      <div>
+                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1.5 block">Organization</label>
+                        <Input value={quickForm.organization} onChange={(e) => setQuickForm({ ...quickForm, organization: e.target.value })} placeholder="e.g. Hamilton Girls Flag Football" className="border-[#F2A0B8]/30 font-body bg-[#FAFAFA] focus:bg-white transition-colors" />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Date + Capacity */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Event Date *</label>
-                      <Input type="date" value={quickForm.eventDate} onChange={(e) => setQuickForm({ ...quickForm, eventDate: e.target.value })} className="border-[#F2A0B8]/40 font-body text-sm" />
+                  {/* Card 2: Event Details */}
+                  <div className="bg-white rounded-2xl border border-[#F2A0B8]/20 p-5 shadow-sm">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-7 h-7 rounded-lg bg-[#FFF5F8] flex items-center justify-center">
+                        <Sparkles size={14} className="text-[#8B2252]" />
+                      </div>
+                      <h3 className="font-display text-sm font-bold text-[#1A0A12]">Event Details</h3>
                     </div>
-                    <div>
-                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Max Capacity</label>
-                      <Input type="number" min="1" value={quickForm.maxCapacity} onChange={(e) => setQuickForm({ ...quickForm, maxCapacity: e.target.value })} className="border-[#F2A0B8]/40 font-body text-sm" />
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1.5 block">Event Type</label>
+                        <Select value={quickForm.eventType} onValueChange={(v) => setQuickForm({ ...quickForm, eventType: v })}>
+                          <SelectTrigger className="border-[#F2A0B8]/30 font-body text-sm bg-[#FAFAFA]"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Team Building">Team Building</SelectItem>
+                            <SelectItem value="Birthday">Birthday</SelectItem>
+                            <SelectItem value="Bachelorette">Bachelorette</SelectItem>
+                            <SelectItem value="Corporate">Corporate</SelectItem>
+                            <SelectItem value="Baby Shower">Baby Shower</SelectItem>
+                            <SelectItem value="School/Youth Group">School/Youth Group</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1.5 block">Event Date *</label>
+                        <Input type="date" value={quickForm.eventDate} onChange={(e) => setQuickForm({ ...quickForm, eventDate: e.target.value })} className="border-[#F2A0B8]/30 font-body text-sm bg-[#FAFAFA] focus:bg-white transition-colors" />
+                      </div>
+                      <div>
+                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1.5 block">Max Guests</label>
+                        <Input type="number" min="1" value={quickForm.maxCapacity} onChange={(e) => setQuickForm({ ...quickForm, maxCapacity: e.target.value })} className="border-[#F2A0B8]/30 font-body text-sm bg-[#FAFAFA] focus:bg-white transition-colors" />
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1.5 block">Puppy Breed</label>
+                      <div className="flex items-center gap-2">
+                        <PawPrint size={14} className="text-[#D4708A] shrink-0" />
+                        <Input value={quickForm.puppyBreed} onChange={(e) => setQuickForm({ ...quickForm, puppyBreed: e.target.value })} placeholder="e.g. French Bulldog" className="border-[#F2A0B8]/30 font-body bg-[#FAFAFA] focus:bg-white transition-colors" />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Session Schedule */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60">Session Schedule</label>
-                      <Button type="button" variant="ghost" size="sm" className="text-[#8B2252] font-body text-xs" onClick={addSession}>+ Add Session</Button>
+                  {/* Card 3: Schedule */}
+                  <div className="bg-white rounded-2xl border border-[#F2A0B8]/20 p-5 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-[#FFF5F8] flex items-center justify-center">
+                          <Clock size={14} className="text-[#8B2252]" />
+                        </div>
+                        <h3 className="font-display text-sm font-bold text-[#1A0A12]">Session Schedule</h3>
+                      </div>
+                      <Button type="button" variant="ghost" size="sm" className="text-[#8B2252] font-body text-xs hover:bg-[#FFF5F8] rounded-full px-3" onClick={addSession}>
+                        + Add Session
+                      </Button>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {quickForm.sessionSchedule.map((session, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                          <span className="font-body text-xs text-[#3D1A2E]/50 w-20">Session {idx + 1}</span>
-                          <Input type="time" value={session.startTime} onChange={(e) => updateSession(idx, "startTime", e.target.value)} className="border-[#F2A0B8]/40 font-body text-sm w-28" />
-                          <span className="font-body text-xs text-[#3D1A2E]/40">to</span>
-                          <Input type="time" value={session.endTime} onChange={(e) => updateSession(idx, "endTime", e.target.value)} className="border-[#F2A0B8]/40 font-body text-sm w-28" />
+                        <div key={idx} className="flex items-center gap-3 bg-[#FAFAFA] rounded-xl p-3 border border-[#F2A0B8]/10">
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#8B2252] to-[#D4708A] flex items-center justify-center shrink-0">
+                            <span className="text-white text-[10px] font-bold">{idx + 1}</span>
+                          </div>
+                          <Input type="time" value={session.startTime} onChange={(e) => updateSession(idx, "startTime", e.target.value)} className="border-[#F2A0B8]/30 font-body text-sm w-28 bg-white" />
+                          <span className="font-body text-xs text-[#3D1A2E]/40 font-medium">to</span>
+                          <Input type="time" value={session.endTime} onChange={(e) => updateSession(idx, "endTime", e.target.value)} className="border-[#F2A0B8]/30 font-body text-sm w-28 bg-white" />
                           {quickForm.sessionSchedule.length > 1 && (
-                            <Button type="button" variant="ghost" size="sm" className="text-red-500 text-xs px-2" onClick={() => removeSession(idx)}>Remove</Button>
+                            <Button type="button" variant="ghost" size="sm" className="text-red-400 hover:text-red-600 hover:bg-red-50 text-xs px-2 rounded-full ml-auto" onClick={() => removeSession(idx)}>Remove</Button>
                           )}
                         </div>
                       ))}
                     </div>
+                    {quickForm.sessionSchedule.length > 1 && (
+                      <p className="font-body text-[11px] text-[#3D1A2E]/40 mt-3 flex items-center gap-1">
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#D4708A]/40"></span>
+                        30-min puppy rest break between sessions
+                      </p>
+                    )}
                   </div>
 
-                  {/* Location */}
-                  <div>
-                    <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Event Location</label>
-                    <select
-                      value={quickForm.location === "__custom__" ? "__custom__" : quickForm.location}
-                      onChange={(e) => {
-                        if (e.target.value === "__custom__") {
-                          setQuickForm({ ...quickForm, location: "__custom__", customLocation: "" });
-                        } else {
-                          setQuickForm({ ...quickForm, location: e.target.value, customLocation: "" });
-                        }
-                      }}
-                      className="w-full rounded-md border border-[#F2A0B8]/40 bg-white px-3 py-2 font-body text-sm text-[#3D1A2E]"
-                    >
-                      <option value="kitchener">APY Kitchener — 329 King St E</option>
-                      <option value="hamilton">APY Hamilton — 2751 Barton St E</option>
-                      <option value="oakville">APY Oakville — 1670 North Service Rd E</option>
-                      <option value="__custom__">Client&apos;s Location (enter below)</option>
-                    </select>
+                  {/* Card 4: Location */}
+                  <div className="bg-white rounded-2xl border border-[#F2A0B8]/20 p-5 shadow-sm">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-7 h-7 rounded-lg bg-[#FFF5F8] flex items-center justify-center">
+                        <MapPin size={14} className="text-[#8B2252]" />
+                      </div>
+                      <h3 className="font-display text-sm font-bold text-[#1A0A12]">Location</h3>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      {["kitchener", "hamilton", "oakville", "__custom__"].map((loc) => {
+                        const labels: Record<string, string> = {
+                          kitchener: "APY Kitchener",
+                          hamilton: "APY Hamilton",
+                          oakville: "APY Oakville",
+                          __custom__: "Client's Location",
+                        };
+                        const addresses: Record<string, string> = {
+                          kitchener: "329 King St E, Kitchener",
+                          hamilton: "2751 Barton St E, Hamilton",
+                          oakville: "1670 North Service Rd E, Oakville",
+                          __custom__: "Enter address below",
+                        };
+                        const isSelected = (quickForm.location === "__custom__" ? "__custom__" : quickForm.location) === loc;
+                        return (
+                          <button
+                            key={loc}
+                            type="button"
+                            onClick={() => {
+                              if (loc === "__custom__") {
+                                setQuickForm({ ...quickForm, location: "__custom__", customLocation: "" });
+                              } else {
+                                setQuickForm({ ...quickForm, location: loc, customLocation: "" });
+                              }
+                            }}
+                            className={`w-full text-left rounded-xl p-3 border transition-all ${
+                              isSelected
+                                ? "border-[#8B2252]/40 bg-[#FFF5F8] shadow-sm"
+                                : "border-[#F2A0B8]/15 bg-[#FAFAFA] hover:border-[#F2A0B8]/40 hover:bg-white"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                                isSelected ? "border-[#8B2252]" : "border-[#D4708A]/30"
+                              }`}>
+                                {isSelected && <div className="w-2 h-2 rounded-full bg-[#8B2252]" />}
+                              </div>
+                              <div>
+                                <p className="font-body text-sm font-semibold text-[#1A0A12]">{labels[loc]}</p>
+                                <p className="font-body text-xs text-[#3D1A2E]/45">{addresses[loc]}</p>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
                     {quickForm.location === "__custom__" && (
                       <Input
                         value={quickForm.customLocation}
                         onChange={(e) => setQuickForm({ ...quickForm, customLocation: e.target.value })}
                         placeholder="e.g. 2751 Barton Street East, Hamilton, ON"
-                        className="mt-2 border-[#F2A0B8]/40 font-body text-sm"
+                        className="mt-3 border-[#F2A0B8]/30 font-body text-sm bg-[#FAFAFA] focus:bg-white transition-colors"
                       />
                     )}
                   </div>
 
-                  {/* Pricing */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Total Price (CAD) *</label>
-                      <Input type="number" value={quickForm.finalPrice} onChange={(e) => setQuickForm({ ...quickForm, finalPrice: e.target.value })} placeholder="e.g. 3000" className="border-[#F2A0B8]/40 font-body" />
+                  {/* Card 5: Pricing */}
+                  <div className="bg-white rounded-2xl border border-[#F2A0B8]/20 p-5 shadow-sm">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-7 h-7 rounded-lg bg-[#FFF5F8] flex items-center justify-center">
+                        <DollarSign size={14} className="text-[#8B2252]" />
+                      </div>
+                      <h3 className="font-display text-sm font-bold text-[#1A0A12]">Pricing</h3>
                     </div>
-                    <div>
-                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Pricing Type</label>
-                      <Select value={quickForm.pricingType} onValueChange={(v) => setQuickForm({ ...quickForm, pricingType: v as "plus_hst" | "all_in" })}>
-                        <SelectTrigger className="border-[#F2A0B8]/40 font-body text-sm"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="plus_hst">+ HST (13%)</SelectItem>
-                          <SelectItem value="all_in">All-in (HST included)</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1.5 block">Base Price (CAD) *</label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm text-[#3D1A2E]/40">$</span>
+                          <Input type="number" value={quickForm.finalPrice} onChange={(e) => setQuickForm({ ...quickForm, finalPrice: e.target.value })} placeholder="3000" className="border-[#F2A0B8]/30 font-body pl-7 bg-[#FAFAFA] focus:bg-white transition-colors" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1.5 block">Pricing Type</label>
+                        <Select value={quickForm.pricingType} onValueChange={(v) => setQuickForm({ ...quickForm, pricingType: v as "plus_hst" | "all_in" })}>
+                          <SelectTrigger className="border-[#F2A0B8]/30 font-body text-sm bg-[#FAFAFA]"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="plus_hst">+ HST (13%)</SelectItem>
+                            <SelectItem value="all_in">All-in (HST included)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
+
+                    {/* HST Breakdown */}
+                    {parseFloat(quickForm.finalPrice) > 0 && (
+                      <div className="mt-4 bg-gradient-to-br from-[#FFF5F8] to-[#FFF0F5] rounded-xl p-4 border border-[#F2A0B8]/15">
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm font-body">
+                            <span className="text-[#3D1A2E]/50">Base price</span>
+                            <span className="font-medium text-[#1A0A12]">${quickForm.pricingType === "plus_hst" ? parseFloat(quickForm.finalPrice).toLocaleString() : (parseFloat(quickForm.finalPrice) / 1.13).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm font-body">
+                            <span className="text-[#3D1A2E]/50">HST (13%)</span>
+                            <span className="font-medium text-[#1A0A12]">${quickForm.pricingType === "plus_hst" ? (parseFloat(quickForm.finalPrice) * 0.13).toFixed(2) : (parseFloat(quickForm.finalPrice) - parseFloat(quickForm.finalPrice) / 1.13).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm font-body font-bold border-t border-[#D4708A]/15 pt-2.5 mt-1">
+                            <span className="text-[#1A0A12]">Total charged</span>
+                            <span className="text-[#8B2252] text-base">${quickForm.pricingType === "plus_hst" ? (parseFloat(quickForm.finalPrice) * 1.13).toFixed(2) : parseFloat(quickForm.finalPrice).toFixed(2)} CAD</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* HST Preview */}
-                  {parseFloat(quickForm.finalPrice) > 0 && (
-                    <div className="bg-[#FFF5F8] rounded-lg p-3 border border-[#F2A0B8]/20">
-                      <div className="flex justify-between text-sm font-body">
-                        <span className="text-[#3D1A2E]/55">Base price</span>
-                        <span className="font-semibold">${quickForm.pricingType === "plus_hst" ? parseFloat(quickForm.finalPrice).toLocaleString() : (parseFloat(quickForm.finalPrice) / 1.13).toFixed(2)}</span>
+                  {/* Card 6: Notes */}
+                  <div className="bg-white rounded-2xl border border-[#F2A0B8]/20 p-5 shadow-sm">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-7 h-7 rounded-lg bg-[#FFF5F8] flex items-center justify-center">
+                        <StickyNote size={14} className="text-[#8B2252]" />
                       </div>
-                      <div className="flex justify-between text-sm font-body">
-                        <span className="text-[#3D1A2E]/55">HST (13%)</span>
-                        <span className="font-semibold">${quickForm.pricingType === "plus_hst" ? (parseFloat(quickForm.finalPrice) * 0.13).toFixed(2) : (parseFloat(quickForm.finalPrice) - parseFloat(quickForm.finalPrice) / 1.13).toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between text-sm font-body font-bold border-t border-[#F2A0B8]/20 pt-2 mt-2">
-                        <span className="text-[#1A0A12]">Total charged to client</span>
-                        <span className="text-[#8B2252]">${quickForm.pricingType === "plus_hst" ? (parseFloat(quickForm.finalPrice) * 1.13).toFixed(2) : parseFloat(quickForm.finalPrice).toFixed(2)} CAD</span>
-                      </div>
+                      <h3 className="font-display text-sm font-bold text-[#1A0A12]">Internal Notes</h3>
+                      <span className="font-body text-[11px] text-[#3D1A2E]/35 ml-1">(optional)</span>
                     </div>
-                  )}
-
-                  {/* Notes */}
-                  <div>
-                    <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Internal Notes (optional)</label>
-                    <Textarea value={quickForm.notes} onChange={(e) => setQuickForm({ ...quickForm, notes: e.target.value })} placeholder="Any extra details about this event..." className="border-[#F2A0B8]/40 font-body text-sm" rows={2} />
+                    <Textarea value={quickForm.notes} onChange={(e) => setQuickForm({ ...quickForm, notes: e.target.value })} placeholder="Any extra details about this event — not shown to the client..." className="border-[#F2A0B8]/30 font-body text-sm bg-[#FAFAFA] focus:bg-white transition-colors resize-none" rows={3} />
                   </div>
 
-                  {/* Generate */}
+                  {/* Generate Button */}
                   <Button
                     onClick={handleQuickGenerate}
                     disabled={isQuickGenerating}
-                    className="w-full bg-gradient-to-r from-[#8B2252] to-[#D4708A] hover:from-[#6B1A40] hover:to-[#B85A74] text-white font-body font-bold rounded-full py-3"
+                    className="w-full bg-gradient-to-r from-[#8B2252] to-[#D4708A] hover:from-[#6B1A40] hover:to-[#B85A74] text-white font-body font-bold rounded-full py-6 text-base shadow-lg shadow-[#8B2252]/20 transition-all hover:shadow-xl hover:shadow-[#8B2252]/25 active:scale-[0.98]"
                   >
                     {isQuickGenerating ? (
-                      <><Loader2 size={16} className="animate-spin mr-2" /> Creating Luma Event...</>
+                      <><Loader2 size={18} className="animate-spin mr-2" /> Creating Luma Event...</>
                     ) : (
-                      <><Link2 size={16} className="mr-2" /> Generate Private Luma Link</>
+                      <><Link2 size={18} className="mr-2" /> Generate Private Luma Link</>
                     )}
                   </Button>
                 </div>
