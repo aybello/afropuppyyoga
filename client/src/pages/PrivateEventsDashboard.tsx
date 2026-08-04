@@ -614,38 +614,20 @@ export default function PrivateEventsDashboard() {
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-5">
-                  {/* Card 1: Client Info */}
+                <div className="space-y-4">
+                  {/* Section 1: Client + Event */}
                   <div className="bg-white rounded-2xl border border-[#F2A0B8]/20 p-5 shadow-sm">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="w-7 h-7 rounded-lg bg-[#FFF5F8] flex items-center justify-center">
-                        <UserCircle size={14} className="text-[#8B2252]" />
-                      </div>
-                      <h3 className="font-display text-sm font-bold text-[#1A0A12]">Client Information</h3>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                       <div>
-                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1.5 block">Client Name *</label>
+                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">Client Name *</label>
                         <Input value={quickForm.clientName} onChange={(e) => setQuickForm({ ...quickForm, clientName: e.target.value })} placeholder="e.g. Sidney Thompson" className="border-[#F2A0B8]/30 font-body bg-[#FAFAFA] focus:bg-white transition-colors" />
                       </div>
                       <div>
-                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1.5 block">Organization</label>
+                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">Organization</label>
                         <Input value={quickForm.organization} onChange={(e) => setQuickForm({ ...quickForm, organization: e.target.value })} placeholder="e.g. Hamilton Girls Flag Football" className="border-[#F2A0B8]/30 font-body bg-[#FAFAFA] focus:bg-white transition-colors" />
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Card 2: Event Details */}
-                  <div className="bg-white rounded-2xl border border-[#F2A0B8]/20 p-5 shadow-sm">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="w-7 h-7 rounded-lg bg-[#FFF5F8] flex items-center justify-center">
-                        <Sparkles size={14} className="text-[#8B2252]" />
-                      </div>
-                      <h3 className="font-display text-sm font-bold text-[#1A0A12]">Event Details</h3>
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
                       <div>
-                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1.5 block">Event Type</label>
+                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">Event Type</label>
                         <Select value={quickForm.eventType} onValueChange={(v) => setQuickForm({ ...quickForm, eventType: v })}>
                           <SelectTrigger className="border-[#F2A0B8]/30 font-body text-sm bg-[#FAFAFA]"><SelectValue /></SelectTrigger>
                           <SelectContent>
@@ -660,142 +642,95 @@ export default function PrivateEventsDashboard() {
                         </Select>
                       </div>
                       <div>
-                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1.5 block">Event Date *</label>
+                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">Event Date *</label>
                         <Input type="date" value={quickForm.eventDate} onChange={(e) => setQuickForm({ ...quickForm, eventDate: e.target.value })} className="border-[#F2A0B8]/30 font-body text-sm bg-[#FAFAFA] focus:bg-white transition-colors" />
                       </div>
                       <div>
-                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1.5 block">Max Guests</label>
+                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">Max Guests</label>
                         <Input type="number" min="1" value={quickForm.maxCapacity} onChange={(e) => setQuickForm({ ...quickForm, maxCapacity: e.target.value })} className="border-[#F2A0B8]/30 font-body text-sm bg-[#FAFAFA] focus:bg-white transition-colors" />
                       </div>
-                    </div>
-                    <div className="mt-4">
-                      <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1.5 block">Puppy Breed</label>
-                      <div className="flex items-center gap-2">
-                        <PawPrint size={14} className="text-[#D4708A] shrink-0" />
+                      <div>
+                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">Puppy Breed</label>
                         <Input value={quickForm.puppyBreed} onChange={(e) => setQuickForm({ ...quickForm, puppyBreed: e.target.value })} placeholder="e.g. French Bulldog" className="border-[#F2A0B8]/30 font-body bg-[#FAFAFA] focus:bg-white transition-colors" />
                       </div>
                     </div>
                   </div>
 
-                  {/* Card 3: Schedule */}
+                  {/* Section 2: Schedule + Location */}
                   <div className="bg-white rounded-2xl border border-[#F2A0B8]/20 p-5 shadow-sm">
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-[#FFF5F8] flex items-center justify-center">
-                          <Clock size={14} className="text-[#8B2252]" />
-                        </div>
-                        <h3 className="font-display text-sm font-bold text-[#1A0A12]">Session Schedule</h3>
+                        <Clock size={14} className="text-[#8B2252]" />
+                        <h3 className="font-display text-sm font-bold text-[#1A0A12]">Schedule & Location</h3>
                       </div>
-                      <Button type="button" variant="ghost" size="sm" className="text-[#8B2252] font-body text-xs hover:bg-[#FFF5F8] rounded-full px-3" onClick={addSession}>
+                      <Button type="button" variant="ghost" size="sm" className="text-[#8B2252] font-body text-xs hover:bg-[#FFF5F8] rounded-full px-3 h-7" onClick={addSession}>
                         + Add Session
                       </Button>
                     </div>
-                    <div className="space-y-3">
+                    <div className="space-y-2 mb-4">
                       {quickForm.sessionSchedule.map((session, idx) => (
-                        <div key={idx} className="flex items-center gap-3 bg-[#FAFAFA] rounded-xl p-3 border border-[#F2A0B8]/10">
-                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#8B2252] to-[#D4708A] flex items-center justify-center shrink-0">
-                            <span className="text-white text-[10px] font-bold">{idx + 1}</span>
-                          </div>
-                          <Input type="time" value={session.startTime} onChange={(e) => updateSession(idx, "startTime", e.target.value)} className="border-[#F2A0B8]/30 font-body text-sm w-36 bg-white" />
-                          <span className="font-body text-xs text-[#3D1A2E]/40 font-medium">to</span>
-                          <Input type="time" value={session.endTime} onChange={(e) => updateSession(idx, "endTime", e.target.value)} className="border-[#F2A0B8]/30 font-body text-sm w-36 bg-white" />
+                        <div key={idx} className="flex items-center gap-2 bg-[#FAFAFA] rounded-lg p-2 border border-[#F2A0B8]/10">
+                          <span className="w-5 h-5 rounded-full bg-gradient-to-br from-[#8B2252] to-[#D4708A] flex items-center justify-center shrink-0 text-white text-[9px] font-bold">{idx + 1}</span>
+                          <Input type="time" value={session.startTime} onChange={(e) => updateSession(idx, "startTime", e.target.value)} className="border-[#F2A0B8]/30 font-body text-sm w-32 bg-white h-8" />
+                          <span className="font-body text-xs text-[#3D1A2E]/40">to</span>
+                          <Input type="time" value={session.endTime} onChange={(e) => updateSession(idx, "endTime", e.target.value)} className="border-[#F2A0B8]/30 font-body text-sm w-32 bg-white h-8" />
                           {quickForm.sessionSchedule.length > 1 && (
-                            <Button type="button" variant="ghost" size="sm" className="text-red-400 hover:text-red-600 hover:bg-red-50 text-xs px-2 rounded-full ml-auto" onClick={() => removeSession(idx)}>Remove</Button>
+                            <Button type="button" variant="ghost" size="sm" className="text-red-400 hover:text-red-600 text-xs px-2 h-7 ml-auto" onClick={() => removeSession(idx)}>Remove</Button>
                           )}
                         </div>
                       ))}
+                      {quickForm.sessionSchedule.length > 1 && (
+                        <p className="font-body text-[11px] text-[#3D1A2E]/40 flex items-center gap-1">
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#D4708A]/40"></span>
+                          30-min puppy rest break between sessions
+                        </p>
+                      )}
                     </div>
-                    {quickForm.sessionSchedule.length > 1 && (
-                      <p className="font-body text-[11px] text-[#3D1A2E]/40 mt-3 flex items-center gap-1">
-                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#D4708A]/40"></span>
-                        30-min puppy rest break between sessions
-                      </p>
-                    )}
+                    <div className="border-t border-[#F2A0B8]/15 pt-3">
+                      <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-2 block">Location</label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {["kitchener", "hamilton", "oakville", "__custom__"].map((loc) => {
+                          const labels: Record<string, string> = { kitchener: "Kitchener", hamilton: "Hamilton", oakville: "Oakville", __custom__: "Custom" };
+                          const isSelected = quickForm.location === loc;
+                          return (
+                            <button
+                              key={loc}
+                              type="button"
+                              onClick={() => setQuickForm({ ...quickForm, location: loc, customLocation: loc === "__custom__" ? "" : "" })}
+                              className={`text-center rounded-lg py-2 px-2 border text-xs font-body font-medium transition-all ${
+                                isSelected
+                                  ? "border-[#8B2252]/40 bg-[#FFF5F8] text-[#8B2252] shadow-sm"
+                                  : "border-[#F2A0B8]/15 bg-[#FAFAFA] text-[#3D1A2E]/60 hover:border-[#F2A0B8]/40"
+                              }`}
+                            >
+                              {labels[loc]}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {quickForm.location === "__custom__" && (
+                        <Input
+                          value={quickForm.customLocation}
+                          onChange={(e) => setQuickForm({ ...quickForm, customLocation: e.target.value })}
+                          placeholder="e.g. 2751 Barton Street East, Hamilton, ON"
+                          className="mt-2 border-[#F2A0B8]/30 font-body text-sm bg-[#FAFAFA] focus:bg-white transition-colors"
+                        />
+                      )}
+                    </div>
                   </div>
 
-                  {/* Card 4: Location */}
+                  {/* Section 3: Pricing + Notes + CTA */}
                   <div className="bg-white rounded-2xl border border-[#F2A0B8]/20 p-5 shadow-sm">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="w-7 h-7 rounded-lg bg-[#FFF5F8] flex items-center justify-center">
-                        <MapPin size={14} className="text-[#8B2252]" />
-                      </div>
-                      <h3 className="font-display text-sm font-bold text-[#1A0A12]">Location</h3>
-                    </div>
-                    <div className="grid grid-cols-1 gap-2">
-                      {["kitchener", "hamilton", "oakville", "__custom__"].map((loc) => {
-                        const labels: Record<string, string> = {
-                          kitchener: "APY Kitchener",
-                          hamilton: "APY Hamilton",
-                          oakville: "APY Oakville",
-                          __custom__: "Client's Location",
-                        };
-                        const addresses: Record<string, string> = {
-                          kitchener: "329 King St E, Kitchener",
-                          hamilton: "2751 Barton St E, Hamilton",
-                          oakville: "1670 North Service Rd E, Oakville",
-                          __custom__: "Enter address below",
-                        };
-                        const isSelected = (quickForm.location === "__custom__" ? "__custom__" : quickForm.location) === loc;
-                        return (
-                          <button
-                            key={loc}
-                            type="button"
-                            onClick={() => {
-                              if (loc === "__custom__") {
-                                setQuickForm({ ...quickForm, location: "__custom__", customLocation: "" });
-                              } else {
-                                setQuickForm({ ...quickForm, location: loc, customLocation: "" });
-                              }
-                            }}
-                            className={`w-full text-left rounded-xl p-3 border transition-all ${
-                              isSelected
-                                ? "border-[#8B2252]/40 bg-[#FFF5F8] shadow-sm"
-                                : "border-[#F2A0B8]/15 bg-[#FAFAFA] hover:border-[#F2A0B8]/40 hover:bg-white"
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                                isSelected ? "border-[#8B2252]" : "border-[#D4708A]/30"
-                              }`}>
-                                {isSelected && <div className="w-2 h-2 rounded-full bg-[#8B2252]" />}
-                              </div>
-                              <div>
-                                <p className="font-body text-sm font-semibold text-[#1A0A12]">{labels[loc]}</p>
-                                <p className="font-body text-xs text-[#3D1A2E]/45">{addresses[loc]}</p>
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {quickForm.location === "__custom__" && (
-                      <Input
-                        value={quickForm.customLocation}
-                        onChange={(e) => setQuickForm({ ...quickForm, customLocation: e.target.value })}
-                        placeholder="e.g. 2751 Barton Street East, Hamilton, ON"
-                        className="mt-3 border-[#F2A0B8]/30 font-body text-sm bg-[#FAFAFA] focus:bg-white transition-colors"
-                      />
-                    )}
-                  </div>
-
-                  {/* Card 5: Pricing */}
-                  <div className="bg-white rounded-2xl border border-[#F2A0B8]/20 p-5 shadow-sm">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="w-7 h-7 rounded-lg bg-[#FFF5F8] flex items-center justify-center">
-                        <DollarSign size={14} className="text-[#8B2252]" />
-                      </div>
-                      <h3 className="font-display text-sm font-bold text-[#1A0A12]">Pricing</h3>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4 mb-3">
                       <div>
-                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1.5 block">Base Price (CAD) *</label>
+                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">Base Price (CAD) *</label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm text-[#3D1A2E]/40">$</span>
                           <Input type="number" value={quickForm.finalPrice} onChange={(e) => setQuickForm({ ...quickForm, finalPrice: e.target.value })} placeholder="3000" className="border-[#F2A0B8]/30 font-body pl-7 bg-[#FAFAFA] focus:bg-white transition-colors" />
                         </div>
                       </div>
                       <div>
-                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1.5 block">Pricing Type</label>
+                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">Pricing Type</label>
                         <Select value={quickForm.pricingType} onValueChange={(v) => setQuickForm({ ...quickForm, pricingType: v as "plus_hst" | "all_in" })}>
                           <SelectTrigger className="border-[#F2A0B8]/30 font-body text-sm bg-[#FAFAFA]"><SelectValue /></SelectTrigger>
                           <SelectContent>
@@ -805,52 +740,38 @@ export default function PrivateEventsDashboard() {
                         </Select>
                       </div>
                     </div>
-
-                    {/* HST Breakdown */}
                     {parseFloat(quickForm.finalPrice) > 0 && (
-                      <div className="mt-4 bg-gradient-to-br from-[#FFF5F8] to-[#FFF0F5] rounded-xl p-4 border border-[#F2A0B8]/15">
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm font-body">
-                            <span className="text-[#3D1A2E]/50">Base price</span>
-                            <span className="font-medium text-[#1A0A12]">${quickForm.pricingType === "plus_hst" ? parseFloat(quickForm.finalPrice).toLocaleString() : (parseFloat(quickForm.finalPrice) / 1.13).toFixed(2)}</span>
-                          </div>
-                          <div className="flex justify-between text-sm font-body">
-                            <span className="text-[#3D1A2E]/50">HST (13%)</span>
-                            <span className="font-medium text-[#1A0A12]">${quickForm.pricingType === "plus_hst" ? (parseFloat(quickForm.finalPrice) * 0.13).toFixed(2) : (parseFloat(quickForm.finalPrice) - parseFloat(quickForm.finalPrice) / 1.13).toFixed(2)}</span>
-                          </div>
-                          <div className="flex justify-between text-sm font-body font-bold border-t border-[#D4708A]/15 pt-2.5 mt-1">
-                            <span className="text-[#1A0A12]">Total charged</span>
-                            <span className="text-[#8B2252] text-base">${quickForm.pricingType === "plus_hst" ? (parseFloat(quickForm.finalPrice) * 1.13).toFixed(2) : parseFloat(quickForm.finalPrice).toFixed(2)} CAD</span>
-                          </div>
+                      <div className="bg-[#FFF5F8] rounded-lg p-3 border border-[#F2A0B8]/15 mb-3">
+                        <div className="flex justify-between text-xs font-body">
+                          <span className="text-[#3D1A2E]/50">Base</span>
+                          <span className="font-medium">${quickForm.pricingType === "plus_hst" ? parseFloat(quickForm.finalPrice).toLocaleString() : (parseFloat(quickForm.finalPrice) / 1.13).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs font-body mt-1">
+                          <span className="text-[#3D1A2E]/50">HST (13%)</span>
+                          <span className="font-medium">${quickForm.pricingType === "plus_hst" ? (parseFloat(quickForm.finalPrice) * 0.13).toFixed(2) : (parseFloat(quickForm.finalPrice) - parseFloat(quickForm.finalPrice) / 1.13).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm font-body font-bold border-t border-[#D4708A]/15 pt-2 mt-2">
+                          <span className="text-[#1A0A12]">Total</span>
+                          <span className="text-[#8B2252]">${quickForm.pricingType === "plus_hst" ? (parseFloat(quickForm.finalPrice) * 1.13).toFixed(2) : parseFloat(quickForm.finalPrice).toFixed(2)} CAD</span>
                         </div>
                       </div>
                     )}
-                  </div>
-
-                  {/* Card 6: Notes */}
-                  <div className="bg-white rounded-2xl border border-[#F2A0B8]/20 p-5 shadow-sm">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="w-7 h-7 rounded-lg bg-[#FFF5F8] flex items-center justify-center">
-                        <StickyNote size={14} className="text-[#8B2252]" />
-                      </div>
-                      <h3 className="font-display text-sm font-bold text-[#1A0A12]">Internal Notes</h3>
-                      <span className="font-body text-[11px] text-[#3D1A2E]/35 ml-1">(optional)</span>
+                    <div className="mb-4">
+                      <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">Internal Notes <span className="text-[#3D1A2E]/30">(optional)</span></label>
+                      <Textarea value={quickForm.notes} onChange={(e) => setQuickForm({ ...quickForm, notes: e.target.value })} placeholder="Any extra details — not shown to the client..." className="border-[#F2A0B8]/30 font-body text-sm bg-[#FAFAFA] focus:bg-white transition-colors resize-none" rows={2} />
                     </div>
-                    <Textarea value={quickForm.notes} onChange={(e) => setQuickForm({ ...quickForm, notes: e.target.value })} placeholder="Any extra details about this event — not shown to the client..." className="border-[#F2A0B8]/30 font-body text-sm bg-[#FAFAFA] focus:bg-white transition-colors resize-none" rows={3} />
+                    <Button
+                      onClick={handleQuickGenerate}
+                      disabled={isQuickGenerating}
+                      className="w-full bg-gradient-to-r from-[#8B2252] to-[#D4708A] hover:from-[#6B1A40] hover:to-[#B85A74] text-white font-body font-bold rounded-full py-5 text-sm shadow-lg shadow-[#8B2252]/20 transition-all hover:shadow-xl hover:shadow-[#8B2252]/25 active:scale-[0.98]"
+                    >
+                      {isQuickGenerating ? (
+                        <><Loader2 size={16} className="animate-spin mr-2" /> Creating Luma Event...</>
+                      ) : (
+                        <><Link2 size={16} className="mr-2" /> Generate Private Luma Link</>
+                      )}
+                    </Button>
                   </div>
-
-                  {/* Generate Button */}
-                  <Button
-                    onClick={handleQuickGenerate}
-                    disabled={isQuickGenerating}
-                    className="w-full bg-gradient-to-r from-[#8B2252] to-[#D4708A] hover:from-[#6B1A40] hover:to-[#B85A74] text-white font-body font-bold rounded-full py-6 text-base shadow-lg shadow-[#8B2252]/20 transition-all hover:shadow-xl hover:shadow-[#8B2252]/25 active:scale-[0.98]"
-                  >
-                    {isQuickGenerating ? (
-                      <><Loader2 size={18} className="animate-spin mr-2" /> Creating Luma Event...</>
-                    ) : (
-                      <><Link2 size={18} className="mr-2" /> Generate Private Luma Link</>
-                    )}
-                  </Button>
                 </div>
               )}
             </div>

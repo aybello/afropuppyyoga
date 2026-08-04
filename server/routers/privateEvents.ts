@@ -186,7 +186,7 @@ async function createLumaEvent(params: {
       visibility: "private",
       max_capacity: params.maxCapacity,
       geo_address_json: googlePlaceId
-        ? { type: "google", address: loc!.address, full_address: loc!.fullAddress, city_state: locKey === 'kitchener' ? 'Kitchener, ON' : locKey === 'hamilton' ? 'Hamilton, ON' : 'Oakville, ON', google_maps_place_id: googlePlaceId }
+        ? { type: "google", place_id: googlePlaceId }
         : { type: "manual", address },
       ...(coordinate ? { coordinate } : {}),
       phone_number_requirement: "required",
