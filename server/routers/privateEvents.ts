@@ -725,9 +725,9 @@ export const privateEventsRouter = router({
       // Check if owner approval is needed (discount below estimate or > $3000)
       const needsApproval = input.finalPrice < inquiry.estimatedMin || input.finalPrice > 3000;
 
-      // Build event name
+      // Build event name — include org/client name
       const orgName = input.organization || inquiry.name;
-      const eventName = "Private PuppyYoga Experience";
+      const eventName = orgName ? `${orgName} — Private PuppyYoga` : "Private PuppyYoga Experience";
 
       // Build ISO timestamps (America/Toronto)
       const startAt = `${input.eventDate}T${input.startTime}:00-04:00`;
@@ -1005,7 +1005,7 @@ export const privateEventsRouter = router({
 
       // Create the Luma event
       const { eventId, eventUrl } = await createLumaEvent({
-        name: "Private PuppyYoga Experience",
+        name: orgName ? `${orgName} — Private PuppyYoga` : "Private PuppyYoga Experience",
         startAt,
         endAt,
         location: input.customLocation || input.location,
