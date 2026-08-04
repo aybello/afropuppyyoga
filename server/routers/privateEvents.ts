@@ -10,14 +10,29 @@ import { TRPCError } from "@trpc/server";
 const LUMA_BASE = "https://public-api.luma.com/v1";
 const HST_RATE = 0.13;
 
-/** Locations with their addresses for Luma events */
-const LOCATION_MAP: Record<string, { address: string; lat: number; lng: number }> = {
-  kitchener: { address: "Kitchener, ON, Canada", lat: 43.4516, lng: -80.4925 },
-  cambridge: { address: "Cambridge, ON, Canada", lat: 43.3616, lng: -80.3144 },
-  toronto: { address: "Toronto, ON, Canada", lat: 43.6532, lng: -79.3832 },
-  guelph: { address: "Guelph, ON, Canada", lat: 43.5448, lng: -80.2482 },
-  hamilton: { address: "Hamilton, ON, Canada", lat: 43.2557, lng: -79.8711 },
-  london: { address: "London, ON, Canada", lat: 42.9849, lng: -81.2453 },
+/** APY Studio locations with actual addresses */
+const LOCATION_MAP: Record<string, { address: string; fullAddress: string; lat: number; lng: number; googlePlaceId?: string }> = {
+  kitchener: {
+    address: "329 King St E",
+    fullAddress: "329 King St E, Kitchener, ON N2G 2L2, Canada",
+    lat: 43.4516,
+    lng: -80.4925,
+    googlePlaceId: "ChIJH-amGez0K4gRjJwKZT5ifpU",
+  },
+  hamilton: {
+    address: "2751 Barton St E",
+    fullAddress: "2751 Barton St E, Hamilton, ON L8E 2J8, Canada",
+    lat: 43.2557,
+    lng: -79.8711,
+    googlePlaceId: "ChIJj19OTp-YLIgRv4e9qQwDoq8",
+  },
+  oakville: {
+    address: "1670 North Service Rd E, Unit 108",
+    fullAddress: "1670 North Service Rd E unit 108, Oakville, ON L6H 7G3, Canada",
+    lat: 43.4545,
+    lng: -79.6625,
+    googlePlaceId: "ChIJofNPAT9DK4gRAhVcvaHDk7Y",
+  },
 };
 
 /** APY branded cover image for private events */
@@ -152,8 +167,9 @@ async function createLumaEvent(params: {
   const locKey = params.location.toLowerCase().trim();
   const loc = LOCATION_MAP[locKey];
   // If not a known studio, use the raw address string (client's location)
-  const address = loc ? loc.address : params.location;
+  const address = loc ? loc.fullAddress : params.location;
   const coordinate = loc ? { latitude: loc.lat, longitude: loc.lng } : undefined;
+  const googlePlaceId = loc?.googlePlaceId;
 
   // 1. Create the event (private, unlisted)
   const createRes = await fetch(`${LUMA_BASE}/events/create`, {
@@ -169,7 +185,9 @@ async function createLumaEvent(params: {
       timezone: "America/Toronto",
       visibility: "private",
       max_capacity: params.maxCapacity,
-      geo_address_json: { type: "manual", address },
+      geo_address_json: googlePlaceId
+        ? { address: loc!.address, full_address: loc!.fullAddress, city_state: locKey === 'kitchener' ? 'Kitchener, ON' : locKey === 'hamilton' ? 'Hamilton, ON' : 'Oakville, ON', google_maps_place_id: googlePlaceId }
+        : { type: "manual", address },
       ...(coordinate ? { coordinate } : {}),
       phone_number_requirement: "required",
       name_requirement: "first-last",

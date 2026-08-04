@@ -678,12 +678,9 @@ export default function PrivateEventsDashboard() {
                       }}
                       className="w-full rounded-md border border-[#F2A0B8]/40 bg-white px-3 py-2 font-body text-sm text-[#3D1A2E]"
                     >
-                      <option value="kitchener">APY Studio — Kitchener</option>
-                      <option value="cambridge">APY Studio — Cambridge</option>
-                      <option value="toronto">APY Studio — Toronto</option>
-                      <option value="guelph">APY Studio — Guelph</option>
-                      <option value="hamilton">APY Studio — Hamilton</option>
-                      <option value="london">APY Studio — London</option>
+                      <option value="kitchener">APY Kitchener — 329 King St E</option>
+                      <option value="hamilton">APY Hamilton — 2751 Barton St E</option>
+                      <option value="oakville">APY Oakville — 1670 North Service Rd E</option>
                       <option value="__custom__">Client&apos;s Location (enter below)</option>
                     </select>
                     {quickForm.location === "__custom__" && (
@@ -1066,12 +1063,9 @@ export default function PrivateEventsDashboard() {
                       className="w-full rounded-md border border-[#F2A0B8]/40 bg-white px-3 py-2 font-body text-sm text-[#3D1A2E]"
                     >
                       <option value="">Use inquiry location ({selectedInquiry?.location || "Kitchener"})</option>
-                      <option value="Kitchener, ON">APY Studio — Kitchener</option>
-                      <option value="Cambridge, ON">APY Studio — Cambridge</option>
-                      <option value="Toronto, ON">APY Studio — Toronto</option>
-                      <option value="Guelph, ON">APY Studio — Guelph</option>
-                      <option value="Hamilton, ON">APY Studio — Hamilton</option>
-                      <option value="London, ON">APY Studio — London</option>
+                      <option value="kitchener">APY Kitchener — 329 King St E</option>
+                      <option value="hamilton">APY Hamilton — 2751 Barton St E</option>
+                      <option value="oakville">APY Oakville — 1670 North Service Rd E</option>
                       <option value="__custom__">Client&apos;s Location (enter below)</option>
                     </select>
                     {bookingForm.customLocation.startsWith("__custom__") && (
