@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { adminProcedure, staffProcedure, publicProcedure, router } from "../_core/trpc";
 
 /** Escape user-supplied text before interpolating into HTML email templates */
@@ -295,6 +296,7 @@ export const careersRouter = router({
       })
     )
     .mutation(async ({ input }) => {
+      console.log(`[Onboarding] Sending onboarding email to ${input.applicantEmail} for ${input.applicantName} (${input.role}, ${input.location})`);
       // Use role-specific email template
       const isYogaInstructor = input.role.toLowerCase().includes("yoga instructor") || input.role.toLowerCase().includes("instructor");
       const { subject, html, text } = isYogaInstructor
@@ -316,10 +318,17 @@ export const careersRouter = router({
             additionalNotes: input.additionalNotes,
           });
 
-      await sendEmail({ to: input.applicantEmail, subject, html, text });
+      try {
+        await sendEmail({ to: input.applicantEmail, subject, html, text });
+        console.log(`[Onboarding] ✅ Email sent successfully to ${input.applicantEmail}`);
+      } catch (err: any) {
+        console.error(`[Onboarding] ❌ Failed to send email:`, err.message || err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `Email send failed: ${err.message}` });
+      }
 
       // Auto-advance status to onboarded
       await updateJobApplication(input.id, { status: "onboarded" });
+      console.log(`[Onboarding] Status updated to onboarded for application ${input.id}`);
 
       await notifyOwner({
         title: `Onboarding Email Sent — ${input.applicantName}`,
