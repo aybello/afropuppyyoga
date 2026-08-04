@@ -558,3 +558,6 @@
 
 ## Copy Email Template Button (Aug 4, 2026)
 - [x] Add "Copy Email" button to the Quick Booking Link success state that generates a confirmation email from form data (client name, date, time, guest count, location, luma link) and copies to clipboard
+
+## Email Template Update (Aug 4, 2026)
+- [x] Update email template to match new format: location as address block, puppy breed in bullet, "Venue, setup and cleanup", shorter closing, no future-confirmation disclaimer

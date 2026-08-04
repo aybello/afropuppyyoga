@@ -618,9 +618,14 @@ export default function PrivateEventsDashboard() {
                         <h3 className="font-display text-sm font-bold text-[#1A0A12]">Email Template</h3>
                       </div>
                       <Button size="sm" variant="outline" className="border-[#F2A0B8]/40 hover:bg-[#FFF5F8] font-body text-xs" onClick={() => {
-                        const firstName = quickForm.clientName.split(" ")[0];
-                        const locationLabels: Record<string, string> = { kitchener: "Kitchener", hamilton: "Hamilton", oakville: "Oakville" };
-                        const locationName = quickForm.location === "__custom__" ? quickForm.customLocation : locationLabels[quickForm.location] || quickForm.location;
+                        const firstName = quickForm.clientName.split(" ")[0] || "[Name]";
+                        const locationAddresses: Record<string, { street: string; city: string }> = {
+                          kitchener: { street: "329 King Street East", city: "Kitchener, ON" },
+                          hamilton: { street: "2751 Barton Street East", city: "Hamilton, ON" },
+                          oakville: { street: "1670 North Service Road East", city: "Oakville, ON" },
+                        };
+                        const locationStudioNames: Record<string, string> = { kitchener: "Kitchener", hamilton: "Hamilton", oakville: "Oakville" };
+                        const locAddr = quickForm.location !== "__custom__" ? locationAddresses[quickForm.location] : null;
                         const date = quickForm.eventDate ? new Date(quickForm.eventDate + "T00:00:00") : null;
                         const formattedDate = date ? date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : "[DATE]";
                         const startTime = quickForm.sessionSchedule[0]?.startTime || "11:00";
@@ -630,11 +635,18 @@ export default function PrivateEventsDashboard() {
                         const formattedTime = `${h12}:${m.toString().padStart(2, "0")} ${ampm}`;
                         const guests = quickForm.maxCapacity || "20";
                         const sessions = quickForm.sessionSchedule.length;
-                        const sessionText = sessions > 1 ? `${sessions} sessions` : "a private one-hour puppy yoga experience";
+                        const breed = quickForm.puppyBreed ? `${quickForm.puppyBreed} puppies` : "Puppies";
 
                         const subject = `Private AfroPuppyYoga Experience | ${date ? date.toLocaleDateString("en-US", { month: "long", day: "numeric" }) : "[DATE]"} at ${formattedTime} \uD83D\uDC36`;
 
-                        const body = `Hi ${firstName},\n\nThank you for reaching out! We would love to host your group for a private AfroPuppyYoga experience in ${locationName} on ${formattedDate} at ${formattedTime}.\n\nThe Classic Experience for your group of ${guests} guests includes:\n\n\uD83D\uDC36 ${sessions > 1 ? `${sessions} private puppy yoga sessions` : "A private one-hour puppy yoga experience"}\n\uD83E\uDDD8 Beginner-friendly guided yoga instruction\n\uD83D\uDC3E Puppies and dedicated puppy handlers\n\uD83D\uDC9B Supervised puppy interaction and playtime\n\uD83E\uDDD8 Yoga mats for participants\n\uD83C\uDFB6 Curated music\n\uD83E\uDDF4 Setup and cleanup\n\nYou can secure the event using the private booking link below:\n\n${quickGeneratedLink}\n\nThe booking will be confirmed once payment has been completed. The puppy breed and final venue details will be confirmed closer to the event based on availability.\n\nWarmly,\n\nThe AfroPuppyYoga Team`;
+                        let locationBlock = "";
+                        if (locAddr) {
+                          locationBlock = `\n\nThe event will take place at our ${locationStudioNames[quickForm.location]} studio:\n\n${locAddr.street}\n${locAddr.city}`;
+                        } else if (quickForm.customLocation) {
+                          locationBlock = `\n\nThe event will take place at:\n\n${quickForm.customLocation}`;
+                        }
+
+                        const body = `Hi ${firstName},\n\nThank you for reaching out! We would love to host your group for a private AfroPuppyYoga experience on ${formattedDate} at ${formattedTime}.${locationBlock}\n\nThe Classic Experience for your group of ${guests} guests includes:\n\n\uD83D\uDC36 ${sessions > 1 ? `${sessions} private puppy yoga sessions` : "A private one-hour puppy yoga experience"}\n\uD83E\uDDD8 Beginner-friendly guided yoga instruction\n\uD83D\uDC3E ${breed} and dedicated puppy handlers\n\uD83D\uDC9B Supervised puppy interaction and playtime\n\uD83E\uDDD8 Yoga mats for participants\n\uD83C\uDFB6 Curated music\n\uD83E\uDDF4 Venue, setup and cleanup\n\nYou can secure the event using the private booking link below:\n\n${quickGeneratedLink}\n\nThe booking will be confirmed once payment is complete.\n\nWarmly,`;
 
                         const fullEmail = `Subject: ${subject}\n\n${body}`;
                         navigator.clipboard.writeText(fullEmail);
@@ -646,8 +658,13 @@ export default function PrivateEventsDashboard() {
                     <div className="bg-[#FAFAFA] rounded-xl border border-[#F2A0B8]/10 p-4 font-body text-xs text-[#3D1A2E]/70 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
                       {(() => {
                         const firstName = quickForm.clientName.split(" ")[0] || "[Name]";
-                        const locationLabels: Record<string, string> = { kitchener: "Kitchener", hamilton: "Hamilton", oakville: "Oakville" };
-                        const locationName = quickForm.location === "__custom__" ? quickForm.customLocation : locationLabels[quickForm.location] || quickForm.location;
+                        const locationAddresses: Record<string, { street: string; city: string }> = {
+                          kitchener: { street: "329 King Street East", city: "Kitchener, ON" },
+                          hamilton: { street: "2751 Barton Street East", city: "Hamilton, ON" },
+                          oakville: { street: "1670 North Service Road East", city: "Oakville, ON" },
+                        };
+                        const locationStudioNames: Record<string, string> = { kitchener: "Kitchener", hamilton: "Hamilton", oakville: "Oakville" };
+                        const locAddr = quickForm.location !== "__custom__" ? locationAddresses[quickForm.location] : null;
                         const date = quickForm.eventDate ? new Date(quickForm.eventDate + "T00:00:00") : null;
                         const formattedDate = date ? date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : "[DATE]";
                         const startTime = quickForm.sessionSchedule[0]?.startTime || "11:00";
@@ -657,7 +674,16 @@ export default function PrivateEventsDashboard() {
                         const formattedTime = `${h12}:${m.toString().padStart(2, "0")} ${ampm}`;
                         const guests = quickForm.maxCapacity || "20";
                         const sessions = quickForm.sessionSchedule.length;
-                        return `Subject: Private AfroPuppyYoga Experience | ${date ? date.toLocaleDateString("en-US", { month: "long", day: "numeric" }) : "[DATE]"} at ${formattedTime} \uD83D\uDC36\n\nHi ${firstName},\n\nThank you for reaching out! We would love to host your group for a private AfroPuppyYoga experience in ${locationName} on ${formattedDate} at ${formattedTime}.\n\nThe Classic Experience for your group of ${guests} guests includes:\n\n\uD83D\uDC36 ${sessions > 1 ? `${sessions} private puppy yoga sessions` : "A private one-hour puppy yoga experience"}\n\uD83E\uDDD8 Beginner-friendly guided yoga instruction\n\uD83D\uDC3E Puppies and dedicated puppy handlers\n\uD83D\uDC9B Supervised puppy interaction and playtime\n\uD83E\uDDD8 Yoga mats for participants\n\uD83C\uDFB6 Curated music\n\uD83E\uDDF4 Setup and cleanup\n\nYou can secure the event using the private booking link below:\n\n${quickGeneratedLink}\n\nThe booking will be confirmed once payment has been completed. The puppy breed and final venue details will be confirmed closer to the event based on availability.\n\nWarmly,\n\nThe AfroPuppyYoga Team`;
+                        const breed = quickForm.puppyBreed ? `${quickForm.puppyBreed} puppies` : "Puppies";
+
+                        let locationBlock = "";
+                        if (locAddr) {
+                          locationBlock = `\n\nThe event will take place at our ${locationStudioNames[quickForm.location]} studio:\n\n${locAddr.street}\n${locAddr.city}`;
+                        } else if (quickForm.customLocation) {
+                          locationBlock = `\n\nThe event will take place at:\n\n${quickForm.customLocation}`;
+                        }
+
+                        return `Subject: Private AfroPuppyYoga Experience | ${date ? date.toLocaleDateString("en-US", { month: "long", day: "numeric" }) : "[DATE]"} at ${formattedTime} \uD83D\uDC36\n\nHi ${firstName},\n\nThank you for reaching out! We would love to host your group for a private AfroPuppyYoga experience on ${formattedDate} at ${formattedTime}.${locationBlock}\n\nThe Classic Experience for your group of ${guests} guests includes:\n\n\uD83D\uDC36 ${sessions > 1 ? `${sessions} private puppy yoga sessions` : "A private one-hour puppy yoga experience"}\n\uD83E\uDDD8 Beginner-friendly guided yoga instruction\n\uD83D\uDC3E ${breed} and dedicated puppy handlers\n\uD83D\uDC9B Supervised puppy interaction and playtime\n\uD83E\uDDD8 Yoga mats for participants\n\uD83C\uDFB6 Curated music\n\uD83E\uDDF4 Venue, setup and cleanup\n\nYou can secure the event using the private booking link below:\n\n${quickGeneratedLink}\n\nThe booking will be confirmed once payment is complete.\n\nWarmly,`;
                       })()}
                     </div>
                   </div>
