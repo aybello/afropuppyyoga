@@ -1201,7 +1201,7 @@ export default function ApplicationsDashboard() {
       </div>
 
       {/* Modals */}
-      {selectedApp && !showInterviewModal && !showOfferModal && !showRejectionModal && (
+      {selectedApp && !showInterviewModal && !showOfferModal && !showRejectionModal && !showOnboardingModal && (
         <ApplicationDetailModal
           app={selectedApp}
           open={!!selectedApp}
@@ -1227,6 +1227,13 @@ export default function ApplicationsDashboard() {
           app={selectedApp}
           open={showRejectionModal}
           onClose={() => { setShowRejectionModal(false); setSelectedApp(null); }}
+        />
+      )}
+      {selectedApp && showOnboardingModal && (
+        <OnboardingEmailModal
+          app={selectedApp}
+          open={showOnboardingModal}
+          onClose={() => { setShowOnboardingModal(false); setSelectedApp(null); }}
         />
       )}
       {/* Delete Confirmation Dialog */}

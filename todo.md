@@ -571,3 +571,6 @@
 
 ## Inquiry Send Quote Email Update (Aug 4, 2026)
 - [x] Update the Inquiries tab "Send Quote Email" to use the same email template with event-type variants, Gmail compose, and client email auto-fill
+
+## Onboarding Email Bug Fix (Aug 4, 2026)
+- [x] Fix OnboardingEmailModal not rendering in main ApplicationsDashboard (modal was only in sub-component, not in main render tree when triggered from table row button)
