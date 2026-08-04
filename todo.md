@@ -534,5 +534,5 @@
 ## Quick Booking Link Generator (Standalone — Aug 4, 2026)
 - [x] Add generateQuickBookingLink tRPC procedure (creates Luma event without an inquiry)
 - [x] Add "Quick Booking Link" tab to Private Events Dashboard with standalone form
-- [ ] Support multi-session events (e.g., 2 sessions with break in between)
-- [ ] Include all fields: client name, org, event type, date, sessions, times, location, price, HST, breed, notes
+- [x] Support multi-session events (e.g., 2 sessions with break in between)
+- [x] Include all fields: client name, org, event type, date, sessions, times, location, price, HST, breed, notes

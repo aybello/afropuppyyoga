@@ -204,7 +204,7 @@ async function createLumaEvent(params: {
     },
     body: JSON.stringify({
       event_id: eventId,
-      name: params.sessions > 1 ? `Private Experience (${params.sessions} sessions)` : "Private Experience",
+      name: params.sessions > 1 ? `Private (${params.sessions} Sessions)` : "Private Experience",
       type: "paid",
       cents: params.priceCents,
       currency: "cad",
