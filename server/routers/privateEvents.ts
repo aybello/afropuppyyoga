@@ -194,6 +194,7 @@ async function createLumaEvent(params: {
       description_md: params.description,
       cover_url: params.coverUrl || APY_PRIVATE_COVER,
       tint_color: params.tintColor || APY_TINT_COLOR,
+      theme: "hypnotic",
       registration_questions: [
         {
           id: "waiver",

@@ -552,3 +552,6 @@
 ## Quick Booking Link Bug Fix + Layout Compaction (Aug 4, 2026)
 - [x] Fix generate link button not working (Luma API changed: field must be `place_id` not `google_maps_place_id`)
 - [x] Compact the form layout (merged 6 cards into 3 sections: Client+Event, Schedule+Location, Pricing+Notes+CTA)
+
+## Luma Event Theme Defaults (Aug 4, 2026)
+- [x] Set default Luma event theme to: Color=Cranberry, Pattern=Hypnotic, Font=Default, Display=Light
