@@ -446,23 +446,44 @@ function OnboardingEmailModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Orientation Date (optional)</Label>
-              <Input
-                placeholder="e.g. Saturday, May 10th"
-                value={orientationDate}
-                onChange={(e) => setOrientationDate(e.target.value)}
-                className="border-[#F0D0DC] font-body"
-              />
-              <p className="font-body text-xs text-[#C4A0B0] mt-1">Leave blank to omit</p>
+              <Select value={orientationDate} onValueChange={setOrientationDate}>
+                <SelectTrigger className="border-[#F0D0DC] font-body">
+                  <SelectValue placeholder="Select a date" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(() => {
+                    const dates: string[] = [];
+                    const now = new Date();
+                    for (let i = 1; i <= 28; i++) {
+                      const d = new Date(now);
+                      d.setDate(now.getDate() + i);
+                      const day = d.toLocaleDateString('en-US', { weekday: 'long' });
+                      const month = d.toLocaleDateString('en-US', { month: 'long' });
+                      const date = d.getDate();
+                      const suffix = date === 1 || date === 21 || date === 31 ? 'st' : date === 2 || date === 22 ? 'nd' : date === 3 || date === 23 ? 'rd' : 'th';
+                      dates.push(`${day}, ${month} ${date}${suffix}`);
+                    }
+                    return dates.map((d) => (
+                      <SelectItem key={d} value={d}>{d}</SelectItem>
+                    ));
+                  })()}
+                </SelectContent>
+              </Select>
+              <p className="font-body text-xs text-[#C4A0B0] mt-1">Leave unselected to omit</p>
             </div>
             <div>
               <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Orientation Time (optional)</Label>
-              <Input
-                placeholder="e.g. 9:00 AM"
-                value={orientationTime}
-                onChange={(e) => setOrientationTime(e.target.value)}
-                className="border-[#F0D0DC] font-body"
-              />
-              <p className="font-body text-xs text-[#C4A0B0] mt-1">Kitchener: 9am, Hamilton: 10am</p>
+              <Select value={orientationTime} onValueChange={setOrientationTime}>
+                <SelectTrigger className="border-[#F0D0DC] font-body">
+                  <SelectValue placeholder="Select a time" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="9:00 AM">9:00 AM (Kitchener)</SelectItem>
+                  <SelectItem value="10:00 AM">10:00 AM (Hamilton)</SelectItem>
+                  <SelectItem value="10:00 AM (Oakville)">10:00 AM (Oakville)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="font-body text-xs text-[#C4A0B0] mt-1">Auto-suggests based on location</p>
             </div>
           </div>
 

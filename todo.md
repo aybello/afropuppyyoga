@@ -586,3 +586,7 @@
 - [x] Add "Archived" tab to ApplicationsDashboard showing soft-deleted records
 - [x] Add "Restore" button on archived records
 - [x] Update delete confirmation dialog to say "Archive" instead of "Delete"
+
+## Onboarding Modal Dropdowns (Aug 4, 2026)
+- [x] Replace Orientation Date free-text with dropdown showing upcoming dates (next 2-4 weeks)
+- [x] Replace Orientation Time free-text with dropdown based on location (Kitchener: 9am, Hamilton: 10am)
