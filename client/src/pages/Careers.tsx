@@ -88,7 +88,7 @@ const JOB_LISTINGS = [
     pay: "$50/shift",
     emoji: "🐾",
     description:
-      "You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class — feeding, cleaning, and making sure every pup is thriving.",
+      "You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class — feeding, cleaning, and making sure every pup is thriving. This role is perfect for university and college students looking for flexible, fun, part-time work.",
     responsibilities: [
       "Supervise and handle puppies throughout each class session",
       "Ensure the safety and wellbeing of all puppies at all times",
@@ -101,6 +101,7 @@ const JOB_LISTINGS = [
       "Calm, patient, and attentive personality",
       "Comfortable in a high-energy, social environment",
       "Reliable and punctual for event-based scheduling",
+      "University or college students encouraged to apply",
       "First aid for animals is a plus but not required",
     ],
     perks: [
@@ -121,7 +122,7 @@ const JOB_LISTINGS = [
     pay: "$50/shift",
     emoji: "🐾",
     description:
-      "You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class — feeding, cleaning, and making sure every pup is thriving.",
+      "You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class — feeding, cleaning, and making sure every pup is thriving. This role is perfect for university and college students looking for flexible, fun, part-time work.",
     responsibilities: [
       "Supervise and handle puppies throughout each class session",
       "Ensure the safety and wellbeing of all puppies at all times",
@@ -134,6 +135,7 @@ const JOB_LISTINGS = [
       "Calm, patient, and attentive personality",
       "Comfortable in a high-energy, social environment",
       "Reliable and punctual for event-based scheduling",
+      "University or college students encouraged to apply",
       "First aid for animals is a plus but not required",
     ],
     perks: [
@@ -154,7 +156,7 @@ const JOB_LISTINGS = [
     pay: "$50/shift",
     emoji: "🐾",
     description:
-      "You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class — feeding, cleaning, and making sure every pup is thriving.",
+      "You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class — feeding, cleaning, and making sure every pup is thriving. This role is perfect for university and college students looking for flexible, fun, part-time work.",
     responsibilities: [
       "Supervise and handle puppies throughout each class session",
       "Ensure the safety and wellbeing of all puppies at all times",
@@ -167,6 +169,7 @@ const JOB_LISTINGS = [
       "Calm, patient, and attentive personality",
       "Comfortable in a high-energy, social environment",
       "Reliable and punctual for event-based scheduling",
+      "University or college students encouraged to apply",
       "First aid for animals is a plus but not required",
     ],
     perks: [
