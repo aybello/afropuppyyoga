@@ -607,3 +607,15 @@
 - [x] Build /admin/sms-inbox page (SMS Inbox with All/Unread tabs, mark read on click, Mark All Read button)
 - [x] Add SMS Inbox to AdminNav More dropdown
 - [x] Register /admin/sms-inbox route in App.tsx
+
+## Breeder Confirmation SMS (Aug 7, 2026)
+- [x] Read existing sendConfirmation flow (email-only, toEmail required)
+- [x] Make toEmail optional, add toPhone to sendConfirmation input
+- [x] Send SMS via Twilio when phone on file (condensed event blocks per message)
+- [x] Send email when email on file (both channels used when both available)
+- [x] Return emailSent/smsSent/emailError/smsError from procedure
+- [x] Update handleSend in BreedersDashboard to pass phone alongside email
+- [x] Replace alert with toast showing which channels were used
+- [x] Update info box to show both email and phone recipients
+- [x] Rename "Send Email" button to "Send Confirmation"
+- [x] Add toast import to BreedersDashboard

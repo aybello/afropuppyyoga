@@ -246,11 +246,16 @@ export const breedersRouter = router({
     .input(z.object({
       breederId: z.number(),
       breederFirstName: z.string().min(1),
-      toEmail: z.string().email(),
+      toEmail: z.string().email().optional(),
+      toPhone: z.string().optional(),
       events: z.array(eventBlockSchema).min(1),
       availabilityNote: z.string().optional(),
     }))
     .mutation(async ({ input }) => {
+      if (!input.toEmail && !input.toPhone) {
+        throw new Error("This breeder has no email or phone number on file. Please add contact info first.");
+      }
+
       const { html, text } = generateConfirmationEmail({
         breederFirstName: input.breederFirstName,
         events: input.events,
@@ -262,24 +267,88 @@ export const breedersRouter = router({
       const [breeder] = await db.select().from(breeders).where(eq(breeders.id, input.breederId));
       const breederName = breeder?.name ?? input.breederFirstName;
 
-      await sendEmail({
-        to: input.toEmail,
-        subject: `AfroPuppyYoga - Booking Confirmation`,
-        html,
-        text,
-      });
+      let emailSent = false;
+      let smsSent = false;
+      let emailError: string | undefined;
+      let smsError: string | undefined;
+
+      // Send email if available
+      if (input.toEmail) {
+        try {
+          await sendEmail({
+            to: input.toEmail,
+            subject: `AfroPuppyYoga - Booking Confirmation`,
+            html,
+            text,
+          });
+          emailSent = true;
+        } catch (err: any) {
+          emailError = err?.message ?? "Unknown email error";
+          console.error("[Breeder Confirmation] Email failed:", emailError);
+        }
+      }
+
+      // Send SMS if phone available
+      if (input.toPhone) {
+        try {
+          const twilioSid = process.env.TWILIO_ACCOUNT_SID;
+          const twilioAuth = process.env.TWILIO_AUTH_TOKEN;
+          const twilioFrom = process.env.TWILIO_PHONE_NUMBER;
+
+          if (!twilioSid || !twilioAuth || !twilioFrom) throw new Error("Twilio not configured");
+
+          // Normalize phone to E.164
+          const digits = input.toPhone.replace(/\D/g, "");
+          const normalized = digits.length === 10 ? "+1" + digits : digits.length === 11 && digits.startsWith("1") ? "+" + digits : null;
+          if (!normalized) throw new Error("Invalid phone number format");
+
+          // Build condensed SMS — one line per event
+          const eventLines = input.events.map((ev) => {
+            const date = formatDateHuman(ev.date);
+            const time = ev.apyTransport
+              ? `Pickup ${ev.pickupTime ?? ""}, Return ${ev.returnTime ?? ""}`
+              : `Drop-off ${ev.dropOffTime ?? ""}, Pick-up ${ev.pickUpTime ?? ""}`;
+            return `📍 ${ev.city} — ${date}\n${time}\n${ev.location}\nCompensation: ${ev.compensation}`;
+          }).join("\n\n");
+
+          const smsBody = `Hi ${input.breederFirstName}, you're confirmed for AfroPuppyYoga! 🐾\n\n${eventLines}\n\nPlease ensure puppies are groomed, vaccinated & dewormed. Reply to confirm or call 289-788-1885.`;
+
+          const params = new URLSearchParams();
+          params.append("To", normalized);
+          params.append("From", twilioFrom);
+          params.append("Body", smsBody);
+
+          const resp = await fetch(
+            `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: "Basic " + Buffer.from(`${twilioSid}:${twilioAuth}`).toString("base64"),
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              body: params.toString(),
+            }
+          );
+          const data = await resp.json() as { sid?: string; message?: string };
+          if (!data.sid) throw new Error(data.message ?? "Twilio error");
+          smsSent = true;
+        } catch (err: any) {
+          smsError = err?.message ?? "Unknown SMS error";
+          console.error("[Breeder Confirmation] SMS failed:", smsError);
+        }
+      }
 
       await db.insert(breederConfirmations).values({
         breederId: input.breederId,
         breederName,
-        sentToEmail: input.toEmail,
+        sentToEmail: input.toEmail ?? "",
         events: JSON.stringify(input.events),
         availabilityNote: input.availabilityNote ?? null,
         emailBody: html,
-        status: "sent",
+        status: emailSent || smsSent ? "sent" : "failed",
       });
 
-      return { success: true };
+      return { success: true, emailSent, smsSent, emailError, smsError };
     }),
 
   getConfirmations: staffProcedure

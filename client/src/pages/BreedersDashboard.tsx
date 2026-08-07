@@ -181,15 +181,26 @@ export default function BreedersDashboard() {
     onSuccess: (data) => setPreviewHtml(data.html),
   });
   const sendMutation = trpc.breeders.sendConfirmation.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
       utils.breeders.getConfirmations.invalidate({ breederId: confirmBreeder?.id });
       setConfirmBreeder(null);
       setEvents([{ ...EMPTY_EVENT }]);
       setAvailabilityNote("");
       setPreviewHtml(null);
-      alert("Confirmation email sent successfully!");
+      const parts = [];
+      if (data.emailSent) parts.push("email");
+      if (data.smsSent) parts.push("SMS");
+      const sent = parts.length > 0 ? `Confirmation sent via ${parts.join(" & ")}!` : "Confirmation recorded.";
+      const warnings = [];
+      if (data.emailError) warnings.push(`Email failed: ${data.emailError}`);
+      if (data.smsError) warnings.push(`SMS failed: ${data.smsError}`);
+      if (warnings.length > 0) {
+        toast.warning(`${sent} Note: ${warnings.join(" | ")}`);
+      } else {
+        toast.success(sent);
+      }
     },
-    onError: (e) => alert(`Error sending email: ${e.message}`),
+    onError: (e) => alert(`Error sending confirmation: ${e.message}`),
   });
   const addPresetMutation = trpc.breeders.addPreset.useMutation({
     onSuccess: () => { utils.breeders.listPresets.invalidate(); setNewPreset({ label: "", city: "", address: "" }); },
@@ -267,12 +278,16 @@ export default function BreedersDashboard() {
   }
 
   function handleSend() {
-    if (!confirmBreeder?.email) { alert("This breeder has no email address on file. Please add one first."); return; }
+    if (!confirmBreeder?.email && !confirmBreeder?.phone) {
+      alert("This breeder has no email or phone on file. Please add contact info first.");
+      return;
+    }
     const firstName = (confirmBreeder.contactName || confirmBreeder.name).split(" ")[0];
     sendMutation.mutate({
       breederId: confirmBreeder.id,
       breederFirstName: firstName,
-      toEmail: confirmBreeder.email,
+      toEmail: confirmBreeder.email || undefined,
+      toPhone: confirmBreeder.phone || undefined,
       events,
       availabilityNote: availabilityNote || undefined,
     });
@@ -791,7 +806,10 @@ export default function BreedersDashboard() {
             <div>
               <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                 <p className="font-body text-sm text-amber-800">
-                  Preview below. Email will be sent to <strong>{confirmBreeder?.email}</strong>.
+              Preview below. Confirmation will be sent to:
+              {confirmBreeder?.email && <> <strong>{confirmBreeder.email}</strong> (email)</>}
+              {confirmBreeder?.email && confirmBreeder?.phone && " · "}
+              {confirmBreeder?.phone && <> <strong>{confirmBreeder.phone}</strong> (SMS)</>}
                 </p>
               </div>
               <div
@@ -808,7 +826,7 @@ export default function BreedersDashboard() {
                   className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body gap-2"
                 >
                   <Send className="w-4 h-4" />
-                  {sendMutation.isPending ? "Sending..." : "Send Email"}
+                  {sendMutation.isPending ? "Sending..." : "Send Confirmation"}
                 </Button>
               </div>
             </div>
@@ -933,7 +951,10 @@ export default function BreedersDashboard() {
 
               <div className="p-3 bg-[#FFF5F8] border border-[#F0D0DC] rounded-lg">
                 <p className="font-body text-xs text-[#6B4C3B]">
-                  Email will be sent from <strong>afropuppyyoga@gmail.com</strong> to <strong>{confirmBreeder?.email || "no email on file"}</strong>
+                  Confirmation will be sent from <strong>afropuppyyoga@gmail.com</strong> / <strong>289-788-1885</strong> to:{" "}
+                  {confirmBreeder?.email && <><strong>{confirmBreeder.email}</strong> (email){confirmBreeder?.phone ? " · " : ""}</>}
+                  {confirmBreeder?.phone && <><strong>{confirmBreeder.phone}</strong> (SMS)</>}
+                  {!confirmBreeder?.email && !confirmBreeder?.phone && <span className="text-red-500">No contact info on file</span>}
                 </p>
               </div>
             </div>
@@ -1159,3 +1180,4 @@ export default function BreedersDashboard() {
     </div>
   );
 }
+import { toast } from "sonner";
