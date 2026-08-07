@@ -619,3 +619,15 @@
 - [x] Update info box to show both email and phone recipients
 - [x] Rename "Send Email" button to "Send Confirmation"
 - [x] Add toast import to BreedersDashboard
+
+## Post-Class Google Review SMS (Aug 7, 2026)
+- [x] Add reviewTextLogs table to schema (lumaEventId, lumaGuestId, guestName, phone, status, etc.)
+- [x] Run migration to create reviewTextLogs table
+- [x] Build reviewTextSender.ts — fetches events ending 1.5-2.5h ago, fetches guests, sends review SMS
+- [x] Dedup check — skip guests already texted for same event
+- [x] Register /api/scheduled/review-text endpoint in server index.ts
+- [x] Add reviewTextsRouter with list, stats, triggerNow procedures
+- [x] Build ReviewTexts admin page with stats cards, send log table, Run Now button
+- [x] Add Review Texts to AdminNav More dropdown
+- [x] Register /admin/review-texts route in App.tsx
+- [ ] Register heartbeat cron job (requires deploy first — see below)

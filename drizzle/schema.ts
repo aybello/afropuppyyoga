@@ -570,3 +570,27 @@ export const callLogs = mysqlTable("callLogs", {
 ]);
 export type CallLog = typeof callLogs.$inferSelect;
 export type InsertCallLog = typeof callLogs.$inferInsert;
+
+// ─── Review Text Logs ─────────────────────────────────────────────────────────
+// Tracks post-class Google review SMS sends per guest per event.
+// Unique constraint on (lumaEventId, lumaGuestId) prevents duplicate sends.
+export const reviewTextLogs = mysqlTable("reviewTextLogs", {
+  id: int("id").autoincrement().primaryKey(),
+  lumaEventId: varchar("lumaEventId", { length: 128 }).notNull(),
+  lumaGuestId: varchar("lumaGuestId", { length: 128 }).notNull(),
+  eventName: varchar("eventName", { length: 255 }).notNull(),
+  eventEndAt: varchar("eventEndAt", { length: 64 }).notNull(),
+  guestName: varchar("guestName", { length: 255 }).notNull(),
+  guestEmail: varchar("guestEmail", { length: 320 }),
+  phone: varchar("phone", { length: 30 }).notNull(),
+  smsSid: varchar("smsSid", { length: 64 }),
+  status: varchar("status", { length: 32 }).notNull().default("sent"),
+  errorMessage: text("errorMessage"),
+  sentAt: bigint("sentAt", { mode: "number" }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  index("idx_reviewTextLogs_lumaEventId").on(t.lumaEventId),
+  index("idx_reviewTextLogs_guest").on(t.lumaEventId, t.lumaGuestId),
+]);
+export type ReviewTextLog = typeof reviewTextLogs.$inferSelect;
+export type InsertReviewTextLog = typeof reviewTextLogs.$inferInsert;

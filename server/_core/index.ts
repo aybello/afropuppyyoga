@@ -281,6 +281,19 @@ async function startServer() {
     }
   });
 
+  // POST /api/scheduled/review-text — called by heartbeat every 30 min
+  // Finds events that ended ~2h ago and sends Google review SMS to all registered guests.
+  app.post("/api/scheduled/review-text", async (req, res) => {
+    if (!requireCronAuth(req, res)) return;
+    try {
+      const result = await reviewTextSender();
+      res.json({ ok: true, ...result });
+    } catch (err) {
+      console.error("[ReviewText] Handler error:", err);
+      res.status(500).json({ ok: false, error: String(err) });
+    }
+  });
+
   // Twilio webhook callbacks — must be registered before tRPC
   app.use(twilioWebhookRouter);
   // Luma webhook for payment/registration notifications
@@ -314,3 +327,4 @@ async function startServer() {
 }
 
 startServer().catch(console.error);
+import { reviewTextSender } from "../reviewTextSender";

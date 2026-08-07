@@ -21,7 +21,7 @@ import {
   PhoneOff,
   MessageSquare,
 } from "lucide-react";
-import { Inbox } from "lucide-react";
+import { Inbox, Star } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useState, useRef, useEffect } from "react";
 
@@ -42,6 +42,7 @@ const MORE_ITEMS = [
   { href: "/admin/cancellation", label: "Cancel Class", icon: PhoneOff, adminOnly: false },
   { href: "/admin/sms-broadcast", label: "SMS Broadcast", icon: MessageSquare, adminOnly: false },
   { href: "/admin/sms-inbox",      label: "SMS Inbox",       icon: Inbox,        adminOnly: false },
+  { href: "/admin/review-texts",   label: "Review Texts",    icon: Star,         adminOnly: false },
 ];
 
 export default function AdminNav() {
