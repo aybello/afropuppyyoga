@@ -590,3 +590,20 @@
 ## Onboarding Modal Dropdowns (Aug 4, 2026)
 - [x] Replace Orientation Date free-text with dropdown showing upcoming dates (next 2-4 weeks)
 - [x] Replace Orientation Time free-text with dropdown based on location (Kitchener: 9am, Hamilton: 10am)
+
+## Breeder Availability Outreach (Aug 6, 2026)
+- [x] Query all 58 active breeders from DB with contact info
+- [x] Send availability emails (29 sent) to breeders with email for Aug 15-16, 22-23, 29-30
+- [x] Send availability SMS (43 sent) to breeders with phone via Twilio
+- [x] Greet by first name when known, fall back to "Hi" for unknown names
+
+## SMS Inbox + Reply Forwarding (Aug 6, 2026)
+- [x] Add inboundSms table to schema (fromPhone, toPhone, body, twilioSid, breederId, breederName, isRead)
+- [x] Run migration for inboundSms table
+- [x] Add POST /api/twilio/sms-inbound webhook endpoint (stores reply, matches breeder by phone, forwards to owner)
+- [x] Configure Twilio SmsUrl webhook on +12898153524 to point to https://afropuppyyoga.ca/api/twilio/sms-inbound
+- [x] Store owner phone +12897881885 as OWNER_PHONE_NUMBER secret for forwarding
+- [x] Add inboundSmsRouter (list, unreadCount, markRead, markAllRead procedures)
+- [x] Build /admin/sms-inbox page (SMS Inbox with All/Unread tabs, mark read on click, Mark All Read button)
+- [x] Add SMS Inbox to AdminNav More dropdown
+- [x] Register /admin/sms-inbox route in App.tsx

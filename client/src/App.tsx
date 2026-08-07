@@ -85,6 +85,7 @@ function Router() {
         <Route path="/admin/refunds" component={RefundTracker} />
         <Route path="/admin/cancellation" component={CancellationDashboard} />
         <Route path="/admin/sms-broadcast" component={SmsBroadcast} />
+        <Route path="/admin/sms-inbox" component={SmsInbox} />
         <Route path="/breeder-availability" component={BreederAvailability} />
         <Route path="/loyalty" component={Loyalty} />
         <Route path="/ethics" component={Ethics} />
@@ -120,3 +121,4 @@ function App() {
 }
 
 export default App;
+const SmsInbox = lazy(() => import("./pages/SmsInbox"));

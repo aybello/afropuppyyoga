@@ -15,7 +15,7 @@ import { Router } from "express";
 import twilio from "twilio";
 import { eq } from "drizzle-orm";
 import { getDb } from "./db";
-import { callLogs } from "../drizzle/schema";
+import { callLogs, inboundSms, breeders } from "../drizzle/schema";
 
 const webhookRouter = Router();
 
@@ -96,6 +96,109 @@ webhookRouter.post("/api/twilio/sms-status", async (req, res) => {
   }
 
   res.status(200).send("OK");
+});
+
+/**
+ * POST /api/twilio/sms-inbound
+ * Twilio calls this when someone replies to our Twilio number.
+ * 1. Saves the message to inboundSms table
+ * 2. Tries to match the sender to a known breeder by phone number
+ * 3. Forwards the message to the owner's personal cell via SMS
+ */
+webhookRouter.post("/api/twilio/sms-inbound", async (req, res) => {
+  // Skip signature validation in dev; enforce in production
+  if (process.env.NODE_ENV !== "development" && !validateTwilioSignature(req)) {
+    res.status(403).send("Forbidden");
+    return;
+  }
+
+  const body = req.body as {
+    MessageSid?: string;
+    SmsSid?: string;
+    From?: string;
+    To?: string;
+    Body?: string;
+  };
+
+  const twilioSid = body.MessageSid ?? body.SmsSid ?? "";
+  const fromPhone = body.From ?? "";
+  const toPhone = body.To ?? "";
+  const messageBody = body.Body ?? "";
+
+  if (!twilioSid || !fromPhone || !messageBody) {
+    res.status(200).send("<Response></Response>");
+    return;
+  }
+
+  let breederId: number | null = null;
+  let breederName: string | null = null;
+
+  try {
+    const db = await getDb();
+    if (db) {
+      // Normalize phone for matching (strip non-digits, add country code)
+      const digits = fromPhone.replace(/\D/g, "");
+      const normalized = digits.length === 10 ? "1" + digits : digits;
+
+      // Try to match to a breeder by phone
+      const allBreeders = await db.select().from(breeders).where(eq(breeders.isActive, 1));
+      const matched = allBreeders.find(b => {
+        if (!b.phone) return false;
+        const bd = b.phone.replace(/\D/g, "");
+        const bn = bd.length === 10 ? "1" + bd : bd;
+        return bn === normalized;
+      });
+
+      if (matched) {
+        breederId = matched.id;
+        breederName = matched.name;
+      }
+
+      // Store in DB (ignore duplicate twilioSid)
+      await db.insert(inboundSms).ignore().values({
+        fromPhone,
+        toPhone,
+        body: messageBody,
+        twilioSid,
+        breederId: breederId ?? undefined,
+        breederName: breederName ?? undefined,
+        isRead: 0,
+      });
+
+      // Forward to owner's personal cell
+      const ownerPhone = process.env.OWNER_PHONE_NUMBER;
+      const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
+      const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
+      const twilioFromNumber = process.env.TWILIO_PHONE_NUMBER;
+
+      if (ownerPhone && twilioAccountSid && twilioAuthToken && twilioFromNumber) {
+        const senderLabel = breederName ?? fromPhone;
+        const forwardBody = `📩 Reply from ${senderLabel}:\n"${messageBody}"`;
+        const params = new URLSearchParams();
+        params.append("To", ownerPhone);
+        params.append("From", twilioFromNumber);
+        params.append("Body", forwardBody);
+        await fetch(
+          `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: "Basic " + Buffer.from(`${twilioAccountSid}:${twilioAuthToken}`).toString("base64"),
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: params.toString(),
+          }
+        );
+        console.log(`[SMS Inbound] Forwarded reply from ${senderLabel} to owner`);
+      }
+    }
+  } catch (err) {
+    console.error("[SMS Inbound] Error handling inbound SMS:", err);
+  }
+
+  // Respond with empty TwiML so Twilio doesn't auto-reply
+  res.set("Content-Type", "text/xml");
+  res.status(200).send("<Response></Response>");
 });
 
 export default webhookRouter;

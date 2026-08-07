@@ -462,6 +462,39 @@ export const puppySchedule = mysqlTable("puppySchedule", {
 export type PuppySchedule = typeof puppySchedule.$inferSelect;
 export type InsertPuppySchedule = typeof puppySchedule.$inferInsert;
 
+// ─── Inbound SMS ──────────────────────────────────────────────────────────────
+/**
+ * Stores inbound SMS replies received on the Twilio number.
+ * Used for the SMS Inbox in the admin portal.
+ */
+export const inboundSms = mysqlTable("inboundSms", {
+  id: int("id").autoincrement().primaryKey(),
+  /** The phone number that sent the message (E.164 format) */
+  fromPhone: varchar("fromPhone", { length: 20 }).notNull(),
+  /** The Twilio phone number that received it */
+  toPhone: varchar("toPhone", { length: 20 }).notNull(),
+  /** The message body */
+  body: text("body").notNull(),
+  /** Twilio message SID for deduplication */
+  twilioSid: varchar("twilioSid", { length: 64 }).notNull().unique(),
+  /** Matched breeder ID (if we can match by phone) */
+  breederId: int("breederId"),
+  /** Matched breeder name snapshot */
+  breederName: varchar("breederName", { length: 255 }),
+  /** Whether the admin has read/acknowledged this message */
+  isRead: int("isRead").default(0).notNull(),
+  /** When Twilio received the message */
+  receivedAt: timestamp("receivedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  index("idx_inbound_sms_fromPhone").on(t.fromPhone),
+  index("idx_inbound_sms_breederId").on(t.breederId),
+  index("idx_inbound_sms_isRead").on(t.isRead),
+]);
+
+export type InboundSms = typeof inboundSms.$inferSelect;
+export type InsertInboundSms = typeof inboundSms.$inferInsert;
+
 // ─── Meta Conversions API ─────────────────────────────────────────────────────
 /**
  * One row per Luma guest registration that needs to be (or has been) sent

@@ -162,6 +162,13 @@
       "when": 1785885906420,
       "tag": "0024_rapid_venom",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "5",
+      "when": 1786063309557,
+      "tag": "0025_gray_hobgoblin",
+      "breakpoints": true
     }
   ]
 }
