@@ -128,6 +128,15 @@ export async function reviewTextSender(): Promise<{ sent: number; skipped: numbe
   let errors = 0;
 
   const now = Date.now();
+  // Only run on weekends (Saturday = 6, Sunday = 0) — classes are Sat/Sun only.
+  // The triggerNow manual button bypasses this check so staff can always run it manually.
+  const dayOfWeek = new Date(now).getDay(); // 0=Sun, 6=Sat
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+  if (!isWeekend) {
+    console.log("[ReviewText] Weekday — skipping (classes run Sat/Sun only)");
+    return { sent: 0, skipped: 0, errors: 0 };
+  }
+
   // Target window: events that ended between 1.5h and 2.5h ago
   const windowStart = now - 2.5 * 60 * 60 * 1000;
   const windowEnd = now - 1.5 * 60 * 60 * 1000;
