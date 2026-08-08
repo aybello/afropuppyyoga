@@ -2,6 +2,7 @@ import { z } from "zod";
 import { router, staffProcedure, publicProcedure } from "../_core/trpc";
 import { getDb } from "../db";
 import { breeders, breederConfirmations, locationPresets, breederAvailabilityBlasts, breederAvailabilityResponses } from "../../drizzle/schema";
+import { puppySchedule } from "../../drizzle/schema";
 import type { Breeder } from "../../drizzle/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { sendEmail } from "../email";
@@ -341,14 +342,101 @@ export const breedersRouter = router({
       }
 
       await db.insert(breederConfirmations).values({
-        breederId: input.breederId,
-        breederName,
-        sentToEmail: input.toEmail ?? "",
-        events: JSON.stringify(input.events),
-        availabilityNote: input.availabilityNote ?? null,
-        emailBody: html,
-        status: emailSent || smsSent ? "sent" : "failed",
-      });
+      breederId: input.breederId,
+      breederName,
+      sentToEmail: input.toEmail ?? "",
+      events: JSON.stringify(input.events),
+      availabilityNote: input.availabilityNote ?? null,
+      emailBody: html,
+      status: emailSent || smsSent ? "sent" : "failed",
+    });
+
+      // Auto-create puppy schedule entries for each event block
+      const VALID_LOCATIONS = ["Kitchener", "Hamilton", "Oakville"] as const;
+      const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
+
+      function parseTimeTo24h(timeStr: string | undefined): string {
+        if (!timeStr) return "09:00";
+        // Already HH:MM
+        if (/^\d{2}:\d{2}$/.test(timeStr)) return timeStr;
+        // e.g. "9:00 AM", "12:30 PM"
+        const m = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+        if (!m) return "09:00";
+        let h = parseInt(m[1], 10);
+        const min = m[2];
+        const period = m[3].toUpperCase();
+        if (period === "PM" && h !== 12) h += 12;
+        if (period === "AM" && h === 12) h = 0;
+        return `${String(h).padStart(2, "0")}:${min}`;
+      }
+
+      let scheduleCreated = 0;
+      let scheduleSkipped = 0;
+
+      for (const ev of input.events) {
+        const city = ev.city?.trim();
+        if (!VALID_LOCATIONS.includes(city as any)) {
+          scheduleSkipped++;
+          continue; // Private/custom location — skip
+        }
+        const location = city as typeof VALID_LOCATIONS[number];
+
+        // Parse ISO date to get day of week
+        let classDate = ev.date;
+        let dayOfWeek: typeof DAY_NAMES[number] = "Saturday";
+        if (/^\d{4}-\d{2}-\d{2}$/.test(ev.date)) {
+          const d = new Date(ev.date + "T12:00:00");
+          dayOfWeek = DAY_NAMES[d.getDay()];
+        }
+
+        // Determine start/end times
+        const startTime = ev.apyTransport
+          ? parseTimeTo24h(ev.pickupTime)
+          : parseTimeTo24h(ev.dropOffTime);
+        const endTime = ev.apyTransport
+          ? parseTimeTo24h(ev.returnTime)
+          : parseTimeTo24h(ev.pickUpTime);
+
+        // Check for existing entry (same breeder + date + location) to avoid duplicates
+        const existing = await db
+          .select({ id: puppySchedule.id })
+          .from(puppySchedule)
+          .where(
+            and(
+              eq(puppySchedule.breederId, input.breederId),
+              eq(puppySchedule.classDate, classDate),
+              eq(puppySchedule.location, location)
+            )
+          )
+          .limit(1);
+
+        if (existing.length > 0) {
+          scheduleSkipped++;
+          console.log(`[Schedule] Entry already exists for breeder ${input.breederId} on ${classDate} at ${location} — skipping`);
+          continue;
+        }
+
+        try {
+          await db.insert(puppySchedule).values({
+            classDate,
+            dayOfWeek,
+            location,
+            breed: breeder?.breed ?? "TBD",
+            breederId: input.breederId,
+            breederName,
+            startTime,
+            endTime,
+            classType: ["Saturday", "Sunday"].includes(dayOfWeek) ? "regular" : "private",
+            notes: `Auto-created from breeder confirmation. Compensation: ${ev.compensation}`,
+          });
+          scheduleCreated++;
+          console.log(`[Schedule] Created entry for ${breederName} on ${classDate} at ${location}`);
+        } catch (err) {
+          console.error(`[Schedule] Failed to create entry for ${classDate} at ${location}:`, err);
+        }
+      }
+
+      console.log(`[Schedule] Auto-created: ${scheduleCreated}, skipped: ${scheduleSkipped}`);
 
       return { success: true, emailSent, smsSent, emailError, smsError };
     }),
