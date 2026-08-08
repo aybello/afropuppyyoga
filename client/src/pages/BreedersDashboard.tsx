@@ -128,8 +128,8 @@ export default function BreedersDashboard() {
 
   // Confirmation state
   const [confirmBreeder, setConfirmBreeder] = useState<any>(null);
-  const [events, setEvents] = useState([{ ...EMPTY_EVENT }]);
-  const [availabilityNote, setAvailabilityNote] = useState("");
+  const [events, setEvents] = useState<typeof EMPTY_EVENT[]>([{ ...EMPTY_EVENT }]);
+  const [availabilityNote, setAvailabilityNote] = useState<string>("");
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState<number | null>(null);
 
@@ -183,6 +183,8 @@ export default function BreedersDashboard() {
   const sendMutation = trpc.breeders.sendConfirmation.useMutation({
     onSuccess: (data) => {
       utils.breeders.getConfirmations.invalidate({ breederId: confirmBreeder?.id });
+      // Clear the saved draft for this breeder — confirmation was sent
+      if (confirmBreeder) localStorage.removeItem(`apy-confirm-draft-${confirmBreeder.id}`);
       setConfirmBreeder(null);
       setEvents([{ ...EMPTY_EVENT }]);
       setAvailabilityNote("");
@@ -242,25 +244,57 @@ export default function BreedersDashboard() {
 
   function openConfirm(b: any) {
     setConfirmBreeder(b);
-    setEvents([{
-      ...EMPTY_EVENT,
-      compensation: b.typicalRate ? `$${b.typicalRate}` : "",
-    }]);
-    setAvailabilityNote("");
     setPreviewHtml(null);
+    // Restore draft from localStorage if one exists for this breeder
+    const draftKey = `apy-confirm-draft-${b.id}`;
+    const saved = localStorage.getItem(draftKey);
+    if (saved) {
+      try {
+        const { events: savedEvents, availabilityNote: savedNote } = JSON.parse(saved);
+        setEvents(savedEvents ?? [{ ...EMPTY_EVENT, compensation: b.typicalRate ? `$${b.typicalRate}` : "" }]);
+        setAvailabilityNote(savedNote ?? "");
+        return;
+      } catch {
+        // Corrupted draft — fall through to defaults
+      }
+    }
+    setEvents([{ ...EMPTY_EVENT, compensation: b.typicalRate ? `$${b.typicalRate}` : "" }]);
+    setAvailabilityNote("");
+  }
+
+  function hasDraft(breederId: number): boolean {
+    return !!localStorage.getItem(`apy-confirm-draft-${breederId}`);
+  }
+
+  function clearDraft(breederId: number) {
+    localStorage.removeItem(`apy-confirm-draft-${breederId}`);
+    setEvents([{ ...EMPTY_EVENT, compensation: confirmBreeder?.typicalRate ? `$${confirmBreeder.typicalRate}` : "" }]);
+    setAvailabilityNote("");
   }
 
   function updateEvent(idx: number, field: string, value: any) {
-    setEvents(ev => ev.map((e, i) => i === idx ? { ...e, [field]: value } : e));
+    setEvents(ev => {
+      const updated = ev.map((e, i) => i === idx ? { ...e, [field]: value } : e);
+      if (confirmBreeder) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events: updated, availabilityNote }));
+      return updated;
+    });
   }
 
   function applyStudio(idx: number, studioLabel: string) {
     if (studioLabel === "private") {
-      setEvents(ev => ev.map((e, i) => i === idx ? { ...e, city: "", location: "", isPrivateEvent: true } : e));
+      setEvents(ev => {
+        const updated = ev.map((e, i) => i === idx ? { ...e, city: "", location: "", isPrivateEvent: true } : e);
+        if (confirmBreeder) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events: updated, availabilityNote }));
+        return updated;
+      });
     } else {
       const studio = STUDIO_LOCATIONS.find(s => s.label === studioLabel);
       if (studio) {
-        setEvents(ev => ev.map((e, i) => i === idx ? { ...e, city: studio.city, location: studio.address, isPrivateEvent: false } : e));
+        setEvents(ev => {
+          const updated = ev.map((e, i) => i === idx ? { ...e, city: studio.city, location: studio.address, isPrivateEvent: false } : e);
+          if (confirmBreeder) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events: updated, availabilityNote }));
+          return updated;
+        });
       }
     }
   }
@@ -802,6 +836,19 @@ export default function BreedersDashboard() {
             </DialogTitle>
           </DialogHeader>
 
+          {/* Draft restored banner */}
+          {confirmBreeder && hasDraft(confirmBreeder.id) && !previewHtml && (
+            <div className="flex items-center justify-between px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs font-body text-amber-800">
+              <span>📝 Draft restored — your unsent changes are still here.</span>
+              <button
+                onClick={() => clearDraft(confirmBreeder.id)}
+                className="ml-3 text-amber-600 hover:text-amber-800 underline whitespace-nowrap"
+              >
+                Start fresh
+              </button>
+            </div>
+          )}
+
           {previewHtml ? (
             <div>
               <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
@@ -838,7 +885,11 @@ export default function BreedersDashboard() {
                     <span className="font-body text-sm font-semibold text-[#8B2252]">Event {idx + 1}</span>
                     {events.length > 1 && (
                       <button
-                        onClick={() => setEvents(ev => ev.filter((_, i) => i !== idx))}
+                        onClick={() => setEvents(ev => {
+                          const updated = ev.filter((_, i) => i !== idx);
+                          if (confirmBreeder) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events: updated, availabilityNote }));
+                          return updated;
+                        })}
                         className="text-red-400 hover:text-red-600"
                       >
                         <X className="w-4 h-4" />
@@ -931,7 +982,11 @@ export default function BreedersDashboard() {
 
               <Button
                 variant="outline"
-                onClick={() => setEvents(ev => [...ev, { ...EMPTY_EVENT, compensation: confirmBreeder?.typicalRate ? `$${confirmBreeder.typicalRate}` : "" }])}
+                onClick={() => setEvents(ev => {
+                  const updated = [...ev, { ...EMPTY_EVENT, compensation: confirmBreeder?.typicalRate ? `$${confirmBreeder.typicalRate}` : "" }];
+                  if (confirmBreeder) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events: updated, availabilityNote }));
+                  return updated;
+                })}
                 className="w-full border-dashed border-[#F0D0DC] text-[#8B2252] hover:bg-[#FFF0F4] font-body gap-2"
               >
                 <Plus className="w-4 h-4" />
@@ -942,7 +997,11 @@ export default function BreedersDashboard() {
                 <Label className="font-body text-sm text-[#1A0A12] font-semibold">Checking Availability For (optional)</Label>
                 <Input
                   value={availabilityNote}
-                  onChange={(e) => setAvailabilityNote(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setAvailabilityNote(val);
+                    if (confirmBreeder) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events, availabilityNote: val }));
+                  }}
                   className="mt-1 border-[#F0D0DC] font-body"
                   placeholder="e.g. Saturday, July 11"
                 />
