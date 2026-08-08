@@ -87,6 +87,7 @@ function Router() {
         <Route path="/admin/sms-broadcast" component={SmsBroadcast} />
         <Route path="/admin/sms-inbox" component={SmsInbox} />
         <Route path="/admin/review-texts" component={ReviewTexts} />
+        <Route path="/admin/revenue" component={RevenueDashboard} />
         <Route path="/breeder-availability" component={BreederAvailability} />
         <Route path="/loyalty" component={Loyalty} />
         <Route path="/ethics" component={Ethics} />
