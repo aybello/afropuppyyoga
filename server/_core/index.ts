@@ -323,6 +323,7 @@ async function startServer() {
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
+    server.timeout = 120000; // 120s — allows slow queries like revenue dashboard
   });
 }
 

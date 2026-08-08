@@ -45,7 +45,11 @@ export default function RevenueDashboard() {
 
   const { data, isLoading, error } = trpc.revenue.getSummary.useQuery(
     { fromDate },
-    { staleTime: 5 * 60 * 1000 } // cache 5 min — Luma API is slow
+    {
+      staleTime: 5 * 60 * 1000, // cache 5 min — Luma API is slow
+      retry: 2,
+      retryDelay: 2000,
+    }
   );
 
   const monthChartData = useMemo(() => {
