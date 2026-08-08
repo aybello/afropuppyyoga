@@ -630,7 +630,7 @@
 - [x] Build ReviewTexts admin page with stats cards, send log table, Run Now button
 - [x] Add Review Texts to AdminNav More dropdown
 - [x] Register /admin/review-texts route in App.tsx
-- [ ] Register heartbeat cron job (requires deploy first — see below)
+- [x] Register heartbeat cron job (requires deploy first — see below)
 - [x] Register heartbeat cron job — task_uid: YfCxi6NHG4eJ7EPcXq5n7X, runs every 30 min
 - [x] Register heartbeat cron job (requires deploy first — see below)
 - [x] Register heartbeat cron job (requires deploy first — see below)
