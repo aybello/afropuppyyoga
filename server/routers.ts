@@ -18,6 +18,7 @@ import { cancellationRouter } from "./routers/cancellation";
 import { smsBroadcastRouter } from "./routers/smsBroadcast";
 import { inboundSmsRouter } from "./routers/inboundSms";
 import { reviewTextsRouter } from "./routers/reviewTexts";
+import { revenueRouter } from "./routers/revenue";
 import { z } from "zod";
 
 const messageSchema = z.object({
@@ -41,6 +42,7 @@ export const appRouter = router({
   smsBroadcast: smsBroadcastRouter,
   inboundSms: inboundSmsRouter,
   reviewTexts: reviewTextsRouter,
+  revenue: revenueRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

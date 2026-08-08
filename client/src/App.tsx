@@ -124,3 +124,4 @@ function App() {
 export default App;
 const SmsInbox = lazy(() => import("./pages/SmsInbox"));
 const ReviewTexts = lazy(() => import("./pages/ReviewTexts"));
+const RevenueDashboard = lazy(() => import("./pages/RevenueDashboard"));
