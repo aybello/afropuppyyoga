@@ -7,6 +7,7 @@ import type { Breeder } from "../../drizzle/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { sendEmail } from "../email";
 import crypto from "crypto";
+import { createLumaEventForSchedule } from "../lumaScheduleHelper";
 
 const breederInput = z.object({
   name: z.string().min(1, "Breeder name is required"),
@@ -431,6 +432,29 @@ export const breedersRouter = router({
           });
           scheduleCreated++;
           console.log(`[Schedule] Created entry for ${breederName} on ${classDate} at ${location}`);
+
+          // Auto-create Luma event page for this schedule entry
+          const lumaResult = await createLumaEventForSchedule({
+            classDate,
+            location,
+            breed: breeder?.breed ?? "TBD",
+            startTime,
+            endTime,
+            classType: ["Saturday", "Sunday"].includes(dayOfWeek) ? "regular" : "private",
+          });
+          if (lumaResult) {
+            // Update the just-inserted row with the Luma event info
+            await db.update(puppySchedule)
+              .set({ lumaEventId: lumaResult.lumaEventId, lumaEventUrl: lumaResult.lumaEventUrl })
+              .where(
+                and(
+                  eq(puppySchedule.breederId, input.breederId),
+                  eq(puppySchedule.classDate, classDate),
+                  eq(puppySchedule.location, location)
+                )
+              );
+            console.log(`[Schedule] Luma event created: ${lumaResult.lumaEventUrl}`);
+          }
         } catch (err) {
           console.error(`[Schedule] Failed to create entry for ${classDate} at ${location}:`, err);
         }

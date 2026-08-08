@@ -452,6 +452,10 @@ export const puppySchedule = mysqlTable("puppySchedule", {
   classType: mysqlEnum("classType", ["regular", "private"]).notNull().default("regular"),
   /** Optional notes e.g. number of puppies, special instructions */
   notes: text("notes"),
+  /** Luma event ID — set after auto-creating the Luma event page */
+  lumaEventId: varchar("lumaEventId", { length: 128 }),
+  /** Luma event URL — e.g. https://lu.ma/abc123 */
+  lumaEventUrl: varchar("lumaEventUrl", { length: 500 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (t) => [

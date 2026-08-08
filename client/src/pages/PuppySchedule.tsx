@@ -34,7 +34,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { CalendarDays, Plus, Pencil, Trash2, MapPin, PawPrint, Loader2, Dog } from "lucide-react";
+import { CalendarDays, Plus, Pencil, Trash2, MapPin, PawPrint, Loader2, Dog, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 const LOCATIONS = ["Kitchener", "Hamilton", "Oakville"] as const;
@@ -307,6 +307,21 @@ export default function PuppySchedule() {
                           </div>
                           {s.notes && (
                             <div className="font-body text-xs text-[#C4A0B0] mt-1 italic">{s.notes}</div>
+                          )}
+                          {s.lumaEventUrl ? (
+                            <a
+                              href={s.lumaEventUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 mt-1.5 text-xs font-body text-[#8B2252] hover:underline"
+                            >
+                              <ExternalLink size={11} />
+                              View Luma Event
+                            </a>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 mt-1.5 text-xs font-body text-[#C4A0B0] italic">
+                              No Luma event yet
+                            </span>
                           )}
                         </div>
                         <div className="flex gap-2 shrink-0">

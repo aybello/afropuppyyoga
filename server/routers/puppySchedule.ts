@@ -4,6 +4,7 @@ import { getDb } from "../db";
 import { puppySchedule, breeders } from "../../drizzle/schema";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
 import { sendEmail, buildBreederConfirmationEmail } from "../email";
+import { createLumaEventForSchedule } from "../lumaScheduleHelper";
 
 const LOCATIONS = ["Kitchener", "Hamilton", "Oakville"] as const;
 const ALL_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
@@ -68,7 +69,7 @@ export const puppyScheduleRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
-      await db.insert(puppySchedule).values({
+      const [inserted] = await db.insert(puppySchedule).values({
         classDate: input.classDate,
         dayOfWeek: input.dayOfWeek,
         location: input.location,
@@ -79,8 +80,25 @@ export const puppyScheduleRouter = router({
         endTime: input.endTime,
         classType: input.classType,
         notes: input.notes ?? null,
+      }).$returningId();
+
+      // Auto-create Luma event page (non-fatal if it fails)
+      const lumaResult = await createLumaEventForSchedule({
+        classDate: input.classDate,
+        location: input.location,
+        breed: input.breed,
+        startTime: input.startTime,
+        endTime: input.endTime,
+        classType: input.classType,
       });
-      return { success: true };
+
+      if (lumaResult && inserted?.id) {
+        await db.update(puppySchedule)
+          .set({ lumaEventId: lumaResult.lumaEventId, lumaEventUrl: lumaResult.lumaEventUrl })
+          .where(eq(puppySchedule.id, inserted.id));
+      }
+
+      return { success: true, lumaEventUrl: lumaResult?.lumaEventUrl ?? null };
     }),
 
   /** Update an existing schedule slot — staff/admin only */
