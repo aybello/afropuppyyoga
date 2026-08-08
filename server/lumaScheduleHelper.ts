@@ -135,10 +135,34 @@ export async function createLumaEventForSchedule(params: {
         cover_url: APY_COVER,
         registration_questions: [
           {
-            id: "waiver",
-            label: "I acknowledge and accept AfroPuppyYoga's waiver and terms of service. Participants must be 18+ years of age.",
+            id: "jry47jna",
+            label: "How did you hear about us?",
             required: true,
-            question_type: "agree-check",
+            question_type: "multi-select",
+            options: ["Instagram", "Facebook", "Poster", "Word of Mouth"],
+          },
+          {
+            id: "kbrpflwx",
+            label: "We\u2019re thinking of creating a cute APY keepsake. Which one would you love more?",
+            required: true,
+            question_type: "dropdown",
+            options: [
+              "A puppy yoga coloring book",
+              "A jigsaw puzzle with our cutest puppies",
+              "I\u2019d actually love both \ud83d\ude2d",
+              "Not for me, but sounds cute!",
+            ],
+          },
+          {
+            id: "1oy5wt8g",
+            label: "Terms and Conditions",
+            required: true,
+            question_type: "terms",
+            terms: {
+              content_type: "text",
+              content_md: `**AfroPuppyYoga \u2014 Participant Agreement, Waiver & Booking Policy**\n\nBy registering for an AfroPuppyYoga session, you confirm that you have read, understood, and agreed to the following terms.\n\n***\n\n**1\\. Voluntary Participation**\n\nI understand that participation in AfroPuppyYoga involves physical activity, interaction with live puppies, and the use of shared space. I am participating voluntarily and entirely at my own risk.\n\n**2\\. Health & Physical Fitness**\n\nI confirm that I am physically able to participate in light movement or yoga. I understand that modifications are available for all experience levels. I accept full responsibility for my own health and well-being throughout the session.\n\n**3\\. Animal Interaction**\n\nI understand that while our puppies are friendly, well-socialized, and supervised by trained handlers, they are still animals and may behave unpredictably. I agree to treat them with care and respect, and to follow all instructions from the puppy handlers at all times. I waive any and all claims related to minor scratches, puppy accidents, or allergic reactions.\n\n**4\\. Liability Release**\n\nI release AfroPuppyYoga, its instructors, staff, volunteers, puppy handlers, and venue partners from all liability for any injuries, damages, or losses that may occur before, during, or after the session, to the fullest extent permitted by law.\n\n**5\\. Media Release**\n\nI consent to being photographed or filmed during the event and grant AfroPuppyYoga permission to use these materials for promotional and marketing purposes across any platform. If I wish to opt out, I will notify a staff member before the session begins.\n\n***\n\n**6\\. Cancellation & Refund Policy**\n\nWe never want to cancel a class. When we must, it is always due to circumstances outside our control \u2014 puppy availability, instructor emergencies, safety concerns, or venue issues.\n\nBecause of the nature of our business, we are not able to issue cash refunds at this time. All bookings are subject to the following credit policy:\n\n*   **APY-initiated cancellations:** You will automatically receive a full class credit delivered as a coupon code. The code never expires and may be transferred to another person.\n*   **Customer cancellations (more than 24 hours before class):** You will receive a full class credit as a coupon code with no expiry. Email [afropuppyyoga@gmail.com](mailto:afropuppyyoga@gmail.com) with your booking confirmation to receive your code.\n*   **Customer cancellations (within 24 hours) and no-shows:** Credits are not issued. Exceptions may be made for documented emergencies at AfroPuppyYoga\u2019s discretion.\n*   **Ticket transfers:** Tickets and credit codes are transferable to another person. Please notify us before class begins at [afropuppyyoga@gmail.com](mailto:afropuppyyoga@gmail.com).\n\nNo cash refunds are issued under any circumstances, including when AfroPuppyYoga cancels a class.\n\nWe are deeply grateful for your kindness and support. It truly means everything to us. \ud83d\udc3e\n\n***\n\n_By proceeding with registration or signing below, you confirm that you have read and agreed to all of the above._`,
+              collect_signature: true,
+            },
           },
         ],
       }),
