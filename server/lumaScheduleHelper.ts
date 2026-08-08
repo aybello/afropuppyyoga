@@ -1,87 +1,102 @@
 /**
  * Creates a public Luma event page for a regular puppy yoga class (schedule slot).
- * Returns { lumaEventId, lumaEventUrl } on success, or null on failure (non-fatal).
+ * Matches the exact format of real APY events (Aug 15 2026 style):
+ *   - Name: AfroPuppyYoga |📍{Location} |🐶{Breed}
+ *   - 3 time slots: 10AM, 11:30AM, 1:30PM — each with Early Bird / Bring a Friend / Group of 3 / Regular tickets
+ *   - Mat Rental ticket
+ *   - Full APY branded description
+ *   - No tint color / no theme (matches real events)
  */
 
 const LUMA_BASE = "https://public-api.luma.com/v1";
-const APY_TINT_COLOR = "#9B2335";
 
-// APY public cover image (same as private events)
-const APY_COVER = "https://images.lumacdn.com/event-covers/up/fc92575f-4105-4406-a89b-14105f70e638.jpg";
+// APY cover image (placeholder — swap in puppy photo after creation)
+const APY_COVER = "https://images.lumacdn.com/event-covers/oi/e96e9bff-d920-423c-9d67-55dd8b8041a9.jpg";
 
-const LOCATION_MAP: Record<string, { fullAddress: string; googlePlaceId: string }> = {
-  kitchener: {
-    fullAddress: "329 King St E, Kitchener, ON N2G 2L2, Canada",
-    googlePlaceId: "ChIJH-amGez0K4gRjJwKZT5ifpU",
-  },
-  hamilton: {
-    fullAddress: "2751 Barton St E, Hamilton, ON L8E 2J8, Canada",
-    googlePlaceId: "ChIJj19OTp-YLIgRv4e9qQwDoq8",
-  },
-  oakville: {
-    fullAddress: "1670 North Service Rd E unit 108, Oakville, ON L6H 7G3, Canada",
-    googlePlaceId: "ChIJofNPAT9DK4gRAhVcvaHDk7Y",
-  },
+const LOCATION_MAP: Record<string, { googlePlaceId: string }> = {
+  kitchener: { googlePlaceId: "ChIJH-amGez0K4gRjJwKZT5ifpU" },
+  hamilton:  { googlePlaceId: "ChIJj19OTp-YLIgRv4e9qQwDoq8" },
+  oakville:  { googlePlaceId: "ChIJofNPAT9DK4gRAhVcvaHDk7Y" },
 };
 
-function formatDisplayDate(isoDate: string): string {
-  // "2026-08-15" → "Saturday, August 15"
-  const d = new Date(isoDate + "T12:00:00");
-  return d.toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric" });
-}
+// Standard time slots for regular Saturday/Sunday classes (Toronto time, UTC-4 in summer)
+// 10:00 AM ET = 14:00 UTC, 11:30 AM ET = 15:30 UTC, 1:30 PM ET = 17:30 UTC
+const TIME_SLOTS = [
+  { label: "10AM",    startOffsetH: 10, startOffsetM: 0,  endOffsetH: 11, endOffsetM: 0  },
+  { label: "11:30AM", startOffsetH: 11, startOffsetM: 30, endOffsetH: 12, endOffsetM: 30 },
+  { label: "1:30PM",  startOffsetH: 13, startOffsetM: 30, endOffsetH: 14, endOffsetM: 30 },
+];
 
-function to12h(time24: string): string {
-  // "09:00" → "9:00 AM"
-  const [hStr, mStr] = time24.split(":");
-  let h = parseInt(hStr, 10);
-  const m = mStr ?? "00";
-  const period = h >= 12 ? "PM" : "AM";
-  if (h === 0) h = 12;
-  else if (h > 12) h -= 12;
-  return `${h}:${m} ${period}`;
-}
+const APY_DESCRIPTION = `Start your weekend with a little more movement… and a lot more puppy love.
 
-function buildDescription(params: {
-  location: string;
-  breed: string;
-  classDate: string;
-  startTime: string;
-  endTime: string;
-}): string {
-  const dateStr = formatDisplayDate(params.classDate);
-  const start = to12h(params.startTime);
-  const end = to12h(params.endTime);
-  const breed = params.breed && params.breed !== "TBD" ? params.breed : "adorable puppies";
+**AfroPuppyYoga** is a feel-good wellness experience where yoga, music, and the joyful presence of puppies come together. Whether you're a first-timer or returning for another session, every class is designed to help you reset, breathe deeper, and leave smiling.
 
-  return `Join us for a fun and relaxing AfroPuppyYoga class in ${params.location} on **${dateStr}** from **${start} to ${end}**!
+**Each session includes:**
+✨ A 40-minute beginner-friendly yoga class
+✨ Puppies roaming freely throughout to interact and cuddle with you
+✨ A group photo + 20 minutes of puppy playtime after yoga
+✨ Light refreshments available post-session
+✨ Mats available for rent
 
-Roll out your mat, strike a pose, and let ${breed} puppies melt your stress away — all to the sounds of Afrobeats.
+🧳 **What to Bring:**
+✔️ Digital or printed booking confirmation
+✔️ Water bottle
+✔️ Comfortable clothing
+✔️ A smile and all the good energy 🐶💛
 
-**What's included:**
-🐶 A one-hour puppy yoga experience
-🧘 Beginner-friendly guided yoga instruction
-🐾 ${breed} puppies and dedicated puppy handlers
-💛 Supervised puppy interaction and playtime
-🧘 Yoga mats provided
-🎶 Curated Afrobeats playlist
-🧼 Venue, setup and cleanup
+📞 **Contact Us**
+Phone: **+1 (289) 788-1885**
+Email: **[afropuppyyoga@gmail.com](mailto:afropuppyyoga@gmail.com)**
+Website: **[afropuppyyoga.ca](http://afropuppyyoga.ca)**
+**Instagram:** **[@afropuppyyoga](https://www.instagram.com/afropuppyyoga/)**
 
-Spots are limited — secure yours today!
+No yoga experience needed — just bring yourself and your love for puppies. **Spots are limited and go fast, so book early to save yours!**
 
-*The puppy breed and final venue details will be confirmed closer to the event based on availability.*`;
+**Disclaimer:**
+We do our best to ensure that the puppies advertised for each class are the ones you'll meet in person. However, please note that puppies are sometimes subject to change due to unforeseen circumstances. If any changes occur, we will provide an update to all registered guests as soon as possible.
+
+Thanks for your understanding and continued support 🐶🧘🏽‍♀️💛`;
+
+async function createTicketType(apiKey: string, eventId: string, ticket: {
+  name: string;
+  cents: number;
+  maxCapacity: number | null;
+  validEndAt?: string;
+  validStartAt?: string;
+}) {
+  const body: Record<string, unknown> = {
+    event_id: eventId,
+    name: ticket.name,
+    type: "paid",
+    cents: ticket.cents,
+    currency: "cad",
+  };
+  if (ticket.maxCapacity !== null) body.max_capacity = ticket.maxCapacity;
+  if (ticket.validEndAt) body.valid_end_at = ticket.validEndAt;
+  if (ticket.validStartAt) body.valid_start_at = ticket.validStartAt;
+
+  const res = await fetch(`${LUMA_BASE}/events/ticket-types/create`, {
+    method: "POST",
+    headers: { "x-luma-api-key": apiKey, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    console.warn(`[LumaSchedule] Ticket creation failed for "${ticket.name}": ${err}`);
+  }
 }
 
 export async function createLumaEventForSchedule(params: {
   classDate: string;      // "2026-08-15"
   location: string;       // "Kitchener" | "Hamilton" | "Oakville"
   breed: string;
-  startTime: string;      // "09:00"
-  endTime: string;        // "15:00"
+  startTime: string;      // "09:00" — used for event start (overall window)
+  endTime: string;        // "15:00" — used for event end (overall window)
   classType: "regular" | "private";
 }): Promise<{ lumaEventId: string; lumaEventUrl: string } | null> {
   const apiKey = process.env.LUMA_API_KEY;
   if (!apiKey) {
-    console.warn("[LumaSchedule] LUMA_API_KEY not set — skipping Luma event creation");
+    console.warn("[LumaSchedule] LUMA_API_KEY not set — skipping");
     return null;
   }
 
@@ -92,25 +107,18 @@ export async function createLumaEventForSchedule(params: {
     return null;
   }
 
-  // Build ISO 8601 start/end in Toronto timezone
-  const [startH, startM] = params.startTime.split(":").map(Number);
-  const [endH, endM] = params.endTime.split(":").map(Number);
-  const startAt = `${params.classDate}T${String(startH).padStart(2,"0")}:${String(startM).padStart(2,"0")}:00-04:00`;
-  const endAt   = `${params.classDate}T${String(endH).padStart(2,"0")}:${String(endM).padStart(2,"0")}:00-04:00`;
+  const breed = params.breed && params.breed !== "TBD" ? params.breed : "Puppies";
+  const eventName = `AfroPuppyYoga |📍${params.location} |🐶${breed}`;
 
-  const displayDate = formatDisplayDate(params.classDate);
-  const eventName = `AfroPuppyYoga — ${params.location} | ${displayDate}`;
-
-  const description = buildDescription({
-    location: params.location,
-    breed: params.breed,
-    classDate: params.classDate,
-    startTime: params.startTime,
-    endTime: params.endTime,
-  });
+  // Overall event window: first slot start → last slot end (in Toronto summer time UTC-4)
+  const firstSlot = TIME_SLOTS[0];
+  const lastSlot = TIME_SLOTS[TIME_SLOTS.length - 1];
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const startAt = `${params.classDate}T${pad(firstSlot.startOffsetH)}:${pad(firstSlot.startOffsetM)}:00-04:00`;
+  const endAt   = `${params.classDate}T${pad(lastSlot.endOffsetH)}:${pad(lastSlot.endOffsetM)}:00-04:00`;
 
   try {
-    // 1. Create the event (public, listed)
+    // 1. Create the event
     const createRes = await fetch(`${LUMA_BASE}/events/create`, {
       method: "POST",
       headers: { "x-luma-api-key": apiKey, "Content-Type": "application/json" },
@@ -123,10 +131,8 @@ export async function createLumaEventForSchedule(params: {
         geo_address_json: { type: "google", place_id: loc.googlePlaceId },
         phone_number_requirement: "required",
         name_requirement: "first-last",
-        description_md: description,
+        description_md: APY_DESCRIPTION,
         cover_url: APY_COVER,
-        tint_color: APY_TINT_COLOR,
-        theme: "hypnotic",
         registration_questions: [
           {
             id: "waiver",
@@ -147,7 +153,38 @@ export async function createLumaEventForSchedule(params: {
     const createData = (await createRes.json()) as { id: string };
     const lumaEventId = createData.id;
 
-    // 2. Fetch the actual slug-based URL
+    // 2. Remove the default free "Standard" ticket Luma auto-creates
+    try {
+      const listRes = await fetch(`${LUMA_BASE}/events/ticket-types/list?event_id=${lumaEventId}`, {
+        headers: { "x-luma-api-key": apiKey },
+      });
+      if (listRes.ok) {
+        const { entries } = (await listRes.json()) as { entries: Array<{ id: string; type: string; name: string }> };
+        for (const t of entries) {
+          if (t.type === "free" && t.name === "Standard") {
+            await fetch(`${LUMA_BASE}/events/ticket-types/delete`, {
+              method: "POST",
+              headers: { "x-luma-api-key": apiKey, "Content-Type": "application/json" },
+              body: JSON.stringify({ event_ticket_type_id: t.id }),
+            });
+          }
+        }
+      }
+    } catch { /* non-critical */ }
+
+    // 3. Create ticket types — Mat Rental + 3 time slots × 4 ticket types each
+    // Mat Rental (unlimited)
+    await createTicketType(apiKey, lumaEventId, { name: "Mat Rental 🧘‍♀️", cents: 250, maxCapacity: null });
+
+    // Per time slot: Early Bird, Bring a Friend, Group of 3, Regular
+    for (const slot of TIME_SLOTS) {
+      await createTicketType(apiKey, lumaEventId, { name: `${slot.label} Early Bird 🐣❤️`, cents: 5000, maxCapacity: 5 });
+      await createTicketType(apiKey, lumaEventId, { name: `${slot.label} Bring a Friend 👯‍♀️`, cents: 9600, maxCapacity: 4 });
+      await createTicketType(apiKey, lumaEventId, { name: `${slot.label} Group of 3 👯‍♀️`, cents: 13800, maxCapacity: 1 });
+      await createTicketType(apiKey, lumaEventId, { name: `${slot.label} Regular`, cents: 5200, maxCapacity: 4 });
+    }
+
+    // 4. Fetch the slug-based URL
     let lumaEventUrl = `https://lu.ma/${lumaEventId}`;
     try {
       const getRes = await fetch(`${LUMA_BASE}/events/get?event_id=${lumaEventId}`, {
@@ -159,7 +196,7 @@ export async function createLumaEventForSchedule(params: {
       }
     } catch { /* fallback URL is fine */ }
 
-    console.log(`[LumaSchedule] Created Luma event: ${lumaEventUrl}`);
+    console.log(`[LumaSchedule] Created Luma event: ${lumaEventUrl} (${eventName})`);
     return { lumaEventId, lumaEventUrl };
   } catch (err) {
     console.error("[LumaSchedule] Unexpected error:", err);

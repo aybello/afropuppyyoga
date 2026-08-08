@@ -636,3 +636,4 @@
 - [x] Register heartbeat cron job (requires deploy first — see below)
 - [x] Register heartbeat cron job (requires deploy first — see below)
 - [x] Register heartbeat cron job (requires deploy first — see below)
+- [x] Register heartbeat cron job (requires deploy first — see below)
