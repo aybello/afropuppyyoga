@@ -95,7 +95,7 @@ function generateConfirmationEmail(opts: {
         <li>Have been dewormed</li>
       </ul>
       <p style="margin:0 0 16px;line-height:1.6;">Our team will supervise the puppies at all times and ensure they receive regular breaks, water, and a safe, controlled environment throughout the events.</p>
-      <p style="margin:0 0 16px;line-height:1.6;">For any dates where APY is handling transportation, please provide the pickup address that works best for you.</p>
+      ${opts.events.some(ev => ev.apyTransport) ? `<p style="margin:0 0 16px;line-height:1.6;">For any dates where APY is handling transportation, please provide the pickup address that works best for you.</p>` : ""}
       ${availabilitySection}
       <p style="margin:24px 0 16px;line-height:1.6;">Please confirm that the above dates and times work for you, and we can finalize everything from there.</p>
       <p style="margin:0 0 4px;">Looking forward to working together.</p>
@@ -118,7 +118,9 @@ function generateConfirmationEmail(opts: {
     return `📍 ${ev.city}\nDate: ${formatDateHuman(ev.date)}\n${transport}\nLocation: ${ev.location}\nCompensation: ${ev.compensation} (paid via e-transfer)`;
   }).join("\n\n---\n\n");
 
-  const text = `Hi ${opts.breederFirstName},\n\nWe're excited to be working with you and your puppies for our upcoming AfroPuppyYoga classes.\n\nAs discussed, here are the confirmed details:\n\n${textEvents}\n\nPlease ensure all puppies:\n- Are freshly groomed, clean, and smell pleasant\n- Are up to date on vaccinations\n- Have been dewormed\n\nOur team will supervise the puppies at all times and ensure they receive regular breaks, water, and a safe, controlled environment throughout the events.\n\nFor any dates where APY is handling transportation, please provide the pickup address that works best for you.\n\n${opts.availabilityNote ? `We also wanted to see if you may have availability for ${opts.availabilityNote}. If so, we'd love to discuss potentially adding that date as well.\n\n` : ""}Please confirm that the above dates and times work for you, and we can finalize everything from there.\n\nLooking forward to working together.\n\nBest,\nThe AfroPuppyYoga Team\nP: 289-788-1885\nE: afropuppyyoga@gmail.com\nW: afropuppyyoga.ca`;
+  const hasTransport = opts.events.some(ev => ev.apyTransport);
+  const transportNote = hasTransport ? "For any dates where APY is handling transportation, please provide the pickup address that works best for you.\n\n" : "";
+  const text = `Hi ${opts.breederFirstName},\n\nWe're excited to be working with you and your puppies for our upcoming AfroPuppyYoga classes.\n\nAs discussed, here are the confirmed details:\n\n${textEvents}\n\nPlease ensure all puppies:\n- Are freshly groomed, clean, and smell pleasant\n- Are up to date on vaccinations\n- Have been dewormed\n\nOur team will supervise the puppies at all times and ensure they receive regular breaks, water, and a safe, controlled environment throughout the events.\n\n${transportNote}${opts.availabilityNote ? `We also wanted to see if you may have availability for ${opts.availabilityNote}. If so, we'd love to discuss potentially adding that date as well.\n\n` : ""}Please confirm that the above dates and times work for you, and we can finalize everything from there.\n\nLooking forward to working together.\n\nBest,\nThe AfroPuppyYoga Team\nP: 289-788-1885\nE: afropuppyyoga@gmail.com\nW: afropuppyyoga.ca`;
 
   return { html, text };
 }

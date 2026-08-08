@@ -633,3 +633,4 @@
 - [ ] Register heartbeat cron job (requires deploy first — see below)
 - [x] Register heartbeat cron job — task_uid: YfCxi6NHG4eJ7EPcXq5n7X, runs every 30 min
 - [x] Register heartbeat cron job (requires deploy first — see below)
+- [x] Register heartbeat cron job (requires deploy first — see below)
