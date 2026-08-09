@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { router, staffProcedure } from "../_core/trpc";
+import { router, staffProcedure, publicProcedure } from "../_core/trpc";
 import { getDb } from "../db";
 import { breederLeads, breederLeadMessages, breederLeadActivities, breeders } from "../../drizzle/schema";
 import { eq, desc, and, like, or, isNull } from "drizzle-orm";
@@ -143,7 +143,7 @@ export const breederLeadsRouter = router({
       return { success: true };
     }),
 
-  searchKijiji: staffProcedure
+  searchKijiji: publicProcedure
     .input(z.object({ keyword: z.string().min(1), location: z.string().default("gta") }))
     .mutation(async ({ input }) => {
       const db = await getDb();
