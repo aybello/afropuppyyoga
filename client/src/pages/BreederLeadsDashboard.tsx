@@ -40,6 +40,7 @@ export default function BreederLeadsDashboard() {
   const [kijijiKeyword, setKijijiKeyword] = useState("Golden Retriever puppies");
   const [kijijiLocation, setKijijiLocation] = useState("gta");
   const [kijijiResults, setKijijiResults] = useState<any[]>([]);
+  const [kijijiError, setKijijiError] = useState("");
   const [importingUrl, setImportingUrl] = useState("");
   const [importUrl, setImportUrl] = useState("");
   const [newLead, setNewLead] = useState({ breed: "", sellerName: "", phoneNumber: "", email: "", city: "", puppyCount: "", listingUrl: "", internalNotes: "" });
@@ -57,8 +58,8 @@ export default function BreederLeadsDashboard() {
   });
 
   const searchKijijiMutation = trpc.breederLeads.searchKijiji.useMutation({
-    onSuccess: (data) => setKijijiResults(data),
-    onError: (e) => toast.error(e.message),
+    onSuccess: (data) => { setKijijiResults(data); setKijijiError(""); },
+    onError: (e) => { setKijijiError(e.message); toast.error(e.message); },
   });
 
   const importUrlMutation = trpc.breederLeads.importFromUrl.useMutation({
@@ -268,6 +269,7 @@ export default function BreederLeadsDashboard() {
             <button type="button" className="w-full h-10 rounded-md bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 disabled:opacity-50" disabled={!kijijiKeyword || searchKijijiMutation.isPending} onClick={() => { console.log("Searching:", kijijiKeyword, kijijiLocation); searchKijijiMutation.mutate({ keyword: kijijiKeyword, location: kijijiLocation }); }}>
               {searchKijijiMutation.isPending ? "Searching..." : "Search Kijiji"}
             </button>
+            {kijijiError && <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-md px-3 py-2">{kijijiError}</div>}
           </div>
           {kijijiResults.length > 0 && (
             <div className="space-y-2">
