@@ -232,48 +232,42 @@ export default function BreederLeadsDashboard() {
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Breed</label>
-                <Select value={kijijiKeyword} onValueChange={setKijijiKeyword}>
-                  <SelectTrigger><SelectValue placeholder="Select breed" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Golden Retriever puppies">Golden Retriever</SelectItem>
-                    <SelectItem value="Bernese Mountain Dog puppies">Bernese Mountain Dog</SelectItem>
-                    <SelectItem value="German Shepherd puppies">German Shepherd</SelectItem>
-                    <SelectItem value="Labrador puppies">Labrador Retriever</SelectItem>
-                    <SelectItem value="Goldendoodle puppies">Goldendoodle</SelectItem>
-                    <SelectItem value="Cane Corso puppies">Cane Corso</SelectItem>
-                    <SelectItem value="French Bulldog puppies">French Bulldog</SelectItem>
-                    <SelectItem value="Poodle puppies">Poodle</SelectItem>
-                    <SelectItem value="Husky puppies">Husky</SelectItem>
-                    <SelectItem value="Corgi puppies">Corgi</SelectItem>
-                    <SelectItem value="Australian Shepherd puppies">Australian Shepherd</SelectItem>
-                    <SelectItem value="Border Collie puppies">Border Collie</SelectItem>
-                    <SelectItem value="Cavalier King Charles puppies">Cavalier King Charles</SelectItem>
-                    <SelectItem value="Shih Tzu puppies">Shih Tzu</SelectItem>
-                    <SelectItem value="Pomeranian puppies">Pomeranian</SelectItem>
-                    <SelectItem value="Doberman puppies">Doberman</SelectItem>
-                    <SelectItem value="Rottweiler puppies">Rottweiler</SelectItem>
-                    <SelectItem value="Great Dane puppies">Great Dane</SelectItem>
-                    <SelectItem value="Samoyed puppies">Samoyed</SelectItem>
-                    <SelectItem value="Mini Pinscher puppies">Mini Pinscher</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm" value={kijijiKeyword} onChange={e => setKijijiKeyword(e.target.value)}>
+                  <option value="Golden Retriever puppies">Golden Retriever</option>
+                  <option value="Bernese Mountain Dog puppies">Bernese Mountain Dog</option>
+                  <option value="German Shepherd puppies">German Shepherd</option>
+                  <option value="Labrador puppies">Labrador Retriever</option>
+                  <option value="Goldendoodle puppies">Goldendoodle</option>
+                  <option value="Cane Corso puppies">Cane Corso</option>
+                  <option value="French Bulldog puppies">French Bulldog</option>
+                  <option value="Poodle puppies">Poodle</option>
+                  <option value="Husky puppies">Husky</option>
+                  <option value="Corgi puppies">Corgi</option>
+                  <option value="Australian Shepherd puppies">Australian Shepherd</option>
+                  <option value="Border Collie puppies">Border Collie</option>
+                  <option value="Cavalier King Charles puppies">Cavalier King Charles</option>
+                  <option value="Shih Tzu puppies">Shih Tzu</option>
+                  <option value="Pomeranian puppies">Pomeranian</option>
+                  <option value="Doberman puppies">Doberman</option>
+                  <option value="Rottweiler puppies">Rottweiler</option>
+                  <option value="Great Dane puppies">Great Dane</option>
+                  <option value="Samoyed puppies">Samoyed</option>
+                  <option value="Mini Pinscher puppies">Mini Pinscher</option>
+                </select>
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Location</label>
-                <Select value={kijijiLocation} onValueChange={setKijijiLocation}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="kitchener">Near Kitchener (100km)</SelectItem>
-                    <SelectItem value="hamilton">Near Hamilton (100km)</SelectItem>
-                    <SelectItem value="oakville">Near Oakville (100km)</SelectItem>
-                    <SelectItem value="gta">GTA / All (100km)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm" value={kijijiLocation} onChange={e => setKijijiLocation(e.target.value)}>
+                  <option value="kitchener">Near Kitchener (100km)</option>
+                  <option value="hamilton">Near Hamilton (100km)</option>
+                  <option value="oakville">Near Oakville (100km)</option>
+                  <option value="gta">GTA / All (100km)</option>
+                </select>
               </div>
             </div>
-            <Button className="w-full" disabled={!kijijiKeyword || searchKijijiMutation.isPending} onClick={() => searchKijijiMutation.mutate({ keyword: kijijiKeyword, location: kijijiLocation })}>
-              {searchKijijiMutation.isPending ? "Searching..." : "Search"}
-            </Button>
+            <button type="button" className="w-full h-10 rounded-md bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 disabled:opacity-50" disabled={!kijijiKeyword || searchKijijiMutation.isPending} onClick={() => { console.log("Searching:", kijijiKeyword, kijijiLocation); searchKijijiMutation.mutate({ keyword: kijijiKeyword, location: kijijiLocation }); }}>
+              {searchKijijiMutation.isPending ? "Searching..." : "Search Kijiji"}
+            </button>
           </div>
           {kijijiResults.length > 0 && (
             <div className="space-y-2">
