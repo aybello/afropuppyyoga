@@ -2,7 +2,7 @@ import { z } from "zod";
 import Stripe from "stripe";
 import { router, staffProcedure } from "../_core/trpc";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+const stripe = new Stripe(process.env.STRIPE_LIVE_SECRET_KEY || "", {
   apiVersion: "2024-12-18.acacia" as any,
 });
 
@@ -38,7 +38,7 @@ export const revenueRouter = router({
       }),
     )
     .query(async ({ input }) => {
-      if (!process.env.STRIPE_SECRET_KEY) {
+      if (!process.env.STRIPE_LIVE_SECRET_KEY) {
         throw new Error("STRIPE_SECRET_KEY not configured");
       }
 
