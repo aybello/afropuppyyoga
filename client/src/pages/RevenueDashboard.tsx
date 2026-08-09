@@ -13,7 +13,11 @@ import {
   Calendar,
   Ticket,
   Clock,
+  Users,
+  RefreshCw,
+  ExternalLink,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 function fmt(cents: number | null | undefined) {
   if (cents == null) return "—";
@@ -304,7 +308,122 @@ export default function RevenueDashboard() {
             </Card>
           </>
         )}
+
+        {/* Luma Attendance Section */}
+        <LumaAttendanceSection fromDate={fromDate} />
       </div>
+    </div>
+  );
+}
+
+function LumaAttendanceSection({ fromDate }: { fromDate: string | undefined }) {
+  const { data, isLoading, error, refetch, isFetching } = trpc.revenue.getLumaAttendance.useQuery(
+    { fromDate },
+    { enabled: false, retry: 1 },
+  );
+
+  return (
+    <div className="mt-8">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="font-display text-xl text-[#1A0A12] flex items-center gap-2">
+            <Users size={20} /> Luma Attendance
+          </h2>
+          <p className="font-body text-xs text-[#9B7A69] mt-1">Guest registrations and check-ins from Luma (fetched on demand)</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refetch()}
+          disabled={isFetching}
+          className="border-[#F0D0DC] text-[#8B2252] hover:bg-[#FFF0F4]"
+        >
+          <RefreshCw size={14} className={isFetching ? "animate-spin mr-2" : "mr-2"} />
+          {isFetching ? "Loading..." : data ? "Refresh" : "Load Luma Data"}
+        </Button>
+      </div>
+
+      {isLoading && isFetching && (
+        <div className="grid grid-cols-3 gap-4">
+          {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 rounded-2xl" />)}
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 font-body text-sm">
+          <p className="font-semibold">Luma data unavailable</p>
+          <p className="mt-1">{error.message}</p>
+        </div>
+      )}
+
+      {data && (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <Card className="bg-white border-[#F0D0DC] rounded-2xl">
+              <CardContent className="pt-5 pb-4">
+                <p className="font-body text-xs text-[#6B4C3B] uppercase tracking-wide">Events</p>
+                <p className="font-display text-2xl text-[#1A0A12] mt-1">{data.totalEvents}</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-white border-[#F0D0DC] rounded-2xl">
+              <CardContent className="pt-5 pb-4">
+                <p className="font-body text-xs text-[#6B4C3B] uppercase tracking-wide">Total Guests</p>
+                <p className="font-display text-2xl text-[#1A0A12] mt-1">{data.totalGuests.toLocaleString()}</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-white border-[#F0D0DC] rounded-2xl">
+              <CardContent className="pt-5 pb-4">
+                <p className="font-body text-xs text-[#6B4C3B] uppercase tracking-wide">Checked In</p>
+                <p className="font-display text-2xl text-[#1A0A12] mt-1">{data.totalCheckedIn.toLocaleString()}</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-white border-[#F0D0DC] rounded-2xl">
+              <CardContent className="pt-5 pb-4">
+                <p className="font-body text-xs text-[#6B4C3B] uppercase tracking-wide">Attendance Rate</p>
+                <p className="font-display text-2xl text-[#1A0A12] mt-1">{(data.attendanceRate * 100).toFixed(0)}%</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="bg-white border-[#F0D0DC] rounded-2xl">
+            <CardHeader className="pb-3">
+              <CardTitle className="font-display text-base text-[#1A0A12]">Event Attendance</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full font-body text-sm">
+                  <thead>
+                    <tr className="border-b border-[#F0D0DC]">
+                      <th className="text-left px-5 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Event</th>
+                      <th className="text-left px-3 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Date</th>
+                      <th className="text-right px-3 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Guests</th>
+                      <th className="text-right px-3 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Checked In</th>
+                      <th className="text-center px-3 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Link</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.eventAttendance.map((ev, i) => (
+                      <tr key={i} className="border-b border-[#F6E6EC] last:border-0 hover:bg-[#FFF8FA]">
+                        <td className="px-5 py-3 max-w-[250px] truncate">{ev.name}</td>
+                        <td className="px-3 py-3 text-[#9B7A69]">{new Date(ev.date).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}</td>
+                        <td className="px-3 py-3 text-right font-medium">{ev.guests}</td>
+                        <td className="px-3 py-3 text-right font-medium">{ev.checkedIn}</td>
+                        <td className="px-3 py-3 text-center">
+                          {ev.url && (
+                            <a href={`https://lu.ma/${ev.url}`} target="_blank" rel="noopener noreferrer" className="text-[#8B2252] hover:underline">
+                              <ExternalLink size={14} className="inline" />
+                            </a>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
 }

@@ -2,6 +2,8 @@ import { z } from "zod";
 import Stripe from "stripe";
 import { router, staffProcedure } from "../_core/trpc";
 
+const LUMA_BASE = "https://public-api.luma.com/v1";
+
 const stripe = new Stripe(process.env.STRIPE_LIVE_SECRET_KEY || "", {
   apiVersion: "2024-12-18.acacia" as any,
 });
@@ -224,6 +226,102 @@ export const revenueRouter = router({
         })).sort((a, b) => b.revenueCents - a.revenueCents),
         dataSource: "stripe",
         chargesAnalyzed: charges.length,
+      };
+    }),
+
+  getLumaAttendance: staffProcedure
+    .input(z.object({ fromDate: z.string().optional() }))
+    .query(async ({ input }) => {
+      const apiKey = process.env.LUMA_API_KEY;
+      if (!apiKey) throw new Error("LUMA_API_KEY not configured");
+
+      const after = input.fromDate
+        ? new Date(`${input.fromDate}T00:00:00.000Z`).toISOString()
+        : new Date("2024-08-22T00:00:00.000Z").toISOString();
+
+      // Fetch events
+      const eventsUrl = new URL(`${LUMA_BASE}/calendar/list-events`);
+      eventsUrl.searchParams.set("after", after);
+      eventsUrl.searchParams.set("period", "all");
+
+      const eventsRes = await fetch(eventsUrl.toString(), {
+        headers: { "x-luma-api-key": apiKey },
+      });
+      if (!eventsRes.ok) {
+        const body = await eventsRes.text().catch(() => "");
+        throw new Error(`Luma event list failed (${eventsRes.status}): ${body}`);
+      }
+      const eventsData = await eventsRes.json() as any;
+      const events = (eventsData.entries || []).map((e: any) => e.event || e);
+
+      // Fetch guests for each event (batched 4 at a time)
+      let totalGuests = 0;
+      let totalCheckedIn = 0;
+      let totalEvents = events.length;
+      const eventAttendance: Array<{
+        name: string;
+        date: string;
+        guests: number;
+        checkedIn: number;
+        url: string;
+      }> = [];
+
+      const batchSize = 4;
+      for (let i = 0; i < events.length; i += batchSize) {
+        const batch = events.slice(i, i + batchSize);
+        const results = await Promise.all(
+          batch.map(async (event: any) => {
+            let guests = 0;
+            let checkedIn = 0;
+            let cursor: string | null = null;
+            let hasMore = true;
+
+            while (hasMore) {
+              const gUrl = new URL(`${LUMA_BASE}/event/get-guests`);
+              gUrl.searchParams.set("event_api_id", event.api_id);
+              if (cursor) gUrl.searchParams.set("cursor", cursor);
+
+              const gRes = await fetch(gUrl.toString(), {
+                headers: { "x-luma-api-key": apiKey },
+              });
+              if (!gRes.ok) break;
+
+              const gData = await gRes.json() as any;
+              const entries = gData.entries || [];
+              for (const entry of entries) {
+                const g = entry.guest || entry;
+                if (g.approval_status === "approved" || !g.approval_status) {
+                  guests++;
+                  if (g.checked_in_at) checkedIn++;
+                }
+              }
+              hasMore = gData.has_more || false;
+              cursor = gData.next_cursor || null;
+            }
+
+            return {
+              name: event.name || "Untitled",
+              date: event.start_at ? event.start_at.split("T")[0] : "Unknown",
+              guests,
+              checkedIn,
+              url: event.url || "",
+            };
+          }),
+        );
+
+        for (const r of results) {
+          totalGuests += r.guests;
+          totalCheckedIn += r.checkedIn;
+          eventAttendance.push(r);
+        }
+      }
+
+      return {
+        totalEvents,
+        totalGuests,
+        totalCheckedIn,
+        attendanceRate: totalGuests > 0 ? totalCheckedIn / totalGuests : 0,
+        eventAttendance: eventAttendance.sort((a, b) => b.date.localeCompare(a.date)),
       };
     }),
 });
