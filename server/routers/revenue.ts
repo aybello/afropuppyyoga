@@ -29,6 +29,23 @@ function extractBreed(description: string): string | null {
   return null;
 }
 
+function extractTimeSlot(description: string): string | null {
+  // Stripe descriptions from Luma include ticket names like "10AM Early Bird", "11:30AM Regular"
+  const match = description.match(/(\d{1,2}(?::\d{2})?\s*(?:AM|PM))/i);
+  if (match) return match[1].toUpperCase();
+  return null;
+}
+
+function extractTicketType(description: string): string | null {
+  const desc = description.toLowerCase();
+  if (desc.includes("early bird")) return "Early Bird 🐣";
+  if (desc.includes("bring a friend")) return "Bring a Friend 👯‍♀️";
+  if (desc.includes("group of 3")) return "Group of 3 👯‍♀️";
+  if (desc.includes("mat rental")) return "Mat Rental 🧘‍♀️";
+  if (desc.includes("regular")) return "Regular";
+  return null;
+}
+
 export const revenueRouter = router({
   getSummary: staffProcedure
     .input(
@@ -80,6 +97,8 @@ export const revenueRouter = router({
       const byLocation: Record<string, { revenue: number; transactions: number }> = {};
       const byMonth: Record<string, { revenue: number; transactions: number }> = {};
       const byEventType: Record<string, { revenue: number; transactions: number }> = {};
+      const byTicketType: Record<string, { revenue: number; count: number }> = {};
+      const byTimeSlot: Record<string, { revenue: number; count: number }> = {};
       const eventRows: Array<{
         id: string;
         description: string;
@@ -102,6 +121,8 @@ export const revenueRouter = router({
         const location = normalizeCity(description);
         const eventType = classifyEvent(description);
         const breed = extractBreed(description);
+        const timeSlot = extractTimeSlot(description);
+        const ticketType = extractTicketType(description);
         const date = new Date(charge.created * 1000).toISOString().split("T")[0];
         const month = date.slice(0, 7); // YYYY-MM
 
@@ -123,6 +144,20 @@ export const revenueRouter = router({
         if (!byEventType[eventType]) byEventType[eventType] = { revenue: 0, transactions: 0 };
         byEventType[eventType].revenue += amount;
         byEventType[eventType].transactions += 1;
+
+        // By ticket type
+        if (ticketType) {
+          if (!byTicketType[ticketType]) byTicketType[ticketType] = { revenue: 0, count: 0 };
+          byTicketType[ticketType].revenue += amount;
+          byTicketType[ticketType].count += 1;
+        }
+
+        // By time slot
+        if (timeSlot) {
+          if (!byTimeSlot[timeSlot]) byTimeSlot[timeSlot] = { revenue: 0, count: 0 };
+          byTimeSlot[timeSlot].revenue += amount;
+          byTimeSlot[timeSlot].count += 1;
+        }
 
         eventRows.push({
           id: charge.id,
@@ -177,6 +212,16 @@ export const revenueRouter = router({
           transactions: data.transactions,
         })),
         recentTransactions: eventRows.slice(0, 50),
+        byTicketType: Object.entries(byTicketType).map(([name, data]) => ({
+          name,
+          revenueCents: data.revenue,
+          count: data.count,
+        })).sort((a, b) => b.revenueCents - a.revenueCents),
+        byTimeSlot: Object.entries(byTimeSlot).map(([slot, data]) => ({
+          slot,
+          revenueCents: data.revenue,
+          count: data.count,
+        })).sort((a, b) => b.revenueCents - a.revenueCents),
         dataSource: "stripe",
         chargesAnalyzed: charges.length,
       };

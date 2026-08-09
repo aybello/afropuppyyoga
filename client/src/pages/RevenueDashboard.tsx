@@ -11,6 +11,8 @@ import {
   Wallet,
   MapPin,
   Calendar,
+  Ticket,
+  Clock,
 } from "lucide-react";
 
 function fmt(cents: number | null | undefined) {
@@ -215,6 +217,55 @@ export default function RevenueDashboard() {
                 </CardContent>
               </Card>
             )}
+
+            {/* Ticket Types & Time Slots */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {data.byTicketType && data.byTicketType.length > 0 && (
+                <Card className="bg-white border-[#F0D0DC] rounded-2xl">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="font-display text-base text-[#1A0A12] flex items-center gap-2">
+                      <Ticket size={16} /> Top Ticket Types
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {data.byTicketType.slice(0, 8).map(t => (
+                        <div key={t.name} className="flex items-center justify-between gap-4 border-b border-[#F6E6EC] pb-2 last:border-0">
+                          <div className="min-w-0">
+                            <p className="font-body text-sm text-[#1A0A12] truncate">{t.name}</p>
+                            <p className="font-body text-xs text-[#9B7A69]">{t.count} sold</p>
+                          </div>
+                          <span className="font-display text-base text-[#8B2252] shrink-0">{fmt(t.revenueCents)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {data.byTimeSlot && data.byTimeSlot.length > 0 && (
+                <Card className="bg-white border-[#F0D0DC] rounded-2xl">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="font-display text-base text-[#1A0A12] flex items-center gap-2">
+                      <Clock size={16} /> Class Time Performance
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {data.byTimeSlot.map(s => (
+                        <div key={s.slot} className="flex items-center justify-between gap-4 border-b border-[#F6E6EC] pb-2 last:border-0">
+                          <div>
+                            <p className="font-display text-base text-[#1A0A12]">{s.slot}</p>
+                            <p className="font-body text-xs text-[#9B7A69]">{s.count} tickets sold</p>
+                          </div>
+                          <span className="font-display text-base text-[#8B2252]">{fmt(s.revenueCents)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
 
             {/* Recent Transactions */}
             <Card className="bg-white border-[#F0D0DC] rounded-2xl">
