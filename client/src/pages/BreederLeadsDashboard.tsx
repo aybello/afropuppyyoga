@@ -37,7 +37,8 @@ export default function BreederLeadsDashboard() {
   const [search, setSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showKijijiSearch, setShowKijijiSearch] = useState(false);
-  const [kijijiKeyword, setKijijiKeyword] = useState("");
+  const [kijijiKeyword, setKijijiKeyword] = useState("Golden Retriever puppies");
+  const [kijijiLocation, setKijijiLocation] = useState("gta");
   const [kijijiResults, setKijijiResults] = useState<any[]>([]);
   const [importingUrl, setImportingUrl] = useState("");
   const [importUrl, setImportUrl] = useState("");
@@ -227,10 +228,50 @@ export default function BreederLeadsDashboard() {
       <Dialog open={showKijijiSearch} onOpenChange={setShowKijijiSearch}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Search Kijiji Listings</DialogTitle></DialogHeader>
-          <div className="flex gap-2 mb-4">
-            <Input placeholder="e.g. Golden Retriever puppies Ontario" value={kijijiKeyword} onChange={e => setKijijiKeyword(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && searchKijijiMutation.mutate({ keyword: kijijiKeyword })} />
-            <Button disabled={!kijijiKeyword || searchKijijiMutation.isPending} onClick={() => searchKijijiMutation.mutate({ keyword: kijijiKeyword })}>
+          <div className="space-y-3 mb-4">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Breed</label>
+                <Select value={kijijiKeyword} onValueChange={setKijijiKeyword}>
+                  <SelectTrigger><SelectValue placeholder="Select breed" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Golden Retriever puppies">Golden Retriever</SelectItem>
+                    <SelectItem value="Bernese Mountain Dog puppies">Bernese Mountain Dog</SelectItem>
+                    <SelectItem value="German Shepherd puppies">German Shepherd</SelectItem>
+                    <SelectItem value="Labrador puppies">Labrador Retriever</SelectItem>
+                    <SelectItem value="Goldendoodle puppies">Goldendoodle</SelectItem>
+                    <SelectItem value="Cane Corso puppies">Cane Corso</SelectItem>
+                    <SelectItem value="French Bulldog puppies">French Bulldog</SelectItem>
+                    <SelectItem value="Poodle puppies">Poodle</SelectItem>
+                    <SelectItem value="Husky puppies">Husky</SelectItem>
+                    <SelectItem value="Corgi puppies">Corgi</SelectItem>
+                    <SelectItem value="Australian Shepherd puppies">Australian Shepherd</SelectItem>
+                    <SelectItem value="Border Collie puppies">Border Collie</SelectItem>
+                    <SelectItem value="Cavalier King Charles puppies">Cavalier King Charles</SelectItem>
+                    <SelectItem value="Shih Tzu puppies">Shih Tzu</SelectItem>
+                    <SelectItem value="Pomeranian puppies">Pomeranian</SelectItem>
+                    <SelectItem value="Doberman puppies">Doberman</SelectItem>
+                    <SelectItem value="Rottweiler puppies">Rottweiler</SelectItem>
+                    <SelectItem value="Great Dane puppies">Great Dane</SelectItem>
+                    <SelectItem value="Samoyed puppies">Samoyed</SelectItem>
+                    <SelectItem value="Mini Pinscher puppies">Mini Pinscher</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Location</label>
+                <Select value={kijijiLocation} onValueChange={setKijijiLocation}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="kitchener">Near Kitchener (100km)</SelectItem>
+                    <SelectItem value="hamilton">Near Hamilton (100km)</SelectItem>
+                    <SelectItem value="oakville">Near Oakville (100km)</SelectItem>
+                    <SelectItem value="gta">GTA / All (100km)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <Button className="w-full" disabled={!kijijiKeyword || searchKijijiMutation.isPending} onClick={() => searchKijijiMutation.mutate({ keyword: kijijiKeyword, location: kijijiLocation })}>
               {searchKijijiMutation.isPending ? "Searching..." : "Search"}
             </Button>
           </div>

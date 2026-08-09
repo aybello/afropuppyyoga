@@ -144,11 +144,11 @@ export const breederLeadsRouter = router({
     }),
 
   searchKijiji: staffProcedure
-    .input(z.object({ keyword: z.string().min(1) }))
+    .input(z.object({ keyword: z.string().min(1), location: z.string().default("gta") }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const listings = await searchKijiji(input.keyword, 20);
+      const listings = await searchKijiji(input.keyword, 20, input.location);
       // Check which are already imported
       const existing = await db.select({ url: breederLeads.listingUrl }).from(breederLeads);
       const existingUrls = new Set(existing.map(e => e.url));

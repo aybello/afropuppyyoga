@@ -91,9 +91,18 @@ function parseListingFromApollo(apolloState: Record<string, any>): KijijiListing
   return listings;
 }
 
-export async function searchKijiji(keyword: string, maxResults = 20): Promise<KijijiListing[]> {
+// Location coords for APY studio areas
+const LOCATION_COORDS: Record<string, { lat: number; lng: number; label: string }> = {
+  kitchener: { lat: 43.4516, lng: -80.4925, label: "Kitchener" },
+  hamilton: { lat: 43.2557, lng: -79.8711, label: "Hamilton" },
+  oakville: { lat: 43.4675, lng: -79.6877, label: "Oakville" },
+  gta: { lat: 43.6532, lng: -79.3832, label: "GTA" },
+};
+
+export async function searchKijiji(keyword: string, maxResults = 20, location = "gta"): Promise<KijijiListing[]> {
+  const loc = LOCATION_COORDS[location] ?? LOCATION_COORDS.gta;
   const encoded = encodeURIComponent(keyword);
-  const url = `https://www.kijiji.ca/b-pets/ontario/${encoded}/k0c112l9004?radius=200.0&address=Ontario&ll=43.6532,-79.3832`;
+  const url = `https://www.kijiji.ca/b-pets/ontario/${encoded}/k0c112l9004?radius=100.0&address=${loc.label}&ll=${loc.lat},${loc.lng}`;
   const html = await httpsGet(url);
   const nextData = extractNextData(html);
   if (!nextData) return [];
