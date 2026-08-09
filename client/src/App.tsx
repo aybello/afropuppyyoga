@@ -88,6 +88,8 @@ function Router() {
         <Route path="/admin/sms-inbox" component={SmsInbox} />
         <Route path="/admin/review-texts" component={ReviewTexts} />
         <Route path="/admin/revenue" component={RevenueDashboard} />
+        <Route path="/admin/breeder-leads/:id" component={BreederLeadDetail} />
+        <Route path="/admin/breeder-leads" component={BreederLeadsDashboard} />
         <Route path="/breeder-availability" component={BreederAvailability} />
         <Route path="/loyalty" component={Loyalty} />
         <Route path="/ethics" component={Ethics} />
@@ -126,3 +128,5 @@ export default App;
 const SmsInbox = lazy(() => import("./pages/SmsInbox"));
 const ReviewTexts = lazy(() => import("./pages/ReviewTexts"));
 const RevenueDashboard = lazy(() => import("./pages/RevenueDashboard"));
+const BreederLeadsDashboard = lazy(() => import("./pages/BreederLeadsDashboard"));
+const BreederLeadDetail = lazy(() => import("./pages/BreederLeadDetail"));

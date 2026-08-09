@@ -598,3 +598,81 @@ export const reviewTextLogs = mysqlTable("reviewTextLogs", {
 ]);
 export type ReviewTextLog = typeof reviewTextLogs.$inferSelect;
 export type InsertReviewTextLog = typeof reviewTextLogs.$inferInsert;
+
+// ── Breeder Acquisition Engine ────────────────────────────────────────────────
+export const breederLeads = mysqlTable("breederLeads", {
+  id: int("id").autoincrement().primaryKey(),
+  breed: varchar("breed", { length: 128 }).notNull(),
+  sellerName: varchar("sellerName", { length: 255 }),
+  phoneNumber: varchar("phoneNumber", { length: 30 }),
+  email: varchar("email", { length: 320 }),
+  city: varchar("city", { length: 128 }),
+  province: varchar("province", { length: 64 }),
+  postalCode: varchar("postalCode", { length: 16 }),
+  distanceKm: int("distanceKm"),
+  puppyCount: int("puppyCount"),
+  puppyAge: varchar("puppyAge", { length: 64 }),
+  expectedReadyDate: varchar("expectedReadyDate", { length: 32 }),
+  listingPrice: int("listingPrice"),
+  listingUrl: text("listingUrl"),
+  listingTitle: varchar("listingTitle", { length: 512 }),
+  listingDescription: text("listingDescription"),
+  listingImageUrls: text("listingImageUrls"),
+  listingPostedAt: varchar("listingPostedAt", { length: 64 }),
+  qualificationScore: int("qualificationScore"),
+  qualificationReasons: text("qualificationReasons"),
+  disqualificationReasons: text("disqualificationReasons"),
+  source: varchar("source", { length: 32 }).notNull().default("manual"),
+  pipelineStatus: varchar("pipelineStatus", { length: 32 }).notNull().default("new"),
+  lastContactedAt: bigint("lastContactedAt", { mode: "number" }),
+  convertedBreederId: int("convertedBreederId"),
+  internalNotes: text("internalNotes"),
+  createdAt: bigint("createdAt", { mode: "number" }).notNull(),
+  updatedAt: bigint("updatedAt", { mode: "number" }).notNull(),
+}, (t) => [
+  index("idx_breederLeads_status").on(t.pipelineStatus),
+  index("idx_breederLeads_breed").on(t.breed),
+]);
+export type BreederLead = typeof breederLeads.$inferSelect;
+export type InsertBreederLead = typeof breederLeads.$inferInsert;
+
+export const breederLeadMessages = mysqlTable("breederLeadMessages", {
+  id: int("id").autoincrement().primaryKey(),
+  leadId: int("leadId").notNull(),
+  channel: varchar("channel", { length: 16 }).notNull(),
+  direction: varchar("direction", { length: 16 }).notNull().default("outbound"),
+  body: text("body").notNull(),
+  subject: varchar("subject", { length: 512 }),
+  smsSid: varchar("smsSid", { length: 64 }),
+  sentAt: bigint("sentAt", { mode: "number" }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  index("idx_breederLeadMessages_leadId").on(t.leadId),
+]);
+export type BreederLeadMessage = typeof breederLeadMessages.$inferSelect;
+
+export const breederLeadActivities = mysqlTable("breederLeadActivities", {
+  id: int("id").autoincrement().primaryKey(),
+  leadId: int("leadId").notNull(),
+  activityType: varchar("activityType", { length: 64 }).notNull(),
+  description: text("description").notNull(),
+  performedBy: varchar("performedBy", { length: 128 }),
+  createdAt: bigint("createdAt", { mode: "number" }).notNull(),
+}, (t) => [
+  index("idx_breederLeadActivities_leadId").on(t.leadId),
+]);
+export type BreederLeadActivity = typeof breederLeadActivities.$inferSelect;
+
+export const breederLeadFollowUps = mysqlTable("breederLeadFollowUps", {
+  id: int("id").autoincrement().primaryKey(),
+  leadId: int("leadId").notNull(),
+  dueAt: bigint("dueAt", { mode: "number" }).notNull(),
+  note: text("note"),
+  completed: boolean("completed").notNull().default(false),
+  completedAt: bigint("completedAt", { mode: "number" }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  index("idx_breederLeadFollowUps_leadId").on(t.leadId),
+  index("idx_breederLeadFollowUps_dueAt").on(t.dueAt),
+]);
+export type BreederLeadFollowUp = typeof breederLeadFollowUps.$inferSelect;
