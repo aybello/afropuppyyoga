@@ -50,18 +50,24 @@ function parseListingFromApollo(apolloState: Record<string, any>): KijijiListing
     if (!v.title) continue;
     const priceRef = v.price;
     let price: number | null = null;
-    if (priceRef && priceRef.__ref) {
+    if (priceRef && priceRef.amount != null) {
+      price = Math.round(parseFloat(priceRef.amount) / 100);
+    } else if (priceRef && priceRef.__ref) {
       const priceObj = apolloState[priceRef.__ref] as any;
-      if (priceObj?.amount) price = Math.round(parseFloat(priceObj.amount) * 100);
+      if (priceObj?.amount) price = Math.round(parseFloat(priceObj.amount) / 100);
     }
     const locRef = v.location;
     let location = { city: "", province: "" };
-    if (locRef && locRef.__ref) {
+    if (locRef && locRef.name) {
+      location = { city: locRef.name ?? "", province: locRef.address ?? "" };
+    } else if (locRef && locRef.__ref) {
       const locObj = apolloState[locRef.__ref] as any;
       location = { city: locObj?.name ?? "", province: locObj?.province ?? "" };
     }
     const imageUrls: string[] = [];
-    if (Array.isArray(v.images)) {
+    if (Array.isArray(v.imageUrls)) {
+      imageUrls.push(...v.imageUrls.slice(0, 3).map((u: string) => u.replace("kijijica-200-jpg", "kijijica-640-jpg")));
+    } else if (Array.isArray(v.images)) {
       for (const imgRef of v.images.slice(0, 3)) {
         const imgObj = apolloState[imgRef.__ref] as any;
         if (imgObj?.url) imageUrls.push(imgObj.url);
@@ -76,6 +82,7 @@ function parseListingFromApollo(apolloState: Record<string, any>): KijijiListing
     }
     const id = key.split(":")[1] ?? key;
     const slug = v.seoUrl ?? v.slug ?? "";
+    const listingUrl = v.url ?? (slug ? `https://www.kijiji.ca${slug}` : `https://www.kijiji.ca/v-pets/${id}`);
     listings.push({
       id,
       title: v.title ?? "",
@@ -83,7 +90,7 @@ function parseListingFromApollo(apolloState: Record<string, any>): KijijiListing
       price,
       location,
       imageUrls,
-      url: slug ? `https://www.kijiji.ca${slug}` : `https://www.kijiji.ca/v-pets/${id}`,
+      url: listingUrl,
       postedAt: v.sortingDate ?? v.activationDate ?? null,
       attributes: attrs,
     });
@@ -106,7 +113,7 @@ export async function searchKijiji(keyword: string, maxResults = 20, location = 
   const html = await httpsGet(url);
   const nextData = extractNextData(html);
   if (!nextData) return [];
-  const apolloState = nextData?.props?.pageProps?.apolloState ?? {};
+  const apolloState = nextData?.props?.pageProps?.__APOLLO_STATE__ ?? nextData?.props?.pageProps?.apolloState ?? {};
   return parseListingFromApollo(apolloState).slice(0, maxResults);
 }
 
@@ -114,7 +121,7 @@ export async function scrapeKijijiListing(listingUrl: string): Promise<KijijiLis
   const html = await httpsGet(listingUrl);
   const nextData = extractNextData(html);
   if (!nextData) return null;
-  const apolloState = nextData?.props?.pageProps?.apolloState ?? {};
+  const apolloState = nextData?.props?.pageProps?.__APOLLO_STATE__ ?? nextData?.props?.pageProps?.apolloState ?? {};
   const listings = parseListingFromApollo(apolloState);
   if (listings.length > 0) return listings[0];
   const pageProps = nextData?.props?.pageProps ?? {};
