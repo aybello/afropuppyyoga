@@ -649,3 +649,9 @@
 - [x] Changed DB column `createdAt` from timestamp to bigint to match Drizzle schema
 - [x] Dropped unused `metadata` column from breederLeadActivities
 - [x] Added proper error handling to BreederLeadDetail.tsx (auth check, error state display)
+
+## Remove 18+ Age Confirmation from Signing Portal (Aug 10, 2026)
+- [x] Remove isAdult state variable from SignDocuments.tsx
+- [x] Remove age confirmation checkbox from the signing form
+- [x] Remove age validation check from handleSubmit
+- [x] Remove !isAdult from submit button disabled condition
