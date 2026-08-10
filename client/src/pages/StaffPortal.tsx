@@ -22,6 +22,7 @@ import {
   Inbox,
   Star,
 } from "lucide-react";
+import { LOGO_URL } from "@/const";
 
 const TOOLS = [
   {
@@ -201,9 +202,7 @@ export default function StaffPortal() {
       <header className="bg-white border-b border-[#F0D0DC] sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm" style={{ background: "linear-gradient(135deg, #8B2252, #C2185B)" }}>
-              <Zap size={14} className="text-white" />
-            </div>
+            <img src={LOGO_URL} alt="AfroPuppyYoga" className="w-9 h-9 rounded-xl object-cover shadow-sm" />
             <div>
               <p className="font-bold text-sm text-[#1A0A12] leading-none tracking-wide">APY HQ</p>
               <p className="text-[10px] text-[#8B2252]/60 leading-none mt-0.5 font-medium">Command Centre</p>
