@@ -11,6 +11,11 @@ export interface KijijiListing {
   url: string;
   postedAt: string | null;
   attributes: Record<string, string>;
+  contactInfo: {
+    phones: string[];
+    emails: string[];
+    instagrams: string[];
+  };
 }
 
 type HttpResult = {
@@ -116,6 +121,48 @@ function stripHtml(value: string): string {
   return decodeHtml(value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim());
 }
 
+function extractContactInfo(text: string): { phones: string[]; emails: string[]; instagrams: string[] } {
+  const phones: string[] = [];
+  const emails: string[] = [];
+  const instagrams: string[] = [];
+
+  // Phone patterns: (xxx) xxx-xxxx, xxx-xxx-xxxx, xxx.xxx.xxxx, xxx xxx xxxx, +1xxxxxxxxxx
+  const phoneRegex = /(?:\+?1[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})/g;
+  const phoneMatches = text.match(phoneRegex);
+  if (phoneMatches) {
+    for (const p of phoneMatches) {
+      const cleaned = p.replace(/[^0-9+]/g, "");
+      // Must be 10 or 11 digits (with or without country code)
+      if (cleaned.length >= 10 && cleaned.length <= 12 && !phones.includes(cleaned)) {
+        phones.push(cleaned);
+      }
+    }
+  }
+
+  // Email pattern
+  const emailRegex = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
+  const emailMatches = text.match(emailRegex);
+  if (emailMatches) {
+    for (const e of emailMatches) {
+      const lower = e.toLowerCase();
+      if (!emails.includes(lower)) emails.push(lower);
+    }
+  }
+
+  // Instagram pattern: @handle or instagram.com/handle
+  const igHandleRegex = /(?:@|instagram\.com\/)([a-zA-Z0-9._]{2,30})/gi;
+  let igMatch: RegExpExecArray | null;
+  while ((igMatch = igHandleRegex.exec(text))) {
+    const handle = igMatch[1].toLowerCase();
+    // Filter out common false positives
+    if (!["gmail", "yahoo", "hotmail", "outlook", "icloud"].some(d => handle.includes(d)) && !instagrams.includes(handle)) {
+      instagrams.push(handle);
+    }
+  }
+
+  return { phones, emails, instagrams };
+}
+
 function extractNextData(html: string): any {
   const match = html.match(/<script[^>]+id=["']__NEXT_DATA__["'][^>]*>([\s\S]*?)<\/script>/i);
   if (!match) return null;
@@ -206,6 +253,7 @@ function parseListingFromApollo(apolloState: Record<string, any>): KijijiListing
       url: absoluteUrl,
       postedAt: v.sortingDate ?? v.activationDate ?? v.datePosted ?? null,
       attributes: attrs,
+      contactInfo: extractContactInfo(String(v.description ?? "") + " " + String(v.title ?? "")),
     });
   }
 
@@ -261,6 +309,7 @@ function parseJsonLdListing(node: any, fallbackUrl: string): KijijiListing | nul
     url: new URL(String(rawUrl), "https://www.kijiji.ca").toString(),
     postedAt: node.datePosted ?? node.datePublished ?? null,
     attributes: {},
+    contactInfo: extractContactInfo(stripHtml(String(node.description ?? node?.itemOffered?.description ?? "")) + " " + String(node.name ?? "")),
   };
 }
 
@@ -293,6 +342,7 @@ function extractListingLinksFromHtml(html: string): KijijiListing[] {
       url: absoluteUrl,
       postedAt: null,
       attributes: {},
+      contactInfo: { phones: [], emails: [], instagrams: [] },
     });
   }
 
@@ -408,5 +458,6 @@ export async function scrapeKijijiListing(listingUrl: string): Promise<KijijiLis
     url: listingUrl,
     postedAt: null,
     attributes: {},
+    contactInfo: extractContactInfo(stripHtml(description) + " " + stripHtml(title)),
   };
 }

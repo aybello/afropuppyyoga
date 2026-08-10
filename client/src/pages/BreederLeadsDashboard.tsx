@@ -281,6 +281,13 @@ export default function BreederLeadsDashboard() {
                     <div className="text-xs text-muted-foreground">{listing.location?.city}, {listing.location?.province}</div>
                     {listing.price && <div className="text-xs text-green-600">${(listing.price/100).toFixed(0)}</div>}
                     <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{listing.description?.slice(0, 120)}...</div>
+                    {(listing.contactInfo?.phones?.length > 0 || listing.contactInfo?.emails?.length > 0 || listing.contactInfo?.instagrams?.length > 0) && (
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {listing.contactInfo.phones.map((p: string) => <span key={p} className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">📞 {p}</span>)}
+                        {listing.contactInfo.emails.map((e: string) => <span key={e} className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">📧 {e}</span>)}
+                        {listing.contactInfo.instagrams.map((ig: string) => <span key={ig} className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">📸 @{ig}</span>)}
+                      </div>
+                    )}
                   </div>
                   <div className="shrink-0 flex flex-col gap-1">
                     {listing.alreadyImported ? (

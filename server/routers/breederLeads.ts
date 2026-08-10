@@ -176,15 +176,23 @@ export const breederLeadsRouter = router({
         price: listing.price,
       });
       const ts = now();
+      // Extract contact info from listing
+      const contactInfo = listing.contactInfo;
+      const phone = contactInfo.phones[0] ?? null;
+      const email = contactInfo.emails[0] ?? null;
+      const instagram = contactInfo.instagrams[0] ?? null;
       const [result] = await db.insert(breederLeads).values({
         breed: qual.extractedBreed ?? breed,
+        sellerName: null,
+        phoneNumber: phone,
+        email: email,
         city: qual.extractedCity ?? listing.location.city,
         province: listing.location.province,
         puppyCount: qual.extractedCount,
         listingPrice: listing.price,
         listingUrl: listing.url,
         listingTitle: listing.title,
-        listingDescription: listing.description,
+        listingDescription: listing.description + (instagram ? `\n\nInstagram: @${instagram}` : ""),
         listingImageUrls: JSON.stringify(listing.imageUrls),
         listingPostedAt: listing.postedAt,
         qualificationScore: qual.score,
@@ -196,7 +204,8 @@ export const breederLeadsRouter = router({
         updatedAt: ts,
       });
       const id = (result as any).insertId;
-      await logActivity(db, id, "imported", `Imported from Kijiji — score ${qual.score}/100`);
+      const contactSummary = [phone && `phone: ${phone}`, email && `email: ${email}`, instagram && `IG: @${instagram}`].filter(Boolean).join(", ");
+      await logActivity(db, id, "imported", `Imported from Kijiji — score ${qual.score}/100${contactSummary ? ` | Contact: ${contactSummary}` : ""}`);
       return { duplicate: false, id, qualification: qual };
     }),
 

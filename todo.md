@@ -655,3 +655,12 @@
 - [x] Remove age confirmation checkbox from the signing form
 - [x] Remove age validation check from handleSubmit
 - [x] Remove !isAdult from submit button disabled condition
+
+## Kijiji Contact Info Extraction (Aug 10, 2026)
+- [x] Add extractContactInfo function to kijijiScraper.ts (regex for phone, email, Instagram)
+- [x] Add contactInfo field to KijijiListing interface
+- [x] Extract contact info from all listing descriptions during search and import
+- [x] Save phone/email to breederLeads DB on import
+- [x] Append Instagram handle to listing description on import
+- [x] Show contact info badges (phone, email, IG) in Kijiji search results UI
+- [x] Log extracted contact info in activity timeline on import
