@@ -641,3 +641,11 @@
 - [x] Register heartbeat cron job (requires deploy first — see below)
 - [x] Register heartbeat cron job (requires deploy first — see below)
 - [x] Register heartbeat cron job (requires deploy first — see below)
+
+## Breeder Lead Detail Page Fix (Aug 10, 2026)
+- [x] Fix BreederLeadDetail page showing blank/nothing when clicking an imported lead
+- [x] Root cause: breederLeadActivities DB table had column name mismatch (type vs activityType) and type mismatch (timestamp vs bigint)
+- [x] Renamed DB column `type` → `activityType` to match Drizzle schema
+- [x] Changed DB column `createdAt` from timestamp to bigint to match Drizzle schema
+- [x] Dropped unused `metadata` column from breederLeadActivities
+- [x] Added proper error handling to BreederLeadDetail.tsx (auth check, error state display)

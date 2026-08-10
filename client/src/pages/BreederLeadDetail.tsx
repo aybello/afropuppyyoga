@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams, useLocation } from "wouter";
 import AdminNav from "@/components/AdminNav";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,13 +29,14 @@ export default function BreederLeadDetail() {
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const id = parseInt(params.id ?? "0");
+  const { user, loading: authLoading } = useAuth();
   const [smsMessage, setSmsMessage] = useState("");
   const [emailSubject, setEmailSubject] = useState("");
   const [emailBody, setEmailBody] = useState("");
   const [noteText, setNoteText] = useState("");
   const [activeTab, setActiveTab] = useState<"outreach" | "notes" | "timeline">("outreach");
 
-  const { data, isLoading, refetch } = trpc.breederLeads.getById.useQuery({ id }, { enabled: id > 0 });
+  const { data, isLoading, error, refetch } = trpc.breederLeads.getById.useQuery({ id }, { enabled: id > 0 && !!user, retry: false });
   const lead = data?.lead;
 
   const updateMutation = trpc.breederLeads.update.useMutation({ onSuccess: () => { toast.success("Updated"); refetch(); }, onError: (e) => toast.error(e.message) });
@@ -51,7 +53,9 @@ export default function BreederLeadDetail() {
   });
   const deleteMutation = trpc.breederLeads.delete.useMutation({ onSuccess: () => { toast.success("Deleted"); navigate("/admin/breeder-leads"); }, onError: (e) => toast.error(e.message) });
 
-  if (isLoading) return <div className="min-h-screen bg-background"><AdminNav /><div className="max-w-5xl mx-auto px-4 py-8 space-y-4">{Array.from({length:4}).map((_,i) => <Skeleton key={i} className="h-32" />)}</div></div>;
+  if (authLoading || isLoading) return <div className="min-h-screen bg-background"><AdminNav /><div className="max-w-5xl mx-auto px-4 py-8 space-y-4">{Array.from({length:4}).map((_,i) => <Skeleton key={i} className="h-32" />)}</div></div>;
+  if (!user) return <div className="min-h-screen bg-background"><AdminNav /><div className="max-w-5xl mx-auto px-4 py-8 text-center text-muted-foreground">Please log in to view this page.</div></div>;
+  if (error) return <div className="min-h-screen bg-background"><AdminNav /><div className="max-w-5xl mx-auto px-4 py-8 text-center text-red-500">Error loading lead: {error.message}</div></div>;
   if (!lead) return <div className="min-h-screen bg-background"><AdminNav /><div className="max-w-5xl mx-auto px-4 py-8 text-center text-muted-foreground">Lead not found.</div></div>;
 
   const reasons: string[] = (() => { try { return JSON.parse(lead.qualificationReasons ?? "[]"); } catch { return []; } })();
