@@ -3,6 +3,7 @@
    ============================================================ */
 import { Link } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { LOGO_URL } from "@/const";
 import {
   FileText,
   Users,
@@ -18,11 +19,11 @@ import {
   DollarSign,
   Dog,
   CalendarDays,
-  Zap,
   Inbox,
   Star,
 } from "lucide-react";
-import { LOGO_URL } from "@/const";
+
+const TEAM_PHOTO = "/manus-storage/apy-team-photo_91f3f029.png";
 
 const TOOLS = [
   {
@@ -121,7 +122,7 @@ const TOOLS = [
     description: "Post-class Google review SMS log and status.",
     href: "/admin/review-texts",
     icon: Star,
-    accent: "#D4A017",
+    accent: "#B8860B",
     adminOnly: true,
     category: "Growth",
   },
@@ -159,15 +160,6 @@ const TOOLS = [
 
 const CATEGORY_ORDER = ["Finance", "Events", "Breeders", "People", "Growth", "Operations"];
 
-const CATEGORY_COLORS: Record<string, string> = {
-  Finance: "#2E7D32",
-  Events: "#8B2252",
-  Breeders: "#8B2252",
-  People: "#6B3A7D",
-  Growth: "#D4A017",
-  Operations: "#C0392B",
-};
-
 function getGreeting() {
   const h = new Date().getHours();
   if (h < 12) return "Good morning";
@@ -196,53 +188,56 @@ export default function StaffPortal() {
   })).filter(g => g.tools.length > 0);
 
   return (
-    <div className="min-h-screen bg-[#FEFAF4]">
+    <div className="min-h-screen bg-[#F7F2EE]">
 
-      {/* Top bar */}
-      <header className="bg-white border-b border-[#F0D0DC] sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+      {/* Sticky top bar */}
+      <header className="bg-white/90 backdrop-blur-md border-b border-[#EDE0D8] sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={LOGO_URL} alt="AfroPuppyYoga" className="w-9 h-9 rounded-xl object-cover shadow-sm" />
+            <img src={LOGO_URL} alt="APY" className="w-8 h-8 rounded-lg object-cover" />
             <div>
-              <p className="font-bold text-sm text-[#1A0A12] leading-none tracking-wide">APY HQ</p>
-              <p className="text-[10px] text-[#8B2252]/60 leading-none mt-0.5 font-medium">Command Centre</p>
+              <p className="font-bold text-[13px] text-[#1A0A12] leading-none">APY HQ</p>
+              <p className="text-[10px] text-[#8B2252] leading-none mt-0.5 font-medium tracking-wide uppercase">Command Centre</p>
             </div>
           </div>
-          <Link
-            href="/"
-            className="flex items-center gap-1.5 text-xs text-[#8B2252] hover:text-[#6B1A3E] transition-colors font-medium"
-          >
+          <Link href="/" className="flex items-center gap-1.5 text-xs text-[#8B2252] hover:text-[#6B1A3E] transition-colors font-medium">
             <ExternalLink size={12} />
             Back to Site
           </Link>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-10">
-
-        {/* Hero welcome banner */}
-        <div className="relative rounded-2xl overflow-hidden mb-10 p-8" style={{ background: "linear-gradient(135deg, #8B2252 0%, #C2185B 50%, #AD1457 100%)" }}>
-          {/* Subtle pattern overlay */}
-          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
-          <div className="relative flex items-start justify-between flex-wrap gap-4">
+      {/* Hero — full-bleed photo with overlay */}
+      <div className="relative h-72 md:h-80 overflow-hidden">
+        <img
+          src={TEAM_PHOTO}
+          alt="APY Team"
+          className="w-full h-full object-cover object-center"
+        />
+        {/* Gradient overlay — dark at bottom for text legibility */}
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(26,10,18,0.15) 0%, rgba(26,10,18,0.72) 100%)" }} />
+        {/* Content */}
+        <div className="absolute bottom-0 left-0 right-0 px-6 md:px-10 pb-8">
+          <div className="max-w-7xl mx-auto flex items-end justify-between gap-4 flex-wrap">
             <div>
-              <p className="text-xs font-bold tracking-widest uppercase mb-2 text-white/60">
-                {getGreeting()} ·{" "}
-                {new Date().toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric" })}
+              <p className="text-xs font-bold tracking-widest uppercase text-white/60 mb-1">
+                {getGreeting()} · {new Date().toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric" })}
               </p>
-              <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight mb-1">
-                Welcome back, <span className="text-[#FFD6E7]">{displayName}</span> 👑
+              <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">
+                Welcome back, <span style={{ color: "#FFB3CC" }}>{displayName}</span> 👑
               </h1>
-              <p className="text-white/60 text-sm mt-2">
-                AfroPuppyYoga Operations · Ontario, Canada
-              </p>
+              <p className="text-white/50 text-sm mt-1">AfroPuppyYoga · Ontario, Canada</p>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/15 border border-white/20 self-start">
-              <div className="w-2 h-2 rounded-full bg-green-300 animate-pulse" />
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 border border-white/25 backdrop-blur-sm">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-xs text-white/80 font-medium">All systems running</span>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Main content */}
+      <main className="max-w-7xl mx-auto px-6 md:px-10 py-10">
 
         {/* Auth notice */}
         {!isAuthenticated && (
@@ -255,20 +250,17 @@ export default function StaffPortal() {
           </div>
         )}
 
-        {/* Tool sections by category */}
-        <div className="space-y-8">
+        {/* Tool grid by category */}
+        <div className="space-y-10">
           {grouped.map(({ category, tools }) => (
             <div key={category}>
-              <div className="flex items-center gap-3 mb-3">
-                <span
-                  className="text-[10px] font-bold tracking-widest uppercase px-2 py-1 rounded-full"
-                  style={{ color: CATEGORY_COLORS[category], background: `${CATEGORY_COLORS[category]}15` }}
-                >
-                  {category}
-                </span>
-                <div className="flex-1 h-px bg-[#F0D0DC]" />
+              {/* Section header */}
+              <div className="flex items-center gap-4 mb-4">
+                <h2 className="text-xs font-bold tracking-widest uppercase text-[#8B2252]">{category}</h2>
+                <div className="flex-1 h-px bg-[#E8D5CC]" />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {/* Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {tools.map((tool) => {
                   const Icon = tool.icon;
                   const isLocked = tool.adminOnly && !isAdmin;
@@ -276,34 +268,33 @@ export default function StaffPortal() {
                   return (
                     <Link key={tool.id} href={tool.href}>
                       <div
-                        className={`group relative bg-white rounded-xl p-4 transition-all duration-200 cursor-pointer border h-full ${
+                        className={`group relative bg-white rounded-2xl overflow-hidden transition-all duration-200 h-full ${
                           isLocked
-                            ? "opacity-50 cursor-not-allowed border-[#F0D0DC]"
-                            : "border-[#F0D0DC] hover:border-[#8B2252]/30 hover:shadow-md hover:-translate-y-0.5"
+                            ? "opacity-45 cursor-not-allowed"
+                            : "cursor-pointer hover:shadow-lg hover:-translate-y-1"
                         }`}
+                        style={{ boxShadow: "0 1px 4px rgba(139,34,82,0.08)" }}
                       >
-                        <div className="flex items-start gap-3">
-                          <div
-                            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                            style={{ background: `${tool.accent}12`, border: `1.5px solid ${tool.accent}25` }}
-                          >
-                            <Icon size={18} style={{ color: tool.accent }} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-0.5">
-                              <h2 className="font-bold text-sm text-[#1A0A12] truncate">
-                                {tool.title}
-                              </h2>
-                              {isLocked && <Lock size={10} className="text-[#C4A0B0] shrink-0" />}
+                        {/* Colored top accent bar */}
+                        <div className="h-1 w-full" style={{ background: tool.accent }} />
+                        <div className="p-5">
+                          <div className="flex items-start justify-between mb-3">
+                            <div
+                              className="w-11 h-11 rounded-xl flex items-center justify-center"
+                              style={{ background: `${tool.accent}12` }}
+                            >
+                              <Icon size={20} style={{ color: tool.accent }} />
                             </div>
-                            <p className="text-xs text-[#6B4C3B]/70 line-clamp-2 leading-relaxed">
-                              {tool.description}
-                            </p>
+                            <div className="flex items-center gap-1.5 mt-1">
+                              {isLocked && <Lock size={11} className="text-[#C4A0B0]" />}
+                              <ArrowRight
+                                size={15}
+                                className="text-[#D4B8C4] group-hover:text-[#8B2252] transition-colors"
+                              />
+                            </div>
                           </div>
-                          <ArrowRight
-                            size={14}
-                            className="text-[#C4A0B0] group-hover:text-[#8B2252] transition-colors shrink-0 mt-1"
-                          />
+                          <h3 className="font-bold text-[14px] text-[#1A0A12] mb-1 leading-snug">{tool.title}</h3>
+                          <p className="text-[12px] text-[#7A5A6A] leading-relaxed">{tool.description}</p>
                         </div>
                       </div>
                     </Link>
@@ -315,7 +306,7 @@ export default function StaffPortal() {
         </div>
 
         {/* Footer */}
-        <p className="mt-12 text-[10px] text-[#C4A0B0] text-center">
+        <p className="mt-14 text-[11px] text-[#C4A0B0] text-center">
           APY HQ · <a href="mailto:afropuppyyoga@gmail.com" className="hover:text-[#8B2252] transition-colors">afropuppyyoga@gmail.com</a>
         </p>
       </main>
