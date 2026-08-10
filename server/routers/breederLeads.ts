@@ -218,7 +218,7 @@ export const breederLeadsRouter = router({
       if (!lead) throw new Error("Lead not found");
       const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
       const response = await client.messages.create({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-5",
         max_tokens: 512,
         messages: [{
           role: "user",
