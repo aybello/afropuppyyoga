@@ -23,7 +23,7 @@ import {
   Star,
 } from "lucide-react";
 
-const TEAM_PHOTO = "/manus-storage/apy-team-photo_91f3f029.png";
+const TEAM_PHOTO = "/manus-storage/apy-team-photo_f92679b8.png";
 
 const TOOLS = [
   {
