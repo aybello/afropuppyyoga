@@ -61,19 +61,23 @@ export const revenueRouter = router({
         throw new Error("STRIPE_SECRET_KEY not configured");
       }
 
+      // Default to last 30 days instead of all time for faster loads
+      const defaultFrom = new Date();
+      defaultFrom.setDate(defaultFrom.getDate() - 30);
       const fromTs = input.fromDate
         ? Math.floor(new Date(`${input.fromDate}T00:00:00.000Z`).getTime() / 1000)
-        : Math.floor(new Date("2024-08-22T00:00:00.000Z").getTime() / 1000);
+        : Math.floor(defaultFrom.getTime() / 1000);
       const toTs = input.toDate
         ? Math.floor(new Date(`${input.toDate}T23:59:59.999Z`).getTime() / 1000)
         : Math.floor(Date.now() / 1000);
 
-      // Fetch all charges in the date range
+      // Fetch charges in the date range (cap at 300 to prevent timeout)
       const charges: Stripe.Charge[] = [];
       let hasMore = true;
       let startingAfter: string | undefined;
+      const MAX_CHARGES = 300;
 
-      while (hasMore) {
+      while (hasMore && charges.length < MAX_CHARGES) {
         const params: Stripe.ChargeListParams = {
           limit: 100,
           created: { gte: fromTs, lte: toTs },
