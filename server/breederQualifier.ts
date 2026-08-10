@@ -1,5 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
-import { ENV } from "./_core/env";
+import { invokeLLM } from "./_core/llm";
 
 export interface QualificationResult {
   score: number;
@@ -24,14 +23,6 @@ const PREFERRED_BREEDS = [
   "border collie", "aussie", "australian shepherd", "cane corso", "great dane",
   "doberman", "rottweiler", "mini pinscher", "miniature pinscher",
 ];
-
-function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
 
 export async function qualifyBreederLead(params: {
   breed: string;
@@ -87,16 +78,13 @@ export async function qualifyBreederLead(params: {
 
   score = Math.max(0, Math.min(100, score));
 
-  // Use Claude for AI extraction of structured data
+  // Use built-in LLM for AI extraction of structured data
   let extractedBreed: string | null = null;
   let extractedCount: number | null = null;
   let extractedCity: string | null = null;
 
   try {
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-    const response = await client.messages.create({
-      model: "claude-sonnet-5",
-      max_tokens: 256,
+    const response = await invokeLLM({
       messages: [{
         role: "user",
         content: `Extract from this puppy listing. Return JSON only: {"breed": "...", "count": number_or_null, "city": "...", "age_weeks": number_or_null}
@@ -105,7 +93,9 @@ Title: ${params.title}
 Description: ${params.description.slice(0, 500)}`
       }]
     });
-    const text = (response.content[0] as any).text ?? "";
+    const text = typeof response.choices[0]?.message?.content === "string"
+      ? response.choices[0].message.content
+      : "";
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);

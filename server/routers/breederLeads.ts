@@ -6,7 +6,7 @@ import { eq, desc, and, like, or, isNull } from "drizzle-orm";
 import { searchKijiji, scrapeKijijiListing } from "../kijijiScraper";
 import { qualifyBreederLead } from "../breederQualifier";
 import { sendEmail } from "../email";
-import Anthropic from "@anthropic-ai/sdk";
+import { invokeLLM } from "../_core/llm";
 
 const now = () => Date.now();
 
@@ -216,16 +216,15 @@ export const breederLeadsRouter = router({
       if (!db) throw new Error("Database not available");
       const [lead] = await db.select().from(breederLeads).where(eq(breederLeads.id, input.id));
       if (!lead) throw new Error("Lead not found");
-      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-      const response = await client.messages.create({
-        model: "claude-sonnet-5",
-        max_tokens: 512,
+      const response = await invokeLLM({
         messages: [{
           role: "user",
           content: `Write a short, friendly outreach SMS (under 160 chars) from AfroPuppyYoga to a ${lead.breed} breeder in ${lead.city ?? "Ontario"}. We want to borrow their puppies for yoga classes (1-2 hours, supervised, well-paid). Be warm, professional, brief. Sign off as "The AfroPuppyYoga Team". No emojis in SMS.`
         }]
       });
-      const message = (response.content[0] as any).text ?? "";
+      const message = typeof response.choices[0]?.message?.content === "string"
+        ? response.choices[0].message.content
+        : "";
       return { message };
     }),
 
