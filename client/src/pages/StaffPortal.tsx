@@ -23,7 +23,7 @@ import {
   Star,
 } from "lucide-react";
 
-const TEAM_PHOTO = "/manus-storage/apy-team-photo_f92679b8.png";
+const TEAM_PHOTO = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663824308637/lqKlQMvtVujJUUpc.png";
 
 const TOOLS = [
   {
