@@ -208,23 +208,23 @@ export default function StaffPortal() {
       </header>
 
       {/* Hero — full-bleed photo with overlay */}
-      <div className="relative h-48 overflow-hidden">
+      <div className="relative overflow-hidden" style={{ paddingBottom: "min(75%, 500px)", height: 0 }}>
         <img
           src={TEAM_PHOTO}
           alt="APY Team"
-          className="w-full h-full object-cover object-center"
+          className="absolute inset-0 w-full h-full object-cover object-center"
         />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(26,10,18,0.15) 0%, rgba(26,10,18,0.72) 100%)" }} />
-        <div className="absolute bottom-0 left-0 right-0 px-6 md:px-10 pb-5">
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(26,10,18,0.05) 0%, rgba(26,10,18,0.45) 60%, rgba(26,10,18,0.80) 100%)" }} />
+        <div className="absolute bottom-0 left-0 right-0 px-6 md:px-10 pb-6">
           <div className="max-w-7xl mx-auto flex items-end justify-between gap-4 flex-wrap">
             <div>
-              <p className="text-[10px] font-bold tracking-widest uppercase text-white/60 mb-0.5">
+              <p className="text-xs font-bold tracking-widest uppercase text-white/60 mb-1">
                 {getGreeting()} · {new Date().toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric" })}
               </p>
-              <h1 className="text-xl md:text-2xl font-bold text-white leading-tight">
+              <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight">
                 Welcome back, <span style={{ color: "#FFB3CC" }}>{displayName}</span> 👑
               </h1>
-              <p className="text-white/50 text-[11px] mt-0.5">AfroPuppyYoga · Ontario, Canada</p>
+              <p className="text-white/50 text-sm mt-1">AfroPuppyYoga · Ontario, Canada</p>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 border border-white/25 backdrop-blur-sm">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -249,16 +249,16 @@ export default function StaffPortal() {
         )}
 
         {/* Tool grid by category */}
-        <div className="space-y-4">
+        <div className="space-y-5">
           {grouped.map(({ category, tools }) => (
             <div key={category}>
               {/* Section header */}
-              <div className="flex items-center gap-3 mb-2">
-                <h2 className="text-[10px] font-bold tracking-widest uppercase text-[#8B2252]">{category}</h2>
+              <div className="flex items-center gap-3 mb-3">
+                <h2 className="text-xs font-bold tracking-widest uppercase text-[#8B2252]">{category}</h2>
                 <div className="flex-1 h-px bg-[#E8D5CC]" />
               </div>
               {/* Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {tools.map((tool) => {
                   const Icon = tool.icon;
                   const isLocked = tool.adminOnly && !isAdmin;
@@ -273,21 +273,21 @@ export default function StaffPortal() {
                         }`}
                         style={{ boxShadow: "0 1px 3px rgba(139,34,82,0.07)" }}
                       >
-                        <div className="p-3">
-                          <div className="flex items-center justify-between mb-1.5">
+                        <div className="p-4">
+                          <div className="flex items-center justify-between mb-2">
                             <div
-                              className="w-7 h-7 rounded-lg flex items-center justify-center"
+                              className="w-9 h-9 rounded-lg flex items-center justify-center"
                               style={{ background: `${tool.accent}12` }}
                             >
-                              <Icon size={14} style={{ color: tool.accent }} />
+                              <Icon size={17} style={{ color: tool.accent }} />
                             </div>
                             <div className="flex items-center gap-1">
                               {isLocked && <Lock size={9} className="text-[#C4A0B0]" />}
-                              <ArrowRight size={11} className="text-[#D4B8C4] group-hover:text-[#8B2252] transition-colors" />
+                              <ArrowRight size={13} className="text-[#D4B8C4] group-hover:text-[#8B2252] transition-colors" />
                             </div>
                           </div>
-                          <h3 className="font-semibold text-[12px] text-[#1A0A12] leading-snug">{tool.title}</h3>
-                          <p className="text-[10px] text-[#7A5A6A] leading-relaxed mt-0.5 line-clamp-1">{tool.description}</p>
+                          <h3 className="font-semibold text-[13px] text-[#1A0A12] leading-snug">{tool.title}</h3>
+                          <p className="text-[11px] text-[#7A5A6A] leading-relaxed mt-0.5">{tool.description}</p>
                         </div>
                       </div>
                     </Link>
