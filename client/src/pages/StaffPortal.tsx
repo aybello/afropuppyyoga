@@ -21,6 +21,7 @@ import {
   CalendarDays,
   Inbox,
   Star,
+  CalendarCheck,
 } from "lucide-react";
 
 const TEAM_PHOTO = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663824308637/IiwudPwckobbrxIv.jpg";
@@ -155,6 +156,16 @@ const TOOLS = [
     accent: "#7C3AED",
     adminOnly: true,
     category: "Operations",
+  },
+  {
+    id: "staff-availability",
+    title: "Staff Availability",
+    description: "Org chart, vacation tracking, and leave management.",
+    href: "/admin/staff-availability",
+    icon: CalendarCheck,
+    accent: "#0891B2",
+    adminOnly: true,
+    category: "People",
   },
 ];
 

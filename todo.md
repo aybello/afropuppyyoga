@@ -664,3 +664,12 @@
 - [x] Append Instagram handle to listing description on import
 - [x] Show contact info badges (phone, email, IG) in Kijiji search results UI
 - [x] Log extracted contact info in activity timeline on import
+
+## Staff Availability & Org Chart (Aug 11, 2026)
+- [x] Add staffAvailability table to drizzle schema (staffId, startDate, endDate, leaveType, notes, createdAt)
+- [x] Add tRPC procedures: getOrgChart, setAvailability, getAvailability, deleteAvailability
+- [x] Build /admin/staff-availability page with visual org chart tree (CEO → roles → staff)
+- [x] Show availability status badges on each staff node (available/vacation/leave)
+- [x] Add click-to-mark-leave modal with date range picker and leave type selector
+- [x] Add Staff Availability card to APY HQ tool grid
+- [x] Add route /admin/staff-availability to App.tsx

@@ -676,3 +676,18 @@ export const breederLeadFollowUps = mysqlTable("breederLeadFollowUps", {
   index("idx_breederLeadFollowUps_dueAt").on(t.dueAt),
 ]);
 export type BreederLeadFollowUp = typeof breederLeadFollowUps.$inferSelect;
+
+export const staffAvailability = mysqlTable("staffAvailability", {
+  id: int("id").autoincrement().primaryKey(),
+  staffId: int("staffId").notNull(),
+  staffName: varchar("staffName", { length: 255 }).notNull(),
+  leaveType: mysqlEnum("leaveType", ["vacation", "sick", "personal", "leave", "unavailable"]).notNull(),
+  startDate: varchar("startDate", { length: 20 }).notNull(),
+  endDate: varchar("endDate", { length: 20 }).notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  index("idx_staffAvailability_staffId").on(t.staffId),
+  index("idx_staffAvailability_dates").on(t.startDate, t.endDate),
+]);
+export type StaffAvailability = typeof staffAvailability.$inferSelect;

@@ -190,6 +190,13 @@
       "when": 1786299406131,
       "tag": "0028_abnormal_ego",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "5",
+      "when": 1786418816419,
+      "tag": "0029_flimsy_vulture",
+      "breakpoints": true
     }
   ]
 }
