@@ -208,25 +208,23 @@ export default function StaffPortal() {
       </header>
 
       {/* Hero — full-bleed photo with overlay */}
-      <div className="relative h-72 md:h-80 overflow-hidden">
+      <div className="relative h-48 overflow-hidden">
         <img
           src={TEAM_PHOTO}
           alt="APY Team"
           className="w-full h-full object-cover object-center"
         />
-        {/* Gradient overlay — dark at bottom for text legibility */}
         <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(26,10,18,0.15) 0%, rgba(26,10,18,0.72) 100%)" }} />
-        {/* Content */}
-        <div className="absolute bottom-0 left-0 right-0 px-6 md:px-10 pb-8">
+        <div className="absolute bottom-0 left-0 right-0 px-6 md:px-10 pb-5">
           <div className="max-w-7xl mx-auto flex items-end justify-between gap-4 flex-wrap">
             <div>
-              <p className="text-xs font-bold tracking-widest uppercase text-white/60 mb-1">
+              <p className="text-[10px] font-bold tracking-widest uppercase text-white/60 mb-0.5">
                 {getGreeting()} · {new Date().toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric" })}
               </p>
-              <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">
+              <h1 className="text-xl md:text-2xl font-bold text-white leading-tight">
                 Welcome back, <span style={{ color: "#FFB3CC" }}>{displayName}</span> 👑
               </h1>
-              <p className="text-white/50 text-sm mt-1">AfroPuppyYoga · Ontario, Canada</p>
+              <p className="text-white/50 text-[11px] mt-0.5">AfroPuppyYoga · Ontario, Canada</p>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 border border-white/25 backdrop-blur-sm">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -237,11 +235,11 @@ export default function StaffPortal() {
       </div>
 
       {/* Main content */}
-      <main className="max-w-7xl mx-auto px-6 md:px-10 py-10">
+      <main className="max-w-7xl mx-auto px-6 md:px-10 py-5">
 
         {/* Auth notice */}
         {!isAuthenticated && (
-          <div className="mb-8 p-4 rounded-xl border border-amber-200 bg-amber-50 flex items-center gap-3">
+          <div className="mb-4 p-3 rounded-xl border border-amber-200 bg-amber-50 flex items-center gap-3">
             <Lock size={14} className="text-amber-600 shrink-0" />
             <p className="text-xs text-amber-800">
               Some tools require login.{" "}
@@ -251,16 +249,16 @@ export default function StaffPortal() {
         )}
 
         {/* Tool grid by category */}
-        <div className="space-y-10">
+        <div className="space-y-4">
           {grouped.map(({ category, tools }) => (
             <div key={category}>
               {/* Section header */}
-              <div className="flex items-center gap-4 mb-4">
-                <h2 className="text-xs font-bold tracking-widest uppercase text-[#8B2252]">{category}</h2>
+              <div className="flex items-center gap-3 mb-2">
+                <h2 className="text-[10px] font-bold tracking-widest uppercase text-[#8B2252]">{category}</h2>
                 <div className="flex-1 h-px bg-[#E8D5CC]" />
               </div>
               {/* Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                 {tools.map((tool) => {
                   const Icon = tool.icon;
                   const isLocked = tool.adminOnly && !isAdmin;
@@ -268,33 +266,28 @@ export default function StaffPortal() {
                   return (
                     <Link key={tool.id} href={tool.href}>
                       <div
-                        className={`group relative bg-white rounded-2xl overflow-hidden transition-all duration-200 h-full ${
+                        className={`group relative bg-white rounded-xl overflow-hidden transition-all duration-150 h-full ${
                           isLocked
                             ? "opacity-45 cursor-not-allowed"
-                            : "cursor-pointer hover:shadow-lg hover:-translate-y-1"
+                            : "cursor-pointer hover:shadow-md hover:-translate-y-0.5"
                         }`}
-                        style={{ boxShadow: "0 1px 4px rgba(139,34,82,0.08)" }}
+                        style={{ boxShadow: "0 1px 3px rgba(139,34,82,0.07)" }}
                       >
-                        {/* Colored top accent bar */}
-                        <div className="h-1 w-full" style={{ background: tool.accent }} />
-                        <div className="p-5">
-                          <div className="flex items-start justify-between mb-3">
+                        <div className="p-3">
+                          <div className="flex items-center justify-between mb-1.5">
                             <div
-                              className="w-11 h-11 rounded-xl flex items-center justify-center"
+                              className="w-7 h-7 rounded-lg flex items-center justify-center"
                               style={{ background: `${tool.accent}12` }}
                             >
-                              <Icon size={20} style={{ color: tool.accent }} />
+                              <Icon size={14} style={{ color: tool.accent }} />
                             </div>
-                            <div className="flex items-center gap-1.5 mt-1">
-                              {isLocked && <Lock size={11} className="text-[#C4A0B0]" />}
-                              <ArrowRight
-                                size={15}
-                                className="text-[#D4B8C4] group-hover:text-[#8B2252] transition-colors"
-                              />
+                            <div className="flex items-center gap-1">
+                              {isLocked && <Lock size={9} className="text-[#C4A0B0]" />}
+                              <ArrowRight size={11} className="text-[#D4B8C4] group-hover:text-[#8B2252] transition-colors" />
                             </div>
                           </div>
-                          <h3 className="font-bold text-[14px] text-[#1A0A12] mb-1 leading-snug">{tool.title}</h3>
-                          <p className="text-[12px] text-[#7A5A6A] leading-relaxed">{tool.description}</p>
+                          <h3 className="font-semibold text-[12px] text-[#1A0A12] leading-snug">{tool.title}</h3>
+                          <p className="text-[10px] text-[#7A5A6A] leading-relaxed mt-0.5 line-clamp-1">{tool.description}</p>
                         </div>
                       </div>
                     </Link>
@@ -306,7 +299,7 @@ export default function StaffPortal() {
         </div>
 
         {/* Footer */}
-        <p className="mt-14 text-[11px] text-[#C4A0B0] text-center">
+        <p className="mt-6 text-[10px] text-[#C4A0B0] text-center">
           APY HQ · <a href="mailto:afropuppyyoga@gmail.com" className="hover:text-[#8B2252] transition-colors">afropuppyyoga@gmail.com</a>
         </p>
       </main>
