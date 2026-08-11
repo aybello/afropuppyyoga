@@ -274,21 +274,21 @@ export default function StaffPortal() {
                         }`}
                         style={{ boxShadow: "0 1px 3px rgba(139,34,82,0.07)" }}
                       >
-                        <div className="p-4">
-                          <div className="flex items-center justify-between mb-2">
+                        <div className="p-4 py-5">
+                          <div className="flex items-center justify-between mb-3">
                             <div
-                              className="w-9 h-9 rounded-lg flex items-center justify-center"
+                              className="w-10 h-10 rounded-lg flex items-center justify-center"
                               style={{ background: `${tool.accent}12` }}
                             >
-                              <Icon size={17} style={{ color: tool.accent }} />
+                              <Icon size={19} style={{ color: tool.accent }} />
                             </div>
                             <div className="flex items-center gap-1">
                               {isLocked && <Lock size={9} className="text-[#C4A0B0]" />}
-                              <ArrowRight size={13} className="text-[#D4B8C4] group-hover:text-[#8B2252] transition-colors" />
+                              <ArrowRight size={14} className="text-[#D4B8C4] group-hover:text-[#8B2252] transition-colors" />
                             </div>
                           </div>
-                          <h3 className="font-semibold text-[13px] text-[#1A0A12] leading-snug">{tool.title}</h3>
-                          <p className="text-[11px] text-[#7A5A6A] leading-relaxed mt-0.5">{tool.description}</p>
+                          <h3 className="font-semibold text-[15px] text-[#1A0A12] leading-snug">{tool.title}</h3>
+                          <p className="text-[12px] text-[#7A5A6A] leading-relaxed mt-1">{tool.description}</p>
                         </div>
                       </div>
                     </Link>
