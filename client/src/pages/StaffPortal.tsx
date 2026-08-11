@@ -23,7 +23,7 @@ import {
   Star,
 } from "lucide-react";
 
-const TEAM_PHOTO = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663824308637/ajLKAXnoeiZxfjrO.jpg";
+const TEAM_PHOTO = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663824308637/IiwudPwckobbrxIv.jpg";
 
 const TOOLS = [
   {
