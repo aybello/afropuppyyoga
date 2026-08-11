@@ -208,11 +208,12 @@ export default function StaffPortal() {
       </header>
 
       {/* Hero — clean full photo, no overlay */}
-      <div className="relative overflow-hidden" style={{ paddingBottom: "min(75%, 480px)", height: 0 }}>
+      <div className="relative overflow-hidden" style={{ height: "260px" }}>
         <img
           src={TEAM_PHOTO}
           alt="APY Team"
-          className="absolute inset-0 w-full h-full object-cover object-center"
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ objectPosition: "center 60%" }}
         />
       </div>
 
