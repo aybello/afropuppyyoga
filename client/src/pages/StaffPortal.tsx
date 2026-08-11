@@ -207,29 +207,29 @@ export default function StaffPortal() {
         </div>
       </header>
 
-      {/* Hero — full-bleed photo with overlay */}
-      <div className="relative overflow-hidden" style={{ paddingBottom: "min(75%, 500px)", height: 0 }}>
+      {/* Hero — clean full photo, no overlay */}
+      <div className="relative overflow-hidden" style={{ paddingBottom: "min(75%, 480px)", height: 0 }}>
         <img
           src={TEAM_PHOTO}
           alt="APY Team"
           className="absolute inset-0 w-full h-full object-cover object-center"
         />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(26,10,18,0.05) 0%, rgba(26,10,18,0.45) 60%, rgba(26,10,18,0.80) 100%)" }} />
-        <div className="absolute bottom-0 left-0 right-0 px-6 md:px-10 pb-6">
-          <div className="max-w-7xl mx-auto flex items-end justify-between gap-4 flex-wrap">
-            <div>
-              <p className="text-xs font-bold tracking-widest uppercase text-white/60 mb-1">
-                {getGreeting()} · {new Date().toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric" })}
-              </p>
-              <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight">
-                Welcome back, <span style={{ color: "#FFB3CC" }}>{displayName}</span> 👑
-              </h1>
-              <p className="text-white/50 text-sm mt-1">AfroPuppyYoga · Ontario, Canada</p>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 border border-white/25 backdrop-blur-sm">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs text-white/80 font-medium">All systems running</span>
-            </div>
+      </div>
+
+      {/* Welcome bar below photo */}
+      <div className="bg-white border-b border-[#EDE0D8] px-6 md:px-10 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-[10px] font-bold tracking-widest uppercase text-[#8B2252]/60 mb-0.5">
+              {getGreeting()} · {new Date().toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric" })}
+            </p>
+            <h1 className="text-xl md:text-2xl font-bold text-[#1A0A12] leading-tight">
+              Welcome back, <span style={{ color: "#8B2252" }}>{displayName}</span> 👑
+            </h1>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs text-emerald-700 font-medium">All systems running</span>
           </div>
         </div>
       </div>
