@@ -673,3 +673,8 @@
 - [x] Add click-to-mark-leave modal with date range picker and leave type selector
 - [x] Add Staff Availability card to APY HQ tool grid
 - [x] Add route /admin/staff-availability to App.tsx
+
+## New Private-Event Inquiry (Aug 11, 2026)
+- [x] Review the new inquiry details and prepare the appropriate quote or booking next step
+- [x] Build a self-serve inquiry-to-quote workflow with tailored response drafting, Luma payment-link generation, and a final owner preview before sending
+- [x] Test the payment-offer drafting logic using Taylor Stanbury’s corporate wellness inquiry without creating or emailing a live offer before the final date and time are approved

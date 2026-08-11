@@ -243,10 +243,19 @@ export const privateEventInquiries = mysqlTable("privateEventInquiries", {
   puppyBreed: varchar("puppyBreed", { length: 100 }),
   /** Organization name (for corporate events) */
   organization: varchar("organization", { length: 255 }),
+  /** Final venue selected while preparing the payment-ready offer */
+  eventVenue: varchar("eventVenue", { length: 255 }),
+  /** Final event start time in local Toronto HH:mm format */
+  eventStartTime: varchar("eventStartTime", { length: 5 }),
+  /** Final event end time in local Toronto HH:mm format */
+  eventEndTime: varchar("eventEndTime", { length: 5 }),
   /** Generated Luma event URL */
   lumaEventUrl: varchar("lumaEventUrl", { length: 500 }),
   /** Luma event ID */
   lumaEventId: varchar("lumaEventId", { length: 100 }),
+  /** Exact client-facing quote response, stored for preview and audit */
+  quoteEmailSubject: varchar("quoteEmailSubject", { length: 500 }),
+  quoteEmailBody: text("quoteEmailBody"),
   /** Whether owner approval was required and given */
   ownerApproved: boolean("ownerApproved"),
   /** Quote email sent timestamp */

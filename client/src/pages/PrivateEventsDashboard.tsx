@@ -89,8 +89,13 @@ type PrivateEventInquiry = {
   sessions: number | null;
   puppyBreed: string | null;
   organization: string | null;
+  eventVenue: string | null;
+  eventStartTime: string | null;
+  eventEndTime: string | null;
   lumaEventUrl: string | null;
   lumaEventId: string | null;
+  quoteEmailSubject: string | null;
+  quoteEmailBody: string | null;
   ownerApproved: boolean | null;
   quoteSentAt: Date | null;
   createdAt: Date;
@@ -125,6 +130,21 @@ const PACKAGE_LABELS: Record<string, string> = {
   signature: "Signature Experience",
   luxury: "Luxury Experience",
 };
+
+function organizationSuggestion(inquiry: PrivateEventInquiry): string {
+  if (inquiry.organization?.trim()) return inquiry.organization.trim();
+  const emailDomain = inquiry.email.split("@")[1]?.split(".")[0] || "";
+  return emailDomain ? emailDomain.charAt(0).toUpperCase() + emailDomain.slice(1) : "";
+}
+
+function venueSuggestion(inquiry: PrivateEventInquiry): string {
+  if (inquiry.eventVenue?.trim()) return inquiry.eventVenue.trim();
+  const location = inquiry.location.toLowerCase();
+  if (location.includes("kitchener") || location.includes("waterloo") || location.includes("cambridge")) return "kitchener";
+  if (location.includes("hamilton")) return "hamilton";
+  if (location.includes("oakville") || location.includes("burlington")) return "oakville";
+  return "";
+}
 
 export default function PrivateEventsDashboard() {
   const { user, loading, isAuthenticated } = useAuth();
@@ -179,7 +199,8 @@ export default function PrivateEventsDashboard() {
 
   // Quote email state
   const [showEmailPanel, setShowEmailPanel] = useState(false);
-  const [customMessage, setCustomMessage] = useState("");
+  const [quoteEmailSubject, setQuoteEmailSubject] = useState("");
+  const [quoteEmailBody, setQuoteEmailBody] = useState("");
   const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   const utils = trpc.useUtils();
@@ -204,11 +225,15 @@ export default function PrivateEventsDashboard() {
     onSuccess: (data) => {
       utils.privateEvents.listInquiries.invalidate();
       setGeneratedLink(data.eventUrl);
+      setQuoteEmailSubject(data.emailDraft.subject);
+      setQuoteEmailBody(data.emailDraft.body);
+      setShowBookingPanel(false);
+      setShowEmailPanel(true);
       setIsGenerating(false);
       if (data.needsApproval) {
-        toast.info("Booking link generated — Owner approval recommended (discount or large event)");
+        toast.info("Payment-ready offer created — review the email before sending.");
       } else {
-        toast.success("Booking link generated successfully!");
+        toast.success("Payment-ready offer created. Review the email, then send it when ready.");
       }
     },
     onError: (err) => {
@@ -283,17 +308,19 @@ export default function PrivateEventsDashboard() {
     setShowBookingPanel(false);
     setShowEmailPanel(false);
     setGeneratedLink(inq.lumaEventUrl || null);
+    setQuoteEmailSubject(inq.quoteEmailSubject || "");
+    setQuoteEmailBody(inq.quoteEmailBody || "");
     // Pre-fill booking form from inquiry data
     setBookingForm({
-      finalPrice: inq.finalPriceCents ? String(inq.finalPriceCents / 100) : String(inq.estimatedMin),
+      finalPrice: inq.finalPriceCents ? String(inq.finalPriceCents / 100) : String(inq.estimatedMax),
       pricingType: (inq.pricingType as "plus_hst" | "all_in") || "plus_hst",
       sessions: String(inq.sessions || 1),
       puppyBreed: inq.puppyBreed || "",
-      organization: inq.organization || "",
+      organization: organizationSuggestion(inq),
       eventDate: inq.preferredDate || "",
-      startTime: "14:00",
-      endTime: "15:30",
-      customLocation: "",
+      startTime: inq.eventStartTime || "14:00",
+      endTime: inq.eventEndTime || "15:30",
+      customLocation: venueSuggestion(inq),
     });
   }
 
@@ -335,12 +362,17 @@ export default function PrivateEventsDashboard() {
     });
   }
 
-  function handleSendEmail() {
+  function handleSendEmail(subject = quoteEmailSubject, body = quoteEmailBody) {
     if (!selectedInquiry) return;
+    if (!subject.trim() || !body.trim()) {
+      toast.error("Add a subject and message before sending the offer.");
+      return;
+    }
     setIsSendingEmail(true);
     sendQuoteEmail.mutate({
       inquiryId: selectedInquiry.id,
-      customMessage: customMessage || undefined,
+      subject,
+      body,
     });
   }
 
@@ -1033,15 +1065,17 @@ export default function PrivateEventsDashboard() {
 
                 const subject = `Private AfroPuppyYoga Experience | ${formattedDate} \uD83D\uDC36`;
                 const body = `Hi ${firstName},\n\nThank you for reaching out! ${intro} on ${formattedDate}.${locationBlock}\n\nThe Classic Experience for your group of ${guests} guests includes:\n\n\uD83D\uDC36 ${sessionDesc}\n\uD83E\uDDD8 Beginner-friendly guided yoga instruction\n\uD83D\uDC3E ${breed} and dedicated puppy handlers\n\uD83D\uDC9B Supervised puppy interaction and playtime\n\uD83E\uDDD8 Yoga mats for participants\n\uD83C\uDFB6 Curated music\n\uD83E\uDDF4 Venue, setup and cleanup\n\nYou can secure the event using the private booking link below:\n\n${generatedLink}\n\nThe booking will be confirmed once payment has been completed. The puppy breed and final venue details will be confirmed closer to the event based on availability.\n\nWarmly,`;
-                const fullEmail = `Subject: ${subject}\n\n${body}`;
-                const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(selectedInquiry.email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                const effectiveSubject = quoteEmailSubject || subject;
+                const effectiveBody = quoteEmailBody || body;
+                const fullEmail = `Subject: ${effectiveSubject}\n\n${effectiveBody}`;
+                const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(selectedInquiry.email)}&su=${encodeURIComponent(effectiveSubject)}&body=${encodeURIComponent(effectiveBody)}`;
 
                 return (
                   <div className="bg-white border border-[#F2A0B8]/30 rounded-xl p-5 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Mail size={14} className="text-[#8B2252]" />
-                        <p className="font-body text-xs font-semibold text-[#8B2252] uppercase tracking-wider">Email Template</p>
+                        <p className="font-body text-xs font-semibold text-[#8B2252] uppercase tracking-wider">Client offer preview</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <Button size="sm" variant="outline" className="border-[#F2A0B8]/40 hover:bg-[#FFF5F8] font-body text-xs rounded-full" onClick={() => { navigator.clipboard.writeText(fullEmail); toast.success("Email copied to clipboard!"); }}>
@@ -1052,26 +1086,31 @@ export default function PrivateEventsDashboard() {
                         </Button>
                       </div>
                     </div>
-                    <div className="bg-[#FAFAFA] rounded-xl border border-[#F2A0B8]/10 p-4 font-body text-xs text-[#3D1A2E]/70 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
-                      {fullEmail}
-                    </div>
                     <div className="border-t border-[#F2A0B8]/20 pt-3 space-y-2">
-                      <p className="font-body text-xs text-[#3D1A2E]/50">Or send the branded HTML email directly:</p>
+                      <div className="rounded-lg bg-[#FFF5F8] border border-[#F2A0B8]/20 px-3 py-2 font-body text-xs text-[#8B2252]">
+                        This will send to <span className="font-semibold">{selectedInquiry.email}</span> and includes the private Luma payment link.
+                      </div>
+                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 block">Subject</label>
+                      <Input
+                        value={effectiveSubject}
+                        onChange={(e) => setQuoteEmailSubject(e.target.value)}
+                        className="border-[#F2A0B8]/20 focus:border-[#F2A0B8] font-body text-sm"
+                      />
+                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 block">Message</label>
                       <Textarea
-                        value={customMessage}
-                        onChange={(e) => setCustomMessage(e.target.value)}
-                        placeholder="Add a personal message (optional)"
-                        className="border-[#F2A0B8]/20 focus:border-[#F2A0B8] font-body text-sm min-h-[50px] resize-none"
+                        value={effectiveBody}
+                        onChange={(e) => setQuoteEmailBody(e.target.value)}
+                        className="border-[#F2A0B8]/20 focus:border-[#F2A0B8] font-body text-sm min-h-[250px] resize-y"
                       />
                       <div className="flex gap-2">
                         <Button
-                          onClick={handleSendEmail}
+                          onClick={() => handleSendEmail(effectiveSubject, effectiveBody)}
                           disabled={isSendingEmail}
                           size="sm"
                           className="bg-gradient-to-r from-[#8B2252] to-[#D4708A] hover:from-[#6B1A40] hover:to-[#B85A74] text-white font-body font-semibold rounded-full text-xs"
                         >
                           {isSendingEmail ? <Loader2 size={12} className="animate-spin mr-1" /> : <Send size={12} className="mr-1" />}
-                          Send Branded Email
+                          Approve & Send Offer
                         </Button>
                         <Button
                           variant="outline"
@@ -1094,16 +1133,19 @@ export default function PrivateEventsDashboard() {
                   onClick={() => setShowBookingPanel(true)}
                 >
                   <Link2 size={16} className="mr-2" />
-                  Generate Booking Link
+                  Prepare Payment-Ready Offer
                 </Button>
               )}
 
               {showBookingPanel && !generatedLink && (
                 <div className="bg-[#FFF5F8] border border-[#F2A0B8]/40 rounded-xl p-5 space-y-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    <DollarSign size={16} className="text-[#8B2252]" />
-                    <p className="font-body text-sm font-bold text-[#1A0A12]">Quote & Booking Details</p>
-                  </div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <DollarSign size={16} className="text-[#8B2252]" />
+                      <p className="font-body text-sm font-bold text-[#1A0A12]">Build Payment-Ready Offer</p>
+                    </div>
+                    <p className="font-body text-xs text-[#3D1A2E]/55 -mt-2">
+                      Confirm the quote, date, venue and timing. APY HQ will create the private Luma payment page and draft the exact client reply for your review.
+                    </p>
 
                   {/* Price + HST */}
                   <div className="grid grid-cols-2 gap-3">
@@ -1258,16 +1300,16 @@ export default function PrivateEventsDashboard() {
                   </div>
 
                   {/* Generate button */}
-                  <Button
-                    onClick={handleGenerateLink}
-                    disabled={isGenerating}
+                    <Button
+                      onClick={handleGenerateLink}
+                      disabled={isGenerating}
                     className="w-full bg-[#8B2252] hover:bg-[#6B1A40] text-white font-body font-bold rounded-full py-3"
                   >
-                    {isGenerating ? (
-                      <><Loader2 size={16} className="animate-spin mr-2" /> Creating Luma Event...</>
-                    ) : (
-                      <><Link2 size={16} className="mr-2" /> Generate Private Luma Link</>
-                    )}
+                      {isGenerating ? (
+                        <><Loader2 size={16} className="animate-spin mr-2" /> Creating Luma Event...</>
+                      ) : (
+                        <><Link2 size={16} className="mr-2" /> Create Offer & Draft Client Reply</>
+                      )}
                   </Button>
                 </div>
               )}
