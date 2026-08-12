@@ -678,3 +678,6 @@
 - [x] Review the new inquiry details and prepare the appropriate quote or booking next step
 - [x] Build a self-serve inquiry-to-quote workflow with tailored response drafting, Luma payment-link generation, and a final owner preview before sending
 - [x] Test the payment-offer drafting logic using Taylor Stanbury’s corporate wellness inquiry without creating or emailing a live offer before the final date and time are approved
+
+## Private-Event Phone Validation (Aug 11, 2026)
+- [x] Require a complete valid Canadian phone number on the private-event inquiry form and revalidate it on the server

@@ -7,6 +7,7 @@ import { privateEventInquiries } from "../../drizzle/schema";
 import { desc, eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { buildPrivateEventQuoteDraft } from "../privateEventQuote";
+import { normalizeCanadianPhoneNumber } from "@shared/phone";
 
 const LUMA_BASE = "https://public-api.luma.com/v1";
 const HST_RATE = 0.13;
@@ -480,7 +481,18 @@ export const privateEventsRouter = router({
       z.object({
         name: z.string().min(1),
         email: z.string().email(),
-        phone: z.string().optional().default(""),
+        phone: z.string().min(1, "A phone number is required for private-event inquiries.")
+          .transform((value, ctx) => {
+            const normalized = normalizeCanadianPhoneNumber(value);
+            if (!normalized) {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Enter a complete 10-digit Canadian phone number.",
+              });
+              return z.NEVER;
+            }
+            return normalized;
+          }),
         eventType: z.string().min(1),
         guests: z.number().min(1),
         location: z.string().min(1),

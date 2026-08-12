@@ -9,6 +9,7 @@
    ============================================================ */
 import { useState } from "react";
 import { useSeoMeta } from "@/hooks/useSeoMeta";
+import { formatCanadianPhoneNumber, normalizeCanadianPhoneNumber } from "@shared/phone";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -166,10 +167,15 @@ export default function PrivateEventQuote() {
       toast.error("Please enter your name, email, and phone number so we can follow up.");
       return;
     }
+    const normalizedPhone = normalizeCanadianPhoneNumber(phone);
+    if (!normalizedPhone) {
+      toast.error("Please enter a complete 10-digit Canadian phone number, such as (289) 788-1885.");
+      return;
+    }
     submitInquiry.mutate({
       name,
       email,
-      phone,
+      phone: normalizedPhone,
       eventType,
       guests: guestCount,
       location: LOCATIONS.find((l) => l.value === locationKey)?.label ?? locationKey,
@@ -636,13 +642,23 @@ export default function PrivateEventQuote() {
                         <div className="relative">
                           <Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#3D1A2E]/40" />
                           <Input
-                            type="tel"
-                            placeholder="+1 (289) 000-0000"
+                          type="tel"
+                            placeholder="(289) 788-1885"
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
+                            onBlur={() => {
+                              const formatted = formatCanadianPhoneNumber(phone);
+                              if (formatted !== phone) setPhone(formatted);
+                            }}
+                            inputMode="tel"
+                            autoComplete="tel"
+                            aria-describedby="private-event-phone-help"
                             className="pl-9 border-[#F2A0B8]/40 focus:border-[#8B2252]"
                           />
                         </div>
+                        <p id="private-event-phone-help" className="font-body text-xs text-[#3D1A2E]/55">
+                          Canadian mobile or local number required. We will format it automatically.
+                        </p>
                       </div>
                       <div className="space-y-2">
                         <Label className="font-body text-sm font-semibold text-[#3D1A2E]">
