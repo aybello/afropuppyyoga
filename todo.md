@@ -681,3 +681,6 @@
 
 ## Private-Event Phone Validation (Aug 11, 2026)
 - [x] Require a complete valid Canadian phone number on the private-event inquiry form and revalidate it on the server
+
+## APY HQ Navigation (Aug 12, 2026)
+- [x] Restore the People category and Staff Availability entry in the APY HQ tool grid

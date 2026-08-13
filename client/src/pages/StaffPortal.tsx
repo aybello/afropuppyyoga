@@ -169,7 +169,7 @@ const TOOLS = [
   },
 ];
 
-const CATEGORY_ORDER = ["Finance", "Events", "Breeders", "People", "Growth", "Operations"];
+const CATEGORY_ORDER = ["People", "Finance", "Events", "Breeders", "Growth", "Operations"];
 
 function getGreeting() {
   const h = new Date().getHours();
