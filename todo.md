@@ -702,3 +702,6 @@
 - [x] Connect the Puppy Schedule/Breeder Calendar to weekend leadership coverage for each scheduled class
 - [x] Require and assign two available Puppy Monitors for every class day
 - [x] Flag any class that lacks Operations Manager, Yoga Instructor, or two Puppy Monitor assignments
+
+## Latest-Version Visibility (Aug 13, 2026)
+- [x] Investigate why the latest staffing changes are not visible in GitHub or on the deployed site and restore the correct version
