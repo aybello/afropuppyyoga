@@ -687,3 +687,9 @@
 
 ## Direct Team Management (Aug 12, 2026)
 - [x] Let APY HQ admins add a team member directly with role and studio location, including Operations Managers for Kitchener, Hamilton, and Oakville
+
+## Org Chart Refinement (Aug 12, 2026)
+- [x] Redesign the org chart into a wider, location-first layout with Operations Manager before Yoga Instructor
+- [x] Show six Puppy Monitor slots for each studio location
+- [x] Add central BDR and Social Media Specialist positions to the APY-wide team
+- [x] Allow admins to remove team members safely from the org chart

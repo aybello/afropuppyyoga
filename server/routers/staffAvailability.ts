@@ -8,8 +8,8 @@ export const directTeamMemberSchema = z.object({
   name: z.string().trim().min(2, "Enter the team member's full name."),
   email: z.string().trim().email("Enter a valid email address."),
   phone: z.string().trim().max(50).optional().default(""),
-  role: z.enum(["Yoga Instructor", "Operations Manager", "Puppy Monitor", "Puppy Specialist"]),
-  location: z.enum(["KW", "OAK", "HAM"]),
+  role: z.enum(["Yoga Instructor", "Operations Manager", "Puppy Monitor", "Puppy Specialist", "BDR", "Social Media Specialist"]),
+  location: z.enum(["KW", "OAK", "HAM", "CENTRAL"]),
 });
 
 export const staffAvailabilityRouter = router({
@@ -110,5 +110,17 @@ export const staffAvailabilityRouter = router({
       });
 
       return { success: true, id: Number(result[0].insertId) };
+    }),
+
+  // Soft-delete a team member so they disappear from the org chart without losing history.
+  removeTeamMember: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      await db.update(jobApplications)
+        .set({ deletedAt: new Date() })
+        .where(eq(jobApplications.id, input.id));
+      return { success: true };
     }),
 });
