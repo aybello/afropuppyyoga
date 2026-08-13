@@ -53,6 +53,18 @@ type WeekendShift = {
   candidates: Pick<StaffMember, "id" | "name" | "role" | "location">[];
   status: "available" | "away" | "covered" | "unassigned";
 };
+type ScheduledClassStaffing = {
+  id: number;
+  classDate: string;
+  location: "Kitchener" | "Hamilton" | "Oakville";
+  breed: string;
+  breederName: string;
+  staffing: {
+    assignedPuppyMonitors: { id: number; staffId: number; name: string }[];
+    eligiblePuppyMonitors: { id: number; name: string }[];
+    fullyStaffed: boolean;
+  };
+};
 const WEEKEND_STATUS = {
   available: { label: "Primary available", className: "border-emerald-200 bg-emerald-50 text-emerald-800" },
   away: { label: "Away · cover needed", className: "border-amber-200 bg-amber-50 text-amber-800" },
@@ -115,17 +127,20 @@ export default function StaffAvailabilityPage() {
   const { data, isLoading, refetch } = trpc.staffAvailability.getOrgChart.useQuery();
   const [weekendCoverageInput] = useState(() => ({ weekends: 6 }));
   const weekendCoverage = trpc.staffAvailability.getWeekendCoverage.useQuery(weekendCoverageInput);
+  const classStaffing = trpc.puppySchedule.listWithStaffing.useQuery();
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
   const [selectedWeekendShift, setSelectedWeekendShift] = useState<WeekendShift | null>(null);
   const [coverageDraft, setCoverageDraft] = useState({ coverageStaffId: "", notes: "" });
+  const [selectedClassStaffing, setSelectedClassStaffing] = useState<ScheduledClassStaffing | null>(null);
+  const [selectedPuppyMonitor, setSelectedPuppyMonitor] = useState("");
   const [leaveForm, setLeaveForm] = useState({ leaveType: "vacation" as const, startDate: today, endDate: today, notes: "" });
   const [newMember, setNewMember] = useState<{ name: string; email: string; phone: string; role: TeamRole; location: TeamLocation }>({
     name: "", email: "", phone: "", role: "Operations Manager", location: "KW",
   });
 
-  const refreshAvailability = () => { refetch(); weekendCoverage.refetch(); };
+  const refreshAvailability = () => { refetch(); weekendCoverage.refetch(); classStaffing.refetch(); };
   const addLeave = trpc.staffAvailability.addLeave.useMutation({
     onSuccess: () => { refreshAvailability(); toast.success("Leave added"); setShowLeaveModal(false); },
   });
@@ -150,6 +165,14 @@ export default function StaffAvailabilityPage() {
   const assignWeekendCoverage = trpc.staffAvailability.assignWeekendCoverage.useMutation({
     onSuccess: () => { refreshAvailability(); toast.success("Weekend coverage updated"); setSelectedWeekendShift(null); },
     onError: (error) => toast.error(error.message || "Could not update weekend coverage."),
+  });
+  const assignPuppyMonitor = trpc.puppySchedule.assignPuppyMonitor.useMutation({
+    onSuccess: () => { refreshAvailability(); toast.success("Puppy Monitor assigned"); setSelectedClassStaffing(null); setSelectedPuppyMonitor(""); },
+    onError: (error) => toast.error(error.message || "Could not assign this Puppy Monitor."),
+  });
+  const removePuppyMonitor = trpc.puppySchedule.removePuppyMonitorAssignment.useMutation({
+    onSuccess: () => { refreshAvailability(); toast.success("Puppy Monitor removed from this class"); setSelectedClassStaffing(null); },
+    onError: (error) => toast.error(error.message || "Could not remove this Puppy Monitor."),
   });
 
   const staff = (data?.staff ?? []) as StaffMember[];
@@ -178,6 +201,9 @@ export default function StaffAvailabilityPage() {
     { location, role: "Yoga Instructor" as const },
   ]));
   const findWeekendShift = (date: string, location: string, role: string) => weekendShifts.find((shift) => shift.date === date && shift.location === location && shift.role === role);
+  const scheduledClasses = (classStaffing.data ?? []) as ScheduledClassStaffing[];
+  const weekendClasses = scheduledClasses.filter((entry) => weekendDates.some((weekend) => weekend.date === entry.classDate));
+  const openClassStaffing = (entry: ScheduledClassStaffing) => { setSelectedClassStaffing(entry); setSelectedPuppyMonitor(""); };
 
   return (
     <div className="min-h-screen bg-[#F7F2EE]">
@@ -254,7 +280,7 @@ export default function StaffAvailabilityPage() {
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8B2252]/60">Weekend leadership plan</p>
                 <h2 className="mt-0.5 text-lg font-bold text-[#1A0A12]">Saturday & Sunday coverage</h2>
-                <p className="mt-1 text-xs text-[#7A5A6A]">The board reads existing leave records automatically. Select a shift to mark the primary person away or assign a same-role cover.</p>
+                <p className="mt-1 text-xs text-[#7A5A6A]">Manage all weekend coverage here: leadership shifts plus the two Puppy Monitors required for every scheduled breeder class.</p>
               </div>
             </div>
             <div className="flex items-center gap-2 text-[10px] font-bold text-[#7A5A6A]"><ShieldCheck size={14} className="text-[#177343]" /> {weekendDates.length / 2} upcoming weekends</div>
@@ -266,7 +292,7 @@ export default function StaffAvailabilityPage() {
             <div className="overflow-x-auto pb-2">
               <div className="min-w-[2100px]">
                 <div className="grid border-b border-[#EADBE2]" style={{ gridTemplateColumns: `220px repeat(${weekendDates.length}, minmax(150px, 1fr))` }}>
-                  <div className="sticky left-0 z-10 bg-white px-3 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#8B2252]">Studio · Leadership role</div>
+                  <div className="sticky left-0 z-10 bg-white px-3 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#8B2252]">Studio · Coverage requirement</div>
                   {weekendDates.map((weekend) => (
                     <div key={weekend.date} className={`border-l border-[#EADBE2] px-3 py-3 text-center ${weekend.dayLabel === "Sunday" ? "bg-[#FAF5F2]" : "bg-white"}`}>
                       <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#8B2252]">{weekend.dayLabel.slice(0, 3)}</p>
@@ -297,6 +323,30 @@ export default function StaffAvailabilityPage() {
                     })}
                   </div>
                 ))}
+                {weekendClasses.map((entry) => {
+                  const locationCode = entry.location === "Kitchener" ? "KW" : entry.location === "Hamilton" ? "HAM" : "OAK";
+                  return (
+                    <div key={`class-${entry.id}`} className="grid border-b border-[#F1E7E2] last:border-b-0" style={{ gridTemplateColumns: `220px repeat(${weekendDates.length}, minmax(150px, 1fr))` }}>
+                      <div className="sticky left-0 z-10 flex items-center gap-2 bg-[#FFF9FC] px-3 py-3">
+                        <span className="h-7 w-1 rounded-full bg-[#7C3AED]" />
+                        <div><p className="text-xs font-bold text-[#1A0A12]">{LOCATION_LABELS[locationCode]} · {entry.breed}</p><p className="text-[10px] font-medium text-[#7C3AED]">Puppy Monitors · 2 required</p><p className="mt-0.5 truncate text-[9px] text-[#7A5A6A]">Breeder: {entry.breederName}</p></div>
+                      </div>
+                      {weekendDates.map((weekend) => {
+                        const isClassDate = weekend.date === entry.classDate;
+                        const monitorCount = entry.staffing.assignedPuppyMonitors.length;
+                        const isCovered = monitorCount >= 2;
+                        return (
+                          <div key={weekend.date} className={`border-l border-[#F1E7E2] p-2 ${weekend.dayLabel === "Sunday" ? "bg-[#FFFCFA]" : "bg-white"}`}>
+                            {isClassDate ? <button type="button" onClick={() => openClassStaffing(entry)} className={`w-full rounded-xl border px-2.5 py-2 text-left transition-colors hover:brightness-95 ${isCovered ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
+                              <p className="text-[11px] font-bold">PMs: {monitorCount}/2</p>
+                              <p className="mt-1 text-[9px] font-semibold leading-tight">{isCovered ? entry.staffing.assignedPuppyMonitors.map((monitor) => monitor.name).join(" · ") : "Assign Puppy Monitors →"}</p>
+                            </button> : <div className="min-h-[58px]" />}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -306,6 +356,23 @@ export default function StaffAvailabilityPage() {
       </main>
 
       {showLeaveModal && selectedStaff && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"><div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"><div className="mb-5 flex items-start justify-between gap-4"><div><h3 className="text-lg font-bold text-[#1A0A12]">{selectedStaff.name}</h3><p className="mt-1 text-xs text-[#7A5A6A]">{selectedStaff.role} · {LOCATION_LABELS[selectedStaff.location] ?? selectedStaff.location}</p></div><button onClick={() => setShowLeaveModal(false)} className="text-[#C4A0B0] hover:text-[#8B2252]"><X size={18} /></button></div><div className="space-y-4"><div><label className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#8B2252]">Leave Type</label><select value={leaveForm.leaveType} onChange={(event) => setLeaveForm((form) => ({ ...form, leaveType: event.target.value as typeof form.leaveType }))} className="w-full rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm focus:border-[#8B2252] focus:outline-none">{Object.entries(LEAVE_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div><div className="grid grid-cols-2 gap-3"><div><label className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#8B2252]">Start Date</label><input type="date" value={leaveForm.startDate} onChange={(event) => setLeaveForm((form) => ({ ...form, startDate: event.target.value }))} className="w-full rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm focus:border-[#8B2252] focus:outline-none" /></div><div><label className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#8B2252]">End Date</label><input type="date" value={leaveForm.endDate} onChange={(event) => setLeaveForm((form) => ({ ...form, endDate: event.target.value }))} className="w-full rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm focus:border-[#8B2252] focus:outline-none" /></div></div><div><label className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#8B2252]">Notes <span className="normal-case font-medium text-[#7A5A6A]">(optional)</span></label><textarea value={leaveForm.notes} onChange={(event) => setLeaveForm((form) => ({ ...form, notes: event.target.value }))} rows={2} placeholder="e.g. Family vacation" className="w-full resize-none rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm focus:border-[#8B2252] focus:outline-none" /></div></div><div className="mt-6 grid grid-cols-2 gap-3"><button onClick={() => addLeave.mutate({ staffId: selectedStaff.id, staffName: selectedStaff.name, ...leaveForm })} disabled={addLeave.isPending} className="rounded-xl bg-[#8B2252] py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#6B1A3E] disabled:opacity-50">{addLeave.isPending ? "Saving..." : "Save Leave"}</button><button onClick={() => { if (window.confirm(`Remove ${selectedStaff.name} from the APY org chart? Their record will be archived, not permanently deleted.`)) removeTeamMember.mutate({ id: selectedStaff.id }); }} disabled={removeTeamMember.isPending} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50 py-2.5 text-sm font-bold text-red-700 transition-colors hover:bg-red-100 disabled:opacity-50"><Trash2 size={14} />{removeTeamMember.isPending ? "Removing..." : "Remove Person"}</button></div></div></div>}
+
+      {selectedClassStaffing && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#7C3AED]">Weekend class staffing</p><h3 className="mt-1 text-lg font-bold text-[#1A0A12]">{selectedClassStaffing.breed} · {selectedClassStaffing.location}</h3><p className="mt-1 text-xs text-[#7A5A6A]">{selectedClassStaffing.classDate} · Breeder: {selectedClassStaffing.breederName}</p></div>
+            <button onClick={() => setSelectedClassStaffing(null)} className="text-[#C4A0B0] transition-colors hover:text-[#8B2252]" aria-label="Close Puppy Monitor editor"><X size={18} /></button>
+          </div>
+          <div className="rounded-xl border border-[#E6D6F8] bg-[#FAF5FF] p-3"><p className="text-xs font-bold text-[#4C1D95]">Two Puppy Monitors are required for this class.</p><p className="mt-1 text-[11px] text-[#6B21A8]">Only active local Puppy Monitors who are not away on this date appear below.</p></div>
+          <div className="mt-4 space-y-2">
+            {selectedClassStaffing.staffing.assignedPuppyMonitors.map((monitor) => <div key={monitor.id} className="flex items-center justify-between rounded-xl border border-[#EDE0D8] bg-[#FFFCFA] px-3 py-2.5"><span className="text-sm font-bold text-[#1A0A12]">{monitor.name}</span><button onClick={() => removePuppyMonitor.mutate({ id: monitor.id })} disabled={removePuppyMonitor.isPending} className="rounded-lg p-1 text-[#C4A0B0] transition-colors hover:bg-red-50 hover:text-red-600" aria-label={`Remove ${monitor.name}`}><X size={15} /></button></div>)}
+            {Array.from({ length: Math.max(0, 2 - selectedClassStaffing.staffing.assignedPuppyMonitors.length) }, (_, index) => <div key={index} className="rounded-xl border border-dashed border-amber-300 bg-amber-50 px-3 py-2.5 text-xs font-bold text-amber-800">Puppy Monitor {selectedClassStaffing.staffing.assignedPuppyMonitors.length + index + 1} still needed</div>)}
+          </div>
+          {selectedClassStaffing.staffing.assignedPuppyMonitors.length < 2 && <div className="mt-4 flex gap-2"><select value={selectedPuppyMonitor} onChange={(event) => setSelectedPuppyMonitor(event.target.value)} className="min-w-0 flex-1 rounded-lg border border-[#E6D6F8] px-3 py-2 text-sm focus:border-[#7C3AED] focus:outline-none"><option value="">Select an available Puppy Monitor</option>{selectedClassStaffing.staffing.eligiblePuppyMonitors.map((monitor) => <option key={monitor.id} value={monitor.id}>{monitor.name}</option>)}</select><button onClick={() => selectedPuppyMonitor && assignPuppyMonitor.mutate({ scheduleId: selectedClassStaffing.id, staffId: Number(selectedPuppyMonitor) })} disabled={!selectedPuppyMonitor || assignPuppyMonitor.isPending} className="rounded-lg bg-[#7C3AED] px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-[#6D28D9] disabled:opacity-50">{assignPuppyMonitor.isPending ? "Assigning…" : "Assign"}</button></div>}
+          {selectedClassStaffing.staffing.assignedPuppyMonitors.length < 2 && selectedClassStaffing.staffing.eligiblePuppyMonitors.length === 0 && <p className="mt-2 text-xs font-medium text-rose-700">No eligible local Puppy Monitors are available for this date.</p>}
+          <button onClick={() => setSelectedClassStaffing(null)} className="mt-5 w-full rounded-xl border border-[#EDE0D8] py-2.5 text-sm font-medium text-[#7A5A6A] transition-colors hover:bg-[#FAF5F2]">Close</button>
+        </div>
+      </div>}
 
       {selectedWeekendShift && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
         <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">

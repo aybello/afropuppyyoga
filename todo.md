@@ -705,3 +705,7 @@
 
 ## Latest-Version Visibility (Aug 13, 2026)
 - [x] Investigate why the latest staffing changes are not visible in GitHub or on the deployed site and restore the correct version
+
+## Unified Weekend Staffing Board (Aug 13, 2026)
+- [x] Add scheduled breeder/class rows and two-Puppy-Monitor assignments to the Weekend Leadership board
+- [x] Make the Weekend Leadership board the one place to manage all Saturday/Sunday staffing coverage
