@@ -700,3 +700,23 @@ export const staffAvailability = mysqlTable("staffAvailability", {
   index("idx_staffAvailability_dates").on(t.startDate, t.endDate),
 ]);
 export type StaffAvailability = typeof staffAvailability.$inferSelect;
+
+// ─── Weekend Leadership Coverage ─────────────────────────────────────────────
+// One assignment per location / leadership role / Saturday-or-Sunday date.
+// Primary availability is derived from staffAvailability; this table stores the
+// chosen backup when the primary person is away or coverage is otherwise needed.
+export const weekendLeadershipCoverage = mysqlTable("weekendLeadershipCoverage", {
+  id: int("id").autoincrement().primaryKey(),
+  coverageDate: varchar("coverageDate", { length: 10 }).notNull(),
+  location: mysqlEnum("weekendCoverageLocation", ["KW", "OAK", "HAM"]).notNull(),
+  role: mysqlEnum("weekendCoverageRole", ["Operations Manager", "Yoga Instructor"]).notNull(),
+  coverageStaffId: int("coverageStaffId"),
+  coverageStaffName: varchar("coverageStaffName", { length: 255 }),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (t) => [
+  index("idx_weekendCoverage_date").on(t.coverageDate),
+  index("idx_weekendCoverage_shift").on(t.coverageDate, t.location, t.role),
+]);
+export type WeekendLeadershipCoverage = typeof weekendLeadershipCoverage.$inferSelect;

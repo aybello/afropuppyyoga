@@ -693,3 +693,7 @@
 - [x] Show six Puppy Monitor slots for each studio location
 - [x] Add central BDR and Social Media Specialist positions to the APY-wide team
 - [x] Allow admins to remove team members safely from the org chart
+
+## Weekend Leadership Coverage (Aug 13, 2026)
+- [x] Track Saturday and Sunday availability for each Operations Manager and Yoga Instructor by studio
+- [x] Surface away/uncovered weekend leadership shifts and allow coverage assignments
