@@ -684,3 +684,6 @@
 
 ## APY HQ Navigation (Aug 12, 2026)
 - [x] Restore the People category and Staff Availability entry in the APY HQ tool grid
+
+## Direct Team Management (Aug 12, 2026)
+- [x] Let APY HQ admins add a team member directly with role and studio location, including Operations Managers for Kitchener, Hamilton, and Oakville

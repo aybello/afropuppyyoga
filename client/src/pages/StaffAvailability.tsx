@@ -82,11 +82,28 @@ export default function StaffAvailabilityPage() {
   const { data, isLoading, refetch } = trpc.staffAvailability.getOrgChart.useQuery();
   const addLeave = trpc.staffAvailability.addLeave.useMutation({ onSuccess: () => { refetch(); toast.success("Leave added"); setShowModal(false); } });
   const deleteLeave = trpc.staffAvailability.deleteLeave.useMutation({ onSuccess: () => { refetch(); toast.success("Leave removed"); } });
+  const createTeamMember = trpc.staffAvailability.createTeamMember.useMutation({
+    onSuccess: () => {
+      refetch();
+      toast.success("Team member added to the org chart");
+      setShowAddMember(false);
+      setNewMember({ name: "", email: "", phone: "", role: "Operations Manager", location: "KW" });
+    },
+    onError: (error) => toast.error(error.message || "Could not add this team member."),
+  });
 
   const [showModal, setShowModal] = useState(false);
+  const [showAddMember, setShowAddMember] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<{ id: number; name: string } | null>(null);
   const [leaveForm, setLeaveForm] = useState({ leaveType: "vacation" as const, startDate: today, endDate: today, notes: "" });
   const [showLeavePanel, setShowLeavePanel] = useState<number | null>(null);
+  const [newMember, setNewMember] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    role: "Operations Manager" as "Yoga Instructor" | "Operations Manager" | "Puppy Monitor" | "Puppy Specialist",
+    location: "KW" as "KW" | "OAK" | "HAM",
+  });
 
   const staff = data?.staff ?? [];
   const leaves = data?.leaves ?? [];
@@ -117,9 +134,17 @@ export default function StaffAvailabilityPage() {
             <span className="text-[#D4B8C4]">/</span>
             <p className="font-bold text-[13px] text-[#1A0A12]">Staff Availability</p>
           </div>
-          <div className="flex items-center gap-2 text-xs text-[#7A5A6A]">
-            <Calendar size={13} />
-            <span>{new Date().toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}</span>
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-2 text-xs text-[#7A5A6A]">
+              <Calendar size={13} />
+              <span>{new Date().toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}</span>
+            </div>
+            <button
+              onClick={() => setShowAddMember(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#8B2252] px-3 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#6B1A3E]"
+            >
+              <Plus size={14} /> Add Team Member
+            </button>
           </div>
         </div>
       </header>
@@ -305,6 +330,62 @@ export default function StaffAvailabilityPage() {
                 style={{ background: "#8B2252" }}
               >
                 {addLeave.isPending ? "Saving..." : "Save Leave"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Team Member Modal */}
+      {showAddMember && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-bold text-[#1A0A12]">Add Team Member</h3>
+                <p className="mt-1 text-xs text-[#7A5A6A]">Add a person directly to APY HQ and assign their role and home studio.</p>
+              </div>
+              <button onClick={() => setShowAddMember(false)} className="text-[#C4A0B0] transition-colors hover:text-[#8B2252]" aria-label="Close add team member form"><X size={18} /></button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#8B2252]">Full Name</label>
+                <input value={newMember.name} onChange={(e) => setNewMember((member) => ({ ...member, name: e.target.value }))} placeholder="e.g. Jordan Smith" className="w-full rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm focus:border-[#8B2252] focus:outline-none" />
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#8B2252]">Role</label>
+                  <select value={newMember.role} onChange={(e) => setNewMember((member) => ({ ...member, role: e.target.value as typeof member.role }))} className="w-full rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm focus:border-[#8B2252] focus:outline-none">
+                    <option>Operations Manager</option>
+                    <option>Yoga Instructor</option>
+                    <option>Puppy Monitor</option>
+                    <option>Puppy Specialist</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#8B2252]">Home Studio</label>
+                  <select value={newMember.location} onChange={(e) => setNewMember((member) => ({ ...member, location: e.target.value as typeof member.location }))} className="w-full rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm focus:border-[#8B2252] focus:outline-none">
+                    <option value="KW">Kitchener</option>
+                    <option value="OAK">Oakville</option>
+                    <option value="HAM">Hamilton</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#8B2252]">Email Address</label>
+                <input type="email" value={newMember.email} onChange={(e) => setNewMember((member) => ({ ...member, email: e.target.value }))} placeholder="name@email.com" className="w-full rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm focus:border-[#8B2252] focus:outline-none" />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#8B2252]">Phone Number <span className="normal-case font-medium text-[#7A5A6A]">(optional)</span></label>
+                <input type="tel" value={newMember.phone} onChange={(e) => setNewMember((member) => ({ ...member, phone: e.target.value }))} placeholder="(289) 788-1885" className="w-full rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm focus:border-[#8B2252] focus:outline-none" />
+              </div>
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <button onClick={() => setShowAddMember(false)} className="flex-1 rounded-xl border border-[#EDE0D8] py-2.5 text-sm font-medium text-[#7A5A6A] transition-colors hover:bg-[#FAF5F2]">Cancel</button>
+              <button onClick={() => createTeamMember.mutate(newMember)} disabled={createTeamMember.isPending || !newMember.name.trim() || !newMember.email.trim()} className="flex-1 rounded-xl bg-[#8B2252] py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#6B1A3E] disabled:cursor-not-allowed disabled:opacity-50">
+                {createTeamMember.isPending ? "Adding..." : "Add to APY HQ"}
               </button>
             </div>
           </div>

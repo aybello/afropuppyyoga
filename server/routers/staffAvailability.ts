@@ -4,6 +4,14 @@ import { getDb } from "../db";
 import { staffAvailability, jobApplications } from "../../drizzle/schema";
 import { eq, gte, isNull, desc } from "drizzle-orm";
 
+export const directTeamMemberSchema = z.object({
+  name: z.string().trim().min(2, "Enter the team member's full name."),
+  email: z.string().trim().email("Enter a valid email address."),
+  phone: z.string().trim().max(50).optional().default(""),
+  role: z.enum(["Yoga Instructor", "Operations Manager", "Puppy Monitor", "Puppy Specialist"]),
+  location: z.enum(["KW", "OAK", "HAM"]),
+});
+
 export const staffAvailabilityRouter = router({
   // Get all staff (onboarded/accepted) with their current availability status
   getOrgChart: staffProcedure.query(async () => {
@@ -81,5 +89,26 @@ export const staffAvailabilityRouter = router({
       if (!db) throw new Error("Database not available");
       await db.delete(staffAvailability).where(eq(staffAvailability.id, input.id));
       return { success: true };
+    }),
+
+  // Add a staff member directly, without requiring a careers-portal application.
+  createTeamMember: adminProcedure
+    .input(directTeamMemberSchema)
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const result = await db.insert(jobApplications).values({
+        name: input.name,
+        email: input.email.toLowerCase(),
+        phone: input.phone || null,
+        role: input.role,
+        location: input.location,
+        whyAPY: "Added directly through APY HQ.",
+        experience: "",
+        status: "onboarded",
+      });
+
+      return { success: true, id: Number(result[0].insertId) };
     }),
 });
