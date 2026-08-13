@@ -720,3 +720,19 @@ export const weekendLeadershipCoverage = mysqlTable("weekendLeadershipCoverage",
   index("idx_weekendCoverage_shift").on(t.coverageDate, t.location, t.role),
 ]);
 export type WeekendLeadershipCoverage = typeof weekendLeadershipCoverage.$inferSelect;
+
+// ─── Class Staffing Assignments ──────────────────────────────────────────────
+// Puppy Monitors are assigned to the concrete class slot, rather than only to a
+// studio, so the Puppy Schedule can enforce the two-monitor requirement.
+export const classStaffAssignments = mysqlTable("classStaffAssignments", {
+  id: int("id").autoincrement().primaryKey(),
+  scheduleId: int("scheduleId").notNull(),
+  staffId: int("staffId").notNull(),
+  staffName: varchar("staffName", { length: 255 }).notNull(),
+  role: mysqlEnum("classStaffRole", ["Puppy Monitor"]).notNull().default("Puppy Monitor"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  index("idx_classStaffAssignments_schedule").on(t.scheduleId),
+  index("idx_classStaffAssignments_staff").on(t.staffId),
+]);
+export type ClassStaffAssignment = typeof classStaffAssignments.$inferSelect;

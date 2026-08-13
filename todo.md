@@ -697,3 +697,8 @@
 ## Weekend Leadership Coverage (Aug 13, 2026)
 - [x] Track Saturday and Sunday availability for each Operations Manager and Yoga Instructor by studio
 - [x] Surface away/uncovered weekend leadership shifts and allow coverage assignments
+
+## Unified Class Staffing Calendar (Aug 13, 2026)
+- [x] Connect the Puppy Schedule/Breeder Calendar to weekend leadership coverage for each scheduled class
+- [x] Require and assign two available Puppy Monitors for every class day
+- [x] Flag any class that lacks Operations Manager, Yoga Instructor, or two Puppy Monitor assignments
