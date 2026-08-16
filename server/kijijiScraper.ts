@@ -29,6 +29,29 @@ const DEFAULT_HEADERS = {
   "Cache-Control": "no-cache",
 };
 
+export function validateKijijiUrl(value: string): URL {
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new Error("Invalid Kijiji URL");
+  }
+
+  const isKijijiHost = /(^|\.)kijiji\.ca$/i.test(parsed.hostname);
+  const usesStandardHttpsPort = parsed.port === "" || parsed.port === "443";
+  if (
+    parsed.protocol !== "https:" ||
+    !isKijijiHost ||
+    !usesStandardHttpsPort ||
+    parsed.username !== "" ||
+    parsed.password !== ""
+  ) {
+    throw new Error("Only HTTPS kijiji.ca URLs on the standard port are supported");
+  }
+
+  return parsed;
+}
+
 function httpsGet(url: string, redirects = 0): Promise<HttpResult> {
   return new Promise((resolve, reject) => {
     if (redirects > 5) {
@@ -36,7 +59,16 @@ function httpsGet(url: string, redirects = 0): Promise<HttpResult> {
       return;
     }
 
-    const parsed = new URL(url);
+    let parsed: URL;
+    try {
+      // Revalidate every redirect target so an otherwise valid Kijiji URL cannot
+      // become an open proxy to another host, protocol, or port.
+      parsed = validateKijijiUrl(url);
+    } catch (error) {
+      reject(error);
+      return;
+    }
+
     const options = {
       protocol: parsed.protocol,
       hostname: parsed.hostname,
@@ -227,7 +259,11 @@ function extractJsonLd(html: string): any[] {
 
 function parseJsonLdListing(node: any, fallbackUrl: string): KijijiListing | null {
   const type = Array.isArray(node?.["@type"]) ? node["@type"].join(" ") : String(node?.["@type"] ?? "");
-  const isListing = /product|offer|itempage|thing/i.test(type) || Boolean(node?.name && (node?.offers || node?.description));
+  // Do not treat generic Thing/WebSite/Organization metadata as an ad. Detail
+  // pages commonly include those blocks before the actual Product.
+  const isListing =
+    /(^|\s)(product|offer|itempage)(\s|$)/i.test(type) ||
+    Boolean(node?.name && node?.offers);
   if (!isListing || !node?.name) return null;
 
   const offer = Array.isArray(node.offers) ? node.offers[0] : node.offers;
@@ -300,7 +336,7 @@ function dedupeListings(listings: KijijiListing[]): KijijiListing[] {
   });
 }
 
-function extractListingsFromHtml(html: string, pageUrl: string): KijijiListing[] {
+export function extractListingsFromHtml(html: string, pageUrl: string): KijijiListing[] {
   const candidates: KijijiListing[] = [];
 
   const nextData = extractNextData(html);
@@ -356,17 +392,7 @@ export async function searchKijiji(keyword: string, maxResults = 20, location = 
 }
 
 export async function scrapeKijijiListing(listingUrl: string): Promise<KijijiListing | null> {
-  let parsed: URL;
-  try {
-    parsed = new URL(listingUrl);
-  } catch {
-    throw new Error("Invalid Kijiji URL");
-  }
-
-  if (!/(^|\.)kijiji\.ca$/i.test(parsed.hostname)) {
-    throw new Error("Only kijiji.ca listing URLs are supported");
-  }
-
+  const parsed = validateKijijiUrl(listingUrl);
   const result = await httpsGet(parsed.toString());
   assertUsefulResponse(result, "Kijiji listing import failed");
 
