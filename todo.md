@@ -736,3 +736,6 @@
 
 ## Kitchener Operations Specialist Opening (Aug 19, 2026)
 - [x] Publish an Operations Specialist — Kitchener position on the public careers page and route applications to the existing hiring workflow
+
+## Oakville Operations Specialist Alignment (Aug 19, 2026)
+- [x] Align the Oakville Operations Specialist listing with the Kitchener role and update compensation to $20/hour
