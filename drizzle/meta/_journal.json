@@ -232,6 +232,13 @@
       "when": 1787174801739,
       "tag": "0034_ancient_vulcan",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "5",
+      "when": 1787180711114,
+      "tag": "0035_chemical_aaron_stack",
+      "breakpoints": true
     }
   ]
 }

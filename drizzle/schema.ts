@@ -86,10 +86,12 @@ export const jobApplications = mysqlTable("jobApplications", {
   resumeKey: varchar("resumeKey", { length: 500 }),
   /** Application status */
   status: mysqlEnum("appStatus", ["new", "reviewed", "shortlisted", "interview_scheduled", "accepted", "rejected", "onboarded"]).default("new").notNull(),
+  /** Explicit APY HQ membership. Applications remain separate until an admin manually adds the person to the team. */
+  isTeamMember: boolean("isTeamMember").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   /** Soft-delete timestamp — null means active, non-null means archived */
   deletedAt: timestamp("deletedAt"),
-}, (t) => [index("idx_jobapps_status").on(t.status), index("idx_jobapps_email").on(t.email)]);
+}, (t) => [index("idx_jobapps_status").on(t.status), index("idx_jobapps_email").on(t.email), index("idx_jobapps_team_member").on(t.isTeamMember)]);
 
 export type JobApplication = typeof jobApplications.$inferSelect;
 export type InsertJobApplication = typeof jobApplications.$inferInsert;

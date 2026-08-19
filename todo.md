@@ -743,3 +743,6 @@
 ## Job Application Reliability Audit (Aug 19, 2026)
 - [x] Audit and harden the public application flow, submission validation, storage, and admin review experience for higher applicant volume
 - [x] Increase reliable job-application video upload capacity with resumable chunked uploads and clear recovery states
+
+## Manual Puppy Monitor Team Membership (Aug 19, 2026)
+- [x] Keep Puppy Monitor job applicants out of the APY HQ team and availability board until an Operations Manager manually adds them after onboarding

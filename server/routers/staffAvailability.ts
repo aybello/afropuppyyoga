@@ -4,6 +4,7 @@ import { getDb } from "../db";
 import { staffAvailability, jobApplications, weekendLeadershipCoverage } from "../../drizzle/schema";
 import { and, eq, gte, isNull, desc } from "drizzle-orm";
 import { getUpcomingWeekendDates, isAwayOnDate, isWeekendDate } from "../weekendCoverage";
+import { isActiveTeamMember } from "../teamMembership";
 
 export const directTeamMemberSchema = z.object({
   name: z.string().trim().min(2, "Enter the team member's full name."),
@@ -14,7 +15,7 @@ export const directTeamMemberSchema = z.object({
 });
 
 export const staffAvailabilityRouter = router({
-  // Get all staff (onboarded/accepted) with their current availability status
+  // Get only people manually added to APY HQ with their current availability status.
   getOrgChart: staffProcedure.query(async () => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
@@ -30,7 +31,7 @@ export const staffAvailabilityRouter = router({
       })
       .from(jobApplications)
       .where(
-        isNull(jobApplications.deletedAt)
+        and(isNull(jobApplications.deletedAt), eq(jobApplications.isTeamMember, true))
       )
       .orderBy(jobApplications.role, jobApplications.location);
 
@@ -76,12 +77,14 @@ export const staffAvailabilityRouter = router({
           role: jobApplications.role,
           location: jobApplications.location,
           status: jobApplications.status,
-        }).from(jobApplications).where(isNull(jobApplications.deletedAt)),
+          isTeamMember: jobApplications.isTeamMember,
+          deletedAt: jobApplications.deletedAt,
+        }).from(jobApplications).where(and(isNull(jobApplications.deletedAt), eq(jobApplications.isTeamMember, true))),
         db.select().from(staffAvailability).where(gte(staffAvailability.endDate, firstDate)),
         db.select().from(weekendLeadershipCoverage).where(gte(weekendLeadershipCoverage.coverageDate, firstDate)),
       ]);
 
-      const activeStaff = staff.filter((person) => person.status === "onboarded" || person.status === "accepted");
+      const activeStaff = staff.filter(isActiveTeamMember);
       const roles = ["Operations Manager", "Yoga Instructor"] as const;
       const locations = ["KW", "OAK", "HAM"] as const;
       const sameRole = (personRole: string, role: string) => personRole === role || personRole === role.toLowerCase().replaceAll(" ", "_");
@@ -177,11 +180,12 @@ export const staffAvailabilityRouter = router({
         name: jobApplications.name,
         role: jobApplications.role,
         status: jobApplications.status,
+        isTeamMember: jobApplications.isTeamMember,
         deletedAt: jobApplications.deletedAt,
       }).from(jobApplications).where(eq(jobApplications.id, input.coverageStaffId)).limit(1);
       const person = candidate[0];
       const normalRole = input.role.toLowerCase().replaceAll(" ", "_");
-      if (!person || person.deletedAt || (person.status !== "onboarded" && person.status !== "accepted")) throw new Error("Choose an active APY team member for coverage.");
+      if (!person || !isActiveTeamMember(person)) throw new Error("Choose an active APY HQ team member for coverage.");
       if (person.role !== input.role && person.role !== normalRole) throw new Error("Coverage must be assigned to a team member with the same role.");
 
       const values = {
@@ -209,6 +213,21 @@ export const staffAvailabilityRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
+      if (input.role === "Puppy Monitor") {
+        const [operationsManager] = await db.select({ id: jobApplications.id })
+          .from(jobApplications)
+          .where(and(
+            isNull(jobApplications.deletedAt),
+            eq(jobApplications.isTeamMember, true),
+            eq(jobApplications.role, "Operations Manager"),
+            eq(jobApplications.location, input.location),
+          ))
+          .limit(1);
+        if (!operationsManager) {
+          throw new Error("Add this location's Operations Manager to APY HQ before adding Puppy Monitors.");
+        }
+      }
+
       const result = await db.insert(jobApplications).values({
         name: input.name,
         email: input.email.toLowerCase(),
@@ -218,6 +237,7 @@ export const staffAvailabilityRouter = router({
         whyAPY: "Added directly through APY HQ.",
         experience: "",
         status: "onboarded",
+        isTeamMember: true,
       });
 
       return { success: true, id: Number(result[0].insertId) };

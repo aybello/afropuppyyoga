@@ -2,11 +2,12 @@ import { z } from "zod";
 import { staffProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { puppySchedule, breeders, classStaffAssignments, jobApplications, staffAvailability, weekendLeadershipCoverage } from "../../drizzle/schema";
-import { eq, and, gte, lte, desc } from "drizzle-orm";
+import { eq, and, gte, lte, desc, isNull } from "drizzle-orm";
 import { sendEmail, buildBreederConfirmationEmail } from "../email";
 import { createLumaEventForSchedule } from "../lumaScheduleHelper";
 import { isAwayOnDate } from "../weekendCoverage";
 import { isClassFullyStaffed, scheduleLocationToTeamLocation, staffingGaps, TWO_PUPPY_MONITORS_REQUIRED } from "../classStaffing";
+import { isActiveTeamMember } from "../teamMembership";
 
 const LOCATIONS = ["Kitchener", "Hamilton", "Oakville"] as const;
 const ALL_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
@@ -47,12 +48,13 @@ export const puppyScheduleRouter = router({
     const earliestDate = schedules.reduce((earliest, schedule) => schedule.classDate < earliest ? schedule.classDate : earliest, schedules[0].classDate);
     const [assignments, staff, leaves, leadershipCoverage] = await Promise.all([
       db.select().from(classStaffAssignments),
-      db.select({ id: jobApplications.id, name: jobApplications.name, role: jobApplications.role, location: jobApplications.location, status: jobApplications.status })
-        .from(jobApplications),
+      db.select({ id: jobApplications.id, name: jobApplications.name, role: jobApplications.role, location: jobApplications.location, status: jobApplications.status, isTeamMember: jobApplications.isTeamMember, deletedAt: jobApplications.deletedAt })
+        .from(jobApplications)
+        .where(and(isNull(jobApplications.deletedAt), eq(jobApplications.isTeamMember, true))),
       db.select().from(staffAvailability).where(gte(staffAvailability.endDate, earliestDate)),
       db.select().from(weekendLeadershipCoverage).where(gte(weekendLeadershipCoverage.coverageDate, earliestDate)),
     ]);
-    const activeStaff = staff.filter((person) => person.status === "onboarded" || person.status === "accepted");
+    const activeStaff = staff.filter(isActiveTeamMember);
     const sameRole = (role: string, expected: string) => role === expected || role === expected.toLowerCase().replaceAll(" ", "_");
 
     return schedules.map((schedule) => {
@@ -96,9 +98,9 @@ export const puppyScheduleRouter = router({
       if (!db) throw new Error("Database unavailable");
       const [schedule] = await db.select().from(puppySchedule).where(eq(puppySchedule.id, input.scheduleId)).limit(1);
       if (!schedule) throw new Error("Scheduled class not found");
-      const [staffMember] = await db.select({ id: jobApplications.id, name: jobApplications.name, role: jobApplications.role, location: jobApplications.location, status: jobApplications.status, deletedAt: jobApplications.deletedAt })
+      const [staffMember] = await db.select({ id: jobApplications.id, name: jobApplications.name, role: jobApplications.role, location: jobApplications.location, status: jobApplications.status, isTeamMember: jobApplications.isTeamMember, deletedAt: jobApplications.deletedAt })
         .from(jobApplications).where(eq(jobApplications.id, input.staffId)).limit(1);
-      if (!staffMember || staffMember.deletedAt || (staffMember.status !== "onboarded" && staffMember.status !== "accepted")) throw new Error("Choose an active APY team member.");
+      if (!staffMember || !isActiveTeamMember(staffMember)) throw new Error("Choose an active APY HQ team member.");
       if (staffMember.role !== "Puppy Monitor" && staffMember.role !== "puppy_monitor") throw new Error("Only Puppy Monitors can be assigned to this requirement.");
       if (staffMember.location !== scheduleLocationToTeamLocation(schedule.location)) throw new Error("Choose a Puppy Monitor assigned to this studio.");
       const [away] = await db.select().from(staffAvailability).where(and(eq(staffAvailability.staffId, staffMember.id), lte(staffAvailability.startDate, schedule.classDate), gte(staffAvailability.endDate, schedule.classDate))).limit(1);

@@ -334,6 +334,7 @@ export default function StaffAvailabilityPage() {
           </div>
           <input value={newMember.email} onChange={(e) => setNewMember((m) => ({ ...m, email: e.target.value }))} placeholder="Email" className="w-full rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm" />
           <input value={newMember.phone} onChange={(e) => setNewMember((m) => ({ ...m, phone: e.target.value }))} placeholder="Phone (optional)" className="w-full rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm" />
+          {newMember.role === "Puppy Monitor" && <p className="rounded-lg border border-[#E6D6F8] bg-[#FAF5FF] px-3 py-2 text-xs font-medium text-[#4C1D95]">Puppy Monitors are added manually after this location’s Operations Manager has joined APY HQ. Applicants do not appear on the team board automatically.</p>}
         </div>
         <button onClick={() => createTeamMember.mutate(newMember)} disabled={!newMember.name || !newMember.email || createTeamMember.isPending} className="mt-5 w-full rounded-xl bg-[#8B2252] py-2.5 text-sm font-bold text-white hover:bg-[#6B1A3E] disabled:opacity-50">{createTeamMember.isPending ? "Adding…" : "Add to Team"}</button>
       </div></div>}
