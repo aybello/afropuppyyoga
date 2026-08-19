@@ -989,7 +989,7 @@ export default function ApplicationsDashboard() {
   const normalizedQuery = applicationQuery.trim().toLowerCase();
   const filteredApplications = (applications ?? []).filter((app) => {
     const matchesQuery = !normalizedQuery || [app.name, app.email, app.role, app.location]
-      .filter(Boolean)
+      .filter((value): value is string => typeof value === "string")
       .some((value) => value.toLowerCase().includes(normalizedQuery));
     const matchesStatus = statusFilter === "all" || app.status === statusFilter;
     const matchesRole = roleFilter === "all" || app.role === roleFilter;
@@ -1283,14 +1283,16 @@ export default function ApplicationsDashboard() {
                           >
                             <CheckCircle className="w-3 h-3" />
                           </button>
-                          <button
-                            onClick={() => requestVideoMain.mutate({ id: app.id, applicantName: app.name, applicantEmail: app.email, role: app.role, location: app.location })}
-                            disabled={requestVideoMain.isPending}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-orange-50 border border-orange-200 rounded-lg font-body text-xs font-semibold text-orange-600 hover:bg-orange-100 transition-colors"
-                            title="Request intro video"
-                          >
-                            <VideoIcon className="w-3 h-3" />
-                          </button>
+                          {app.email ? (
+                            <button
+                              onClick={() => requestVideoMain.mutate({ id: app.id, applicantName: app.name, applicantEmail: app.email!, role: app.role, location: app.location })}
+                              disabled={requestVideoMain.isPending}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-orange-50 border border-orange-200 rounded-lg font-body text-xs font-semibold text-orange-600 hover:bg-orange-100 transition-colors"
+                              title="Request intro video"
+                            >
+                              <VideoIcon className="w-3 h-3" />
+                            </button>
+                          ) : null}
                           <button
                             onClick={() => { setSelectedApp(app as Application); setShowRejectionModal(true); }}
                             className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg font-body text-xs font-semibold text-red-600 hover:bg-red-100 transition-colors"

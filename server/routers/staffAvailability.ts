@@ -5,13 +5,21 @@ import { staffAvailability, jobApplications, weekendLeadershipCoverage } from ".
 import { and, eq, gte, isNull, desc } from "drizzle-orm";
 import { getUpcomingWeekendDates, isAwayOnDate, isWeekendDate } from "../weekendCoverage";
 import { isActiveTeamMember } from "../teamMembership";
+import { normalizeCanadianPhoneNumber } from "../../shared/phone";
 
 export const directTeamMemberSchema = z.object({
   name: z.string().trim().min(2, "Enter the team member's full name."),
-  email: z.string().trim().email("Enter a valid email address."),
+  email: z.string().trim().email("Enter a valid email address.").or(z.literal("")).default(""),
   phone: z.string().trim().max(50).optional().default(""),
   role: z.enum(["Yoga Instructor", "Operations Manager", "Puppy Monitor", "Puppy Specialist", "BDR", "Social Media Specialist"]),
   location: z.enum(["KW", "OAK", "HAM", "CENTRAL"]),
+}).superRefine((value, ctx) => {
+  if (!value.email && !value.phone) {
+    ctx.addIssue({ code: "custom", path: ["email"], message: "Add either an email address or phone number." });
+  }
+  if (value.phone && !normalizeCanadianPhoneNumber(value.phone)) {
+    ctx.addIssue({ code: "custom", path: ["phone"], message: "Enter a valid Canadian phone number." });
+  }
 });
 
 export const staffAvailabilityRouter = router({
@@ -212,6 +220,7 @@ export const staffAvailabilityRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
+      const normalizedPhone = input.phone ? normalizeCanadianPhoneNumber(input.phone) : null;
 
       if (input.role === "Puppy Monitor") {
         const [operationsManager] = await db.select({ id: jobApplications.id })
@@ -230,8 +239,8 @@ export const staffAvailabilityRouter = router({
 
       const result = await db.insert(jobApplications).values({
         name: input.name,
-        email: input.email.toLowerCase(),
-        phone: input.phone || null,
+        email: input.email ? input.email.toLowerCase() : null,
+        phone: normalizedPhone,
         role: input.role,
         location: input.location,
         whyAPY: "Added directly through APY HQ.",

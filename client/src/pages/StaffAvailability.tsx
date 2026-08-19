@@ -332,11 +332,12 @@ export default function StaffAvailabilityPage() {
             <select value={newMember.role} onChange={(e) => setRole(e.target.value as TeamRole)} className="rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm"><option>Operations Manager</option><option>Yoga Instructor</option><option>Puppy Monitor</option><option>Puppy Specialist</option><option>BDR</option><option>Social Media Specialist</option></select>
             <select value={newMember.location} onChange={(e) => setNewMember((m) => ({ ...m, location: e.target.value as TeamLocation }))} disabled={CENTRAL_ROLES.includes(newMember.role as any)} className="rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm disabled:opacity-50"><option value="KW">Kitchener</option><option value="OAK">Oakville</option><option value="HAM">Hamilton</option>{CENTRAL_ROLES.includes(newMember.role as any) && <option value="CENTRAL">APY-wide</option>}</select>
           </div>
-          <input value={newMember.email} onChange={(e) => setNewMember((m) => ({ ...m, email: e.target.value }))} placeholder="Email" className="w-full rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm" />
-          <input value={newMember.phone} onChange={(e) => setNewMember((m) => ({ ...m, phone: e.target.value }))} placeholder="Phone (optional)" className="w-full rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm" />
+          <input value={newMember.email} onChange={(e) => setNewMember((m) => ({ ...m, email: e.target.value }))} type="email" placeholder="Email (optional if phone is added)" className="w-full rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm" />
+          <input value={newMember.phone} onChange={(e) => setNewMember((m) => ({ ...m, phone: e.target.value }))} type="tel" placeholder="Canadian phone (optional if email is added)" className="w-full rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm" />
+          <p className="text-[11px] text-[#7A5A6A]">Add at least one contact method: email or phone.</p>
           {newMember.role === "Puppy Monitor" && <p className="rounded-lg border border-[#E6D6F8] bg-[#FAF5FF] px-3 py-2 text-xs font-medium text-[#4C1D95]">Puppy Monitors are added manually after this location’s Operations Manager has joined APY HQ. Applicants do not appear on the team board automatically.</p>}
         </div>
-        <button onClick={() => createTeamMember.mutate(newMember)} disabled={!newMember.name || !newMember.email || createTeamMember.isPending} className="mt-5 w-full rounded-xl bg-[#8B2252] py-2.5 text-sm font-bold text-white hover:bg-[#6B1A3E] disabled:opacity-50">{createTeamMember.isPending ? "Adding…" : "Add to Team"}</button>
+        <button onClick={() => createTeamMember.mutate(newMember)} disabled={!newMember.name || (!newMember.email.trim() && !newMember.phone.trim()) || createTeamMember.isPending} className="mt-5 w-full rounded-xl bg-[#8B2252] py-2.5 text-sm font-bold text-white hover:bg-[#6B1A3E] disabled:opacity-50">{createTeamMember.isPending ? "Adding…" : "Add to Team"}</button>
       </div></div>}
     </div>
   );

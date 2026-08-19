@@ -746,3 +746,6 @@
 
 ## Manual Puppy Monitor Team Membership (Aug 19, 2026)
 - [x] Keep Puppy Monitor job applicants out of the APY HQ team and availability board until an Operations Manager manually adds them after onboarding
+
+## APY HQ Team Contact Methods (Aug 19, 2026)
+- [x] Allow team members to be added with either a valid email address or a phone number, while requiring at least one contact method

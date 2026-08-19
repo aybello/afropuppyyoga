@@ -33,6 +33,20 @@ describe("direct team-member validation", () => {
     expect(social.location).toBe("CENTRAL");
   });
 
+  it("accepts a phone-only team member and requires at least one contact method", () => {
+    const phoneOnly = directTeamMemberSchema.parse({
+      name: "Jordan Miles",
+      email: "",
+      phone: "289-788-1885",
+      role: "Puppy Monitor",
+      location: "KW",
+    });
+
+    expect(phoneOnly.email).toBe("");
+    expect(phoneOnly.phone).toBe("289-788-1885");
+    expect(() => directTeamMemberSchema.parse({ name: "Jordan Miles", email: "", phone: "", role: "Puppy Monitor", location: "KW" })).toThrow();
+  });
+
   it("rejects an unsupported role or location", () => {
     expect(() => directTeamMemberSchema.parse({ name: "Taylor James", email: "taylor@example.com", role: "CEO", location: "TOR" })).toThrow();
   });

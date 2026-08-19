@@ -68,8 +68,8 @@ export const jobApplications = mysqlTable("jobApplications", {
   location: varchar("location", { length: 100 }).notNull(),
   /** Applicant's full name */
   name: varchar("name", { length: 255 }).notNull(),
-  /** Applicant's email */
-  email: varchar("email", { length: 320 }).notNull(),
+  /** Applicant's email. Team members may use phone as their sole contact method. */
+  email: varchar("email", { length: 320 }),
   /** Applicant's phone number */
   phone: varchar("phone", { length: 50 }),
   /** Why they want to work at APY */

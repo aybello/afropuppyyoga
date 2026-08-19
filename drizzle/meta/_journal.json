@@ -239,6 +239,13 @@
       "when": 1787180711114,
       "tag": "0035_chemical_aaron_stack",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "5",
+      "when": 1787181481332,
+      "tag": "0036_hesitant_crusher_hogan",
+      "breakpoints": true
     }
   ]
 }
