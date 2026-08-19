@@ -64,15 +64,9 @@ export function useSeoMeta({
       : null;
 
     return () => {
-      // Restore previous title on unmount
+      // Restore previous title on unmount — keep other tags as-is
+      // (don't reset canonical to "/" — that was the critical SEO bug)
       document.title = prevTitle;
-      // Remove tags we added (only if they were created by us — safest to just reset)
-      descEl.setAttribute("content", "");
-      canonEl.setAttribute("href", "https://afropuppyyoga.ca/");
-      ogTitleEl.setAttribute("content", "");
-      ogDescEl.setAttribute("content", "");
-      ogUrlEl.setAttribute("content", "");
-      if (ogImgEl) ogImgEl.setAttribute("content", "");
     };
   }, [title, description, canonical, ogTitle, ogDescription, ogImage]);
 }

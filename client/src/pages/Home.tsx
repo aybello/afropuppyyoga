@@ -42,8 +42,8 @@ export default function Home() {
   useScrollDepthTracking();
   useTimeOnPageTracking();
   useSeoMeta({
-    title: "AfroPuppyYoga | Ontario's #1 Puppy Yoga Experience",
-    description: "Ontario's #1 puppy yoga studio. Guided yoga, Afro-beat rhythms & adorable puppies in Hamilton, Kitchener-Waterloo & Oakville, Ontario. Book your class today!",
+    title: "AfroPuppyYoga — Puppy Yoga in Kitchener, Hamilton & Oakville",
+    description: "Guided 60-min puppy yoga in Kitchener-Waterloo, Hamilton & Oakville. Afro-beat music, ethical puppies, 494+ five-star reviews. Book your class today.",
     canonical: "https://afropuppyyoga.ca/",
   });
   return (

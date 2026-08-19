@@ -84,6 +84,25 @@ async function startServer() {
   // Trust the platform's reverse proxy so rate limiting uses the real client IP, not the load balancer IP.
   // Without this, all users in production share one IP and hit the rate limit together.
   app.set("trust proxy", 1);
+  // Remove x-powered-by header (security best practice)
+  app.disable("x-powered-by");
+
+  // 301 redirects for legacy URLs still indexed by Google
+  app.use((req, res, next) => {
+    const legacyRedirects: Record<string, string> = {
+      "/about/": "/",
+      "/about": "/",
+      "/gallery/": "/#gallery",
+      "/gallery": "/#gallery",
+      "/contact/": "/#contact",
+      "/contact": "/#contact",
+      "/careers/": "/careers",
+    };
+    const target = legacyRedirects[req.path];
+    if (target) return res.redirect(301, target);
+    next();
+  });
+
   // Redirect manus.space domains to the canonical custom domain
   app.use((req, res, next) => {
     const host = req.headers.host || "";
