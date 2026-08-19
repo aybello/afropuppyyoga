@@ -197,6 +197,7 @@ export function buildOfferLetterEmail(opts: {
 
     ${opts.startDate ? `<table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;"><tr><td style="padding:16px 20px;"><p style="margin:0 0 4px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Proposed Start Date</p><p style="margin:0;font-size:15px;color:#1A0A12;font-weight:bold;">📅 ${opts.startDate}</p></td></tr></table>` : ""}
     ${opts.additionalNotes ? `${bodyText(opts.additionalNotes)}` : ""}
+    ${bodyText(`<strong>Notice of Resignation:</strong> If you wish to end your engagement with AfroPuppyYoga, please provide at least two weeks' written notice whenever reasonably possible. This helps APY arrange coverage and maintain a consistent guest experience.`)}
 
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;">
       <tr><td style="padding:16px 20px;">
@@ -214,7 +215,7 @@ export function buildOfferLetterEmail(opts: {
 
   const html = wrapInBrandedLayout(hero, body);
 
-  const text = `Hi ${opts.applicantName},\n\nWe are thrilled to offer you the position of ${opts.role} at our ${opts.location} location!\n\nYou stood out to us with your energy, passion, and alignment with our mission. We can't wait to have you on the team.\n\n${opts.startDate ? `Proposed Start Date: ${opts.startDate}\n\n` : ""}${opts.additionalNotes ? `${opts.additionalNotes}\n\n` : ""}Please sign both attached documents and reply to this email with the signed copies.\n\nWelcome to the family!\n\nWith excitement,\nThe AfroPuppyYoga Team\nafropuppyyoga@gmail.com`;
+  const text = `Hi ${opts.applicantName},\n\nWe are thrilled to offer you the position of ${opts.role} at our ${opts.location} location!\n\nYou stood out to us with your energy, passion, and alignment with our mission. We can't wait to have you on the team.\n\n${opts.startDate ? `Proposed Start Date: ${opts.startDate}\n\n` : ""}${opts.additionalNotes ? `${opts.additionalNotes}\n\n` : ""}Notice of Resignation: If you wish to end your engagement with AfroPuppyYoga, please provide at least two weeks' written notice whenever reasonably possible. This helps APY arrange coverage and maintain a consistent guest experience.\n\nPlease sign both attached documents and reply to this email with the signed copies.\n\nWelcome to the family!\n\nWith excitement,\nThe AfroPuppyYoga Team\nafropuppyyoga@gmail.com`;
 
   return { subject, html, text };
 }

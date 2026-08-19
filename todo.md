@@ -722,3 +722,11 @@
 
 ## Prospective Contractor Set-Off Terms (Aug 19, 2026)
 - [x] Add a prospective independent-contractor clause covering two-week notice, direct documented replacement costs, written notice, and a limited set-off authorization
+
+## APY Agreement Standardization (Aug 19, 2026)
+- [x] Add a two-week written-notice expectation to every future APY offer letter and agreement template
+- [x] Update future independent-contractor terms so APY determines and offsets reasonable documented direct replacement costs
+
+## APY Agreement Standardization (Aug 19, 2026)
+- [x] Add a two-week written-notice expectation to every future APY offer letter and agreement template
+- [x] Limit direct-cost recovery and set-off language to independent-contractor templates only
