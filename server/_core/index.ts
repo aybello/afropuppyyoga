@@ -47,13 +47,26 @@ const formLimiter = rateLimit({
   skip: () => process.env.NODE_ENV === "development",
 });
 
-// Upload rate limiter — 100 uploads per IP per hour (blocks bots, invisible to real applicants)
+// Standard file/session rate limiter. A video upload has one init and one completion
+// request, while each chunk is protected separately below.
 const uploadLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 100,
+  max: 300,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Too many upload requests. Please try again later." },
+  skip: () => process.env.NODE_ENV === "development",
+});
+
+// A single 500MB video uses roughly 100 five-megabyte chunk requests. Keeping
+// chunks on the generic limiter previously allowed one large application video
+// to exhaust its own upload allowance before completion.
+const videoChunkLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 1200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many video upload parts. Please wait a few minutes and try again." },
   skip: () => process.env.NODE_ENV === "development",
 });
 
@@ -128,7 +141,7 @@ async function startServer() {
   app.use("/api/upload-resume", uploadLimiter);
   app.use("/api/upload-invoice", uploadLimiter);
   app.use("/api/upload-video-init", uploadLimiter);
-  app.use("/api/upload-video-chunk", uploadLimiter);
+  app.use("/api/upload-video-chunk", videoChunkLimiter);
   app.use("/api/upload-video-complete", uploadLimiter);
 
   // Video upload endpoint (multipart, bypasses JSON body limit)
@@ -156,6 +169,19 @@ async function startServer() {
       return res.json({ url });
     } catch (e) {
       return res.status(500).json({ error: "Failed to generate video URL" });
+    }
+  });
+
+  app.get("/api/resume-url", requireStaffOrAdmin, async (req, res) => {
+    const key = req.query.key as string;
+    if (!key || key.includes("..") || !key.startsWith("applications/resumes/")) {
+      return res.status(400).json({ error: "Invalid key" });
+    }
+    try {
+      const { url } = await storageGet(key);
+      return res.json({ url });
+    } catch (e) {
+      return res.status(500).json({ error: "Failed to generate resume URL" });
     }
   });
 

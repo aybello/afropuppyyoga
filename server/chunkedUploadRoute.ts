@@ -24,10 +24,16 @@ import crypto from "crypto";
 import { storagePut, storageGet } from "./storage";
 
 const router = Router();
-const CHUNK_SIZE_LIMIT = 6 * 1024 * 1024;   // 6MB per chunk
-const MAX_TOTAL_SIZE   = 500 * 1024 * 1024;  // 500MB total video limit
-const MAX_CHUNKS       = 200;                 // max 200 chunks (500MB / 5MB ≈ 100, generous headroom)
-const SESSION_TTL_MS   = 24 * 60 * 60 * 1000; // 24-hour session expiry
+export const VIDEO_UPLOAD_LIMITS = {
+  chunkSizeBytes: 6 * 1024 * 1024,
+  maxTotalBytes: 500 * 1024 * 1024,
+  maxChunks: 200,
+  sessionTtlMs: 24 * 60 * 60 * 1000,
+} as const;
+const CHUNK_SIZE_LIMIT = VIDEO_UPLOAD_LIMITS.chunkSizeBytes;
+const MAX_TOTAL_SIZE = VIDEO_UPLOAD_LIMITS.maxTotalBytes;
+const MAX_CHUNKS = VIDEO_UPLOAD_LIMITS.maxChunks;
+const SESSION_TTL_MS = VIDEO_UPLOAD_LIMITS.sessionTtlMs;
 
 // Multer for individual chunks (max 6MB each, memory storage)
 const chunkUpload = multer({
@@ -217,8 +223,11 @@ router.post("/api/upload-video-complete", async (req: Request, res: Response) =>
   (req as any).socket?.setTimeout(170_000);
   (res as any).setTimeout?.(170_000);
 
+  let activeUploadId: string | null = null;
+
   try {
     const { uploadId } = req.body;
+    activeUploadId = uploadId ?? null;
 
     if (!uploadId || !isValidUploadId(uploadId)) {
       return res.status(400).json({ error: "Invalid uploadId" });
@@ -304,6 +313,23 @@ router.post("/api/upload-video-complete", async (req: Request, res: Response) =>
     console.log(`[upload-video-complete] Assembly done: ${manifest.finalKey} (${assembled.length} bytes)`);
     return res.json({ url, key: manifest.finalKey });
   } catch (err: any) {
+    // A transient storage or network error must not strand an otherwise valid
+    // resumable upload in the completed state. Reset it so the browser retry can
+    // safely re-run completion and return the same final storage key.
+    if (activeUploadId && isValidUploadId(activeUploadId)) {
+      try {
+        const currentManifest = await readManifest(activeUploadId);
+        if (currentManifest?.completed) {
+          await storagePut(
+            `uploads/chunks/${activeUploadId}/manifest.json`,
+            Buffer.from(JSON.stringify({ ...currentManifest, completed: false })),
+            "application/json"
+          );
+        }
+      } catch (recoveryError) {
+        console.error("[upload-video-complete] Failed to reset interrupted upload:", recoveryError);
+      }
+    }
     console.error("[upload-video-complete] Error:", err);
     return res.status(500).json({ error: err.message ?? "Failed to assemble video" });
   }

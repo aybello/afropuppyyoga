@@ -66,6 +66,23 @@ async function openVideo(videoKey: string | null | undefined, videoUrl: string |
   window.open(videoUrl, "_blank");
 }
 
+async function openResume(resumeKey: string | null | undefined, resumeUrl: string | null | undefined) {
+  if (!resumeUrl) return;
+  if (resumeKey) {
+    try {
+      const res = await fetch(`/api/resume-url?key=${encodeURIComponent(resumeKey)}`);
+      if (res.ok) {
+        const { url } = await res.json();
+        window.open(url, "_blank", "noopener,noreferrer");
+        return;
+      }
+    } catch {
+      // Fall through for a legacy application without a usable storage key.
+    }
+  }
+  window.open(resumeUrl, "_blank", "noopener,noreferrer");
+}
+
 /**
  * Returns a proxy URL for range-request video seeking in the inline player.
  */
@@ -98,6 +115,7 @@ type Application = {
   videoUrl: string | null;
   videoKey: string | null;
   resumeUrl: string | null;
+  resumeKey: string | null;
   status: string;
   createdAt: Date;
   signingStatus: string | null;
@@ -721,14 +739,13 @@ function ApplicationDetailModal({
             {app.resumeUrl && (
               <div>
                 <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-2">Resume</p>
-                <a
-                  href={app.resumeUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => openResume(app.resumeKey, app.resumeUrl)}
                   className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-xl font-body text-sm font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
                 >
                   <FileText className="w-4 h-4" /> View Resume
-                </a>
+                </button>
               </div>
             )}
 
@@ -880,9 +897,15 @@ export default function ApplicationsDashboard() {
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const [applicationQuery, setApplicationQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | AppStatus>("all");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [applicationPage, setApplicationPage] = useState(1);
 
   const { data: applications, isLoading } = trpc.careers.list.useQuery(undefined, {
-    refetchInterval: 15000,
+    refetchInterval: 60000,
+    staleTime: 30000,
+    refetchOnWindowFocus: true,
   });
 
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
@@ -962,6 +985,23 @@ export default function ApplicationsDashboard() {
   const shortlistedCount = applications?.filter((a) => a.status === "shortlisted").length ?? 0;
   const interviewCount = applications?.filter((a) => a.status === "interview_scheduled").length ?? 0;
   const totalCount = applications?.length ?? 0;
+  const applicationRoles = Array.from(new Set((applications ?? []).map((app) => app.role))).sort();
+  const normalizedQuery = applicationQuery.trim().toLowerCase();
+  const filteredApplications = (applications ?? []).filter((app) => {
+    const matchesQuery = !normalizedQuery || [app.name, app.email, app.role, app.location]
+      .filter(Boolean)
+      .some((value) => value.toLowerCase().includes(normalizedQuery));
+    const matchesStatus = statusFilter === "all" || app.status === statusFilter;
+    const matchesRole = roleFilter === "all" || app.role === roleFilter;
+    return matchesQuery && matchesStatus && matchesRole;
+  });
+  const applicationsPerPage = 50;
+  const totalApplicationPages = Math.max(1, Math.ceil(filteredApplications.length / applicationsPerPage));
+  const currentApplicationPage = Math.min(applicationPage, totalApplicationPages);
+  const displayedApplications = filteredApplications.slice(
+    (currentApplicationPage - 1) * applicationsPerPage,
+    currentApplicationPage * applicationsPerPage
+  );
 
   return (
     <div className="min-h-screen bg-[#FEFAF4]">
@@ -1008,6 +1048,42 @@ export default function ApplicationsDashboard() {
           </div>
         </div>
 
+        <div className="bg-white rounded-2xl border border-[#F0D0DC] p-4 flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+          <div className="flex flex-col sm:flex-row gap-3 flex-1">
+            <Input
+              value={applicationQuery}
+              onChange={(event) => { setApplicationQuery(event.target.value); setApplicationPage(1); }}
+              placeholder="Search applicant, email, role, or location"
+              className="sm:max-w-sm border-[#F0D0DC]"
+            />
+            <select
+              value={statusFilter}
+              onChange={(event) => { setStatusFilter(event.target.value as "all" | AppStatus); setApplicationPage(1); }}
+              className="h-10 rounded-md border border-[#F0D0DC] bg-white px-3 font-body text-sm text-[#3D1A2E]"
+            >
+              <option value="all">All statuses</option>
+              <option value="new">New</option>
+              <option value="reviewed">Reviewed</option>
+              <option value="shortlisted">Shortlisted</option>
+              <option value="interview_scheduled">Interview scheduled</option>
+              <option value="accepted">Accepted</option>
+              <option value="rejected">Rejected</option>
+              <option value="onboarded">Onboarded</option>
+            </select>
+            <select
+              value={roleFilter}
+              onChange={(event) => { setRoleFilter(event.target.value); setApplicationPage(1); }}
+              className="h-10 rounded-md border border-[#F0D0DC] bg-white px-3 font-body text-sm text-[#3D1A2E]"
+            >
+              <option value="all">All roles</option>
+              {applicationRoles.map((role) => <option key={role} value={role}>{role}</option>)}
+            </select>
+          </div>
+          <p className="font-body text-xs text-[#6B4658] whitespace-nowrap">
+            Showing {displayedApplications.length} of {filteredApplications.length} applications
+          </p>
+        </div>
+
 
 
         {/* Applications table */}
@@ -1025,6 +1101,11 @@ export default function ApplicationsDashboard() {
               <p className="font-body text-[#1A0A12] text-sm">
                 Applications submitted through the careers page will appear here.
               </p>
+            </div>
+          ) : filteredApplications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <h3 className="font-display font-bold text-xl text-[#1A0A12] mb-2">No matching applications</h3>
+              <p className="font-body text-[#1A0A12] text-sm">Try clearing or changing your search filters.</p>
             </div>
           ) : (
             <div
@@ -1051,7 +1132,7 @@ export default function ApplicationsDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {applications.map((app, idx) => (
+                  {displayedApplications.map((app, idx) => (
                     <tr
                       key={app.id}
                       className={`border-b border-[#F0D0DC] last:border-0 transition-colors hover:bg-[#FFF5F8] ${idx % 2 === 0 ? "" : "bg-[#FEFAF4]"}`}
@@ -1117,15 +1198,14 @@ export default function ApplicationsDashboard() {
                       {/* Resume */}
                       <td className="px-5 py-4">
                         {app.resumeUrl ? (
-                          <a
-                            href={app.resumeUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            type="button"
+                            onClick={() => openResume(app.resumeKey, app.resumeUrl)}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg font-body text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
                           >
                             <FileText className="w-3 h-3" />
                             View
-                          </a>
+                          </button>
                         ) : (
                           <span className="font-body text-xs text-[#C4A0B0] italic">No resume</span>
                         )}
@@ -1240,6 +1320,31 @@ export default function ApplicationsDashboard() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+          {filteredApplications.length > applicationsPerPage && (
+            <div className="flex items-center justify-between border-t border-[#F0D0DC] px-5 py-3 bg-[#FEFAF4]">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={currentApplicationPage === 1}
+                onClick={() => setApplicationPage((page) => Math.max(1, page - 1))}
+                className="border-[#F0D0DC] text-[#8B2252]"
+              >
+                Previous
+              </Button>
+              <p className="font-body text-xs text-[#6B4658]">Page {currentApplicationPage} of {totalApplicationPages}</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={currentApplicationPage === totalApplicationPages}
+                onClick={() => setApplicationPage((page) => Math.min(totalApplicationPages, page + 1))}
+                className="border-[#F0D0DC] text-[#8B2252]"
+              >
+                Next
+              </Button>
             </div>
           )}
         </div>

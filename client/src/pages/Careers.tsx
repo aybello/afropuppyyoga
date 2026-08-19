@@ -485,6 +485,25 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       });
     };
 
+    const retryRequest = async (request: () => Promise<Response>, label: string, attempts = 3): Promise<Response> => {
+      let lastError: Error | null = null;
+      for (let attempt = 1; attempt <= attempts; attempt++) {
+        try {
+          const response = await request();
+          if (response.ok) return response;
+          const retryable = response.status === 408 || response.status === 429 || response.status >= 500;
+          if (!retryable || attempt === attempts) return response;
+          lastError = new Error(`${label} temporarily failed (${response.status})`);
+        } catch (error: any) {
+          lastError = error instanceof Error ? error : new Error(`${label} failed`);
+          if (attempt === attempts) throw lastError;
+        }
+        setUploadStatus(`${label} paused — retrying (${attempt}/${attempts})…`);
+        await new Promise((resolve) => setTimeout(resolve, 700 * attempt));
+      }
+      throw lastError ?? new Error(`${label} failed`);
+    };
+
     // Chunked upload for video — splits file into 5MB pieces
     // Bug 3 fix: was 1MB → 500MB video = 500 chunks > MAX_CHUNKS=200 → init rejected
     // Bug 1+2 fix: /api/upload-video-complete now assembles synchronously and returns { url, key } directly
@@ -494,11 +513,11 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
 
       // 1. Initiate upload session
       setUploadStatus("Preparing video upload...");
-      const initRes = await fetch("/api/upload-video-init", {
+      const initRes = await retryRequest(() => fetch("/api/upload-video-init", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ filename: file.name, totalChunks, totalSize: file.size }),
-      });
+      }), "Preparing video upload");
       if (!initRes.ok) {
         const err = await initRes.json().catch(() => ({}));
         throw new Error(err.error ?? "Failed to initiate video upload");
@@ -520,7 +539,10 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
         fd.append("chunkIndex", String(i));
         fd.append("chunk", chunk, `chunk-${i}`);
 
-        const chunkRes = await fetch("/api/upload-video-chunk", { method: "POST", body: fd });
+        const chunkRes = await retryRequest(
+          () => fetch("/api/upload-video-chunk", { method: "POST", body: fd }),
+          `Video part ${i + 1} of ${totalChunks}`
+        );
         if (!chunkRes.ok) {
           const err = await chunkRes.json().catch(() => ({}));
           throw new Error(err.error ?? `Failed to upload video part ${i + 1}`);
@@ -531,12 +553,12 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       // No polling needed. The request may take up to 2 minutes for large files.
       setUploadProgress(90);
       setUploadStatus("Processing video... (this may take up to 2 minutes for large files)");
-      const completeRes = await fetch("/api/upload-video-complete", {
+      const completeRes = await retryRequest(() => fetch("/api/upload-video-complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ uploadId }),
         signal: AbortSignal.timeout(170_000), // 170s — matches server-side socket timeout
-      });
+      }), "Processing video", 2);
       if (!completeRes.ok) {
         const err = await completeRes.json().catch(() => ({}));
         throw new Error(err.error ?? "Failed to process video. Please try again.");
@@ -821,7 +843,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                     <span className="font-body text-sm text-[#3D1A2E] group-hover:text-[#8B2252] transition-colors">
                       Click to upload your video
                     </span>
-                    <span className="font-body text-xs text-[#C4A0B0]">MP4, MOV, WebM — Max 500MB</span>
+                    <span className="font-body text-xs text-[#C4A0B0]">MP4, MOV, WebM, AVI — Max 500MB. Upload resumes automatically after brief connection issues.</span>
                   </button>
                 )
               ) : (

@@ -26,7 +26,7 @@ const safeResumeUrl = z
   .string()
   .url()
   .refine((url) => url.startsWith("https://"), "Must be an https:// URL");
-import { createJobApplication, getAllJobApplications, updateJobApplication, deleteJobApplication, getArchivedJobApplications, restoreJobApplication, permanentlyDeleteJobApplication, createSigningToken } from "../db";
+import { createJobApplication, getAllJobApplications, updateJobApplication, deleteJobApplication, getArchivedJobApplications, restoreJobApplication, permanentlyDeleteJobApplication, createSigningToken, getRecentDuplicateJobApplication } from "../db";
 import { notifyOwner } from "../_core/notification";
 import {
   sendEmail,
@@ -64,6 +64,15 @@ export const careersRouter = router({
       })
     )
     .mutation(async ({ input }) => {
+      const duplicate = await getRecentDuplicateJobApplication({
+        email: input.email,
+        role: input.role,
+        location: input.location,
+      });
+      if (duplicate) {
+        return { success: true, duplicate: true, notificationWarning: false };
+      }
+
       // Save to DB
       await createJobApplication({
         role: input.role,
@@ -103,33 +112,37 @@ export const careersRouter = router({
         </div>
       `;
 
-      await sendEmail({
-        to: "afropuppyyoga@gmail.com",
-        subject: `New Application: ${input.name} — ${input.role} (${input.location})`,
-        html: emailHtml,
-        text: `New job application received!\n\nRole: ${input.role} — ${input.location}\nName: ${input.name}\nEmail: ${input.email}\nPhone: ${input.phone ?? "Not provided"}\n\nWhy APY:\n${input.whyAPY ?? "Not provided"}\n\nExperience:\n${input.experience ?? "Not provided"}\n\nVideo: ${input.videoUrl ?? "Not provided"}\nResume: ${input.resumeUrl}`,
-      });
-
-      // Send auto-confirmation email to the applicant
+      // The application has already been saved. Notification failures should be
+      // logged for recovery, not make the applicant retry and create duplicates.
       const confirmation = buildApplicationConfirmationEmail({
         applicantName: input.name,
         role: input.role,
         location: input.location,
       });
-      await sendEmail({
-        to: input.email,
-        subject: confirmation.subject,
-        html: confirmation.html,
-        text: confirmation.text,
-      });
+      const notificationResults = await Promise.allSettled([
+        sendEmail({
+          to: "afropuppyyoga@gmail.com",
+          subject: `New Application: ${input.name} — ${input.role} (${input.location})`,
+          html: emailHtml,
+          text: `New job application received!\n\nRole: ${input.role} — ${input.location}\nName: ${input.name}\nEmail: ${input.email}\nPhone: ${input.phone ?? "Not provided"}\n\nWhy APY:\n${input.whyAPY ?? "Not provided"}\n\nExperience:\n${input.experience ?? "Not provided"}\n\nVideo: ${input.videoUrl ?? "Not provided"}\nResume: ${input.resumeUrl}`,
+        }),
+        sendEmail({
+          to: input.email,
+          subject: confirmation.subject,
+          html: confirmation.html,
+          text: confirmation.text,
+        }),
+        notifyOwner({
+          title: `New Application: ${input.role} (${input.location})`,
+          content: `${input.name} (${input.email}) applied for ${input.role} — ${input.location}.\n\nVideo: ${input.videoUrl ?? "Not provided"}\nResume: ${input.resumeUrl}`,
+        }),
+      ]);
+      const failedNotifications = notificationResults.filter((result) => result.status === "rejected").length;
+      if (failedNotifications > 0) {
+        console.error(`[Careers] Application ${input.email} saved, but ${failedNotifications} notification(s) failed.`);
+      }
 
-      // Also send Manus owner notification as backup
-      await notifyOwner({
-        title: `New Application: ${input.role} (${input.location})`,
-        content: `${input.name} (${input.email}) applied for ${input.role} — ${input.location}.\n\nVideo: ${input.videoUrl ?? "Not provided"}\nResume: ${input.resumeUrl}`,
-      });
-
-      return { success: true };
+      return { success: true, notificationWarning: failedNotifications > 0 };
     }),
 
   /**

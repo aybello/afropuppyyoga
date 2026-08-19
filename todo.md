@@ -739,3 +739,7 @@
 
 ## Oakville Operations Specialist Alignment (Aug 19, 2026)
 - [x] Align the Oakville Operations Specialist listing with the Kitchener role and update compensation to $20/hour
+
+## Job Application Reliability Audit (Aug 19, 2026)
+- [x] Audit and harden the public application flow, submission validation, storage, and admin review experience for higher applicant volume
+- [x] Increase reliable job-application video upload capacity with resumable chunked uploads and clear recovery states
