@@ -553,6 +553,7 @@ export function buildYogaInstructorOfferLetterEmail(opts: {
         <p style="margin:0 0 8px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Terms and Conditions</p>
         <p style="margin:0 0 6px;font-size:14px;color:#3D1A2A;line-height:1.6;"><strong>Probation Period:</strong> A probationary period of <strong>4 months</strong> will apply to assess performance and alignment with APY's goals.</p>
         <p style="margin:0 0 6px;font-size:14px;color:#3D1A2A;line-height:1.6;"><strong>Confidentiality:</strong> You will be required to sign a <strong>Non-Disclosure Agreement (NDA)</strong> to protect AfroPuppyYoga's proprietary information.</p>
+        <p style="margin:0 0 6px;font-size:14px;color:#3D1A2A;line-height:1.6;"><strong>Notice of Resignation:</strong> If you wish to end your engagement with AfroPuppyYoga, please provide at least two weeks' written notice whenever reasonably possible. This helps APY arrange class coverage and maintain a consistent guest experience.</p>
         <p style="margin:0;font-size:14px;color:#3D1A2A;line-height:1.6;"><strong>Performance Reviews:</strong> Class feedback and team collaboration will be reviewed periodically.</p>
       </td></tr>
     </table>
@@ -595,6 +596,7 @@ Class scheduling will be determined based on APY's event calendar. Flexibility, 
 TERMS AND CONDITIONS
 Probation Period: A probationary period of 4 months will apply to assess performance and alignment with APY's goals.
 Confidentiality: You will be required to sign a Non-Disclosure Agreement (NDA) to protect AfroPuppyYoga's proprietary information.
+Notice of Resignation: If you wish to end your engagement with AfroPuppyYoga, please provide at least two weeks' written notice whenever reasonably possible. This helps APY arrange class coverage and maintain a consistent guest experience.
 Performance Reviews: Class feedback and team collaboration will be reviewed periodically.
 ${opts.startDate ? `\nProposed Start Date: ${opts.startDate}\n` : ""}
 ACCEPTANCE OF OFFER

@@ -63,6 +63,7 @@ function getOfferLetterContent(
           <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Terms and Conditions</p>
           <p><strong>Probation Period:</strong> A probationary period of 4 months will apply to assess performance and alignment with APY's goals.</p>
           <p className="mt-2"><strong>Confidentiality:</strong> You will be required to sign a Non-Disclosure Agreement (NDA) to protect AfroPuppyYoga's proprietary information.</p>
+          <p className="mt-2"><strong>Notice of Resignation:</strong> If you wish to end your engagement with AfroPuppyYoga, please provide at least two weeks' written notice whenever reasonably possible. This helps APY arrange class coverage and maintain a consistent guest experience.</p>
           <p className="mt-2"><strong>Performance Reviews:</strong> Class feedback and team collaboration will be reviewed periodically.</p>
         </div>
 
@@ -123,6 +124,7 @@ function getOfferLetterContent(
           <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Terms and Conditions</p>
           <p><strong>Probation Period:</strong> A probationary period of 4 months will apply to assess performance and alignment with APY's standards.</p>
           <p className="mt-2"><strong>Confidentiality:</strong> You will be required to sign a Non-Disclosure Agreement (NDA) to protect AfroPuppyYoga's proprietary information.</p>
+          <p className="mt-2"><strong>Notice of Resignation:</strong> If you wish to end your engagement with AfroPuppyYoga, please provide at least two weeks' written notice whenever reasonably possible. This helps APY arrange class coverage and maintain a consistent guest experience.</p>
           <p className="mt-2"><strong>Dress Code:</strong> Black yoga attire and grippy socks are required for all sessions.</p>
           <p className="mt-2"><strong>Performance Reviews:</strong> Puppy welfare outcomes and team collaboration will be reviewed periodically.</p>
         </div>
@@ -173,10 +175,11 @@ function getOfferLetterContent(
       </div>
 
       <div className="border-t border-[#F0D0DC] pt-4">
-        <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Terms and Conditions</p>
-        <p><strong>Probation Period:</strong> A probationary period of 4 months will apply.</p>
-        <p className="mt-2"><strong>Confidentiality:</strong> You will be required to sign a Non-Disclosure Agreement (NDA) to protect AfroPuppyYoga's proprietary information.</p>
-        <p className="mt-2"><strong>Dress Code:</strong> Black yoga attire and grippy socks are required for all sessions.</p>
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Terms and Conditions</p>
+          <p><strong>Probation Period:</strong> A probationary period of 4 months will apply.</p>
+          <p className="mt-2"><strong>Confidentiality:</strong> You will be required to sign a Non-Disclosure Agreement (NDA) to protect AfroPuppyYoga's proprietary information.</p>
+          <p className="mt-2"><strong>Notice of Resignation:</strong> If you wish to end your engagement with AfroPuppyYoga, please provide at least two weeks' written notice whenever reasonably possible. This helps APY arrange class coverage and maintain a consistent guest experience.</p>
+          <p className="mt-2"><strong>Dress Code:</strong> Black yoga attire and grippy socks are required for all sessions.</p>
       </div>
 
       <div className="border-t border-[#F0D0DC] pt-4">

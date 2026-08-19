@@ -709,3 +709,6 @@
 ## Unified Weekend Staffing Board (Aug 13, 2026)
 - [x] Add scheduled breeder/class rows and two-Puppy-Monitor assignments to the Weekend Leadership board
 - [x] Make the Weekend Leadership board the one place to manage all Saturday/Sunday staffing coverage
+
+## Offer-Letter Notice Requirement (Aug 19, 2026)
+- [x] Add a consistent two-week written-notice clause to every future APY offer-letter type
