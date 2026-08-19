@@ -251,6 +251,41 @@ const JOB_LISTINGS = [
   },
   // ── Operations Specialist ───────────────────────────────
   {
+    id: "operations-specialist-kw",
+    title: "Operations Specialist",
+    location: "Kitchener-Waterloo",
+    locationCode: "KW",
+    type: "Part-Time",
+    badge: "Now Hiring",
+    emoji: "⚙️",
+    pay: "$20/hr",
+    description:
+      "Keep AfroPuppyYoga's Kitchener classes running smoothly from first setup to final reset. You'll coordinate event-day flow, staff and guest readiness, breeder and puppy-partner logistics, and the little operational details that make every session feel seamless.",
+    responsibilities: [
+      "Prepare the venue, supplies, and guest flow before each class and complete the reset afterward",
+      "Coordinate staff arrival, guest check-in, class flow, and on-site communications",
+      "Support breeder and puppy-partner arrival, handoff, supplies, and event-day logistics",
+      "Track attendance, supplies, incidents, and follow-up items for APY leadership",
+      "Help maintain a safe, welcoming experience for guests, staff, and puppies",
+      "Escalate staffing, venue, safety, or guest concerns promptly and professionally",
+    ],
+    requirements: [
+      "Available and reliable for weekend event-based shifts in Kitchener-Waterloo",
+      "Organized, calm under pressure, and comfortable taking initiative",
+      "Strong communication and problem-solving skills",
+      "Comfortable and enthusiastic around dogs",
+      "Previous event, hospitality, studio, or operations experience is an asset",
+      "Access to reliable transportation is preferred",
+    ],
+    perks: [
+      "$20/hr",
+      "Free access to APY classes",
+      "Hands-on experience in wellness events and operations",
+      "Be part of a fast-growing, community-loved brand",
+      "Puppies every shift — enough said",
+    ],
+  },
+  {
     id: "operations-specialist-oakville",
     title: "Operations Specialist",
     location: "Oakville",

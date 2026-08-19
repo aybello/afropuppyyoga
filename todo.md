@@ -733,3 +733,6 @@
 
 ## Operations Specialist Offer (Aug 19, 2026)
 - [x] Create a dedicated $20/hour Operations Specialist offer-letter type with APY class-operations responsibilities and signing support
+
+## Kitchener Operations Specialist Opening (Aug 19, 2026)
+- [x] Publish an Operations Specialist — Kitchener position on the public careers page and route applications to the existing hiring workflow
