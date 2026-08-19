@@ -23,6 +23,7 @@ function getOfferLetterContent(
 
   const isYogaInstructor = offerLetterType === "yoga_instructor";
   const isPuppySpecialist = offerLetterType === "puppy_specialist";
+  const isBDR = offerLetterType === "bdr";
 
   if (isYogaInstructor) {
     return (
@@ -136,6 +137,50 @@ function getOfferLetterContent(
           </p>
           <p className="mt-3">Warmly,</p>
           <p className="font-bold">Ay &amp; The AfroPuppyYoga Team</p>
+          <p className="text-xs text-[#C4A0B0]">afropuppyyoga@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isBDR) {
+    return (
+      <div className="space-y-4 text-sm text-[#1A0A12] leading-relaxed">
+        <p className="text-xs text-[#C4A0B0]">{today}</p>
+        <p>Dear <strong>{applicantName}</strong>,</p>
+        <p>
+          We are excited to formally offer you the position of <strong>Business Development Representative (BDR)</strong> with <strong>AfroPuppyYoga (APY)</strong>. Your relationship-building approach and understanding of wellness-focused businesses will help expand APY's partnerships and private-event opportunities.
+        </p>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Position Details</p>
+          <p><strong>Position:</strong> Business Development Representative (BDR)</p>
+          <p><strong>Work Arrangement:</strong> Remote · Central APY Team</p>
+          <p><strong>Compensation:</strong> 7% commission on inbound business and 10% commission on outbound business.</p>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Key Responsibilities</p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Respond to and qualify inbound partnership, corporate wellness, and private-event opportunities</li>
+            <li>Research and conduct outbound outreach to prospective partners, businesses, and community organizations</li>
+            <li>Maintain accurate opportunity notes and handoffs within APY's business-development workflow</li>
+            <li>Represent AfroPuppyYoga's wellness, culture, and puppy-welfare standards professionally in every interaction</li>
+          </ul>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Terms and Conditions</p>
+          <p><strong>Probation Period:</strong> A probationary period of 4 months will apply to assess performance and alignment with APY's goals.</p>
+          <p className="mt-2"><strong>Confidentiality:</strong> You will be required to sign a Non-Disclosure Agreement (NDA) to protect AfroPuppyYoga's proprietary information.</p>
+          <p className="mt-2"><strong>Notice of Resignation:</strong> If you wish to end your engagement with AfroPuppyYoga, please provide at least two weeks' written notice whenever reasonably possible. This helps APY maintain continuity across active business opportunities.</p>
+          <p className="mt-2"><strong>Performance Reviews:</strong> Outreach activity, opportunity quality, and collaboration will be reviewed periodically.</p>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p>We are thrilled to welcome you to AfroPuppyYoga and look forward to the partnerships and experiences you will help create.</p>
+          <p className="mt-3">Warm regards,</p>
+          <p className="font-bold">The AfroPuppyYoga Team</p>
           <p className="text-xs text-[#C4A0B0]">afropuppyyoga@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
         </div>
       </div>

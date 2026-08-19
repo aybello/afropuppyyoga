@@ -712,3 +712,8 @@
 
 ## Offer-Letter Notice Requirement (Aug 19, 2026)
 - [x] Add a consistent two-week written-notice clause to every future APY offer-letter type
+
+## Taya Dual-Role Offers (Aug 19, 2026)
+- [x] Verify Taya’s applicant records and current signing status
+- [x] Add a role-specific remote BDR offer-letter template with 7% inbound and 10% outbound commission terms
+- [x] Prepare Taya Viera’s Yoga Instructor and BDR offers for final approval before sending
