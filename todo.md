@@ -717,3 +717,5 @@
 - [x] Verify Taya’s applicant records and current signing status
 - [x] Add a role-specific remote BDR offer-letter template with 7% inbound and 10% outbound commission terms
 - [x] Prepare Taya Viera’s Yoga Instructor and BDR offers for final approval before sending
+- [ ] Send separate Yoga Instructor and BDR signing offers to Taya Viera after final owner approval
+- [x] Review and approve the independent-contractor BDR commission terms before adding them to Taya’s offer

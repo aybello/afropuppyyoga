@@ -156,7 +156,8 @@ function getOfferLetterContent(
           <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Position Details</p>
           <p><strong>Position:</strong> Business Development Representative (BDR)</p>
           <p><strong>Work Arrangement:</strong> Remote · Central APY Team</p>
-          <p><strong>Compensation:</strong> 7% commission on inbound business and 10% commission on outbound business.</p>
+          <p><strong>Independent Contractor:</strong> This engagement is an independent-contractor arrangement and does not create an employment, partnership, joint-venture, or agency relationship.</p>
+          <p className="mt-2"><strong>Compensation:</strong> 7% commission on inbound business and 10% commission on outbound business, calculated on Eligible Collected Revenue.</p>
         </div>
 
         <div className="border-t border-[#F0D0DC] pt-4">
@@ -170,8 +171,17 @@ function getOfferLetterContent(
         </div>
 
         <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Commission Terms</p>
+          <p><strong>Inbound business:</strong> Opportunities that first contact APY through an APY-owned channel, where you materially participate in qualifying, nurturing, or closing the opportunity.</p>
+          <p className="mt-2"><strong>Outbound business:</strong> Opportunities you first identify and actively approach on APY's behalf, recorded in APY's designated workflow. APY may reasonably determine attribution where more than one person has materially contributed.</p>
+          <p className="mt-2"><strong>Eligible Collected Revenue:</strong> Amounts actually received and retained by APY, excluding HST and other sales taxes, refunds, chargebacks, payment reversals, complimentary services, and unapproved discounts.</p>
+          <p className="mt-2"><strong>Payment timing:</strong> Commission is earned only as APY receives Eligible Collected Revenue and will be paid within 15 days after the end of the month in which the applicable revenue is received, subject to any required invoice and completed opportunity documentation.</p>
+          <p className="mt-2"><strong>Repeat business:</strong> Unless APY agrees otherwise in writing, commission applies to the initial paid booking or first paid transaction only; renewals, repeat bookings, expansions, and later work are not automatically commissionable.</p>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
           <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Terms and Conditions</p>
-          <p><strong>Probation Period:</strong> A probationary period of 4 months will apply to assess performance and alignment with APY's goals.</p>
+          <p><strong>Records and Authority:</strong> You must maintain accurate opportunity notes and handoffs in APY's designated workflow. You may not bind APY, approve discounts, or promise pricing, dates, availability, or services without APY's prior written approval.</p>
           <p className="mt-2"><strong>Confidentiality:</strong> You will be required to sign a Non-Disclosure Agreement (NDA) to protect AfroPuppyYoga's proprietary information.</p>
           <p className="mt-2"><strong>Notice of Resignation:</strong> If you wish to end your engagement with AfroPuppyYoga, please provide at least two weeks' written notice whenever reasonably possible. This helps APY maintain continuity across active business opportunities.</p>
           <p className="mt-2"><strong>Performance Reviews:</strong> Outreach activity, opportunity quality, and collaboration will be reviewed periodically.</p>
