@@ -180,6 +180,14 @@ function getOfferLetterContent(
         </div>
 
         <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Notice, Direct Costs, and Limited Set-Off</p>
+          <p><strong>Notice:</strong> If you wish to end this contractor engagement, please provide at least two weeks' written notice whenever reasonably possible. This requirement does not apply where notice is not reasonably possible because of an emergency or other circumstances outside your reasonable control.</p>
+          <p className="mt-2"><strong>Direct documented costs only:</strong> If a material failure to provide notice directly causes APY to incur a reasonable, documented external replacement cost, APY may seek recovery only of that actual direct cost. APY will not seek lost profits, anticipated revenue, internal staff time, general overhead, or consequential or punitive damages under this clause.</p>
+          <p className="mt-2"><strong>Written notice and response:</strong> Before seeking recovery, APY will provide written notice describing the claimed amount and supporting documentation. You will have five business days to respond or dispute the claim.</p>
+          <p className="mt-2"><strong>Limited set-off authorization:</strong> To the extent permitted by law, and only for an amount that you acknowledge in writing or that is finally determined through an agreed dispute-resolution process, you authorize APY to set off that amount against unpaid approved commissions or invoices. APY will not unilaterally withhold disputed earned amounts under this clause.</p>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
           <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Terms and Conditions</p>
           <p><strong>Records and Authority:</strong> You must maintain accurate opportunity notes and handoffs in APY's designated workflow. You may not bind APY, approve discounts, or promise pricing, dates, availability, or services without APY's prior written approval.</p>
           <p className="mt-2"><strong>Confidentiality:</strong> You will be required to sign a Non-Disclosure Agreement (NDA) to protect AfroPuppyYoga's proprietary information.</p>

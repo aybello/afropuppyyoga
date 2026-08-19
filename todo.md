@@ -719,3 +719,6 @@
 - [x] Prepare Taya Viera’s Yoga Instructor and BDR offers for final approval before sending
 - [x] Send separate Yoga Instructor and BDR signing offers to Taya Viera after final owner approval
 - [x] Review and approve the independent-contractor BDR commission terms before adding them to Taya’s offer
+
+## Prospective Contractor Set-Off Terms (Aug 19, 2026)
+- [x] Add a prospective independent-contractor clause covering two-week notice, direct documented replacement costs, written notice, and a limited set-off authorization
