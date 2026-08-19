@@ -211,9 +211,11 @@ export const careersRouter = router({
       // Determine offer letter type from role and location
       const roleLower = input.role.toLowerCase();
       const locationLower = input.location.toLowerCase();
-      let offerLetterType: "puppy_monitor_kw" | "puppy_monitor_hamilton" | "yoga_instructor" | "bdr" = "puppy_monitor_kw";
+      let offerLetterType: "puppy_monitor_kw" | "puppy_monitor_hamilton" | "yoga_instructor" | "operations_specialist" | "bdr" = "puppy_monitor_kw";
       if (roleLower.includes("yoga") || roleLower.includes("instructor")) {
         offerLetterType = "yoga_instructor";
+      } else if (roleLower.includes("operations specialist") || roleLower.includes("operation specialist")) {
+        offerLetterType = "operations_specialist";
       } else if (roleLower.includes("bdr") || roleLower.includes("business development")) {
         offerLetterType = "bdr";
       } else if (locationLower.includes("hamilton")) {

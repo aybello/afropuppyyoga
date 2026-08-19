@@ -10,5 +10,8 @@ describe("offer-letter type routing", () => {
   it("continues to route Yoga Instructor offers correctly", () => {
     expect(detectOfferLetterType("Yoga Instructor", "OAK")).toBe("yoga_instructor");
   });
-});
 
+  it("routes Operations Specialist offers to their dedicated template", () => {
+    expect(detectOfferLetterType("Operations Specialist", "Kitchener")).toBe("operations_specialist");
+  });
+});

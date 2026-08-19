@@ -730,3 +730,6 @@
 ## APY Agreement Standardization (Aug 19, 2026)
 - [x] Add a two-week written-notice expectation to every future APY offer letter and agreement template
 - [x] Limit direct-cost recovery and set-off language to independent-contractor templates only
+
+## Operations Specialist Offer (Aug 19, 2026)
+- [x] Create a dedicated $20/hour Operations Specialist offer-letter type with APY class-operations responsibilities and signing support

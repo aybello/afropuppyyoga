@@ -23,6 +23,7 @@ function getOfferLetterContent(
 
   const isYogaInstructor = offerLetterType === "yoga_instructor";
   const isPuppySpecialist = offerLetterType === "puppy_specialist";
+  const isOperationsSpecialist = offerLetterType === "operations_specialist";
   const isBDR = offerLetterType === "bdr";
 
   if (isYogaInstructor) {
@@ -75,6 +76,58 @@ function getOfferLetterContent(
           </p>
           <p className="mt-3">Warm regards,</p>
           <p className="font-bold">The AfroPuppyYoga Team</p>
+          <p className="text-xs text-[#C4A0B0]">afropuppyyoga@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isOperationsSpecialist) {
+    return (
+      <div className="space-y-4 text-sm text-[#1A0A12] leading-relaxed">
+        <p className="text-xs text-[#C4A0B0]">{today}</p>
+        <p>Dear <strong>{applicantName}</strong>,</p>
+        <p>
+          On behalf of the AfroPuppyYoga team, we are excited to offer you the position of <strong>Operations Specialist</strong> at our <strong>{location}</strong> location. Your organization, calm problem-solving, and ability to create smooth guest and team experiences will be central to every APY class.
+        </p>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Position Details</p>
+          <p><strong>Position:</strong> Operations Specialist</p>
+          <p><strong>Location:</strong> {location}</p>
+          <p><strong>Compensation:</strong> $20.00 per hour</p>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Key Responsibilities</p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Prepare the venue before class and ensure a smooth reset and close-down after the final session</li>
+            <li>Coordinate staff arrival, class flow, guest check-in, and on-site communications</li>
+            <li>Support breeder and puppy-handler arrival, handoff, supplies, and venue logistics</li>
+            <li>Track operational supplies, attendance, incidents, and issues requiring follow-up</li>
+            <li>Escalate safety, staffing, guest, or venue concerns promptly to APY leadership</li>
+            <li>Represent AfroPuppyYoga with warmth, professionalism, and consistent attention to detail</li>
+          </ul>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Schedule and Hours</p>
+          <p>Scheduling will be determined by APY's event calendar. Weekend availability, punctuality, and flexibility are essential for this class-operations role.</p>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Terms and Conditions</p>
+          <p><strong>Probation Period:</strong> A probationary period of 4 months will apply to assess performance and alignment with APY's standards.</p>
+          <p className="mt-2"><strong>Confidentiality:</strong> You will be required to sign a Non-Disclosure Agreement (NDA) to protect AfroPuppyYoga's proprietary information.</p>
+          <p className="mt-2"><strong>Notice of Resignation:</strong> If you wish to end your engagement with AfroPuppyYoga, please provide at least two weeks' written notice whenever reasonably possible. This helps APY arrange coverage and maintain a consistent guest experience.</p>
+          <p className="mt-2"><strong>Dress Code:</strong> Black APY-appropriate attire and grippy socks are required for on-site shifts.</p>
+          <p className="mt-2"><strong>Performance Reviews:</strong> Operational readiness, team collaboration, and guest experience outcomes will be reviewed periodically.</p>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p>We are thrilled to welcome you to AfroPuppyYoga and look forward to the care and operational consistency you will bring to our classes.</p>
+          <p className="mt-3">Warmly,</p>
+          <p className="font-bold">Ay &amp; The AfroPuppyYoga Team</p>
           <p className="text-xs text-[#C4A0B0]">afropuppyyoga@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
         </div>
       </div>

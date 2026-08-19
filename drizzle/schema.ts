@@ -185,7 +185,7 @@ export const signingTokens = mysqlTable("signingTokens", {
   /** Location (KW / Hamilton / Oakville / Central) */
   location: varchar("location", { length: 100 }).notNull(),
   /** Which offer letter to show */
-  offerLetterType: mysqlEnum("offerLetterType", ["puppy_monitor_kw", "puppy_monitor_hamilton", "yoga_instructor", "puppy_specialist", "bdr"]).notNull(),
+  offerLetterType: mysqlEnum("offerLetterType", ["puppy_monitor_kw", "puppy_monitor_hamilton", "yoga_instructor", "puppy_specialist", "operations_specialist", "bdr"]).notNull(),
   /** Secure random token sent in the signing link */
   token: varchar("token", { length: 128 }).notNull().unique(),
   /** Whether the applicant has signed */

@@ -6,7 +6,7 @@ import { sendEmail } from "../email";
 import crypto from "crypto";
 
 // CDN URLs for all offer letter PDFs
-type OfferLetterType = "puppy_monitor_kw" | "puppy_monitor_hamilton" | "yoga_instructor" | "puppy_specialist" | "bdr";
+type OfferLetterType = "puppy_monitor_kw" | "puppy_monitor_hamilton" | "yoga_instructor" | "puppy_specialist" | "operations_specialist" | "bdr";
 
 export function detectOfferLetterType(role: string, location: string): OfferLetterType {
   const roleLower = role.toLowerCase();
@@ -14,6 +14,9 @@ export function detectOfferLetterType(role: string, location: string): OfferLett
 
   if (roleLower.includes("yoga")) {
     return "yoga_instructor";
+  }
+  if (roleLower.includes("operations specialist") || roleLower.includes("operation specialist")) {
+    return "operations_specialist";
   }
   if (roleLower.includes("specialist")) {
     return "puppy_specialist";
