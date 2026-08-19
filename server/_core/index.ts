@@ -326,6 +326,11 @@ async function startServer() {
       createContext,
     })
   );
+  // SEO dynamic rendering: intercept crawler requests BEFORE Vite/static
+  // so bots receive pre-rendered HTML with per-page title/description/canonical/JSON-LD.
+  // Real users fall through to the SPA. See server/seoRenderer.ts.
+  app.use(seoRenderMiddleware);
+
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
