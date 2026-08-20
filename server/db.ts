@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, gte, isNull, isNotNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertInvoice, InsertJobApplication, InsertUser, InsertBirthdayInquiry, InsertPartnershipInquiry, InsertStaffInvite, InsertSigningToken, invoices, jobApplications, users, birthdayInquiries, partnershipInquiries, staffInvites, signingTokens } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -135,32 +135,48 @@ export async function createJobApplication(data: InsertJobApplication) {
   return result;
 }
 
+export async function getRecentDuplicateJobApplication(input: { email: string; role: string; location: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const cutoff = new Date(Date.now() - 10 * 60 * 1000);
+  const matches = await db
+    .select({ id: jobApplications.id })
+    .from(jobApplications)
+    .where(
+      and(
+        eq(jobApplications.email, input.email),
+        eq(jobApplications.role, input.role),
+        eq(jobApplications.location, input.location),
+        isNull(jobApplications.deletedAt),
+        gte(jobApplications.createdAt, cutoff)
+      )
+    )
+    .limit(1);
+  return matches[0] ?? null;
+}
+
 export async function getAllJobApplications() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const apps = await db.select().from(jobApplications).orderBy(desc(jobApplications.createdAt));
-  // Enrich each application with signing status from signingTokens
-  const enriched = await Promise.all(
-    apps.map(async (app) => {
-      const signingRecord = await db
-        .select()
-        .from(signingTokens)
-        .where(eq(signingTokens.applicationId, app.id))
-        .limit(1);
-      const signing = signingRecord[0];
-      return {
-        ...app,
-        signingStatus: signing
-          ? signing.signed === 1
-            ? "signed"
-            : "pending_signature"
-          : null,
-        signedName: signing?.signedName ?? null,
-        signedAt: signing?.signedAt ?? null,
-      };
-    })
-  );
-  return enriched;
+  const apps = await db.select().from(jobApplications).where(isNull(jobApplications.deletedAt)).orderBy(desc(jobApplications.createdAt));
+  const allSigningTokens = await db.select().from(signingTokens);
+  const latestSigningByApplication = new Map<number, (typeof allSigningTokens)[number]>();
+  for (const signing of allSigningTokens) {
+    const existing = latestSigningByApplication.get(signing.applicationId);
+    if (!existing || signing.createdAt > existing.createdAt) {
+      latestSigningByApplication.set(signing.applicationId, signing);
+    }
+  }
+
+  return apps.map((app) => {
+    const signing = latestSigningByApplication.get(app.id);
+    return {
+      ...app,
+      signingStatus: signing ? (signing.signed === 1 ? "signed" : "pending_signature") : null,
+      signedName: signing?.signedName ?? null,
+      signedAt: signing?.signedAt ?? null,
+    };
+  });
 }
 
 export async function updateJobApplication(id: number, data: Partial<InsertJobApplication>) {
@@ -170,6 +186,43 @@ export async function updateJobApplication(id: number, data: Partial<InsertJobAp
 }
 
 export async function deleteJobApplication(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Soft-delete: set deletedAt timestamp instead of removing the row
+  await db.update(jobApplications).set({ deletedAt: new Date() }).where(eq(jobApplications.id, id));
+}
+
+export async function getArchivedJobApplications() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const apps = await db.select().from(jobApplications).where(isNotNull(jobApplications.deletedAt)).orderBy(desc(jobApplications.deletedAt));
+  const allSigningTokens = await db.select().from(signingTokens);
+  const latestSigningByApplication = new Map<number, (typeof allSigningTokens)[number]>();
+  for (const signing of allSigningTokens) {
+    const existing = latestSigningByApplication.get(signing.applicationId);
+    if (!existing || signing.createdAt > existing.createdAt) {
+      latestSigningByApplication.set(signing.applicationId, signing);
+    }
+  }
+
+  return apps.map((app) => {
+    const signing = latestSigningByApplication.get(app.id);
+    return {
+      ...app,
+      signingStatus: signing ? (signing.signed === 1 ? "signed" : "pending_signature") : null,
+      signedName: signing?.signedName ?? null,
+      signedAt: signing?.signedAt ?? null,
+    };
+  });
+}
+
+export async function restoreJobApplication(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(jobApplications).set({ deletedAt: null }).where(eq(jobApplications.id, id));
+}
+
+export async function permanentlyDeleteJobApplication(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(jobApplications).where(eq(jobApplications.id, id));

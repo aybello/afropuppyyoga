@@ -97,7 +97,7 @@ export default function Contact() {
       setForm({ name: "", email: "", message: "" });
     },
     onError: () => {
-      setError("Something went wrong. Please email us directly at afropuppyyogaofficial@gmail.com");
+      setError("Something went wrong. Please email us directly at afropuppyyoga@gmail.com");
     },
   });
 
@@ -194,9 +194,9 @@ export default function Contact() {
             {/* Contact items */}
             <FadeUp delay={0.2}>
               <div className="flex flex-wrap gap-4 mb-6">
-                <a href="mailto:afropuppyyogaofficial@gmail.com" className="flex items-center gap-2 group">
+                <a href="mailto:afropuppyyoga@gmail.com" className="flex items-center gap-2 group">
                   <Mail size={15} className="text-[#F2A0B8]" />
-                  <span className="font-body text-white/70 text-sm group-hover:text-[#F2A0B8] transition-colors">afropuppyyogaofficial@gmail.com</span>
+                  <span className="font-body text-white/70 text-sm group-hover:text-[#F2A0B8] transition-colors">afropuppyyoga@gmail.com</span>
                 </a>
                 <a href="tel:+12897881885" className="flex items-center gap-2 group">
                   <Phone size={15} className="text-[#F2A0B8]" />

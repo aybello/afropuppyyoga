@@ -2,10 +2,12 @@ import { z } from "zod";
 import { router, staffProcedure, publicProcedure } from "../_core/trpc";
 import { getDb } from "../db";
 import { breeders, breederConfirmations, locationPresets, breederAvailabilityBlasts, breederAvailabilityResponses } from "../../drizzle/schema";
+import { puppySchedule } from "../../drizzle/schema";
 import type { Breeder } from "../../drizzle/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { sendEmail } from "../email";
 import crypto from "crypto";
+import { createLumaEventForSchedule } from "../lumaScheduleHelper";
 
 const breederInput = z.object({
   name: z.string().min(1, "Breeder name is required"),
@@ -95,7 +97,7 @@ function generateConfirmationEmail(opts: {
         <li>Have been dewormed</li>
       </ul>
       <p style="margin:0 0 16px;line-height:1.6;">Our team will supervise the puppies at all times and ensure they receive regular breaks, water, and a safe, controlled environment throughout the events.</p>
-      <p style="margin:0 0 16px;line-height:1.6;">For any dates where APY is handling transportation, please provide the pickup address that works best for you.</p>
+      ${opts.events.some(ev => ev.apyTransport) ? `<p style="margin:0 0 16px;line-height:1.6;">For any dates where APY is handling transportation, please provide the pickup address that works best for you.</p>` : ""}
       ${availabilitySection}
       <p style="margin:24px 0 16px;line-height:1.6;">Please confirm that the above dates and times work for you, and we can finalize everything from there.</p>
       <p style="margin:0 0 4px;">Looking forward to working together.</p>
@@ -103,7 +105,7 @@ function generateConfirmationEmail(opts: {
       <div style="border-top:1px solid #f0d0dc;padding-top:20px;margin-top:8px;">
         <p style="margin:0;font-weight:700;color:#8B2252;font-size:15px;">The AfroPuppyYoga Team</p>
         <p style="margin:4px 0 0;font-size:13px;color:#5a3040;">P: 289-788-1885</p>
-        <p style="margin:2px 0 0;font-size:13px;color:#5a3040;">E: <a href="mailto:afropuppyyogaofficial@gmail.com" style="color:#8B2252;">afropuppyyogaofficial@gmail.com</a></p>
+        <p style="margin:2px 0 0;font-size:13px;color:#5a3040;">E: <a href="mailto:afropuppyyoga@gmail.com" style="color:#8B2252;">afropuppyyoga@gmail.com</a></p>
         <p style="margin:2px 0 0;font-size:13px;color:#5a3040;">W: <a href="https://afropuppyyoga.ca" style="color:#8B2252;">afropuppyyoga.ca</a></p>
       </div>
     </div>
@@ -118,7 +120,9 @@ function generateConfirmationEmail(opts: {
     return `📍 ${ev.city}\nDate: ${formatDateHuman(ev.date)}\n${transport}\nLocation: ${ev.location}\nCompensation: ${ev.compensation} (paid via e-transfer)`;
   }).join("\n\n---\n\n");
 
-  const text = `Hi ${opts.breederFirstName},\n\nWe're excited to be working with you and your puppies for our upcoming AfroPuppyYoga classes.\n\nAs discussed, here are the confirmed details:\n\n${textEvents}\n\nPlease ensure all puppies:\n- Are freshly groomed, clean, and smell pleasant\n- Are up to date on vaccinations\n- Have been dewormed\n\nOur team will supervise the puppies at all times and ensure they receive regular breaks, water, and a safe, controlled environment throughout the events.\n\nFor any dates where APY is handling transportation, please provide the pickup address that works best for you.\n\n${opts.availabilityNote ? `We also wanted to see if you may have availability for ${opts.availabilityNote}. If so, we'd love to discuss potentially adding that date as well.\n\n` : ""}Please confirm that the above dates and times work for you, and we can finalize everything from there.\n\nLooking forward to working together.\n\nBest,\nThe AfroPuppyYoga Team\nP: 289-788-1885\nE: afropuppyyogaofficial@gmail.com\nW: afropuppyyoga.ca`;
+  const hasTransport = opts.events.some(ev => ev.apyTransport);
+  const transportNote = hasTransport ? "For any dates where APY is handling transportation, please provide the pickup address that works best for you.\n\n" : "";
+  const text = `Hi ${opts.breederFirstName},\n\nWe're excited to be working with you and your puppies for our upcoming AfroPuppyYoga classes.\n\nAs discussed, here are the confirmed details:\n\n${textEvents}\n\nPlease ensure all puppies:\n- Are freshly groomed, clean, and smell pleasant\n- Are up to date on vaccinations\n- Have been dewormed\n\nOur team will supervise the puppies at all times and ensure they receive regular breaks, water, and a safe, controlled environment throughout the events.\n\n${transportNote}${opts.availabilityNote ? `We also wanted to see if you may have availability for ${opts.availabilityNote}. If so, we'd love to discuss potentially adding that date as well.\n\n` : ""}Please confirm that the above dates and times work for you, and we can finalize everything from there.\n\nLooking forward to working together.\n\nBest,\nThe AfroPuppyYoga Team\nP: 289-788-1885\nE: afropuppyyoga@gmail.com\nW: afropuppyyoga.ca`;
 
   return { html, text };
 }
@@ -246,11 +250,16 @@ export const breedersRouter = router({
     .input(z.object({
       breederId: z.number(),
       breederFirstName: z.string().min(1),
-      toEmail: z.string().email(),
+      toEmail: z.string().email().optional(),
+      toPhone: z.string().optional(),
       events: z.array(eventBlockSchema).min(1),
       availabilityNote: z.string().optional(),
     }))
     .mutation(async ({ input }) => {
+      if (!input.toEmail && !input.toPhone) {
+        throw new Error("This breeder has no email or phone number on file. Please add contact info first.");
+      }
+
       const { html, text } = generateConfirmationEmail({
         breederFirstName: input.breederFirstName,
         events: input.events,
@@ -262,24 +271,198 @@ export const breedersRouter = router({
       const [breeder] = await db.select().from(breeders).where(eq(breeders.id, input.breederId));
       const breederName = breeder?.name ?? input.breederFirstName;
 
-      await sendEmail({
-        to: input.toEmail,
-        subject: `AfroPuppyYoga - Booking Confirmation`,
-        html,
-        text,
-      });
+      let emailSent = false;
+      let smsSent = false;
+      let emailError: string | undefined;
+      let smsError: string | undefined;
+
+      // Send email if available
+      if (input.toEmail) {
+        try {
+          await sendEmail({
+            to: input.toEmail,
+            subject: `AfroPuppyYoga - Booking Confirmation`,
+            html,
+            text,
+          });
+          emailSent = true;
+        } catch (err: any) {
+          emailError = err?.message ?? "Unknown email error";
+          console.error("[Breeder Confirmation] Email failed:", emailError);
+        }
+      }
+
+      // Send SMS if phone available
+      if (input.toPhone) {
+        try {
+          const twilioSid = process.env.TWILIO_ACCOUNT_SID;
+          const twilioAuth = process.env.TWILIO_AUTH_TOKEN;
+          const twilioFrom = process.env.TWILIO_PHONE_NUMBER;
+
+          if (!twilioSid || !twilioAuth || !twilioFrom) throw new Error("Twilio not configured");
+
+          // Normalize phone to E.164
+          const digits = input.toPhone.replace(/\D/g, "");
+          const normalized = digits.length === 10 ? "+1" + digits : digits.length === 11 && digits.startsWith("1") ? "+" + digits : null;
+          if (!normalized) throw new Error("Invalid phone number format");
+
+          // Build condensed SMS — one line per event
+          const eventLines = input.events.map((ev) => {
+            const date = formatDateHuman(ev.date);
+            const time = ev.apyTransport
+              ? `Pickup ${ev.pickupTime ?? ""}, Return ${ev.returnTime ?? ""}`
+              : `Drop-off ${ev.dropOffTime ?? ""}, Pick-up ${ev.pickUpTime ?? ""}`;
+            return `📍 ${ev.city} — ${date}\n${time}\n${ev.location}\nCompensation: ${ev.compensation}`;
+          }).join("\n\n");
+
+          const smsBody = `Hi ${input.breederFirstName}, you're confirmed for AfroPuppyYoga! 🐾\n\n${eventLines}\n\nPlease ensure puppies are groomed, vaccinated & dewormed. Reply to confirm or call 289-788-1885.`;
+
+          const params = new URLSearchParams();
+          params.append("To", normalized);
+          params.append("From", twilioFrom);
+          params.append("Body", smsBody);
+
+          const resp = await fetch(
+            `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: "Basic " + Buffer.from(`${twilioSid}:${twilioAuth}`).toString("base64"),
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              body: params.toString(),
+            }
+          );
+          const data = await resp.json() as { sid?: string; message?: string };
+          if (!data.sid) throw new Error(data.message ?? "Twilio error");
+          smsSent = true;
+        } catch (err: any) {
+          smsError = err?.message ?? "Unknown SMS error";
+          console.error("[Breeder Confirmation] SMS failed:", smsError);
+        }
+      }
 
       await db.insert(breederConfirmations).values({
-        breederId: input.breederId,
-        breederName,
-        sentToEmail: input.toEmail,
-        events: JSON.stringify(input.events),
-        availabilityNote: input.availabilityNote ?? null,
-        emailBody: html,
-        status: "sent",
-      });
+      breederId: input.breederId,
+      breederName,
+      sentToEmail: input.toEmail ?? "",
+      events: JSON.stringify(input.events),
+      availabilityNote: input.availabilityNote ?? null,
+      emailBody: html,
+      status: emailSent || smsSent ? "sent" : "failed",
+    });
 
-      return { success: true };
+      // Auto-create puppy schedule entries for each event block
+      const VALID_LOCATIONS = ["Kitchener", "Hamilton", "Oakville"] as const;
+      const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
+
+      function parseTimeTo24h(timeStr: string | undefined): string {
+        if (!timeStr) return "09:00";
+        // Already HH:MM
+        if (/^\d{2}:\d{2}$/.test(timeStr)) return timeStr;
+        // e.g. "9:00 AM", "12:30 PM"
+        const m = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+        if (!m) return "09:00";
+        let h = parseInt(m[1], 10);
+        const min = m[2];
+        const period = m[3].toUpperCase();
+        if (period === "PM" && h !== 12) h += 12;
+        if (period === "AM" && h === 12) h = 0;
+        return `${String(h).padStart(2, "0")}:${min}`;
+      }
+
+      let scheduleCreated = 0;
+      let scheduleSkipped = 0;
+
+      for (const ev of input.events) {
+        const city = ev.city?.trim();
+        if (!VALID_LOCATIONS.includes(city as any)) {
+          scheduleSkipped++;
+          continue; // Private/custom location — skip
+        }
+        const location = city as typeof VALID_LOCATIONS[number];
+
+        // Parse ISO date to get day of week
+        let classDate = ev.date;
+        let dayOfWeek: typeof DAY_NAMES[number] = "Saturday";
+        if (/^\d{4}-\d{2}-\d{2}$/.test(ev.date)) {
+          const d = new Date(ev.date + "T12:00:00");
+          dayOfWeek = DAY_NAMES[d.getDay()];
+        }
+
+        // Determine start/end times
+        const startTime = ev.apyTransport
+          ? parseTimeTo24h(ev.pickupTime)
+          : parseTimeTo24h(ev.dropOffTime);
+        const endTime = ev.apyTransport
+          ? parseTimeTo24h(ev.returnTime)
+          : parseTimeTo24h(ev.pickUpTime);
+
+        // Check for existing entry (same breeder + date + location) to avoid duplicates
+        const existing = await db
+          .select({ id: puppySchedule.id })
+          .from(puppySchedule)
+          .where(
+            and(
+              eq(puppySchedule.breederId, input.breederId),
+              eq(puppySchedule.classDate, classDate),
+              eq(puppySchedule.location, location)
+            )
+          )
+          .limit(1);
+
+        if (existing.length > 0) {
+          scheduleSkipped++;
+          console.log(`[Schedule] Entry already exists for breeder ${input.breederId} on ${classDate} at ${location} — skipping`);
+          continue;
+        }
+
+        try {
+          await db.insert(puppySchedule).values({
+            classDate,
+            dayOfWeek,
+            location,
+            breed: breeder?.breed ?? "TBD",
+            breederId: input.breederId,
+            breederName,
+            startTime,
+            endTime,
+            classType: ["Saturday", "Sunday"].includes(dayOfWeek) ? "regular" : "private",
+            notes: `Auto-created from breeder confirmation. Compensation: ${ev.compensation}`,
+          });
+          scheduleCreated++;
+          console.log(`[Schedule] Created entry for ${breederName} on ${classDate} at ${location}`);
+
+          // Auto-create Luma event page for this schedule entry
+          const lumaResult = await createLumaEventForSchedule({
+            classDate,
+            location,
+            breed: breeder?.breed ?? "TBD",
+            startTime,
+            endTime,
+            classType: ["Saturday", "Sunday"].includes(dayOfWeek) ? "regular" : "private",
+          });
+          if (lumaResult) {
+            // Update the just-inserted row with the Luma event info
+            await db.update(puppySchedule)
+              .set({ lumaEventId: lumaResult.lumaEventId, lumaEventUrl: lumaResult.lumaEventUrl })
+              .where(
+                and(
+                  eq(puppySchedule.breederId, input.breederId),
+                  eq(puppySchedule.classDate, classDate),
+                  eq(puppySchedule.location, location)
+                )
+              );
+            console.log(`[Schedule] Luma event created: ${lumaResult.lumaEventUrl}`);
+          }
+        } catch (err) {
+          console.error(`[Schedule] Failed to create entry for ${classDate} at ${location}:`, err);
+        }
+      }
+
+      console.log(`[Schedule] Auto-created: ${scheduleCreated}, skipped: ${scheduleSkipped}`);
+
+      return { success: true, emailSent, smsSent, emailError, smsError };
     }),
 
   getConfirmations: staffProcedure
@@ -413,7 +596,7 @@ export const breedersRouter = router({
           <p style="color:#8B6070;font-size:13px;line-height:1.6;margin:0;">This link is unique to you. If you have any questions, reply to this email or reach us at <a href="tel:289-788-1885" style="color:#C2185B;">289-788-1885</a>.</p>
         </td></tr>
         <tr><td style="background:#FFF5F8;padding:20px 40px;text-align:center;border-top:1px solid #F0D0DC;">
-          <p style="color:#8B6070;font-size:12px;margin:0;">The AfroPuppyYoga Team &nbsp;|&nbsp; afropuppyyogaofficial@gmail.com &nbsp;|&nbsp; afropuppyyoga.ca</p>
+          <p style="color:#8B6070;font-size:12px;margin:0;">The AfroPuppyYoga Team &nbsp;|&nbsp; afropuppyyoga@gmail.com &nbsp;|&nbsp; afropuppyyoga.ca</p>
         </td></tr>
       </table>
     </td></tr>
@@ -426,7 +609,7 @@ export const breedersRouter = router({
             to: breeder.email!,
             subject: `AfroPuppyYoga - Availability Check for ${input.monthLabel}`,
             html,
-            text: `Hi ${firstName},\n\nWe are planning our AfroPuppyYoga classes for ${input.monthLabel} and would love to know your availability!\n\n${input.customMessage ? input.customMessage + "\n\n" : ""}Please share your available dates using this link:\n${responseLink}\n\nThe AfroPuppyYoga Team\nP: 289-788-1885\nE: afropuppyyogaofficial@gmail.com`,
+            text: `Hi ${firstName},\n\nWe are planning our AfroPuppyYoga classes for ${input.monthLabel} and would love to know your availability!\n\n${input.customMessage ? input.customMessage + "\n\n" : ""}Please share your available dates using this link:\n${responseLink}\n\nThe AfroPuppyYoga Team\nP: 289-788-1885\nE: afropuppyyoga@gmail.com`,
           });
           sent++;
         } catch {
@@ -586,7 +769,7 @@ export const breedersRouter = router({
           <p style="color:#8B6070;font-size:13px;line-height:1.6;margin:0;">This link is unique to you. If you have any questions, reply to this email or reach us at <a href="tel:289-788-1885" style="color:#C2185B;">289-788-1885</a>.</p>
         </td></tr>
         <tr><td style="background:#FFF5F8;padding:20px 40px;text-align:center;border-top:1px solid #F0D0DC;">
-          <p style="color:#8B6070;font-size:12px;margin:0;">The AfroPuppyYoga Team &nbsp;|&nbsp; afropuppyyogaofficial@gmail.com &nbsp;|&nbsp; afropuppyyoga.ca</p>
+          <p style="color:#8B6070;font-size:12px;margin:0;">The AfroPuppyYoga Team &nbsp;|&nbsp; afropuppyyoga@gmail.com &nbsp;|&nbsp; afropuppyyoga.ca</p>
         </td></tr>
       </table>
     </td></tr>

@@ -13,6 +13,7 @@ import rateLimit from "express-rate-limit";
 import { storageGet } from "../storage";
 import { lumaPoller, capiSender } from "../metaCapi";
 import twilioWebhookRouter from "../twilioWebhook";
+import lumaWebhookRouter from "../lumaWebhook";
 import { requireStaffOrAdmin } from "./requireStaff";
 import { registerStorageProxy } from "./storageProxy";
 import crypto from "crypto";
@@ -46,13 +47,26 @@ const formLimiter = rateLimit({
   skip: () => process.env.NODE_ENV === "development",
 });
 
-// Upload rate limiter — 100 uploads per IP per hour (blocks bots, invisible to real applicants)
+// Standard file/session rate limiter. A video upload has one init and one completion
+// request, while each chunk is protected separately below.
 const uploadLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 100,
+  max: 300,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Too many upload requests. Please try again later." },
+  skip: () => process.env.NODE_ENV === "development",
+});
+
+// A single 500MB video uses roughly 100 five-megabyte chunk requests. Keeping
+// chunks on the generic limiter previously allowed one large application video
+// to exhaust its own upload allowance before completion.
+const videoChunkLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 1200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many video upload parts. Please wait a few minutes and try again." },
   skip: () => process.env.NODE_ENV === "development",
 });
 
@@ -83,6 +97,25 @@ async function startServer() {
   // Trust the platform's reverse proxy so rate limiting uses the real client IP, not the load balancer IP.
   // Without this, all users in production share one IP and hit the rate limit together.
   app.set("trust proxy", 1);
+  // Remove x-powered-by header (security best practice)
+  app.disable("x-powered-by");
+
+  // 301 redirects for legacy URLs still indexed by Google
+  app.use((req, res, next) => {
+    const legacyRedirects: Record<string, string> = {
+      "/about/": "/",
+      "/about": "/",
+      "/gallery/": "/#gallery",
+      "/gallery": "/#gallery",
+      "/contact/": "/#contact",
+      "/contact": "/#contact",
+      "/careers/": "/careers",
+    };
+    const target = legacyRedirects[req.path];
+    if (target) return res.redirect(301, target);
+    next();
+  });
+
   // Redirect manus.space domains to the canonical custom domain
   app.use((req, res, next) => {
     const host = req.headers.host || "";
@@ -108,7 +141,7 @@ async function startServer() {
   app.use("/api/upload-resume", uploadLimiter);
   app.use("/api/upload-invoice", uploadLimiter);
   app.use("/api/upload-video-init", uploadLimiter);
-  app.use("/api/upload-video-chunk", uploadLimiter);
+  app.use("/api/upload-video-chunk", videoChunkLimiter);
   app.use("/api/upload-video-complete", uploadLimiter);
 
   // Video upload endpoint (multipart, bypasses JSON body limit)
@@ -136,6 +169,19 @@ async function startServer() {
       return res.json({ url });
     } catch (e) {
       return res.status(500).json({ error: "Failed to generate video URL" });
+    }
+  });
+
+  app.get("/api/resume-url", requireStaffOrAdmin, async (req, res) => {
+    const key = req.query.key as string;
+    if (!key || key.includes("..") || !key.startsWith("applications/resumes/")) {
+      return res.status(400).json({ error: "Invalid key" });
+    }
+    try {
+      const { url } = await storageGet(key);
+      return res.json({ url });
+    } catch (e) {
+      return res.status(500).json({ error: "Failed to generate resume URL" });
     }
   });
 
@@ -280,8 +326,23 @@ async function startServer() {
     }
   });
 
+  // POST /api/scheduled/review-text — called by heartbeat every 30 min
+  // Finds events that ended ~2h ago and sends Google review SMS to all registered guests.
+  app.post("/api/scheduled/review-text", async (req, res) => {
+    if (!requireCronAuth(req, res)) return;
+    try {
+      const result = await reviewTextSender();
+      res.json({ ok: true, ...result });
+    } catch (err) {
+      console.error("[ReviewText] Handler error:", err);
+      res.status(500).json({ ok: false, error: String(err) });
+    }
+  });
+
   // Twilio webhook callbacks — must be registered before tRPC
   app.use(twilioWebhookRouter);
+  // Luma webhook for payment/registration notifications
+  app.use(lumaWebhookRouter);
 
   // tRPC API
   app.use(
@@ -291,6 +352,11 @@ async function startServer() {
       createContext,
     })
   );
+  // SEO dynamic rendering: intercept crawler requests BEFORE Vite/static
+  // so bots receive pre-rendered HTML with per-page title/description/canonical/JSON-LD.
+  // Real users fall through to the SPA. See server/seoRenderer.ts.
+  app.use(seoRenderMiddleware);
+
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
@@ -307,7 +373,9 @@ async function startServer() {
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
+    server.timeout = 120000; // 120s — allows slow queries like revenue dashboard
   });
 }
 
 startServer().catch(console.error);
+import { reviewTextSender } from "../reviewTextSender";

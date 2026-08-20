@@ -35,7 +35,7 @@ export default function ChatbotWidget() {
         {
           role: "assistant",
           content:
-            "Sorry, I'm having a little trouble right now. Please email us at afropuppyyogaofficial@gmail.com and we'll get back to you quickly!",
+            "Sorry, I'm having a little trouble right now. Please email us at afropuppyyoga@gmail.com and we'll get back to you quickly!",
         },
       ]);
     },

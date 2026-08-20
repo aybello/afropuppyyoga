@@ -1,4 +1,4 @@
-import { bigint, index, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { bigint, boolean, index, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -68,8 +68,8 @@ export const jobApplications = mysqlTable("jobApplications", {
   location: varchar("location", { length: 100 }).notNull(),
   /** Applicant's full name */
   name: varchar("name", { length: 255 }).notNull(),
-  /** Applicant's email */
-  email: varchar("email", { length: 320 }).notNull(),
+  /** Applicant's email. Team members may use phone as their sole contact method. */
+  email: varchar("email", { length: 320 }),
   /** Applicant's phone number */
   phone: varchar("phone", { length: 50 }),
   /** Why they want to work at APY */
@@ -86,8 +86,12 @@ export const jobApplications = mysqlTable("jobApplications", {
   resumeKey: varchar("resumeKey", { length: 500 }),
   /** Application status */
   status: mysqlEnum("appStatus", ["new", "reviewed", "shortlisted", "interview_scheduled", "accepted", "rejected", "onboarded"]).default("new").notNull(),
+  /** Explicit APY HQ membership. Applications remain separate until an admin manually adds the person to the team. */
+  isTeamMember: boolean("isTeamMember").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-}, (t) => [index("idx_jobapps_status").on(t.status), index("idx_jobapps_email").on(t.email)]);
+  /** Soft-delete timestamp — null means active, non-null means archived */
+  deletedAt: timestamp("deletedAt"),
+}, (t) => [index("idx_jobapps_status").on(t.status), index("idx_jobapps_email").on(t.email), index("idx_jobapps_team_member").on(t.isTeamMember)]);
 
 export type JobApplication = typeof jobApplications.$inferSelect;
 export type InsertJobApplication = typeof jobApplications.$inferInsert;
@@ -180,10 +184,10 @@ export const signingTokens = mysqlTable("signingTokens", {
   applicantEmail: varchar("applicantEmail", { length: 320 }).notNull(),
   /** Role (Puppy Monitor / Yoga Instructor) */
   role: varchar("role", { length: 255 }).notNull(),
-  /** Location (KW / Hamilton / BDR) */
+  /** Location (KW / Hamilton / Oakville / Central) */
   location: varchar("location", { length: 100 }).notNull(),
-  /** Which offer letter to show (puppy_monitor_kw | puppy_monitor_hamilton | yoga_instructor | puppy_specialist) */
-  offerLetterType: mysqlEnum("offerLetterType", ["puppy_monitor_kw", "puppy_monitor_hamilton", "yoga_instructor", "puppy_specialist"]).notNull(),
+  /** Which offer letter to show */
+  offerLetterType: mysqlEnum("offerLetterType", ["puppy_monitor_kw", "puppy_monitor_hamilton", "yoga_instructor", "puppy_specialist", "operations_specialist", "bdr"]).notNull(),
   /** Secure random token sent in the signing link */
   token: varchar("token", { length: 128 }).notNull().unique(),
   /** Whether the applicant has signed */
@@ -226,9 +230,38 @@ export const privateEventInquiries = mysqlTable("privateEventInquiries", {
   /** Estimated maximum price */
   estimatedMax: int("estimatedMax").notNull(),
   /** Inquiry status */
-  status: mysqlEnum("peStatus", ["new", "contacted", "confirmed", "cancelled"]).default("new").notNull(),
+  status: mysqlEnum("peStatus", ["new", "contacted", "confirmed", "cancelled", "quote_sent", "booked"]).default("new").notNull(),
   /** Internal notes from admin */
   adminNotes: text("adminNotes"),
+  /** Final approved price in cents (CAD) */
+  finalPriceCents: int("finalPriceCents"),
+  /** HST amount in cents */
+  hstCents: int("hstCents"),
+  /** Whether price is plus HST or all-inclusive */
+  pricingType: varchar("pricingType", { length: 20 }),
+  /** Number of sessions */
+  sessions: int("sessions").default(1),
+  /** Puppy breed request */
+  puppyBreed: varchar("puppyBreed", { length: 100 }),
+  /** Organization name (for corporate events) */
+  organization: varchar("organization", { length: 255 }),
+  /** Final venue selected while preparing the payment-ready offer */
+  eventVenue: varchar("eventVenue", { length: 255 }),
+  /** Final event start time in local Toronto HH:mm format */
+  eventStartTime: varchar("eventStartTime", { length: 5 }),
+  /** Final event end time in local Toronto HH:mm format */
+  eventEndTime: varchar("eventEndTime", { length: 5 }),
+  /** Generated Luma event URL */
+  lumaEventUrl: varchar("lumaEventUrl", { length: 500 }),
+  /** Luma event ID */
+  lumaEventId: varchar("lumaEventId", { length: 100 }),
+  /** Exact client-facing quote response, stored for preview and audit */
+  quoteEmailSubject: varchar("quoteEmailSubject", { length: 500 }),
+  quoteEmailBody: text("quoteEmailBody"),
+  /** Whether owner approval was required and given */
+  ownerApproved: boolean("ownerApproved"),
+  /** Quote email sent timestamp */
+  quoteSentAt: timestamp("quoteSentAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (t) => [index("idx_pe_status").on(t.status)]);
@@ -430,6 +463,10 @@ export const puppySchedule = mysqlTable("puppySchedule", {
   classType: mysqlEnum("classType", ["regular", "private"]).notNull().default("regular"),
   /** Optional notes e.g. number of puppies, special instructions */
   notes: text("notes"),
+  /** Luma event ID — set after auto-creating the Luma event page */
+  lumaEventId: varchar("lumaEventId", { length: 128 }),
+  /** Luma event URL — e.g. https://lu.ma/abc123 */
+  lumaEventUrl: varchar("lumaEventUrl", { length: 500 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (t) => [
@@ -439,6 +476,39 @@ export const puppySchedule = mysqlTable("puppySchedule", {
 ]);
 export type PuppySchedule = typeof puppySchedule.$inferSelect;
 export type InsertPuppySchedule = typeof puppySchedule.$inferInsert;
+
+// ─── Inbound SMS ──────────────────────────────────────────────────────────────
+/**
+ * Stores inbound SMS replies received on the Twilio number.
+ * Used for the SMS Inbox in the admin portal.
+ */
+export const inboundSms = mysqlTable("inboundSms", {
+  id: int("id").autoincrement().primaryKey(),
+  /** The phone number that sent the message (E.164 format) */
+  fromPhone: varchar("fromPhone", { length: 20 }).notNull(),
+  /** The Twilio phone number that received it */
+  toPhone: varchar("toPhone", { length: 20 }).notNull(),
+  /** The message body */
+  body: text("body").notNull(),
+  /** Twilio message SID for deduplication */
+  twilioSid: varchar("twilioSid", { length: 64 }).notNull().unique(),
+  /** Matched breeder ID (if we can match by phone) */
+  breederId: int("breederId"),
+  /** Matched breeder name snapshot */
+  breederName: varchar("breederName", { length: 255 }),
+  /** Whether the admin has read/acknowledged this message */
+  isRead: int("isRead").default(0).notNull(),
+  /** When Twilio received the message */
+  receivedAt: timestamp("receivedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  index("idx_inbound_sms_fromPhone").on(t.fromPhone),
+  index("idx_inbound_sms_breederId").on(t.breederId),
+  index("idx_inbound_sms_isRead").on(t.isRead),
+]);
+
+export type InboundSms = typeof inboundSms.$inferSelect;
+export type InsertInboundSms = typeof inboundSms.$inferInsert;
 
 // ─── Meta Conversions API ─────────────────────────────────────────────────────
 /**
@@ -515,3 +585,156 @@ export const callLogs = mysqlTable("callLogs", {
 ]);
 export type CallLog = typeof callLogs.$inferSelect;
 export type InsertCallLog = typeof callLogs.$inferInsert;
+
+// ─── Review Text Logs ─────────────────────────────────────────────────────────
+// Tracks post-class Google review SMS sends per guest per event.
+// Unique constraint on (lumaEventId, lumaGuestId) prevents duplicate sends.
+export const reviewTextLogs = mysqlTable("reviewTextLogs", {
+  id: int("id").autoincrement().primaryKey(),
+  lumaEventId: varchar("lumaEventId", { length: 128 }).notNull(),
+  lumaGuestId: varchar("lumaGuestId", { length: 128 }).notNull(),
+  eventName: varchar("eventName", { length: 255 }).notNull(),
+  eventEndAt: varchar("eventEndAt", { length: 64 }).notNull(),
+  guestName: varchar("guestName", { length: 255 }).notNull(),
+  guestEmail: varchar("guestEmail", { length: 320 }),
+  phone: varchar("phone", { length: 30 }).notNull(),
+  smsSid: varchar("smsSid", { length: 64 }),
+  status: varchar("status", { length: 32 }).notNull().default("sent"),
+  errorMessage: text("errorMessage"),
+  sentAt: bigint("sentAt", { mode: "number" }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  index("idx_reviewTextLogs_lumaEventId").on(t.lumaEventId),
+  index("idx_reviewTextLogs_guest").on(t.lumaEventId, t.lumaGuestId),
+]);
+export type ReviewTextLog = typeof reviewTextLogs.$inferSelect;
+export type InsertReviewTextLog = typeof reviewTextLogs.$inferInsert;
+
+// ── Breeder Acquisition Engine ────────────────────────────────────────────────
+export const breederLeads = mysqlTable("breederLeads", {
+  id: int("id").autoincrement().primaryKey(),
+  breed: varchar("breed", { length: 128 }).notNull(),
+  sellerName: varchar("sellerName", { length: 255 }),
+  phoneNumber: varchar("phoneNumber", { length: 30 }),
+  email: varchar("email", { length: 320 }),
+  city: varchar("city", { length: 128 }),
+  province: varchar("province", { length: 64 }),
+  postalCode: varchar("postalCode", { length: 16 }),
+  distanceKm: int("distanceKm"),
+  puppyCount: int("puppyCount"),
+  puppyAge: varchar("puppyAge", { length: 64 }),
+  expectedReadyDate: varchar("expectedReadyDate", { length: 32 }),
+  listingPrice: int("listingPrice"),
+  listingUrl: text("listingUrl"),
+  listingTitle: varchar("listingTitle", { length: 512 }),
+  listingDescription: text("listingDescription"),
+  listingImageUrls: text("listingImageUrls"),
+  listingPostedAt: varchar("listingPostedAt", { length: 64 }),
+  qualificationScore: int("qualificationScore"),
+  qualificationReasons: text("qualificationReasons"),
+  disqualificationReasons: text("disqualificationReasons"),
+  source: varchar("source", { length: 32 }).notNull().default("manual"),
+  pipelineStatus: varchar("pipelineStatus", { length: 32 }).notNull().default("new"),
+  lastContactedAt: bigint("lastContactedAt", { mode: "number" }),
+  convertedBreederId: int("convertedBreederId"),
+  internalNotes: text("internalNotes"),
+  createdAt: bigint("createdAt", { mode: "number" }).notNull(),
+  updatedAt: bigint("updatedAt", { mode: "number" }).notNull(),
+}, (t) => [
+  index("idx_breederLeads_status").on(t.pipelineStatus),
+  index("idx_breederLeads_breed").on(t.breed),
+]);
+export type BreederLead = typeof breederLeads.$inferSelect;
+export type InsertBreederLead = typeof breederLeads.$inferInsert;
+
+export const breederLeadMessages = mysqlTable("breederLeadMessages", {
+  id: int("id").autoincrement().primaryKey(),
+  leadId: int("leadId").notNull(),
+  channel: varchar("channel", { length: 16 }).notNull(),
+  direction: varchar("direction", { length: 16 }).notNull().default("outbound"),
+  body: text("body").notNull(),
+  subject: varchar("subject", { length: 512 }),
+  smsSid: varchar("smsSid", { length: 64 }),
+  sentAt: bigint("sentAt", { mode: "number" }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  index("idx_breederLeadMessages_leadId").on(t.leadId),
+]);
+export type BreederLeadMessage = typeof breederLeadMessages.$inferSelect;
+
+export const breederLeadActivities = mysqlTable("breederLeadActivities", {
+  id: int("id").autoincrement().primaryKey(),
+  leadId: int("leadId").notNull(),
+  activityType: varchar("activityType", { length: 64 }).notNull(),
+  description: text("description").notNull(),
+  performedBy: varchar("performedBy", { length: 128 }),
+  createdAt: bigint("createdAt", { mode: "number" }).notNull(),
+}, (t) => [
+  index("idx_breederLeadActivities_leadId").on(t.leadId),
+]);
+export type BreederLeadActivity = typeof breederLeadActivities.$inferSelect;
+
+export const breederLeadFollowUps = mysqlTable("breederLeadFollowUps", {
+  id: int("id").autoincrement().primaryKey(),
+  leadId: int("leadId").notNull(),
+  dueAt: bigint("dueAt", { mode: "number" }).notNull(),
+  note: text("note"),
+  completed: boolean("completed").notNull().default(false),
+  completedAt: bigint("completedAt", { mode: "number" }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  index("idx_breederLeadFollowUps_leadId").on(t.leadId),
+  index("idx_breederLeadFollowUps_dueAt").on(t.dueAt),
+]);
+export type BreederLeadFollowUp = typeof breederLeadFollowUps.$inferSelect;
+
+export const staffAvailability = mysqlTable("staffAvailability", {
+  id: int("id").autoincrement().primaryKey(),
+  staffId: int("staffId").notNull(),
+  staffName: varchar("staffName", { length: 255 }).notNull(),
+  leaveType: mysqlEnum("leaveType", ["vacation", "sick", "personal", "leave", "unavailable"]).notNull(),
+  startDate: varchar("startDate", { length: 20 }).notNull(),
+  endDate: varchar("endDate", { length: 20 }).notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  index("idx_staffAvailability_staffId").on(t.staffId),
+  index("idx_staffAvailability_dates").on(t.startDate, t.endDate),
+]);
+export type StaffAvailability = typeof staffAvailability.$inferSelect;
+
+// ─── Weekend Leadership Coverage ─────────────────────────────────────────────
+// One assignment per location / leadership role / Saturday-or-Sunday date.
+// Primary availability is derived from staffAvailability; this table stores the
+// chosen backup when the primary person is away or coverage is otherwise needed.
+export const weekendLeadershipCoverage = mysqlTable("weekendLeadershipCoverage", {
+  id: int("id").autoincrement().primaryKey(),
+  coverageDate: varchar("coverageDate", { length: 10 }).notNull(),
+  location: mysqlEnum("weekendCoverageLocation", ["KW", "OAK", "HAM"]).notNull(),
+  role: mysqlEnum("weekendCoverageRole", ["Operations Manager", "Yoga Instructor"]).notNull(),
+  coverageStaffId: int("coverageStaffId"),
+  coverageStaffName: varchar("coverageStaffName", { length: 255 }),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (t) => [
+  index("idx_weekendCoverage_date").on(t.coverageDate),
+  index("idx_weekendCoverage_shift").on(t.coverageDate, t.location, t.role),
+]);
+export type WeekendLeadershipCoverage = typeof weekendLeadershipCoverage.$inferSelect;
+
+// ─── Class Staffing Assignments ──────────────────────────────────────────────
+// Puppy Monitors are assigned to the concrete class slot, rather than only to a
+// studio, so the Puppy Schedule can enforce the two-monitor requirement.
+export const classStaffAssignments = mysqlTable("classStaffAssignments", {
+  id: int("id").autoincrement().primaryKey(),
+  scheduleId: int("scheduleId").notNull(),
+  staffId: int("staffId").notNull(),
+  staffName: varchar("staffName", { length: 255 }).notNull(),
+  role: mysqlEnum("classStaffRole", ["Puppy Monitor"]).notNull().default("Puppy Monitor"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  index("idx_classStaffAssignments_schedule").on(t.scheduleId),
+  index("idx_classStaffAssignments_staff").on(t.staffId),
+]);
+export type ClassStaffAssignment = typeof classStaffAssignments.$inferSelect;

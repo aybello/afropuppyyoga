@@ -457,8 +457,8 @@ export default function Partnerships() {
 
               <p className="font-body text-xs text-center text-[#3D1A2E]/60">
                 We respond to all inquiries within 3 business days. For urgent matters, email us at{" "}
-                <a href="mailto:afropuppyyogaofficial@gmail.com" className="text-[#8B2252] underline">
-                  afropuppyyogaofficial@gmail.com
+                <a href="mailto:afropuppyyoga@gmail.com" className="text-[#8B2252] underline">
+                  afropuppyyoga@gmail.com
                 </a>
               </p>
             </form>

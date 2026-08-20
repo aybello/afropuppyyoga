@@ -57,7 +57,7 @@ export default function GiftCards() {
                 Buy a Gift Card
               </a>
               <a
-                href="mailto:afropuppyyogaofficial@gmail.com?subject=Gift%20Card%20Inquiry"
+                href="mailto:afropuppyyoga@gmail.com?subject=Gift%20Card%20Inquiry"
                 className="inline-flex items-center justify-center gap-2 flex-1 md:flex-none px-5 md:px-8 py-3 md:py-4 bg-white/30 text-[#1A0A12] font-body font-semibold text-sm md:text-base rounded-full border-2 border-[#1A0A12]/20 hover:bg-white/50 transition-all duration-200"
               >
                 <Heart size={18} />

@@ -128,8 +128,8 @@ export default function BreedersDashboard() {
 
   // Confirmation state
   const [confirmBreeder, setConfirmBreeder] = useState<any>(null);
-  const [events, setEvents] = useState([{ ...EMPTY_EVENT }]);
-  const [availabilityNote, setAvailabilityNote] = useState("");
+  const [events, setEvents] = useState<typeof EMPTY_EVENT[]>([{ ...EMPTY_EVENT }]);
+  const [availabilityNote, setAvailabilityNote] = useState<string>("");
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState<number | null>(null);
 
@@ -181,15 +181,28 @@ export default function BreedersDashboard() {
     onSuccess: (data) => setPreviewHtml(data.html),
   });
   const sendMutation = trpc.breeders.sendConfirmation.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
       utils.breeders.getConfirmations.invalidate({ breederId: confirmBreeder?.id });
+      // Clear the saved draft for this breeder — confirmation was sent
+      if (confirmBreeder) localStorage.removeItem(`apy-confirm-draft-${confirmBreeder.id}`);
       setConfirmBreeder(null);
       setEvents([{ ...EMPTY_EVENT }]);
       setAvailabilityNote("");
       setPreviewHtml(null);
-      alert("Confirmation email sent successfully!");
+      const parts = [];
+      if (data.emailSent) parts.push("email");
+      if (data.smsSent) parts.push("SMS");
+      const sent = parts.length > 0 ? `Confirmation sent via ${parts.join(" & ")}!` : "Confirmation recorded.";
+      const warnings = [];
+      if (data.emailError) warnings.push(`Email failed: ${data.emailError}`);
+      if (data.smsError) warnings.push(`SMS failed: ${data.smsError}`);
+      if (warnings.length > 0) {
+        toast.warning(`${sent} Note: ${warnings.join(" | ")}`);
+      } else {
+        toast.success(sent);
+      }
     },
-    onError: (e) => alert(`Error sending email: ${e.message}`),
+    onError: (e) => alert(`Error sending confirmation: ${e.message}`),
   });
   const addPresetMutation = trpc.breeders.addPreset.useMutation({
     onSuccess: () => { utils.breeders.listPresets.invalidate(); setNewPreset({ label: "", city: "", address: "" }); },
@@ -231,25 +244,57 @@ export default function BreedersDashboard() {
 
   function openConfirm(b: any) {
     setConfirmBreeder(b);
-    setEvents([{
-      ...EMPTY_EVENT,
-      compensation: b.typicalRate ? `$${b.typicalRate}` : "",
-    }]);
-    setAvailabilityNote("");
     setPreviewHtml(null);
+    // Restore draft from localStorage if one exists for this breeder
+    const draftKey = `apy-confirm-draft-${b.id}`;
+    const saved = localStorage.getItem(draftKey);
+    if (saved) {
+      try {
+        const { events: savedEvents, availabilityNote: savedNote } = JSON.parse(saved);
+        setEvents(savedEvents ?? [{ ...EMPTY_EVENT, compensation: b.typicalRate ? `$${b.typicalRate}` : "" }]);
+        setAvailabilityNote(savedNote ?? "");
+        return;
+      } catch {
+        // Corrupted draft — fall through to defaults
+      }
+    }
+    setEvents([{ ...EMPTY_EVENT, compensation: b.typicalRate ? `$${b.typicalRate}` : "" }]);
+    setAvailabilityNote("");
+  }
+
+  function hasDraft(breederId: number): boolean {
+    return !!localStorage.getItem(`apy-confirm-draft-${breederId}`);
+  }
+
+  function clearDraft(breederId: number) {
+    localStorage.removeItem(`apy-confirm-draft-${breederId}`);
+    setEvents([{ ...EMPTY_EVENT, compensation: confirmBreeder?.typicalRate ? `$${confirmBreeder.typicalRate}` : "" }]);
+    setAvailabilityNote("");
   }
 
   function updateEvent(idx: number, field: string, value: any) {
-    setEvents(ev => ev.map((e, i) => i === idx ? { ...e, [field]: value } : e));
+    setEvents(ev => {
+      const updated = ev.map((e, i) => i === idx ? { ...e, [field]: value } : e);
+      if (confirmBreeder) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events: updated, availabilityNote }));
+      return updated;
+    });
   }
 
   function applyStudio(idx: number, studioLabel: string) {
     if (studioLabel === "private") {
-      setEvents(ev => ev.map((e, i) => i === idx ? { ...e, city: "", location: "", isPrivateEvent: true } : e));
+      setEvents(ev => {
+        const updated = ev.map((e, i) => i === idx ? { ...e, city: "", location: "", isPrivateEvent: true } : e);
+        if (confirmBreeder) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events: updated, availabilityNote }));
+        return updated;
+      });
     } else {
       const studio = STUDIO_LOCATIONS.find(s => s.label === studioLabel);
       if (studio) {
-        setEvents(ev => ev.map((e, i) => i === idx ? { ...e, city: studio.city, location: studio.address, isPrivateEvent: false } : e));
+        setEvents(ev => {
+          const updated = ev.map((e, i) => i === idx ? { ...e, city: studio.city, location: studio.address, isPrivateEvent: false } : e);
+          if (confirmBreeder) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events: updated, availabilityNote }));
+          return updated;
+        });
       }
     }
   }
@@ -267,12 +312,16 @@ export default function BreedersDashboard() {
   }
 
   function handleSend() {
-    if (!confirmBreeder?.email) { alert("This breeder has no email address on file. Please add one first."); return; }
+    if (!confirmBreeder?.email && !confirmBreeder?.phone) {
+      alert("This breeder has no email or phone on file. Please add contact info first.");
+      return;
+    }
     const firstName = (confirmBreeder.contactName || confirmBreeder.name).split(" ")[0];
     sendMutation.mutate({
       breederId: confirmBreeder.id,
       breederFirstName: firstName,
-      toEmail: confirmBreeder.email,
+      toEmail: confirmBreeder.email || undefined,
+      toPhone: confirmBreeder.phone || undefined,
       events,
       availabilityNote: availabilityNote || undefined,
     });
@@ -787,11 +836,27 @@ export default function BreedersDashboard() {
             </DialogTitle>
           </DialogHeader>
 
+          {/* Draft restored banner */}
+          {confirmBreeder && hasDraft(confirmBreeder.id) && !previewHtml && (
+            <div className="flex items-center justify-between px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs font-body text-amber-800">
+              <span>📝 Draft restored — your unsent changes are still here.</span>
+              <button
+                onClick={() => clearDraft(confirmBreeder.id)}
+                className="ml-3 text-amber-600 hover:text-amber-800 underline whitespace-nowrap"
+              >
+                Start fresh
+              </button>
+            </div>
+          )}
+
           {previewHtml ? (
             <div>
               <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                 <p className="font-body text-sm text-amber-800">
-                  Preview below. Email will be sent to <strong>{confirmBreeder?.email}</strong>.
+              Preview below. Confirmation will be sent to:
+              {confirmBreeder?.email && <> <strong>{confirmBreeder.email}</strong> (email)</>}
+              {confirmBreeder?.email && confirmBreeder?.phone && " · "}
+              {confirmBreeder?.phone && <> <strong>{confirmBreeder.phone}</strong> (SMS)</>}
                 </p>
               </div>
               <div
@@ -808,7 +873,7 @@ export default function BreedersDashboard() {
                   className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body gap-2"
                 >
                   <Send className="w-4 h-4" />
-                  {sendMutation.isPending ? "Sending..." : "Send Email"}
+                  {sendMutation.isPending ? "Sending..." : "Send Confirmation"}
                 </Button>
               </div>
             </div>
@@ -820,7 +885,11 @@ export default function BreedersDashboard() {
                     <span className="font-body text-sm font-semibold text-[#8B2252]">Event {idx + 1}</span>
                     {events.length > 1 && (
                       <button
-                        onClick={() => setEvents(ev => ev.filter((_, i) => i !== idx))}
+                        onClick={() => setEvents(ev => {
+                          const updated = ev.filter((_, i) => i !== idx);
+                          if (confirmBreeder) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events: updated, availabilityNote }));
+                          return updated;
+                        })}
                         className="text-red-400 hover:text-red-600"
                       >
                         <X className="w-4 h-4" />
@@ -913,7 +982,11 @@ export default function BreedersDashboard() {
 
               <Button
                 variant="outline"
-                onClick={() => setEvents(ev => [...ev, { ...EMPTY_EVENT, compensation: confirmBreeder?.typicalRate ? `$${confirmBreeder.typicalRate}` : "" }])}
+                onClick={() => setEvents(ev => {
+                  const updated = [...ev, { ...EMPTY_EVENT, compensation: confirmBreeder?.typicalRate ? `$${confirmBreeder.typicalRate}` : "" }];
+                  if (confirmBreeder) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events: updated, availabilityNote }));
+                  return updated;
+                })}
                 className="w-full border-dashed border-[#F0D0DC] text-[#8B2252] hover:bg-[#FFF0F4] font-body gap-2"
               >
                 <Plus className="w-4 h-4" />
@@ -924,7 +997,11 @@ export default function BreedersDashboard() {
                 <Label className="font-body text-sm text-[#1A0A12] font-semibold">Checking Availability For (optional)</Label>
                 <Input
                   value={availabilityNote}
-                  onChange={(e) => setAvailabilityNote(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setAvailabilityNote(val);
+                    if (confirmBreeder) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events, availabilityNote: val }));
+                  }}
                   className="mt-1 border-[#F0D0DC] font-body"
                   placeholder="e.g. Saturday, July 11"
                 />
@@ -933,7 +1010,10 @@ export default function BreedersDashboard() {
 
               <div className="p-3 bg-[#FFF5F8] border border-[#F0D0DC] rounded-lg">
                 <p className="font-body text-xs text-[#6B4C3B]">
-                  Email will be sent from <strong>afropuppyyogaofficial@gmail.com</strong> to <strong>{confirmBreeder?.email || "no email on file"}</strong>
+                  Confirmation will be sent from <strong>afropuppyyoga@gmail.com</strong> / <strong>289-788-1885</strong> to:{" "}
+                  {confirmBreeder?.email && <><strong>{confirmBreeder.email}</strong> (email){confirmBreeder?.phone ? " · " : ""}</>}
+                  {confirmBreeder?.phone && <><strong>{confirmBreeder.phone}</strong> (SMS)</>}
+                  {!confirmBreeder?.email && !confirmBreeder?.phone && <span className="text-red-500">No contact info on file</span>}
                 </p>
               </div>
             </div>
@@ -1159,3 +1239,4 @@ export default function BreedersDashboard() {
     </div>
   );
 }
+import { toast } from "sonner";

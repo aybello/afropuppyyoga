@@ -1,9 +1,13 @@
 import { z } from "zod";
 import { staffProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { puppySchedule, breeders } from "../../drizzle/schema";
-import { eq, and, gte, lte, desc } from "drizzle-orm";
+import { puppySchedule, breeders, classStaffAssignments, jobApplications, staffAvailability, weekendLeadershipCoverage } from "../../drizzle/schema";
+import { eq, and, gte, lte, desc, isNull } from "drizzle-orm";
 import { sendEmail, buildBreederConfirmationEmail } from "../email";
+import { createLumaEventForSchedule } from "../lumaScheduleHelper";
+import { isAwayOnDate } from "../weekendCoverage";
+import { isClassFullyStaffed, scheduleLocationToTeamLocation, staffingGaps, TWO_PUPPY_MONITORS_REQUIRED } from "../classStaffing";
+import { isActiveTeamMember } from "../teamMembership";
 
 const LOCATIONS = ["Kitchener", "Hamilton", "Oakville"] as const;
 const ALL_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
@@ -34,6 +38,88 @@ export const puppyScheduleRouter = router({
     if (!db) return [];
     return db.select().from(puppySchedule).orderBy(desc(puppySchedule.classDate));
   }),
+
+  // The operational view: breeder/class calendar plus leadership and Puppy Monitor coverage.
+  listWithStaffing: staffProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return [];
+    const schedules = await db.select().from(puppySchedule).orderBy(desc(puppySchedule.classDate));
+    if (!schedules.length) return [];
+    const earliestDate = schedules.reduce((earliest, schedule) => schedule.classDate < earliest ? schedule.classDate : earliest, schedules[0].classDate);
+    const [assignments, staff, leaves, leadershipCoverage] = await Promise.all([
+      db.select().from(classStaffAssignments),
+      db.select({ id: jobApplications.id, name: jobApplications.name, role: jobApplications.role, location: jobApplications.location, status: jobApplications.status, isTeamMember: jobApplications.isTeamMember, deletedAt: jobApplications.deletedAt })
+        .from(jobApplications)
+        .where(and(isNull(jobApplications.deletedAt), eq(jobApplications.isTeamMember, true))),
+      db.select().from(staffAvailability).where(gte(staffAvailability.endDate, earliestDate)),
+      db.select().from(weekendLeadershipCoverage).where(gte(weekendLeadershipCoverage.coverageDate, earliestDate)),
+    ]);
+    const activeStaff = staff.filter(isActiveTeamMember);
+    const sameRole = (role: string, expected: string) => role === expected || role === expected.toLowerCase().replaceAll(" ", "_");
+
+    return schedules.map((schedule) => {
+      const location = scheduleLocationToTeamLocation(schedule.location);
+      const assignmentRows = assignments.filter((assignment) => assignment.scheduleId === schedule.id);
+      const assignedIds = new Set(assignmentRows.map((assignment) => assignment.staffId));
+      const isAway = (staffId: number) => leaves.some((leave) => leave.staffId === staffId && isAwayOnDate(leave, schedule.classDate));
+      const resolveLeader = (role: "Operations Manager" | "Yoga Instructor") => {
+        const coverage = leadershipCoverage.find((item) => item.coverageDate === schedule.classDate && item.location === location && item.role === role && item.coverageStaffId);
+        if (coverage?.coverageStaffId) return { id: coverage.coverageStaffId, name: coverage.coverageStaffName ?? "Assigned cover", isCover: true };
+        const primary = activeStaff.find((person) => person.location === location && sameRole(person.role, role));
+        return primary && !isAway(primary.id) ? { id: primary.id, name: primary.name, isCover: false } : null;
+      };
+      const operationsManager = resolveLeader("Operations Manager");
+      const yogaInstructor = resolveLeader("Yoga Instructor");
+      const assignedPuppyMonitors = assignmentRows.map((assignment) => ({ id: assignment.id, staffId: assignment.staffId, name: assignment.staffName }));
+      const eligiblePuppyMonitors = activeStaff
+        .filter((person) => person.location === location && sameRole(person.role, "Puppy Monitor"))
+        .filter((person) => !isAway(person.id) && !assignedIds.has(person.id))
+        .map((person) => ({ id: person.id, name: person.name }));
+      const gaps = staffingGaps({ operationsManager: Boolean(operationsManager), yogaInstructor: Boolean(yogaInstructor), puppyMonitorCount: assignedPuppyMonitors.length });
+      return {
+        ...schedule,
+        staffing: {
+          operationsManager,
+          yogaInstructor,
+          assignedPuppyMonitors,
+          eligiblePuppyMonitors,
+          requiredPuppyMonitors: TWO_PUPPY_MONITORS_REQUIRED,
+          gaps,
+          fullyStaffed: isClassFullyStaffed({ operationsManager: Boolean(operationsManager), yogaInstructor: Boolean(yogaInstructor), puppyMonitorCount: assignedPuppyMonitors.length }),
+        },
+      };
+    });
+  }),
+
+  assignPuppyMonitor: staffProcedure
+    .input(z.object({ scheduleId: z.number().int().positive(), staffId: z.number().int().positive() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+      const [schedule] = await db.select().from(puppySchedule).where(eq(puppySchedule.id, input.scheduleId)).limit(1);
+      if (!schedule) throw new Error("Scheduled class not found");
+      const [staffMember] = await db.select({ id: jobApplications.id, name: jobApplications.name, role: jobApplications.role, location: jobApplications.location, status: jobApplications.status, isTeamMember: jobApplications.isTeamMember, deletedAt: jobApplications.deletedAt })
+        .from(jobApplications).where(eq(jobApplications.id, input.staffId)).limit(1);
+      if (!staffMember || !isActiveTeamMember(staffMember)) throw new Error("Choose an active APY HQ team member.");
+      if (staffMember.role !== "Puppy Monitor" && staffMember.role !== "puppy_monitor") throw new Error("Only Puppy Monitors can be assigned to this requirement.");
+      if (staffMember.location !== scheduleLocationToTeamLocation(schedule.location)) throw new Error("Choose a Puppy Monitor assigned to this studio.");
+      const [away] = await db.select().from(staffAvailability).where(and(eq(staffAvailability.staffId, staffMember.id), lte(staffAvailability.startDate, schedule.classDate), gte(staffAvailability.endDate, schedule.classDate))).limit(1);
+      if (away) throw new Error(`${staffMember.name} is unavailable on this class date.`);
+      const existing = await db.select().from(classStaffAssignments).where(eq(classStaffAssignments.scheduleId, input.scheduleId));
+      if (existing.some((assignment) => assignment.staffId === staffMember.id)) throw new Error(`${staffMember.name} is already assigned to this class.`);
+      if (existing.length >= TWO_PUPPY_MONITORS_REQUIRED) throw new Error(`This class already has its required ${TWO_PUPPY_MONITORS_REQUIRED} Puppy Monitors.`);
+      await db.insert(classStaffAssignments).values({ scheduleId: input.scheduleId, staffId: staffMember.id, staffName: staffMember.name, role: "Puppy Monitor" });
+      return { success: true };
+    }),
+
+  removePuppyMonitorAssignment: staffProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+      await db.delete(classStaffAssignments).where(eq(classStaffAssignments.id, input.id));
+      return { success: true };
+    }),
 
   // ─── Calendar procedures ──────────────────────────────────────────────────
 
@@ -68,7 +154,7 @@ export const puppyScheduleRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
-      await db.insert(puppySchedule).values({
+      const [inserted] = await db.insert(puppySchedule).values({
         classDate: input.classDate,
         dayOfWeek: input.dayOfWeek,
         location: input.location,
@@ -79,8 +165,25 @@ export const puppyScheduleRouter = router({
         endTime: input.endTime,
         classType: input.classType,
         notes: input.notes ?? null,
+      }).$returningId();
+
+      // Auto-create Luma event page (non-fatal if it fails)
+      const lumaResult = await createLumaEventForSchedule({
+        classDate: input.classDate,
+        location: input.location,
+        breed: input.breed,
+        startTime: input.startTime,
+        endTime: input.endTime,
+        classType: input.classType,
       });
-      return { success: true };
+
+      if (lumaResult && inserted?.id) {
+        await db.update(puppySchedule)
+          .set({ lumaEventId: lumaResult.lumaEventId, lumaEventUrl: lumaResult.lumaEventUrl })
+          .where(eq(puppySchedule.id, inserted.id));
+      }
+
+      return { success: true, lumaEventUrl: lumaResult?.lumaEventUrl ?? null };
     }),
 
   /** Update an existing schedule slot — staff/admin only */

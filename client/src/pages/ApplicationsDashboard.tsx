@@ -66,6 +66,23 @@ async function openVideo(videoKey: string | null | undefined, videoUrl: string |
   window.open(videoUrl, "_blank");
 }
 
+async function openResume(resumeKey: string | null | undefined, resumeUrl: string | null | undefined) {
+  if (!resumeUrl) return;
+  if (resumeKey) {
+    try {
+      const res = await fetch(`/api/resume-url?key=${encodeURIComponent(resumeKey)}`);
+      if (res.ok) {
+        const { url } = await res.json();
+        window.open(url, "_blank", "noopener,noreferrer");
+        return;
+      }
+    } catch {
+      // Fall through for a legacy application without a usable storage key.
+    }
+  }
+  window.open(resumeUrl, "_blank", "noopener,noreferrer");
+}
+
 /**
  * Returns a proxy URL for range-request video seeking in the inline player.
  */
@@ -98,6 +115,7 @@ type Application = {
   videoUrl: string | null;
   videoKey: string | null;
   resumeUrl: string | null;
+  resumeKey: string | null;
   status: string;
   createdAt: Date;
   signingStatus: string | null;
@@ -446,23 +464,44 @@ function OnboardingEmailModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Orientation Date (optional)</Label>
-              <Input
-                placeholder="e.g. Saturday, May 10th"
-                value={orientationDate}
-                onChange={(e) => setOrientationDate(e.target.value)}
-                className="border-[#F0D0DC] font-body"
-              />
-              <p className="font-body text-xs text-[#C4A0B0] mt-1">Leave blank to omit</p>
+              <Select value={orientationDate} onValueChange={setOrientationDate}>
+                <SelectTrigger className="border-[#F0D0DC] font-body">
+                  <SelectValue placeholder="Select a date" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(() => {
+                    const dates: string[] = [];
+                    const now = new Date();
+                    for (let i = 1; i <= 28; i++) {
+                      const d = new Date(now);
+                      d.setDate(now.getDate() + i);
+                      const day = d.toLocaleDateString('en-US', { weekday: 'long' });
+                      const month = d.toLocaleDateString('en-US', { month: 'long' });
+                      const date = d.getDate();
+                      const suffix = date === 1 || date === 21 || date === 31 ? 'st' : date === 2 || date === 22 ? 'nd' : date === 3 || date === 23 ? 'rd' : 'th';
+                      dates.push(`${day}, ${month} ${date}${suffix}`);
+                    }
+                    return dates.map((d) => (
+                      <SelectItem key={d} value={d}>{d}</SelectItem>
+                    ));
+                  })()}
+                </SelectContent>
+              </Select>
+              <p className="font-body text-xs text-[#C4A0B0] mt-1">Leave unselected to omit</p>
             </div>
             <div>
               <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Orientation Time (optional)</Label>
-              <Input
-                placeholder="e.g. 9:00 AM"
-                value={orientationTime}
-                onChange={(e) => setOrientationTime(e.target.value)}
-                className="border-[#F0D0DC] font-body"
-              />
-              <p className="font-body text-xs text-[#C4A0B0] mt-1">Kitchener: 9am, Hamilton: 10am</p>
+              <Select value={orientationTime} onValueChange={setOrientationTime}>
+                <SelectTrigger className="border-[#F0D0DC] font-body">
+                  <SelectValue placeholder="Select a time" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="9:00 AM">9:00 AM (Kitchener)</SelectItem>
+                  <SelectItem value="10:00 AM">10:00 AM (Hamilton)</SelectItem>
+                  <SelectItem value="10:00 AM (Oakville)">10:00 AM (Oakville)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="font-body text-xs text-[#C4A0B0] mt-1">Auto-suggests based on location</p>
             </div>
           </div>
 
@@ -700,14 +739,13 @@ function ApplicationDetailModal({
             {app.resumeUrl && (
               <div>
                 <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-2">Resume</p>
-                <a
-                  href={app.resumeUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => openResume(app.resumeKey, app.resumeUrl)}
                   className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-xl font-body text-sm font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
                 >
                   <FileText className="w-4 h-4" /> View Resume
-                </a>
+                </button>
               </div>
             )}
 
@@ -859,9 +897,15 @@ export default function ApplicationsDashboard() {
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const [applicationQuery, setApplicationQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | AppStatus>("all");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [applicationPage, setApplicationPage] = useState(1);
 
   const { data: applications, isLoading } = trpc.careers.list.useQuery(undefined, {
-    refetchInterval: 15000,
+    refetchInterval: 60000,
+    staleTime: 30000,
+    refetchOnWindowFocus: true,
   });
 
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
@@ -873,11 +917,25 @@ export default function ApplicationsDashboard() {
 
   const deleteApplication = trpc.careers.deleteApplication.useMutation({
     onSuccess: () => {
-      toast.success("Application deleted");
+      toast.success("Application archived");
       utils.careers.list.invalidate();
+      utils.careers.listArchived.invalidate();
       setDeleteConfirmId(null);
     },
-    onError: (err) => toast.error(`Failed to delete: ${err.message}`),
+    onError: (err) => toast.error(`Failed to archive: ${err.message}`),
+  });
+
+  const [showArchived, setShowArchived] = useState(false);
+  const { data: archivedApps, isLoading: archivedLoading } = trpc.careers.listArchived.useQuery(undefined, {
+    enabled: showArchived,
+  });
+  const restoreApplication = trpc.careers.restoreApplication.useMutation({
+    onSuccess: () => {
+      toast.success("Application restored");
+      utils.careers.list.invalidate();
+      utils.careers.listArchived.invalidate();
+    },
+    onError: (err) => toast.error(`Failed to restore: ${err.message}`),
   });
   const requestVideoMain = trpc.careers.requestVideo.useMutation({
     onSuccess: (_, vars) => {
@@ -927,6 +985,23 @@ export default function ApplicationsDashboard() {
   const shortlistedCount = applications?.filter((a) => a.status === "shortlisted").length ?? 0;
   const interviewCount = applications?.filter((a) => a.status === "interview_scheduled").length ?? 0;
   const totalCount = applications?.length ?? 0;
+  const applicationRoles = Array.from(new Set((applications ?? []).map((app) => app.role))).sort();
+  const normalizedQuery = applicationQuery.trim().toLowerCase();
+  const filteredApplications = (applications ?? []).filter((app) => {
+    const matchesQuery = !normalizedQuery || [app.name, app.email, app.role, app.location]
+      .filter((value): value is string => typeof value === "string")
+      .some((value) => value.toLowerCase().includes(normalizedQuery));
+    const matchesStatus = statusFilter === "all" || app.status === statusFilter;
+    const matchesRole = roleFilter === "all" || app.role === roleFilter;
+    return matchesQuery && matchesStatus && matchesRole;
+  });
+  const applicationsPerPage = 50;
+  const totalApplicationPages = Math.max(1, Math.ceil(filteredApplications.length / applicationsPerPage));
+  const currentApplicationPage = Math.min(applicationPage, totalApplicationPages);
+  const displayedApplications = filteredApplications.slice(
+    (currentApplicationPage - 1) * applicationsPerPage,
+    currentApplicationPage * applicationsPerPage
+  );
 
   return (
     <div className="min-h-screen bg-[#FEFAF4]">
@@ -934,13 +1009,23 @@ export default function ApplicationsDashboard() {
 
       <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
         {/* Page title */}
-        <div>
-          <div className="inline-flex items-center gap-2 mb-2">
-            <span className="h-px w-6 bg-[#8B2252]" />
-            <span className="font-body text-xs font-semibold tracking-widest uppercase text-[#8B2252]">Admin</span>
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="inline-flex items-center gap-2 mb-2">
+              <span className="h-px w-6 bg-[#8B2252]" />
+              <span className="font-body text-xs font-semibold tracking-widest uppercase text-[#8B2252]">Admin</span>
+            </div>
+            <h1 className="font-display font-bold text-3xl text-[#1A0A12]">Job Applications</h1>
+            <p className="font-body text-sm text-[#1A0A12] mt-1">Review and manage applicants for all open positions</p>
           </div>
-          <h1 className="font-display font-bold text-3xl text-[#1A0A12]">Job Applications</h1>
-          <p className="font-body text-sm text-[#1A0A12] mt-1">Review and manage applicants for all open positions</p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-[#F0D0DC] text-[#8B2252] hover:bg-[#FFF5F8] font-body"
+            onClick={() => setShowArchived(true)}
+          >
+            <Inbox className="w-4 h-4 mr-1.5" /> Archived
+          </Button>
         </div>
 
         {/* Summary cards */}
@@ -963,6 +1048,42 @@ export default function ApplicationsDashboard() {
           </div>
         </div>
 
+        <div className="bg-white rounded-2xl border border-[#F0D0DC] p-4 flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+          <div className="flex flex-col sm:flex-row gap-3 flex-1">
+            <Input
+              value={applicationQuery}
+              onChange={(event) => { setApplicationQuery(event.target.value); setApplicationPage(1); }}
+              placeholder="Search applicant, email, role, or location"
+              className="sm:max-w-sm border-[#F0D0DC]"
+            />
+            <select
+              value={statusFilter}
+              onChange={(event) => { setStatusFilter(event.target.value as "all" | AppStatus); setApplicationPage(1); }}
+              className="h-10 rounded-md border border-[#F0D0DC] bg-white px-3 font-body text-sm text-[#3D1A2E]"
+            >
+              <option value="all">All statuses</option>
+              <option value="new">New</option>
+              <option value="reviewed">Reviewed</option>
+              <option value="shortlisted">Shortlisted</option>
+              <option value="interview_scheduled">Interview scheduled</option>
+              <option value="accepted">Accepted</option>
+              <option value="rejected">Rejected</option>
+              <option value="onboarded">Onboarded</option>
+            </select>
+            <select
+              value={roleFilter}
+              onChange={(event) => { setRoleFilter(event.target.value); setApplicationPage(1); }}
+              className="h-10 rounded-md border border-[#F0D0DC] bg-white px-3 font-body text-sm text-[#3D1A2E]"
+            >
+              <option value="all">All roles</option>
+              {applicationRoles.map((role) => <option key={role} value={role}>{role}</option>)}
+            </select>
+          </div>
+          <p className="font-body text-xs text-[#6B4658] whitespace-nowrap">
+            Showing {displayedApplications.length} of {filteredApplications.length} applications
+          </p>
+        </div>
+
 
 
         {/* Applications table */}
@@ -980,6 +1101,11 @@ export default function ApplicationsDashboard() {
               <p className="font-body text-[#1A0A12] text-sm">
                 Applications submitted through the careers page will appear here.
               </p>
+            </div>
+          ) : filteredApplications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <h3 className="font-display font-bold text-xl text-[#1A0A12] mb-2">No matching applications</h3>
+              <p className="font-body text-[#1A0A12] text-sm">Try clearing or changing your search filters.</p>
             </div>
           ) : (
             <div
@@ -1006,7 +1132,7 @@ export default function ApplicationsDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {applications.map((app, idx) => (
+                  {displayedApplications.map((app, idx) => (
                     <tr
                       key={app.id}
                       className={`border-b border-[#F0D0DC] last:border-0 transition-colors hover:bg-[#FFF5F8] ${idx % 2 === 0 ? "" : "bg-[#FEFAF4]"}`}
@@ -1072,15 +1198,14 @@ export default function ApplicationsDashboard() {
                       {/* Resume */}
                       <td className="px-5 py-4">
                         {app.resumeUrl ? (
-                          <a
-                            href={app.resumeUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            type="button"
+                            onClick={() => openResume(app.resumeKey, app.resumeUrl)}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg font-body text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
                           >
                             <FileText className="w-3 h-3" />
                             View
-                          </a>
+                          </button>
                         ) : (
                           <span className="font-body text-xs text-[#C4A0B0] italic">No resume</span>
                         )}
@@ -1158,14 +1283,16 @@ export default function ApplicationsDashboard() {
                           >
                             <CheckCircle className="w-3 h-3" />
                           </button>
-                          <button
-                            onClick={() => requestVideoMain.mutate({ id: app.id, applicantName: app.name, applicantEmail: app.email, role: app.role, location: app.location })}
-                            disabled={requestVideoMain.isPending}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-orange-50 border border-orange-200 rounded-lg font-body text-xs font-semibold text-orange-600 hover:bg-orange-100 transition-colors"
-                            title="Request intro video"
-                          >
-                            <VideoIcon className="w-3 h-3" />
-                          </button>
+                          {app.email ? (
+                            <button
+                              onClick={() => requestVideoMain.mutate({ id: app.id, applicantName: app.name, applicantEmail: app.email!, role: app.role, location: app.location })}
+                              disabled={requestVideoMain.isPending}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-orange-50 border border-orange-200 rounded-lg font-body text-xs font-semibold text-orange-600 hover:bg-orange-100 transition-colors"
+                              title="Request intro video"
+                            >
+                              <VideoIcon className="w-3 h-3" />
+                            </button>
+                          ) : null}
                           <button
                             onClick={() => { setSelectedApp(app as Application); setShowRejectionModal(true); }}
                             className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg font-body text-xs font-semibold text-red-600 hover:bg-red-100 transition-colors"
@@ -1197,11 +1324,36 @@ export default function ApplicationsDashboard() {
               </table>
             </div>
           )}
+          {filteredApplications.length > applicationsPerPage && (
+            <div className="flex items-center justify-between border-t border-[#F0D0DC] px-5 py-3 bg-[#FEFAF4]">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={currentApplicationPage === 1}
+                onClick={() => setApplicationPage((page) => Math.max(1, page - 1))}
+                className="border-[#F0D0DC] text-[#8B2252]"
+              >
+                Previous
+              </Button>
+              <p className="font-body text-xs text-[#6B4658]">Page {currentApplicationPage} of {totalApplicationPages}</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={currentApplicationPage === totalApplicationPages}
+                onClick={() => setApplicationPage((page) => Math.min(totalApplicationPages, page + 1))}
+                className="border-[#F0D0DC] text-[#8B2252]"
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Modals */}
-      {selectedApp && !showInterviewModal && !showOfferModal && !showRejectionModal && (
+      {selectedApp && !showInterviewModal && !showOfferModal && !showRejectionModal && !showOnboardingModal && (
         <ApplicationDetailModal
           app={selectedApp}
           open={!!selectedApp}
@@ -1229,30 +1381,79 @@ export default function ApplicationsDashboard() {
           onClose={() => { setShowRejectionModal(false); setSelectedApp(null); }}
         />
       )}
-      {/* Delete Confirmation Dialog */}
+      {selectedApp && showOnboardingModal && (
+        <OnboardingEmailModal
+          app={selectedApp}
+          open={showOnboardingModal}
+          onClose={() => { setShowOnboardingModal(false); setSelectedApp(null); }}
+        />
+      )}
+      {/* Archive Confirmation Dialog */}
       <AlertDialog open={deleteConfirmId !== null} onOpenChange={(v) => !v && setDeleteConfirmId(null)}>
         <AlertDialogContent className="bg-[#FEFAF4] border-[#F0D0DC]">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-xl text-[#1A0A12]">Delete Application?</AlertDialogTitle>
+            <AlertDialogTitle className="font-display text-xl text-[#1A0A12]">Archive Application?</AlertDialogTitle>
             <AlertDialogDescription className="font-body text-sm text-[#1A0A12]">
-              This will permanently delete the application and cannot be undone.
+              This will move the application to the archive. You can restore it later from the Archived tab.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="font-body border-[#F0D0DC]">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteConfirmId !== null && deleteApplication.mutate({ id: deleteConfirmId })}
-              className="font-body bg-red-600 hover:bg-red-700 text-white"
+              className="font-body bg-amber-600 hover:bg-amber-700 text-white"
             >
               {deleteApplication.isPending ? (
-                <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Deleting...</>
+                <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Archiving...</>
               ) : (
-                "Delete"
+                "Archive"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Archived Applications Dialog */}
+      <Dialog open={showArchived} onOpenChange={setShowArchived}>
+        <DialogContent className="bg-[#FEFAF4] border-[#F0D0DC] max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl text-[#1A0A12]">Archived Applications</DialogTitle>
+            <DialogDescription className="font-body text-sm text-[#1A0A12]">
+              These applications were archived and can be restored at any time.
+            </DialogDescription>
+          </DialogHeader>
+          {archivedLoading ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 className="w-6 h-6 animate-spin text-[#8B2252]" />
+            </div>
+          ) : !archivedApps || archivedApps.length === 0 ? (
+            <div className="text-center py-10">
+              <Inbox className="w-10 h-10 mx-auto text-gray-300 mb-3" />
+              <p className="font-body text-sm text-gray-500">No archived applications</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {archivedApps.map((app) => (
+                <div key={app.id} className="flex items-center justify-between bg-white rounded-xl p-4 border border-[#F0D0DC]">
+                  <div>
+                    <p className="font-body font-semibold text-[#1A0A12]">{app.name}</p>
+                    <p className="font-body text-xs text-gray-500">{app.role} • {app.location} • Archived {app.deletedAt ? new Date(app.deletedAt).toLocaleDateString() : ''}</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                    onClick={() => restoreApplication.mutate({ id: app.id })}
+                    disabled={restoreApplication.isPending}
+                  >
+                    {restoreApplication.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "Restore"}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

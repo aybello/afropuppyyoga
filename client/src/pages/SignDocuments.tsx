@@ -23,6 +23,8 @@ function getOfferLetterContent(
 
   const isYogaInstructor = offerLetterType === "yoga_instructor";
   const isPuppySpecialist = offerLetterType === "puppy_specialist";
+  const isOperationsSpecialist = offerLetterType === "operations_specialist";
+  const isBDR = offerLetterType === "bdr";
 
   if (isYogaInstructor) {
     return (
@@ -63,6 +65,7 @@ function getOfferLetterContent(
           <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Terms and Conditions</p>
           <p><strong>Probation Period:</strong> A probationary period of 4 months will apply to assess performance and alignment with APY's goals.</p>
           <p className="mt-2"><strong>Confidentiality:</strong> You will be required to sign a Non-Disclosure Agreement (NDA) to protect AfroPuppyYoga's proprietary information.</p>
+          <p className="mt-2"><strong>Notice of Resignation:</strong> If you wish to end your engagement with AfroPuppyYoga, please provide at least two weeks' written notice whenever reasonably possible. This helps APY arrange class coverage and maintain a consistent guest experience.</p>
           <p className="mt-2"><strong>Performance Reviews:</strong> Class feedback and team collaboration will be reviewed periodically.</p>
         </div>
 
@@ -73,7 +76,59 @@ function getOfferLetterContent(
           </p>
           <p className="mt-3">Warm regards,</p>
           <p className="font-bold">The AfroPuppyYoga Team</p>
-          <p className="text-xs text-[#C4A0B0]">afropuppyyogaofficial@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
+          <p className="text-xs text-[#C4A0B0]">afropuppyyoga@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isOperationsSpecialist) {
+    return (
+      <div className="space-y-4 text-sm text-[#1A0A12] leading-relaxed">
+        <p className="text-xs text-[#C4A0B0]">{today}</p>
+        <p>Dear <strong>{applicantName}</strong>,</p>
+        <p>
+          On behalf of the AfroPuppyYoga team, we are excited to offer you the position of <strong>Operations Specialist</strong> at our <strong>{location}</strong> location. Your organization, calm problem-solving, and ability to create smooth guest and team experiences will be central to every APY class.
+        </p>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Position Details</p>
+          <p><strong>Position:</strong> Operations Specialist</p>
+          <p><strong>Location:</strong> {location}</p>
+          <p><strong>Compensation:</strong> $20.00 per hour</p>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Key Responsibilities</p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Prepare the venue before class and ensure a smooth reset and close-down after the final session</li>
+            <li>Coordinate staff arrival, class flow, guest check-in, and on-site communications</li>
+            <li>Support breeder and puppy-handler arrival, handoff, supplies, and venue logistics</li>
+            <li>Track operational supplies, attendance, incidents, and issues requiring follow-up</li>
+            <li>Escalate safety, staffing, guest, or venue concerns promptly to APY leadership</li>
+            <li>Represent AfroPuppyYoga with warmth, professionalism, and consistent attention to detail</li>
+          </ul>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Schedule and Hours</p>
+          <p>Scheduling will be determined by APY's event calendar. Weekend availability, punctuality, and flexibility are essential for this class-operations role.</p>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Terms and Conditions</p>
+          <p><strong>Probation Period:</strong> A probationary period of 4 months will apply to assess performance and alignment with APY's standards.</p>
+          <p className="mt-2"><strong>Confidentiality:</strong> You will be required to sign a Non-Disclosure Agreement (NDA) to protect AfroPuppyYoga's proprietary information.</p>
+          <p className="mt-2"><strong>Notice of Resignation:</strong> If you wish to end your engagement with AfroPuppyYoga, please provide at least two weeks' written notice whenever reasonably possible. This helps APY arrange coverage and maintain a consistent guest experience.</p>
+          <p className="mt-2"><strong>Dress Code:</strong> Black APY-appropriate attire and grippy socks are required for on-site shifts.</p>
+          <p className="mt-2"><strong>Performance Reviews:</strong> Operational readiness, team collaboration, and guest experience outcomes will be reviewed periodically.</p>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p>We are thrilled to welcome you to AfroPuppyYoga and look forward to the care and operational consistency you will bring to our classes.</p>
+          <p className="mt-3">Warmly,</p>
+          <p className="font-bold">Ay &amp; The AfroPuppyYoga Team</p>
+          <p className="text-xs text-[#C4A0B0]">afropuppyyoga@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
         </div>
       </div>
     );
@@ -123,6 +178,7 @@ function getOfferLetterContent(
           <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Terms and Conditions</p>
           <p><strong>Probation Period:</strong> A probationary period of 4 months will apply to assess performance and alignment with APY's standards.</p>
           <p className="mt-2"><strong>Confidentiality:</strong> You will be required to sign a Non-Disclosure Agreement (NDA) to protect AfroPuppyYoga's proprietary information.</p>
+          <p className="mt-2"><strong>Notice of Resignation:</strong> If you wish to end your engagement with AfroPuppyYoga, please provide at least two weeks' written notice whenever reasonably possible. This helps APY arrange class coverage and maintain a consistent guest experience.</p>
           <p className="mt-2"><strong>Dress Code:</strong> Black yoga attire and grippy socks are required for all sessions.</p>
           <p className="mt-2"><strong>Performance Reviews:</strong> Puppy welfare outcomes and team collaboration will be reviewed periodically.</p>
         </div>
@@ -134,7 +190,69 @@ function getOfferLetterContent(
           </p>
           <p className="mt-3">Warmly,</p>
           <p className="font-bold">Ay &amp; The AfroPuppyYoga Team</p>
-          <p className="text-xs text-[#C4A0B0]">afropuppyyogaofficial@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
+          <p className="text-xs text-[#C4A0B0]">afropuppyyoga@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isBDR) {
+    return (
+      <div className="space-y-4 text-sm text-[#1A0A12] leading-relaxed">
+        <p className="text-xs text-[#C4A0B0]">{today}</p>
+        <p>Dear <strong>{applicantName}</strong>,</p>
+        <p>
+          We are excited to formally offer you the position of <strong>Business Development Representative (BDR)</strong> with <strong>AfroPuppyYoga (APY)</strong>. Your relationship-building approach and understanding of wellness-focused businesses will help expand APY's partnerships and private-event opportunities.
+        </p>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Position Details</p>
+          <p><strong>Position:</strong> Business Development Representative (BDR)</p>
+          <p><strong>Work Arrangement:</strong> Remote · Central APY Team</p>
+          <p><strong>Independent Contractor:</strong> This engagement is an independent-contractor arrangement and does not create an employment, partnership, joint-venture, or agency relationship.</p>
+          <p className="mt-2"><strong>Compensation:</strong> 7% commission on inbound business and 10% commission on outbound business, calculated on Eligible Collected Revenue.</p>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Key Responsibilities</p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Respond to and qualify inbound partnership, corporate wellness, and private-event opportunities</li>
+            <li>Research and conduct outbound outreach to prospective partners, businesses, and community organizations</li>
+            <li>Maintain accurate opportunity notes and handoffs within APY's business-development workflow</li>
+            <li>Represent AfroPuppyYoga's wellness, culture, and puppy-welfare standards professionally in every interaction</li>
+          </ul>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Commission Terms</p>
+          <p><strong>Inbound business:</strong> Opportunities that first contact APY through an APY-owned channel, where you materially participate in qualifying, nurturing, or closing the opportunity.</p>
+          <p className="mt-2"><strong>Outbound business:</strong> Opportunities you first identify and actively approach on APY's behalf, recorded in APY's designated workflow. APY may reasonably determine attribution where more than one person has materially contributed.</p>
+          <p className="mt-2"><strong>Eligible Collected Revenue:</strong> Amounts actually received and retained by APY, excluding HST and other sales taxes, refunds, chargebacks, payment reversals, complimentary services, and unapproved discounts.</p>
+          <p className="mt-2"><strong>Payment timing:</strong> Commission is earned only as APY receives Eligible Collected Revenue and will be paid within 15 days after the end of the month in which the applicable revenue is received, subject to any required invoice and completed opportunity documentation.</p>
+          <p className="mt-2"><strong>Repeat business:</strong> Unless APY agrees otherwise in writing, commission applies to the initial paid booking or first paid transaction only; renewals, repeat bookings, expansions, and later work are not automatically commissionable.</p>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Notice, Direct Costs, and Limited Set-Off</p>
+          <p><strong>Notice:</strong> If you wish to end this contractor engagement, please provide at least two weeks' written notice whenever reasonably possible. This requirement does not apply where notice is not reasonably possible because of an emergency or other circumstances outside your reasonable control.</p>
+          <p className="mt-2"><strong>Direct documented costs only:</strong> If a material failure to provide notice directly causes APY to incur a reasonable, documented external replacement cost, APY may determine and recover that actual direct cost. APY will not seek lost profits, anticipated revenue, internal staff time, general overhead, or consequential or punitive damages under this clause.</p>
+          <p className="mt-2"><strong>Written notice and response:</strong> Before applying any recovery, APY will provide written notice describing the amount and supporting documentation. You may provide relevant information or raise a dispute within five business days, and APY will consider it before finalizing its reasonable determination.</p>
+          <p className="mt-2"><strong>Limited set-off authorization:</strong> To the extent permitted by law, you authorize APY to set off APY's reasonable, documented determination of an eligible direct replacement cost against unpaid approved commissions or invoices, after the written-notice process above. Any remaining undisputed approved commission or invoice balance will be paid under APY's normal payment terms.</p>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Terms and Conditions</p>
+          <p><strong>Records and Authority:</strong> You must maintain accurate opportunity notes and handoffs in APY's designated workflow. You may not bind APY, approve discounts, or promise pricing, dates, availability, or services without APY's prior written approval.</p>
+          <p className="mt-2"><strong>Confidentiality:</strong> You will be required to sign a Non-Disclosure Agreement (NDA) to protect AfroPuppyYoga's proprietary information.</p>
+          <p className="mt-2"><strong>Notice of Resignation:</strong> If you wish to end your engagement with AfroPuppyYoga, please provide at least two weeks' written notice whenever reasonably possible. This helps APY maintain continuity across active business opportunities.</p>
+          <p className="mt-2"><strong>Performance Reviews:</strong> Outreach activity, opportunity quality, and collaboration will be reviewed periodically.</p>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p>We are thrilled to welcome you to AfroPuppyYoga and look forward to the partnerships and experiences you will help create.</p>
+          <p className="mt-3">Warm regards,</p>
+          <p className="font-bold">The AfroPuppyYoga Team</p>
+          <p className="text-xs text-[#C4A0B0]">afropuppyyoga@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
         </div>
       </div>
     );
@@ -173,10 +291,11 @@ function getOfferLetterContent(
       </div>
 
       <div className="border-t border-[#F0D0DC] pt-4">
-        <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Terms and Conditions</p>
-        <p><strong>Probation Period:</strong> A probationary period of 4 months will apply.</p>
-        <p className="mt-2"><strong>Confidentiality:</strong> You will be required to sign a Non-Disclosure Agreement (NDA) to protect AfroPuppyYoga's proprietary information.</p>
-        <p className="mt-2"><strong>Dress Code:</strong> Black yoga attire and grippy socks are required for all sessions.</p>
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Terms and Conditions</p>
+          <p><strong>Probation Period:</strong> A probationary period of 4 months will apply.</p>
+          <p className="mt-2"><strong>Confidentiality:</strong> You will be required to sign a Non-Disclosure Agreement (NDA) to protect AfroPuppyYoga's proprietary information.</p>
+          <p className="mt-2"><strong>Notice of Resignation:</strong> If you wish to end your engagement with AfroPuppyYoga, please provide at least two weeks' written notice whenever reasonably possible. This helps APY arrange class coverage and maintain a consistent guest experience.</p>
+          <p className="mt-2"><strong>Dress Code:</strong> Black yoga attire and grippy socks are required for all sessions.</p>
       </div>
 
       <div className="border-t border-[#F0D0DC] pt-4">
@@ -186,7 +305,7 @@ function getOfferLetterContent(
         </p>
         <p className="mt-3">Warmly,</p>
         <p className="font-bold">Ay &amp; The AfroPuppyYoga Team</p>
-        <p className="text-xs text-[#C4A0B0]">afropuppyyogaofficial@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
+        <p className="text-xs text-[#C4A0B0]">afropuppyyoga@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
       </div>
     </div>
   );
@@ -369,8 +488,8 @@ function ErrorState({ message }: { message: string }) {
         <p className="text-sm text-[#1A0A12] leading-relaxed mb-6">{message}</p>
         <p className="text-xs text-[#C4A0B0]">
           Need help? Contact us at{" "}
-          <a href="mailto:afropuppyyogaofficial@gmail.com" className="text-[#8B2252] hover:underline">
-            afropuppyyogaofficial@gmail.com
+          <a href="mailto:afropuppyyoga@gmail.com" className="text-[#8B2252] hover:underline">
+            afropuppyyoga@gmail.com
           </a>{" "}
           or call{" "}
           <a href="tel:2897881885" className="text-[#8B2252] hover:underline">
@@ -391,7 +510,6 @@ export default function SignDocuments() {
   const [signedName, setSignedName] = useState("");
   const [hasReadOffer, setHasReadOffer] = useState(false);
   const [hasReadNDA, setHasReadNDA] = useState(false);
-  const [isAdult, setIsAdult] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const { data, isLoading, error } = trpc.signing.getSigningRequest.useQuery(
@@ -412,10 +530,6 @@ export default function SignDocuments() {
     }
     if (!hasReadOffer || !hasReadNDA) {
       toast.error("Please confirm you have read both documents before signing.");
-      return;
-    }
-    if (!isAdult) {
-      toast.error("You must confirm you are 18 years of age or older to sign.");
       return;
     }
     submitMutation.mutate({ token, signedName: signedName.trim() });
@@ -583,12 +697,6 @@ export default function SignDocuments() {
                 onChange={setHasReadNDA}
                 label="I have read and agree to the terms of the Non-Disclosure Agreement"
               />
-              <CheckboxItem
-                id="confirmAdult"
-                checked={isAdult}
-                onChange={setIsAdult}
-                label="I confirm that I am 18 years of age or older"
-              />
             </div>
 
             <Button
@@ -597,8 +705,7 @@ export default function SignDocuments() {
                 submitMutation.isPending ||
                 !signedName.trim() ||
                 !hasReadOffer ||
-                !hasReadNDA ||
-                !isAdult
+                !hasReadNDA
               }
               className="w-full h-12 bg-gradient-to-r from-[#8B2252] to-[#8B2252] hover:from-[#8B2252] hover:to-[#8B2252] text-white font-bold text-base rounded-xl"
             >

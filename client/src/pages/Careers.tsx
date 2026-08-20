@@ -88,7 +88,7 @@ const JOB_LISTINGS = [
     pay: "$50/shift",
     emoji: "🐾",
     description:
-      "You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class — feeding, cleaning, and making sure every pup is thriving.",
+      "You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class — feeding, cleaning, and making sure every pup is thriving. This role is perfect for university and college students looking for flexible, fun, part-time work.",
     responsibilities: [
       "Supervise and handle puppies throughout each class session",
       "Ensure the safety and wellbeing of all puppies at all times",
@@ -101,6 +101,7 @@ const JOB_LISTINGS = [
       "Calm, patient, and attentive personality",
       "Comfortable in a high-energy, social environment",
       "Reliable and punctual for event-based scheduling",
+      "University or college students encouraged to apply",
       "First aid for animals is a plus but not required",
     ],
     perks: [
@@ -121,7 +122,7 @@ const JOB_LISTINGS = [
     pay: "$50/shift",
     emoji: "🐾",
     description:
-      "You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class — feeding, cleaning, and making sure every pup is thriving.",
+      "You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class — feeding, cleaning, and making sure every pup is thriving. This role is perfect for university and college students looking for flexible, fun, part-time work.",
     responsibilities: [
       "Supervise and handle puppies throughout each class session",
       "Ensure the safety and wellbeing of all puppies at all times",
@@ -134,6 +135,7 @@ const JOB_LISTINGS = [
       "Calm, patient, and attentive personality",
       "Comfortable in a high-energy, social environment",
       "Reliable and punctual for event-based scheduling",
+      "University or college students encouraged to apply",
       "First aid for animals is a plus but not required",
     ],
     perks: [
@@ -154,7 +156,7 @@ const JOB_LISTINGS = [
     pay: "$50/shift",
     emoji: "🐾",
     description:
-      "You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class — feeding, cleaning, and making sure every pup is thriving.",
+      "You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class — feeding, cleaning, and making sure every pup is thriving. This role is perfect for university and college students looking for flexible, fun, part-time work.",
     responsibilities: [
       "Supervise and handle puppies throughout each class session",
       "Ensure the safety and wellbeing of all puppies at all times",
@@ -167,6 +169,7 @@ const JOB_LISTINGS = [
       "Calm, patient, and attentive personality",
       "Comfortable in a high-energy, social environment",
       "Reliable and punctual for event-based scheduling",
+      "University or college students encouraged to apply",
       "First aid for animals is a plus but not required",
     ],
     perks: [
@@ -248,6 +251,41 @@ const JOB_LISTINGS = [
   },
   // ── Operations Specialist ───────────────────────────────
   {
+    id: "operations-specialist-kw",
+    title: "Operations Specialist",
+    location: "Kitchener-Waterloo",
+    locationCode: "KW",
+    type: "Part-Time",
+    badge: "Now Hiring",
+    emoji: "⚙️",
+    pay: "$20/hr",
+    description:
+      "Keep AfroPuppyYoga's Kitchener classes running smoothly from first setup to final reset. You'll coordinate event-day flow, staff and guest readiness, breeder and puppy-partner logistics, and the little operational details that make every session feel seamless.",
+    responsibilities: [
+      "Prepare the venue, supplies, and guest flow before each class and complete the reset afterward",
+      "Coordinate staff arrival, guest check-in, class flow, and on-site communications",
+      "Support breeder and puppy-partner arrival, handoff, supplies, and event-day logistics",
+      "Track attendance, supplies, incidents, and follow-up items for APY leadership",
+      "Help maintain a safe, welcoming experience for guests, staff, and puppies",
+      "Escalate staffing, venue, safety, or guest concerns promptly and professionally",
+    ],
+    requirements: [
+      "Available and reliable for weekend event-based shifts in Kitchener-Waterloo",
+      "Organized, calm under pressure, and comfortable taking initiative",
+      "Strong communication and problem-solving skills",
+      "Comfortable and enthusiastic around dogs",
+      "Previous event, hospitality, studio, or operations experience is an asset",
+      "Access to reliable transportation is preferred",
+    ],
+    perks: [
+      "$20/hr",
+      "Free access to APY classes",
+      "Hands-on experience in wellness events and operations",
+      "Be part of a fast-growing, community-loved brand",
+      "Puppies every shift — enough said",
+    ],
+  },
+  {
     id: "operations-specialist-oakville",
     title: "Operations Specialist",
     location: "Oakville",
@@ -255,27 +293,27 @@ const JOB_LISTINGS = [
     type: "Part-Time",
     badge: "Now Hiring",
     emoji: "⚙️",
-    pay: "$19/hr",
+    pay: "$20/hr",
     description:
-      "Do you love puppies and want to help create unforgettable experiences? AfroPuppyYoga is looking for an Operations Specialist to join our Oakville team. You'll be on the ground supporting event-day operations — coordinating instructors, puppy partners, and volunteers to help deliver smooth, joyful sessions for every guest.",
+      "Keep AfroPuppyYoga's Oakville classes running smoothly from first setup to final reset. You'll coordinate event-day flow, staff and guest readiness, breeder and puppy-partner logistics, and the little operational details that make every session feel seamless.",
     responsibilities: [
-      "Support event-day operations and logistics",
-      "Coordinate instructors, puppy partners, and volunteers",
-      "Welcome and check in guests, manage registration lists",
-      "Monitor the space to ensure guest and puppy safety and comfort",
-      "Assist with photography and post-event cleanup",
-      "Communicate feedback and incidents to the management team",
+      "Prepare the venue, supplies, and guest flow before each class and complete the reset afterward",
+      "Coordinate staff arrival, guest check-in, class flow, and on-site communications",
+      "Support breeder and puppy-partner arrival, handoff, supplies, and event-day logistics",
+      "Track attendance, supplies, incidents, and follow-up items for APY leadership",
+      "Help maintain a safe, welcoming experience for guests, staff, and puppies",
+      "Escalate staffing, venue, safety, or guest concerns promptly and professionally",
     ],
     requirements: [
-      "3rd/4th year university student or recent graduate",
-      "Must have access to a car",
-      "Available on weekends",
-      "Organized, reliable, and calm under pressure",
-      "Incredibly sharp and able to take initiative",
+      "Available and reliable for weekend event-based shifts in Oakville",
+      "Organized, calm under pressure, and comfortable taking initiative",
+      "Strong communication and problem-solving skills",
       "Comfortable and enthusiastic around dogs",
+      "Previous event, hospitality, studio, or operations experience is an asset",
+      "Access to reliable transportation is preferred",
     ],
     perks: [
-      "$19/hr",
+      "$20/hr",
       "Free access to APY classes",
       "Hands-on experience in wellness events and operations",
       "Be part of a fast-growing, community-loved brand",
@@ -447,6 +485,25 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       });
     };
 
+    const retryRequest = async (request: () => Promise<Response>, label: string, attempts = 3): Promise<Response> => {
+      let lastError: Error | null = null;
+      for (let attempt = 1; attempt <= attempts; attempt++) {
+        try {
+          const response = await request();
+          if (response.ok) return response;
+          const retryable = response.status === 408 || response.status === 429 || response.status >= 500;
+          if (!retryable || attempt === attempts) return response;
+          lastError = new Error(`${label} temporarily failed (${response.status})`);
+        } catch (error: any) {
+          lastError = error instanceof Error ? error : new Error(`${label} failed`);
+          if (attempt === attempts) throw lastError;
+        }
+        setUploadStatus(`${label} paused — retrying (${attempt}/${attempts})…`);
+        await new Promise((resolve) => setTimeout(resolve, 700 * attempt));
+      }
+      throw lastError ?? new Error(`${label} failed`);
+    };
+
     // Chunked upload for video — splits file into 5MB pieces
     // Bug 3 fix: was 1MB → 500MB video = 500 chunks > MAX_CHUNKS=200 → init rejected
     // Bug 1+2 fix: /api/upload-video-complete now assembles synchronously and returns { url, key } directly
@@ -456,11 +513,11 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
 
       // 1. Initiate upload session
       setUploadStatus("Preparing video upload...");
-      const initRes = await fetch("/api/upload-video-init", {
+      const initRes = await retryRequest(() => fetch("/api/upload-video-init", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ filename: file.name, totalChunks, totalSize: file.size }),
-      });
+      }), "Preparing video upload");
       if (!initRes.ok) {
         const err = await initRes.json().catch(() => ({}));
         throw new Error(err.error ?? "Failed to initiate video upload");
@@ -482,7 +539,10 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
         fd.append("chunkIndex", String(i));
         fd.append("chunk", chunk, `chunk-${i}`);
 
-        const chunkRes = await fetch("/api/upload-video-chunk", { method: "POST", body: fd });
+        const chunkRes = await retryRequest(
+          () => fetch("/api/upload-video-chunk", { method: "POST", body: fd }),
+          `Video part ${i + 1} of ${totalChunks}`
+        );
         if (!chunkRes.ok) {
           const err = await chunkRes.json().catch(() => ({}));
           throw new Error(err.error ?? `Failed to upload video part ${i + 1}`);
@@ -493,12 +553,12 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       // No polling needed. The request may take up to 2 minutes for large files.
       setUploadProgress(90);
       setUploadStatus("Processing video... (this may take up to 2 minutes for large files)");
-      const completeRes = await fetch("/api/upload-video-complete", {
+      const completeRes = await retryRequest(() => fetch("/api/upload-video-complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ uploadId }),
         signal: AbortSignal.timeout(170_000), // 170s — matches server-side socket timeout
-      });
+      }), "Processing video", 2);
       if (!completeRes.ok) {
         const err = await completeRes.json().catch(() => ({}));
         throw new Error(err.error ?? "Failed to process video. Please try again.");
@@ -783,7 +843,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                     <span className="font-body text-sm text-[#3D1A2E] group-hover:text-[#8B2252] transition-colors">
                       Click to upload your video
                     </span>
-                    <span className="font-body text-xs text-[#C4A0B0]">MP4, MOV, WebM — Max 500MB</span>
+                    <span className="font-body text-xs text-[#C4A0B0]">MP4, MOV, WebM, AVI — Max 500MB. Upload resumes automatically after brief connection issues.</span>
                   </button>
                 )
               ) : (
@@ -1157,7 +1217,7 @@ export default function Careers() {
             If you have a skill that could help AfroPuppyYoga grow, reach out. We love hearing from passionate people.
           </p>
           <a
-            href="mailto:afropuppyyogaofficial@gmail.com"
+            href="mailto:afropuppyyoga@gmail.com"
             className="inline-flex items-center px-6 py-3 bg-[#8B2252] text-white font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] transition-colors"
           >
             Say Hello

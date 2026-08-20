@@ -15,7 +15,7 @@ const primaryLinks = [
   { label: "Experience", href: "#experience" },
   { label: "Memberships", href: "#memberships" },
   { label: "Private Events", href: "#private-events" },
-  { label: "Gallery", href: "#gallery" },
+  { label: "Class Pictures", href: "https://drive.google.com/drive/folders/1Q8WpKFj4cUsXlnn0jeKdBeWz5hSunp2t?usp=drive_link", isPage: true, isExternal: true },
   { label: "Careers", href: "/careers", isPage: true },
 ];
 
@@ -23,6 +23,7 @@ const primaryLinks = [
 const loyaltyLink = { label: "🐾 Rewards", href: "/loyalty", isPage: true };
 
 const moreLinks = [
+  { label: "🖼️ Gallery", href: "#gallery" },
   { label: "📍 Kitchener", href: "/puppy-yoga-kitchener", isPage: true },
   { label: "📍 Hamilton", href: "/puppy-yoga-hamilton", isPage: true },
   { label: "📍 Oakville", href: "/puppy-yoga-oakville", isPage: true },
@@ -117,8 +118,17 @@ export default function Navbar() {
                     <a
                       href={isSubPage ? "/#memberships" : link.href}
                       onClick={(e) => handleNavClick(e, link.href)}
-                      className="px-3 py-1.5 text-sm font-body font-bold rounded-full transition-all duration-200 text-white"
-                      style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)", boxShadow: "0 2px 8px rgba(233,30,140,0.35)" }}
+                      className="px-3 py-1.5 text-sm font-body font-bold rounded-full transition-all duration-200 text-white animate-pulse-subtle"
+                      style={{ background: "linear-gradient(135deg, #D4708A, #8B2252)", boxShadow: "0 2px 12px rgba(212,112,138,0.5), 0 0 20px rgba(139,34,82,0.3)" }}
+                    >
+                      {link.label}
+                    </a>
+                  ) : (link as any).isExternal ? (
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`px-3 py-2 text-sm font-body font-medium rounded-md transition-all duration-200 ${navTextClass} ${navHoverClass}`}
                     >
                       {link.label}
                     </a>
@@ -147,8 +157,8 @@ export default function Navbar() {
                 <a
                   href={loyaltyLink.href}
                   onClick={() => { setMenuOpen(false); setMoreOpen(false); }}
-                  className="px-3 py-1.5 text-sm font-body font-bold rounded-full transition-all duration-200 text-white"
-                  style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)", boxShadow: "0 2px 8px rgba(233,30,140,0.35)" }}
+                  className="px-3 py-1.5 text-sm font-body font-bold rounded-full transition-all duration-200 text-white animate-pulse-subtle"
+                  style={{ background: "linear-gradient(135deg, #D4708A, #8B2252)", boxShadow: "0 2px 12px rgba(212,112,138,0.5), 0 0 20px rgba(139,34,82,0.3)" }}
                 >
                   {loyaltyLink.label}
                 </a>
@@ -243,8 +253,18 @@ export default function Navbar() {
                   <a
                     href={link.href}
                     onClick={() => setMenuOpen(false)}
-                    className="block px-4 py-3 font-body font-bold rounded-lg text-white transition-colors"
-                    style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}
+                    className="block px-4 py-3 font-body font-bold rounded-lg text-white transition-colors animate-pulse-subtle"
+                    style={{ background: "linear-gradient(135deg, #D4708A, #8B2252)" }}
+                  >
+                    {link.label}
+                  </a>
+                ) : (link as any).isExternal ? (
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMenuOpen(false)}
+                    className="block px-4 py-3 text-[#1A0A12] font-body font-medium rounded-lg hover:bg-[#8B2252]/10 hover:text-[#8B2252] transition-colors"
                   >
                     {link.label}
                   </a>

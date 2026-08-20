@@ -235,8 +235,8 @@ export default function InvoiceSubmit() {
           <p className="font-body text-xs text-center text-[#1A0A12] mt-5">
             Your invoice will be reviewed and payment processed by the due date.{" "}
             Questions? Email{" "}
-            <a href="mailto:afropuppyyogaofficial@gmail.com" className="text-[#8B2252] underline">
-              afropuppyyogaofficial@gmail.com
+            <a href="mailto:afropuppyyoga@gmail.com" className="text-[#8B2252] underline">
+              afropuppyyoga@gmail.com
             </a>
           </p>
         </div>

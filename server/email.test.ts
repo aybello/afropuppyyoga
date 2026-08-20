@@ -18,7 +18,7 @@ describe("Email SMTP", () => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "afropuppyyogaofficial@gmail.com",
+        user: "afropuppyyoga@gmail.com",
         pass,
       },
     });

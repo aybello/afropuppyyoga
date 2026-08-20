@@ -170,8 +170,8 @@ export default function PrivateEvents() {
             </p>
             <p className="font-body text-white/30 text-xs mt-2">
               Questions?{" "}
-              <a href="mailto:afropuppyyogaofficial@gmail.com" className="text-[#8B2252]/70 hover:text-[#8B2252] transition-colors">
-                afropuppyyogaofficial@gmail.com
+              <a href="mailto:afropuppyyoga@gmail.com" className="text-[#8B2252]/70 hover:text-[#8B2252] transition-colors">
+                afropuppyyoga@gmail.com
               </a>
             </p>
           </div>

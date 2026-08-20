@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { adminProcedure, staffProcedure, publicProcedure, router } from "../_core/trpc";
 
 /** Escape user-supplied text before interpolating into HTML email templates */
@@ -25,7 +26,7 @@ const safeResumeUrl = z
   .string()
   .url()
   .refine((url) => url.startsWith("https://"), "Must be an https:// URL");
-import { createJobApplication, getAllJobApplications, updateJobApplication, deleteJobApplication, createSigningToken } from "../db";
+import { createJobApplication, getAllJobApplications, updateJobApplication, deleteJobApplication, getArchivedJobApplications, restoreJobApplication, permanentlyDeleteJobApplication, createSigningToken, getRecentDuplicateJobApplication } from "../db";
 import { notifyOwner } from "../_core/notification";
 import {
   sendEmail,
@@ -63,6 +64,15 @@ export const careersRouter = router({
       })
     )
     .mutation(async ({ input }) => {
+      const duplicate = await getRecentDuplicateJobApplication({
+        email: input.email,
+        role: input.role,
+        location: input.location,
+      });
+      if (duplicate) {
+        return { success: true, duplicate: true, notificationWarning: false };
+      }
+
       // Save to DB
       await createJobApplication({
         role: input.role,
@@ -79,7 +89,7 @@ export const careersRouter = router({
         status: "new",
       });
 
-      // Send email notification to afropuppyyogaofficial@gmail.com
+      // Send email notification to afropuppyyoga@gmail.com
       const emailHtml = `
         <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; background: #FEFAF4; padding: 32px; border-radius: 12px;">
           <div style="background: #3D1A2E; padding: 24px; border-radius: 8px; margin-bottom: 24px; text-align: center;">
@@ -102,33 +112,37 @@ export const careersRouter = router({
         </div>
       `;
 
-      await sendEmail({
-        to: "afropuppyyogaofficial@gmail.com",
-        subject: `New Application: ${input.name} — ${input.role} (${input.location})`,
-        html: emailHtml,
-        text: `New job application received!\n\nRole: ${input.role} — ${input.location}\nName: ${input.name}\nEmail: ${input.email}\nPhone: ${input.phone ?? "Not provided"}\n\nWhy APY:\n${input.whyAPY ?? "Not provided"}\n\nExperience:\n${input.experience ?? "Not provided"}\n\nVideo: ${input.videoUrl ?? "Not provided"}\nResume: ${input.resumeUrl}`,
-      });
-
-      // Send auto-confirmation email to the applicant
+      // The application has already been saved. Notification failures should be
+      // logged for recovery, not make the applicant retry and create duplicates.
       const confirmation = buildApplicationConfirmationEmail({
         applicantName: input.name,
         role: input.role,
         location: input.location,
       });
-      await sendEmail({
-        to: input.email,
-        subject: confirmation.subject,
-        html: confirmation.html,
-        text: confirmation.text,
-      });
+      const notificationResults = await Promise.allSettled([
+        sendEmail({
+          to: "afropuppyyoga@gmail.com",
+          subject: `New Application: ${input.name} — ${input.role} (${input.location})`,
+          html: emailHtml,
+          text: `New job application received!\n\nRole: ${input.role} — ${input.location}\nName: ${input.name}\nEmail: ${input.email}\nPhone: ${input.phone ?? "Not provided"}\n\nWhy APY:\n${input.whyAPY ?? "Not provided"}\n\nExperience:\n${input.experience ?? "Not provided"}\n\nVideo: ${input.videoUrl ?? "Not provided"}\nResume: ${input.resumeUrl}`,
+        }),
+        sendEmail({
+          to: input.email,
+          subject: confirmation.subject,
+          html: confirmation.html,
+          text: confirmation.text,
+        }),
+        notifyOwner({
+          title: `New Application: ${input.role} (${input.location})`,
+          content: `${input.name} (${input.email}) applied for ${input.role} — ${input.location}.\n\nVideo: ${input.videoUrl ?? "Not provided"}\nResume: ${input.resumeUrl}`,
+        }),
+      ]);
+      const failedNotifications = notificationResults.filter((result) => result.status === "rejected").length;
+      if (failedNotifications > 0) {
+        console.error(`[Careers] Application ${input.email} saved, but ${failedNotifications} notification(s) failed.`);
+      }
 
-      // Also send Manus owner notification as backup
-      await notifyOwner({
-        title: `New Application: ${input.role} (${input.location})`,
-        content: `${input.name} (${input.email}) applied for ${input.role} — ${input.location}.\n\nVideo: ${input.videoUrl ?? "Not provided"}\nResume: ${input.resumeUrl}`,
-      });
-
-      return { success: true };
+      return { success: true, notificationWarning: failedNotifications > 0 };
     }),
 
   /**
@@ -210,9 +224,13 @@ export const careersRouter = router({
       // Determine offer letter type from role and location
       const roleLower = input.role.toLowerCase();
       const locationLower = input.location.toLowerCase();
-      let offerLetterType: "puppy_monitor_kw" | "puppy_monitor_hamilton" | "yoga_instructor" = "puppy_monitor_kw";
+      let offerLetterType: "puppy_monitor_kw" | "puppy_monitor_hamilton" | "yoga_instructor" | "operations_specialist" | "bdr" = "puppy_monitor_kw";
       if (roleLower.includes("yoga") || roleLower.includes("instructor")) {
         offerLetterType = "yoga_instructor";
+      } else if (roleLower.includes("operations specialist") || roleLower.includes("operation specialist")) {
+        offerLetterType = "operations_specialist";
+      } else if (roleLower.includes("bdr") || roleLower.includes("business development")) {
+        offerLetterType = "bdr";
       } else if (locationLower.includes("hamilton")) {
         offerLetterType = "puppy_monitor_hamilton";
       }
@@ -278,6 +296,33 @@ export const careersRouter = router({
     }),
 
   /**
+   * Staff: list archived (soft-deleted) applications
+   */
+  listArchived: staffProcedure.query(async () => {
+    return getArchivedJobApplications();
+  }),
+
+  /**
+   * Staff: restore a soft-deleted application
+   */
+  restoreApplication: staffProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      await restoreJobApplication(input.id);
+      return { success: true };
+    }),
+
+  /**
+   * Admin-only: permanently delete an archived application (no recovery)
+   */
+  permanentlyDelete: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      await permanentlyDeleteJobApplication(input.id);
+      return { success: true };
+    }),
+
+  /**
    * Admin-only: send onboarding email to a hired + signed applicant
    */
   sendOnboardingEmail: staffProcedure
@@ -295,6 +340,7 @@ export const careersRouter = router({
       })
     )
     .mutation(async ({ input }) => {
+      console.log(`[Onboarding] Sending onboarding email to ${input.applicantEmail} for ${input.applicantName} (${input.role}, ${input.location})`);
       // Use role-specific email template
       const isYogaInstructor = input.role.toLowerCase().includes("yoga instructor") || input.role.toLowerCase().includes("instructor");
       const { subject, html, text } = isYogaInstructor
@@ -316,10 +362,17 @@ export const careersRouter = router({
             additionalNotes: input.additionalNotes,
           });
 
-      await sendEmail({ to: input.applicantEmail, subject, html, text });
+      try {
+        await sendEmail({ to: input.applicantEmail, subject, html, text });
+        console.log(`[Onboarding] ✅ Email sent successfully to ${input.applicantEmail}`);
+      } catch (err: any) {
+        console.error(`[Onboarding] ❌ Failed to send email:`, err.message || err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `Email send failed: ${err.message}` });
+      }
 
       // Auto-advance status to onboarded
       await updateJobApplication(input.id, { status: "onboarded" });
+      console.log(`[Onboarding] Status updated to onboarded for application ${input.id}`);
 
       await notifyOwner({
         title: `Onboarding Email Sent — ${input.applicantName}`,
@@ -450,7 +503,7 @@ export const careersRouter = router({
           <li>Your personality and energy (we love enthusiasm!)</li>
         </ul>
       </div>
-      <p style="margin:0 0 18px;font-size:15px;line-height:1.7;">Please upload your video to YouTube, Google Drive, or Loom and reply to this email with the link. You can also email it directly to <a href="mailto:afropuppyyogaofficial@gmail.com" style="color:#C2185B;">afropuppyyogaofficial@gmail.com</a>.</p>
+      <p style="margin:0 0 18px;font-size:15px;line-height:1.7;">Please upload your video to YouTube, Google Drive, or Loom and reply to this email with the link. You can also email it directly to <a href="mailto:afropuppyyoga@gmail.com" style="color:#C2185B;">afropuppyyoga@gmail.com</a>.</p>
       <p style="margin:0 0 18px;font-size:15px;line-height:1.7;">We look forward to hearing from you!</p>
       <p style="margin:32px 0 0;font-size:14px;color:#8B6070;">Warm regards,<br/><strong>The AfroPuppyYoga Team</strong></p>
     </div>

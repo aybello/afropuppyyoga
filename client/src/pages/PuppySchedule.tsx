@@ -34,7 +34,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { CalendarDays, Plus, Pencil, Trash2, MapPin, PawPrint, Loader2, Dog } from "lucide-react";
+import { CalendarDays, Plus, Pencil, Trash2, MapPin, PawPrint, Loader2, Dog, ExternalLink, UsersRound, ShieldAlert, CheckCircle2, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 
 const LOCATIONS = ["Kitchener", "Hamilton", "Oakville"] as const;
@@ -88,14 +88,17 @@ export default function PuppySchedule() {
   const [showDialog, setShowDialog] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [filterLocation, setFilterLocation] = useState<string>("all");
+  const [staffingEntry, setStaffingEntry] = useState<any | null>(null);
+  const [selectedPuppyMonitor, setSelectedPuppyMonitor] = useState("");
 
   const utils = trpc.useUtils();
-  const { data: schedules = [], isLoading } = trpc.puppySchedule.list.useQuery();
+  const { data: schedules = [], isLoading } = trpc.puppySchedule.listWithStaffing.useQuery();
   const { data: breeders = [] } = trpc.breeders.list.useQuery();
 
   const createMutation = trpc.puppySchedule.create.useMutation({
     onSuccess: () => {
       utils.puppySchedule.list.invalidate();
+      utils.puppySchedule.listWithStaffing.invalidate();
       toast.success("Class scheduled!");
       setShowDialog(false);
       setForm({ ...EMPTY_FORM });
@@ -106,6 +109,7 @@ export default function PuppySchedule() {
   const updateMutation = trpc.puppySchedule.update.useMutation({
     onSuccess: () => {
       utils.puppySchedule.list.invalidate();
+      utils.puppySchedule.listWithStaffing.invalidate();
       toast.success("Schedule updated!");
       setShowDialog(false);
       setEditId(null);
@@ -117,10 +121,28 @@ export default function PuppySchedule() {
   const deleteMutation = trpc.puppySchedule.delete.useMutation({
     onSuccess: () => {
       utils.puppySchedule.list.invalidate();
+      utils.puppySchedule.listWithStaffing.invalidate();
       toast.success("Removed from schedule.");
       setDeleteId(null);
     },
     onError: (e) => toast.error(e.message),
+  });
+  const assignPuppyMonitor = trpc.puppySchedule.assignPuppyMonitor.useMutation({
+    onSuccess: () => {
+      utils.puppySchedule.listWithStaffing.invalidate();
+      toast.success("Puppy Monitor assigned");
+      setSelectedPuppyMonitor("");
+      setStaffingEntry(null);
+    },
+    onError: (error) => toast.error(error.message),
+  });
+  const removePuppyMonitor = trpc.puppySchedule.removePuppyMonitorAssignment.useMutation({
+    onSuccess: () => {
+      utils.puppySchedule.listWithStaffing.invalidate();
+      toast.success("Puppy Monitor removed from this class");
+      setStaffingEntry(null);
+    },
+    onError: (error) => toast.error(error.message),
   });
 
   function openAdd() {
@@ -141,6 +163,11 @@ export default function PuppySchedule() {
     });
     setEditId(s.id);
     setShowDialog(true);
+  }
+
+  function openStaffing(entry: typeof schedules[0]) {
+    setStaffingEntry(entry);
+    setSelectedPuppyMonitor("");
   }
 
   function handleDateChange(dateStr: string) {
@@ -308,6 +335,32 @@ export default function PuppySchedule() {
                           {s.notes && (
                             <div className="font-body text-xs text-[#C4A0B0] mt-1 italic">{s.notes}</div>
                           )}
+                          {s.lumaEventUrl ? (
+                            <a
+                              href={s.lumaEventUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 mt-1.5 text-xs font-body text-[#8B2252] hover:underline"
+                            >
+                              <ExternalLink size={11} />
+                              View Luma Event
+                            </a>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 mt-1.5 text-xs font-body text-[#C4A0B0] italic">
+                              No Luma event yet
+                            </span>
+                          )}
+                          <div className={`mt-3 rounded-xl border p-3 ${s.staffing.fullyStaffed ? "border-emerald-200 bg-emerald-50/60" : "border-amber-200 bg-amber-50/70"}`}>
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div className="flex items-center gap-1.5 text-xs font-bold text-[#1A0A12]"><UsersRound size={14} className={s.staffing.fullyStaffed ? "text-emerald-600" : "text-amber-600"} /> Class staffing</div>
+                              <button onClick={() => openStaffing(s)} className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-[#8B2252] shadow-sm ring-1 ring-[#EADBE2] transition-colors hover:bg-[#FFF5F8]"><UserPlus size={12} /> Manage</button>
+                            </div>
+                            <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] font-semibold">
+                              <span className={`rounded-full px-2 py-1 ${s.staffing.operationsManager ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-700"}`}>Ops: {s.staffing.operationsManager?.name ?? "Gap"}</span>
+                              <span className={`rounded-full px-2 py-1 ${s.staffing.yogaInstructor ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-700"}`}>Yoga: {s.staffing.yogaInstructor?.name ?? "Gap"}</span>
+                              <span className={`rounded-full px-2 py-1 ${s.staffing.assignedPuppyMonitors.length >= 2 ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>PMs: {s.staffing.assignedPuppyMonitors.length}/2</span>
+                            </div>
+                          </div>
                         </div>
                         <div className="flex gap-2 shrink-0">
                           <button
@@ -332,6 +385,41 @@ export default function PuppySchedule() {
           </div>
         )}
       </div>
+
+      {/* Class Staffing Dialog */}
+      <Dialog open={staffingEntry !== null} onOpenChange={open => !open && setStaffingEntry(null)}>
+        {staffingEntry && <DialogContent className="max-w-lg bg-[#FEFAF4] border-[#F0D0DC]">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl text-[#1A0A12]">Class staffing</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="rounded-xl border border-[#F0D0DC] bg-white p-3">
+              <p className="font-body text-sm font-bold text-[#1A0A12]">{staffingEntry.breed} · {staffingEntry.location}</p>
+              <p className="mt-1 font-body text-xs text-[#6B4C3B]">{staffingEntry.classDate} · Breeder: {staffingEntry.breederName}</p>
+            </div>
+
+            <div>
+              <div className="mb-2 flex items-center gap-1.5"><CheckCircle2 size={14} className="text-[#8B2252]" /><Label className="font-body text-sm font-semibold text-[#1A0A12]">Leadership coverage</Label></div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <div className={`rounded-lg border px-3 py-2 ${staffingEntry.staffing.operationsManager ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50"}`}><p className="text-[10px] font-bold uppercase tracking-wide text-[#6B4C3B]">Operations Manager</p><p className="mt-0.5 text-xs font-bold text-[#1A0A12]">{staffingEntry.staffing.operationsManager?.name ?? "Coverage gap"}</p></div>
+                <div className={`rounded-lg border px-3 py-2 ${staffingEntry.staffing.yogaInstructor ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50"}`}><p className="text-[10px] font-bold uppercase tracking-wide text-[#6B4C3B]">Yoga Instructor</p><p className="mt-0.5 text-xs font-bold text-[#1A0A12]">{staffingEntry.staffing.yogaInstructor?.name ?? "Coverage gap"}</p></div>
+              </div>
+              {(!staffingEntry.staffing.operationsManager || !staffingEntry.staffing.yogaInstructor) && <p className="mt-2 flex items-center gap-1 text-xs font-medium text-rose-700"><ShieldAlert size={13} /> Fix leadership coverage in Team & Availability.</p>}
+            </div>
+
+            <div>
+              <div className="mb-2 flex items-center justify-between gap-2"><div className="flex items-center gap-1.5"><UsersRound size={14} className="text-[#8B2252]" /><Label className="font-body text-sm font-semibold text-[#1A0A12]">Puppy Monitors</Label></div><span className={`rounded-full px-2 py-1 text-[11px] font-bold ${staffingEntry.staffing.assignedPuppyMonitors.length >= 2 ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>{staffingEntry.staffing.assignedPuppyMonitors.length}/2 required</span></div>
+              <div className="space-y-2">
+                {staffingEntry.staffing.assignedPuppyMonitors.map((monitor: any) => <div key={monitor.id} className="flex items-center justify-between rounded-lg border border-[#EADBE2] bg-white px-3 py-2"><span className="font-body text-sm font-semibold text-[#1A0A12]">{monitor.name}</span><button onClick={() => removePuppyMonitor.mutate({ id: monitor.id })} disabled={removePuppyMonitor.isPending} className="rounded-md p-1 text-[#C4A0B0] hover:bg-red-50 hover:text-red-600" aria-label={`Remove ${monitor.name} from class`}><X size={14} /></button></div>)}
+                {Array.from({ length: Math.max(0, 2 - staffingEntry.staffing.assignedPuppyMonitors.length) }, (_, index) => <div key={index} className="rounded-lg border border-dashed border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">Puppy Monitor {staffingEntry.staffing.assignedPuppyMonitors.length + index + 1} still required</div>)}
+              </div>
+              {staffingEntry.staffing.assignedPuppyMonitors.length < 2 && <div className="mt-3 flex gap-2"><select value={selectedPuppyMonitor} onChange={event => setSelectedPuppyMonitor(event.target.value)} className="min-w-0 flex-1 rounded-lg border border-[#F0D0DC] bg-white px-3 py-2 text-sm font-body focus:border-[#8B2252] focus:outline-none"><option value="">Select an available Puppy Monitor</option>{staffingEntry.staffing.eligiblePuppyMonitors.map((monitor: any) => <option key={monitor.id} value={monitor.id}>{monitor.name}</option>)}</select><Button onClick={() => selectedPuppyMonitor && assignPuppyMonitor.mutate({ scheduleId: staffingEntry.id, staffId: Number(selectedPuppyMonitor) })} disabled={!selectedPuppyMonitor || assignPuppyMonitor.isPending} className="bg-[#8B2252] text-white hover:bg-[#6B1A3E]"><UserPlus size={14} className="mr-1" />Assign</Button></div>}
+              {staffingEntry.staffing.assignedPuppyMonitors.length < 2 && staffingEntry.staffing.eligiblePuppyMonitors.length === 0 && <p className="mt-2 text-xs text-rose-700">No available Puppy Monitors are currently listed for this studio and date.</p>}
+            </div>
+          </div>
+          <DialogFooter><Button variant="outline" onClick={() => setStaffingEntry(null)} className="font-body border-[#F0D0DC]">Close</Button></DialogFooter>
+        </DialogContent>}
+      </Dialog>
 
       {/* Add / Edit Dialog */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>

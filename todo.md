@@ -456,11 +456,11 @@
 - [x] Fix Luma listEvents to correctly return upcoming classes from the calendar
 
 ## Twilio Webhook + Email Fallback
-- [ ] Add POST /api/twilio/call-status webhook endpoint to update callLogs.status from Twilio callbacks
-- [ ] Add POST /api/twilio/sms-status webhook endpoint to update callLogs.smsStatus from Twilio callbacks
-- [ ] Configure Twilio number to point statusCallback to the deployed webhook URLs
-- [ ] Add email fallback in cancelClass mutation: send Gmail cancellation email to guests with no phone number
-- [ ] Update CancellationDashboard to show email status in results and log
+- [x] Add POST /api/twilio/call-status webhook endpoint to update callLogs.status from Twilio callbacks
+- [x] Add POST /api/twilio/sms-status webhook endpoint to update callLogs.smsStatus from Twilio callbacks
+- [x] Configure Twilio number to point statusCallback to the deployed webhook URLs
+- [x] Add email fallback in cancelClass mutation: send Gmail cancellation email to guests with no phone number
+- [x] Update CancellationDashboard to show email status in results and log
 
 ## Triple Notification on Cancellation
 - [x] Update cancellation router: every attendee always gets email + SMS + call (not conditional)
@@ -497,3 +497,255 @@
 - [x] Register /admin/sms-broadcast route in App.tsx
 - [x] Add SMS Broadcast link to AdminNav
 - [x] Add SMS Broadcast tile to StaffPortal
+
+## Cancellation Loop Parallelization
+- [x] Fix sequential guest notification loop in cancellation router — parallelize with Promise.allSettled
+- [x] Fix fetchLumaGuests to only include guests with approval_status === 'approved' (exclude invited/declined)
+
+## Cancellation Preview Feature
+- [x] Add previewCancellation tRPC procedure that returns the list of approved guests before sending
+- [x] Update CancellationDashboard UI with a preview/confirmation step showing recipient count and names
+
+## Quote-to-Booking Generator (Private Events Extension)
+- [x] Research Luma API create-event endpoint and test it
+- [x] Add new statuses to privateEventInquiries: "quote_sent" and "booked"
+- [x] Add columns for finalPrice, hstAmount, pricingType (plus_hst/all_in), lumaEventUrl, sessions, puppyBreed
+- [x] Create backend procedure: generateLumaBookingLink (creates private paid Luma event via API)
+- [x] Create backend procedure: sendQuoteEmail (drafts and sends email with Luma link via Gmail)
+- [x] Extend Private Events Dashboard detail dialog with "Generate Booking Link" panel
+- [x] Add pricing calculator with HST logic and owner-approval flag
+- [x] Auto-update status to "quote_sent" after email sent, "booked" when payment received
+- [x] Improve Luma event page: personalized descriptions by event type, branded cover image, tint color, org-name-only title
+
+## Luma Event Page Improvements (Aug 3, 2026)
+- [x] Update event title to 'Private PuppyYoga Experience'
+- [x] Set Cranberry color (#9B2335) as default tint (note: Luma API ignores tint_color — must be set manually in Luma dashboard)
+- [x] Auto-remove default 'Standard' free ticket after event creation (POST /events/ticket-types/delete)
+- [x] Add location selector: APY studios (Kitchener, Cambridge, Toronto, Guelph, Hamilton, London) or custom client address
+- [x] Support custom client addresses for on-site events (pass-through to Luma geo_address_json)
+
+## Delete Luma Event + Payment Webhook (Aug 3, 2026)
+- [x] Add deleteLumaEvent tRPC procedure (calls Luma DELETE API, clears lumaEventUrl/lumaEventId from inquiry)
+- [x] Add "Delete Luma Event" button to Private Events Dashboard (with confirmation dialog)
+- [x] Add /api/luma/webhook POST endpoint to receive Luma payment notifications
+- [x] Auto-update inquiry status from "quote_sent" to "booked" when payment webhook fires
+- [x] Send confirmation email to owner when a private event is booked/paid
+
+## Quick Booking Link Generator (Standalone — Aug 4, 2026)
+- [x] Add generateQuickBookingLink tRPC procedure (creates Luma event without an inquiry)
+- [x] Add "Quick Booking Link" tab to Private Events Dashboard with standalone form
+- [x] Support multi-session events (e.g., 2 sessions with break in between)
+- [x] Include all fields: client name, org, event type, date, sessions, times, location, price, HST, breed, notes
+
+## Quick Booking Link Form UI Redesign (Aug 4, 2026)
+- [x] Redesign form with card-based layout (6 distinct cards: Client Info, Event Details, Schedule, Location, Pricing, Notes)
+- [x] Add section header icons with branded pink icon containers
+- [x] Replace dropdown location selector with radio-button style location cards
+- [x] Add gradient header banner with Zap icon
+- [x] Improve success state with better spacing and helper text
+- [x] Add $ prefix to price input, subtle bg transitions on focus
+- [x] Add numbered session badges with gradient circles
+- [x] Add "30-min puppy rest break" helper text for multi-session events
+- [x] Add URL param support (?tab=quick-link) for direct linking to the tab
+- [x] Larger CTA button with shadow and active:scale micro-interaction
+
+## Quick Booking Link Bug Fix + Layout Compaction (Aug 4, 2026)
+- [x] Fix generate link button not working (Luma API changed: field must be `place_id` not `google_maps_place_id`)
+- [x] Compact the form layout (merged 6 cards into 3 sections: Client+Event, Schedule+Location, Pricing+Notes+CTA)
+
+## Luma Event Theme Defaults (Aug 4, 2026)
+- [x] Set default Luma event theme to: Color=Cranberry, Pattern=Hypnotic, Font=Default, Display=Light
+
+## Copy Email Template Button (Aug 4, 2026)
+- [x] Add "Copy Email" button to the Quick Booking Link success state that generates a confirmation email from form data (client name, date, time, guest count, location, luma link) and copies to clipboard
+
+## Email Template Update (Aug 4, 2026)
+- [x] Update email template to match new format: location as address block, puppy breed in bullet, "Venue, setup and cleanup", shorter closing, no future-confirmation disclaimer
+
+## Send via Gmail + Template Variants (Aug 4, 2026)
+- [x] Add "Send via Gmail" button that opens a pre-filled Gmail compose window (mailto: or Gmail URL) with subject and body
+- [x] Add event-type-specific template variants (Birthday, Bachelorette, Corporate, Team Building) with different intro wording
+
+## Client Email Field (Aug 4, 2026)
+- [x] Add optional client email field to Quick Booking Link form so Gmail compose auto-fills the "To" field
+
+## Inquiry Send Quote Email Update (Aug 4, 2026)
+- [x] Update the Inquiries tab "Send Quote Email" to use the same email template with event-type variants, Gmail compose, and client email auto-fill
+
+## Onboarding Email Bug Fix (Aug 4, 2026)
+- [x] Fix OnboardingEmailModal not rendering in main ApplicationsDashboard (modal was only in sub-component, not in main render tree when triggered from table row button)
+
+## Soft-Delete for Applications (Aug 4, 2026)
+- [x] Add deletedAt column to jobApplications schema (nullable timestamp)
+- [x] Run migration for deletedAt column
+- [x] Update deleteApplication mutation to set deletedAt instead of hard delete
+- [x] Filter out soft-deleted records from careers.list query
+- [x] Add listArchived procedure to return only soft-deleted applications
+- [x] Add restoreApplication procedure to clear deletedAt
+- [x] Add permanentlyDelete procedure (admin-only) for true deletion
+- [x] Add "Archived" tab to ApplicationsDashboard showing soft-deleted records
+- [x] Add "Restore" button on archived records
+- [x] Update delete confirmation dialog to say "Archive" instead of "Delete"
+
+## Onboarding Modal Dropdowns (Aug 4, 2026)
+- [x] Replace Orientation Date free-text with dropdown showing upcoming dates (next 2-4 weeks)
+- [x] Replace Orientation Time free-text with dropdown based on location (Kitchener: 9am, Hamilton: 10am)
+
+## Breeder Availability Outreach (Aug 6, 2026)
+- [x] Query all 58 active breeders from DB with contact info
+- [x] Send availability emails (29 sent) to breeders with email for Aug 15-16, 22-23, 29-30
+- [x] Send availability SMS (43 sent) to breeders with phone via Twilio
+- [x] Greet by first name when known, fall back to "Hi" for unknown names
+
+## SMS Inbox + Reply Forwarding (Aug 6, 2026)
+- [x] Add inboundSms table to schema (fromPhone, toPhone, body, twilioSid, breederId, breederName, isRead)
+- [x] Run migration for inboundSms table
+- [x] Add POST /api/twilio/sms-inbound webhook endpoint (stores reply, matches breeder by phone, forwards to owner)
+- [x] Configure Twilio SmsUrl webhook on +12898153524 to point to https://afropuppyyoga.ca/api/twilio/sms-inbound
+- [x] Store owner phone +12897881885 as OWNER_PHONE_NUMBER secret for forwarding
+- [x] Add inboundSmsRouter (list, unreadCount, markRead, markAllRead procedures)
+- [x] Build /admin/sms-inbox page (SMS Inbox with All/Unread tabs, mark read on click, Mark All Read button)
+- [x] Add SMS Inbox to AdminNav More dropdown
+- [x] Register /admin/sms-inbox route in App.tsx
+
+## Breeder Confirmation SMS (Aug 7, 2026)
+- [x] Read existing sendConfirmation flow (email-only, toEmail required)
+- [x] Make toEmail optional, add toPhone to sendConfirmation input
+- [x] Send SMS via Twilio when phone on file (condensed event blocks per message)
+- [x] Send email when email on file (both channels used when both available)
+- [x] Return emailSent/smsSent/emailError/smsError from procedure
+- [x] Update handleSend in BreedersDashboard to pass phone alongside email
+- [x] Replace alert with toast showing which channels were used
+- [x] Update info box to show both email and phone recipients
+- [x] Rename "Send Email" button to "Send Confirmation"
+- [x] Add toast import to BreedersDashboard
+
+## Post-Class Google Review SMS (Aug 7, 2026)
+- [x] Add reviewTextLogs table to schema (lumaEventId, lumaGuestId, guestName, phone, status, etc.)
+- [x] Run migration to create reviewTextLogs table
+- [x] Build reviewTextSender.ts — fetches events ending 1.5-2.5h ago, fetches guests, sends review SMS
+- [x] Dedup check — skip guests already texted for same event
+- [x] Register /api/scheduled/review-text endpoint in server index.ts
+- [x] Add reviewTextsRouter with list, stats, triggerNow procedures
+- [x] Build ReviewTexts admin page with stats cards, send log table, Run Now button
+- [x] Add Review Texts to AdminNav More dropdown
+- [x] Register /admin/review-texts route in App.tsx
+- [x] Register heartbeat cron job (requires deploy first — see below)
+- [x] Register heartbeat cron job — task_uid: YfCxi6NHG4eJ7EPcXq5n7X, runs every 30 min
+- [x] Register heartbeat cron job (requires deploy first — see below)
+- [x] Register heartbeat cron job (requires deploy first — see below)
+- [x] Register heartbeat cron job (requires deploy first — see below)
+- [x] Register heartbeat cron job (requires deploy first — see below)
+- [x] Register heartbeat cron job (requires deploy first — see below)
+- [x] Register heartbeat cron job (requires deploy first — see below)
+- [x] Register heartbeat cron job (requires deploy first — see below)
+- [x] Register heartbeat cron job (requires deploy first — see below)
+- [x] Register heartbeat cron job (requires deploy first — see below)
+
+## Breeder Lead Detail Page Fix (Aug 10, 2026)
+- [x] Fix BreederLeadDetail page showing blank/nothing when clicking an imported lead
+- [x] Root cause: breederLeadActivities DB table had column name mismatch (type vs activityType) and type mismatch (timestamp vs bigint)
+- [x] Renamed DB column `type` → `activityType` to match Drizzle schema
+- [x] Changed DB column `createdAt` from timestamp to bigint to match Drizzle schema
+- [x] Dropped unused `metadata` column from breederLeadActivities
+- [x] Added proper error handling to BreederLeadDetail.tsx (auth check, error state display)
+
+## Remove 18+ Age Confirmation from Signing Portal (Aug 10, 2026)
+- [x] Remove isAdult state variable from SignDocuments.tsx
+- [x] Remove age confirmation checkbox from the signing form
+- [x] Remove age validation check from handleSubmit
+- [x] Remove !isAdult from submit button disabled condition
+
+## Kijiji Contact Info Extraction (Aug 10, 2026)
+- [x] Add extractContactInfo function to kijijiScraper.ts (regex for phone, email, Instagram)
+- [x] Add contactInfo field to KijijiListing interface
+- [x] Extract contact info from all listing descriptions during search and import
+- [x] Save phone/email to breederLeads DB on import
+- [x] Append Instagram handle to listing description on import
+- [x] Show contact info badges (phone, email, IG) in Kijiji search results UI
+- [x] Log extracted contact info in activity timeline on import
+
+## Staff Availability & Org Chart (Aug 11, 2026)
+- [x] Add staffAvailability table to drizzle schema (staffId, startDate, endDate, leaveType, notes, createdAt)
+- [x] Add tRPC procedures: getOrgChart, setAvailability, getAvailability, deleteAvailability
+- [x] Build /admin/staff-availability page with visual org chart tree (CEO → roles → staff)
+- [x] Show availability status badges on each staff node (available/vacation/leave)
+- [x] Add click-to-mark-leave modal with date range picker and leave type selector
+- [x] Add Staff Availability card to APY HQ tool grid
+- [x] Add route /admin/staff-availability to App.tsx
+
+## New Private-Event Inquiry (Aug 11, 2026)
+- [x] Review the new inquiry details and prepare the appropriate quote or booking next step
+- [x] Build a self-serve inquiry-to-quote workflow with tailored response drafting, Luma payment-link generation, and a final owner preview before sending
+- [x] Test the payment-offer drafting logic using Taylor Stanbury’s corporate wellness inquiry without creating or emailing a live offer before the final date and time are approved
+
+## Private-Event Phone Validation (Aug 11, 2026)
+- [x] Require a complete valid Canadian phone number on the private-event inquiry form and revalidate it on the server
+
+## APY HQ Navigation (Aug 12, 2026)
+- [x] Restore the People category and Staff Availability entry in the APY HQ tool grid
+
+## Direct Team Management (Aug 12, 2026)
+- [x] Let APY HQ admins add a team member directly with role and studio location, including Operations Managers for Kitchener, Hamilton, and Oakville
+
+## Org Chart Refinement (Aug 12, 2026)
+- [x] Redesign the org chart into a wider, location-first layout with Operations Manager before Yoga Instructor
+- [x] Show six Puppy Monitor slots for each studio location
+- [x] Add central BDR and Social Media Specialist positions to the APY-wide team
+- [x] Allow admins to remove team members safely from the org chart
+
+## Weekend Leadership Coverage (Aug 13, 2026)
+- [x] Track Saturday and Sunday availability for each Operations Manager and Yoga Instructor by studio
+- [x] Surface away/uncovered weekend leadership shifts and allow coverage assignments
+
+## Unified Class Staffing Calendar (Aug 13, 2026)
+- [x] Connect the Puppy Schedule/Breeder Calendar to weekend leadership coverage for each scheduled class
+- [x] Require and assign two available Puppy Monitors for every class day
+- [x] Flag any class that lacks Operations Manager, Yoga Instructor, or two Puppy Monitor assignments
+
+## Latest-Version Visibility (Aug 13, 2026)
+- [x] Investigate why the latest staffing changes are not visible in GitHub or on the deployed site and restore the correct version
+
+## Unified Weekend Staffing Board (Aug 13, 2026)
+- [x] Add scheduled breeder/class rows and two-Puppy-Monitor assignments to the Weekend Leadership board
+- [x] Make the Weekend Leadership board the one place to manage all Saturday/Sunday staffing coverage
+
+## Offer-Letter Notice Requirement (Aug 19, 2026)
+- [x] Add a consistent two-week written-notice clause to every future APY offer-letter type
+
+## Taya Dual-Role Offers (Aug 19, 2026)
+- [x] Verify Taya’s applicant records and current signing status
+- [x] Add a role-specific remote BDR offer-letter template with 7% inbound and 10% outbound commission terms
+- [x] Prepare Taya Viera’s Yoga Instructor and BDR offers for final approval before sending
+- [x] Send separate Yoga Instructor and BDR signing offers to Taya Viera after final owner approval
+- [x] Review and approve the independent-contractor BDR commission terms before adding them to Taya’s offer
+
+## Prospective Contractor Set-Off Terms (Aug 19, 2026)
+- [x] Add a prospective independent-contractor clause covering two-week notice, direct documented replacement costs, written notice, and a limited set-off authorization
+
+## APY Agreement Standardization (Aug 19, 2026)
+- [x] Add a two-week written-notice expectation to every future APY offer letter and agreement template
+- [x] Update future independent-contractor terms so APY determines and offsets reasonable documented direct replacement costs
+
+## APY Agreement Standardization (Aug 19, 2026)
+- [x] Add a two-week written-notice expectation to every future APY offer letter and agreement template
+- [x] Limit direct-cost recovery and set-off language to independent-contractor templates only
+
+## Operations Specialist Offer (Aug 19, 2026)
+- [x] Create a dedicated $20/hour Operations Specialist offer-letter type with APY class-operations responsibilities and signing support
+
+## Kitchener Operations Specialist Opening (Aug 19, 2026)
+- [x] Publish an Operations Specialist — Kitchener position on the public careers page and route applications to the existing hiring workflow
+
+## Oakville Operations Specialist Alignment (Aug 19, 2026)
+- [x] Align the Oakville Operations Specialist listing with the Kitchener role and update compensation to $20/hour
+
+## Job Application Reliability Audit (Aug 19, 2026)
+- [x] Audit and harden the public application flow, submission validation, storage, and admin review experience for higher applicant volume
+- [x] Increase reliable job-application video upload capacity with resumable chunked uploads and clear recovery states
+
+## Manual Puppy Monitor Team Membership (Aug 19, 2026)
+- [x] Keep Puppy Monitor job applicants out of the APY HQ team and availability board until an Operations Manager manually adds them after onboarding
+
+## APY HQ Team Contact Methods (Aug 19, 2026)
+- [x] Allow team members to be added with either a valid email address or a phone number, while requiring at least one contact method

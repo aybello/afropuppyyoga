@@ -1,0 +1,1 @@
+ALTER TABLE `jobApplications` ADD `deletedAt` timestamp;

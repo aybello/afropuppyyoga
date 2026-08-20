@@ -16,6 +16,11 @@ import { refundsRouter } from "./routers/refunds";
 import { puppyScheduleRouter } from "./routers/puppySchedule";
 import { cancellationRouter } from "./routers/cancellation";
 import { smsBroadcastRouter } from "./routers/smsBroadcast";
+import { inboundSmsRouter } from "./routers/inboundSms";
+import { reviewTextsRouter } from "./routers/reviewTexts";
+import { revenueRouter } from "./routers/revenue";
+import { breederLeadsRouter } from "./routers/breederLeads";
+import { staffAvailabilityRouter } from "./routers/staffAvailability";
 import { z } from "zod";
 
 const messageSchema = z.object({
@@ -37,6 +42,11 @@ export const appRouter = router({
   puppySchedule: puppyScheduleRouter,
   cancellation: cancellationRouter,
   smsBroadcast: smsBroadcastRouter,
+  inboundSms: inboundSmsRouter,
+  reviewTexts: reviewTextsRouter,
+  revenue: revenueRouter,
+  breederLeads: breederLeadsRouter,
+  staffAvailability: staffAvailabilityRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
@@ -67,7 +77,7 @@ export const appRouter = router({
         const response = await invokeLLM({ messages: llmMessages });
         const reply =
           response.choices?.[0]?.message?.content ??
-          "I'm not sure about that one! Reach out to us at afropuppyyogaofficial@gmail.com and we'll help you out.";
+          "I'm not sure about that one! Reach out to us at afropuppyyoga@gmail.com and we'll help you out.";
 
         return { reply };
       }),
