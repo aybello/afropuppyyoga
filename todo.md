@@ -749,3 +749,7 @@
 
 ## APY HQ Team Contact Methods (Aug 19, 2026)
 - [x] Allow team members to be added with either a valid email address or a phone number, while requiring at least one contact method
+
+## Production Deployment Repair (Aug 20, 2026)
+- [x] Prevent Stripe from crashing server startup when production Stripe credentials are not configured
+- [x] Correct Revenue Dashboard TypeScript errors and verify deployment health
