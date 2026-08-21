@@ -760,3 +760,6 @@
 ## Production Deployment Repair (Aug 20, 2026)
 - [x] Prevent Stripe from crashing server startup when production Stripe credentials are not configured
 - [x] Correct Revenue Dashboard TypeScript errors and verify deployment health
+
+## Cancellation Notification Delivery (Aug 21, 2026)
+- [x] Diagnose and fix cancellation SMS and call notifications that remain queued instead of reaching guests

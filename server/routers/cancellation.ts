@@ -20,8 +20,14 @@ import { getDb } from "../db";
 import { callLogs } from "../../drizzle/schema";
 import { staffProcedure, router } from "../_core/trpc";
 import { sendClassCancellationEmail } from "../email";
+import { getTwilioWebhookUrl } from "../twilioWebhook";
 
 const LUMA_BASE = "https://public-api.luma.com/v1";
+const IN_FLIGHT_TWILIO_STATUSES = new Set(["accepted", "queued", "sending", "sent", "in-progress", "ringing"]);
+
+export function isInFlightTwilioStatus(status: string | null | undefined): boolean {
+  return !!status && IN_FLIGHT_TWILIO_STATUSES.has(status.toLowerCase());
+}
 
 /** Fetch all guests for a Luma event (handles pagination) */
 async function fetchLumaGuests(eventApiId: string): Promise<
@@ -203,11 +209,6 @@ export const cancellationRouter = router({
       const guests = await fetchLumaGuests(input.eventApiId);
       const now = Date.now();
 
-      // Build webhook callback URLs for real-time status updates
-      const baseUrl = process.env.NODE_ENV === "production"
-        ? "https://afropuppyyoga.ca"
-        : `http://localhost:${process.env.PORT ?? 3000}`;
-
       const results: Array<{
         name: string;
         phone: string;
@@ -239,7 +240,7 @@ export const cancellationRouter = router({
                   to: guest.phone,
                   from: fromNumber,
                   twiml: `<Response><Say voice="Polly.Joanna">${voiceMessage}</Say></Response>`,
-                  statusCallback: `${baseUrl}/api/twilio/call-status`,
+                  statusCallback: getTwilioWebhookUrl("/api/twilio/call-status"),
                   statusCallbackMethod: "POST",
                   statusCallbackEvent: ["completed", "no-answer", "busy", "failed", "canceled"],
                 });
@@ -262,7 +263,7 @@ export const cancellationRouter = router({
                   to: guest.phone,
                   from: fromNumber,
                   body: smsMessage,
-                  statusCallback: `${baseUrl}/api/twilio/sms-status`,
+                  statusCallback: getTwilioWebhookUrl("/api/twilio/sms-status"),
                 });
                 smsStatus = msg.status ?? "queued";
                 smsSid = msg.sid;
@@ -351,6 +352,55 @@ export const cancellationRouter = router({
       ).length;
 
       return { total: guests.length, called, texted, emailed, failed, results };
+    }),
+
+  /** Reconcile in-flight delivery records with Twilio when an admin refreshes the notification log. */
+  syncDeliveryStatuses: staffProcedure
+    .input(z.object({ eventApiId: z.string().min(1) }))
+    .mutation(async ({ input }) => {
+      const accountSid = process.env.TWILIO_ACCOUNT_SID;
+      const authToken = process.env.TWILIO_AUTH_TOKEN;
+      if (!accountSid || !authToken) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Twilio credentials are not configured" });
+      }
+
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      const client = twilio(accountSid, authToken);
+      const logs = await db
+        .select()
+        .from(callLogs)
+        .where(eq(callLogs.lumaEventId, input.eventApiId))
+        .orderBy(desc(callLogs.calledAt));
+
+      let reviewed = 0;
+      let updated = 0;
+      const errors: string[] = [];
+
+      for (const log of logs) {
+        const changes: { status?: string; smsStatus?: string } = {};
+        try {
+          if (log.callSid && isInFlightTwilioStatus(log.status)) {
+            reviewed += 1;
+            const call = await client.calls(log.callSid).fetch();
+            if (call.status && call.status !== log.status) changes.status = call.status;
+          }
+          if (log.smsSid && isInFlightTwilioStatus(log.smsStatus)) {
+            reviewed += 1;
+            const message = await client.messages(log.smsSid).fetch();
+            if (message.status && message.status !== log.smsStatus) changes.smsStatus = message.status;
+          }
+          if (Object.keys(changes).length > 0) {
+            await db.update(callLogs).set(changes).where(eq(callLogs.id, log.id));
+            updated += 1;
+          }
+        } catch (error) {
+          errors.push(error instanceof Error ? error.message : String(error));
+        }
+      }
+
+      return { reviewed, updated, errors };
     }),
 
   /** Send a test SMS to verify Twilio is working */

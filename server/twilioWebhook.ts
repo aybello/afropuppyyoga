@@ -19,6 +19,14 @@ import { callLogs, inboundSms, breeders } from "../drizzle/schema";
 
 const webhookRouter = Router();
 
+export function getTwilioWebhookBaseUrl(): string {
+  return (process.env.TWILIO_WEBHOOK_BASE_URL ?? "https://afropuppyyoga.ca").replace(/\/+$/, "");
+}
+
+export function getTwilioWebhookUrl(path: string): string {
+  return `${getTwilioWebhookBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
 function validateTwilioSignature(req: import("express").Request): boolean {
   const authToken = process.env.TWILIO_AUTH_TOKEN;
   if (!authToken) return false;
@@ -26,8 +34,14 @@ function validateTwilioSignature(req: import("express").Request): boolean {
   if (process.env.NODE_ENV === "development") return true;
   const signature = req.headers["x-twilio-signature"] as string | undefined;
   if (!signature) return false;
-  const url = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-  return twilio.validateRequest(authToken, signature, url, req.body as Record<string, string>);
+  const requestBody = req.body as Record<string, string>;
+  // Twilio signs the callback URL supplied at dispatch. Proxies can rewrite the
+  // runtime protocol/host, so verify the configured public callback URL first.
+  const canonicalUrl = getTwilioWebhookUrl(req.originalUrl);
+  const requestUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  return [canonicalUrl, requestUrl].some((url) =>
+    twilio.validateRequest(authToken, signature, url, requestBody)
+  );
 }
 
 /**

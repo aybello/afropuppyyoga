@@ -110,6 +110,25 @@ export default function CancellationDashboard() {
     { enabled: !!selectedEventApiId }
   );
 
+  const syncDeliveryStatuses = trpc.cancellation.syncDeliveryStatuses.useMutation({
+    onSuccess: async (result) => {
+      await refetchLogs();
+      if (result.errors.length > 0) {
+        toast.error("Some delivery records could not be refreshed. Please try again.");
+      } else if (result.updated > 0) {
+        toast.success(`Updated ${result.updated} notification record${result.updated === 1 ? "" : "s"} from Twilio.`);
+      } else {
+        toast.success("Notification delivery statuses are already current.");
+      }
+    },
+    onError: (error) => toast.error(`Could not refresh delivery statuses: ${error.message}`),
+  });
+
+  function handleRefreshLogs() {
+    if (!selectedEventApiId || syncDeliveryStatuses.isPending) return;
+    syncDeliveryStatuses.mutate({ eventApiId: selectedEventApiId });
+  }
+
   function handleSelectEvent(apiId: string) {
     const event = events?.find((e) => e.apiId === apiId);
     setSelectedEventApiId(apiId);
@@ -483,10 +502,12 @@ export default function CancellationDashboard() {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg text-[#2d1b4e]">Notification Log</CardTitle>
                 <button
-                  onClick={() => refetchLogs()}
+                  onClick={handleRefreshLogs}
+                  disabled={syncDeliveryStatuses.isPending}
                   className="text-xs text-[#8b5cf6] hover:underline flex items-center gap-1"
                 >
-                  <RefreshCw className="w-3 h-3" /> Refresh
+                  <RefreshCw className={`w-3 h-3 ${syncDeliveryStatuses.isPending ? "animate-spin" : ""}`} />
+                  {syncDeliveryStatuses.isPending ? "Syncing…" : "Refresh"}
                 </button>
               </div>
             </CardHeader>
