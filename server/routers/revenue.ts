@@ -4,7 +4,11 @@ import { router, staffProcedure } from "../_core/trpc";
 
 const LUMA_BASE = "https://public-api.luma.com/v1";
 
-/** Creates the Stripe client only when revenue data is requested. */
+/**
+ * Stripe is optional until the Revenue Dashboard is configured. Creating the
+ * client lazily keeps the public site and all non-Stripe admin tools available
+ * when no production Stripe secret has been supplied yet.
+ */
 function getStripeClient(): Stripe {
   const apiKey = process.env.STRIPE_LIVE_SECRET_KEY;
   if (!apiKey) {

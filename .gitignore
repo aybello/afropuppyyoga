@@ -113,5 +113,5 @@ temp/
 client/public/__manus__/version.json
 .project-config.json
 
-# Generated database-query exports can contain customer data and credentials
+# Manus database query exports can contain customer data and credentials
 .manus/db/

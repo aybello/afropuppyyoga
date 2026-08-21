@@ -82,10 +82,17 @@ export default function CancellationDashboard() {
       setShowPreview(false);
       setCustomMessage("");
 
+      // The mutation writes notification logs, but React Query still has the
+      // pre-send responses cached. Refresh every cancellation-related view so
+      // the event list and notification history update immediately.
       await Promise.all([
         utils.cancellation.listEvents.invalidate(),
-        utils.cancellation.previewCancellation.invalidate({ eventApiId: variables.eventApiId }),
-        utils.cancellation.getCallLogs.invalidate({ eventApiId: variables.eventApiId }),
+        utils.cancellation.previewCancellation.invalidate({
+          eventApiId: variables.eventApiId,
+        }),
+        utils.cancellation.getCallLogs.invalidate({
+          eventApiId: variables.eventApiId,
+        }),
       ]);
 
       toast.success(
