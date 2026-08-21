@@ -233,10 +233,6 @@ function InterviewInviteModal({
     }
     sendInvite.mutate({
       id: app.id,
-      applicantName: app.name,
-      applicantEmail: app.email,
-      role: app.role,
-      location: app.location,
       bookingLink: bookingLink.trim(),
       additionalNotes: additionalNotes || undefined,
     });
@@ -335,11 +331,6 @@ function OfferLetterModal({
   const handleSend = () => {
     sendSigningLink.mutate({
       applicationId: app.id,
-      applicantName: app.name,
-      applicantEmail: app.email,
-      role: app.role,
-      location: app.location,
-      origin: window.location.origin,
     });
   };
 
@@ -430,10 +421,6 @@ function OnboardingEmailModal({
   const handleSend = () => {
     sendOnboarding.mutate({
       id: app.id,
-      applicantName: app.name,
-      applicantEmail: app.email,
-      role: app.role,
-      location: app.location,
       orientationDate: orientationDate.trim() || undefined,
       orientationTime: orientationTime.trim() || undefined,
       additionalNotes: additionalNotes.trim() || undefined,
@@ -605,10 +592,6 @@ function RejectionLetterModal({
             onClick={() =>
               sendRejection.mutate({
                 id: app.id,
-                applicantName: app.name,
-                applicantEmail: app.email,
-                role: app.role,
-                location: app.location,
                 additionalNotes: additionalNotes || undefined,
               })
             }
@@ -665,10 +648,6 @@ function ApplicationDetailModal({
   const handleResend = () => {
     resendOnboarding.mutate({
       id: app.id,
-      applicantName: app.name,
-      applicantEmail: app.email,
-      role: app.role,
-      location: app.location,
     });
   };
 
@@ -779,10 +758,6 @@ function ApplicationDetailModal({
                   onClick={() => {
                     requestVideo.mutate({
                       id: app.id,
-                      applicantName: app.name,
-                      applicantEmail: app.email,
-                      role: app.role,
-                      location: app.location,
                     });
                   }}
                   disabled={requestVideo.isPending}
@@ -1295,7 +1270,7 @@ export default function ApplicationsDashboard() {
                           </button>
                           {app.email ? (
                             <button
-                              onClick={() => requestVideoMain.mutate({ id: app.id, applicantName: app.name, applicantEmail: app.email!, role: app.role, location: app.location })}
+                              onClick={() => requestVideoMain.mutate({ id: app.id })}
                               disabled={requestVideoMain.isPending}
                               className="inline-flex items-center gap-1 px-3 py-1.5 bg-orange-50 border border-orange-200 rounded-lg font-body text-xs font-semibold text-orange-600 hover:bg-orange-100 transition-colors"
                               title="Request intro video"

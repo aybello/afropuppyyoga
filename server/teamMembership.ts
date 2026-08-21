@@ -5,8 +5,8 @@ export type TeamMembershipCandidate = {
 };
 
 /**
- * A job application is not an APY HQ team record. Only people explicitly added
- * through the Team & Availability workflow can appear in the staffing tools.
+ * Only people explicitly promoted during onboarding or added through the Team
+ * & Availability workflow can appear in APY HQ staffing tools.
  */
 export function isActiveTeamMember(person: TeamMembershipCandidate) {
   return Boolean(person.isTeamMember)

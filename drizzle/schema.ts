@@ -86,7 +86,7 @@ export const jobApplications = mysqlTable("jobApplications", {
   resumeKey: varchar("resumeKey", { length: 500 }),
   /** Application status */
   status: mysqlEnum("appStatus", ["new", "reviewed", "shortlisted", "interview_requested", "interview_scheduled", "accepted", "rejected", "onboarded"]).default("new").notNull(),
-  /** Explicit APY HQ membership. Applications remain separate until an admin manually adds the person to the team. */
+  /** Explicit APY HQ membership. Activated when onboarding is sent or an admin adds a person directly. */
   isTeamMember: boolean("isTeamMember").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   /** Soft-delete timestamp — null means active, non-null means archived */

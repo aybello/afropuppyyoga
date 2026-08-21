@@ -14,7 +14,7 @@ import { storageGet } from "../storage";
 import { lumaPoller, capiSender } from "../metaCapi";
 import twilioWebhookRouter from "../twilioWebhook";
 import lumaWebhookRouter from "../lumaWebhook";
-import { requireStaffOrAdmin } from "./requireStaff";
+import { requireAdmin, requireStaffOrAdmin } from "./requireStaff";
 import { registerStorageProxy } from "./storageProxy";
 import crypto from "crypto";
 
@@ -44,6 +44,18 @@ const formLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Too many submissions. Please try again later." },
+  skip: () => process.env.NODE_ENV === "development",
+});
+
+// Careers receives expensive resume/video-backed submissions. Sixty completed
+// applications per public IP per hour still accommodates campuses and shared
+// networks while making automated application spam materially more expensive.
+const careersFormLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many job applications. Please try again later." },
   skip: () => process.env.NODE_ENV === "development",
 });
 
@@ -143,6 +155,7 @@ async function startServer() {
   app.use("/api/upload-video-init", uploadLimiter);
   app.use("/api/upload-video-chunk", videoChunkLimiter);
   app.use("/api/upload-video-complete", uploadLimiter);
+  app.use("/api/upload-video-status", uploadLimiter);
 
   // Video upload endpoint (multipart, bypasses JSON body limit)
   app.use(uploadRouter);
@@ -150,7 +163,7 @@ async function startServer() {
   app.use(chunkedUploadRouter);
 
   // Form rate limiters on public tRPC mutations
-  app.use("/api/trpc/careers.submitApplication", formLimiter);
+  app.use("/api/trpc/careers.submitApplication", careersFormLimiter);
   app.use("/api/trpc/privateEvents.submitInquiry", formLimiter);
   app.use("/api/trpc/birthday.submitInquiry", formLimiter);
   app.use("/api/trpc/partnership.submitInquiry", formLimiter);
@@ -159,7 +172,7 @@ async function startServer() {
 
   // Phase 2: Protect applicant media routes — only staff/admin can access these
   // These endpoints are only called from ApplicationsDashboard (admin/staff only)
-  app.get("/api/video-url", requireStaffOrAdmin, async (req, res) => {
+  app.get("/api/video-url", requireAdmin, async (req, res) => {
     const key = req.query.key as string;
     if (!key || key.includes("..") || !key.startsWith("applications/")) {
       return res.status(400).json({ error: "Invalid key" });
@@ -172,7 +185,7 @@ async function startServer() {
     }
   });
 
-  app.get("/api/resume-url", requireStaffOrAdmin, async (req, res) => {
+  app.get("/api/resume-url", requireAdmin, async (req, res) => {
     const key = req.query.key as string;
     if (!key || key.includes("..") || !key.startsWith("applications/resumes/")) {
       return res.status(400).json({ error: "Invalid key" });
@@ -189,7 +202,7 @@ async function startServer() {
   // Approved CDN hostname for applicant media (S3-backed CloudFront distribution)
   const APPROVED_CDN_HOST = "d2xsxph8kpxj0f.cloudfront.net";
 
-  app.get("/api/video-proxy", requireStaffOrAdmin, async (req, res) => {
+  app.get("/api/video-proxy", requireAdmin, async (req, res) => {
     const url = req.query.url as string;
     let parsedUrl: URL;
     try {

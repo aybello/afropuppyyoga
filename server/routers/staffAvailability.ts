@@ -23,7 +23,7 @@ export const directTeamMemberSchema = z.object({
 });
 
 export const staffAvailabilityRouter = router({
-  // Get only people manually added to APY HQ with their current availability status.
+  // Get people promoted during onboarding or added directly to APY HQ.
   getOrgChart: staffProcedure.query(async () => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
