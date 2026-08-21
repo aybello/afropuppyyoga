@@ -101,7 +101,7 @@ function isExternalVideoLink(url: string): boolean {
   }
 }
 
-type AppStatus = "new" | "reviewed" | "shortlisted" | "interview_scheduled" | "accepted" | "rejected" | "onboarded";
+type AppStatus = "new" | "reviewed" | "shortlisted" | "interview_requested" | "interview_scheduled" | "accepted" | "rejected" | "onboarded";
 
 type Application = {
   id: number;
@@ -166,6 +166,7 @@ function StatusBadge({ status }: { status: AppStatus }) {
     new: "bg-blue-100 text-blue-700",
     reviewed: "bg-yellow-100 text-yellow-700",
     shortlisted: "bg-emerald-100 text-emerald-700",
+    interview_requested: "bg-violet-100 text-violet-700",
     interview_scheduled: "bg-purple-100 text-purple-700",
     accepted: "bg-green-100 text-green-700",
     rejected: "bg-red-100 text-red-600",
@@ -175,6 +176,7 @@ function StatusBadge({ status }: { status: AppStatus }) {
     new: <Inbox className="w-3 h-3" />,
     reviewed: <Eye className="w-3 h-3" />,
     shortlisted: <Star className="w-3 h-3" />,
+    interview_requested: <Send className="w-3 h-3" />,
     interview_scheduled: <Calendar className="w-3 h-3" />,
     accepted: <CheckCircle className="w-3 h-3" />,
     rejected: <XCircle className="w-3 h-3" />,
@@ -184,6 +186,7 @@ function StatusBadge({ status }: { status: AppStatus }) {
     new: "New",
     reviewed: "Reviewed",
     shortlisted: "Shortlisted",
+    interview_requested: "Interview Request Sent",
     interview_scheduled: "Interview Scheduled",
     accepted: "Accepted",
     rejected: "Rejected",
@@ -214,7 +217,7 @@ function InterviewInviteModal({
 
   const sendInvite = trpc.careers.sendInterviewInvite.useMutation({
     onSuccess: () => {
-      toast.success(`Interview invite sent to ${app.email}!`);
+      toast.success(`Interview request sent to ${app.email}!`);
       utils.careers.list.invalidate();
       onClose();
     },
@@ -244,7 +247,7 @@ function InterviewInviteModal({
       <DialogContent className="max-w-lg bg-[#FEFAF4] border-[#F0D0DC]">
         <DialogHeader>
           <DialogTitle className="font-display text-xl text-[#1A0A12]">
-            📅 Send Interview Invite
+            📅 Send Interview Request
           </DialogTitle>
           <DialogDescription className="font-body text-sm text-[#1A0A12]">
             Sending to <strong>{app.name}</strong> ({app.email}) for <strong>{app.role}</strong>
@@ -254,7 +257,7 @@ function InterviewInviteModal({
         <div className="space-y-4 py-2">
           <div className="bg-[#FFF5F8] border border-[#F0D0DC] rounded-xl p-4">
             <p className="font-body text-sm text-[#3D1A2E] leading-relaxed">
-              The applicant will receive an email with a button to book their interview at their convenience.
+              The applicant will receive an email with a button to request or book their interview. Their status will remain <strong>Interview Request Sent</strong> until you manually confirm a date and time.
             </p>
           </div>
 
@@ -294,7 +297,7 @@ function InterviewInviteModal({
             {sendInvite.isPending ? (
               <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Sending...</>
             ) : (
-              <><Send className="w-4 h-4 mr-2" /> Send Invite</>
+              <><Send className="w-4 h-4 mr-2" /> Send Request</>
             )}
           </Button>
         </DialogFooter>
@@ -983,7 +986,8 @@ export default function ApplicationsDashboard() {
 
   const newCount = applications?.filter((a) => a.status === "new").length ?? 0;
   const shortlistedCount = applications?.filter((a) => a.status === "shortlisted").length ?? 0;
-  const interviewCount = applications?.filter((a) => a.status === "interview_scheduled").length ?? 0;
+  const interviewRequestCount = applications?.filter((a) => a.status === "interview_requested").length ?? 0;
+  const interviewScheduledCount = applications?.filter((a) => a.status === "interview_scheduled").length ?? 0;
   const totalCount = applications?.length ?? 0;
   const applicationRoles = Array.from(new Set((applications ?? []).map((app) => app.role))).sort();
   const normalizedQuery = applicationQuery.trim().toLowerCase();
@@ -1029,7 +1033,7 @@ export default function ApplicationsDashboard() {
         </div>
 
         {/* Summary cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           <div className="bg-white rounded-2xl p-5 border border-[#F0D0DC]">
             <p className="font-body text-xs text-[#1A0A12] mb-1">Total</p>
             <p className="font-display font-bold text-3xl text-[#1A0A12]">{totalCount}</p>
@@ -1039,8 +1043,12 @@ export default function ApplicationsDashboard() {
             <p className="font-display font-bold text-3xl text-blue-600">{newCount}</p>
           </div>
           <div className="bg-white rounded-2xl p-5 border border-purple-200">
-            <p className="font-body text-xs text-purple-500 mb-1">Interviews</p>
-            <p className="font-display font-bold text-3xl text-purple-600">{interviewCount}</p>
+            <p className="font-body text-xs text-violet-600 mb-1">Requests Sent</p>
+            <p className="font-display font-bold text-3xl text-violet-700">{interviewRequestCount}</p>
+          </div>
+          <div className="bg-white rounded-2xl p-5 border border-purple-200">
+            <p className="font-body text-xs text-purple-500 mb-1">Scheduled</p>
+            <p className="font-display font-bold text-3xl text-purple-600">{interviewScheduledCount}</p>
           </div>
           <div className="bg-white rounded-2xl p-5 border border-emerald-200">
             <p className="font-body text-xs text-emerald-600 mb-1">Shortlisted</p>
@@ -1065,6 +1073,7 @@ export default function ApplicationsDashboard() {
               <option value="new">New</option>
               <option value="reviewed">Reviewed</option>
               <option value="shortlisted">Shortlisted</option>
+              <option value="interview_requested">Interview request sent</option>
               <option value="interview_scheduled">Interview scheduled</option>
               <option value="accepted">Accepted</option>
               <option value="rejected">Rejected</option>
@@ -1251,6 +1260,7 @@ export default function ApplicationsDashboard() {
                             <SelectItem value="new">New</SelectItem>
                             <SelectItem value="reviewed">Reviewed</SelectItem>
                             <SelectItem value="shortlisted">Shortlisted</SelectItem>
+                            <SelectItem value="interview_requested">Interview Request Sent</SelectItem>
                             <SelectItem value="interview_scheduled">Interview Scheduled</SelectItem>
                             <SelectItem value="accepted">Accepted</SelectItem>
                             <SelectItem value="rejected">Rejected</SelectItem>
@@ -1272,7 +1282,7 @@ export default function ApplicationsDashboard() {
                           <button
                             onClick={() => { setSelectedApp(app as Application); setShowInterviewModal(true); }}
                             className="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-lg font-body text-xs font-semibold text-purple-700 hover:bg-purple-100 transition-colors"
-                            title="Send interview invite"
+                            title="Send interview request"
                           >
                             <Calendar className="w-3 h-3" />
                           </button>

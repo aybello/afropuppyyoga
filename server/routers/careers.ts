@@ -39,7 +39,7 @@ import {
 } from "../email";
 import crypto from "crypto";
 
-const APP_STATUS = ["new", "reviewed", "shortlisted", "interview_scheduled", "accepted", "rejected", "onboarded"] as const;
+export const APP_STATUS = ["new", "reviewed", "shortlisted", "interview_requested", "interview_scheduled", "accepted", "rejected", "onboarded"] as const;
 type AppStatus = (typeof APP_STATUS)[number];
 
 export const careersRouter = router({
@@ -193,8 +193,8 @@ export const careersRouter = router({
 
       await sendEmail({ to: input.applicantEmail, subject, html, text });
 
-      // Update status to interview_scheduled
-      await updateJobApplication(input.id, { status: "interview_scheduled" });
+      // A booking link has been sent, but no date or time is confirmed yet.
+      await updateJobApplication(input.id, { status: "interview_requested" });
 
       await notifyOwner({
         title: `Interview Invite Sent — ${input.applicantName}`,

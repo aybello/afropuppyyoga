@@ -85,7 +85,7 @@ export const jobApplications = mysqlTable("jobApplications", {
   /** S3 key of the uploaded resume */
   resumeKey: varchar("resumeKey", { length: 500 }),
   /** Application status */
-  status: mysqlEnum("appStatus", ["new", "reviewed", "shortlisted", "interview_scheduled", "accepted", "rejected", "onboarded"]).default("new").notNull(),
+  status: mysqlEnum("appStatus", ["new", "reviewed", "shortlisted", "interview_requested", "interview_scheduled", "accepted", "rejected", "onboarded"]).default("new").notNull(),
   /** Explicit APY HQ membership. Applications remain separate until an admin manually adds the person to the team. */
   isTeamMember: boolean("isTeamMember").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

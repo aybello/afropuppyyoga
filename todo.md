@@ -763,3 +763,6 @@
 
 ## Cancellation Notification Delivery (Aug 21, 2026)
 - [x] Diagnose and fix cancellation SMS and call notifications that remain queued instead of reaching guests
+
+## Hiring Interview Statuses (Aug 21, 2026)
+- [x] Separate Interview Request Sent from Interview Scheduled so only confirmed date-and-time bookings appear as scheduled
