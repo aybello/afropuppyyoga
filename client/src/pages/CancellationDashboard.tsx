@@ -61,6 +61,7 @@ export default function CancellationDashboard() {
   const [cancellationResult, setCancellationResult] = useState<CancellationResult | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const utils = trpc.useUtils();
 
   const { data: events, isLoading: eventsLoading, refetch: refetchEvents } = trpc.cancellation.listEvents.useQuery();
 
@@ -75,10 +76,18 @@ export default function CancellationDashboard() {
   );
 
   const cancelMutation = trpc.cancellation.cancelClass.useMutation({
-    onSuccess: (data) => {
+    onSuccess: async (data, variables) => {
       setCancellationResult(data as CancellationResult);
       setConfirming(false);
       setShowPreview(false);
+      setCustomMessage("");
+
+      await Promise.all([
+        utils.cancellation.listEvents.invalidate(),
+        utils.cancellation.previewCancellation.invalidate({ eventApiId: variables.eventApiId }),
+        utils.cancellation.getCallLogs.invalidate({ eventApiId: variables.eventApiId }),
+      ]);
+
       toast.success(
         `Done! ${data.called} called · ${data.texted} texted · ${data.emailed} emailed · ${data.failed} failed`
       );

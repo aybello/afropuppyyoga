@@ -4,9 +4,17 @@ import { router, staffProcedure } from "../_core/trpc";
 
 const LUMA_BASE = "https://public-api.luma.com/v1";
 
-const stripe = new Stripe(process.env.STRIPE_LIVE_SECRET_KEY || "", {
-  apiVersion: "2024-12-18.acacia" as any,
-});
+/** Creates the Stripe client only when revenue data is requested. */
+function getStripeClient(): Stripe {
+  const apiKey = process.env.STRIPE_LIVE_SECRET_KEY;
+  if (!apiKey) {
+    throw new Error("Stripe revenue reporting is not configured");
+  }
+
+  return new Stripe(apiKey, {
+    apiVersion: "2024-12-18.acacia" as any,
+  });
+}
 
 function normalizeCity(description: string): string {
   const desc = description.toLowerCase();
@@ -57,9 +65,7 @@ export const revenueRouter = router({
       }),
     )
     .query(async ({ input }) => {
-      if (!process.env.STRIPE_LIVE_SECRET_KEY) {
-        throw new Error("STRIPE_SECRET_KEY not configured");
-      }
+      const stripe = getStripeClient();
 
       // Default to last 30 days instead of all time for faster loads
       const defaultFrom = new Date();
@@ -188,8 +194,8 @@ export const revenueRouter = router({
 
       // Get balance
       const balance = await stripe.balance.retrieve();
-      const availableBalance = balance.available.reduce((sum, b) => sum + b.amount, 0);
-      const pendingBalance = balance.pending.reduce((sum, b) => sum + b.amount, 0);
+      const availableBalance = balance.available.reduce<number>((sum, b) => sum + b.amount, 0);
+      const pendingBalance = balance.pending.reduce<number>((sum, b) => sum + b.amount, 0);
 
       return {
         summary: {

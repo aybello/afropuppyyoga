@@ -749,3 +749,10 @@
 
 ## APY HQ Team Contact Methods (Aug 19, 2026)
 - [x] Allow team members to be added with either a valid email address or a phone number, while requiring at least one contact method
+
+## Available Project Updates (Aug 19, 2026)
+- [x] Review newly available project updates and assess whether any are safe to apply to the deployed application
+
+## Approved Update Integration (Aug 21, 2026)
+- [x] Integrate PR #2 cancellation refresh and repository cleanup into the deployed codebase
+- [x] Integrate the Stripe production-startup safeguard without replacing current APY features
