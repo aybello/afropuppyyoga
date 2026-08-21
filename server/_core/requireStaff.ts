@@ -22,3 +22,20 @@ export async function requireStaffOrAdmin(req: Request, res: Response, next: Nex
     return res.status(401).json({ error: "Authentication required" });
   }
 }
+
+/** Restrict applicant PII and hiring actions to the APY administrator. */
+export async function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  try {
+    const user = await sdk.authenticateRequest(req as any);
+    if (!user) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    if (user.role !== "admin") {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    (req as any).staffUser = user;
+    next();
+  } catch {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+}

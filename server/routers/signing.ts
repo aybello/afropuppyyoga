@@ -1,78 +1,98 @@
 import { z } from "zod";
-import { adminProcedure, staffProcedure, publicProcedure, router } from "../_core/trpc";
-import { createSigningToken, getSigningTokenByToken, updateSigningToken, getSigningTokenByApplicationId } from "../db";
+import { TRPCError } from "@trpc/server";
+import { adminProcedure, publicProcedure, router } from "../_core/trpc";
+import {
+  createSigningToken,
+  getJobApplicationById,
+  getSigningTokenByToken,
+  updateSigningToken,
+  getSigningTokenByApplicationId,
+  updateJobApplication,
+} from "../db";
 import { notifyOwner } from "../_core/notification";
 import { sendEmail } from "../email";
+import {
+  canReuseSigningToken,
+  detectOfferLetterType,
+  type OfferLetterType,
+} from "../signingPolicy";
 import crypto from "crypto";
 
-// CDN URLs for all offer letter PDFs
-type OfferLetterType = "puppy_monitor_kw" | "puppy_monitor_hamilton" | "yoga_instructor" | "puppy_specialist" | "operations_specialist" | "bdr";
-
-export function detectOfferLetterType(role: string, location: string): OfferLetterType {
-  const roleLower = role.toLowerCase();
-  const locationLower = location.toLowerCase();
-
-  if (roleLower.includes("yoga")) {
-    return "yoga_instructor";
-  }
-  if (roleLower.includes("operations specialist") || roleLower.includes("operation specialist")) {
-    return "operations_specialist";
-  }
-  if (roleLower.includes("specialist")) {
-    return "puppy_specialist";
-  }
-  if (roleLower.includes("bdr") || roleLower.includes("business development")) {
-    return "bdr";
-  }
-  if (locationLower.includes("hamilton") || locationLower.includes("ham")) {
-    return "puppy_monitor_hamilton";
-  }
-  return "puppy_monitor_kw";
-}
+export { canReuseSigningToken, detectOfferLetterType } from "../signingPolicy";
 
 export const signingRouter = router({
   /**
    * Admin-only: create a signing request and send the signing link to the applicant
    */
-  createSigningRequest: staffProcedure
+  createSigningRequest: adminProcedure
     .input(
       z.object({
         applicationId: z.number(),
-        applicantName: z.string(),
-        applicantEmail: z.string().email(),
-        role: z.string(),
-        location: z.string(),
-        origin: z.string().url(), // frontend origin for building the signing link
       })
     )
     .mutation(async ({ input }) => {
-      const token = crypto.randomBytes(48).toString("hex");
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-      const offerLetterType = detectOfferLetterType(input.role, input.location);
+      const application = await getJobApplicationById(input.applicationId);
+      if (!application) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Application not found or archived." });
+      }
+      if (!application.email) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "This applicant does not have an email address." });
+      }
 
-      await createSigningToken({
-        applicationId: input.applicationId,
-        applicantName: input.applicantName,
-        applicantEmail: input.applicantEmail,
-        role: input.role,
-        location: input.location,
-        offerLetterType,
-        token,
-        signed: 0,
-        expiresAt,
-      });
+      const latestSigning = await getSigningTokenByApplicationId(application.id);
+      if (latestSigning?.signed === 1) {
+        throw new TRPCError({ code: "CONFLICT", message: "This applicant has already signed their offer." });
+      }
 
-      const signingLink = `${input.origin}/sign?token=${token}`;
+      const canReuseToken = canReuseSigningToken(latestSigning, application);
+      const token = canReuseToken
+        ? latestSigning!.token
+        : crypto.randomBytes(48).toString("hex");
+      const expiresAt = canReuseToken
+        ? latestSigning!.expiresAt
+        : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+      if (!canReuseToken) {
+        await createSigningToken({
+          applicationId: application.id,
+          applicantName: application.name,
+          applicantEmail: application.email,
+          role: application.role,
+          location: application.location,
+          offerLetterType: detectOfferLetterType(application.role, application.location),
+          token,
+          signed: 0,
+          expiresAt,
+        });
+      }
+
+      const signingLink = `https://afropuppyyoga.ca/sign?token=${token}`;
 
       // Send signing email to applicant
       await sendEmail({
-        to: input.applicantEmail,
+        to: application.email,
         subject: `Action Required: Review & Sign Your Offer — AfroPuppyYoga`,
-        html: buildSigningEmail({ applicantName: input.applicantName, role: input.role, location: input.location, signingLink }),
-        text: `Hi ${input.applicantName},\n\nCongratulations! Please review and sign your offer letter for the ${input.role} position at AfroPuppyYoga (${input.location}).\n\nClick the link below to review and sign your documents:\n${signingLink}\n\nThis link is valid for 7 days.\n\nBest regards,\nThe AfroPuppyYoga Team`,
+        html: buildSigningEmail({
+          applicantName: application.name,
+          role: application.role,
+          location: application.location,
+          signingLink,
+        }),
+        text: `Hi ${application.name},\n\nCongratulations! Please review and sign your offer letter for the ${application.role} position at AfroPuppyYoga (${application.location}).\n\nClick the link below to review and sign your documents:\n${signingLink}\n\nThis link is valid for 7 days.\n\nBest regards,\nThe AfroPuppyYoga Team`,
       });
 
-      return { success: true, signingLink };
+      await updateJobApplication(application.id, { status: "accepted" });
+
+      try {
+        await notifyOwner({
+          title: `Offer Letter Sent: ${application.name}`,
+          content: `Offer letter sent to ${application.name} (${application.email}) for ${application.role} (${application.location}).\nSigning link: ${signingLink}`,
+        });
+      } catch (error) {
+        console.error("[Signing] Offer sent, but owner notification failed:", error);
+      }
+
+      return { success: true, signingLink, reused: canReuseToken };
     }),
 
   /**
@@ -121,6 +141,7 @@ export const signingRouter = router({
         signedIp: ip,
         signedAt: new Date(),
       });
+      await updateJobApplication(record.applicationId, { status: "accepted" });
 
       // Notify owner
       await notifyOwner({
@@ -142,7 +163,7 @@ export const signingRouter = router({
   /**
    * Admin-only: check signing status for an application
    */
-  getSigningStatus: staffProcedure
+  getSigningStatus: adminProcedure
     .input(z.object({ applicationId: z.number() }))
     .query(async ({ input }) => {
       const record = await getSigningTokenByApplicationId(input.applicationId);

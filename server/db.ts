@@ -179,6 +179,17 @@ export async function getAllJobApplications() {
   });
 }
 
+export async function getJobApplicationById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db
+    .select()
+    .from(jobApplications)
+    .where(and(eq(jobApplications.id, id), isNull(jobApplications.deletedAt)))
+    .limit(1);
+  return result[0] ?? null;
+}
+
 export async function updateJobApplication(id: number, data: Partial<InsertJobApplication>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -327,7 +338,12 @@ export async function getSigningTokenByToken(token: string) {
 export async function getSigningTokenByApplicationId(applicationId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.select().from(signingTokens).where(eq(signingTokens.applicationId, applicationId)).limit(1);
+  const result = await db
+    .select()
+    .from(signingTokens)
+    .where(eq(signingTokens.applicationId, applicationId))
+    .orderBy(desc(signingTokens.createdAt), desc(signingTokens.id))
+    .limit(1);
   return result[0] ?? null;
 }
 
