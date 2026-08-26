@@ -766,3 +766,12 @@
 
 ## Hiring Interview Statuses (Aug 21, 2026)
 - [x] Separate Interview Request Sent from Interview Scheduled so only confirmed date-and-time bookings appear as scheduled
+
+## Available Project Updates (Aug 21, 2026)
+- [ ] Review newly available project updates and assess whether any are safe to integrate into the deployed application
+- [ ] Inspect the newly announced update and compare it with the current deployed code before integration
+
+## Breeder-Scheduled Luma Events (Aug 25, 2026)
+- [x] Enable group registration for Luma events created from a breeder-scheduled class
+- [x] Remove the unnecessary Standard Free ticket from created Luma class events
+- [x] Apply cranberry tint, hypnotic pattern, and light appearance to created Luma class events

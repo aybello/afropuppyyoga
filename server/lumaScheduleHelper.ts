@@ -3,9 +3,9 @@
  * Matches the exact format of real APY events (Aug 15 2026 style):
  *   - Name: AfroPuppyYoga |📍{Location} |🐶{Breed}
  *   - 3 time slots: 10AM, 11:30AM, 1:30PM — each with Early Bird / Bring a Friend / Group of 3 / Regular tickets
- *   - Mat Rental ticket
+ *   - Mat Rental ticket, with no default free Standard ticket
  *   - Full APY branded description
- *   - No tint color / no theme (matches real events)
+ *   - Group Registration, cranberry tint, and the light Hypnotic pattern
  */
 
 const LUMA_BASE = "https://public-api.luma.com/v1";
@@ -26,6 +26,44 @@ const TIME_SLOTS = [
   { label: "11:30AM", startOffsetH: 11, startOffsetM: 30, endOffsetH: 12, endOffsetM: 30 },
   { label: "1:30PM",  startOffsetH: 13, startOffsetM: 30, endOffsetH: 14, endOffsetM: 30 },
 ];
+
+export const REGULAR_CLASS_LUMA_EVENT_DEFAULTS = {
+  can_register_for_multiple_tickets: true,
+  tint_color: "#9B2335",
+  // Luma's documented Hypnotic theme is the requested light pattern. The API
+  // does not expose a separate hypnotic-light enum or dark-mode flag.
+  theme: "hypnotic",
+} as const;
+
+type LumaTicketType = {
+  name: string;
+  type: "paid";
+  cents: number;
+  currency: "cad";
+  max_capacity?: number;
+};
+
+/**
+ * Passing ticket types directly to Luma event creation replaces its automatic
+ * free Standard ticket, so newly scheduled breeder classes only show APY's
+ * actual purchasable options.
+ */
+export function buildRegularClassTicketTypes(): LumaTicketType[] {
+  const tickets: LumaTicketType[] = [
+    { name: "Mat Rental 🧘‍♀️", type: "paid", cents: 250, currency: "cad" },
+  ];
+
+  for (const slot of TIME_SLOTS) {
+    tickets.push(
+      { name: `${slot.label} Early Bird 🐣❤️`, type: "paid", cents: 5000, currency: "cad", max_capacity: 5 },
+      { name: `${slot.label} Bring a Friend 👯‍♀️`, type: "paid", cents: 9600, currency: "cad", max_capacity: 4 },
+      { name: `${slot.label} Group of 3 👯‍♀️`, type: "paid", cents: 13800, currency: "cad", max_capacity: 1 },
+      { name: `${slot.label} Regular`, type: "paid", cents: 5200, currency: "cad", max_capacity: 4 },
+    );
+  }
+
+  return tickets;
+}
 
 const APY_DESCRIPTION = `Start your weekend with a little more movement… and a lot more puppy love.
 
@@ -57,35 +95,6 @@ We do our best to ensure that the puppies advertised for each class are the ones
 
 Thanks for your understanding and continued support 🐶🧘🏽‍♀️💛`;
 
-async function createTicketType(apiKey: string, eventId: string, ticket: {
-  name: string;
-  cents: number;
-  maxCapacity: number | null;
-  validEndAt?: string;
-  validStartAt?: string;
-}) {
-  const body: Record<string, unknown> = {
-    event_id: eventId,
-    name: ticket.name,
-    type: "paid",
-    cents: ticket.cents,
-    currency: "cad",
-  };
-  if (ticket.maxCapacity !== null) body.max_capacity = ticket.maxCapacity;
-  if (ticket.validEndAt) body.valid_end_at = ticket.validEndAt;
-  if (ticket.validStartAt) body.valid_start_at = ticket.validStartAt;
-
-  const res = await fetch(`${LUMA_BASE}/events/ticket-types/create`, {
-    method: "POST",
-    headers: { "x-luma-api-key": apiKey, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    console.warn(`[LumaSchedule] Ticket creation failed for "${ticket.name}": ${err}`);
-  }
-}
-
 export async function createLumaEventForSchedule(params: {
   classDate: string;      // "2026-08-15"
   location: string;       // "Kitchener" | "Hamilton" | "Oakville"
@@ -109,6 +118,7 @@ export async function createLumaEventForSchedule(params: {
 
   const breed = params.breed && params.breed !== "TBD" ? params.breed : "Puppies";
   const eventName = `AfroPuppyYoga |📍${params.location} |🐶${breed}`;
+  const ticketTypes = buildRegularClassTicketTypes();
 
   // Overall event window: first slot start → last slot end (in Toronto summer time UTC-4)
   const firstSlot = TIME_SLOTS[0];
@@ -131,6 +141,10 @@ export async function createLumaEventForSchedule(params: {
         geo_address_json: { type: "google", place_id: loc.googlePlaceId },
         phone_number_requirement: "required",
         name_requirement: "first-last",
+        ...REGULAR_CLASS_LUMA_EVENT_DEFAULTS,
+        // Providing paid ticket types at creation prevents Luma from adding its
+        // automatic free Standard ticket before APY's tickets are configured.
+        ticket_types: ticketTypes,
         description_md: APY_DESCRIPTION,
         cover_url: APY_COVER,
         registration_questions: [
@@ -177,38 +191,7 @@ export async function createLumaEventForSchedule(params: {
     const createData = (await createRes.json()) as { id: string };
     const lumaEventId = createData.id;
 
-    // 2. Remove the default free "Standard" ticket Luma auto-creates
-    try {
-      const listRes = await fetch(`${LUMA_BASE}/events/ticket-types/list?event_id=${lumaEventId}`, {
-        headers: { "x-luma-api-key": apiKey },
-      });
-      if (listRes.ok) {
-        const { entries } = (await listRes.json()) as { entries: Array<{ id: string; type: string; name: string }> };
-        for (const t of entries) {
-          if (t.type === "free" && t.name === "Standard") {
-            await fetch(`${LUMA_BASE}/events/ticket-types/delete`, {
-              method: "POST",
-              headers: { "x-luma-api-key": apiKey, "Content-Type": "application/json" },
-              body: JSON.stringify({ event_ticket_type_id: t.id }),
-            });
-          }
-        }
-      }
-    } catch { /* non-critical */ }
-
-    // 3. Create ticket types — Mat Rental + 3 time slots × 4 ticket types each
-    // Mat Rental (unlimited)
-    await createTicketType(apiKey, lumaEventId, { name: "Mat Rental 🧘‍♀️", cents: 250, maxCapacity: null });
-
-    // Per time slot: Early Bird, Bring a Friend, Group of 3, Regular
-    for (const slot of TIME_SLOTS) {
-      await createTicketType(apiKey, lumaEventId, { name: `${slot.label} Early Bird 🐣❤️`, cents: 5000, maxCapacity: 5 });
-      await createTicketType(apiKey, lumaEventId, { name: `${slot.label} Bring a Friend 👯‍♀️`, cents: 9600, maxCapacity: 4 });
-      await createTicketType(apiKey, lumaEventId, { name: `${slot.label} Group of 3 👯‍♀️`, cents: 13800, maxCapacity: 1 });
-      await createTicketType(apiKey, lumaEventId, { name: `${slot.label} Regular`, cents: 5200, maxCapacity: 4 });
-    }
-
-    // 4. Fetch the slug-based URL
+    // 2. Fetch the slug-based URL
     let lumaEventUrl = `https://lu.ma/${lumaEventId}`;
     try {
       const getRes = await fetch(`${LUMA_BASE}/events/get?event_id=${lumaEventId}`, {
