@@ -775,3 +775,6 @@
 - [x] Enable group registration for Luma events created from a breeder-scheduled class
 - [x] Remove the unnecessary Standard Free ticket from created Luma class events
 - [x] Apply cranberry tint, hypnotic pattern, and light appearance to created Luma class events
+
+## Luma Class Creation Preview (Aug 25, 2026)
+- [x] Add an admin preview card showing the Luma event settings before a breeder-scheduled class is finalized

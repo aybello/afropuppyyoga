@@ -8,6 +8,13 @@
  *   - Group Registration, cranberry tint, and the light Hypnotic pattern
  */
 
+import {
+  APY_MAT_RENTAL_TICKET,
+  APY_REGULAR_CLASS_LUMA_PREVIEW,
+  APY_REGULAR_CLASS_TICKET_OPTIONS,
+  APY_REGULAR_CLASS_TIME_SLOTS,
+} from "@shared/lumaClassConfig";
+
 const LUMA_BASE = "https://public-api.luma.com/v1";
 
 // APY cover image (placeholder — swap in puppy photo after creation)
@@ -19,17 +26,9 @@ const LOCATION_MAP: Record<string, { googlePlaceId: string }> = {
   oakville:  { googlePlaceId: "ChIJofNPAT9DK4gRAhVcvaHDk7Y" },
 };
 
-// Standard time slots for regular Saturday/Sunday classes (Toronto time, UTC-4 in summer)
-// 10:00 AM ET = 14:00 UTC, 11:30 AM ET = 15:30 UTC, 1:30 PM ET = 17:30 UTC
-const TIME_SLOTS = [
-  { label: "10AM",    startOffsetH: 10, startOffsetM: 0,  endOffsetH: 11, endOffsetM: 0  },
-  { label: "11:30AM", startOffsetH: 11, startOffsetM: 30, endOffsetH: 12, endOffsetM: 30 },
-  { label: "1:30PM",  startOffsetH: 13, startOffsetM: 30, endOffsetH: 14, endOffsetM: 30 },
-];
-
 export const REGULAR_CLASS_LUMA_EVENT_DEFAULTS = {
-  can_register_for_multiple_tickets: true,
-  tint_color: "#9B2335",
+  can_register_for_multiple_tickets: APY_REGULAR_CLASS_LUMA_PREVIEW.groupRegistration,
+  tint_color: APY_REGULAR_CLASS_LUMA_PREVIEW.tintColor,
   // Luma's documented Hypnotic theme is the requested light pattern. The API
   // does not expose a separate hypnotic-light enum or dark-mode flag.
   theme: "hypnotic",
@@ -50,16 +49,19 @@ type LumaTicketType = {
  */
 export function buildRegularClassTicketTypes(): LumaTicketType[] {
   const tickets: LumaTicketType[] = [
-    { name: "Mat Rental 🧘‍♀️", type: "paid", cents: 250, currency: "cad" },
+    { name: APY_MAT_RENTAL_TICKET.name, type: "paid", cents: APY_MAT_RENTAL_TICKET.cents, currency: "cad" },
   ];
 
-  for (const slot of TIME_SLOTS) {
-    tickets.push(
-      { name: `${slot.label} Early Bird 🐣❤️`, type: "paid", cents: 5000, currency: "cad", max_capacity: 5 },
-      { name: `${slot.label} Bring a Friend 👯‍♀️`, type: "paid", cents: 9600, currency: "cad", max_capacity: 4 },
-      { name: `${slot.label} Group of 3 👯‍♀️`, type: "paid", cents: 13800, currency: "cad", max_capacity: 1 },
-      { name: `${slot.label} Regular`, type: "paid", cents: 5200, currency: "cad", max_capacity: 4 },
-    );
+  for (const slot of APY_REGULAR_CLASS_TIME_SLOTS) {
+    for (const option of APY_REGULAR_CLASS_TICKET_OPTIONS) {
+      tickets.push({
+        name: `${slot.label} ${option.suffix}`,
+        type: "paid",
+        cents: option.cents,
+        currency: "cad",
+        max_capacity: option.maxCapacity,
+      });
+    }
   }
 
   return tickets;
@@ -121,11 +123,11 @@ export async function createLumaEventForSchedule(params: {
   const ticketTypes = buildRegularClassTicketTypes();
 
   // Overall event window: first slot start → last slot end (in Toronto summer time UTC-4)
-  const firstSlot = TIME_SLOTS[0];
-  const lastSlot = TIME_SLOTS[TIME_SLOTS.length - 1];
+  const firstSlot = APY_REGULAR_CLASS_TIME_SLOTS[0];
+  const lastSlot = APY_REGULAR_CLASS_TIME_SLOTS[APY_REGULAR_CLASS_TIME_SLOTS.length - 1];
   const pad = (n: number) => String(n).padStart(2, "0");
-  const startAt = `${params.classDate}T${pad(firstSlot.startOffsetH)}:${pad(firstSlot.startOffsetM)}:00-04:00`;
-  const endAt   = `${params.classDate}T${pad(lastSlot.endOffsetH)}:${pad(lastSlot.endOffsetM)}:00-04:00`;
+  const startAt = `${params.classDate}T${pad(firstSlot.startHour)}:${pad(firstSlot.startMinute)}:00-04:00`;
+  const endAt   = `${params.classDate}T${pad(lastSlot.endHour)}:${pad(lastSlot.endMinute)}:00-04:00`;
 
   try {
     // 1. Create the event

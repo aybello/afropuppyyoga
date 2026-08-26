@@ -7,6 +7,12 @@
 import { useState, useMemo, useCallback } from "react";
 import AdminNav from "@/components/AdminNav";
 import { trpc } from "@/lib/trpc";
+import {
+  APY_MAT_RENTAL_TICKET,
+  APY_REGULAR_CLASS_LUMA_PREVIEW,
+  APY_REGULAR_CLASS_TICKET_OPTIONS,
+  APY_REGULAR_CLASS_TIME_SLOTS,
+} from "@shared/lumaClassConfig";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,6 +54,10 @@ import {
   Clock,
   Dog,
   Lock,
+  Eye,
+  Palette,
+  Ticket,
+  UsersRound,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -154,6 +164,73 @@ const EMPTY_FORM = {
   classType: "regular" as "regular" | "private",
   notes: "",
 };
+
+type ScheduleForm = typeof EMPTY_FORM;
+
+function LumaClassPreviewCard({ form }: { form: ScheduleForm }) {
+  const eventName = form.location && form.breed
+    ? `AfroPuppyYoga | 📍${form.location} | 🐶${form.breed}`
+    : "AfroPuppyYoga | 📍Location | 🐶Breed";
+  const dateLabel = form.classDate
+    ? new Date(`${form.classDate}T12:00:00`).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })
+    : "Choose a class date";
+
+  return (
+    <section className="rounded-2xl border border-[#D9A0B5] bg-[#FFF4F8] overflow-hidden shadow-[0_8px_20px_rgba(139,34,82,0.08)]" aria-label="Luma event preview">
+      <div className="relative overflow-hidden border-b border-[#EBC3D1] bg-[#9B2335] px-4 py-3 text-white">
+        <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:12px_12px]" />
+        <div className="relative flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Eye size={16} />
+            <div>
+              <p className="font-body text-[10px] font-bold tracking-[0.16em] uppercase text-white/75">Before you create</p>
+              <h3 className="font-display text-base font-bold">Luma Event Preview</h3>
+            </div>
+          </div>
+          <Badge className="bg-white/15 border border-white/30 text-white font-body text-[10px]">New regular class</Badge>
+        </div>
+      </div>
+
+      <div className="space-y-3 p-4">
+        <div>
+          <p className="font-display text-sm font-bold text-[#3D1A2E] leading-snug">{eventName}</p>
+          <p className="font-body text-xs text-[#6B4C3B] mt-0.5">{dateLabel} · Standard sessions: 10AM, 11:30AM, and 1:30PM</p>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-xl bg-white/80 border border-[#F0D0DC] p-2.5">
+            <UsersRound size={14} className="text-[#8B2252] mb-1" />
+            <p className="font-body text-[10px] text-[#6B4C3B]">Registration</p>
+            <p className="font-body text-xs font-bold text-[#3D1A2E]">Group on</p>
+          </div>
+          <div className="rounded-xl bg-white/80 border border-[#F0D0DC] p-2.5">
+            <Palette size={14} className="text-[#8B2252] mb-1" />
+            <p className="font-body text-[10px] text-[#6B4C3B]">Appearance</p>
+            <p className="font-body text-xs font-bold text-[#3D1A2E]">{APY_REGULAR_CLASS_LUMA_PREVIEW.pattern} · {APY_REGULAR_CLASS_LUMA_PREVIEW.display}</p>
+          </div>
+          <div className="rounded-xl bg-white/80 border border-[#F0D0DC] p-2.5">
+            <span className="block h-3.5 w-3.5 rounded-full border border-[#711936] mb-1" style={{ backgroundColor: APY_REGULAR_CLASS_LUMA_PREVIEW.tintColor }} />
+            <p className="font-body text-[10px] text-[#6B4C3B]">Tint</p>
+            <p className="font-body text-xs font-bold text-[#3D1A2E]">Cranberry</p>
+          </div>
+        </div>
+
+        <div className="rounded-xl bg-white/70 border border-[#F0D0DC] p-3">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Ticket size={14} className="text-[#8B2252]" />
+            <p className="font-body text-xs font-bold text-[#3D1A2E]">Tickets that will be created</p>
+          </div>
+          <p className="font-body text-[11px] leading-relaxed text-[#6B4C3B]">
+            {APY_REGULAR_CLASS_TIME_SLOTS.map((slot) => slot.label).join(", ")}: {APY_REGULAR_CLASS_TICKET_OPTIONS.map((option) => `${option.label} ${option.displayPrice}`).join(" · ")}. {APY_MAT_RENTAL_TICKET.name.replace(" 🧘‍♀️", "")} {APY_MAT_RENTAL_TICKET.displayPrice}.
+          </p>
+          <p className="font-body text-[10px] text-[#8B2252] font-semibold mt-2">No Standard Free ticket will be included.</p>
+        </div>
+
+        <p className="font-body text-[10px] text-[#8B2252]/75">The Luma page is created only after you select <strong>Add Slot</strong>.</p>
+      </div>
+    </section>
+  );
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -671,6 +748,11 @@ export default function ScheduleCalendar() {
                 onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
               />
             </div>
+
+            {/* Luma preview for new breeder-backed public classes */}
+            {editId === null && form.classType === "regular" && (
+              <LumaClassPreviewCard form={form} />
+            )}
 
             {/* Delete button when editing */}
             {editId !== null && (
