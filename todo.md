@@ -781,3 +781,9 @@
 
 ## Mobile Homepage Hero Image Reliability (Aug 26, 2026)
 - [x] Ensure the mobile homepage hero image loads reliably and provides a graceful fallback instead of exposing an incomplete blank state
+
+## Available Project Update Review (Aug 27, 2026)
+- [x] Inspect the newly available project update and assess whether it is safe to integrate into the deployed application
+
+## Approved PR #4 Integration (Aug 27, 2026)
+- [x] Merge and publish the APY admin workflow and Luma attendance reliability improvements from pull request #4
