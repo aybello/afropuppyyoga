@@ -2,7 +2,7 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Link } from "wouter";
-import { ArrowLeft, Calendar, CalendarCheck, ChevronLeft, ChevronRight, Plus, Trash2, Users, X } from "lucide-react";
+import { ArrowLeft, Calendar, CalendarCheck, ChevronLeft, ChevronRight, Mail, MessageSquare, Plus, Send, Trash2, Users, X } from "lucide-react";
 
 const LOCATIONS = ["KW", "OAK", "HAM"] as const;
 const LOCATION_LABELS: Record<string, string> = { KW: "Kitchener", OAK: "Oakville", HAM: "Hamilton", CENTRAL: "APY-wide" };
@@ -21,7 +21,7 @@ type TeamRole = "Yoga Instructor" | "Operations Manager" | "Puppy Monitor" | "Pu
 type TeamLocation = "KW" | "OAK" | "HAM" | "CENTRAL";
 type StaffMember = { id: number; name: string; email: string; phone: string | null; role: string; location: string; appStatus: string };
 type WeekendShift = { date: string; dayLabel: string; shortLabel: string; location: "KW" | "OAK" | "HAM"; role: "Operations Manager" | "Yoga Instructor"; primary: Pick<StaffMember, "id" | "name" | "role" | "location"> | null; primaryLeave: { leaveType: string } | null; coverage: { coverageStaffId: number | null; coverageStaffName: string | null; notes: string | null } | null; candidates: Pick<StaffMember, "id" | "name" | "role" | "location">[]; status: "available" | "away" | "covered" | "unassigned" };
-type ScheduledClassStaffing = { id: number; classDate: string; location: "Kitchener" | "Hamilton" | "Oakville"; breed: string; breederName: string; staffing: { assignedPuppyMonitors: { id: number; staffId: number; name: string }[]; eligiblePuppyMonitors: { id: number; name: string }[]; fullyStaffed: boolean } };
+type ScheduledClassStaffing = { id: number; classDate: string; location: "Kitchener" | "Hamilton" | "Oakville"; breed: string; breederName: string; startTime: string; endTime: string; staffing: { operationsManager: { id: number; name: string } | null; yogaInstructor: { id: number; name: string } | null; assignedPuppyMonitors: { id: number; staffId: number; name: string }[]; eligiblePuppyMonitors: { id: number; name: string }[]; gaps: { operationsManager: boolean; yogaInstructor: boolean; puppyMonitors: number }; fullyStaffed: boolean } };
 
 function isOnLeave(staffId: number, leaves: any[], today: string) {
   return leaves.find((l) => l.staffId === staffId && l.startDate <= today && l.endDate >= today);
@@ -109,6 +109,7 @@ export default function StaffAvailabilityPage() {
   const [coverageDraft, setCoverageDraft] = useState({ coverageStaffId: "", notes: "" });
   const [selectedClassStaffing, setSelectedClassStaffing] = useState<ScheduledClassStaffing | null>(null);
   const [selectedPuppyMonitor, setSelectedPuppyMonitor] = useState("");
+  const notificationPreview = trpc.puppySchedule.eventNotificationPreview.useQuery({ scheduleId: selectedClassStaffing?.id ?? 0 }, { enabled: Boolean(selectedClassStaffing) });
   const [leaveForm, setLeaveForm] = useState({ leaveType: "vacation" as "vacation" | "sick" | "personal" | "leave" | "unavailable", startDate: today, endDate: today, notes: "" });
   const [newMember, setNewMember] = useState<{ name: string; email: string; phone: string; role: TeamRole; location: TeamLocation }>({ name: "", email: "", phone: "", role: "Operations Manager", location: "KW" });
 
@@ -121,6 +122,7 @@ export default function StaffAvailabilityPage() {
   const assignWeekendCoverage = trpc.staffAvailability.assignWeekendCoverage.useMutation({ onSuccess: () => { refreshAvailability(); toast.success("Coverage updated"); setSelectedWeekendShift(null); }, onError: (e) => toast.error(e.message) });
   const assignPuppyMonitor = trpc.puppySchedule.assignPuppyMonitor.useMutation({ onSuccess: () => { refreshAvailability(); toast.success("PM assigned"); setSelectedClassStaffing(null); setSelectedPuppyMonitor(""); }, onError: (e) => toast.error(e.message) });
   const removePuppyMonitor = trpc.puppySchedule.removePuppyMonitorAssignment.useMutation({ onSuccess: () => { refreshAvailability(); toast.success("PM removed"); setSelectedClassStaffing(null); }, onError: (e) => toast.error(e.message) });
+  const notifyEventTeam = trpc.puppySchedule.notifyEventTeam.useMutation({ onSuccess: (result) => { notificationPreview.refetch(); const delivered = result.results.filter((item) => item.emailStatus === "sent" || item.smsStatus === "sent").length; toast.success(`Schedule sent to ${delivered} team members`); }, onError: (e) => toast.error(e.message) });
 
   const staff = (data?.staff ?? []) as StaffMember[];
   const leaves = data?.leaves ?? [];
@@ -321,7 +323,17 @@ export default function StaffAvailabilityPage() {
           {Array.from({ length: Math.max(0, 2 - selectedClassStaffing.staffing.assignedPuppyMonitors.length) }, (_, i) => <div key={i} className="rounded-lg border border-dashed border-amber-300 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800">PM {selectedClassStaffing.staffing.assignedPuppyMonitors.length + i + 1} needed</div>)}
         </div>
         {selectedClassStaffing.staffing.assignedPuppyMonitors.length < 2 && <div className="mt-3 flex gap-2"><select value={selectedPuppyMonitor} onChange={(e) => setSelectedPuppyMonitor(e.target.value)} className="min-w-0 flex-1 rounded-lg border border-[#E6D6F8] px-3 py-2 text-sm"><option value="">Select PM</option>{selectedClassStaffing.staffing.eligiblePuppyMonitors.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select><button onClick={() => selectedPuppyMonitor && assignPuppyMonitor.mutate({ scheduleId: selectedClassStaffing.id, staffId: Number(selectedPuppyMonitor) })} disabled={!selectedPuppyMonitor || assignPuppyMonitor.isPending} className="rounded-lg bg-[#7C3AED] px-3 py-2 text-xs font-bold text-white hover:bg-[#6D28D9] disabled:opacity-50">Assign</button></div>}
-        <button onClick={() => setSelectedClassStaffing(null)} className="mt-4 w-full rounded-xl border border-[#EDE0D8] py-2 text-sm text-[#7A5A6A] hover:bg-[#FAF5F2]">Close</button>
+        <div className="mt-5 border-t border-[#EDE0D8] pt-4">
+          <div className="mb-3 flex items-center justify-between"><div><p className="text-sm font-bold text-[#1A0A12]">Notify event team</p><p className="text-[11px] text-[#7A5A6A]">Preview recipients before sending email + text.</p></div><Send size={18} className="text-[#8B2252]"/></div>
+          {notificationPreview.isLoading ? <p className="text-xs text-[#7A5A6A]">Preparing preview…</p> : <>
+            <div className="space-y-1.5">{notificationPreview.data?.recipients.map((recipient) => <div key={`${recipient.role}-${recipient.id}`} className="flex items-center gap-2 rounded-lg bg-[#F7F2EE] px-3 py-2"><span className="min-w-0 flex-1 truncate text-xs font-bold">{recipient.name} · {recipient.role}</span><Mail size={13} className={recipient.email ? "text-emerald-600" : "text-gray-300"}/><MessageSquare size={13} className={recipient.phone ? "text-emerald-600" : "text-gray-300"}/></div>)}</div>
+            {notificationPreview.data?.gapLabels.length ? <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs font-bold text-amber-800">Still needed: {notificationPreview.data.gapLabels.join(", ")}</p> : null}
+            {notificationPreview.data?.fullyStaffed && <div className="mt-3 rounded-lg border border-[#EADBE2] bg-[#FFFCFA] p-3 text-[11px] leading-relaxed text-[#5D4350]">{notificationPreview.data.message}</div>}
+            <button onClick={() => { if (confirm(`Send this schedule by email and text to ${notificationPreview.data?.recipients.length ?? 0} team members?`)) notifyEventTeam.mutate({ scheduleId: selectedClassStaffing.id, resend: Boolean(notificationPreview.data?.lastSentAt) }); }} disabled={!notificationPreview.data?.fullyStaffed || notifyEventTeam.isPending} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#8B2252] py-2.5 text-sm font-bold text-white hover:bg-[#6B1A3E] disabled:opacity-40"><Send size={14}/>{notifyEventTeam.isPending ? "Sending…" : notificationPreview.data?.lastSentAt ? "Resend schedule" : "Send email + text"}</button>
+            {notificationPreview.data?.lastSentAt && <p className="mt-2 text-center text-[10px] font-medium text-emerald-700">Last sent {new Date(notificationPreview.data.lastSentAt).toLocaleString("en-CA")}</p>}
+          </>}
+        </div>
+        <button onClick={() => setSelectedClassStaffing(null)} className="mt-3 w-full rounded-xl border border-[#EDE0D8] py-2 text-sm text-[#7A5A6A] hover:bg-[#FAF5F2]">Close</button>
       </div></div>}
 
       {/* Add member modal */}

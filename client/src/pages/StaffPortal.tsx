@@ -22,11 +22,22 @@ import {
   Inbox,
   Star,
   CalendarCheck,
+  GraduationCap,
 } from "lucide-react";
 
 const TEAM_PHOTO = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663824308637/IiwudPwckobbrxIv.jpg";
 
 const TOOLS = [
+  {
+    id: "staff-training",
+    title: "Team Training",
+    description: "Role-based onboarding, safety and event-day playbooks.",
+    href: "/staff/training",
+    icon: GraduationCap,
+    accent: "#8B2252",
+    adminOnly: true,
+    category: "People",
+  },
   {
     id: "submit-invoice",
     title: "Submit Invoice",
