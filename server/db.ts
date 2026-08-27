@@ -158,7 +158,9 @@ export async function getRecentDuplicateJobApplication(input: { email: string; r
 export async function getAllJobApplications() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const apps = await db.select().from(jobApplications).where(isNull(jobApplications.deletedAt)).orderBy(desc(jobApplications.createdAt));
+  const apps = await db.select().from(jobApplications).where(
+    and(isNull(jobApplications.deletedAt), eq(jobApplications.isTeamMember, false)),
+  ).orderBy(desc(jobApplications.createdAt));
   const allSigningTokens = await db.select().from(signingTokens);
   const latestSigningByApplication = new Map<number, (typeof allSigningTokens)[number]>();
   for (const signing of allSigningTokens) {
@@ -179,6 +181,19 @@ export async function getAllJobApplications() {
   });
 }
 
+export async function getJobApplicationById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const rows = await db.select().from(jobApplications).where(
+    and(
+      eq(jobApplications.id, id),
+      eq(jobApplications.isTeamMember, false),
+      isNull(jobApplications.deletedAt),
+    ),
+  ).limit(1);
+  return rows[0] ?? null;
+}
+
 export async function updateJobApplication(id: number, data: Partial<InsertJobApplication>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -195,7 +210,9 @@ export async function deleteJobApplication(id: number) {
 export async function getArchivedJobApplications() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const apps = await db.select().from(jobApplications).where(isNotNull(jobApplications.deletedAt)).orderBy(desc(jobApplications.deletedAt));
+  const apps = await db.select().from(jobApplications).where(
+    and(isNotNull(jobApplications.deletedAt), eq(jobApplications.isTeamMember, false)),
+  ).orderBy(desc(jobApplications.deletedAt));
   const allSigningTokens = await db.select().from(signingTokens);
   const latestSigningByApplication = new Map<number, (typeof allSigningTokens)[number]>();
   for (const signing of allSigningTokens) {

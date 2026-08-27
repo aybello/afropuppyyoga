@@ -92,6 +92,10 @@ router.post("/api/upload-video-init", async (req: Request, res: Response) => {
     if (Number(totalSize) > MAX_TOTAL_SIZE) {
       return res.status(400).json({ error: `File too large. Maximum size is ${MAX_TOTAL_SIZE / 1024 / 1024}MB.` });
     }
+    const minimumChunks = Math.ceil(Number(totalSize) / CHUNK_SIZE_LIMIT);
+    if (Number(totalChunks) < minimumChunks || Number(totalChunks) > Number(totalSize)) {
+      return res.status(400).json({ error: "totalChunks does not match the declared file size." });
+    }
 
     const ext = (filename.split(".").pop() ?? "mp4").toLowerCase().replace(/[^a-z0-9]/g, "");
     const allowedExts = ["mp4", "mov", "webm", "avi"];
@@ -163,6 +167,9 @@ router.post("/api/upload-video-chunk", (req: any, res: any, next: any) => {
     // Session expiry check
     if (Date.now() - manifest.createdAt > SESSION_TTL_MS) {
       return res.status(410).json({ error: "Upload session expired. Please restart the upload." });
+    }
+    if (manifest.completed) {
+      return res.status(409).json({ error: "This upload has already been completed." });
     }
 
     // Validate chunk index against declared total
@@ -301,6 +308,9 @@ router.post("/api/upload-video-complete", async (req: Request, res: Response) =>
     }
 
     const assembled = Buffer.concat(allBuffers);
+    if (assembled.length !== manifest.totalSize) {
+      throw new Error(`Uploaded video is incomplete (${assembled.length} of ${manifest.totalSize} bytes). Please retry the upload.`);
+    }
     const { url } = await storagePut(manifest.finalKey, assembled, mimeType);
 
     // Persist result to S3 so duplicate-completion requests can return it

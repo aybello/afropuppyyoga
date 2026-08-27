@@ -26,7 +26,7 @@ const safeResumeUrl = z
   .string()
   .url()
   .refine((url) => url.startsWith("https://"), "Must be an https:// URL");
-import { createJobApplication, getAllJobApplications, updateJobApplication, deleteJobApplication, getArchivedJobApplications, restoreJobApplication, permanentlyDeleteJobApplication, createSigningToken, getRecentDuplicateJobApplication } from "../db";
+import { createJobApplication, getAllJobApplications, updateJobApplication, deleteJobApplication, getArchivedJobApplications, restoreJobApplication, permanentlyDeleteJobApplication, createSigningToken, getRecentDuplicateJobApplication, getJobApplicationById } from "../db";
 import { notifyOwner } from "../_core/notification";
 import {
   sendEmail,
@@ -38,9 +38,21 @@ import {
   buildSigningInviteEmail,
 } from "../email";
 import crypto from "crypto";
+import { getTrustedAppOrigin } from "../_core/trustedOrigin";
 
 export const APP_STATUS = ["new", "reviewed", "shortlisted", "interview_requested", "interview_scheduled", "accepted", "rejected", "onboarded"] as const;
 type AppStatus = (typeof APP_STATUS)[number];
+
+async function requireApplicant(id: number) {
+  const applicant = await getJobApplicationById(id);
+  if (!applicant) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Application not found or archived." });
+  }
+  if (!applicant.email) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: "This applicant does not have an email address." });
+  }
+  return { ...applicant, email: applicant.email };
+}
 
 export const careersRouter = router({
   /**
@@ -183,22 +195,23 @@ export const careersRouter = router({
       })
     )
     .mutation(async ({ input }) => {
+      const applicant = await requireApplicant(input.id);
       const { subject, html, text } = buildInterviewInviteEmail({
-        applicantName: input.applicantName,
-        role: input.role,
-        location: input.location,
+        applicantName: applicant.name,
+        role: applicant.role,
+        location: applicant.location,
         bookingLink: input.bookingLink,
         additionalNotes: input.additionalNotes,
       });
 
-      await sendEmail({ to: input.applicantEmail, subject, html, text });
+      await sendEmail({ to: applicant.email, subject, html, text });
 
       // A booking link has been sent, but no date or time is confirmed yet.
       await updateJobApplication(input.id, { status: "interview_requested" });
 
       await notifyOwner({
-        title: `Interview Invite Sent — ${input.applicantName}`,
-        content: `Interview invitation sent to ${input.applicantName} (${input.applicantEmail}) for ${input.role} (${input.location}).\n\nBooking link: ${input.bookingLink}`,
+        title: `Interview Invite Sent — ${applicant.name}`,
+        content: `Interview invitation sent to ${applicant.name} (${applicant.email}) for ${applicant.role} (${applicant.location}).\n\nBooking link: ${input.bookingLink}`,
       });
 
       return { success: true };
@@ -221,9 +234,10 @@ export const careersRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      const applicant = await requireApplicant(input.id);
       // Determine offer letter type from role and location
-      const roleLower = input.role.toLowerCase();
-      const locationLower = input.location.toLowerCase();
+      const roleLower = applicant.role.toLowerCase();
+      const locationLower = applicant.location.toLowerCase();
       let offerLetterType: "puppy_monitor_kw" | "puppy_monitor_hamilton" | "yoga_instructor" | "operations_specialist" | "bdr" = "puppy_monitor_kw";
       if (roleLower.includes("yoga") || roleLower.includes("instructor")) {
         offerLetterType = "yoga_instructor";
@@ -241,10 +255,10 @@ export const careersRouter = router({
 
       await createSigningToken({
         applicationId: input.id,
-        applicantName: input.applicantName,
-        applicantEmail: input.applicantEmail,
-        role: input.role,
-        location: input.location,
+        applicantName: applicant.name,
+        applicantEmail: applicant.email,
+        role: applicant.role,
+        location: applicant.location,
         offerLetterType,
         token,
         signed: 0,
@@ -252,34 +266,34 @@ export const careersRouter = router({
       });
 
       // Build the signing portal link using the origin passed from the frontend
-      const origin = input.origin ?? "https://afropuppyyoga.ca";
+      const origin = getTrustedAppOrigin(input.origin);
       const signingLink = `${origin}/sign?token=${token}`;
 
       // Send the signing invitation email
-      const firstName = input.applicantName.split(" ")[0];
+      const firstName = applicant.name.split(" ")[0];
       const emailHtml = buildSigningInviteEmail({
         firstName,
-        applicantName: input.applicantName,
-        role: input.role,
-        location: input.location,
+        applicantName: applicant.name,
+        role: applicant.role,
+        location: applicant.location,
         signingLink,
         startDate: input.startDate,
         additionalNotes: input.additionalNotes,
       });
 
       await sendEmail({
-        to: input.applicantEmail,
+        to: applicant.email,
         subject: `${firstName}, your AfroPuppyYoga offer is ready to sign! 🐾`,
         html: emailHtml,
-        text: `Hi ${firstName},\n\nCongratulations! We are excited to offer you the ${input.role} position at AfroPuppyYoga (${input.location}).\n\nPlease review and sign your Offer Letter and NDA using the link below:\n${signingLink}\n\nThis link is valid for 7 days.\n\nWarm regards,\nThe AfroPuppyYoga Team`,
+        text: `Hi ${firstName},\n\nCongratulations! We are excited to offer you the ${applicant.role} position at AfroPuppyYoga (${applicant.location}).\n\nPlease review and sign your Offer Letter and NDA using the link below:\n${signingLink}\n\nThis link is valid for 7 days.\n\nWarm regards,\nThe AfroPuppyYoga Team`,
       });
 
       // Update status to accepted
       await updateJobApplication(input.id, { status: "accepted" });
 
       await notifyOwner({
-        title: `Offer Letter Sent: ${input.applicantName}`,
-        content: `Offer letter sent to ${input.applicantName} (${input.applicantEmail}) for ${input.role} (${input.location}).\nSigning link: ${signingLink}`,
+        title: `Offer Letter Sent: ${applicant.name}`,
+        content: `Offer letter sent to ${applicant.name} (${applicant.email}) for ${applicant.role} (${applicant.location}).\nSigning link: ${signingLink}`,
       });
 
       return { success: true, signingLink };
@@ -340,22 +354,23 @@ export const careersRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      console.log(`[Onboarding] Sending onboarding email to ${input.applicantEmail} for ${input.applicantName} (${input.role}, ${input.location})`);
+      const applicant = await requireApplicant(input.id);
+      console.log(`[Onboarding] Sending onboarding email to ${applicant.email} for ${applicant.name} (${applicant.role}, ${applicant.location})`);
       // Use role-specific email template
-      const isYogaInstructor = input.role.toLowerCase().includes("yoga instructor") || input.role.toLowerCase().includes("instructor");
+      const isYogaInstructor = applicant.role.toLowerCase().includes("yoga instructor") || applicant.role.toLowerCase().includes("instructor");
       const { subject, html, text } = isYogaInstructor
         ? buildYogaInstructorOnboardingEmail({
-            applicantName: input.applicantName,
-            location: input.location,
+            applicantName: applicant.name,
+            location: applicant.location,
             orientationDate: input.orientationDate,
             orientationTime: input.orientationTime,
             planningDocUrl: input.planningDocUrl,
             additionalNotes: input.additionalNotes,
           })
         : buildOnboardingEmail({
-            applicantName: input.applicantName,
-            role: input.role,
-            location: input.location,
+            applicantName: applicant.name,
+            role: applicant.role,
+            location: applicant.location,
             orientationDate: input.orientationDate,
             orientationTime: input.orientationTime,
             planningDocUrl: input.planningDocUrl,
@@ -363,8 +378,8 @@ export const careersRouter = router({
           });
 
       try {
-        await sendEmail({ to: input.applicantEmail, subject, html, text });
-        console.log(`[Onboarding] ✅ Email sent successfully to ${input.applicantEmail}`);
+        await sendEmail({ to: applicant.email, subject, html, text });
+        console.log(`[Onboarding] ✅ Email sent successfully to ${applicant.email}`);
       } catch (err: any) {
         console.error(`[Onboarding] ❌ Failed to send email:`, err.message || err);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `Email send failed: ${err.message}` });
@@ -375,8 +390,8 @@ export const careersRouter = router({
       console.log(`[Onboarding] Status updated to onboarded for application ${input.id}`);
 
       await notifyOwner({
-        title: `Onboarding Email Sent — ${input.applicantName}`,
-        content: `Onboarding email sent to ${input.applicantName} (${input.applicantEmail}) for ${input.role} (${input.location}). Status updated to Onboarded.`,
+        title: `Onboarding Email Sent — ${applicant.name}`,
+        content: `Onboarding email sent to ${applicant.name} (${applicant.email}) for ${applicant.role} (${applicant.location}). Status updated to Onboarded.`,
       });
 
       return { success: true };
@@ -400,31 +415,32 @@ export const careersRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const isYogaInstructor = input.role.toLowerCase().includes("yoga instructor") || input.role.toLowerCase().includes("instructor");
+      const applicant = await requireApplicant(input.id);
+      const isYogaInstructor = applicant.role.toLowerCase().includes("yoga instructor") || applicant.role.toLowerCase().includes("instructor");
       const { subject, html, text } = isYogaInstructor
         ? buildYogaInstructorOnboardingEmail({
-            applicantName: input.applicantName,
-            location: input.location,
+            applicantName: applicant.name,
+            location: applicant.location,
             orientationDate: input.orientationDate,
             orientationTime: input.orientationTime,
             planningDocUrl: input.planningDocUrl,
             additionalNotes: input.additionalNotes,
           })
         : buildOnboardingEmail({
-            applicantName: input.applicantName,
-            role: input.role,
-            location: input.location,
+            applicantName: applicant.name,
+            role: applicant.role,
+            location: applicant.location,
             orientationDate: input.orientationDate,
             orientationTime: input.orientationTime,
             planningDocUrl: input.planningDocUrl,
             additionalNotes: input.additionalNotes,
           });
 
-      await sendEmail({ to: input.applicantEmail, subject, html, text });
+      await sendEmail({ to: applicant.email, subject, html, text });
 
       await notifyOwner({
-        title: `Onboarding Email Resent -- ${input.applicantName}`,
-        content: `Onboarding email resent to ${input.applicantName} (${input.applicantEmail}) for ${input.role} (${input.location}).`,
+        title: `Onboarding Email Resent -- ${applicant.name}`,
+        content: `Onboarding email resent to ${applicant.name} (${applicant.email}) for ${applicant.role} (${applicant.location}).`,
       });
 
       return { success: true };
@@ -445,21 +461,22 @@ export const careersRouter = router({
       })
     )
     .mutation(async ({ input }) => {
+      const applicant = await requireApplicant(input.id);
       const { subject, html, text } = buildRejectionLetterEmail({
-        applicantName: input.applicantName,
-        role: input.role,
-        location: input.location,
+        applicantName: applicant.name,
+        role: applicant.role,
+        location: applicant.location,
         additionalNotes: input.additionalNotes,
       });
 
-      await sendEmail({ to: input.applicantEmail, subject, html, text });
+      await sendEmail({ to: applicant.email, subject, html, text });
 
       // Update status to rejected
       await updateJobApplication(input.id, { status: "rejected" });
 
       await notifyOwner({
-        title: `Rejection Letter Sent — ${input.applicantName}`,
-        content: `Rejection letter sent to ${input.applicantName} (${input.applicantEmail}) for ${input.role} (${input.location}).`,
+        title: `Rejection Letter Sent — ${applicant.name}`,
+        content: `Rejection letter sent to ${applicant.name} (${applicant.email}) for ${applicant.role} (${applicant.location}).`,
       });
 
       return { success: true };
@@ -479,7 +496,8 @@ export const careersRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const firstName = input.applicantName.split(" ")[0];
+      const applicant = await requireApplicant(input.id);
+      const firstName = applicant.name.split(" ")[0];
       const subject = `${firstName}, we still need your intro video`;
       const html = `<!DOCTYPE html>
 <html>
@@ -492,7 +510,7 @@ export const careersRouter = router({
     </div>
     <div style="padding:36px 40px;">
       <p style="margin:0 0 18px;font-size:16px;line-height:1.7;">Hi ${escapeHtml(firstName)},</p>
-      <p style="margin:0 0 18px;font-size:15px;line-height:1.7;">Thank you for applying for the <strong>${escapeHtml(input.role)}</strong> position at AfroPuppyYoga (${escapeHtml(input.location)}). We are excited to learn more about you!</p>
+      <p style="margin:0 0 18px;font-size:15px;line-height:1.7;">Thank you for applying for the <strong>${escapeHtml(applicant.role)}</strong> position at AfroPuppyYoga (${escapeHtml(applicant.location)}). We are excited to learn more about you!</p>
       <p style="margin:0 0 18px;font-size:15px;line-height:1.7;">We noticed we do not have your intro video on file yet. A short video (1 to 2 minutes) is an important part of your application and helps us get to know you before we move forward.</p>
       <div style="background:#fef3f7;border-left:4px solid #C2185B;border-radius:8px;padding:18px 22px;margin:24px 0;">
         <p style="margin:0 0 10px;font-weight:700;color:#8B2252;font-size:15px;">What to include in your video:</p>
@@ -513,11 +531,11 @@ export const careersRouter = router({
   </div>
 </body>
 </html>`;
-      const text = `Hi ${firstName},\n\nThank you for applying for the ${input.role} position at AfroPuppyYoga (${input.location}).\n\nWe noticed we do not have your intro video on file yet. Please record a short 1-2 minute video introducing yourself and reply to this email with a link (YouTube, Google Drive, or Loom).\n\nWarm regards,\nThe AfroPuppyYoga Team`;
-      await sendEmail({ to: input.applicantEmail, subject, html, text });
+      const text = `Hi ${firstName},\n\nThank you for applying for the ${applicant.role} position at AfroPuppyYoga (${applicant.location}).\n\nWe noticed we do not have your intro video on file yet. Please record a short 1-2 minute video introducing yourself and reply to this email with a link (YouTube, Google Drive, or Loom).\n\nWarm regards,\nThe AfroPuppyYoga Team`;
+      await sendEmail({ to: applicant.email, subject, html, text });
       await notifyOwner({
-        title: `Video Requested: ${input.applicantName}`,
-        content: `Video request email sent to ${input.applicantName} (${input.applicantEmail}) for ${input.role} (${input.location}).`,
+        title: `Video Requested: ${applicant.name}`,
+        content: `Video request email sent to ${applicant.name} (${applicant.email}) for ${applicant.role} (${applicant.location}).`,
       });
       return { success: true };
     }),

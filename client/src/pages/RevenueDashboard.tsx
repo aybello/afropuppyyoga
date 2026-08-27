@@ -368,13 +368,13 @@ function LumaAttendanceSection({ fromDate }: { fromDate: string | undefined }) {
             </Card>
             <Card className="bg-white border-[#F0D0DC] rounded-2xl">
               <CardContent className="pt-5 pb-4">
-                <p className="font-body text-xs text-[#6B4C3B] uppercase tracking-wide">Total Guests</p>
+                <p className="font-body text-xs text-[#6B4C3B] uppercase tracking-wide">Paid Seats</p>
                 <p className="font-display text-2xl text-[#1A0A12] mt-1">{data.totalGuests.toLocaleString()}</p>
               </CardContent>
             </Card>
             <Card className="bg-white border-[#F0D0DC] rounded-2xl">
               <CardContent className="pt-5 pb-4">
-                <p className="font-body text-xs text-[#6B4C3B] uppercase tracking-wide">Checked In</p>
+                <p className="font-body text-xs text-[#6B4C3B] uppercase tracking-wide">Checked-in Seats</p>
                 <p className="font-display text-2xl text-[#1A0A12] mt-1">{data.totalCheckedIn.toLocaleString()}</p>
               </CardContent>
             </Card>
@@ -397,7 +397,8 @@ function LumaAttendanceSection({ fromDate }: { fromDate: string | undefined }) {
                     <tr className="border-b border-[#F0D0DC]">
                       <th className="text-left px-5 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Event</th>
                       <th className="text-left px-3 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Date</th>
-                      <th className="text-right px-3 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Guests</th>
+                      <th className="text-right px-3 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Registrations</th>
+                      <th className="text-right px-3 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Paid Seats</th>
                       <th className="text-right px-3 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Checked In</th>
                       <th className="text-center px-3 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Link</th>
                     </tr>
@@ -407,11 +408,12 @@ function LumaAttendanceSection({ fromDate }: { fromDate: string | undefined }) {
                       <tr key={i} className="border-b border-[#F6E6EC] last:border-0 hover:bg-[#FFF8FA]">
                         <td className="px-5 py-3 max-w-[250px] truncate">{ev.name}</td>
                         <td className="px-3 py-3 text-[#9B7A69]">{new Date(ev.date).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}</td>
+                        <td className="px-3 py-3 text-right font-medium">{ev.registrations}</td>
                         <td className="px-3 py-3 text-right font-medium">{ev.guests}</td>
                         <td className="px-3 py-3 text-right font-medium">{ev.checkedIn}</td>
                         <td className="px-3 py-3 text-center">
                           {ev.url && (
-                            <a href={`https://lu.ma/${ev.url}`} target="_blank" rel="noopener noreferrer" className="text-[#8B2252] hover:underline">
+                            <a href={ev.url.startsWith("http") ? ev.url : `https://lu.ma/${ev.url}`} target="_blank" rel="noopener noreferrer" className="text-[#8B2252] hover:underline">
                               <ExternalLink size={14} className="inline" />
                             </a>
                           )}

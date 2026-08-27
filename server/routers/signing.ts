@@ -1,9 +1,11 @@
 import { z } from "zod";
 import { adminProcedure, staffProcedure, publicProcedure, router } from "../_core/trpc";
-import { createSigningToken, getSigningTokenByToken, updateSigningToken, getSigningTokenByApplicationId } from "../db";
+import { createSigningToken, getSigningTokenByToken, updateSigningToken, getSigningTokenByApplicationId, getJobApplicationById } from "../db";
+import { TRPCError } from "@trpc/server";
 import { notifyOwner } from "../_core/notification";
 import { sendEmail } from "../email";
 import crypto from "crypto";
+import { getTrustedAppOrigin } from "../_core/trustedOrigin";
 
 // CDN URLs for all offer letter PDFs
 type OfferLetterType = "puppy_monitor_kw" | "puppy_monitor_hamilton" | "yoga_instructor" | "puppy_specialist" | "operations_specialist" | "bdr";
@@ -46,30 +48,34 @@ export const signingRouter = router({
       })
     )
     .mutation(async ({ input }) => {
+      const applicant = await getJobApplicationById(input.applicationId);
+      if (!applicant) throw new TRPCError({ code: "NOT_FOUND", message: "Application not found or archived." });
+      if (!applicant.email) throw new TRPCError({ code: "BAD_REQUEST", message: "This applicant does not have an email address." });
       const token = crypto.randomBytes(48).toString("hex");
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-      const offerLetterType = detectOfferLetterType(input.role, input.location);
+      const offerLetterType = detectOfferLetterType(applicant.role, applicant.location);
 
       await createSigningToken({
         applicationId: input.applicationId,
-        applicantName: input.applicantName,
-        applicantEmail: input.applicantEmail,
-        role: input.role,
-        location: input.location,
+        applicantName: applicant.name,
+        applicantEmail: applicant.email,
+        role: applicant.role,
+        location: applicant.location,
         offerLetterType,
         token,
         signed: 0,
         expiresAt,
       });
 
-      const signingLink = `${input.origin}/sign?token=${token}`;
+      const origin = getTrustedAppOrigin(input.origin);
+      const signingLink = `${origin}/sign?token=${token}`;
 
       // Send signing email to applicant
       await sendEmail({
-        to: input.applicantEmail,
+        to: applicant.email,
         subject: `Action Required: Review & Sign Your Offer — AfroPuppyYoga`,
-        html: buildSigningEmail({ applicantName: input.applicantName, role: input.role, location: input.location, signingLink }),
-        text: `Hi ${input.applicantName},\n\nCongratulations! Please review and sign your offer letter for the ${input.role} position at AfroPuppyYoga (${input.location}).\n\nClick the link below to review and sign your documents:\n${signingLink}\n\nThis link is valid for 7 days.\n\nBest regards,\nThe AfroPuppyYoga Team`,
+        html: buildSigningEmail({ applicantName: applicant.name, role: applicant.role, location: applicant.location, signingLink }),
+        text: `Hi ${applicant.name},\n\nCongratulations! Please review and sign your offer letter for the ${applicant.role} position at AfroPuppyYoga (${applicant.location}).\n\nClick the link below to review and sign your documents:\n${signingLink}\n\nThis link is valid for 7 days.\n\nBest regards,\nThe AfroPuppyYoga Team`,
       });
 
       return { success: true, signingLink };
