@@ -794,3 +794,6 @@
 ## Approved Staff Training & Schedule Notifications (Aug 27, 2026)
 - [x] Merge, migrate, validate, and publish the staff training and guarded event-notification workflow from pull request #5
 - [x] Correct the APY Training Centre route so it is reachable from the admin portal
+
+## Free Luma Cancellation Rebooking Codes (Aug 27, 2026)
+- [x] Create a 100% free calendar-level Luma code when cancelling a class so guests can rebook into any eligible APY class

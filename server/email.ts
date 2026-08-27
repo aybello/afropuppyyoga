@@ -738,7 +738,7 @@ export function buildSigningInviteEmail(opts: {
 
 /**
  * Sends a branded class cancellation email to every attendee.
- * Includes a rebooking code (auto-generated from event date) and next class info.
+ * Includes a free calendar-wide Luma rebooking code and next class info.
  */
 export async function sendClassCancellationEmail(opts: {
   to: string;
@@ -767,9 +767,9 @@ export async function sendClassCancellationEmail(opts: {
     <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;">
       <tr>
         <td style="background:#FFF0F5;border:2px dashed #E91E8C;border-radius:10px;padding:18px 24px;text-align:center;">
-          <p style="margin:0 0 6px;font-size:12px;color:#888;letter-spacing:1px;text-transform:uppercase;">Your Class Credit Code</p>
+          <p style="margin:0 0 6px;font-size:12px;color:#888;letter-spacing:1px;text-transform:uppercase;">Your Free Rebooking Code</p>
           <p style="margin:0;font-size:28px;font-weight:bold;color:#C2185B;letter-spacing:4px;font-family:monospace;">${opts.rebookingCode}</p>
-          <p style="margin:8px 0 0;font-size:12px;color:#666;">Enter this code at checkout when booking any upcoming class</p>
+          <p style="margin:8px 0 0;font-size:12px;color:#666;">Enter this code at Luma checkout for 100% off any upcoming APY class</p>
         </td>
       </tr>
     </table>
@@ -797,7 +797,7 @@ export async function sendClassCancellationEmail(opts: {
     ? `We'd love to see you at our next class: ${opts.nextClassName} on ${opts.nextClassDate}.\n\n`
     : `We'd love to have you join us at a future session at any of our locations.\n\n`;
 
-  const text = `Hi ${opts.guestName},\n\nWe regret to inform you that your upcoming class "${opts.eventName}" has been cancelled. We sincerely apologize for the inconvenience.\n\n${opts.customMessage ? `Message from our team: ${opts.customMessage}\n\n` : ""}Your rebooking code: ${opts.rebookingCode}\nSimply enter this code at checkout when booking any upcoming class.\n\n${nextClassLine}Browse upcoming classes at https://lu.ma/AfroPuppyYoga\n\nIf you have questions, email us at afropuppyyoga@gmail.com or DM @afropuppyyoga on Instagram.\n\nWith warmth,\nThe AfroPuppyYoga Team`;
+  const text = `Hi ${opts.guestName},\n\nWe regret to inform you that your upcoming class "${opts.eventName}" has been cancelled. We sincerely apologize for the inconvenience.\n\n${opts.customMessage ? `Message from our team: ${opts.customMessage}\n\n` : ""}Your free rebooking code: ${opts.rebookingCode}\nEnter this code at Luma checkout for 100% off any upcoming APY class.\n\n${nextClassLine}Browse upcoming classes at https://lu.ma/AfroPuppyYoga\n\nIf you have questions, email us at afropuppyyoga@gmail.com or DM @afropuppyyoga on Instagram.\n\nWith warmth,\nThe AfroPuppyYoga Team`;
 
   await sendEmail({ to: opts.to, subject, html, text });
 }

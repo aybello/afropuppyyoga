@@ -21,6 +21,7 @@ import { callLogs } from "../../drizzle/schema";
 import { staffProcedure, router } from "../_core/trpc";
 import { sendClassCancellationEmail } from "../email";
 import { getTwilioWebhookUrl } from "../twilioWebhook";
+import { ensureFreeCalendarRebookingCoupon, rebookingCodeForClassDate } from "../lumaCalendarCoupon";
 
 const LUMA_BASE = "https://public-api.luma.com/v1";
 const IN_FLIGHT_TWILIO_STATUSES = new Set(["accepted", "queued", "sending", "sent", "in-progress", "ringing"]);
@@ -170,12 +171,21 @@ export const cancellationRouter = router({
 
       const client = twilio(accountSid, authToken);
 
-      // ── Generate rebooking code from event start date (MONTHDDAY format) ──
+      // ── Create or reuse a 100%-off calendar-wide Luma rebooking code ──────
       const allEvents = await fetchLumaEvents();
       const cancelledEvent = allEvents.find((e) => e.api_id === input.eventApiId);
-      const eventDate = cancelledEvent ? new Date(cancelledEvent.start_at) : new Date();
-      const monthNames = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-      const rebookingCode = `${monthNames[eventDate.getMonth()]}${eventDate.getDate()}`;
+      const rebookingCode = rebookingCodeForClassDate(cancelledEvent?.start_at ?? new Date());
+      let couponState: "created" | "reused";
+      try {
+        ({ state: couponState } = await ensureFreeCalendarRebookingCoupon(rebookingCode, {
+          apiKey: process.env.LUMA_API_KEY ?? "",
+        }));
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `The free Luma rebooking code could not be created. No guest notifications were sent. ${error instanceof Error ? error.message : ""}`.trim(),
+        });
+      }
 
       // ── Find next upcoming class (any location) ───────────────────────────
       const nextEvent = allEvents
@@ -192,18 +202,18 @@ export const cancellationRouter = router({
         : undefined;
 
       // Voice message (TTS — slightly more formal for spoken delivery)
-      const voiceMessage =
-        input.customMessage ??
-        `Hello, this is a message from AfroPuppyYoga. We regret to inform you that your upcoming class, ${input.eventName}, has been cancelled. We apologize for the inconvenience. Please check your email for your rebooking credit code. Thank you for your understanding.`;
+      const voiceMessage = input.customMessage
+        ? `${input.customMessage} Please check your email for the free rebooking code ${rebookingCode}, valid across the AfroPuppyYoga calendar.`
+        : `Hello, this is a message from AfroPuppyYoga. We regret to inform you that your upcoming class, ${input.eventName}, has been cancelled. We apologize for the inconvenience. Please check your email for your free rebooking code, valid across the AfroPuppyYoga calendar. Thank you for your understanding.`;
 
       // SMS message (concise for text — includes rebooking code and next class)
       const nextClassSmsHint = nextClassName && nextClassDate
         ? ` Our next class is ${nextClassName} on ${nextClassDate} — we'd love to see you there!`
         : " We'd love to see you at a future class at any of our locations — Hamilton, Kitchener & Oakville. Book at afropuppyyoga.ca.";
 
-      const smsMessage =
-        input.customMessage ??
-        `Hi from AfroPuppyYoga! Your class "${input.eventName}" has been cancelled. Sorry for the inconvenience! Use code ${rebookingCode} for a credit on your next booking.${nextClassSmsHint}`;
+      const smsMessage = input.customMessage
+        ? `${input.customMessage}\n\nUse free code ${rebookingCode} for 100% off any future APY class booked through our Luma calendar.`
+        : `Hi from AfroPuppyYoga! Your class "${input.eventName}" has been cancelled. Sorry for the inconvenience! Use free code ${rebookingCode} for 100% off any future APY class booked through our Luma calendar.${nextClassSmsHint}`;
 
       // ── Fetch all guests
       const guests = await fetchLumaGuests(input.eventApiId);
@@ -351,7 +361,7 @@ export const cancellationRouter = router({
         r.callStatus === "failed" || r.smsStatus === "failed" || r.emailStatus === "failed"
       ).length;
 
-      return { total: guests.length, called, texted, emailed, failed, results };
+      return { total: guests.length, called, texted, emailed, failed, results, rebookingCode, couponState };
     }),
 
   /** Reconcile in-flight delivery records with Twilio when an admin refreshes the notification log. */

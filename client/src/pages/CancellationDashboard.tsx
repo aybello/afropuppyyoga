@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import AdminNav from "@/components/AdminNav";
 import { toast } from "sonner";
-import { PhoneCall, MessageSquare, Mail, AlertTriangle, CheckCircle2, XCircle, RefreshCw, Send, Users, Eye } from "lucide-react";
+import { PhoneCall, MessageSquare, Mail, AlertTriangle, CheckCircle2, XCircle, RefreshCw, Send, Users, Eye, Ticket } from "lucide-react";
 
 type CallResult = {
   name: string;
@@ -27,6 +27,8 @@ type CancellationResult = {
   texted: number;
   emailed: number;
   failed: number;
+  rebookingCode: string;
+  couponState: "created" | "reused";
   results: CallResult[];
 };
 
@@ -257,7 +259,7 @@ export default function CancellationDashboard() {
                 Preview Recipients Before Sending
               </Button>
               <p className="text-xs text-gray-500 mt-2">
-                This will fetch the list of registered attendees from Luma so you can review before sending any notifications.
+                This will fetch the list of registered attendees from Luma so you can review before sending any notifications. When sent, APY will create or reuse a free calendar-wide Luma rebooking code.
               </p>
             </CardContent>
           </Card>
@@ -428,7 +430,7 @@ export default function CancellationDashboard() {
                 <CheckCircle2 className="w-5 h-5 text-green-600" />
                 <span className="font-bold text-green-800">Notifications Sent</span>
               </div>
-              <div className="grid grid-cols-5 gap-3 mb-4">
+                <div className="grid grid-cols-5 gap-3 mb-4">
                 <div className="text-center bg-white rounded-lg p-3 border border-green-200">
                   <div className="text-2xl font-bold text-[#2d1b4e]">{cancellationResult.total}</div>
                   <div className="text-xs text-gray-500">Total</div>
@@ -451,11 +453,25 @@ export default function CancellationDashboard() {
                     <Mail className="w-3 h-3" /> Emailed
                   </div>
                 </div>
-                <div className="text-center bg-white rounded-lg p-3 border border-green-200">
-                  <div className="text-2xl font-bold text-red-500">{cancellationResult.failed}</div>
-                  <div className="text-xs text-gray-500">Failed</div>
+                  <div className="text-center bg-white rounded-lg p-3 border border-green-200">
+                    <div className="text-2xl font-bold text-red-500">{cancellationResult.failed}</div>
+                    <div className="text-xs text-gray-500">Failed</div>
+                  </div>
                 </div>
-              </div>
+
+                <div className="mb-4 flex items-start gap-3 rounded-lg border border-[#e7bdd1] bg-white px-4 py-3">
+                  <div className="mt-0.5 rounded-full bg-[#9B2335] p-2 text-white">
+                    <Ticket className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-[#6f1630]">
+                      Free Luma rebooking code: <span className="font-mono tracking-widest">{cancellationResult.rebookingCode}</span>
+                    </p>
+                    <p className="mt-0.5 text-xs text-gray-600">
+                      {cancellationResult.couponState === "created" ? "Created" : "Reused"} on the APY Luma calendar with 100% off and no event restriction. Guests can use it on any upcoming APY class.
+                    </p>
+                  </div>
+                </div>
 
               {/* Per-guest results */}
               <div className="space-y-2 max-h-64 overflow-y-auto">
