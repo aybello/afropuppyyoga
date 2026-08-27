@@ -22,4 +22,14 @@ describe("role-based training catalog", () => {
     expect(lessons).toContain("two assigned Puppy Monitors");
     expect(modulesForRole("Operations Manager").flatMap((module) => module.lessons).join(" ")).toContain("Luma check-in");
   });
+
+  it("uses the APY Yoga Instructor Guide for class timing and safety", () => {
+    const yogaLessons = modulesForRole("Yoga Instructor").flatMap((module) => module.lessons).join(" ");
+    expect(yogaLessons).toContain("minutes 0–10");
+    expect(yogaLessons).toContain("two at a time about every five minutes");
+    expect(yogaLessons).toContain("Begin Shavasana at about 30 minutes");
+    expect(yogaLessons).toContain("end promptly at 40 minutes");
+    expect(yogaLessons).toContain("must not be picked up");
+    expect(yogaLessons).toContain("group photo");
+  });
 });
