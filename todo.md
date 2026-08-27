@@ -787,3 +787,10 @@
 
 ## Approved PR #4 Integration (Aug 27, 2026)
 - [x] Merge and publish the APY admin workflow and Luma attendance reliability improvements from pull request #4
+
+## Available Project Updates (Aug 27, 2026)
+- [x] Inspect newly available project updates and assess whether they are safe to integrate into the deployed application
+
+## Approved Staff Training & Schedule Notifications (Aug 27, 2026)
+- [x] Merge, migrate, validate, and publish the staff training and guarded event-notification workflow from pull request #5
+- [x] Correct the APY Training Centre route so it is reachable from the admin portal
