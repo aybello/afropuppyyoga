@@ -16,6 +16,7 @@ import { sendStaffInviteEmail } from "../email";
 import { sdk } from "../_core/sdk";
 import { getSessionCookieOptions } from "../_core/cookies";
 import { COOKIE_NAME, SEVEN_DAYS_MS, ONE_YEAR_MS } from "../../shared/const";
+import { getTrustedAppOrigin } from "../_core/trustedOrigin";
 
 export const staffRouter = router({
   /**
@@ -50,7 +51,7 @@ export const staffRouter = router({
         isActive: 1,
       });
 
-      const magicLink = `${input.origin}/staff-login?token=${token}`;
+      const magicLink = `${getTrustedAppOrigin(input.origin)}/staff-login?token=${token}`;
 
       await sendStaffInviteEmail({
         to: input.email,
@@ -151,7 +152,7 @@ export const staffRouter = router({
         isActive: 1,
       });
 
-      const magicLink = `${input.origin}/staff-login?token=${newToken}`;
+      const magicLink = `${getTrustedAppOrigin(input.origin)}/staff-login?token=${newToken}`;
 
       await sendStaffInviteEmail({
         to: invite.email,

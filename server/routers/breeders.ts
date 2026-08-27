@@ -7,6 +7,7 @@ import type { Breeder } from "../../drizzle/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { sendEmail } from "../email";
 import crypto from "crypto";
+import { getTrustedAppOrigin } from "../_core/trustedOrigin";
 import { createLumaEventForSchedule } from "../lumaScheduleHelper";
 
 const breederInput = z.object({
@@ -549,7 +550,7 @@ export const breedersRouter = router({
         .$returningId();
 
       const blastId = blast.id;
-      const origin = input.origin ?? "https://afropuppyyoga.ca";
+      const origin = getTrustedAppOrigin(input.origin);
       let sent = 0;
       let failed = 0;
 
@@ -733,7 +734,7 @@ export const breedersRouter = router({
       }
       const token = crypto.randomBytes(32).toString("hex");
       const firstName = (breeder.contactName ?? breeder.name).split(" ")[0];
-      const origin = input.origin ?? "https://afropuppyyoga.ca";
+      const origin = getTrustedAppOrigin(input.origin);
       const responseLink = `${origin}/breeder-availability?token=${token}`;
       await db.insert(breederAvailabilityResponses).values({
         blastId,

@@ -56,14 +56,14 @@ async function openVideo(videoKey: string | null | undefined, videoUrl: string |
       const res = await fetch(`/api/video-url?key=${encodeURIComponent(videoKey)}`);
       if (res.ok) {
         const { url } = await res.json();
-        window.open(url, "_blank");
+        window.open(url, "_blank", "noopener,noreferrer");
         return;
       }
     } catch {
       // fall through to raw URL
     }
   }
-  window.open(videoUrl, "_blank");
+  window.open(videoUrl, "_blank", "noopener,noreferrer");
 }
 
 async function openResume(resumeKey: string | null | undefined, resumeUrl: string | null | undefined) {
