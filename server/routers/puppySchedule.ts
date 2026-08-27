@@ -2,8 +2,10 @@ import { z } from "zod";
 import { staffProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { puppySchedule, breeders, classStaffAssignments, jobApplications, staffAvailability, weekendLeadershipCoverage } from "../../drizzle/schema";
+import { staffScheduleNotifications } from "../../drizzle/schema";
 import { eq, and, gte, lte, desc, isNull } from "drizzle-orm";
 import { sendEmail, buildBreederConfirmationEmail } from "../email";
+import twilio from "twilio";
 import { createLumaEventForSchedule } from "../lumaScheduleHelper";
 import { isAwayOnDate } from "../weekendCoverage";
 import { isClassFullyStaffed, scheduleLocationToTeamLocation, staffingGaps, TWO_PUPPY_MONITORS_REQUIRED } from "../classStaffing";
@@ -15,6 +17,44 @@ const WEEKEND_DAYS = ["Saturday", "Sunday"] as const;
 
 /** Zod type for HH:MM 24-hour time strings */
 const timeString = z.string().regex(/^\d{2}:\d{2}$/, "Must be HH:MM format");
+
+function friendlyDate(value: string) {
+  return new Date(`${value}T12:00:00`).toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+}
+
+async function getEventNotificationPreview(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, scheduleId: number) {
+  const [schedule] = await db.select().from(puppySchedule).where(eq(puppySchedule.id, scheduleId)).limit(1);
+  if (!schedule) throw new Error("Scheduled class not found");
+  const teamLocation = scheduleLocationToTeamLocation(schedule.location);
+  const [team, leaves, coverage, pmAssignments, priorNotifications] = await Promise.all([
+    db.select({ id: jobApplications.id, name: jobApplications.name, email: jobApplications.email, phone: jobApplications.phone, role: jobApplications.role, location: jobApplications.location, status: jobApplications.status, isTeamMember: jobApplications.isTeamMember, deletedAt: jobApplications.deletedAt })
+      .from(jobApplications).where(and(isNull(jobApplications.deletedAt), eq(jobApplications.isTeamMember, true))),
+    db.select().from(staffAvailability).where(and(lte(staffAvailability.startDate, schedule.classDate), gte(staffAvailability.endDate, schedule.classDate))),
+    db.select().from(weekendLeadershipCoverage).where(and(eq(weekendLeadershipCoverage.coverageDate, schedule.classDate), eq(weekendLeadershipCoverage.location, teamLocation))),
+    db.select().from(classStaffAssignments).where(eq(classStaffAssignments.scheduleId, scheduleId)),
+    db.select().from(staffScheduleNotifications).where(eq(staffScheduleNotifications.scheduleId, scheduleId)).orderBy(desc(staffScheduleNotifications.sentAt)),
+  ]);
+  const active = team.filter(isActiveTeamMember);
+  const awayIds = new Set(leaves.map((leave) => leave.staffId));
+  const sameRole = (actual: string, expected: string) => actual === expected || actual === expected.toLowerCase().replaceAll(" ", "_");
+  const leader = (role: "Operations Manager" | "Yoga Instructor") => {
+    const covered = coverage.find((item) => item.role === role && item.coverageStaffId);
+    return covered?.coverageStaffId
+      ? active.find((person) => person.id === covered.coverageStaffId) ?? null
+      : active.find((person) => person.location === teamLocation && sameRole(person.role, role) && !awayIds.has(person.id)) ?? null;
+  };
+  const recipients = [
+    { person: leader("Operations Manager"), role: "Operations Manager" },
+    { person: leader("Yoga Instructor"), role: "Yoga Instructor" },
+    ...pmAssignments.map((assignment) => ({ person: active.find((person) => person.id === assignment.staffId) ?? null, role: "Puppy Monitor" })),
+  ].filter((item): item is { person: NonNullable<typeof item.person>; role: string } => Boolean(item.person))
+    .map(({ person, role }) => ({ id: person.id, name: person.name, email: person.email, phone: person.phone, role }));
+  const gaps = staffingGaps({ operationsManager: recipients.some((r) => r.role === "Operations Manager"), yogaInstructor: recipients.some((r) => r.role === "Yoga Instructor"), puppyMonitorCount: recipients.filter((r) => r.role === "Puppy Monitor").length });
+  const gapLabels = [gaps.operationsManager ? "Operations Manager" : null, gaps.yogaInstructor ? "Yoga Instructor" : null, gaps.puppyMonitors ? `${gaps.puppyMonitors} Puppy Monitor${gaps.puppyMonitors === 1 ? "" : "s"}` : null].filter((value): value is string => Boolean(value));
+  const dateLabel = friendlyDate(schedule.classDate);
+  const message = `Hi [Name], you are scheduled as [Role] for AfroPuppyYoga on ${dateLabel} in ${schedule.location}. Event: ${schedule.breed}. Time: ${schedule.startTime}–${schedule.endTime}. Please reply to confirm you received this schedule.`;
+  return { schedule, recipients, gaps, gapLabels, fullyStaffed: gapLabels.length === 0, message, lastSentAt: priorNotifications[0]?.sentAt ?? null };
+}
 
 /** Shared slot input shape — used for both create and update */
 const slotInputBase = z.object({
@@ -90,6 +130,57 @@ export const puppyScheduleRouter = router({
       };
     });
   }),
+
+  eventNotificationPreview: staffProcedure
+    .input(z.object({ scheduleId: z.number().int().positive() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+      return getEventNotificationPreview(db, input.scheduleId);
+    }),
+
+  notifyEventTeam: staffProcedure
+    .input(z.object({ scheduleId: z.number().int().positive(), resend: z.boolean().default(false) }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+      const preview = await getEventNotificationPreview(db, input.scheduleId);
+      if (!preview.fullyStaffed) throw new Error(`Finish staffing this event first: ${preview.gapLabels.join(", ")}.`);
+      if (preview.lastSentAt && !input.resend) throw new Error("This team was already notified. Choose Resend if you want to send the schedule again.");
+      const accountSid = process.env.TWILIO_ACCOUNT_SID;
+      const authToken = process.env.TWILIO_AUTH_TOKEN;
+      const from = process.env.TWILIO_PHONE_NUMBER;
+      const smsClient = accountSid && authToken && from ? twilio(accountSid, authToken) : null;
+      const dateLabel = friendlyDate(preview.schedule.classDate);
+      const subject = `You're scheduled — APY ${preview.schedule.location}, ${dateLabel}`;
+      const results = [];
+      for (const recipient of preview.recipients) {
+        const body = preview.message.replace("[Name]", recipient.name.split(" ")[0]).replace("[Role]", recipient.role);
+        let emailStatus = recipient.email ? "failed" : "missing";
+        let smsStatus = recipient.phone ? "failed" : "missing";
+        let smsSid: string | null = null;
+        const errors: string[] = [];
+        if (recipient.email) {
+          try {
+            await sendEmail({ to: recipient.email, subject, text: body, html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto"><h2 style="color:#8B2252">You're on the APY team for this event</h2><p>${body}</p><p><strong>Date:</strong> ${dateLabel}<br/><strong>Location:</strong> ${preview.schedule.location}<br/><strong>Role:</strong> ${recipient.role}<br/><strong>Event:</strong> ${preview.schedule.breed}<br/><strong>Time:</strong> ${preview.schedule.startTime}–${preview.schedule.endTime}</p><p>Please reply to confirm you received your schedule.</p></div>` });
+            emailStatus = "sent";
+          } catch (error) { errors.push(`Email: ${error instanceof Error ? error.message : "failed"}`); }
+        }
+        if (recipient.phone && smsClient && from) {
+          try {
+            const sent = await smsClient.messages.create({ to: recipient.phone, from, body });
+            smsSid = sent.sid;
+            smsStatus = "sent";
+          } catch (error) { errors.push(`SMS: ${error instanceof Error ? error.message : "failed"}`); }
+        } else if (recipient.phone && !smsClient) {
+          smsStatus = "not_configured";
+          errors.push("SMS: Twilio is not configured");
+        }
+        await db.insert(staffScheduleNotifications).values({ scheduleId: input.scheduleId, staffId: recipient.id, staffName: recipient.name, role: recipient.role, emailStatus, smsStatus, smsSid, errorMessage: errors.join(" | ") || null, sentBy: ctx.user.email ?? ctx.user.name ?? null });
+        results.push({ staffId: recipient.id, name: recipient.name, emailStatus, smsStatus, errors });
+      }
+      return { success: results.every((r) => r.emailStatus === "sent" || r.smsStatus === "sent"), results };
+    }),
 
   assignPuppyMonitor: staffProcedure
     .input(z.object({ scheduleId: z.number().int().positive(), staffId: z.number().int().positive() }))

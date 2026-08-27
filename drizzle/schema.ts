@@ -738,3 +738,35 @@ export const classStaffAssignments = mysqlTable("classStaffAssignments", {
   index("idx_classStaffAssignments_staff").on(t.staffId),
 ]);
 export type ClassStaffAssignment = typeof classStaffAssignments.$inferSelect;
+
+// ─── Staff Training ─────────────────────────────────────────────────────────
+export const staffTrainingProgress = mysqlTable("staffTrainingProgress", {
+  id: int("id").autoincrement().primaryKey(),
+  staffId: int("staffId").notNull(),
+  moduleKey: varchar("moduleKey", { length: 128 }).notNull(),
+  completedAt: timestamp("completedAt").defaultNow().notNull(),
+  acknowledgedBy: varchar("acknowledgedBy", { length: 320 }),
+}, (t) => [
+  index("idx_staffTraining_staff").on(t.staffId),
+  index("idx_staffTraining_module").on(t.moduleKey),
+]);
+export type StaffTrainingProgress = typeof staffTrainingProgress.$inferSelect;
+
+// ─── Event Team Notifications ───────────────────────────────────────────────
+export const staffScheduleNotifications = mysqlTable("staffScheduleNotifications", {
+  id: int("id").autoincrement().primaryKey(),
+  scheduleId: int("scheduleId").notNull(),
+  staffId: int("staffId").notNull(),
+  staffName: varchar("staffName", { length: 255 }).notNull(),
+  role: varchar("role", { length: 100 }).notNull(),
+  emailStatus: varchar("emailStatus", { length: 32 }).notNull().default("not_sent"),
+  smsStatus: varchar("smsStatus", { length: 32 }).notNull().default("not_sent"),
+  smsSid: varchar("smsSid", { length: 64 }),
+  errorMessage: text("errorMessage"),
+  sentBy: varchar("sentBy", { length: 320 }),
+  sentAt: timestamp("sentAt").defaultNow().notNull(),
+}, (t) => [
+  index("idx_staffScheduleNotifications_schedule").on(t.scheduleId),
+  index("idx_staffScheduleNotifications_staff").on(t.staffId),
+]);
+export type StaffScheduleNotification = typeof staffScheduleNotifications.$inferSelect;
