@@ -5,10 +5,16 @@ import { BOOK_URL } from "@/const";
    Design: Afro-editorial, warm tones, asymmetric layout
    ============================================================ */
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { trackCTAClick } from "@/hooks/useAnalytics";
+import {
+  getNextHeroImageOnError,
+  PRIMARY_HERO_IMAGE,
+} from "@shared/heroImage";
 
-const HERO_BG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/apy_hero_bg-aDMPriKGFaJ3ZgQKWVBv5n.webp";
+// The primary copy is served through this web project's managed storage, which
+// avoids relying on an external session CDN for the page's most important image.
 
 // Each logo: src = CDN URL, height = display height in px
 // All logos are shown in their natural colors on a white/frosted strip
@@ -38,19 +44,39 @@ const trustedBy = [
 ];
 
 export default function Hero() {
+  const [heroImage, setHeroImage] = useState(PRIMARY_HERO_IMAGE);
+  const [heroImageReady, setHeroImageReady] = useState(false);
+  const [heroImageFailed, setHeroImageFailed] = useState(false);
+
   const scrollToExperience = () => {
     document.querySelector("#experience")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
     <section id="home" className="relative min-h-screen flex flex-col">
-      {/* Background image with overlay */}
-      <div className="absolute inset-0 overflow-hidden">
-        <img
-          src={HERO_BG}
-          alt="AfroPuppyYoga class"
-          className="w-full h-full object-cover object-center scale-105 animate-[kenBurns_20s_ease-in-out_infinite_alternate]"
-        />
+      {/* Background image with overlay. A solid brand fallback is always present, so a failed image never leaves a white or broken-image state. */}
+      <div className="absolute inset-0 overflow-hidden bg-[#5B2D3E]">
+        {!heroImageFailed && (
+          <img
+            src={heroImage}
+            alt=""
+            aria-hidden="true"
+            loading="eager"
+            decoding="sync"
+            fetchPriority="high"
+            onLoad={() => setHeroImageReady(true)}
+            onError={() => {
+              const fallbackImage = getNextHeroImageOnError(heroImage);
+              if (fallbackImage) {
+                setHeroImage(fallbackImage);
+                setHeroImageReady(false);
+              } else {
+                setHeroImageFailed(true);
+              }
+            }}
+            className={`w-full h-full object-cover object-center scale-105 animate-[kenBurns_20s_ease-in-out_infinite_alternate] transition-opacity duration-300 ${heroImageReady ? "opacity-100" : "opacity-0"}`}
+          />
+        )}
         {/* Gradient overlay — dark at bottom-left for text legibility, dark at top for nav */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/40" />
         {/* Warm amber tint */}

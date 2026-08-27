@@ -778,3 +778,6 @@
 
 ## Luma Class Creation Preview (Aug 25, 2026)
 - [x] Add an admin preview card showing the Luma event settings before a breeder-scheduled class is finalized
+
+## Mobile Homepage Hero Image Reliability (Aug 26, 2026)
+- [x] Ensure the mobile homepage hero image loads reliably and provides a graceful fallback instead of exposing an incomplete blank state
