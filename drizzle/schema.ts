@@ -420,6 +420,10 @@ export const breederConfirmations = mysqlTable("breederConfirmations", {
   breederName: varchar("breederName", { length: 255 }).notNull(),
   /** Email address it was sent to */
   sentToEmail: varchar("sentToEmail", { length: 320 }).notNull(),
+  /** Phone number used for SMS, if any */
+  sentToPhone: varchar("sentToPhone", { length: 20 }),
+  /** Stable fingerprint used to make retries safe and prevent duplicate classes */
+  requestKey: varchar("requestKey", { length: 64 }).unique(),
   /** JSON array of event blocks */
   events: text("events").notNull(),
   /** Optional availability check note */
@@ -427,7 +431,7 @@ export const breederConfirmations = mysqlTable("breederConfirmations", {
   /** Full email body that was sent (HTML) */
   emailBody: text("emailBody").notNull(),
   /** Send status */
-  status: mysqlEnum("confStatus", ["sent", "failed"]).default("sent").notNull(),
+  status: mysqlEnum("confStatus", ["pending", "sent", "failed"]).default("pending").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (t) => [index("idx_conf_breederId").on(t.breederId)]);
 
