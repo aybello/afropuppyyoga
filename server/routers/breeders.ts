@@ -1,16 +1,22 @@
 import { z } from "zod";
 import { router, staffProcedure, publicProcedure } from "../_core/trpc";
 import { getDb } from "../db";
-import { breeders, breederConfirmations, locationPresets, breederAvailabilityBlasts, breederAvailabilityResponses } from "../../drizzle/schema";
+import { breeders, breederConfirmations, communicationsLog, inboundSms, locationPresets, breederAvailabilityBlasts, breederAvailabilityResponses } from "../../drizzle/schema";
 import { puppySchedule } from "../../drizzle/schema";
 import type { Breeder } from "../../drizzle/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { sendEmail } from "../email";
 import crypto from "crypto";
 import { getTrustedAppOrigin } from "../_core/trustedOrigin";
-import { createLumaEventForSchedule, setLumaRegistrationOpen } from "../lumaScheduleHelper";
+import { cancelUnpublishedLumaEvent, createLumaEventForSchedule } from "../lumaScheduleHelper";
 import { isSmsSuppressed } from "../smsConsent";
-import { schedulesOverlap, validateScheduleCandidate } from "../scheduleValidation";
+import { schedulesOverlap } from "../scheduleValidation";
+import {
+  breederConfirmationRequestKey,
+  normalizeBreederPhone,
+  planBreederConfirmationEvents,
+  type PlannedBreederEvent,
+} from "../breederConfirmationWorkflow";
 
 const breederInput = z.object({
   name: z.string().min(1, "Breeder name is required"),
@@ -28,18 +34,32 @@ const breederInput = z.object({
 });
 
 const eventBlockSchema = z.object({
-  city: z.string().min(1),
+  city: z.string(),
   date: z.string().min(1),
   location: z.string().min(1),
+  isPrivateEvent: z.boolean().default(false),
   apyTransport: z.boolean().default(false),
   dropOffTime: z.string().optional(),
   pickUpTime: z.string().optional(),
   pickupTime: z.string().optional(),
   returnTime: z.string().optional(),
   compensation: z.string().min(1),
+}).superRefine((event, context) => {
+  if (!event.isPrivateEvent && !event.city.trim()) {
+    context.addIssue({ code: "custom", path: ["city"], message: "Choose an APY studio or mark this as a private event." });
+  }
 });
 
 const APY_LOGO = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 function formatDateHuman(dateStr: string): string {
   if (!dateStr) return dateStr;
@@ -57,25 +77,33 @@ function generateConfirmationEmail(opts: {
   availabilityNote?: string;
 }): { html: string; text: string } {
   const eventBlocks = opts.events.map((ev) => {
+    const cityLabel = escapeHtml(ev.city.trim() || "Private Event");
+    const location = escapeHtml(ev.location);
+    const compensation = escapeHtml(ev.compensation);
+    const date = escapeHtml(formatDateHuman(ev.date));
+    const pickupTime = escapeHtml(ev.pickupTime ?? "");
+    const returnTime = escapeHtml(ev.returnTime ?? "");
+    const dropOffTime = escapeHtml(ev.dropOffTime ?? "");
+    const pickUpTime = escapeHtml(ev.pickUpTime ?? "");
     const transportLine = ev.apyTransport
       ? `<p style="margin:4px 0;"><strong>APY will provide transportation for this event.</strong></p>
-         <p style="margin:4px 0;"><strong>Pickup Time:</strong> ${ev.pickupTime ?? ""}</p>
-         <p style="margin:4px 0;"><strong>Return Time:</strong> ${ev.returnTime ?? ""}</p>`
-      : `<p style="margin:4px 0;"><strong>Drop-off Time:</strong> ${ev.dropOffTime ?? ""}</p>
-         <p style="margin:4px 0;"><strong>Pick-up Time:</strong> ${ev.pickUpTime ?? ""}</p>`;
+         <p style="margin:4px 0;"><strong>Pickup Time:</strong> ${pickupTime}</p>
+         <p style="margin:4px 0;"><strong>Return Time:</strong> ${returnTime}</p>`
+      : `<p style="margin:4px 0;"><strong>Drop-off Time:</strong> ${dropOffTime}</p>
+         <p style="margin:4px 0;"><strong>Pick-up Time:</strong> ${pickUpTime}</p>`;
 
     return `
       <div style="border:1px solid #e8c0d0;border-radius:10px;padding:18px 22px;margin:18px 0;background:#fff9fb;">
-        <p style="margin:0 0 10px;font-size:16px;font-weight:700;color:#8B2252;">📍 ${ev.city}</p>
-        <p style="margin:4px 0;"><strong>Date:</strong> ${formatDateHuman(ev.date)}</p>
+        <p style="margin:0 0 10px;font-size:16px;font-weight:700;color:#8B2252;">📍 ${cityLabel}</p>
+        <p style="margin:4px 0;"><strong>Date:</strong> ${date}</p>
         ${transportLine}
-        <p style="margin:4px 0;"><strong>Location:</strong> ${ev.location}</p>
-        <p style="margin:4px 0;"><strong>Compensation:</strong> ${ev.compensation} (paid via e-transfer)</p>
+        <p style="margin:4px 0;"><strong>Location:</strong> ${location}</p>
+        <p style="margin:4px 0;"><strong>Compensation:</strong> ${compensation} (paid via e-transfer)</p>
       </div>`;
   }).join("");
 
   const availabilitySection = opts.availabilityNote
-    ? `<p style="margin:18px 0 0;line-height:1.6;">We also wanted to see if you may have availability for <strong>${opts.availabilityNote}</strong>. If so, we'd love to discuss potentially adding that date as well.</p>`
+    ? `<p style="margin:18px 0 0;line-height:1.6;">We also wanted to see if you may have availability for <strong>${escapeHtml(opts.availabilityNote)}</strong>. If so, we'd love to discuss potentially adding that date as well.</p>`
     : "";
 
   const html = `<!DOCTYPE html>
@@ -89,7 +117,7 @@ function generateConfirmationEmail(opts: {
       <p style="color:#f9c8de;font-size:13px;margin:4px 0 0;letter-spacing:1px;text-transform:uppercase;">Breeder Confirmation</p>
     </div>
     <div style="padding:32px;">
-      <p style="margin:0 0 16px;font-size:16px;">Hi ${opts.breederFirstName},</p>
+      <p style="margin:0 0 16px;font-size:16px;">Hi ${escapeHtml(opts.breederFirstName)},</p>
       <p style="margin:0 0 20px;line-height:1.6;">We're excited to be working with you and your puppies for our upcoming AfroPuppyYoga classes.</p>
       <p style="margin:0 0 8px;font-weight:600;">As discussed, here are the confirmed details:</p>
       ${eventBlocks}
@@ -120,7 +148,7 @@ function generateConfirmationEmail(opts: {
     const transport = ev.apyTransport
       ? `APY will provide transportation.\nPickup Time: ${ev.pickupTime ?? ""}\nReturn Time: ${ev.returnTime ?? ""}`
       : `Drop-off Time: ${ev.dropOffTime ?? ""}\nPick-up Time: ${ev.pickUpTime ?? ""}`;
-    return `📍 ${ev.city}\nDate: ${formatDateHuman(ev.date)}\n${transport}\nLocation: ${ev.location}\nCompensation: ${ev.compensation} (paid via e-transfer)`;
+    return `📍 ${ev.city.trim() || "Private Event"}\nDate: ${formatDateHuman(ev.date)}\n${transport}\nLocation: ${ev.location}\nCompensation: ${ev.compensation} (paid via e-transfer)`;
   }).join("\n\n---\n\n");
 
   const hasTransport = opts.events.some(ev => ev.apyTransport);
@@ -245,6 +273,7 @@ export const breedersRouter = router({
       availabilityNote: z.string().optional(),
     }))
     .mutation(async ({ input }) => {
+      planBreederConfirmationEvents(input.events);
       const { html, text } = generateConfirmationEmail(input);
       return { html, text };
     }),
@@ -252,38 +281,141 @@ export const breedersRouter = router({
   sendConfirmation: staffProcedure
     .input(z.object({
       breederId: z.number(),
-      breederFirstName: z.string().min(1),
-      toEmail: z.string().email().optional(),
-      toPhone: z.string().optional(),
       events: z.array(eventBlockSchema).min(1),
       availabilityNote: z.string().optional(),
     }))
-    .mutation(async ({ input }) => {
-      if (!input.toEmail && !input.toPhone) {
-        throw new Error("This breeder has no email or phone number on file. Please add contact info first.");
-      }
-
-      const { html, text } = generateConfirmationEmail({
-        breederFirstName: input.breederFirstName,
-        events: input.events,
-        availabilityNote: input.availabilityNote,
-      });
-
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
-      const [breeder] = await db.select().from(breeders).where(eq(breeders.id, input.breederId));
-      const breederName = breeder?.name ?? input.breederFirstName;
+      const [breeder] = await db.select().from(breeders).where(eq(breeders.id, input.breederId)).limit(1);
+      if (!breeder) throw new Error("Breeder not found.");
+      const toEmail = breeder.email?.trim() || null;
+      const toPhone = normalizeBreederPhone(breeder.phone);
+      if (!toEmail && !toPhone) {
+        throw new Error("This breeder has no email or phone number on file. Please add contact info first.");
+      }
+      const breederName = breeder.name;
+      const breederFirstName = (breeder.contactName?.trim() || breeder.name).split(/\s+/)[0];
+      const { html, text } = generateConfirmationEmail({ breederFirstName, events: input.events, availabilityNote: input.availabilityNote });
+      const requestKey = breederConfirmationRequestKey(input);
+      const [prior] = await db.select().from(breederConfirmations).where(eq(breederConfirmations.requestKey, requestKey)).limit(1);
+      if (prior?.status === "sent") {
+        return {
+          success: true,
+          alreadySent: true,
+          emailSent: Boolean(prior.sentToEmail),
+          smsSent: Boolean(prior.sentToPhone),
+          emailError: undefined,
+          smsError: undefined,
+          scheduleCreated: 0,
+          customCommitmentsRecorded: input.events.filter(event => event.isPrivateEvent).length,
+        };
+      }
+      if (prior?.status === "pending" && Date.now() - prior.createdAt.getTime() < 2 * 60 * 1000) {
+        throw new Error("This confirmation is already being processed. Wait a moment before trying again.");
+      }
+
+      let confirmationId = prior?.id;
+      let scheduleCreated = 0;
+      let customCommitmentsRecorded = input.events.filter(event => event.isPrivateEvent).length;
+
+      if (!prior) {
+        // Validate every commitment and every collision before creating Luma
+        // pages, schedule rows, or customer-facing messages.
+        const plans = planBreederConfirmationEvents(input.events);
+        const studioPlans = plans.filter((plan): plan is PlannedBreederEvent & { schedule: NonNullable<PlannedBreederEvent["schedule"]> } => plan.schedule !== null);
+        customCommitmentsRecorded = plans.length - studioPlans.length;
+        for (const plan of studioPlans) {
+          const existing = await db.select({
+            id: puppySchedule.id,
+            classDate: puppySchedule.classDate,
+            location: puppySchedule.location,
+            startTime: puppySchedule.startTime,
+            endTime: puppySchedule.endTime,
+          }).from(puppySchedule).where(and(
+            eq(puppySchedule.classDate, plan.schedule.classDate),
+            eq(puppySchedule.location, plan.schedule.location),
+            eq(puppySchedule.scheduleStatus, "scheduled"),
+          ));
+          const conflict = existing.find(entry => schedulesOverlap(entry, plan.schedule));
+          if (conflict) {
+            throw new Error(`Event ${input.events.indexOf(plan.event) + 1} overlaps another ${plan.schedule.location} class on ${plan.schedule.classDate} (${conflict.startTime}–${conflict.endTime}).`);
+          }
+        }
+
+        const provisioned: Array<{ plan: typeof studioPlans[number]; lumaEventId: string; lumaEventUrl: string } | { plan: typeof studioPlans[number]; lumaEventId: null; lumaEventUrl: null }> = [];
+        try {
+          for (const plan of studioPlans) {
+            const luma = await createLumaEventForSchedule({
+              ...plan.schedule,
+              breed: breeder.breed ?? "TBD",
+            });
+            if (plan.schedule.classType === "regular" && !luma) {
+              throw new Error(`Luma did not create the ${plan.schedule.location} event on ${plan.schedule.classDate}. Nothing was confirmed or sent.`);
+            }
+            provisioned.push({
+              plan,
+              lumaEventId: luma?.lumaEventId ?? null,
+              lumaEventUrl: luma?.lumaEventUrl ?? null,
+            });
+          }
+
+          confirmationId = await db.transaction(async (tx) => {
+            const [inserted] = await tx.insert(breederConfirmations).values({
+              breederId: input.breederId,
+              breederName,
+              sentToEmail: toEmail ?? "",
+              sentToPhone: toPhone,
+              requestKey,
+              events: JSON.stringify(input.events),
+              availabilityNote: input.availabilityNote ?? null,
+              emailBody: html,
+              status: "pending",
+            }).$returningId();
+            if (!inserted?.id) throw new Error("Could not create the breeder confirmation record.");
+            if (provisioned.length) {
+              await tx.insert(puppySchedule).values(provisioned.map(({ plan, lumaEventId, lumaEventUrl }) => ({
+                classDate: plan.schedule.classDate,
+                dayOfWeek: plan.schedule.dayOfWeek,
+                location: plan.schedule.location,
+                breed: breeder.breed ?? "TBD",
+                breederId: input.breederId,
+                breederName,
+                startTime: plan.schedule.startTime,
+                endTime: plan.schedule.endTime,
+                classType: plan.schedule.classType,
+                notes: `Auto-created from breeder confirmation #${inserted.id}. Compensation: ${plan.event.compensation}`,
+                lumaEventId,
+                lumaEventUrl,
+                lumaSyncStatus: plan.schedule.classType === "private" ? "not_required" as const : "synced" as const,
+                lumaSyncedAt: lumaEventId ? new Date() : null,
+              })));
+            }
+            return inserted.id;
+          });
+          scheduleCreated = provisioned.length;
+        } catch (error) {
+          await Promise.all(provisioned
+            .filter(item => item.lumaEventId !== null)
+            .map(item => cancelUnpublishedLumaEvent(item.lumaEventId!).catch(cleanupError => {
+              console.error(`[Breeder Confirmation] Could not clean up Luma event ${item.lumaEventId}:`, cleanupError);
+            })));
+          throw error;
+        }
+      }
+
+      if (!confirmationId) throw new Error("Could not resolve the breeder confirmation record.");
 
       let emailSent = false;
       let smsSent = false;
       let emailError: string | undefined;
       let smsError: string | undefined;
+      let smsSid: string | undefined;
 
-      // Send email if available
-      if (input.toEmail) {
+      if (toEmail) {
         try {
           await sendEmail({
-            to: input.toEmail,
+            to: toEmail,
             subject: `AfroPuppyYoga - Booking Confirmation`,
             html,
             text,
@@ -295,8 +427,7 @@ export const breedersRouter = router({
         }
       }
 
-      // Send SMS if phone available
-      if (input.toPhone) {
+      if (toPhone) {
         try {
           const twilioSid = process.env.TWILIO_ACCOUNT_SID;
           const twilioAuth = process.env.TWILIO_AUTH_TOKEN;
@@ -304,11 +435,7 @@ export const breedersRouter = router({
 
           if (!twilioSid || !twilioAuth || !twilioFrom) throw new Error("Twilio not configured");
 
-          // Normalize phone to E.164
-          const digits = input.toPhone.replace(/\D/g, "");
-          const normalized = digits.length === 10 ? "+1" + digits : digits.length === 11 && digits.startsWith("1") ? "+" + digits : null;
-          if (!normalized) throw new Error("Invalid phone number format");
-          if (await isSmsSuppressed(normalized)) throw new Error("Recipient has opted out of APY text messages");
+          if (await isSmsSuppressed(toPhone)) throw new Error("Recipient has opted out of APY text messages");
 
           // Build condensed SMS — one line per event
           const eventLines = input.events.map((ev) => {
@@ -319,10 +446,10 @@ export const breedersRouter = router({
             return `📍 ${ev.city} — ${date}\n${time}\n${ev.location}\nCompensation: ${ev.compensation}`;
           }).join("\n\n");
 
-          const smsBody = `Hi ${input.breederFirstName}, you're confirmed for AfroPuppyYoga! 🐾\n\n${eventLines}\n\nPlease ensure puppies are groomed, vaccinated & dewormed. Reply to confirm or call 289-788-1885.`;
+          const smsBody = `Hi ${breederFirstName}, you're confirmed for AfroPuppyYoga! 🐾\n\n${eventLines}\n\nPlease ensure puppies are groomed, vaccinated & dewormed. Reply to confirm or call 289-788-1885.`;
 
           const params = new URLSearchParams();
-          params.append("To", normalized);
+          params.append("To", toPhone);
           params.append("From", twilioFrom);
           params.append("Body", smsBody);
 
@@ -339,6 +466,7 @@ export const breedersRouter = router({
           );
           const data = await resp.json() as { sid?: string; message?: string };
           if (!data.sid) throw new Error(data.message ?? "Twilio error");
+          smsSid = data.sid;
           smsSent = true;
         } catch (err: any) {
           smsError = err?.message ?? "Unknown SMS error";
@@ -346,122 +474,57 @@ export const breedersRouter = router({
         }
       }
 
-      await db.insert(breederConfirmations).values({
-      breederId: input.breederId,
-      breederName,
-      sentToEmail: input.toEmail ?? "",
-      events: JSON.stringify(input.events),
-      availabilityNote: input.availabilityNote ?? null,
-      emailBody: html,
-      status: emailSent || smsSent ? "sent" : "failed",
-    });
+      const status = emailSent || smsSent ? "sent" as const : "failed" as const;
+      await db.update(breederConfirmations).set({
+        status,
+        sentToEmail: toEmail ?? "",
+        sentToPhone: toPhone,
+      }).where(eq(breederConfirmations.id, confirmationId));
 
-      // Auto-create puppy schedule entries for each event block
-      const VALID_LOCATIONS = ["Kitchener", "Hamilton", "Oakville"] as const;
-      const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
-
-      function parseTimeTo24h(timeStr: string | undefined): string {
-        if (!timeStr) return "09:00";
-        // Already HH:MM
-        if (/^\d{2}:\d{2}$/.test(timeStr)) return timeStr;
-        // e.g. "9:00 AM", "12:30 PM"
-        const m = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-        if (!m) return "09:00";
-        let h = parseInt(m[1], 10);
-        const min = m[2];
-        const period = m[3].toUpperCase();
-        if (period === "PM" && h !== 12) h += 12;
-        if (period === "AM" && h === 12) h = 0;
-        return `${String(h).padStart(2, "0")}:${min}`;
+      const communicationRows: Array<typeof communicationsLog.$inferInsert> = [];
+      if (toEmail) communicationRows.push({
+        entityType: "breeder" as const,
+        entityId: input.breederId,
+        channel: "email" as const,
+        direction: "outbound" as const,
+        action: "booking_confirmation",
+        recipient: toEmail,
+        subject: "AfroPuppyYoga - Booking Confirmation",
+        bodyPreview: text.slice(0, 1000),
+        deliveryStatus: emailSent ? "sent" : "failed",
+        actorUserId: ctx.user.id,
+        actorName: ctx.user.name,
+      });
+      if (toPhone) communicationRows.push({
+        entityType: "breeder" as const,
+        entityId: input.breederId,
+        channel: "sms" as const,
+        direction: "outbound" as const,
+        action: "booking_confirmation",
+        recipient: toPhone,
+        subject: null,
+        bodyPreview: `Breeder booking confirmation for ${input.events.length} event(s)`,
+        deliveryStatus: smsSent ? "sent" : "failed",
+        providerMessageId: smsSid ?? null,
+        actorUserId: ctx.user.id,
+        actorName: ctx.user.name,
+      });
+      try {
+        if (communicationRows.length) await db.insert(communicationsLog).values(communicationRows);
+      } catch (error) {
+        console.error(`[Breeder Confirmation] Failed to record communications for breeder ${input.breederId}:`, error);
       }
 
-      let scheduleCreated = 0;
-      let scheduleSkipped = 0;
-
-      for (const ev of input.events) {
-        const city = ev.city?.trim();
-        if (!VALID_LOCATIONS.includes(city as any)) {
-          scheduleSkipped++;
-          continue; // Private/custom location — skip
-        }
-        const location = city as typeof VALID_LOCATIONS[number];
-
-        // Parse ISO date to get day of week
-        let classDate = ev.date;
-        let dayOfWeek: typeof DAY_NAMES[number] = "Saturday";
-        if (/^\d{4}-\d{2}-\d{2}$/.test(ev.date)) {
-          const d = new Date(ev.date + "T12:00:00");
-          dayOfWeek = DAY_NAMES[d.getDay()];
-        }
-
-        // Determine start/end times
-        const startTime = ev.apyTransport
-          ? parseTimeTo24h(ev.pickupTime)
-          : parseTimeTo24h(ev.dropOffTime);
-        const endTime = ev.apyTransport
-          ? parseTimeTo24h(ev.returnTime)
-          : parseTimeTo24h(ev.pickUpTime);
-
-        const classType = ["Saturday", "Sunday"].includes(dayOfWeek) ? "regular" as const : "private" as const;
-        const candidate = { classDate, dayOfWeek, location, startTime, endTime, classType };
-        try {
-          validateScheduleCandidate(candidate);
-        } catch (error) {
-          scheduleSkipped++;
-          console.error(`[Schedule] Invalid confirmed event on ${classDate}:`, error);
-          continue;
-        }
-
-        // Prevent any same-studio time collision, regardless of breeder.
-        const existing = await db
-          .select({ id: puppySchedule.id, classDate: puppySchedule.classDate, location: puppySchedule.location, startTime: puppySchedule.startTime, endTime: puppySchedule.endTime })
-          .from(puppySchedule)
-          .where(
-            and(
-              eq(puppySchedule.classDate, classDate),
-              eq(puppySchedule.location, location),
-              eq(puppySchedule.scheduleStatus, "scheduled")
-            )
-          );
-
-        if (existing.some(entry => schedulesOverlap(entry, candidate))) {
-          scheduleSkipped++;
-          console.log(`[Schedule] Confirmed event overlaps an existing class on ${classDate} at ${location} — skipping`);
-          continue;
-        }
-
-        let lumaResult: Awaited<ReturnType<typeof createLumaEventForSchedule>> = null;
-        try {
-          lumaResult = await createLumaEventForSchedule({ classDate, location, breed: breeder?.breed ?? "TBD", startTime, endTime, classType });
-          await db.insert(puppySchedule).values({
-            classDate,
-            dayOfWeek,
-            location,
-            breed: breeder?.breed ?? "TBD",
-            breederId: input.breederId,
-            breederName,
-            startTime,
-            endTime,
-            classType,
-            notes: `Auto-created from breeder confirmation. Compensation: ${ev.compensation}`,
-            lumaEventId: lumaResult?.lumaEventId ?? null,
-            lumaEventUrl: lumaResult?.lumaEventUrl ?? null,
-            lumaSyncStatus: classType === "private" ? "not_required" : lumaResult ? "synced" : "failed",
-            lumaSyncedAt: lumaResult ? new Date() : null,
-          });
-          scheduleCreated++;
-          console.log(`[Schedule] Created entry for ${breederName} on ${classDate} at ${location}`);
-          if (lumaResult) console.log(`[Schedule] Luma event created: ${lumaResult.lumaEventUrl}`);
-          else if (classType === "regular") console.error(`[Schedule] Luma event needs attention for ${classDate} at ${location}`);
-        } catch (err) {
-          if (lumaResult) await setLumaRegistrationOpen(lumaResult.lumaEventId, false).catch(() => undefined);
-          console.error(`[Schedule] Failed to create entry for ${classDate} at ${location}:`, err);
-        }
-      }
-
-      console.log(`[Schedule] Auto-created: ${scheduleCreated}, skipped: ${scheduleSkipped}`);
-
-      return { success: true, emailSent, smsSent, emailError, smsError };
+      return {
+        success: true,
+        alreadySent: false,
+        emailSent,
+        smsSent,
+        emailError,
+        smsError,
+        scheduleCreated,
+        customCommitmentsRecorded,
+      };
     }),
 
   getConfirmations: staffProcedure
@@ -474,6 +537,44 @@ export const breedersRouter = router({
         .from(breederConfirmations)
         .where(eq(breederConfirmations.breederId, input.breederId))
         .orderBy(desc(breederConfirmations.createdAt));
+    }),
+
+  getCommunications: staffProcedure
+    .input(z.object({ breederId: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const [outbound, inbound] = await Promise.all([
+        db.select().from(communicationsLog).where(and(
+          eq(communicationsLog.entityType, "breeder"),
+          eq(communicationsLog.entityId, input.breederId),
+        )).orderBy(desc(communicationsLog.createdAt)),
+        db.select().from(inboundSms).where(eq(inboundSms.breederId, input.breederId)).orderBy(desc(inboundSms.createdAt)),
+      ]);
+      return [
+        ...outbound.map(item => ({
+          id: `communication-${item.id}`,
+          channel: item.channel,
+          direction: item.direction,
+          action: item.action,
+          recipient: item.recipient,
+          bodyPreview: item.bodyPreview,
+          deliveryStatus: item.deliveryStatus,
+          actorName: item.actorName,
+          createdAt: item.createdAt,
+        })),
+        ...inbound.map(item => ({
+          id: `inbound-${item.id}`,
+          channel: "sms" as const,
+          direction: "inbound" as const,
+          action: "breeder_reply",
+          recipient: item.fromPhone,
+          bodyPreview: item.body,
+          deliveryStatus: "received",
+          actorName: item.breederName,
+          createdAt: item.createdAt,
+        })),
+      ].sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
     }),
 
   // ─── Location Presets ─────────────────────────────────────────────────────

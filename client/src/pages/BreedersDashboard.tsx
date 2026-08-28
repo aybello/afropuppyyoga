@@ -131,6 +131,7 @@ export default function BreedersDashboard() {
   const [events, setEvents] = useState<typeof EMPTY_EVENT[]>([{ ...EMPTY_EVENT }]);
   const [availabilityNote, setAvailabilityNote] = useState<string>("");
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const [deliveryFailed, setDeliveryFailed] = useState(false);
   const [showHistory, setShowHistory] = useState<number | null>(null);
 
   // Availability blast state
@@ -161,6 +162,10 @@ export default function BreedersDashboard() {
     { breederId: showHistory! },
     { enabled: showHistory !== null }
   );
+  const { data: communicationHistory = [], isLoading: communicationsLoading } = trpc.breeders.getCommunications.useQuery(
+    { breederId: showHistory! },
+    { enabled: showHistory !== null }
+  );
 
   const { data: breederAvailability = [], isLoading: availLoading, refetch: refetchAvail } = trpc.breeders.getBreederResponses.useQuery(
     { breederId: showAvailability?.id ?? 0 },
@@ -183,8 +188,17 @@ export default function BreedersDashboard() {
   const sendMutation = trpc.breeders.sendConfirmation.useMutation({
     onSuccess: (data) => {
       utils.breeders.getConfirmations.invalidate({ breederId: confirmBreeder?.id });
+      utils.puppySchedule.list.invalidate();
+      utils.puppySchedule.listWithStaffing.invalidate();
+      if (!data.emailSent && !data.smsSent) {
+        setDeliveryFailed(true);
+        const warnings = [data.emailError, data.smsError].filter(Boolean).join(" | ");
+        toast.error(`The classes were saved, but the confirmation was not delivered. Fix the connection and retry${warnings ? `: ${warnings}` : "."}`);
+        return;
+      }
       // Clear the saved draft for this breeder — confirmation was sent
       if (confirmBreeder) localStorage.removeItem(`apy-confirm-draft-${confirmBreeder.id}`);
+      setDeliveryFailed(false);
       setConfirmBreeder(null);
       setEvents([{ ...EMPTY_EVENT }]);
       setAvailabilityNote("");
@@ -192,7 +206,7 @@ export default function BreedersDashboard() {
       const parts = [];
       if (data.emailSent) parts.push("email");
       if (data.smsSent) parts.push("SMS");
-      const sent = parts.length > 0 ? `Confirmation sent via ${parts.join(" & ")}!` : "Confirmation recorded.";
+      const sent = data.alreadySent ? "This exact confirmation had already been sent; nothing was duplicated." : `Confirmation sent via ${parts.join(" & ")}!`;
       const warnings = [];
       if (data.emailError) warnings.push(`Email failed: ${data.emailError}`);
       if (data.smsError) warnings.push(`SMS failed: ${data.smsError}`);
@@ -245,6 +259,7 @@ export default function BreedersDashboard() {
   function openConfirm(b: any) {
     setConfirmBreeder(b);
     setPreviewHtml(null);
+    setDeliveryFailed(false);
     // Restore draft from localStorage if one exists for this breeder
     const draftKey = `apy-confirm-draft-${b.id}`;
     const saved = localStorage.getItem(draftKey);
@@ -316,12 +331,8 @@ export default function BreedersDashboard() {
       alert("This breeder has no email or phone on file. Please add contact info first.");
       return;
     }
-    const firstName = (confirmBreeder.contactName || confirmBreeder.name).split(" ")[0];
     sendMutation.mutate({
       breederId: confirmBreeder.id,
-      breederFirstName: firstName,
-      toEmail: confirmBreeder.email || undefined,
-      toPhone: confirmBreeder.phone || undefined,
       events,
       availabilityNote: availabilityNote || undefined,
     });
@@ -873,7 +884,7 @@ export default function BreedersDashboard() {
                   className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body gap-2"
                 >
                   <Send className="w-4 h-4" />
-                  {sendMutation.isPending ? "Sending..." : "Send Confirmation"}
+                  {sendMutation.isPending ? "Sending..." : deliveryFailed ? "Retry Delivery" : "Send Confirmation"}
                 </Button>
               </div>
             </div>
@@ -1042,38 +1053,69 @@ export default function BreedersDashboard() {
           <DialogHeader>
             <DialogTitle className="font-display text-xl text-[#1A0A12]">Confirmation History</DialogTitle>
           </DialogHeader>
-          {historyLoading ? (
+          {historyLoading || communicationsLoading ? (
             <p className="font-body text-sm text-[#6B4C3B] py-4">Loading...</p>
-          ) : confirmHistory.length === 0 ? (
+          ) : confirmHistory.length === 0 && communicationHistory.length === 0 ? (
             <div className="text-center py-8">
               <Clock className="w-10 h-10 text-[#F0D0DC] mx-auto mb-2" />
-              <p className="font-body text-sm text-[#6B4C3B]">No confirmations sent yet</p>
+              <p className="font-body text-sm text-[#6B4C3B]">No breeder activity recorded yet</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {confirmHistory.map((c: any) => {
-                const evts = JSON.parse(c.events || "[]");
-                return (
-                  <div key={c.id} className="border border-[#F0D0DC] rounded-xl p-4 bg-[#FEFAF4]">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <p className="font-body text-sm font-semibold text-[#1A0A12]">
-                          {evts.length} event{evts.length !== 1 ? "s" : ""} confirmed
-                        </p>
-                        <p className="font-body text-xs text-[#C4A0B0]">Sent to {c.sentToEmail}</p>
-                      </div>
-                      <span className="font-body text-xs text-[#C4A0B0]">
-                        {new Date(c.createdAt).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}
-                      </span>
-                    </div>
-                    <div className="space-y-1">
-                      {evts.map((ev: any, i: number) => (
-                        <p key={i} className="font-body text-xs text-[#6B4C3B]">📍 {ev.city} — {ev.date} — {ev.compensation}</p>
-                      ))}
-                    </div>
+            <div className="space-y-6">
+              {confirmHistory.length > 0 && (
+                <section>
+                  <p className="mb-2 font-body text-xs font-bold uppercase tracking-wider text-[#8B2252]">Commitments</p>
+                  <div className="space-y-3">
+                    {confirmHistory.map((c: any) => {
+                      const evts = JSON.parse(c.events || "[]");
+                      return (
+                        <div key={c.id} className="border border-[#F0D0DC] rounded-xl p-4 bg-[#FEFAF4]">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <p className="font-body text-sm font-semibold text-[#1A0A12]">
+                                {evts.length} event{evts.length !== 1 ? "s" : ""} recorded
+                              </p>
+                              <p className="font-body text-xs text-[#C4A0B0]">
+                                {c.status === "sent" ? "Delivered to " : c.status === "pending" ? "Delivery in progress to " : "Delivery failed to "}
+                                {[c.sentToEmail, c.sentToPhone].filter(Boolean).join(" · ") || "no contact"}
+                              </p>
+                            </div>
+                            <span className="font-body text-xs text-[#C4A0B0]">
+                              {new Date(c.createdAt).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}
+                            </span>
+                          </div>
+                          <div className="space-y-1">
+                            {evts.map((ev: any, i: number) => (
+                              <p key={i} className="font-body text-xs text-[#6B4C3B]">📍 {ev.city || "Private Event"} — {ev.date} — {ev.compensation}</p>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
+                </section>
+              )}
+              {communicationHistory.length > 0 && (
+                <section>
+                  <p className="mb-2 font-body text-xs font-bold uppercase tracking-wider text-[#8B2252]">Communications</p>
+                  <div className="space-y-2">
+                    {communicationHistory.map((item: any) => (
+                      <div key={item.id} className="rounded-xl border border-[#F0D0DC] bg-white p-3">
+                        <div className="flex items-center gap-2">
+                          {item.channel === "email" ? <Mail className="h-3.5 w-3.5 text-[#8B2252]" /> : <Phone className="h-3.5 w-3.5 text-[#8B2252]" />}
+                          <p className="font-body text-xs font-semibold text-[#1A0A12]">{item.direction === "inbound" ? "Received" : "Sent"} {item.channel.toUpperCase()}</p>
+                          <Badge variant="outline" className="ml-auto text-[10px]">{item.deliveryStatus}</Badge>
+                        </div>
+                        {item.bodyPreview && <p className="mt-1 line-clamp-3 font-body text-xs text-[#6B4C3B]">{item.bodyPreview}</p>}
+                        <p className="mt-1 font-body text-[10px] text-[#C4A0B0]">
+                          {new Date(item.createdAt).toLocaleString("en-CA", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                          {item.actorName ? ` · ${item.actorName}` : ""}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
           )}
         </DialogContent>
