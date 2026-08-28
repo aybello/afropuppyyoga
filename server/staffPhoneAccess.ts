@@ -1,4 +1,5 @@
 import { createHmac, randomInt, timingSafeEqual } from "crypto";
+import { normalizeCanadianPhoneNumber } from "../shared/phone";
 
 export const STAFF_PHONE_CODE_TTL_MS = 10 * 60 * 1000;
 export const STAFF_PHONE_CODE_COOLDOWN_MS = 60 * 1000;
@@ -18,4 +19,10 @@ export function staffPhoneCodeMatches(phone: string, code: string, expectedHash:
   const actual = Buffer.from(hashStaffPhoneCode(phone, code), "hex");
   const expected = Buffer.from(expectedHash, "hex");
   return actual.length === expected.length && timingSafeEqual(actual, expected);
+}
+
+/** Matches only a configured Canadian owner phone after normalization. */
+export function isConfiguredOwnerPhone(phone: string, configuredOwnerPhone = process.env.OWNER_PHONE_NUMBER): boolean {
+  const ownerPhone = normalizeCanadianPhoneNumber(configuredOwnerPhone ?? "");
+  return Boolean(ownerPhone && phone === ownerPhone);
 }

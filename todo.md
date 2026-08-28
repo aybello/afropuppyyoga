@@ -1,6 +1,7 @@
 
 ## Current Staff Access Investigation
 - [ ] Diagnose and restore reliable owner and staff access to the APY HQ staff portal
+- [ ] Allow the configured APY owner to use secure phone verification for owner-level APY HQ access without Manus sign-in
 - [x] Confirm the legacy live `/staff` portal route renders blank while `/staff-access` loads the intended APY HQ access screen
 - [x] Confirm the current `/staff` command centre renders locally, isolating the reported failure to the live deployment path
 - [x] Verify the live `/staff` route renders the APY HQ command-centre access state after its initial bundle load, without requiring a redirect
