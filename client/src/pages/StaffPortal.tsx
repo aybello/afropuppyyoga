@@ -26,11 +26,22 @@ import {
   CalendarCheck,
   GraduationCap,
   UserCog,
+  Gauge,
 } from "lucide-react";
 
 const TEAM_PHOTO = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663824308637/IiwudPwckobbrxIv.jpg";
 
 const TOOLS = [
+  {
+    id: "run-apy",
+    title: "Run APY",
+    description: "Today's classes, staffing gaps, messages, leads, and priority actions.",
+    href: "/admin/run-apy",
+    icon: Gauge,
+    accent: "#2D5A27",
+    adminOnly: true,
+    category: "Operations",
+  },
   {
     id: "staff-access",
     title: "Staff Access",
@@ -193,7 +204,7 @@ const TOOLS = [
   },
 ];
 
-const CATEGORY_ORDER = ["People", "Finance", "Events", "Breeders", "Growth", "Operations"];
+const CATEGORY_ORDER = ["Operations", "People", "Finance", "Events", "Breeders", "Growth"];
 
 function requiredAccessForTool(id: string): ApyHubToolAccess {
   if (id === "invoices" || id === "revenue") return "owner";
