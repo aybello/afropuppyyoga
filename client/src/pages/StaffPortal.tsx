@@ -286,7 +286,7 @@ export default function StaffPortal() {
             <Lock size={14} className="text-amber-600 shrink-0" />
             <p className="text-xs text-amber-800">
               Some tools require login.{" "}
-              <a href="/admin-login" className="underline font-semibold">Sign in</a> to access admin features.
+              <a href="/staff-access" className="underline font-semibold">Sign in</a> to access team tools.
             </p>
           </div>
         )}

@@ -2,7 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import crypto from "crypto";
 import { storagePut } from "./storage";
-import { requireStaffOrAdmin } from "./_core/requireStaff";
+import { requireStaffOrAdmin, requireTeamMember } from "./_core/requireStaff";
 
 const router = Router();
 
@@ -229,7 +229,7 @@ router.post("/api/upload-resume", (req: any, res: any, next: any) => {
  * Accepts multipart/form-data with a single "invoice" field (PDF only, max 16MB).
  * Uploads to S3 and returns { url, key, filename }.
  */
-router.post("/api/upload-invoice", (req: any, res: any, next: any) => {
+router.post("/api/upload-invoice", requireTeamMember, (req: any, res: any, next: any) => {
   invoiceUpload.single("invoice")(req, res, (err) => {
     if (err) return handleMulterError(err, req, res, next);
     next();
@@ -245,7 +245,8 @@ router.post("/api/upload-invoice", (req: any, res: any, next: any) => {
       return res.status(400).json({ error: "File does not appear to be a valid PDF" });
     }
 
-    const key = `invoices/${Date.now()}-${secureId()}.pdf`;
+    const digest = crypto.createHash("sha256").update(req.file.buffer).digest("hex");
+    const key = `invoices/${digest}-${secureId()}.pdf`;
     const { url } = await storagePut(key, req.file.buffer, "application/pdf");
     const safeFilename = sanitiseFilename(req.file.originalname);
     return res.json({ url, key, filename: safeFilename });

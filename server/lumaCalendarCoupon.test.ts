@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { ensureFreeCalendarRebookingCoupon, rebookingCodeForClassDate } from "./lumaCalendarCoupon";
+import { createCappedCalendarRebookingCoupon, ensureFreeCalendarRebookingCoupon, rebookingCodeForClassDate } from "./lumaCalendarCoupon";
 
 const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
@@ -43,5 +43,13 @@ describe("calendar-wide cancellation rebooking coupons", () => {
 
   it("uses the Ontario class date for the daily rebooking code", () => {
     expect(rebookingCodeForClassDate("2026-08-30T01:30:00.000Z")).toBe("AUG29");
+  });
+
+  it("caps a unique calendar credit to the affected guest count", async () => {
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(jsonResponse({ entries: [], has_more: false }))
+      .mockResolvedValueOnce(jsonResponse({ id: "coup-capped", code: "APY-ABC123", remaining_count: 17, percent_off: 100, cents_off: null }));
+    await expect(createCappedCalendarRebookingCoupon("APY-ABC123", 17, { apiKey: "test-key", fetchImpl })).resolves.toEqual({ code: "APY-ABC123", couponId: "coup-capped" });
+    expect(JSON.parse(String(fetchImpl.mock.calls[1]?.[1]?.body))).toMatchObject({ code: "APY-ABC123", remaining_count: 17 });
   });
 });

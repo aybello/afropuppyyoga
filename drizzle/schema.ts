@@ -1,4 +1,4 @@
-import { bigint, boolean, index, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { bigint, boolean, index, int, mysqlEnum, mysqlTable, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -41,21 +41,39 @@ export const invoices = mysqlTable("invoices", {
   fileUrl: text("fileUrl").notNull(),
   /** S3 key of the uploaded PDF */
   fileKey: varchar("fileKey", { length: 500 }).notNull(),
+  fileSha256: varchar("fileSha256", { length: 64 }),
   /** Original filename */
   originalFilename: varchar("originalFilename", { length: 255 }),
   /** Amount paid so far (in cents, to avoid floating point issues) */
   amountPaidCents: int("amountPaidCents").default(0).notNull(),
+  totalAmountCents: int("totalAmountCents"),
   /** Payment notes (e.g. "half payment on May 1") */
   paymentNotes: text("paymentNotes"),
   /** Payment status */
   status: mysqlEnum("status", ["pending", "partial", "paid", "overdue"]).default("pending").notNull(),
+  workflowStatus: mysqlEnum("invoiceWorkflowStatus", ["submitted", "reviewed", "approved", "paid"]).default("submitted").notNull(),
+  submittedByUserId: int("submittedByUserId"),
+  submittedByName: varchar("submittedByName", { length: 255 }),
+  submittedByEmail: varchar("submittedByEmail", { length: 320 }),
+  reviewedByUserId: int("reviewedByUserId"),
+  reviewedAt: timestamp("reviewedAt"),
+  approvedByUserId: int("approvedByUserId"),
+  approvedAt: timestamp("approvedAt"),
+  paidByUserId: int("paidByUserId"),
+  paidAt: timestamp("paidAt"),
+  deletedAt: timestamp("deletedAt"),
   /** Whether AI extraction has been completed */
   extractionStatus: mysqlEnum("extractionStatus", ["pending", "completed", "failed"]).default("pending").notNull(),
   /** Raw extracted text for debugging */
   extractedData: text("extractedData"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-}, (t) => [index("idx_invoices_status").on(t.status)]);
+}, (t) => [
+  index("idx_invoices_status").on(t.status),
+  index("idx_invoices_workflow").on(t.workflowStatus),
+  uniqueIndex("uq_invoices_fileKey").on(t.fileKey),
+  uniqueIndex("uq_invoices_fileSha256").on(t.fileSha256),
+]);
 
 export type Invoice = typeof invoices.$inferSelect;
 export type InsertInvoice = typeof invoices.$inferInsert;
@@ -523,6 +541,18 @@ export const inboundSms = mysqlTable("inboundSms", {
 export type InboundSms = typeof inboundSms.$inferSelect;
 export type InsertInboundSms = typeof inboundSms.$inferInsert;
 
+/** Central STOP/START suppression state checked by every outbound SMS path. */
+export const smsSuppressions = mysqlTable("smsSuppressions", {
+  id: int("id").autoincrement().primaryKey(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  keyword: varchar("keyword", { length: 32 }),
+  sourceTwilioSid: varchar("sourceTwilioSid", { length: 64 }),
+  suppressedAt: timestamp("suppressedAt").defaultNow().notNull(),
+  reactivatedAt: timestamp("reactivatedAt"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (t) => [uniqueIndex("uq_smsSuppressions_phone").on(t.phone)]);
+
 // ─── Meta Conversions API ─────────────────────────────────────────────────────
 /**
  * One row per Luma guest registration that needs to be (or has been) sent
@@ -598,6 +628,22 @@ export const callLogs = mysqlTable("callLogs", {
 ]);
 export type CallLog = typeof callLogs.$inferSelect;
 export type InsertCallLog = typeof callLogs.$inferInsert;
+
+/** One idempotent, capped calendar credit for each cancelled Luma event. */
+export const cancellationCredits = mysqlTable("cancellationCredits", {
+  id: int("id").autoincrement().primaryKey(),
+  lumaEventId: varchar("lumaEventId", { length: 128 }).notNull(),
+  eventName: varchar("eventName", { length: 255 }).notNull(),
+  couponCode: varchar("couponCode", { length: 20 }).notNull(),
+  maxUses: int("maxUses").notNull(),
+  registrationClosedAt: timestamp("registrationClosedAt").notNull(),
+  couponCreatedAt: timestamp("couponCreatedAt").notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("uq_cancellationCredits_event").on(t.lumaEventId),
+  uniqueIndex("uq_cancellationCredits_code").on(t.couponCode),
+]);
 
 // ─── Review Text Logs ─────────────────────────────────────────────────────────
 // Tracks post-class Google review SMS sends per guest per event.

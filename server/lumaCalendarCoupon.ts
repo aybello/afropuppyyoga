@@ -107,3 +107,27 @@ export async function ensureFreeCalendarRebookingCoupon(
   }
   return { code: normalizedCode, couponId: coupon.id, state: "created" };
 }
+
+/** Create a unique 100%-off calendar coupon capped to the affected guest count. */
+export async function createCappedCalendarRebookingCoupon(
+  code: string,
+  remainingCount: number,
+  options: { apiKey: string; fetchImpl?: typeof fetch } = { apiKey: "" },
+): Promise<{ code: string; couponId: string }> {
+  const apiKey = options.apiKey || process.env.LUMA_API_KEY;
+  if (!apiKey) throw new Error("LUMA_API_KEY is not set");
+  if (!Number.isInteger(remainingCount) || remainingCount < 1) throw new Error("Coupon use count must match at least one affected guest");
+  const normalizedCode = code.trim().toUpperCase();
+  if (!/^[A-Z0-9-]{1,20}$/.test(normalizedCode)) throw new Error("The rebooking code must be 1–20 letters, numbers, or hyphens");
+  const fetchImpl = options.fetchImpl ?? fetch;
+  if ((await listCalendarCoupons(apiKey, fetchImpl)).some(coupon => coupon.code.toUpperCase() === normalizedCode)) throw new Error("A Luma coupon already uses this code");
+  const response = await fetchImpl(`${LUMA_BASE}/calendars/coupons/create`, {
+    method: "POST",
+    headers: { "x-luma-api-key": apiKey, "content-type": "application/json", accept: "application/json" },
+    body: JSON.stringify({ code: normalizedCode, remaining_count: remainingCount, discount: { discount_type: "percent", percent_off: 100 } }),
+  });
+  if (!response.ok) throw new Error(`Luma could not create the capped free calendar code (${response.status})`);
+  const coupon = (await response.json()) as LumaCalendarCoupon;
+  if (coupon.percent_off !== 100 || coupon.cents_off !== null) throw new Error("Luma created a coupon that is not 100% free");
+  return { code: normalizedCode, couponId: coupon.id };
+}

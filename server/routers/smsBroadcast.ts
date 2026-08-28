@@ -10,14 +10,12 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import twilio from "twilio";
 import { staffProcedure, router } from "../_core/trpc";
+import { normalizeCanadianPhoneNumber } from "../../shared/phone";
+import { isSmsSuppressed } from "../smsConsent";
 
 /** Normalize a phone number to E.164 format (+1XXXXXXXXXX for CA/US) */
 function normalizePhone(raw: string): string | null {
-  const digits = raw.replace(/\D/g, "");
-  if (digits.length < 10) return null;
-  const withCountry = digits.startsWith("1") ? digits : "1" + digits;
-  if (withCountry.length < 11) return null;
-  return "+" + withCountry;
+  return normalizeCanadianPhoneNumber(raw);
 }
 
 /** Get a configured Twilio client or throw */
@@ -58,6 +56,7 @@ export const smsBroadcastRouter = router({
           message: `Invalid phone number: ${input.phone}`,
         });
       }
+      if (await isSmsSuppressed(to)) throw new TRPCError({ code: "FORBIDDEN", message: "This number has opted out of APY text messages." });
 
       try {
         const msg = await client.messages.create({
@@ -122,6 +121,10 @@ export const smsBroadcastRouter = router({
           });
           continue;
         }
+        if (await isSmsSuppressed(to)) {
+          results.push({ phone: recipient.phone, name, to, status: "suppressed", error: "Recipient opted out" });
+          continue;
+        }
 
         const body = input.personalise && name
           ? input.message.replace(/\{name\}/gi, name)
@@ -145,9 +148,10 @@ export const smsBroadcastRouter = router({
         }
       }
 
-      const sent = results.filter((r) => r.status !== "failed" && r.status !== "invalid").length;
+      const sent = results.filter((r) => !["failed", "invalid", "suppressed"].includes(r.status)).length;
       const failed = results.filter((r) => r.status === "failed" || r.status === "invalid").length;
+      const suppressed = results.filter((r) => r.status === "suppressed").length;
 
-      return { total: input.recipients.length, sent, failed, results };
+      return { total: input.recipients.length, sent, failed, suppressed, results };
     }),
 });

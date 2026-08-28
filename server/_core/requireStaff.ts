@@ -25,3 +25,17 @@ export async function requireStaffOrAdmin(req: Request, res: Response, next: Nex
     return res.status(401).json({ error: "Authentication required" });
   }
 }
+
+/** Any active APY HQ team member; intended for self-service uploads only. */
+export async function requireTeamMember(req: Request, res: Response, next: NextFunction) {
+  try {
+    const user = await sdk.authenticateRequest(req as any);
+    const access = await resolveApyAccess(user);
+    if (access.level === "none") return res.status(403).json({ error: "Active APY team access required" });
+    (req as any).staffUser = user;
+    (req as any).apyAccess = access;
+    next();
+  } catch {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+}

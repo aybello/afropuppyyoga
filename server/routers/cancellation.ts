@@ -12,22 +12,39 @@
  * Only accessible to admin/staff roles.
  */
 import { TRPCError } from "@trpc/server";
+import { randomBytes } from "crypto";
 import { desc, eq } from "drizzle-orm";
 import twilio from "twilio";
 import { z } from "zod";
 
 import { getDb } from "../db";
-import { callLogs } from "../../drizzle/schema";
+import { callLogs, cancellationCredits } from "../../drizzle/schema";
 import { staffProcedure, router } from "../_core/trpc";
 import { sendClassCancellationEmail } from "../email";
 import { getTwilioWebhookUrl } from "../twilioWebhook";
-import { ensureFreeCalendarRebookingCoupon, rebookingCodeForClassDate } from "../lumaCalendarCoupon";
+import { createCappedCalendarRebookingCoupon } from "../lumaCalendarCoupon";
+import { isSmsSuppressed } from "../smsConsent";
 
 const LUMA_BASE = "https://public-api.luma.com/v1";
 const IN_FLIGHT_TWILIO_STATUSES = new Set(["accepted", "queued", "sending", "sent", "in-progress", "ringing"]);
 
 export function isInFlightTwilioStatus(status: string | null | undefined): boolean {
   return !!status && IN_FLIGHT_TWILIO_STATUSES.has(status.toLowerCase());
+}
+
+export function createCancellationCode() {
+  return `APY-${randomBytes(7).toString("hex").toUpperCase()}`;
+}
+
+async function setLumaRegistrationOpen(eventId: string, registrationOpen: boolean) {
+  const apiKey = process.env.LUMA_API_KEY;
+  if (!apiKey) throw new Error("LUMA_API_KEY is not set");
+  const response = await fetch(`${LUMA_BASE}/events/update`, {
+    method: "POST",
+    headers: { "x-luma-api-key": apiKey, "content-type": "application/json" },
+    body: JSON.stringify({ event_id: eventId, registration_open: registrationOpen, suppress_notifications: true }),
+  });
+  if (!response.ok) throw new Error(`Luma registration update failed (${response.status})`);
 }
 
 /** Fetch all guests for a Luma event (handles pagination) */
@@ -157,7 +174,7 @@ export const cancellationRouter = router({
         customMessage: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const accountSid = process.env.TWILIO_ACCOUNT_SID;
       const authToken = process.env.TWILIO_AUTH_TOKEN;
       const fromNumber = process.env.TWILIO_PHONE_NUMBER;
@@ -171,21 +188,30 @@ export const cancellationRouter = router({
 
       const client = twilio(accountSid, authToken);
 
-      // ── Create or reuse a 100%-off calendar-wide Luma rebooking code ──────
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      const [existingCredit] = await db.select().from(cancellationCredits).where(eq(cancellationCredits.lumaEventId, input.eventApiId)).limit(1);
+      if (existingCredit) throw new TRPCError({ code: "CONFLICT", message: `This class was already cancelled with credit ${existingCredit.couponCode}.` });
+
       const allEvents = await fetchLumaEvents();
       const cancelledEvent = allEvents.find((e) => e.api_id === input.eventApiId);
-      const rebookingCode = rebookingCodeForClassDate(cancelledEvent?.start_at ?? new Date());
-      let couponState: "created" | "reused";
+      if (!cancelledEvent) throw new TRPCError({ code: "NOT_FOUND", message: "That upcoming Luma event could not be found." });
+      const canonicalEventName = cancelledEvent.name;
+      const guests = await fetchLumaGuests(input.eventApiId);
+      if (guests.length === 0) throw new TRPCError({ code: "BAD_REQUEST", message: "This event has no approved guests to notify." });
+      const rebookingCode = createCancellationCode();
+      await setLumaRegistrationOpen(input.eventApiId, false);
       try {
-        ({ state: couponState } = await ensureFreeCalendarRebookingCoupon(rebookingCode, {
-          apiKey: process.env.LUMA_API_KEY ?? "",
-        }));
+        await createCappedCalendarRebookingCoupon(rebookingCode, guests.length, { apiKey: process.env.LUMA_API_KEY ?? "" });
       } catch (error) {
+        await setLumaRegistrationOpen(input.eventApiId, true).catch((rollbackError) => console.error("[Cancellation] Could not reopen registration", rollbackError));
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: `The free Luma rebooking code could not be created. No guest notifications were sent. ${error instanceof Error ? error.message : ""}`.trim(),
         });
       }
+      const provisionedAt = new Date();
+      await db.insert(cancellationCredits).values({ lumaEventId: input.eventApiId, eventName: canonicalEventName, couponCode: rebookingCode, maxUses: guests.length, registrationClosedAt: provisionedAt, couponCreatedAt: provisionedAt, createdByUserId: ctx.user.id });
 
       // ── Find next upcoming class (any location) ───────────────────────────
       const nextEvent = allEvents
@@ -204,7 +230,7 @@ export const cancellationRouter = router({
       // Voice message (TTS — slightly more formal for spoken delivery)
       const voiceMessage = input.customMessage
         ? `${input.customMessage} Please check your email for the free rebooking code ${rebookingCode}, valid across the AfroPuppyYoga calendar.`
-        : `Hello, this is a message from AfroPuppyYoga. We regret to inform you that your upcoming class, ${input.eventName}, has been cancelled. We apologize for the inconvenience. Please check your email for your free rebooking code, valid across the AfroPuppyYoga calendar. Thank you for your understanding.`;
+        : `Hello, this is a message from AfroPuppyYoga. We regret to inform you that your upcoming class, ${canonicalEventName}, has been cancelled. We apologize for the inconvenience. Please check your email for your free rebooking code, valid across the AfroPuppyYoga calendar. Thank you for your understanding.`;
 
       // SMS message (concise for text — includes rebooking code and next class)
       const nextClassSmsHint = nextClassName && nextClassDate
@@ -213,10 +239,7 @@ export const cancellationRouter = router({
 
       const smsMessage = input.customMessage
         ? `${input.customMessage}\n\nUse free code ${rebookingCode} for 100% off any future APY class booked through our Luma calendar.`
-        : `Hi from AfroPuppyYoga! Your class "${input.eventName}" has been cancelled. Sorry for the inconvenience! Use free code ${rebookingCode} for 100% off any future APY class booked through our Luma calendar.${nextClassSmsHint}`;
-
-      // ── Fetch all guests
-      const guests = await fetchLumaGuests(input.eventApiId);
+        : `Hi from AfroPuppyYoga! Your class "${canonicalEventName}" has been cancelled. Sorry for the inconvenience! Use free code ${rebookingCode} for 100% off any future APY class booked through our Luma calendar.${nextClassSmsHint}`;
       const now = Date.now();
 
       const results: Array<{
@@ -230,15 +253,13 @@ export const cancellationRouter = router({
         error?: string;
       }> = [];
 
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
-
       // ── Process all guests in parallel (batches of 10 to avoid overwhelming Twilio) ──
       const BATCH_SIZE = 10;
       for (let i = 0; i < guests.length; i += BATCH_SIZE) {
         const batch = guests.slice(i, i + BATCH_SIZE);
         const batchResults = await Promise.allSettled(
           batch.map(async (guest) => {
+            const smsSuppressed = guest.phone ? await isSmsSuppressed(guest.phone) : false;
             // ── 1. Phone call (only if phone number available) ──────────────────
             let callStatus = "skipped";
             let callSid: string | undefined;
@@ -267,7 +288,9 @@ export const cancellationRouter = router({
             let smsSid: string | undefined;
             let smsError: string | undefined;
 
-            if (guest.phone) {
+            if (smsSuppressed) {
+              smsStatus = "suppressed";
+            } else if (guest.phone) {
               try {
                 const msg = await client.messages.create({
                   to: guest.phone,
@@ -292,7 +315,7 @@ export const cancellationRouter = router({
                 await sendClassCancellationEmail({
                   to: guest.email,
                   guestName: guest.name,
-                  eventName: input.eventName,
+                  eventName: canonicalEventName,
                   rebookingCode,
                   nextClassName,
                   nextClassDate,
@@ -311,7 +334,7 @@ export const cancellationRouter = router({
             // ── Log to database ──────────────────────────────────────────────────
             await db.insert(callLogs).values({
               lumaEventId: input.eventApiId,
-              eventName: input.eventName,
+              eventName: canonicalEventName,
               guestName: guest.name,
               phone: guest.phone ?? (guest.email ? `email:${guest.email}` : "N/A"),
               callSid,
@@ -355,13 +378,13 @@ export const cancellationRouter = router({
       }
 
       const called = results.filter((r) => r.callStatus !== "skipped" && r.callStatus !== "failed").length;
-      const texted = results.filter((r) => r.smsStatus !== "skipped" && r.smsStatus !== "failed").length;
+      const texted = results.filter((r) => !["skipped", "failed", "suppressed"].includes(r.smsStatus)).length;
       const emailed = results.filter((r) => r.emailStatus === "sent").length;
       const failed = results.filter((r) =>
         r.callStatus === "failed" || r.smsStatus === "failed" || r.emailStatus === "failed"
       ).length;
 
-      return { total: guests.length, called, texted, emailed, failed, results, rebookingCode, couponState };
+      return { total: guests.length, called, texted, emailed, failed, results, rebookingCode, couponState: "created" as const, registrationClosed: true };
     }),
 
   /** Reconcile in-flight delivery records with Twilio when an admin refreshes the notification log. */
@@ -439,6 +462,7 @@ export const cancellationRouter = router({
       let to = input.phone.replace(/\D/g, "");
       if (!to.startsWith("1")) to = "1" + to;
       to = "+" + to;
+      if (await isSmsSuppressed(to)) throw new TRPCError({ code: "FORBIDDEN", message: "This number has opted out of APY text messages." });
 
       const body =
         input.message?.trim() ||

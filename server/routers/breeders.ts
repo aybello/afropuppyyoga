@@ -9,6 +9,7 @@ import { sendEmail } from "../email";
 import crypto from "crypto";
 import { getTrustedAppOrigin } from "../_core/trustedOrigin";
 import { createLumaEventForSchedule } from "../lumaScheduleHelper";
+import { isSmsSuppressed } from "../smsConsent";
 
 const breederInput = z.object({
   name: z.string().min(1, "Breeder name is required"),
@@ -306,6 +307,7 @@ export const breedersRouter = router({
           const digits = input.toPhone.replace(/\D/g, "");
           const normalized = digits.length === 10 ? "+1" + digits : digits.length === 11 && digits.startsWith("1") ? "+" + digits : null;
           if (!normalized) throw new Error("Invalid phone number format");
+          if (await isSmsSuppressed(normalized)) throw new Error("Recipient has opted out of APY text messages");
 
           // Build condensed SMS — one line per event
           const eventLines = input.events.map((ev) => {
