@@ -27,4 +27,10 @@ describe("staff phone access", () => {
     expect(isConfiguredOwnerPhone("+12897881886", "(289) 788-1885")).toBe(false);
     expect(isConfiguredOwnerPhone("+12897881885", "not-a-phone")).toBe(false);
   });
+
+  it("has a normalized secure owner phone configured for passwordless APY HQ access", () => {
+    const ownerPhone = process.env.OWNER_PHONE_NUMBER;
+    expect(ownerPhone).toBeTruthy();
+    expect(isConfiguredOwnerPhone("+12897881885", ownerPhone)).toBe(true);
+  });
 });

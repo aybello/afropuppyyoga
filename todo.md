@@ -8,6 +8,10 @@
 - [ ] Validate the live owner-account sign-in redirect and callback without submitting credentials
 - [x] Verify the owner-account action reaches the configured AfroPuppyYoga identity-provider sign-in page without an application routing failure
 - [ ] End-to-end verify a phone OTP session reaches `/staff` with the intended APY HQ access level
+- [ ] Confirm delivery of the owner-approved one-time code and complete the passwordless APY HQ session test
+- [x] Verify the published passwordless APY HQ phone-access form loads before submitting the owner-approved test number
+- [ ] Diagnose and restore live delivery of the APY HQ owner verification SMS before sending another code
+- [x] Update the configured owner phone used by passwordless APY HQ access to the owner-confirmed mobile number
 - [ ] End-to-end verify owner sign-in lands on `/staff` after the OAuth callback
 
 ## Staff Invoice Portal
