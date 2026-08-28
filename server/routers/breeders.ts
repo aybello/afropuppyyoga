@@ -339,11 +339,11 @@ export const breedersRouter = router({
           ));
           const conflict = existing.find(entry => schedulesOverlap(entry, plan.schedule));
           if (conflict) {
-            throw new Error(`Event ${input.events.indexOf(plan.event) + 1} overlaps another ${plan.schedule.location} class on ${plan.schedule.classDate} (${conflict.startTime}–${conflict.endTime}).`);
+            throw new Error(`Event ${plans.indexOf(plan) + 1} overlaps another ${plan.schedule.location} class on ${plan.schedule.classDate} (${conflict.startTime}–${conflict.endTime}).`);
           }
         }
 
-        const provisioned: Array<{ plan: typeof studioPlans[number]; lumaEventId: string; lumaEventUrl: string } | { plan: typeof studioPlans[number]; lumaEventId: null; lumaEventUrl: null }> = [];
+        const provisioned: Array<{ plan: typeof studioPlans[number]; lumaEventId: string | null; lumaEventUrl: string | null }> = [];
         try {
           for (const plan of studioPlans) {
             const luma = await createLumaEventForSchedule({
