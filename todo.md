@@ -1,12 +1,28 @@
 
 ## Current Staff Access Investigation
 - [ ] Diagnose and restore reliable owner and staff access to the APY HQ staff portal
+- [ ] Allow the configured APY owner to use secure phone verification for owner-level APY HQ access without Manus sign-in
 - [x] Confirm the legacy live `/staff` portal route renders blank while `/staff-access` loads the intended APY HQ access screen
 - [x] Confirm the current `/staff` command centre renders locally, isolating the reported failure to the live deployment path
 - [x] Verify the live `/staff` route renders the APY HQ command-centre access state after its initial bundle load, without requiring a redirect
 - [ ] Validate the live owner-account sign-in redirect and callback without submitting credentials
 - [x] Verify the owner-account action reaches the configured AfroPuppyYoga identity-provider sign-in page without an application routing failure
 - [ ] End-to-end verify a phone OTP session reaches `/staff` with the intended APY HQ access level
+- [ ] Confirm delivery of the owner-approved one-time code and complete the passwordless APY HQ session test
+- [ ] Confirm the corrected owner recipient receives the second approved verification code
+- [x] Verify the corrected owner-phone request reaches APY HQ code entry without a client-side error
+- [x] Verify the published passwordless APY HQ phone-access form loads before submitting the owner-approved test number
+- [ ] Diagnose and restore live delivery of the APY HQ owner verification SMS before sending another code
+- [x] Update the configured owner phone used by passwordless APY HQ access to the owner-confirmed mobile number
+- [ ] Diagnose and correct the rejected owner verification code before retesting passwordless APY HQ access
+- [ ] Request and verify a fresh, unused owner code after resolving the consumed-code mismatch
+- [ ] Resolve the owner session identity from the existing admin record when the production environment omits the owner identifier
+- [x] Confirm the fresh verification form contains the owner-approved mobile number before dispatching the final code
+- [x] Confirm the corrected live owner-session form contains the owner-approved mobile number before requesting the final session code
+- [ ] Confirm the latest corrected owner verification redirects to the authenticated APY HQ command centre
+- [ ] Fall back to a dedicated verified-owner-phone session identity when owner metadata is unavailable in production
+- [x] Verify the newly published owner-session access form accepts the owner-approved number without a client-side error
+- [x] Verify the final published owner-session request reaches code entry without the earlier production configuration error
 - [ ] End-to-end verify owner sign-in lands on `/staff` after the OAuth callback
 
 ## Staff Invoice Portal
