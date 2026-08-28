@@ -20,6 +20,7 @@ const StaffPortal = lazy(() => import("./pages/StaffPortal"));
 const Partnerships = lazy(() => import("./pages/Partnerships"));
 const StaffLogin = lazy(() => import("./pages/StaffLogin"));
 const StaffAccess = lazy(() => import("./pages/StaffAccess"));
+const RunApyDashboard = lazy(() => import("./pages/RunApyDashboard"));
 const StaffManagement = lazy(() => import("./pages/StaffManagement"));
 const StaffTraining = lazy(() => import("./pages/StaffTraining"));
 const SignDocuments = lazy(() => import("./pages/SignDocuments"));
@@ -79,6 +80,7 @@ function Router() {
         <Route path={"/partnerships"} component={Partnerships} />
         <Route path={"/staff-login"} component={StaffLogin} />
         <Route path={"/staff-access"} component={StaffAccess} />
+        <Route path="/admin/run-apy" component={RunApyDashboard} />
         <Route path={"/admin/staff"} component={StaffManagement} />
         <Route path={"/sign"} component={SignDocuments} />
         <Route path={"/private-events/quote"} component={PrivateEventQuote} />
