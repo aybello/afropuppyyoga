@@ -20,6 +20,7 @@ import {
   CalendarDays,
   PhoneOff,
   MessageSquare,
+  Gauge,
 } from "lucide-react";
 import { Inbox, Star, DollarSign, Dog } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -29,6 +30,7 @@ import { useState, useRef, useEffect } from "react";
 
 // Primary tabs always visible in the nav bar
 const PRIMARY_ITEMS = [
+  { href: "/admin/run-apy",      label: "Run APY",      icon: Gauge,      required: "operations" as ApyHubToolAccess },
   { href: "/admin/invoices",     label: "Invoices",     icon: FileText,   required: "owner" as ApyHubToolAccess },
   { href: "/admin/applications", label: "Applications", icon: Users,      required: "operations" as ApyHubToolAccess },
   { href: "/admin/breeders",     label: "Breeders",     icon: PawPrint,   required: "operations" as ApyHubToolAccess },
