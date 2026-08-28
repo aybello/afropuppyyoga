@@ -9,12 +9,12 @@ type DashboardDb = NonNullable<Awaited<ReturnType<typeof getDb>>>;
 
 async function getOverdueBreederFollowUps(db: DashboardDb, now: number) {
   try {
-    return await db.select({ id: breederLeadFollowUps.id, leadId: breederLeadFollowUps.leadId, dueAt: breederLeadFollowUps.dueAt, note: breederLeadFollowUps.note })
+    return await db.select({ id: breederLeadFollowUps.id, leadId: breederLeadFollowUps.leadId, dueAt: breederLeadFollowUps.scheduledAt, note: breederLeadFollowUps.message })
       .from(breederLeadFollowUps)
-      .where(and(eq(breederLeadFollowUps.completed, false), lte(breederLeadFollowUps.dueAt, now)));
+      .where(and(eq(breederLeadFollowUps.status, "pending"), lte(breederLeadFollowUps.scheduledAt, new Date(now))));
   } catch (error) {
     if (isMissingBreederFollowUpsTable(error)) {
-      console.warn("[Run APY] Breeder follow-up queue will appear after its migration is installed.");
+      console.warn("[Run APY] Breeder follow-up queue is unavailable because its table has not been deployed.");
       return [];
     }
     throw error;
