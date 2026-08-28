@@ -8,8 +8,9 @@ import { eq, desc, and } from "drizzle-orm";
 import { sendEmail } from "../email";
 import crypto from "crypto";
 import { getTrustedAppOrigin } from "../_core/trustedOrigin";
-import { createLumaEventForSchedule } from "../lumaScheduleHelper";
+import { createLumaEventForSchedule, setLumaRegistrationOpen } from "../lumaScheduleHelper";
 import { isSmsSuppressed } from "../smsConsent";
+import { schedulesOverlap, validateScheduleCandidate } from "../scheduleValidation";
 
 const breederInput = z.object({
   name: z.string().min(1, "Breeder name is required"),
@@ -401,26 +402,37 @@ export const breedersRouter = router({
           ? parseTimeTo24h(ev.returnTime)
           : parseTimeTo24h(ev.pickUpTime);
 
-        // Check for existing entry (same breeder + date + location) to avoid duplicates
-        const existing = await db
-          .select({ id: puppySchedule.id })
-          .from(puppySchedule)
-          .where(
-            and(
-              eq(puppySchedule.breederId, input.breederId),
-              eq(puppySchedule.classDate, classDate),
-              eq(puppySchedule.location, location)
-            )
-          )
-          .limit(1);
-
-        if (existing.length > 0) {
+        const classType = ["Saturday", "Sunday"].includes(dayOfWeek) ? "regular" as const : "private" as const;
+        const candidate = { classDate, dayOfWeek, location, startTime, endTime, classType };
+        try {
+          validateScheduleCandidate(candidate);
+        } catch (error) {
           scheduleSkipped++;
-          console.log(`[Schedule] Entry already exists for breeder ${input.breederId} on ${classDate} at ${location} — skipping`);
+          console.error(`[Schedule] Invalid confirmed event on ${classDate}:`, error);
           continue;
         }
 
+        // Prevent any same-studio time collision, regardless of breeder.
+        const existing = await db
+          .select({ id: puppySchedule.id, classDate: puppySchedule.classDate, location: puppySchedule.location, startTime: puppySchedule.startTime, endTime: puppySchedule.endTime })
+          .from(puppySchedule)
+          .where(
+            and(
+              eq(puppySchedule.classDate, classDate),
+              eq(puppySchedule.location, location),
+              eq(puppySchedule.scheduleStatus, "scheduled")
+            )
+          );
+
+        if (existing.some(entry => schedulesOverlap(entry, candidate))) {
+          scheduleSkipped++;
+          console.log(`[Schedule] Confirmed event overlaps an existing class on ${classDate} at ${location} — skipping`);
+          continue;
+        }
+
+        let lumaResult: Awaited<ReturnType<typeof createLumaEventForSchedule>> = null;
         try {
+          lumaResult = await createLumaEventForSchedule({ classDate, location, breed: breeder?.breed ?? "TBD", startTime, endTime, classType });
           await db.insert(puppySchedule).values({
             classDate,
             dayOfWeek,
@@ -430,35 +442,19 @@ export const breedersRouter = router({
             breederName,
             startTime,
             endTime,
-            classType: ["Saturday", "Sunday"].includes(dayOfWeek) ? "regular" : "private",
+            classType,
             notes: `Auto-created from breeder confirmation. Compensation: ${ev.compensation}`,
+            lumaEventId: lumaResult?.lumaEventId ?? null,
+            lumaEventUrl: lumaResult?.lumaEventUrl ?? null,
+            lumaSyncStatus: classType === "private" ? "not_required" : lumaResult ? "synced" : "failed",
+            lumaSyncedAt: lumaResult ? new Date() : null,
           });
           scheduleCreated++;
           console.log(`[Schedule] Created entry for ${breederName} on ${classDate} at ${location}`);
-
-          // Auto-create Luma event page for this schedule entry
-          const lumaResult = await createLumaEventForSchedule({
-            classDate,
-            location,
-            breed: breeder?.breed ?? "TBD",
-            startTime,
-            endTime,
-            classType: ["Saturday", "Sunday"].includes(dayOfWeek) ? "regular" : "private",
-          });
-          if (lumaResult) {
-            // Update the just-inserted row with the Luma event info
-            await db.update(puppySchedule)
-              .set({ lumaEventId: lumaResult.lumaEventId, lumaEventUrl: lumaResult.lumaEventUrl })
-              .where(
-                and(
-                  eq(puppySchedule.breederId, input.breederId),
-                  eq(puppySchedule.classDate, classDate),
-                  eq(puppySchedule.location, location)
-                )
-              );
-            console.log(`[Schedule] Luma event created: ${lumaResult.lumaEventUrl}`);
-          }
+          if (lumaResult) console.log(`[Schedule] Luma event created: ${lumaResult.lumaEventUrl}`);
+          else if (classType === "regular") console.error(`[Schedule] Luma event needs attention for ${classDate} at ${location}`);
         } catch (err) {
+          if (lumaResult) await setLumaRegistrationOpen(lumaResult.lumaEventId, false).catch(() => undefined);
           console.error(`[Schedule] Failed to create entry for ${classDate} at ${location}:`, err);
         }
       }

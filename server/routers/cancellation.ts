@@ -18,12 +18,13 @@ import twilio from "twilio";
 import { z } from "zod";
 
 import { getDb } from "../db";
-import { callLogs, cancellationCredits } from "../../drizzle/schema";
+import { callLogs, cancellationCredits, puppySchedule } from "../../drizzle/schema";
 import { staffProcedure, router } from "../_core/trpc";
 import { sendClassCancellationEmail } from "../email";
 import { getTwilioWebhookUrl } from "../twilioWebhook";
 import { createCappedCalendarRebookingCoupon } from "../lumaCalendarCoupon";
 import { isSmsSuppressed } from "../smsConsent";
+import { setLumaRegistrationOpen } from "../lumaScheduleHelper";
 
 const LUMA_BASE = "https://public-api.luma.com/v1";
 const IN_FLIGHT_TWILIO_STATUSES = new Set(["accepted", "queued", "sending", "sent", "in-progress", "ringing"]);
@@ -34,17 +35,6 @@ export function isInFlightTwilioStatus(status: string | null | undefined): boole
 
 export function createCancellationCode() {
   return `APY-${randomBytes(7).toString("hex").toUpperCase()}`;
-}
-
-async function setLumaRegistrationOpen(eventId: string, registrationOpen: boolean) {
-  const apiKey = process.env.LUMA_API_KEY;
-  if (!apiKey) throw new Error("LUMA_API_KEY is not set");
-  const response = await fetch(`${LUMA_BASE}/events/update`, {
-    method: "POST",
-    headers: { "x-luma-api-key": apiKey, "content-type": "application/json" },
-    body: JSON.stringify({ event_id: eventId, registration_open: registrationOpen, suppress_notifications: true }),
-  });
-  if (!response.ok) throw new Error(`Luma registration update failed (${response.status})`);
 }
 
 /** Fetch all guests for a Luma event (handles pagination) */
@@ -212,6 +202,7 @@ export const cancellationRouter = router({
       }
       const provisionedAt = new Date();
       await db.insert(cancellationCredits).values({ lumaEventId: input.eventApiId, eventName: canonicalEventName, couponCode: rebookingCode, maxUses: guests.length, registrationClosedAt: provisionedAt, couponCreatedAt: provisionedAt, createdByUserId: ctx.user.id });
+      await db.update(puppySchedule).set({ scheduleStatus: "cancelled", lumaSyncStatus: "synced", lumaSyncedAt: provisionedAt }).where(eq(puppySchedule.lumaEventId, input.eventApiId));
 
       // ── Find next upcoming class (any location) ───────────────────────────
       const nextEvent = allEvents

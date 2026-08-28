@@ -15,5 +15,14 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["server/**/*.test.ts", "server/**/*.spec.ts"],
+    // Credential checks make live API calls and belong in the explicit
+    // integration gate, not in deterministic PR validation.
+    exclude: [
+      "server/anthropic.test.ts",
+      "server/cancellation.test.ts",
+      "server/luma.proxy.test.ts",
+      "server/metaCapi.credentials.test.ts",
+      "server/stripe.test.ts",
+    ],
   },
 });

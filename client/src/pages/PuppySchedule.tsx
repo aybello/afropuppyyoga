@@ -96,10 +96,10 @@ export default function PuppySchedule() {
   const { data: breeders = [] } = trpc.breeders.list.useQuery();
 
   const createMutation = trpc.puppySchedule.create.useMutation({
-    onSuccess: () => {
+    onSuccess: (result) => {
       utils.puppySchedule.list.invalidate();
       utils.puppySchedule.listWithStaffing.invalidate();
-      toast.success("Class scheduled!");
+      toast.success(result.lumaSynchronized ? "Class and Luma event created together." : "Class scheduled.");
       setShowDialog(false);
       setForm({ ...EMPTY_FORM });
     },
@@ -107,10 +107,10 @@ export default function PuppySchedule() {
   });
 
   const updateMutation = trpc.puppySchedule.update.useMutation({
-    onSuccess: () => {
+    onSuccess: (result) => {
       utils.puppySchedule.list.invalidate();
       utils.puppySchedule.listWithStaffing.invalidate();
-      toast.success("Schedule updated!");
+      toast.success(result.lumaSynchronized ? "APY HQ and Luma updated together." : "Schedule updated.");
       setShowDialog(false);
       setEditId(null);
       setForm({ ...EMPTY_FORM });
@@ -122,7 +122,7 @@ export default function PuppySchedule() {
     onSuccess: () => {
       utils.puppySchedule.list.invalidate();
       utils.puppySchedule.listWithStaffing.invalidate();
-      toast.success("Removed from schedule.");
+      toast.success("Schedule record archived.");
       setDeleteId(null);
     },
     onError: (e) => toast.error(e.message),
@@ -529,9 +529,9 @@ export default function PuppySchedule() {
       <AlertDialog open={deleteId !== null} onOpenChange={open => !open && setDeleteId(null)}>
         <AlertDialogContent className="bg-[#FEFAF4] border-[#F0D0DC]">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-[#1A0A12]">Remove from schedule?</AlertDialogTitle>
+            <AlertDialogTitle className="font-display text-[#1A0A12]">Archive this schedule record?</AlertDialogTitle>
             <AlertDialogDescription className="font-body text-[#6B4C3B]">
-              This will remove this class entry from the schedule. This cannot be undone.
+              A live Luma-linked class must be cancelled through Cancel Class first. Archived records remain available for audit history.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -540,7 +540,7 @@ export default function PuppySchedule() {
               onClick={() => deleteId !== null && deleteMutation.mutate({ id: deleteId })}
               className="bg-red-600 hover:bg-red-700 text-white font-body"
             >
-              Remove
+              Archive
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
