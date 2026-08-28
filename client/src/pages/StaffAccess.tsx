@@ -51,7 +51,7 @@ export default function StaffAccess() {
 
         <div className="mt-7 border-t border-[#E7EEE2] pt-5 text-center">
           <p className="text-xs leading-5 text-[#8B8978]">Have an email invite? Open the APY HQ access link in that email. Need help? Contact your Operations Manager.</p>
-          <button onClick={() => { window.location.href = getLoginUrl(); }} className="mt-4 text-sm font-bold text-[#2D5A27] underline">Continue with owner account</button>
+          <button onClick={() => { window.location.href = getLoginUrl("/staff"); }} className="mt-4 text-sm font-bold text-[#2D5A27] underline">Continue with owner account</button>
         </div>
       </section>
     </main>
