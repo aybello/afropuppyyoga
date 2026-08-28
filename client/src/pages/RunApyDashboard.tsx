@@ -3,13 +3,33 @@ import { AlertTriangle, ArrowRight, CalendarDays, CheckCircle2, Clock3, Inbox, L
 import { trpc } from "@/lib/trpc";
 import AdminNav from "@/components/AdminNav";
 
-const severityClass = {
+type RunApyAction = {
+  id: string;
+  severity: "critical" | "warning" | "normal";
+  title: string;
+  detail: string;
+  href: string;
+};
+
+type RunApyScheduleEvent = {
+  id: number;
+  classDate: string;
+  startTime: string;
+  location: string;
+  breed: string;
+  breederName: string;
+  fullyStaffed: boolean;
+  gaps: string[];
+  teamNotified: boolean;
+};
+
+const severityClass: Record<RunApyAction["severity"], string> = {
   critical: "border-red-200 bg-red-50 text-red-800",
   warning: "border-amber-200 bg-amber-50 text-amber-900",
   normal: "border-[#D8E5D2] bg-white text-[#29472A]",
 };
 
-function EventRow({ event }: { event: { id: number; classDate: string; startTime: string; location: string; breed: string; breederName: string; fullyStaffed: boolean; gaps: string[]; teamNotified: boolean } }) {
+function EventRow({ event }: { event: RunApyScheduleEvent }) {
   return (
     <div className="grid gap-3 border-b border-[#E6EBDD] px-4 py-4 last:border-0 md:grid-cols-[130px_1fr_1fr_auto] md:items-center">
       <div><p className="text-sm font-bold text-[#1E3A20]">{event.classDate}</p><p className="text-xs text-[#77725F]">{event.startTime}</p></div>
@@ -25,6 +45,9 @@ export default function RunApyDashboard() {
   if (dashboard.isLoading) return <div className="min-h-screen bg-[#F7F2E8] flex items-center justify-center"><Loader2 className="animate-spin text-[#2D5A27]" /></div>;
   if (dashboard.error || !dashboard.data) return <div className="min-h-screen bg-[#F7F2E8]"><AdminNav /><div className="mx-auto max-w-4xl p-8"><div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-800">Run APY could not load: {dashboard.error?.message ?? "Unknown error"}</div></div></div>;
   const data = dashboard.data;
+  const actions = data.actions as RunApyAction[];
+  const todaySchedule = data.todaySchedule as RunApyScheduleEvent[];
+  const upcomingSchedule = data.upcomingSchedule as RunApyScheduleEvent[];
   const metrics = [
     ["Today's classes", data.metrics.todayClasses, CalendarDays],
     ["Staffing gaps", data.metrics.staffingGaps, AlertTriangle],
@@ -49,13 +72,13 @@ export default function RunApyDashboard() {
           <section className="rounded-3xl border border-[#DCE5D5] bg-[#EEF4EA] p-5">
             <div className="flex items-center justify-between"><h2 className="font-serif text-2xl font-bold text-[#2D5A27]">Priority actions</h2><span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#2D5A27]">{data.actions.length}</span></div>
             <div className="mt-4 space-y-3">
-              {data.actions.length === 0 ? <div className="rounded-2xl border border-emerald-200 bg-white p-5 text-sm text-emerald-800"><CheckCircle2 className="mb-2" />No urgent operating tasks are currently open.</div> : data.actions.map(action => <Link key={action.id} href={action.href} className={`block rounded-2xl border p-4 transition-transform hover:-translate-y-0.5 ${severityClass[action.severity]}`}><div className="flex items-start justify-between gap-3"><div><p className="font-bold">{action.title}</p><p className="mt-1 text-xs leading-5 opacity-80">{action.detail}</p></div><ArrowRight size={17} className="mt-0.5 shrink-0" /></div></Link>)}
+              {actions.length === 0 ? <div className="rounded-2xl border border-emerald-200 bg-white p-5 text-sm text-emerald-800"><CheckCircle2 className="mb-2" />No urgent operating tasks are currently open.</div> : actions.map(action => <Link key={action.id} href={action.href} className={`block rounded-2xl border p-4 transition-transform hover:-translate-y-0.5 ${severityClass[action.severity]}`}><div className="flex items-start justify-between gap-3"><div><p className="font-bold">{action.title}</p><p className="mt-1 text-xs leading-5 opacity-80">{action.detail}</p></div><ArrowRight size={17} className="mt-0.5 shrink-0" /></div></Link>)}
             </div>
           </section>
 
           <section className="overflow-hidden rounded-3xl border border-[#DCE5D5] bg-white">
             <div className="border-b border-[#E6EBDD] bg-[#FFF9E9] px-5 py-4"><h2 className="font-serif text-2xl font-bold text-[#2D5A27]">Next 14 days</h2><p className="text-xs text-[#77725F]">{data.metrics.next14Days} scheduled event{data.metrics.next14Days === 1 ? "" : "s"} · {data.metrics.unnotifiedTeams} team notification{data.metrics.unnotifiedTeams === 1 ? "" : "s"} ready to send</p></div>
-            {data.todaySchedule.length === 0 && data.upcomingSchedule.length === 0 ? <div className="p-8 text-center text-sm text-[#77725F]"><Clock3 className="mx-auto mb-2" />No classes are scheduled in this window.</div> : <>{data.todaySchedule.map(event => <EventRow key={event.id} event={event} />)}{data.upcomingSchedule.map(event => <EventRow key={event.id} event={event} />)}</>}
+            {todaySchedule.length === 0 && upcomingSchedule.length === 0 ? <div className="p-8 text-center text-sm text-[#77725F]"><Clock3 className="mx-auto mb-2" />No classes are scheduled in this window.</div> : <>{todaySchedule.map(event => <EventRow key={event.id} event={event} />)}{upcomingSchedule.map(event => <EventRow key={event.id} event={event} />)}</>}
           </section>
         </div>
       </main>
