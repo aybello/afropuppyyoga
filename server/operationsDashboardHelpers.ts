@@ -22,8 +22,8 @@ export function torontoDate(offsetDays = 0, now = Date.now()) {
 }
 
 /**
- * The breeder follow-up queue is introduced by a later, dependent migration.
- * Until then, Run APY must remain usable while surfacing every other action.
+ * Preserve the rest of Run APY on deployments that predate the breeder-lead
+ * queue. Field/query failures must still surface rather than being hidden.
  */
 export function isMissingBreederFollowUpsTable(error: unknown) {
   const messages: string[] = [];
@@ -47,9 +47,5 @@ export function isMissingBreederFollowUpsTable(error: unknown) {
   const message = messages.join(" ");
   const targetsFutureFollowUpQuery = /breederLeadFollowUps/i.test(message);
   const tableIsAbsent = /(does not exist|doesn't exist|unknown table|no such table)/i.test(message);
-  const legacyColumnIsAbsent = codes.includes("ER_BAD_FIELD_ERROR")
-    && /breederleadfollowups\.(completed|dueat|note)/i.test(message)
-    && /unknown column/i.test(message);
-
-  return targetsFutureFollowUpQuery && (tableIsAbsent || legacyColumnIsAbsent);
+  return targetsFutureFollowUpQuery && tableIsAbsent;
 }
