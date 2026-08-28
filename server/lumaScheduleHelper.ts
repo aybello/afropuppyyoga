@@ -40,7 +40,10 @@ export type LumaScheduleParams = {
  * Class times are daytime hours, so they never fall inside the DST transition gap.
  */
 export function torontoDateTimeIso(classDate: string, time: string) {
-  const probe = new Date(`${classDate}T${time}:00Z`);
+  // Resolve the offset at local midday for the calendar date. A UTC probe at
+  // midnight can still fall before a same-day DST transition in Toronto and
+  // produce the prior offset for an afternoon APY class.
+  const probe = new Date(`${classDate}T12:00:00Z`);
   if (Number.isNaN(probe.getTime())) throw new Error("Invalid class date or time");
   const zone = new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Toronto",

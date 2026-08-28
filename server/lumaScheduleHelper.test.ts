@@ -19,6 +19,8 @@ describe("regular class Luma event defaults", () => {
   it("uses the correct Toronto offset in summer and winter", () => {
     expect(torontoDateTimeIso("2026-07-11", "10:00")).toBe("2026-07-11T10:00:00-04:00");
     expect(torontoDateTimeIso("2026-11-14", "10:00")).toBe("2026-11-14T10:00:00-05:00");
+    expect(torontoDateTimeIso("2026-03-08", "10:00")).toBe("2026-03-08T10:00:00-04:00");
+    expect(torontoDateTimeIso("2026-11-01", "10:00")).toBe("2026-11-01T10:00:00-05:00");
   });
 
   it("enables group registration with the cranberry hypnotic presentation", () => {
