@@ -23,6 +23,9 @@
 - [ ] Fall back to a dedicated verified-owner-phone session identity when owner metadata is unavailable in production
 - [x] Verify the newly published owner-session access form accepts the owner-approved number without a client-side error
 - [x] Verify the final published owner-session request reaches code entry without the earlier production configuration error
+- [ ] Reconcile the live staff verification endpoint with the published owner-session source before requesting another code
+- [ ] Verify the live API revision through a non-sensitive health marker before another passwordless owner-code attempt
+- [x] Verify the synchronized-production owner verification form accepts the owner-approved number before its test code is sent
 - [ ] End-to-end verify owner sign-in lands on `/staff` after the OAuth callback
 
 ## Staff Invoice Portal
