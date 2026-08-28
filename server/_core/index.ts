@@ -63,7 +63,9 @@ const uploadLimiter = rateLimit({
 // to exhaust its own upload allowance before completion.
 const videoChunkLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 1200,
+  // A 500MB file uses 100 chunks. This budget supports a hiring fair, campus,
+  // or other shared network without weakening the stricter session/file limits.
+  max: 6000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Too many video upload parts. Please wait a few minutes and try again." },
@@ -143,6 +145,7 @@ async function startServer() {
   app.use("/api/upload-video-init", uploadLimiter);
   app.use("/api/upload-video-chunk", videoChunkLimiter);
   app.use("/api/upload-video-complete", uploadLimiter);
+  app.use("/api/upload-video-status", uploadLimiter);
 
   // Video upload endpoint (multipart, bypasses JSON body limit)
   app.use(uploadRouter);
