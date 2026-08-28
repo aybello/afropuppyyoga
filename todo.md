@@ -841,7 +841,12 @@
 - [x] Align PR #9 private-event client controls with APY HQ owner-versus-operations access visibility
 - [x] Diagnose and resolve the private-event inquiry list loading state observed after PR #9 integration
 - [x] Confirm the new private-event audit timeline resolves for existing legacy inquiries without creating or sending anything
-- [ ] Review, correct as needed, merge, validate, and publish PR #10 breeder workflow
+- [x] Review, correct as needed, merge, validate, and publish PR #10 breeder workflow
+- [x] Use APY's approved Warmly sign-off in the PR #10 breeder confirmation email and plain-text message
+- [x] Keep breeder logistics times separate from public Luma class slots in PR #10 and enforce APY's three regular-class start times
+- [x] Correct PR #10's TiDB migration order before adding its breeder confirmation idempotency key
+- [x] Verify the breeder database loads its existing records and management controls after the PR #10 migration
+- [x] Verify Run APY remains fully available after the breeder workflow migration and preserves its normal operational actions
 - [ ] Review, correct as needed, merge, validate, and publish PR #11 applicant upload resiliency
 - [x] Make the PR #8 schedule lifecycle migration compatible with TiDB column/index ordering before applying it
 - [x] Verify and resolve the Run APY loading state while validating PR #8 lifecycle changes
