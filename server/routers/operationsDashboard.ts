@@ -1,12 +1,12 @@
 import { and, asc, eq, gte, isNull, lte } from "drizzle-orm";
-import { staffProcedure, router } from "../_core/trpc";
+import { operationsProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { breederLeadFollowUps, inboundSms, jobApplications, privateEventInquiries, puppySchedule, refunds } from "../../drizzle/schema";
 import { sortOperationsActions, torontoDate, type OperationsAction } from "../operationsDashboardHelpers";
 import { getEventNotificationPreview } from "./puppySchedule";
 
 export const operationsDashboardRouter = router({
-  getRunApy: staffProcedure.query(async () => {
+  getRunApy: operationsProcedure.query(async () => {
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
     const today = torontoDate();
