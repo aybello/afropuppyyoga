@@ -23,8 +23,8 @@ export default function StaffAccess() {
         <img src={LOGO_URL} alt="AfroPuppyYoga" className="mx-auto h-16 w-16 rounded-2xl object-cover" />
         <div className="mt-5 text-center">
           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#C05A35]">APY HQ</p>
-          <h1 className="mt-2 font-serif text-3xl font-bold text-[#2D5A27]">Staff access</h1>
-          <p className="mt-2 text-sm leading-6 text-[#665A36]">Use the phone number saved on your active APY HQ team profile. We will text a one-time verification code.</p>
+          <h1 className="mt-2 font-serif text-3xl font-bold text-[#2D5A27]">Secure access</h1>
+          <p className="mt-2 text-sm leading-6 text-[#665A36]">Use the owner's configured phone number or the phone number saved on an active APY HQ team profile. We will text a one-time verification code.</p>
         </div>
 
         {!codeSent ? (
@@ -51,7 +51,7 @@ export default function StaffAccess() {
 
         <div className="mt-7 border-t border-[#E7EEE2] pt-5 text-center">
           <p className="text-xs leading-5 text-[#8B8978]">Have an email invite? Open the APY HQ access link in that email. Need help? Contact your Operations Manager.</p>
-          <button onClick={() => { window.location.href = getLoginUrl(); }} className="mt-4 text-sm font-bold text-[#2D5A27] underline">Continue with owner account</button>
+          <button onClick={() => { window.location.href = getLoginUrl(); }} className="mt-4 text-sm font-bold text-[#2D5A27] underline">Use Manus owner backup</button>
         </div>
       </section>
     </main>
