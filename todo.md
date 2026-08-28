@@ -1,32 +1,36 @@
 
 ## Current Staff Access Investigation
-- [ ] Diagnose and restore reliable owner and staff access to the APY HQ staff portal
-- [ ] Allow the configured APY owner to use secure phone verification for owner-level APY HQ access without Manus sign-in
+- [x] Review the newly available Codex update before any integration or deployment decision; retain the stronger current owner-session fallback and staff return-path behavior
+- [x] Diagnose and restore reliable owner and staff access to the APY HQ staff portal
+- [x] Allow the configured APY owner to use secure phone verification for owner-level APY HQ access without Manus sign-in
 - [x] Confirm the legacy live `/staff` portal route renders blank while `/staff-access` loads the intended APY HQ access screen
 - [x] Confirm the current `/staff` command centre renders locally, isolating the reported failure to the live deployment path
 - [x] Verify the live `/staff` route renders the APY HQ command-centre access state after its initial bundle load, without requiring a redirect
-- [ ] Validate the live owner-account sign-in redirect and callback without submitting credentials
+- [x] Retain the owner-account OAuth route only as a backup; the owner approved and verified phone-first APY HQ access instead
 - [x] Verify the owner-account action reaches the configured AfroPuppyYoga identity-provider sign-in page without an application routing failure
-- [ ] End-to-end verify a phone OTP session reaches `/staff` with the intended APY HQ access level
-- [ ] Confirm delivery of the owner-approved one-time code and complete the passwordless APY HQ session test
-- [ ] Confirm the corrected owner recipient receives the second approved verification code
+- [x] End-to-end verify a phone OTP session reaches `/staff` with the intended APY HQ access level
+- [x] Confirm delivery of the owner-approved one-time code and complete the passwordless APY HQ session test
+- [x] Confirm the corrected owner recipient receives the second approved verification code
 - [x] Verify the corrected owner-phone request reaches APY HQ code entry without a client-side error
 - [x] Verify the published passwordless APY HQ phone-access form loads before submitting the owner-approved test number
-- [ ] Diagnose and restore live delivery of the APY HQ owner verification SMS before sending another code
+- [x] Diagnose and restore live delivery of the APY HQ owner verification SMS before sending another code
 - [x] Update the configured owner phone used by passwordless APY HQ access to the owner-confirmed mobile number
-- [ ] Diagnose and correct the rejected owner verification code before retesting passwordless APY HQ access
-- [ ] Request and verify a fresh, unused owner code after resolving the consumed-code mismatch
-- [ ] Resolve the owner session identity from the existing admin record when the production environment omits the owner identifier
+- [x] Diagnose and correct the rejected owner verification code before retesting passwordless APY HQ access
+- [x] Request and verify a fresh, unused owner code after resolving the consumed-code mismatch
+- [x] Resolve the owner session identity from the existing admin record when the production environment omits the owner identifier
 - [x] Confirm the fresh verification form contains the owner-approved mobile number before dispatching the final code
 - [x] Confirm the corrected live owner-session form contains the owner-approved mobile number before requesting the final session code
-- [ ] Confirm the latest corrected owner verification redirects to the authenticated APY HQ command centre
-- [ ] Fall back to a dedicated verified-owner-phone session identity when owner metadata is unavailable in production
+- [x] Confirm the latest corrected owner verification redirects to the authenticated APY HQ command centre
+- [x] Fall back to a dedicated verified-owner-phone session identity when owner metadata is unavailable in production
 - [x] Verify the newly published owner-session access form accepts the owner-approved number without a client-side error
 - [x] Verify the final published owner-session request reaches code entry without the earlier production configuration error
-- [ ] Reconcile the live staff verification endpoint with the published owner-session source before requesting another code
-- [ ] Verify the live API revision through a non-sensitive health marker before another passwordless owner-code attempt
+- [x] Reconcile the live staff verification endpoint with the published owner-session source before requesting another code
+- [x] Verify the live API revision through a non-sensitive health marker before another passwordless owner-code attempt
 - [x] Verify the synchronized-production owner verification form accepts the owner-approved number before its test code is sent
-- [ ] End-to-end verify owner sign-in lands on `/staff` after the OAuth callback
+- [x] Retain the owner OAuth callback route as an optional backup; owner access is now verified through the chosen phone-first flow
+- [x] Verify non-owner APY HQ phone-session identity and staff role boundaries remain protected after the owner-phone changes
+- [x] Verify email-invite staff access remains wired to the existing APY HQ identity and role boundaries after the owner-phone changes
+- [x] Add direct regression coverage proving email invitations remain limited to active manually managed APY HQ team members
 
 ## Staff Invoice Portal
 - [x] Add invoices table to drizzle schema (id, staffName, position, payAmount, dueDate, fileUrl, fileKey, status, extractedAt, createdAt)

@@ -20,6 +20,13 @@ export type ApyAccess = {
   canManageOperations: boolean;
 };
 
+type TeamEmailCandidate = {
+  isTeamMember: boolean | number | null;
+  status: string;
+  deletedAt?: unknown;
+  email: string | null;
+};
+
 const noAccess = (): ApyAccess => ({ level: "none", teamMember: null, canManageOperations: false });
 
 function phoneFromStaffIdentity(openId: string): string | null {
@@ -37,6 +44,13 @@ async function getActiveTeamCandidates() {
   return db.select().from(jobApplications).where(and(eq(jobApplications.isTeamMember, true), isNull(jobApplications.deletedAt)));
 }
 
+/** Selects only a manually managed, active APY HQ team member for an email invite. */
+export function findActiveTeamEmailCandidate<T extends TeamEmailCandidate>(candidates: T[], email: string): T | null {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) return null;
+  return candidates.find((person) => isActiveTeamMember(person) && person.email?.trim().toLowerCase() === normalizedEmail) ?? null;
+}
+
 export async function findActiveTeamMemberByPhone(phone: string): Promise<ApyTeamMember | null> {
   const normalizedPhone = normalizeCanadianPhoneNumber(phone);
   if (!normalizedPhone) return null;
@@ -46,10 +60,8 @@ export async function findActiveTeamMemberByPhone(phone: string): Promise<ApyTea
 }
 
 export async function findActiveTeamMemberByEmail(email: string): Promise<ApyTeamMember | null> {
-  const normalizedEmail = email.trim().toLowerCase();
-  if (!normalizedEmail) return null;
   const candidates = await getActiveTeamCandidates();
-  const match = candidates.find((person) => isActiveTeamMember(person) && person.email?.trim().toLowerCase() === normalizedEmail);
+  const match = findActiveTeamEmailCandidate(candidates, email);
   return match ? toTeamMember(match) : null;
 }
 

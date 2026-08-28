@@ -21,7 +21,7 @@ import { COOKIE_NAME, SEVEN_DAYS_MS } from "../../shared/const";
 import { normalizeCanadianPhoneNumber } from "../../shared/phone";
 import { staffPhoneAccessCodes, users } from "../../drizzle/schema";
 import { findActiveTeamMemberByEmail, findActiveTeamMemberByPhone, resolveApyAccess } from "../apyAccess";
-import { STAFF_PHONE_CODE_COOLDOWN_MS, STAFF_PHONE_CODE_MAX_ATTEMPTS, STAFF_PHONE_CODE_TTL_MS, createStaffPhoneCode, hashStaffPhoneCode, isConfiguredOwnerPhone, resolveOwnerPhoneSessionOpenId, staffPhoneCodeMatches } from "../staffPhoneAccess";
+import { STAFF_PHONE_CODE_COOLDOWN_MS, STAFF_PHONE_CODE_MAX_ATTEMPTS, STAFF_PHONE_CODE_TTL_MS, createStaffPhoneCode, hashStaffPhoneCode, isConfiguredOwnerPhone, resolvePhoneSessionIdentity, staffPhoneCodeMatches } from "../staffPhoneAccess";
 import { getTrustedAppOrigin } from "../_core/trustedOrigin";
 
 export const staffRouter = router({
@@ -76,21 +76,25 @@ export const staffRouter = router({
       const ownerCandidates = isOwner
         ? await db.select({ openId: users.openId, name: users.name }).from(users).where(eq(users.role, "admin")).orderBy(desc(users.lastSignedIn))
         : [];
-      const staffOpenId = isOwner
-        ? resolveOwnerPhoneSessionOpenId(phone, process.env.OWNER_OPEN_ID, process.env.OWNER_NAME, ownerCandidates)
-        : `staff-phone:${phone}`;
-      const displayName = isOwner ? (process.env.OWNER_NAME || "Ay Bello") : member!.name;
+      const identity = resolvePhoneSessionIdentity({
+        phone,
+        isOwner,
+        ownerOpenId: process.env.OWNER_OPEN_ID,
+        ownerName: process.env.OWNER_NAME,
+        ownerCandidates,
+        member: member ?? undefined,
+      });
       await upsertUser({
-        openId: staffOpenId,
-        name: displayName,
-        ...(isOwner ? {} : { email: member!.email }),
+        openId: identity.openId,
+        name: identity.name,
+        email: identity.email,
         loginMethod: "phone_otp",
-        role: isOwner ? "admin" : "staff",
+        role: identity.role,
         lastSignedIn: now,
       });
-      const sessionToken = await sdk.createSessionToken(staffOpenId, { name: displayName, expiresInMs: SEVEN_DAYS_MS });
+      const sessionToken = await sdk.createSessionToken(identity.openId, { name: identity.name, expiresInMs: SEVEN_DAYS_MS });
       ctx.res.cookie(COOKIE_NAME, sessionToken, { ...getSessionCookieOptions(ctx.req), maxAge: SEVEN_DAYS_MS });
-      return { success: true, name: displayName, role: isOwner ? "Owner" : member!.role };
+      return { success: true, name: identity.name, role: identity.apyRole };
     }),
 
   /** Active APY HQ identity and operational authority for role-aware navigation. */

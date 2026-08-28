@@ -28,6 +28,15 @@ export function isConfiguredOwnerPhone(phone: string, configuredOwnerPhone = pro
 }
 
 type OwnerSessionCandidate = { openId: string; name: string | null };
+type StaffSessionMember = { name: string; email: string | null; role: string };
+
+export type PhoneSessionIdentity = {
+  openId: string;
+  name: string;
+  email: string | null;
+  role: "admin" | "staff";
+  apyRole: string;
+};
 
 /**
  * Prefers the configured owner identifier and otherwise resolves the configured
@@ -57,4 +66,35 @@ export function resolveOwnerPhoneSessionOpenId(
   candidates: OwnerSessionCandidate[],
 ): string {
   return resolveOwnerSessionOpenId(configuredOwnerOpenId, configuredOwnerName, candidates) ?? `owner-phone:${phone}`;
+}
+
+/**
+ * Produces an owner session only after the caller has passed the exact owner
+ * phone gate. Every other verified number stays bound to its APY staff role.
+ */
+export function resolvePhoneSessionIdentity(input: {
+  phone: string;
+  isOwner: boolean;
+  ownerOpenId?: string;
+  ownerName?: string;
+  ownerCandidates: OwnerSessionCandidate[];
+  member?: StaffSessionMember;
+}): PhoneSessionIdentity {
+  if (input.isOwner) {
+    return {
+      openId: resolveOwnerPhoneSessionOpenId(input.phone, input.ownerOpenId, input.ownerName, input.ownerCandidates),
+      name: input.ownerName?.trim() || "Ay Bello",
+      email: null,
+      role: "admin",
+      apyRole: "Owner",
+    };
+  }
+  if (!input.member) throw new Error("Active APY HQ team member is required for staff phone access");
+  return {
+    openId: `staff-phone:${input.phone}`,
+    name: input.member.name,
+    email: input.member.email,
+    role: "staff",
+    apyRole: input.member.role,
+  };
 }
