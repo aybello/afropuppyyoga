@@ -1,4 +1,14 @@
 
+## Current Staff Access Investigation
+- [ ] Diagnose and restore reliable owner and staff access to the APY HQ staff portal
+- [x] Confirm the legacy live `/staff` portal route renders blank while `/staff-access` loads the intended APY HQ access screen
+- [x] Confirm the current `/staff` command centre renders locally, isolating the reported failure to the live deployment path
+- [x] Verify the live `/staff` route renders the APY HQ command-centre access state after its initial bundle load, without requiring a redirect
+- [ ] Validate the live owner-account sign-in redirect and callback without submitting credentials
+- [x] Verify the owner-account action reaches the configured AfroPuppyYoga identity-provider sign-in page without an application routing failure
+- [ ] End-to-end verify a phone OTP session reaches `/staff` with the intended APY HQ access level
+- [ ] End-to-end verify owner sign-in lands on `/staff` after the OAuth callback
+
 ## Staff Invoice Portal
 - [x] Add invoices table to drizzle schema (id, staffName, position, payAmount, dueDate, fileUrl, fileKey, status, extractedAt, createdAt)
 - [x] Add tRPC procedure: uploadInvoice (upload PDF to S3, trigger AI extraction)
