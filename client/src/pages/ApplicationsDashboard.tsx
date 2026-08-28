@@ -234,10 +234,6 @@ function InterviewInviteModal({
     }
     sendInvite.mutate({
       id: app.id,
-      applicantName: app.name,
-      applicantEmail: app.email,
-      role: app.role,
-      location: app.location,
       bookingLink: bookingLink.trim(),
       additionalNotes: additionalNotes || undefined,
     });
@@ -336,11 +332,6 @@ function OfferLetterModal({
   const handleSend = () => {
     sendSigningLink.mutate({
       applicationId: app.id,
-      applicantName: app.name,
-      applicantEmail: app.email,
-      role: app.role,
-      location: app.location,
-      origin: window.location.origin,
     });
   };
 
@@ -431,10 +422,6 @@ function OnboardingEmailModal({
   const handleSend = () => {
     sendOnboarding.mutate({
       id: app.id,
-      applicantName: app.name,
-      applicantEmail: app.email,
-      role: app.role,
-      location: app.location,
       orientationDate: orientationDate.trim() || undefined,
       orientationTime: orientationTime.trim() || undefined,
       additionalNotes: additionalNotes.trim() || undefined,
@@ -606,10 +593,6 @@ function RejectionLetterModal({
             onClick={() =>
               sendRejection.mutate({
                 id: app.id,
-                applicantName: app.name,
-                applicantEmail: app.email,
-                role: app.role,
-                location: app.location,
                 additionalNotes: additionalNotes || undefined,
               })
             }
@@ -639,14 +622,20 @@ function ApplicationDetailModal({
   open: boolean;
   onClose: () => void;
 }) {
+  const utils = trpc.useUtils();
   const [showInterviewModal, setShowInterviewModal] = useState(false);
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const { data: timeline, isLoading: timelineLoading } = trpc.careers.getTimeline.useQuery(
+    { id: app.id },
+    { enabled: open },
+  );
 
   const resendOnboarding = trpc.careers.resendOnboardingEmail.useMutation({
     onSuccess: () => {
       toast.success(`Onboarding email resent to ${app.email}! 📬`);
+      utils.careers.getTimeline.invalidate({ id: app.id });
     },
     onError: (err) => {
       toast.error(`Failed to resend onboarding email: ${err.message}`);
@@ -657,6 +646,7 @@ function ApplicationDetailModal({
   const requestVideo = trpc.careers.requestVideo.useMutation({
     onSuccess: () => {
       toast.success(`Video request sent to ${app.name}! 🎥`);
+      utils.careers.getTimeline.invalidate({ id: app.id });
     },
     onError: (err) => {
       toast.error(`Failed to send video request: ${err.message}`);
@@ -666,10 +656,6 @@ function ApplicationDetailModal({
   const handleResend = () => {
     resendOnboarding.mutate({
       id: app.id,
-      applicantName: app.name,
-      applicantEmail: app.email,
-      role: app.role,
-      location: app.location,
     });
   };
 
@@ -759,6 +745,34 @@ function ApplicationDetailModal({
               <StatusBadge status={app.status as AppStatus} />
             </div>
 
+            <div>
+              <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-3">Hiring Timeline</p>
+              <div className="bg-white rounded-xl border border-[#F0D0DC] divide-y divide-[#F0D0DC]">
+                {timelineLoading ? (
+                  <div className="p-4 flex items-center gap-2 font-body text-sm text-[#6B4658]">
+                    <Loader2 className="w-4 h-4 animate-spin" /> Loading timeline…
+                  </div>
+                ) : !timeline?.actions.length ? (
+                  <p className="p-4 font-body text-sm text-[#6B4658]">New activity will appear here as the application moves through hiring.</p>
+                ) : timeline.actions.map((item) => (
+                  <div key={item.id} className="p-3 flex items-start justify-between gap-4">
+                    <div>
+                      <p className="font-body text-sm font-semibold text-[#1A0A12]">
+                        {item.action.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase())}
+                      </p>
+                      <p className="font-body text-xs text-[#6B4658] mt-0.5">
+                        {item.actorName || item.actorEmail || "APY HQ"}
+                        {item.fromStatus && item.toStatus && item.fromStatus !== item.toStatus ? ` · ${item.fromStatus} → ${item.toStatus}` : ""}
+                      </p>
+                    </div>
+                    <time className="font-body text-[11px] text-[#8B6070] whitespace-nowrap">
+                      {new Date(item.createdAt).toLocaleString("en-CA", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                    </time>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Action Buttons */}
             <div>
               <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-3">Pipeline Actions</p>
@@ -780,10 +794,6 @@ function ApplicationDetailModal({
                   onClick={() => {
                     requestVideo.mutate({
                       id: app.id,
-                      applicantName: app.name,
-                      applicantEmail: app.email,
-                      role: app.role,
-                      location: app.location,
                     });
                   }}
                   disabled={requestVideo.isPending}
