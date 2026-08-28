@@ -1,12 +1,28 @@
 import { and, asc, eq, gte, isNull, lte } from "drizzle-orm";
-import { staffProcedure, router } from "../_core/trpc";
+import { adminProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { breederLeadFollowUps, inboundSms, jobApplications, privateEventInquiries, puppySchedule, refunds } from "../../drizzle/schema";
-import { sortOperationsActions, torontoDate, type OperationsAction } from "../operationsDashboardHelpers";
+import { isMissingBreederFollowUpsTable, sortOperationsActions, torontoDate, type OperationsAction } from "../operationsDashboardHelpers";
 import { getEventNotificationPreview } from "./puppySchedule";
 
+type DashboardDb = NonNullable<Awaited<ReturnType<typeof getDb>>>;
+
+async function getOverdueBreederFollowUps(db: DashboardDb, now: number) {
+  try {
+    return await db.select({ id: breederLeadFollowUps.id, leadId: breederLeadFollowUps.leadId, dueAt: breederLeadFollowUps.dueAt, note: breederLeadFollowUps.note })
+      .from(breederLeadFollowUps)
+      .where(and(eq(breederLeadFollowUps.completed, false), lte(breederLeadFollowUps.dueAt, now)));
+  } catch (error) {
+    if (isMissingBreederFollowUpsTable(error)) {
+      console.warn("[Run APY] Breeder follow-up queue will appear after its migration is installed.");
+      return [];
+    }
+    throw error;
+  }
+}
+
 export const operationsDashboardRouter = router({
-  getRunApy: staffProcedure.query(async () => {
+  getRunApy: adminProcedure.query(async () => {
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
     const today = torontoDate();
@@ -29,9 +45,7 @@ export const operationsDashboardRouter = router({
       db.select({ id: inboundSms.id, breederName: inboundSms.breederName, fromPhone: inboundSms.fromPhone, receivedAt: inboundSms.receivedAt })
         .from(inboundSms)
         .where(eq(inboundSms.isRead, 0)),
-      db.select({ id: breederLeadFollowUps.id, leadId: breederLeadFollowUps.leadId, dueAt: breederLeadFollowUps.dueAt, note: breederLeadFollowUps.note })
-        .from(breederLeadFollowUps)
-        .where(and(eq(breederLeadFollowUps.completed, false), lte(breederLeadFollowUps.dueAt, now))),
+      getOverdueBreederFollowUps(db, now),
     ]);
 
     const readiness = await Promise.all(schedules.map(async (schedule) => {
