@@ -332,13 +332,14 @@ function requirePreparedPrivateEvent(inquiry: PrivateEventInquiry) {
   if (inquiry.pricingType !== "plus_hst" && inquiry.pricingType !== "all_in") {
     throw new TRPCError({ code: "BAD_REQUEST", message: "The saved pricing type is invalid." });
   }
+  const pricingType: "plus_hst" | "all_in" = inquiry.pricingType;
   return {
     basePriceCents: inquiry.finalPriceCents,
     hstCents: inquiry.hstCents ?? 0,
     totalCents: inquiry.pricingType === "plus_hst"
       ? inquiry.finalPriceCents + (inquiry.hstCents ?? 0)
       : inquiry.finalPriceCents,
-    pricingType: inquiry.pricingType,
+    pricingType,
     eventDate: inquiry.preferredDate,
     startTime: inquiry.eventStartTime,
     endTime: inquiry.eventEndTime,
