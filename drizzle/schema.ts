@@ -104,7 +104,7 @@ export const jobApplications = mysqlTable("jobApplications", {
   resumeKey: varchar("resumeKey", { length: 500 }),
   /** Application status */
   status: mysqlEnum("appStatus", ["new", "reviewed", "shortlisted", "interview_requested", "interview_scheduled", "accepted", "rejected", "onboarded"]).default("new").notNull(),
-  /** Explicit APY HQ membership. Applications remain separate until an admin manually adds the person to the team. */
+  /** Explicit APY HQ membership. Activated when onboarding is sent; the same row retains the hiring history. */
   isTeamMember: boolean("isTeamMember").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   /** Soft-delete timestamp — null means active, non-null means archived */
@@ -113,6 +113,23 @@ export const jobApplications = mysqlTable("jobApplications", {
 
 export type JobApplication = typeof jobApplications.$inferSelect;
 export type InsertJobApplication = typeof jobApplications.$inferInsert;
+
+/** Immutable hiring timeline entries. Applicant status changes and outbound actions
+ * are recorded here so the dashboard can answer who did what and when. */
+export const jobApplicationActions = mysqlTable("jobApplicationActions", {
+  id: int("id").autoincrement().primaryKey(),
+  applicationId: int("applicationId").notNull(),
+  action: varchar("action", { length: 64 }).notNull(),
+  fromStatus: varchar("fromStatus", { length: 64 }),
+  toStatus: varchar("toStatus", { length: 64 }),
+  actorUserId: int("actorUserId"),
+  actorName: varchar("actorName", { length: 255 }),
+  actorEmail: varchar("actorEmail", { length: 320 }),
+  details: text("details"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [index("idx_jobApplicationActions_application").on(t.applicationId, t.createdAt)]);
+
+export type JobApplicationAction = typeof jobApplicationActions.$inferSelect;
 
 export const birthdayInquiries = mysqlTable("birthdayInquiries", {
   id: int("id").autoincrement().primaryKey(),
@@ -291,6 +308,19 @@ export const privateEventInquiries = mysqlTable("privateEventInquiries", {
   quoteEmailBody: text("quoteEmailBody"),
   /** Whether owner approval was required and given */
   ownerApproved: boolean("ownerApproved"),
+  /** Explicit quote approval state. A pending/rejected quote cannot be published or sent. */
+  approvalStatus: mysqlEnum("approvalStatus", ["draft", "pending", "approved", "rejected"]).default("draft").notNull(),
+  approvalRequestedAt: timestamp("approvalRequestedAt"),
+  approvalRequestedByUserId: int("approvalRequestedByUserId"),
+  approvalRequestedByName: varchar("approvalRequestedByName", { length: 255 }),
+  approvedAt: timestamp("approvedAt"),
+  approvedByUserId: int("approvedByUserId"),
+  approvedByName: varchar("approvedByName", { length: 255 }),
+  approvalRejectedAt: timestamp("approvalRejectedAt"),
+  approvalRejectedByUserId: int("approvalRejectedByUserId"),
+  approvalRejectionReason: text("approvalRejectionReason"),
+  /** When the approved payment page was successfully created in Luma. */
+  bookingLinkPublishedAt: timestamp("bookingLinkPublishedAt"),
   /** Quote email sent timestamp */
   quoteSentAt: timestamp("quoteSentAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -299,6 +329,41 @@ export const privateEventInquiries = mysqlTable("privateEventInquiries", {
 
 export type PrivateEventInquiry = typeof privateEventInquiries.$inferSelect;
 export type InsertPrivateEventInquiry = typeof privateEventInquiries.$inferInsert;
+
+/** Immutable private-event workflow history, including approval and publication. */
+export const privateEventActions = mysqlTable("privateEventActions", {
+  id: int("id").autoincrement().primaryKey(),
+  inquiryId: int("inquiryId").notNull(),
+  action: varchar("action", { length: 64 }).notNull(),
+  actorUserId: int("actorUserId"),
+  actorName: varchar("actorName", { length: 255 }),
+  actorEmail: varchar("actorEmail", { length: 320 }),
+  details: text("details"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [index("idx_privateEventActions_inquiry").on(t.inquiryId, t.createdAt)]);
+
+export type PrivateEventAction = typeof privateEventActions.$inferSelect;
+
+/** Cross-workflow communications ledger. This stores delivery metadata and a short
+ * preview, not full attachments or credentials. */
+export const communicationsLog = mysqlTable("communicationsLog", {
+  id: int("id").autoincrement().primaryKey(),
+  entityType: mysqlEnum("communicationEntityType", ["private_event", "job_application", "breeder", "class", "general"]).notNull(),
+  entityId: int("entityId"),
+  channel: mysqlEnum("communicationChannel", ["email", "sms", "call", "system"]).notNull(),
+  direction: mysqlEnum("communicationDirection", ["outbound", "inbound", "system"]).notNull(),
+  action: varchar("action", { length: 64 }).notNull(),
+  recipient: varchar("recipient", { length: 320 }),
+  subject: varchar("subject", { length: 500 }),
+  bodyPreview: text("bodyPreview"),
+  deliveryStatus: varchar("deliveryStatus", { length: 32 }).notNull().default("sent"),
+  providerMessageId: varchar("providerMessageId", { length: 128 }),
+  actorUserId: int("actorUserId"),
+  actorName: varchar("actorName", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [index("idx_communications_entity").on(t.entityType, t.entityId, t.createdAt)]);
+
+export type CommunicationLog = typeof communicationsLog.$inferSelect;
 
 export const breeders = mysqlTable("breeders", {
   id: int("id").autoincrement().primaryKey(),
