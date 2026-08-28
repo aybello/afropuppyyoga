@@ -824,3 +824,11 @@
 
 ## Approved P0 Security & Operational Integrity Update (Aug 28, 2026)
 - [x] Merge, migrate, validate, and publish the approved P0 security and operational-integrity update from pull request #6
+
+## Remaining Pull Request Review (Aug 28, 2026)
+- [x] Review the remaining dependent pull requests in sequence and recommend the next safe integration
+
+## Approved Run APY Dashboard (Aug 28, 2026)
+- [x] Restrict the Run APY dashboard to Owner and Operations Manager roles, then merge, validate, and publish pull request #7
+- [x] Rebase the Run APY dashboard on current APY HQ authorization and resolve its TypeScript issues before merging
+- [x] Resolve the Run APY dashboard loading state before publishing the operations command centre
