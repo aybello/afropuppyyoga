@@ -21,6 +21,8 @@
 - [x] Confirm the corrected live owner-session form contains the owner-approved mobile number before requesting the final session code
 - [ ] Confirm the latest corrected owner verification redirects to the authenticated APY HQ command centre
 - [ ] Fall back to a dedicated verified-owner-phone session identity when owner metadata is unavailable in production
+- [x] Verify the newly published owner-session access form accepts the owner-approved number without a client-side error
+- [x] Verify the final published owner-session request reaches code entry without the earlier production configuration error
 - [ ] End-to-end verify owner sign-in lands on `/staff` after the OAuth callback
 
 ## Staff Invoice Portal
