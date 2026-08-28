@@ -797,3 +797,6 @@
 
 ## Free Luma Cancellation Rebooking Codes (Aug 27, 2026)
 - [x] Create a 100% free calendar-level Luma code when cancelling a class so guests can rebook into any eligible APY class
+
+## APY Training Centre Improvement (Aug 27, 2026)
+- [x] Improve the Training Centre’s role-based lesson flow, progress guidance, completion experience, and visual hierarchy for staff onboarding
