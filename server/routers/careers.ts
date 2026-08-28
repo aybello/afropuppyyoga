@@ -26,7 +26,7 @@ const safeResumeUrl = z
   .string()
   .url()
   .refine((url) => url.startsWith("https://"), "Must be an https:// URL");
-import { createJobApplication, getAllJobApplications, updateJobApplication, deleteJobApplication, getArchivedJobApplications, restoreJobApplication, permanentlyDeleteJobApplication, createSigningToken, getRecentDuplicateJobApplication, getJobApplicationById } from "../db";
+import { createJobApplication, getAllJobApplications, updateJobApplication, deleteJobApplication, getArchivedJobApplications, restoreJobApplication, permanentlyDeleteJobApplication, getRecentDuplicateJobApplication, getJobApplicationById, getDb } from "../db";
 import { notifyOwner } from "../_core/notification";
 import {
   sendEmail,
@@ -35,13 +35,60 @@ import {
   buildApplicationConfirmationEmail,
   buildOnboardingEmail,
   buildYogaInstructorOnboardingEmail,
-  buildSigningInviteEmail,
 } from "../email";
-import crypto from "crypto";
-import { getTrustedAppOrigin } from "../_core/trustedOrigin";
+import { communicationsLog, jobApplicationActions } from "../../drizzle/schema";
+import { and, desc, eq } from "drizzle-orm";
 
 export const APP_STATUS = ["new", "reviewed", "shortlisted", "interview_requested", "interview_scheduled", "accepted", "rejected", "onboarded"] as const;
 type AppStatus = (typeof APP_STATUS)[number];
+
+type HiringActor = {
+  user: { id: number; name: string | null; email: string | null };
+};
+
+async function recordHiringAction(params: {
+  ctx: HiringActor;
+  applicationId: number;
+  action: string;
+  fromStatus?: string | null;
+  toStatus?: string | null;
+  details?: Record<string, unknown>;
+  communication?: { recipient: string; subject: string; bodyPreview?: string };
+}) {
+  const db = await getDb();
+  if (!db) return;
+  try {
+    await db.insert(jobApplicationActions).values({
+      applicationId: params.applicationId,
+      action: params.action,
+      fromStatus: params.fromStatus || null,
+      toStatus: params.toStatus || null,
+      actorUserId: params.ctx.user.id,
+      actorName: params.ctx.user.name,
+      actorEmail: params.ctx.user.email,
+      details: params.details ? JSON.stringify(params.details) : null,
+    });
+    if (params.communication) {
+      await db.insert(communicationsLog).values({
+        entityType: "job_application",
+        entityId: params.applicationId,
+        channel: "email",
+        direction: "outbound",
+        action: params.action,
+        recipient: params.communication.recipient,
+        subject: params.communication.subject,
+        bodyPreview: params.communication.bodyPreview?.slice(0, 1000) || null,
+        deliveryStatus: "sent",
+        actorUserId: params.ctx.user.id,
+        actorName: params.ctx.user.name,
+      });
+    }
+  } catch (error) {
+    // The customer-facing action already succeeded. Do not make staff retry an
+    // email because the secondary audit write failed.
+    console.error(`[Careers] Failed to record ${params.action} for application ${params.applicationId}:`, error);
+  }
+}
 
 async function requireApplicant(id: number) {
   const applicant = await getJobApplicationById(id);
@@ -86,7 +133,7 @@ export const careersRouter = router({
       }
 
       // Save to DB
-      await createJobApplication({
+      const applicationId = await createJobApplication({
         role: input.role,
         location: input.location,
         name: input.name,
@@ -154,6 +201,33 @@ export const careersRouter = router({
         console.error(`[Careers] Application ${input.email} saved, but ${failedNotifications} notification(s) failed.`);
       }
 
+      const db = await getDb();
+      if (db && applicationId) {
+        await Promise.all([
+          db.insert(jobApplicationActions).values({
+            applicationId,
+            action: "application_submitted",
+            fromStatus: null,
+            toStatus: "new",
+            actorName: input.name,
+            actorEmail: input.email,
+            details: JSON.stringify({ role: input.role, location: input.location, notificationFailures: failedNotifications }),
+          }),
+          db.insert(communicationsLog).values({
+            entityType: "job_application",
+            entityId: applicationId,
+            channel: "email",
+            direction: "outbound",
+            action: "application_confirmation_sent",
+            recipient: input.email,
+            subject: confirmation.subject,
+            bodyPreview: confirmation.text.slice(0, 1000),
+            deliveryStatus: notificationResults[1]?.status === "fulfilled" ? "sent" : "failed",
+            actorName: "APY HQ",
+          }),
+        ]);
+      }
+
       return { success: true, notificationWarning: failedNotifications > 0 };
     }),
 
@@ -163,6 +237,22 @@ export const careersRouter = router({
   list: staffProcedure.query(async () => {
     return getAllJobApplications();
   }),
+
+  getTimeline: staffProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { actions: [], communications: [] };
+      const [actions, communications] = await Promise.all([
+        db.select().from(jobApplicationActions)
+          .where(eq(jobApplicationActions.applicationId, input.id))
+          .orderBy(desc(jobApplicationActions.createdAt)),
+        db.select().from(communicationsLog)
+          .where(and(eq(communicationsLog.entityType, "job_application"), eq(communicationsLog.entityId, input.id)))
+          .orderBy(desc(communicationsLog.createdAt)),
+      ]);
+      return { actions, communications };
+    }),
 
   /**
    * Admin-only: update application status
@@ -174,8 +264,18 @@ export const careersRouter = router({
         status: z.enum(APP_STATUS),
       })
     )
-    .mutation(async ({ input }) => {
-      await updateJobApplication(input.id, { status: input.status as AppStatus });
+    .mutation(async ({ input, ctx }) => {
+      const applicant = await requireApplicant(input.id);
+      await updateJobApplication(input.id, {
+        status: input.status as AppStatus,
+      });
+      await recordHiringAction({
+        ctx,
+        applicationId: input.id,
+        action: "status_changed",
+        fromStatus: applicant.status,
+        toStatus: input.status,
+      });
       return { success: true };
     }),
 
@@ -186,15 +286,11 @@ export const careersRouter = router({
     .input(
       z.object({
         id: z.number(),
-        applicantName: z.string(),
-        applicantEmail: z.string().email(),
-        role: z.string(),
-        location: z.string(),
         bookingLink: z.string().url(), // Google Calendar booking link
         additionalNotes: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const applicant = await requireApplicant(input.id);
       const { subject, html, text } = buildInterviewInviteEmail({
         applicantName: applicant.name,
@@ -209,6 +305,20 @@ export const careersRouter = router({
       // A booking link has been sent, but no date or time is confirmed yet.
       await updateJobApplication(input.id, { status: "interview_requested" });
 
+      await recordHiringAction({
+        ctx,
+        applicationId: input.id,
+        action: "interview_invite_sent",
+        fromStatus: applicant.status,
+        toStatus: "interview_requested",
+        details: { bookingLink: input.bookingLink },
+        communication: {
+          recipient: applicant.email,
+          subject,
+          bodyPreview: text,
+        },
+      });
+
       await notifyOwner({
         title: `Interview Invite Sent — ${applicant.name}`,
         content: `Interview invitation sent to ${applicant.name} (${applicant.email}) for ${applicant.role} (${applicant.location}).\n\nBooking link: ${input.bookingLink}`,
@@ -218,94 +328,20 @@ export const careersRouter = router({
     }),
 
   /**
-   * Admin-only: send offer letter email to applicant
-   */
-  sendOfferLetter: staffProcedure
-    .input(
-      z.object({
-        id: z.number(),
-        applicantName: z.string(),
-        applicantEmail: z.string().email(),
-        role: z.string(),
-        location: z.string(),
-        startDate: z.string().optional(),
-        additionalNotes: z.string().optional(),
-        origin: z.string().optional(), // frontend origin for building the signing link
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      const applicant = await requireApplicant(input.id);
-      // Determine offer letter type from role and location
-      const roleLower = applicant.role.toLowerCase();
-      const locationLower = applicant.location.toLowerCase();
-      let offerLetterType: "puppy_monitor_kw" | "puppy_monitor_hamilton" | "yoga_instructor" | "operations_specialist" | "bdr" = "puppy_monitor_kw";
-      if (roleLower.includes("yoga") || roleLower.includes("instructor")) {
-        offerLetterType = "yoga_instructor";
-      } else if (roleLower.includes("operations specialist") || roleLower.includes("operation specialist")) {
-        offerLetterType = "operations_specialist";
-      } else if (roleLower.includes("bdr") || roleLower.includes("business development")) {
-        offerLetterType = "bdr";
-      } else if (locationLower.includes("hamilton")) {
-        offerLetterType = "puppy_monitor_hamilton";
-      }
-
-      // Generate a unique signing token (7 day expiry)
-      const token = crypto.randomBytes(48).toString("hex");
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
-      await createSigningToken({
-        applicationId: input.id,
-        applicantName: applicant.name,
-        applicantEmail: applicant.email,
-        role: applicant.role,
-        location: applicant.location,
-        offerLetterType,
-        token,
-        signed: 0,
-        expiresAt,
-      });
-
-      // Build the signing portal link using the origin passed from the frontend
-      const origin = getTrustedAppOrigin(input.origin);
-      const signingLink = `${origin}/sign?token=${token}`;
-
-      // Send the signing invitation email
-      const firstName = applicant.name.split(" ")[0];
-      const emailHtml = buildSigningInviteEmail({
-        firstName,
-        applicantName: applicant.name,
-        role: applicant.role,
-        location: applicant.location,
-        signingLink,
-        startDate: input.startDate,
-        additionalNotes: input.additionalNotes,
-      });
-
-      await sendEmail({
-        to: applicant.email,
-        subject: `${firstName}, your AfroPuppyYoga offer is ready to sign! 🐾`,
-        html: emailHtml,
-        text: `Hi ${firstName},\n\nCongratulations! We are excited to offer you the ${applicant.role} position at AfroPuppyYoga (${applicant.location}).\n\nPlease review and sign your Offer Letter and NDA using the link below:\n${signingLink}\n\nThis link is valid for 7 days.\n\nWarm regards,\nThe AfroPuppyYoga Team`,
-      });
-
-      // Update status to accepted
-      await updateJobApplication(input.id, { status: "accepted" });
-
-      await notifyOwner({
-        title: `Offer Letter Sent: ${applicant.name}`,
-        content: `Offer letter sent to ${applicant.name} (${applicant.email}) for ${applicant.role} (${applicant.location}).\nSigning link: ${signingLink}`,
-      });
-
-      return { success: true, signingLink };
-    }),
-
-  /**
    * Admin-only: delete an application
    */
   deleteApplication: staffProcedure
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      const applicant = await requireApplicant(input.id);
       await deleteJobApplication(input.id);
+      await recordHiringAction({
+        ctx,
+        applicationId: input.id,
+        action: "application_archived",
+        fromStatus: applicant.status,
+        details: { applicantName: applicant.name },
+      });
       return { success: true };
     }),
 
@@ -321,8 +357,9 @@ export const careersRouter = router({
    */
   restoreApplication: staffProcedure
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       await restoreJobApplication(input.id);
+      await recordHiringAction({ ctx, applicationId: input.id, action: "application_restored" });
       return { success: true };
     }),
 
@@ -343,17 +380,13 @@ export const careersRouter = router({
     .input(
       z.object({
         id: z.number(),
-        applicantName: z.string(),
-        applicantEmail: z.string().email(),
-        role: z.string(),
-        location: z.string(),
         orientationDate: z.string().optional(),
         orientationTime: z.string().optional(),
         planningDocUrl: z.string().optional(),
         additionalNotes: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const applicant = await requireApplicant(input.id);
       console.log(`[Onboarding] Sending onboarding email to ${applicant.email} for ${applicant.name} (${applicant.role}, ${applicant.location})`);
       // Use role-specific email template
@@ -385,13 +418,23 @@ export const careersRouter = router({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `Email send failed: ${err.message}` });
       }
 
-      // Auto-advance status to onboarded
+      // Onboarding advances the hiring state only. APY HQ membership is a separate,
+      // explicit action in Team Management, including for Puppy Monitors.
       await updateJobApplication(input.id, { status: "onboarded" });
-      console.log(`[Onboarding] Status updated to onboarded for application ${input.id}`);
+      console.log(`[Onboarding] Status updated to onboarded for application ${input.id}; APY HQ membership remains manual.`);
+
+      await recordHiringAction({
+        ctx,
+        applicationId: input.id,
+        action: "onboarding_sent",
+        fromStatus: applicant.status,
+        toStatus: "onboarded",
+        communication: { recipient: applicant.email, subject, bodyPreview: text },
+      });
 
       await notifyOwner({
         title: `Onboarding Email Sent — ${applicant.name}`,
-        content: `Onboarding email sent to ${applicant.name} (${applicant.email}) for ${applicant.role} (${applicant.location}). Status updated to Onboarded.`,
+        content: `Onboarding email sent to ${applicant.name} (${applicant.email}) for ${applicant.role} (${applicant.location}). Add them to APY HQ separately if operational access is required.`,
       });
 
       return { success: true };
@@ -404,17 +447,13 @@ export const careersRouter = router({
     .input(
       z.object({
         id: z.number(),
-        applicantName: z.string(),
-        applicantEmail: z.string().email(),
-        role: z.string(),
-        location: z.string(),
         orientationDate: z.string().optional(),
         orientationTime: z.string().optional(),
         planningDocUrl: z.string().optional(),
         additionalNotes: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const applicant = await requireApplicant(input.id);
       const isYogaInstructor = applicant.role.toLowerCase().includes("yoga instructor") || applicant.role.toLowerCase().includes("instructor");
       const { subject, html, text } = isYogaInstructor
@@ -438,6 +477,15 @@ export const careersRouter = router({
 
       await sendEmail({ to: applicant.email, subject, html, text });
 
+      await recordHiringAction({
+        ctx,
+        applicationId: input.id,
+        action: "onboarding_resent",
+        fromStatus: applicant.status,
+        toStatus: applicant.status,
+        communication: { recipient: applicant.email, subject, bodyPreview: text },
+      });
+
       await notifyOwner({
         title: `Onboarding Email Resent -- ${applicant.name}`,
         content: `Onboarding email resent to ${applicant.name} (${applicant.email}) for ${applicant.role} (${applicant.location}).`,
@@ -453,14 +501,10 @@ export const careersRouter = router({
     .input(
       z.object({
         id: z.number(),
-        applicantName: z.string(),
-        applicantEmail: z.string().email(),
-        role: z.string(),
-        location: z.string(),
         additionalNotes: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const applicant = await requireApplicant(input.id);
       const { subject, html, text } = buildRejectionLetterEmail({
         applicantName: applicant.name,
@@ -473,6 +517,15 @@ export const careersRouter = router({
 
       // Update status to rejected
       await updateJobApplication(input.id, { status: "rejected" });
+
+      await recordHiringAction({
+        ctx,
+        applicationId: input.id,
+        action: "rejection_sent",
+        fromStatus: applicant.status,
+        toStatus: "rejected",
+        communication: { recipient: applicant.email, subject, bodyPreview: text },
+      });
 
       await notifyOwner({
         title: `Rejection Letter Sent — ${applicant.name}`,
@@ -489,13 +542,9 @@ export const careersRouter = router({
     .input(
       z.object({
         id: z.number(),
-        applicantName: z.string(),
-        applicantEmail: z.string().email(),
-        role: z.string(),
-        location: z.string(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const applicant = await requireApplicant(input.id);
       const firstName = applicant.name.split(" ")[0];
       const subject = `${firstName}, we still need your intro video`;
@@ -533,6 +582,14 @@ export const careersRouter = router({
 </html>`;
       const text = `Hi ${firstName},\n\nThank you for applying for the ${applicant.role} position at AfroPuppyYoga (${applicant.location}).\n\nWe noticed we do not have your intro video on file yet. Please record a short 1-2 minute video introducing yourself and reply to this email with a link (YouTube, Google Drive, or Loom).\n\nWarm regards,\nThe AfroPuppyYoga Team`;
       await sendEmail({ to: applicant.email, subject, html, text });
+      await recordHiringAction({
+        ctx,
+        applicationId: input.id,
+        action: "video_requested",
+        fromStatus: applicant.status,
+        toStatus: applicant.status,
+        communication: { recipient: applicant.email, subject, bodyPreview: text },
+      });
       await notifyOwner({
         title: `Video Requested: ${applicant.name}`,
         content: `Video request email sent to ${applicant.name} (${applicant.email}) for ${applicant.role} (${applicant.location}).`,

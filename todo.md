@@ -835,7 +835,12 @@
 
 ## Remaining APY HQ Update Stack (Aug 28, 2026)
 - [x] Review, correct as needed, merge, validate, and publish PR #8 class lifecycle
-- [ ] Review, correct as needed, merge, validate, and publish PR #9 private-event and hiring workflows
+- [x] Review, correct as needed, merge, validate, and publish PR #9 private-event and hiring workflows
+- [x] Preserve manual APY HQ team membership when integrating PR #9 hiring workflow changes
+- [x] Preserve Operations Manager access to routine private-event Luma controls while retaining owner approval for exceptions
+- [x] Align PR #9 private-event client controls with APY HQ owner-versus-operations access visibility
+- [x] Diagnose and resolve the private-event inquiry list loading state observed after PR #9 integration
+- [x] Confirm the new private-event audit timeline resolves for existing legacy inquiries without creating or sending anything
 - [ ] Review, correct as needed, merge, validate, and publish PR #10 breeder workflow
 - [ ] Review, correct as needed, merge, validate, and publish PR #11 applicant upload resiliency
 - [x] Make the PR #8 schedule lifecycle migration compatible with TiDB column/index ordering before applying it
