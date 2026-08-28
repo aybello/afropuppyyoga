@@ -812,14 +812,15 @@ export type BreederLeadActivity = typeof breederLeadActivities.$inferSelect;
 export const breederLeadFollowUps = mysqlTable("breederLeadFollowUps", {
   id: int("id").autoincrement().primaryKey(),
   leadId: int("leadId").notNull(),
-  dueAt: bigint("dueAt", { mode: "number" }).notNull(),
-  note: text("note"),
-  completed: boolean("completed").notNull().default(false),
-  completedAt: bigint("completedAt", { mode: "number" }),
+  scheduledAt: timestamp("scheduledAt").notNull(),
+  message: text("message"),
+  channel: mysqlEnum("channel", ["sms", "email", "kijiji", "phone", "other"]).notNull().default("sms"),
+  status: mysqlEnum("status", ["pending", "sent", "skipped", "cancelled"]).notNull().default("pending"),
+  sentAt: timestamp("sentAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (t) => [
   index("idx_breederLeadFollowUps_leadId").on(t.leadId),
-  index("idx_breederLeadFollowUps_dueAt").on(t.dueAt),
+  index("idx_breederLeadFollowUps_scheduledAt").on(t.scheduledAt),
 ]);
 export type BreederLeadFollowUp = typeof breederLeadFollowUps.$inferSelect;
 
