@@ -81,6 +81,28 @@ export async function setLumaRegistrationOpen(eventId: string, registrationOpen:
   if (!response.ok) throw new Error(`Luma registration update failed (${response.status})`);
 }
 
+/** Permanently remove a newly-created event that APY HQ could not save.
+ * This is only for compensation before a link has been shared or guests exist. */
+export async function cancelUnpublishedLumaEvent(eventId: string) {
+  const apiKey = process.env.LUMA_API_KEY;
+  if (!apiKey) throw new Error("LUMA_API_KEY is not set");
+  const requestRes = await fetch(`${LUMA_BASE}/events/cancel/request`, {
+    method: "POST",
+    headers: { "x-luma-api-key": apiKey, "Content-Type": "application/json" },
+    body: JSON.stringify({ event_id: eventId }),
+  });
+  if (!requestRes.ok) throw new Error(`Luma cleanup request failed (${requestRes.status})`);
+  const requestData = await requestRes.json() as { cancellation_token?: string; token?: string };
+  const cancellationToken = requestData.cancellation_token || requestData.token;
+  if (!cancellationToken) throw new Error("Luma cleanup request returned no cancellation token");
+  const cancelRes = await fetch(`${LUMA_BASE}/events/cancel`, {
+    method: "POST",
+    headers: { "x-luma-api-key": apiKey, "Content-Type": "application/json" },
+    body: JSON.stringify({ event_id: eventId, cancellation_token: cancellationToken, should_refund: false }),
+  });
+  if (!cancelRes.ok) throw new Error(`Luma cleanup failed (${cancelRes.status})`);
+}
+
 export async function updateLumaEventForSchedule(eventId: string, params: LumaScheduleParams) {
   if (params.classType !== "regular") throw new Error("A public APY Luma class cannot be converted into a private event. Cancel the public event first.");
   const apiKey = process.env.LUMA_API_KEY;
