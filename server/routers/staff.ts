@@ -21,7 +21,7 @@ import { COOKIE_NAME, SEVEN_DAYS_MS } from "../../shared/const";
 import { normalizeCanadianPhoneNumber } from "../../shared/phone";
 import { staffPhoneAccessCodes, users } from "../../drizzle/schema";
 import { findActiveTeamMemberByEmail, findActiveTeamMemberByPhone, resolveApyAccess } from "../apyAccess";
-import { STAFF_PHONE_CODE_COOLDOWN_MS, STAFF_PHONE_CODE_MAX_ATTEMPTS, STAFF_PHONE_CODE_TTL_MS, createStaffPhoneCode, hashStaffPhoneCode, isConfiguredOwnerPhone, resolveOwnerSessionOpenId, staffPhoneCodeMatches } from "../staffPhoneAccess";
+import { STAFF_PHONE_CODE_COOLDOWN_MS, STAFF_PHONE_CODE_MAX_ATTEMPTS, STAFF_PHONE_CODE_TTL_MS, createStaffPhoneCode, hashStaffPhoneCode, isConfiguredOwnerPhone, resolveOwnerPhoneSessionOpenId, staffPhoneCodeMatches } from "../staffPhoneAccess";
 import { getTrustedAppOrigin } from "../_core/trustedOrigin";
 
 export const staffRouter = router({
@@ -77,9 +77,8 @@ export const staffRouter = router({
         ? await db.select({ openId: users.openId, name: users.name }).from(users).where(eq(users.role, "admin")).orderBy(desc(users.lastSignedIn))
         : [];
       const staffOpenId = isOwner
-        ? resolveOwnerSessionOpenId(process.env.OWNER_OPEN_ID, process.env.OWNER_NAME, ownerCandidates)
+        ? resolveOwnerPhoneSessionOpenId(phone, process.env.OWNER_OPEN_ID, process.env.OWNER_NAME, ownerCandidates)
         : `staff-phone:${phone}`;
-      if (!staffOpenId) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Owner phone access is not configured." });
       const displayName = isOwner ? (process.env.OWNER_NAME || "Ay Bello") : member!.name;
       await upsertUser({
         openId: staffOpenId,

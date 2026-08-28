@@ -18,6 +18,9 @@
 - [ ] Request and verify a fresh, unused owner code after resolving the consumed-code mismatch
 - [ ] Resolve the owner session identity from the existing admin record when the production environment omits the owner identifier
 - [x] Confirm the fresh verification form contains the owner-approved mobile number before dispatching the final code
+- [x] Confirm the corrected live owner-session form contains the owner-approved mobile number before requesting the final session code
+- [ ] Confirm the latest corrected owner verification redirects to the authenticated APY HQ command centre
+- [ ] Fall back to a dedicated verified-owner-phone session identity when owner metadata is unavailable in production
 - [ ] End-to-end verify owner sign-in lands on `/staff` after the OAuth callback
 
 ## Staff Invoice Portal

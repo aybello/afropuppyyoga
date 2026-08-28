@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { STAFF_PHONE_CODE_MAX_ATTEMPTS, createStaffPhoneCode, hashStaffPhoneCode, isConfiguredOwnerPhone, resolveOwnerSessionOpenId, staffPhoneCodeMatches } from "./staffPhoneAccess";
+import { STAFF_PHONE_CODE_MAX_ATTEMPTS, createStaffPhoneCode, hashStaffPhoneCode, isConfiguredOwnerPhone, resolveOwnerPhoneSessionOpenId, resolveOwnerSessionOpenId, staffPhoneCodeMatches } from "./staffPhoneAccess";
 
 const originalSecret = process.env.JWT_SECRET;
 
@@ -42,5 +42,6 @@ describe("staff phone access", () => {
     expect(resolveOwnerSessionOpenId("direct-owner", "Ay Bello", candidates)).toBe("direct-owner");
     expect(resolveOwnerSessionOpenId("", "Ay Bello", candidates)).toBe("owner-open-id");
     expect(resolveOwnerSessionOpenId("", "Unknown Owner", candidates)).toBeUndefined();
+    expect(resolveOwnerPhoneSessionOpenId("+12897881885", "", "Unknown Owner", candidates)).toBe("owner-phone:+12897881885");
   });
 });

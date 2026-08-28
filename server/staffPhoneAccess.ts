@@ -45,3 +45,16 @@ export function resolveOwnerSessionOpenId(
   if (!ownerName) return undefined;
   return candidates.find((candidate) => candidate.name?.trim().toLowerCase() === ownerName)?.openId;
 }
+
+/**
+ * A verified configured owner phone is sufficient to bootstrap its own stable
+ * APY HQ owner session if legacy owner metadata is unavailable at runtime.
+ */
+export function resolveOwnerPhoneSessionOpenId(
+  phone: string,
+  configuredOwnerOpenId: string | undefined,
+  configuredOwnerName: string | undefined,
+  candidates: OwnerSessionCandidate[],
+): string {
+  return resolveOwnerSessionOpenId(configuredOwnerOpenId, configuredOwnerName, candidates) ?? `owner-phone:${phone}`;
+}
