@@ -3,6 +3,8 @@
    ============================================================ */
 import { Link } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
+import { canAccessHubTool, type ApyHubToolAccess } from "@shared/apyPermissions";
 import { LOGO_URL } from "@/const";
 import {
   FileText,
@@ -182,6 +184,12 @@ const TOOLS = [
 
 const CATEGORY_ORDER = ["People", "Finance", "Events", "Breeders", "Growth", "Operations"];
 
+function requiredAccessForTool(id: string): ApyHubToolAccess {
+  if (id === "invoices" || id === "revenue") return "owner";
+  if (id === "staff-training" || id === "submit-invoice") return "team";
+  return "operations";
+}
+
 function getGreeting() {
   const h = new Date().getHours();
   if (h < 12) return "Good morning";
@@ -191,6 +199,7 @@ function getGreeting() {
 
 export default function StaffPortal() {
   const { user, loading, isAuthenticated } = useAuth();
+  const access = trpc.staff.myAccess.useQuery(undefined, { enabled: isAuthenticated });
 
   if (loading) {
     return (
@@ -200,13 +209,13 @@ export default function StaffPortal() {
     );
   }
 
-  const isAdmin = isAuthenticated && (user?.role === "admin" || user?.role === "staff");
-  const isOwner = isAuthenticated && user?.role === "admin";
+  const accessLevel = access.data?.level ?? "none";
+  const isOwner = accessLevel === "owner";
   const displayName = isOwner ? "Chief Ay" : user?.name?.split(" ")[0] ?? "there";
 
   const grouped = CATEGORY_ORDER.map(cat => ({
     category: cat,
-    tools: TOOLS.filter(t => t.category === cat),
+    tools: TOOLS.filter(t => t.category === cat && canAccessHubTool(accessLevel, requiredAccessForTool(t.id))),
   })).filter(g => g.tools.length > 0);
 
   return (
@@ -270,6 +279,11 @@ export default function StaffPortal() {
             </p>
           </div>
         )}
+        {isAuthenticated && !access.isLoading && accessLevel === "none" && (
+          <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+            Your sign-in is not linked to an active APY HQ team profile. Ask an Operations Manager to add your exact email or phone number to the Team board.
+          </div>
+        )}
 
         {/* Tool grid by category */}
         <div className="space-y-5">
@@ -284,7 +298,7 @@ export default function StaffPortal() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {tools.map((tool) => {
                   const Icon = tool.icon;
-                  const isLocked = tool.adminOnly && !isAdmin;
+                  const isLocked = false;
 
                   return (
                     <Link key={tool.id} href={tool.href}>

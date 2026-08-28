@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { publicProcedure, protectedProcedure, router } from "../_core/trpc";
+import { publicProcedure, router, staffProcedure } from "../_core/trpc";
 import { notifyOwner } from "../_core/notification";
 import { sendEmail } from "../email";
 import { getDb } from "../db";
@@ -675,7 +675,7 @@ export const privateEventsRouter = router({
     }),
 
   // Admin: list all inquiries (newest first)
-  listInquiries: protectedProcedure.query(async ({ ctx }) => {
+  listInquiries: staffProcedure.query(async ({ ctx }) => {
     if (ctx.user.role !== "admin" && ctx.user.role !== "staff") {
       throw new TRPCError({ code: "FORBIDDEN" });
     }
@@ -688,7 +688,7 @@ export const privateEventsRouter = router({
   }),
 
   // Admin: update inquiry status
-  updateStatus: protectedProcedure
+  updateStatus: staffProcedure
     .input(
       z.object({
         id: z.number(),
@@ -713,7 +713,7 @@ export const privateEventsRouter = router({
     }),
 
   // Generate a private Luma booking link for an inquiry
-  generateBookingLink: protectedProcedure
+  generateBookingLink: staffProcedure
     .input(
       z.object({
         inquiryId: z.number(),
@@ -841,7 +841,7 @@ export const privateEventsRouter = router({
     }),
 
   // Send the quote email with the Luma booking link
-  sendQuoteEmail: protectedProcedure
+  sendQuoteEmail: staffProcedure
     .input(
       z.object({
         inquiryId: z.number(),
@@ -930,7 +930,7 @@ export const privateEventsRouter = router({
     }),
 
   /** Delete a generated Luma event and clear the link from the inquiry */
-  deleteLumaEvent: protectedProcedure
+  deleteLumaEvent: staffProcedure
     .input(z.object({ inquiryId: z.number() }))
     .mutation(async ({ ctx, input }) => {
       if (ctx.user.role !== "admin" && ctx.user.role !== "staff") {
@@ -975,7 +975,7 @@ export const privateEventsRouter = router({
     }),
 
   /** Standalone Quick Booking Link — creates a Luma event without an existing inquiry */
-  generateQuickBookingLink: protectedProcedure
+  generateQuickBookingLink: staffProcedure
     .input(
       z.object({
         clientName: z.string().min(1),

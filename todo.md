@@ -800,3 +800,11 @@
 
 ## APY Training Centre Improvement (Aug 27, 2026)
 - [x] Improve the Training Centre’s role-based lesson flow, progress guidance, completion experience, and visual hierarchy for staff onboarding
+
+## APY HQ Training Administration (Aug 28, 2026)
+- [x] Replace the vague Admin Training Review state with a clear training-management view for completion status, staff follow-up, and lesson oversight
+
+## APY HQ Role-Based Permissions (Aug 28, 2026)
+- [x] Define and enforce separate APY HQ access for Owner/Admin, Operations Manager, Yoga Instructor, and Puppy Monitor roles
+- [x] Allow staff identity matching and access invitations through either their APY HQ email or phone number
+- [x] Give Operations Managers full operational APY HQ access while restricting only Invoice Dashboard and Revenue Dashboard

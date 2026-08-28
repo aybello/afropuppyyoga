@@ -19,6 +19,7 @@ const Careers = lazy(() => import("./pages/Careers"));
 const StaffPortal = lazy(() => import("./pages/StaffPortal"));
 const Partnerships = lazy(() => import("./pages/Partnerships"));
 const StaffLogin = lazy(() => import("./pages/StaffLogin"));
+const StaffAccess = lazy(() => import("./pages/StaffAccess"));
 const StaffManagement = lazy(() => import("./pages/StaffManagement"));
 const StaffTraining = lazy(() => import("./pages/StaffTraining"));
 const SignDocuments = lazy(() => import("./pages/SignDocuments"));
@@ -78,6 +79,7 @@ function Router() {
         <Route path={"/birthday"}>{() => { window.location.replace("/private-events/quote"); return null; }}</Route>
         <Route path={"/partnerships"} component={Partnerships} />
         <Route path={"/staff-login"} component={StaffLogin} />
+        <Route path={"/staff-access"} component={StaffAccess} />
         <Route path={"/admin/staff"} component={StaffManagement} />
         <Route path={"/sign"} component={SignDocuments} />
         <Route path={"/private-events/quote"} component={PrivateEventQuote} />

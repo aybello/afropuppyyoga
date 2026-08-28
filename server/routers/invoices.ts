@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { adminProcedure, staffProcedure, publicProcedure, router } from "../_core/trpc";
+import { ownerProcedure, publicProcedure, router } from "../_core/trpc";
 import { invokeLLM } from "../_core/llm";
 import { createInvoice, deleteInvoice, getAllInvoices, updateInvoice } from "../db"; // getAllInvoices still used by list procedure
 import { storageGet } from "../storage";
@@ -48,7 +48,7 @@ export const invoicesRouter = router({
   /**
    * Owner-only: get all invoices with computed daysLeft
    */
-  list: staffProcedure.query(async () => {
+  list: ownerProcedure.query(async () => {
     const invoiceList = await getAllInvoices();
     const now = new Date();
 
@@ -77,7 +77,7 @@ export const invoicesRouter = router({
   /**
    * Owner-only: mark invoice as paid or pending
    */
-  updateStatus: staffProcedure
+  updateStatus: ownerProcedure
     .input(
       z.object({
         id: z.number(),
@@ -93,7 +93,7 @@ export const invoicesRouter = router({
    * Owner-only: record a payment (full or partial) against an invoice.
    * amountPaidCents is the NEW total paid so far (cumulative), not the incremental amount.
    */
-  recordPayment: staffProcedure
+  recordPayment: ownerProcedure
     .input(
       z.object({
         id: z.number(),
@@ -127,7 +127,7 @@ export const invoicesRouter = router({
   /**
    * Owner-only: delete an invoice
    */
-  delete: staffProcedure
+  delete: ownerProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
       await deleteInvoice(input.id);

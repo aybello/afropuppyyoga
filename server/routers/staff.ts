@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { randomBytes } from "crypto";
-import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
+import { and, desc, eq, gt, isNull } from "drizzle-orm";
+import twilio from "twilio";
+import { adminProcedure, router, publicProcedure, protectedProcedure } from "../_core/trpc";
 import { TRPCError } from "@trpc/server";
 import {
   createStaffInvite,
@@ -16,15 +18,74 @@ import { sendStaffInviteEmail } from "../email";
 import { sdk } from "../_core/sdk";
 import { getSessionCookieOptions } from "../_core/cookies";
 import { COOKIE_NAME, SEVEN_DAYS_MS, ONE_YEAR_MS } from "../../shared/const";
+import { normalizeCanadianPhoneNumber } from "../../shared/phone";
+import { staffPhoneAccessCodes } from "../../drizzle/schema";
+import { findActiveTeamMemberByEmail, findActiveTeamMemberByPhone, resolveApyAccess } from "../apyAccess";
+import { STAFF_PHONE_CODE_COOLDOWN_MS, STAFF_PHONE_CODE_MAX_ATTEMPTS, STAFF_PHONE_CODE_TTL_MS, createStaffPhoneCode, hashStaffPhoneCode, staffPhoneCodeMatches } from "../staffPhoneAccess";
 import { getTrustedAppOrigin } from "../_core/trustedOrigin";
 
 export const staffRouter = router({
+  /**
+   * Public: sends a short-lived verification code only to an active APY HQ team
+   * member's saved phone. The generic response avoids revealing who is on staff.
+   */
+  requestPhoneAccessCode: publicProcedure
+    .input(z.object({ phone: z.string().min(7).max(50) }))
+    .mutation(async ({ input }) => {
+      const phone = normalizeCanadianPhoneNumber(input.phone);
+      if (!phone) throw new TRPCError({ code: "BAD_REQUEST", message: "Enter a valid Canadian mobile number." });
+      const member = await findActiveTeamMemberByPhone(phone);
+      if (!member) return { success: true };
+
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Access verification is temporarily unavailable." });
+      const [latest] = await db.select().from(staffPhoneAccessCodes)
+        .where(eq(staffPhoneAccessCodes.phone, phone))
+        .orderBy(desc(staffPhoneAccessCodes.createdAt)).limit(1);
+      if (latest && latest.createdAt.getTime() > Date.now() - STAFF_PHONE_CODE_COOLDOWN_MS) return { success: true };
+
+      const accountSid = process.env.TWILIO_ACCOUNT_SID;
+      const authToken = process.env.TWILIO_AUTH_TOKEN;
+      const from = process.env.TWILIO_PHONE_NUMBER;
+      if (!accountSid || !authToken || !from) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Phone access is not configured." });
+      const code = createStaffPhoneCode();
+      await db.insert(staffPhoneAccessCodes).values({ phone, codeHash: hashStaffPhoneCode(phone, code), expiresAt: new Date(Date.now() + STAFF_PHONE_CODE_TTL_MS) });
+      await twilio(accountSid, authToken).messages.create({ to: phone, from, body: `Your AfroPuppyYoga APY HQ verification code is ${code}. It expires in 10 minutes. Do not share this code.` });
+      return { success: true };
+    }),
+
+  /** Public: validates a single-use staff phone code and issues a seven-day session. */
+  verifyPhoneAccessCode: publicProcedure
+    .input(z.object({ phone: z.string().min(7).max(50), code: z.string().regex(/^\d{6}$/, "Enter the six-digit code.") }))
+    .mutation(async ({ input, ctx }) => {
+      const phone = normalizeCanadianPhoneNumber(input.phone);
+      if (!phone) throw new TRPCError({ code: "BAD_REQUEST", message: "Enter a valid Canadian mobile number." });
+      const member = await findActiveTeamMemberByPhone(phone);
+      if (!member) throw new TRPCError({ code: "UNAUTHORIZED", message: "That code is invalid or expired." });
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Access verification is temporarily unavailable." });
+      const [record] = await db.select().from(staffPhoneAccessCodes).where(and(eq(staffPhoneAccessCodes.phone, phone), isNull(staffPhoneAccessCodes.consumedAt), gt(staffPhoneAccessCodes.expiresAt, new Date()))).orderBy(desc(staffPhoneAccessCodes.createdAt)).limit(1);
+      if (!record || record.attempts >= STAFF_PHONE_CODE_MAX_ATTEMPTS || !staffPhoneCodeMatches(phone, input.code, record.codeHash)) {
+        if (record) await db.update(staffPhoneAccessCodes).set({ attempts: record.attempts + 1 }).where(eq(staffPhoneAccessCodes.id, record.id));
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "That code is invalid or expired." });
+      }
+      const now = new Date();
+      await db.update(staffPhoneAccessCodes).set({ consumedAt: now, attempts: record.attempts + 1 }).where(eq(staffPhoneAccessCodes.id, record.id));
+      const staffOpenId = `staff-phone:${phone}`;
+      await upsertUser({ openId: staffOpenId, name: member.name, email: member.email, loginMethod: "phone_otp", role: "staff", lastSignedIn: now });
+      const sessionToken = await sdk.createSessionToken(staffOpenId, { name: member.name, expiresInMs: SEVEN_DAYS_MS });
+      ctx.res.cookie(COOKIE_NAME, sessionToken, { ...getSessionCookieOptions(ctx.req), maxAge: SEVEN_DAYS_MS });
+      return { success: true, name: member.name, role: member.role };
+    }),
+
+  /** Active APY HQ identity and operational authority for role-aware navigation. */
+  myAccess: protectedProcedure.query(async ({ ctx }) => resolveApyAccess(ctx.user)),
   /**
    * Owner-only: invite a staff member by email.
    * Generates a magic link token and sends it via email.
    * The token is valid for 7 days (staff can re-use it to log back in).
    */
-  inviteStaff: protectedProcedure
+  inviteStaff: adminProcedure
     .input(
       z.object({
         name: z.string().min(1),
@@ -32,9 +93,10 @@ export const staffRouter = router({
         origin: z.string().url(),
       })
     )
-    .mutation(async ({ ctx, input }) => {
-      if (ctx.user.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can invite staff" });
+    .mutation(async ({ input }) => {
+      const member = await findActiveTeamMemberByEmail(input.email);
+      if (!member) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Add this person to the active APY HQ Team with this email before sending an access link." });
       }
 
       // Generate a secure random token
@@ -44,7 +106,7 @@ export const staffRouter = router({
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
       await createStaffInvite({
-        name: input.name,
+        name: member.name,
         email: input.email,
         token,
         expiresAt,
@@ -55,7 +117,7 @@ export const staffRouter = router({
 
       await sendStaffInviteEmail({
         to: input.email,
-        name: input.name,
+        name: member.name,
         magicLink,
       });
 
@@ -126,12 +188,9 @@ export const staffRouter = router({
    * Owner-only: resend a magic link invite to an existing staff member.
    * Regenerates a fresh token and resets the 7-day expiry window.
    */
-  resendInvite: protectedProcedure
+  resendInvite: adminProcedure
     .input(z.object({ id: z.number(), origin: z.string().url() }))
-    .mutation(async ({ ctx, input }) => {
-      if (ctx.user.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can resend invites" });
-      }
+    .mutation(async ({ input }) => {
 
       // Look up the existing invite
       const db = await import("../db");
@@ -166,10 +225,7 @@ export const staffRouter = router({
   /**
    * Owner-only: list all active staff members.
    */
-  listStaff: protectedProcedure.query(async ({ ctx }) => {
-    if (ctx.user.role !== "admin") {
-      throw new TRPCError({ code: "FORBIDDEN" });
-    }
+  listStaff: adminProcedure.query(async () => {
     return getAllActiveStaff();
   }),
 
@@ -181,12 +237,9 @@ export const staffRouter = router({
    * The session token itself is still valid in the JWT sense, but getUserByOpenId will
    * return a user with role='user', causing staffProcedure/requireStaffOrAdmin to reject them.
    */
-  revokeStaff: protectedProcedure
+  revokeStaff: adminProcedure
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ ctx, input }) => {
-      if (ctx.user.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
+    .mutation(async ({ input }) => {
 
       // 1. Mark the invite as inactive (prevents future magic link logins)
       await revokeStaffInvite(input.id);

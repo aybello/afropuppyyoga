@@ -1,6 +1,6 @@
 import { z } from "zod";
 import Stripe from "stripe";
-import { router, staffProcedure } from "../_core/trpc";
+import { ownerProcedure, router } from "../_core/trpc";
 import { getLumaAttendance } from "../lumaAnalytics";
 
 /**
@@ -60,7 +60,7 @@ function extractTicketType(description: string): string | null {
 }
 
 export const revenueRouter = router({
-  getSummary: staffProcedure
+  getSummary: ownerProcedure
     .input(
       z.object({
         fromDate: z.string().optional(),
@@ -242,7 +242,7 @@ export const revenueRouter = router({
       };
     }),
 
-  getLumaAttendance: staffProcedure
+  getLumaAttendance: ownerProcedure
     .input(z.object({ fromDate: z.string().optional() }))
     .query(async ({ input }) => {
       const apiKey = process.env.LUMA_API_KEY;

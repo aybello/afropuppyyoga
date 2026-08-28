@@ -52,7 +52,11 @@ export default function StaffTraining() {
   const percent = total ? Math.round((done / total) * 100) : 0;
   const nextModule = modules.find(module => !completed.has(module.key));
   const isAdminPreview = Boolean(training.data?.adminPreview);
+  const canManageTraining = Boolean(training.data?.canManageTraining);
   const staff = training.data?.staff;
+  const overview = trpc.training.overview.useQuery(undefined, { enabled: canManageTraining });
+  const teamCompletion = overview.data?.reduce((sum, person) => sum + person.completed, 0) ?? 0;
+  const teamAssigned = overview.data?.reduce((sum, person) => sum + person.total, 0) ?? 0;
 
   const complete = trpc.training.complete.useMutation({
     onSuccess: (_, variables) => {
@@ -85,28 +89,28 @@ export default function StaffTraining() {
           <div className="relative grid gap-7 md:grid-cols-[1fr_auto] md:items-end">
             <div className="max-w-2xl">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#F9D781]">
-                <GraduationCap size={17} /> {isAdminPreview ? "Admin training preview" : "Your APY learning path"}
+                <GraduationCap size={17} /> {canManageTraining ? "Training management" : "Your APY learning path"}
               </div>
               <h1 className="mt-3 font-serif text-3xl font-bold tracking-tight md:text-4xl">Train with clarity. Show up with confidence.</h1>
               <p className="mt-3 max-w-xl text-sm leading-6 text-white/82">
                 {staff
                   ? `${staff.name}, complete the short lessons assigned to your ${staff.role} role before your next independent shift.`
-                  : isAdminPreview
-                    ? "Review every team learning path and the exact standards your staff will see."
+                  : canManageTraining
+                    ? "See training completion across the active APY team and review the exact role standards staff are working through."
                     : "Review the practical standards that keep every APY class safe, warm, and well run."}
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/20 bg-white/10 px-5 py-4 backdrop-blur-sm md:min-w-52">
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#F9D781]">{isAdminPreview ? "Training library" : "Your progress"}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#F9D781]">{canManageTraining ? "Team completion" : "Your progress"}</p>
               <div className="mt-1 flex items-end gap-2">
-                <span className="text-3xl font-bold">{done}</span>
-                <span className="mb-1 text-sm text-white/75">of {total} complete</span>
+                <span className="text-3xl font-bold">{canManageTraining ? teamCompletion : done}</span>
+                <span className="mb-1 text-sm text-white/75">of {canManageTraining ? teamAssigned : total} complete</span>
               </div>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-black/15">
-                <div className="h-full rounded-full bg-[#F4A800] transition-[width] duration-300" style={{ width: `${percent}%` }} />
+                <div className="h-full rounded-full bg-[#F4A800] transition-[width] duration-300" style={{ width: `${canManageTraining && teamAssigned ? Math.round((teamCompletion / teamAssigned) * 100) : percent}%` }} />
               </div>
-              <p className="mt-2 text-xs font-semibold text-white/90">{isAdminPreview ? `${total} role-based modules` : `${percent}% ready for your shift`}</p>
+              <p className="mt-2 text-xs font-semibold text-white/90">{canManageTraining ? `${overview.data?.length ?? 0} active team members` : `${percent}% ready for your shift`}</p>
             </div>
           </div>
         </section>
@@ -124,6 +128,27 @@ export default function StaffTraining() {
 
         {training.data && (
           <>
+            {canManageTraining && (
+              <section className="mt-6 rounded-2xl border border-[#DFE8DA] bg-white p-5 shadow-sm">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#C05A35]">Manager view</p>
+                    <h2 className="mt-1 font-serif text-2xl font-bold text-[#1E1208]">Team training at a glance</h2>
+                    <p className="mt-1 text-sm text-[#665A36]">Use this to see who needs a reminder before taking an independent shift. Staff complete their own lessons; managers only oversee readiness.</p>
+                  </div>
+                  <span className="rounded-full bg-[#EDF3E7] px-3 py-1.5 text-xs font-bold text-[#2D5A27]">No manager completion actions</span>
+                </div>
+                <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {overview.data?.map((person) => (
+                    <div key={person.id} className="rounded-xl border border-[#E7EEE2] bg-[#FFFEFB] px-3 py-3">
+                      <div className="flex items-start justify-between gap-2"><p className="font-bold text-[#2D3527]">{person.name}</p><span className="shrink-0 text-xs font-bold text-[#2D5A27]">{person.completed}/{person.total}</span></div>
+                      <p className="mt-0.5 text-xs text-[#7A7462]">{person.role} · {person.location}</p>
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#E7EEE2]"><div className="h-full rounded-full bg-[#2D5A27]" style={{ width: `${person.total ? Math.round((person.completed / person.total) * 100) : 0}%` }} /></div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
             <section className="mt-6 rounded-2xl border border-[#DFE8DA] bg-white p-5 shadow-sm">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -152,7 +177,7 @@ export default function StaffTraining() {
             <section className="mt-8">
               <div className="mb-4 flex items-end justify-between gap-4">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#C05A35]">{isAdminPreview ? "APY training library" : "Your assigned modules"}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#C05A35]">{canManageTraining ? "Training library" : "Your assigned modules"}</p>
                   <h2 className="mt-1 font-serif text-2xl font-bold text-[#1E1208]">One practical lesson at a time.</h2>
                 </div>
                 <span className="hidden text-xs text-[#7A5A6A] sm:block">Tap a module to read it</span>

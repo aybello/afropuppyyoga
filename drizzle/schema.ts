@@ -174,6 +174,19 @@ export const staffInvites = mysqlTable("staffInvites", {
 export type StaffInvite = typeof staffInvites.$inferSelect;
 export type InsertStaffInvite = typeof staffInvites.$inferInsert;
 
+/** Short-lived, single-use SMS verification codes for phone-based APY HQ access. */
+export const staffPhoneAccessCodes = mysqlTable("staffPhoneAccessCodes", {
+  id: int("id").autoincrement().primaryKey(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  codeHash: varchar("codeHash", { length: 64 }).notNull(),
+  attempts: int("attempts").default(0).notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  consumedAt: timestamp("consumedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [index("idx_staffPhoneAccess_phone_created").on(t.phone, t.createdAt)]);
+
+export type StaffPhoneAccessCode = typeof staffPhoneAccessCodes.$inferSelect;
+
 export const signingTokens = mysqlTable("signingTokens", {
   id: int("id").autoincrement().primaryKey(),
   /** The job application this signing request is for */
