@@ -1,5 +1,6 @@
 
 ## Current Staff Access Investigation
+- [x] Create and validate a polished AfroPuppyYoga funding pitch deck from the uploaded source deck and current business evidence
 - [x] Review the newly available Codex update before any integration or deployment decision; retain the stronger current owner-session fallback and staff return-path behavior
 - [x] Diagnose and restore reliable owner and staff access to the APY HQ staff portal
 - [x] Allow the configured APY owner to use secure phone verification for owner-level APY HQ access without Manus sign-in
