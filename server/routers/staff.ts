@@ -21,7 +21,7 @@ import { COOKIE_NAME, SEVEN_DAYS_MS } from "../../shared/const";
 import { normalizeCanadianPhoneNumber } from "../../shared/phone";
 import { staffPhoneAccessCodes } from "../../drizzle/schema";
 import { findActiveTeamMemberByEmail, findActiveTeamMemberByPhone, resolveApyAccess } from "../apyAccess";
-import { STAFF_PHONE_CODE_COOLDOWN_MS, STAFF_PHONE_CODE_MAX_ATTEMPTS, STAFF_PHONE_CODE_TTL_MS, createStaffPhoneCode, hashStaffPhoneCode, staffPhoneCodeMatches } from "../staffPhoneAccess";
+import { STAFF_PHONE_CODE_COOLDOWN_MS, STAFF_PHONE_CODE_MAX_ATTEMPTS, STAFF_PHONE_CODE_TTL_MS, createStaffPhoneCode, hashStaffPhoneCode, isConfiguredOwnerPhone, staffPhoneCodeMatches } from "../staffPhoneAccess";
 import { getTrustedAppOrigin } from "../_core/trustedOrigin";
 
 export const staffRouter = router({
@@ -34,8 +34,9 @@ export const staffRouter = router({
     .mutation(async ({ input }) => {
       const phone = normalizeCanadianPhoneNumber(input.phone);
       if (!phone) throw new TRPCError({ code: "BAD_REQUEST", message: "Enter a valid Canadian mobile number." });
-      const member = await findActiveTeamMemberByPhone(phone);
-      if (!member) return { success: true };
+      const isOwner = isConfiguredOwnerPhone(phone);
+      const member = isOwner ? null : await findActiveTeamMemberByPhone(phone);
+      if (!isOwner && !member) return { success: true };
 
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Access verification is temporarily unavailable." });
@@ -60,8 +61,9 @@ export const staffRouter = router({
     .mutation(async ({ input, ctx }) => {
       const phone = normalizeCanadianPhoneNumber(input.phone);
       if (!phone) throw new TRPCError({ code: "BAD_REQUEST", message: "Enter a valid Canadian mobile number." });
-      const member = await findActiveTeamMemberByPhone(phone);
-      if (!member) throw new TRPCError({ code: "UNAUTHORIZED", message: "That code is invalid or expired." });
+      const isOwner = isConfiguredOwnerPhone(phone);
+      const member = isOwner ? null : await findActiveTeamMemberByPhone(phone);
+      if (!isOwner && !member) throw new TRPCError({ code: "UNAUTHORIZED", message: "That code is invalid or expired." });
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Access verification is temporarily unavailable." });
       const [record] = await db.select().from(staffPhoneAccessCodes).where(and(eq(staffPhoneAccessCodes.phone, phone), isNull(staffPhoneAccessCodes.consumedAt), gt(staffPhoneAccessCodes.expiresAt, new Date()))).orderBy(desc(staffPhoneAccessCodes.createdAt)).limit(1);
@@ -71,11 +73,13 @@ export const staffRouter = router({
       }
       const now = new Date();
       await db.update(staffPhoneAccessCodes).set({ consumedAt: now, attempts: record.attempts + 1 }).where(eq(staffPhoneAccessCodes.id, record.id));
-      const staffOpenId = `staff-phone:${phone}`;
-      await upsertUser({ openId: staffOpenId, name: member.name, email: member.email, loginMethod: "phone_otp", role: "staff", lastSignedIn: now });
-      const sessionToken = await sdk.createSessionToken(staffOpenId, { name: member.name, expiresInMs: SEVEN_DAYS_MS });
+      const identity = isOwner
+        ? { openId: `owner-phone:${phone}`, name: "APY Owner", email: null, role: "admin" as const }
+        : { openId: `staff-phone:${phone}`, name: member!.name, email: member!.email, role: "staff" as const };
+      await upsertUser({ ...identity, loginMethod: "phone_otp", lastSignedIn: now });
+      const sessionToken = await sdk.createSessionToken(identity.openId, { name: identity.name, expiresInMs: SEVEN_DAYS_MS });
       ctx.res.cookie(COOKIE_NAME, sessionToken, { ...getSessionCookieOptions(ctx.req), maxAge: SEVEN_DAYS_MS });
-      return { success: true, name: member.name, role: member.role };
+      return { success: true, name: identity.name, role: isOwner ? "Owner" : member!.role };
     }),
 
   /** Active APY HQ identity and operational authority for role-aware navigation. */

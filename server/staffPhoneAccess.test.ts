@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { STAFF_PHONE_CODE_MAX_ATTEMPTS, createStaffPhoneCode, hashStaffPhoneCode, staffPhoneCodeMatches } from "./staffPhoneAccess";
+import { STAFF_PHONE_CODE_MAX_ATTEMPTS, createStaffPhoneCode, hashStaffPhoneCode, isConfiguredOwnerPhone, staffPhoneCodeMatches } from "./staffPhoneAccess";
 
 const originalSecret = process.env.JWT_SECRET;
 
@@ -20,5 +20,11 @@ describe("staff phone access", () => {
 
   it("keeps brute-force handling bounded to a small number of attempts", () => {
     expect(STAFF_PHONE_CODE_MAX_ATTEMPTS).toBe(5);
+  });
+
+  it("recognizes only the server-configured owner phone across common formats", () => {
+    expect(isConfiguredOwnerPhone("(289) 788-1885", "+1 289 788 1885")).toBe(true);
+    expect(isConfiguredOwnerPhone("289-788-1886", "+1 289 788 1885")).toBe(false);
+    expect(isConfiguredOwnerPhone("289-788-1885", "")).toBe(false);
   });
 });
