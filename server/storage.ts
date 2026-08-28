@@ -2,6 +2,7 @@
 // Uses the Biz-provided storage proxy (Authorization: Bearer <token>)
 
 import { ENV } from './_core/env';
+import { openAsBlob } from 'node:fs';
 
 type StorageConfig = { baseUrl: string; apiKey: string };
 
@@ -76,6 +77,40 @@ export async function storagePut(
   const key = normalizeKey(relKey);
   const uploadUrl = buildUploadUrl(baseUrl, key);
   const formData = toFormData(data, contentType, key.split("/").pop() ?? key);
+  const response = await fetch(uploadUrl, {
+    method: "POST",
+    headers: buildAuthHeaders(apiKey),
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const message = await response.text().catch(() => response.statusText);
+    throw new Error(
+      `Storage upload failed (${response.status} ${response.statusText}): ${message}`
+    );
+  }
+  const url = (await response.json()).url;
+  return { key, url };
+}
+
+/**
+ * Upload a file without first reading the whole file into memory.
+ *
+ * Large applicant videos are assembled on ephemeral disk one chunk at a time.
+ * Passing a file-backed Blob to fetch keeps the final storage upload streaming,
+ * so concurrent applicants do not each consume hundreds of megabytes of RAM.
+ */
+export async function storagePutFile(
+  relKey: string,
+  filePath: string,
+  contentType = "application/octet-stream"
+): Promise<{ key: string; url: string }> {
+  const { baseUrl, apiKey } = getStorageConfig();
+  const key = normalizeKey(relKey);
+  const uploadUrl = buildUploadUrl(baseUrl, key);
+  const blob = await openAsBlob(filePath, { type: contentType });
+  const formData = new FormData();
+  formData.append("file", blob, key.split("/").pop() ?? key);
   const response = await fetch(uploadUrl, {
     method: "POST",
     headers: buildAuthHeaders(apiKey),

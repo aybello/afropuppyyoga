@@ -375,6 +375,8 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
   const [videoLink, setVideoLink] = useState("");
   const [videoMode, setVideoMode] = useState<"upload" | "link">("upload");
   const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [uploadedVideo, setUploadedVideo] = useState<{ fingerprint: string; url: string; key: string } | null>(null);
+  const [uploadedResume, setUploadedResume] = useState<{ fingerprint: string; url: string; key: string } | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
@@ -405,6 +407,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       return;
     }
     setVideoFile(file);
+    setUploadedVideo(null);
     setError(null);
   };
 
@@ -416,6 +419,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       return;
     }
     setResumeFile(file);
+    setUploadedResume(null);
     setError(null);
   };
 
@@ -485,7 +489,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       });
     };
 
-    const retryRequest = async (request: () => Promise<Response>, label: string, attempts = 3): Promise<Response> => {
+    const retryRequest = async (request: () => Promise<Response>, label: string, attempts = 5): Promise<Response> => {
       let lastError: Error | null = null;
       for (let attempt = 1; attempt <= attempts; attempt++) {
         try {
@@ -494,12 +498,21 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
           const retryable = response.status === 408 || response.status === 429 || response.status >= 500;
           if (!retryable || attempt === attempts) return response;
           lastError = new Error(`${label} temporarily failed (${response.status})`);
+
+          const retryAfterSeconds = Number(response.headers.get("Retry-After"));
+          const delay = Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
+            ? retryAfterSeconds * 1000
+            : Math.min(1000 * 2 ** (attempt - 1), 10_000) + Math.round(Math.random() * 500);
+          setUploadStatus(`${label} paused — retrying (${attempt}/${attempts})…`);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
         } catch (error: any) {
           lastError = error instanceof Error ? error : new Error(`${label} failed`);
           if (attempt === attempts) throw lastError;
         }
         setUploadStatus(`${label} paused — retrying (${attempt}/${attempts})…`);
-        await new Promise((resolve) => setTimeout(resolve, 700 * attempt));
+        const delay = Math.min(1000 * 2 ** (attempt - 1), 10_000) + Math.round(Math.random() * 500);
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
       throw lastError ?? new Error(`${label} failed`);
     };
@@ -516,7 +529,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       const initRes = await retryRequest(() => fetch("/api/upload-video-init", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: file.name, totalChunks, totalSize: file.size }),
+        body: JSON.stringify({ filename: file.name, totalChunks, totalSize: file.size, chunkSize: CHUNK_SIZE }),
       }), "Preparing video upload");
       if (!initRes.ok) {
         const err = await initRes.json().catch(() => ({}));
@@ -524,15 +537,17 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       }
       const { uploadId } = await initRes.json();
 
-      // 2. Upload each chunk
-      for (let i = 0; i < totalChunks; i++) {
+      // 2. Upload a few chunks in parallel. This is substantially faster on good
+      // connections while remaining gentle enough for mobile networks and the server.
+      let nextChunkIndex = 0;
+      let uploadedChunks = 0;
+      const uploadNextChunk = async (): Promise<void> => {
+        const i = nextChunkIndex++;
+        if (i >= totalChunks) return;
+
         const start = i * CHUNK_SIZE;
         const end = Math.min(start + CHUNK_SIZE, file.size);
         const chunk = file.slice(start, end);
-
-        const pct = Math.round(((i + 1) / totalChunks) * 85); // reserve last 15% for assembly
-        setUploadProgress(pct);
-        setUploadStatus(`Uploading video... ${pct}% (part ${i + 1} of ${totalChunks})`);
 
         const fd = new FormData();
         fd.append("uploadId", uploadId);
@@ -547,7 +562,16 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
           const err = await chunkRes.json().catch(() => ({}));
           throw new Error(err.error ?? `Failed to upload video part ${i + 1}`);
         }
-      }
+
+        uploadedChunks += 1;
+        const pct = Math.round((uploadedChunks / totalChunks) * 85); // reserve last 15% for assembly
+        setUploadProgress(pct);
+        setUploadStatus(`Uploading video... ${pct}% (${uploadedChunks} of ${totalChunks} parts)`);
+        await uploadNextChunk();
+      };
+
+      const parallelUploads = Math.min(3, totalChunks);
+      await Promise.all(Array.from({ length: parallelUploads }, () => uploadNextChunk()));
 
       // 3. Synchronous assembly — server assembles all chunks and returns { url, key } directly.
       // No polling needed. The request may take up to 2 minutes for large files.
@@ -557,8 +581,8 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ uploadId }),
-        signal: AbortSignal.timeout(170_000), // 170s — matches server-side socket timeout
-      }), "Processing video", 2);
+        signal: AbortSignal.timeout(180_000), // allow the server's 170s processing window to finish
+      }), "Processing video", 8);
       if (!completeRes.ok) {
         const err = await completeRes.json().catch(() => ({}));
         throw new Error(err.error ?? "Failed to process video. Please try again.");
@@ -581,9 +605,15 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       videoUrl = videoLink.trim();
     } else {
       try {
-        const data = await uploadVideoChunked(videoFile!);
+        const fingerprint = `${videoFile!.name}:${videoFile!.size}:${videoFile!.lastModified}`;
+        const data = uploadedVideo?.fingerprint === fingerprint
+          ? uploadedVideo
+          : await uploadVideoChunked(videoFile!);
         videoUrl = data.url;
         videoKey = data.key;
+        if (uploadedVideo?.fingerprint !== fingerprint) {
+          setUploadedVideo({ fingerprint, url: data.url, key: data.key });
+        }
       } catch (err: any) {
         setIsUploading(false);
         setUploadStatus(null);
@@ -594,11 +624,17 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
 
     // Upload resume
     let resumeUrl: string;
-    let resumeKey: string | undefined;
+    let resumeKey: string;
     try {
-      setUploadProgress(0);
-      setUploadStatus("Uploading resume...");
-      const data = await uploadWithProgress("/api/upload-resume", "resume", resumeFile, "Resume");
+      const fingerprint = `${resumeFile.name}:${resumeFile.size}:${resumeFile.lastModified}`;
+      let data = uploadedResume?.fingerprint === fingerprint ? uploadedResume : null;
+      if (!data) {
+        setUploadProgress(0);
+        setUploadStatus("Uploading resume...");
+        const uploaded = await uploadWithProgress("/api/upload-resume", "resume", resumeFile, "Resume");
+        data = { fingerprint, ...uploaded };
+        setUploadedResume(data);
+      }
       resumeUrl = data.url;
       resumeKey = data.key;
     } catch (err: any) {
