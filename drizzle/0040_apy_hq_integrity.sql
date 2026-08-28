@@ -11,7 +11,9 @@ ALTER TABLE `invoices`
   ADD COLUMN `approvedAt` timestamp NULL,
   ADD COLUMN `paidByUserId` int,
   ADD COLUMN `paidAt` timestamp NULL,
-  ADD COLUMN `deletedAt` timestamp NULL,
+  ADD COLUMN `deletedAt` timestamp NULL;
+
+ALTER TABLE `invoices`
   ADD INDEX `idx_invoices_workflow` (`invoiceWorkflowStatus`),
   ADD UNIQUE INDEX `uq_invoices_fileKey` (`fileKey`),
   ADD UNIQUE INDEX `uq_invoices_fileSha256` (`fileSha256`);

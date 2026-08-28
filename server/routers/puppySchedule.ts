@@ -23,7 +23,7 @@ function friendlyDate(value: string) {
   return new Date(`${value}T12:00:00`).toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 }
 
-async function getEventNotificationPreview(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, scheduleId: number) {
+export async function getEventNotificationPreview(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, scheduleId: number) {
   const [schedule] = await db.select().from(puppySchedule).where(eq(puppySchedule.id, scheduleId)).limit(1);
   if (!schedule) throw new Error("Scheduled class not found");
   const teamLocation = scheduleLocationToTeamLocation(schedule.location);
