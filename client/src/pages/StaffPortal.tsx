@@ -25,11 +25,22 @@ import {
   Star,
   CalendarCheck,
   GraduationCap,
+  UserCog,
 } from "lucide-react";
 
 const TEAM_PHOTO = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663824308637/IiwudPwckobbrxIv.jpg";
 
 const TOOLS = [
+  {
+    id: "staff-access",
+    title: "Staff Access",
+    description: "Invite staff by email or manage secure phone access.",
+    href: "/admin/staff",
+    icon: UserCog,
+    accent: "#7C3AED",
+    adminOnly: true,
+    category: "People",
+  },
   {
     id: "staff-training",
     title: "Team Training",

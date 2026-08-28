@@ -33,7 +33,7 @@ const PRIMARY_ITEMS = [
   { href: "/admin/applications", label: "Applications", icon: Users,      required: "operations" as ApyHubToolAccess },
   { href: "/admin/breeders",     label: "Breeders",     icon: PawPrint,   required: "operations" as ApyHubToolAccess },
   { href: "/admin/refunds",      label: "Refunds",      icon: RotateCcw,  required: "operations" as ApyHubToolAccess },
-  { href: "/admin/staff",        label: "Staff",        icon: UserCog,    required: "operations" as ApyHubToolAccess },
+  { href: "/admin/staff",        label: "Staff Access", icon: UserCog,    required: "operations" as ApyHubToolAccess },
 ];
 
 // Secondary tabs collapsed into the "More" dropdown

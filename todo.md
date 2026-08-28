@@ -808,3 +808,6 @@
 - [x] Define and enforce separate APY HQ access for Owner/Admin, Operations Manager, Yoga Instructor, and Puppy Monitor roles
 - [x] Allow staff identity matching and access invitations through either their APY HQ email or phone number
 - [x] Give Operations Managers full operational APY HQ access while restricting only Invoice Dashboard and Revenue Dashboard
+
+## Staff Access Command Centre Placement (Aug 28, 2026)
+- [x] Move Staff Access from hidden secondary navigation into the primary APY HQ Command Centre
