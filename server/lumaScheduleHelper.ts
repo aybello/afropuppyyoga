@@ -26,6 +26,73 @@ const LOCATION_MAP: Record<string, { googlePlaceId: string }> = {
   oakville:  { googlePlaceId: "ChIJofNPAT9DK4gRAhVcvaHDk7Y" },
 };
 
+export type LumaScheduleParams = {
+  classDate: string;
+  location: string;
+  breed: string;
+  startTime: string;
+  endTime: string;
+  classType: "regular" | "private";
+};
+
+/**
+ * Turn a Toronto wall-clock time into ISO 8601 while respecting EST/EDT.
+ * Class times are daytime hours, so they never fall inside the DST transition gap.
+ */
+export function torontoDateTimeIso(classDate: string, time: string) {
+  const probe = new Date(`${classDate}T${time}:00Z`);
+  if (Number.isNaN(probe.getTime())) throw new Error("Invalid class date or time");
+  const zone = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Toronto",
+    timeZoneName: "longOffset",
+  }).formatToParts(probe).find(part => part.type === "timeZoneName")?.value;
+  const offset = zone?.replace("GMT", "");
+  if (!offset || !/^[+-]\d{2}:\d{2}$/.test(offset)) throw new Error("Could not determine the Toronto timezone offset");
+  return `${classDate}T${time}:00${offset}`;
+}
+
+function regularEventFields(params: LumaScheduleParams) {
+  const loc = LOCATION_MAP[params.location.toLowerCase().trim()];
+  if (!loc) throw new Error(`Unknown APY location: ${params.location}`);
+  const breed = params.breed && params.breed !== "TBD" ? params.breed : "Puppies";
+  const firstSlot = APY_REGULAR_CLASS_TIME_SLOTS[0];
+  const lastSlot = APY_REGULAR_CLASS_TIME_SLOTS[APY_REGULAR_CLASS_TIME_SLOTS.length - 1];
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return {
+    name: `AfroPuppyYoga |📍${params.location} |🐶${breed}`,
+    start_at: torontoDateTimeIso(params.classDate, `${pad(firstSlot.startHour)}:${pad(firstSlot.startMinute)}`),
+    end_at: torontoDateTimeIso(params.classDate, `${pad(lastSlot.endHour)}:${pad(lastSlot.endMinute)}`),
+    timezone: "America/Toronto",
+    geo_address_json: { type: "google", place_id: loc.googlePlaceId },
+  };
+}
+
+export async function setLumaRegistrationOpen(eventId: string, registrationOpen: boolean) {
+  const apiKey = process.env.LUMA_API_KEY;
+  if (!apiKey) throw new Error("LUMA_API_KEY is not set");
+  const response = await fetch(`${LUMA_BASE}/events/update`, {
+    method: "POST",
+    headers: { "x-luma-api-key": apiKey, "Content-Type": "application/json" },
+    body: JSON.stringify({ event_id: eventId, registration_open: registrationOpen, suppress_notifications: true }),
+  });
+  if (!response.ok) throw new Error(`Luma registration update failed (${response.status})`);
+}
+
+export async function updateLumaEventForSchedule(eventId: string, params: LumaScheduleParams) {
+  if (params.classType !== "regular") throw new Error("A public APY Luma class cannot be converted into a private event. Cancel the public event first.");
+  const apiKey = process.env.LUMA_API_KEY;
+  if (!apiKey) throw new Error("LUMA_API_KEY is not set");
+  const response = await fetch(`${LUMA_BASE}/events/update`, {
+    method: "POST",
+    headers: { "x-luma-api-key": apiKey, "Content-Type": "application/json" },
+    body: JSON.stringify({ event_id: eventId, ...regularEventFields(params), suppress_notifications: true }),
+  });
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Luma event update failed (${response.status}): ${detail.slice(0, 300)}`);
+  }
+}
+
 export const REGULAR_CLASS_LUMA_EVENT_DEFAULTS = {
   can_register_for_multiple_tickets: APY_REGULAR_CLASS_LUMA_PREVIEW.groupRegistration,
   tint_color: APY_REGULAR_CLASS_LUMA_PREVIEW.tintColor,
@@ -97,37 +164,24 @@ We do our best to ensure that the puppies advertised for each class are the ones
 
 Thanks for your understanding and continued support 🐶🧘🏽‍♀️💛`;
 
-export async function createLumaEventForSchedule(params: {
-  classDate: string;      // "2026-08-15"
-  location: string;       // "Kitchener" | "Hamilton" | "Oakville"
-  breed: string;
-  startTime: string;      // "09:00" — used for event start (overall window)
-  endTime: string;        // "15:00" — used for event end (overall window)
-  classType: "regular" | "private";
-}): Promise<{ lumaEventId: string; lumaEventUrl: string } | null> {
+export async function createLumaEventForSchedule(params: LumaScheduleParams): Promise<{ lumaEventId: string; lumaEventUrl: string } | null> {
+  // Private bookings have their own approval/booking workflow. Never expose
+  // them as a public regular-class event with public ticket types.
+  if (params.classType !== "regular") return null;
   const apiKey = process.env.LUMA_API_KEY;
   if (!apiKey) {
     console.warn("[LumaSchedule] LUMA_API_KEY not set — skipping");
     return null;
   }
 
-  const locKey = params.location.toLowerCase().trim();
-  const loc = LOCATION_MAP[locKey];
-  if (!loc) {
-    console.warn(`[LumaSchedule] Unknown location "${params.location}" — skipping`);
+  let eventFields: ReturnType<typeof regularEventFields>;
+  try {
+    eventFields = regularEventFields(params);
+  } catch (error) {
+    console.warn(`[LumaSchedule] ${error instanceof Error ? error.message : "Invalid event settings"} — skipping`);
     return null;
   }
-
-  const breed = params.breed && params.breed !== "TBD" ? params.breed : "Puppies";
-  const eventName = `AfroPuppyYoga |📍${params.location} |🐶${breed}`;
   const ticketTypes = buildRegularClassTicketTypes();
-
-  // Overall event window: first slot start → last slot end (in Toronto summer time UTC-4)
-  const firstSlot = APY_REGULAR_CLASS_TIME_SLOTS[0];
-  const lastSlot = APY_REGULAR_CLASS_TIME_SLOTS[APY_REGULAR_CLASS_TIME_SLOTS.length - 1];
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const startAt = `${params.classDate}T${pad(firstSlot.startHour)}:${pad(firstSlot.startMinute)}:00-04:00`;
-  const endAt   = `${params.classDate}T${pad(lastSlot.endHour)}:${pad(lastSlot.endMinute)}:00-04:00`;
 
   try {
     // 1. Create the event
@@ -135,12 +189,8 @@ export async function createLumaEventForSchedule(params: {
       method: "POST",
       headers: { "x-luma-api-key": apiKey, "Content-Type": "application/json" },
       body: JSON.stringify({
-        name: eventName,
-        start_at: startAt,
-        end_at: endAt,
-        timezone: "America/Toronto",
+        ...eventFields,
         visibility: "public",
-        geo_address_json: { type: "google", place_id: loc.googlePlaceId },
         phone_number_requirement: "required",
         name_requirement: "first-last",
         ...REGULAR_CLASS_LUMA_EVENT_DEFAULTS,
@@ -205,7 +255,7 @@ export async function createLumaEventForSchedule(params: {
       }
     } catch { /* fallback URL is fine */ }
 
-    console.log(`[LumaSchedule] Created Luma event: ${lumaEventUrl} (${eventName})`);
+    console.log(`[LumaSchedule] Created Luma event: ${lumaEventUrl} (${eventFields.name})`);
     return { lumaEventId, lumaEventUrl };
   } catch (err) {
     console.error("[LumaSchedule] Unexpected error:", err);

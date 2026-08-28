@@ -9,12 +9,12 @@ const severityClass = {
   normal: "border-[#D8E5D2] bg-white text-[#29472A]",
 };
 
-function EventRow({ event }: { event: { id: number; classDate: string; startTime: string; location: string; breed: string; breederName: string; fullyStaffed: boolean; gaps: string[]; teamNotified: boolean } }) {
+function EventRow({ event }: { event: { id: number; classDate: string; startTime: string; location: string; breed: string; breederName: string; fullyStaffed: boolean; gaps: string[]; teamNotified: boolean; lumaSyncStatus: "not_required" | "pending" | "synced" | "failed" } }) {
   return (
     <div className="grid gap-3 border-b border-[#E6EBDD] px-4 py-4 last:border-0 md:grid-cols-[130px_1fr_1fr_auto] md:items-center">
       <div><p className="text-sm font-bold text-[#1E3A20]">{event.classDate}</p><p className="text-xs text-[#77725F]">{event.startTime}</p></div>
       <div><p className="font-bold text-[#1E241C]">{event.location} · {event.breed}</p><p className="text-xs text-[#77725F]">Breeder: {event.breederName}</p></div>
-      <div className="text-xs">{event.fullyStaffed ? <span className="font-bold text-emerald-700">Fully staffed</span> : <span className="font-bold text-red-700">Missing {event.gaps.join(", ")}</span>}<span className="mx-2 text-[#C9C4B3]">·</span>{event.teamNotified ? "Team notified" : "Notification pending"}</div>
+      <div className="text-xs">{event.fullyStaffed ? <span className="font-bold text-emerald-700">Fully staffed</span> : <span className="font-bold text-red-700">Missing {event.gaps.join(", ")}</span>}<span className="mx-2 text-[#C9C4B3]">·</span>{event.teamNotified ? "Team notified" : "Notification pending"}<span className="mx-2 text-[#C9C4B3]">·</span><span className={event.lumaSyncStatus === "synced" || event.lumaSyncStatus === "not_required" ? "text-emerald-700" : "font-bold text-red-700"}>{event.lumaSyncStatus === "not_required" ? "Private" : event.lumaSyncStatus === "synced" ? "Luma synced" : "Luma attention"}</span></div>
       <Link href="/admin/puppy-schedule" className="text-xs font-bold text-[#8B2252] hover:underline">Open schedule</Link>
     </div>
   );

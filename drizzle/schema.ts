@@ -498,12 +498,19 @@ export const puppySchedule = mysqlTable("puppySchedule", {
   lumaEventId: varchar("lumaEventId", { length: 128 }),
   /** Luma event URL — e.g. https://lu.ma/abc123 */
   lumaEventUrl: varchar("lumaEventUrl", { length: 500 }),
+  /** Operational lifecycle — archived rows remain available for audit/history. */
+  scheduleStatus: mysqlEnum("scheduleStatus", ["scheduled", "cancelled", "completed", "archived"]).notNull().default("scheduled"),
+  /** Whether the public Luma record matches this schedule row. */
+  lumaSyncStatus: mysqlEnum("lumaSyncStatus", ["not_required", "pending", "synced", "failed"]).notNull().default("pending"),
+  lumaSyncedAt: timestamp("lumaSyncedAt"),
+  archivedAt: timestamp("archivedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (t) => [
   index("idx_schedule_classDate").on(t.classDate),
   index("idx_schedule_location").on(t.location),
   index("idx_schedule_breederId").on(t.breederId),
+  index("idx_schedule_status").on(t.scheduleStatus),
 ]);
 export type PuppySchedule = typeof puppySchedule.$inferSelect;
 export type InsertPuppySchedule = typeof puppySchedule.$inferInsert;

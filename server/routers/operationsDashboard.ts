@@ -15,7 +15,7 @@ export const operationsDashboardRouter = router({
 
     const [schedules, newApplications, privateLeads, pendingRefunds, unreadMessages, overdueFollowUps] = await Promise.all([
       db.select().from(puppySchedule)
-        .where(and(gte(puppySchedule.classDate, today), lte(puppySchedule.classDate, horizon)))
+        .where(and(gte(puppySchedule.classDate, today), lte(puppySchedule.classDate, horizon), eq(puppySchedule.scheduleStatus, "scheduled")))
         .orderBy(asc(puppySchedule.classDate), asc(puppySchedule.startTime)),
       db.select({ id: jobApplications.id, name: jobApplications.name, role: jobApplications.role, location: jobApplications.location, createdAt: jobApplications.createdAt })
         .from(jobApplications)
@@ -45,6 +45,7 @@ export const operationsDashboardRouter = router({
         breed: schedule.breed,
         breederName: schedule.breederName,
         lumaEventUrl: schedule.lumaEventUrl,
+        lumaSyncStatus: schedule.lumaSyncStatus,
         fullyStaffed: preview.fullyStaffed,
         gaps: preview.gapLabels,
         teamNotified: Boolean(preview.lastSentAt),
@@ -52,6 +53,9 @@ export const operationsDashboardRouter = router({
     }));
 
     const actions: OperationsAction[] = [];
+    for (const event of readiness.filter(item => item.lumaSyncStatus === "failed" || item.lumaSyncStatus === "pending")) {
+      actions.push({ id: `luma-${event.id}`, severity: "critical", title: `Repair Luma sync for ${event.location} on ${event.classDate}`, detail: "The APY HQ schedule exists, but its public Luma event is missing or stale.", href: "/admin/schedule-calendar" });
+    }
     for (const event of readiness.filter(item => !item.fullyStaffed)) {
       actions.push({
         id: `staff-${event.id}`,
@@ -74,6 +78,7 @@ export const operationsDashboardRouter = router({
         next14Days: readiness.length,
         staffingGaps: readiness.filter(item => !item.fullyStaffed).length,
         unnotifiedTeams: readiness.filter(item => item.fullyStaffed && !item.teamNotified).length,
+        lumaSyncIssues: readiness.filter(item => item.lumaSyncStatus === "failed" || item.lumaSyncStatus === "pending").length,
         newPrivateLeads: privateLeads.length,
         newApplications: newApplications.length,
         pendingRefunds: pendingRefunds.length,
