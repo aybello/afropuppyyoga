@@ -832,3 +832,18 @@
 - [x] Restrict the Run APY dashboard to Owner and Operations Manager roles, then merge, validate, and publish pull request #7
 - [x] Rebase the Run APY dashboard on current APY HQ authorization and resolve its TypeScript issues before merging
 - [x] Resolve the Run APY dashboard loading state before publishing the operations command centre
+
+## Remaining APY HQ Update Stack (Aug 28, 2026)
+- [x] Review, correct as needed, merge, validate, and publish PR #8 class lifecycle
+- [ ] Review, correct as needed, merge, validate, and publish PR #9 private-event and hiring workflows
+- [ ] Review, correct as needed, merge, validate, and publish PR #10 breeder workflow
+- [ ] Review, correct as needed, merge, validate, and publish PR #11 applicant upload resiliency
+- [x] Make the PR #8 schedule lifecycle migration compatible with TiDB column/index ordering before applying it
+- [x] Verify and resolve the Run APY loading state while validating PR #8 lifecycle changes
+- [x] Keep Run APY available until PR #10 creates the breeder follow-up table it will later consume
+- [x] Confirm Run APY uses the explicit owner-and-Operations-Manager guard and cannot broaden team-member access
+- [x] Diagnose the remaining Run APY client loading state after the backend missing-table repair
+- [x] Complete a fresh owner-browser verification after the Run APY query recovery reloads
+- [x] Inspect the actual TiDB/Drizzle wrapped error shape before finalizing the narrowly scoped Run APY fallback
+- [x] Treat only the verified pre-PR #10 breeder follow-up column mismatch as an empty Run APY feed
+- [x] Verify Schedule Calendar and Puppy Class Schedule load, with the class editor showing the APY HQ and Luma synchronization state
