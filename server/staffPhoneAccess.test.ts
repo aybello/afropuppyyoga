@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { STAFF_PHONE_CODE_MAX_ATTEMPTS, createStaffPhoneCode, hashStaffPhoneCode, isConfiguredOwnerPhone, staffPhoneCodeMatches } from "./staffPhoneAccess";
+import { STAFF_PHONE_CODE_MAX_ATTEMPTS, createStaffPhoneCode, hashStaffPhoneCode, isConfiguredOwnerPhone, resolveOwnerSessionOpenId, staffPhoneCodeMatches } from "./staffPhoneAccess";
 
 const originalSecret = process.env.JWT_SECRET;
 
@@ -32,5 +32,15 @@ describe("staff phone access", () => {
     const ownerPhone = process.env.OWNER_PHONE_NUMBER;
     expect(ownerPhone).toBeTruthy();
     expect(isConfiguredOwnerPhone("+12897881885", ownerPhone)).toBe(true);
+  });
+
+  it("resolves the configured owner identity from the matching existing admin only when no direct identifier is available", () => {
+    const candidates = [
+      { openId: "legacy-admin", name: "Admin" },
+      { openId: "owner-open-id", name: "Ay Bello" },
+    ];
+    expect(resolveOwnerSessionOpenId("direct-owner", "Ay Bello", candidates)).toBe("direct-owner");
+    expect(resolveOwnerSessionOpenId("", "Ay Bello", candidates)).toBe("owner-open-id");
+    expect(resolveOwnerSessionOpenId("", "Unknown Owner", candidates)).toBeUndefined();
   });
 });

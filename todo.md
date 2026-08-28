@@ -9,9 +9,15 @@
 - [x] Verify the owner-account action reaches the configured AfroPuppyYoga identity-provider sign-in page without an application routing failure
 - [ ] End-to-end verify a phone OTP session reaches `/staff` with the intended APY HQ access level
 - [ ] Confirm delivery of the owner-approved one-time code and complete the passwordless APY HQ session test
+- [ ] Confirm the corrected owner recipient receives the second approved verification code
+- [x] Verify the corrected owner-phone request reaches APY HQ code entry without a client-side error
 - [x] Verify the published passwordless APY HQ phone-access form loads before submitting the owner-approved test number
 - [ ] Diagnose and restore live delivery of the APY HQ owner verification SMS before sending another code
 - [x] Update the configured owner phone used by passwordless APY HQ access to the owner-confirmed mobile number
+- [ ] Diagnose and correct the rejected owner verification code before retesting passwordless APY HQ access
+- [ ] Request and verify a fresh, unused owner code after resolving the consumed-code mismatch
+- [ ] Resolve the owner session identity from the existing admin record when the production environment omits the owner identifier
+- [x] Confirm the fresh verification form contains the owner-approved mobile number before dispatching the final code
 - [ ] End-to-end verify owner sign-in lands on `/staff` after the OAuth callback
 
 ## Staff Invoice Portal

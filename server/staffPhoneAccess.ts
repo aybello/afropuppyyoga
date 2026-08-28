@@ -26,3 +26,22 @@ export function isConfiguredOwnerPhone(phone: string, configuredOwnerPhone = pro
   const ownerPhone = normalizeCanadianPhoneNumber(configuredOwnerPhone ?? "");
   return Boolean(ownerPhone && phone === ownerPhone);
 }
+
+type OwnerSessionCandidate = { openId: string; name: string | null };
+
+/**
+ * Prefers the configured owner identifier and otherwise resolves the configured
+ * owner name from existing admin records. The phone gate is enforced separately.
+ */
+export function resolveOwnerSessionOpenId(
+  configuredOwnerOpenId: string | undefined,
+  configuredOwnerName: string | undefined,
+  candidates: OwnerSessionCandidate[],
+): string | undefined {
+  const directOpenId = configuredOwnerOpenId?.trim();
+  if (directOpenId) return directOpenId;
+
+  const ownerName = configuredOwnerName?.trim().toLowerCase();
+  if (!ownerName) return undefined;
+  return candidates.find((candidate) => candidate.name?.trim().toLowerCase() === ownerName)?.openId;
+}
