@@ -132,7 +132,7 @@ export async function createJobApplication(data: InsertJobApplication) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const result = await db.insert(jobApplications).values(data);
-  return result;
+  return Number(result[0].insertId);
 }
 
 export async function getRecentDuplicateJobApplication(input: { email: string; role: string; location: string }) {
@@ -158,9 +158,9 @@ export async function getRecentDuplicateJobApplication(input: { email: string; r
 export async function getAllJobApplications() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const apps = await db.select().from(jobApplications).where(
-    and(isNull(jobApplications.deletedAt), eq(jobApplications.isTeamMember, false)),
-  ).orderBy(desc(jobApplications.createdAt));
+  const apps = await db.select().from(jobApplications)
+    .where(isNull(jobApplications.deletedAt))
+    .orderBy(desc(jobApplications.createdAt));
   const allSigningTokens = await db.select().from(signingTokens);
   const latestSigningByApplication = new Map<number, (typeof allSigningTokens)[number]>();
   for (const signing of allSigningTokens) {
@@ -187,7 +187,6 @@ export async function getJobApplicationById(id: number) {
   const rows = await db.select().from(jobApplications).where(
     and(
       eq(jobApplications.id, id),
-      eq(jobApplications.isTeamMember, false),
       isNull(jobApplications.deletedAt),
     ),
   ).limit(1);
@@ -344,7 +343,12 @@ export async function getSigningTokenByToken(token: string) {
 export async function getSigningTokenByApplicationId(applicationId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.select().from(signingTokens).where(eq(signingTokens.applicationId, applicationId)).limit(1);
+  const result = await db
+    .select()
+    .from(signingTokens)
+    .where(eq(signingTokens.applicationId, applicationId))
+    .orderBy(desc(signingTokens.createdAt), desc(signingTokens.id))
+    .limit(1);
   return result[0] ?? null;
 }
 

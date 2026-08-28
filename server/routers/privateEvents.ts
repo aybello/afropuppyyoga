@@ -1,16 +1,36 @@
 import { z } from "zod";
-import { publicProcedure, router, staffProcedure } from "../_core/trpc";
+import { ownerProcedure, publicProcedure, router, staffProcedure } from "../_core/trpc";
 import { notifyOwner } from "../_core/notification";
 import { sendEmail } from "../email";
 import { getDb } from "../db";
-import { privateEventInquiries } from "../../drizzle/schema";
-import { desc, eq } from "drizzle-orm";
+import {
+  communicationsLog,
+  privateEventActions,
+  privateEventInquiries,
+  type PrivateEventInquiry,
+} from "../../drizzle/schema";
+import { and, desc, eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { buildPrivateEventQuoteDraft } from "../privateEventQuote";
 import { normalizeCanadianPhoneNumber } from "@shared/phone";
+import { torontoDateTimeIso } from "../lumaScheduleHelper";
 
 const LUMA_BASE = "https://public-api.luma.com/v1";
 const HST_RATE = 0.13;
+
+export function calculatePrivateEventPrice(finalPrice: number, pricingType: "plus_hst" | "all_in") {
+  const basePriceCents = Math.round(finalPrice * 100);
+  if (pricingType === "plus_hst") {
+    const hstCents = Math.round(basePriceCents * HST_RATE);
+    return { basePriceCents, hstCents, totalCents: basePriceCents + hstCents };
+  }
+  const hstCents = Math.round(basePriceCents - basePriceCents / (1 + HST_RATE));
+  return { basePriceCents, hstCents, totalCents: basePriceCents };
+}
+
+export function privateEventQuoteNeedsApproval(finalPrice: number, estimatedMin: number) {
+  return finalPrice < estimatedMin || finalPrice > 3000;
+}
 
 /** APY Studio locations with actual addresses */
 const LOCATION_MAP: Record<string, { address: string; fullAddress: string; lat: number; lng: number; googlePlaceId?: string }> = {
@@ -151,6 +171,24 @@ function buildEventDescription(params: {
 }
 
 /** Create a private paid event on Luma */
+async function cancelUnpublishedLumaEvent(apiKey: string, eventId: string) {
+  const requestRes = await fetch(`${LUMA_BASE}/events/cancel/request`, {
+    method: "POST",
+    headers: { "x-luma-api-key": apiKey, "Content-Type": "application/json" },
+    body: JSON.stringify({ event_id: eventId }),
+  });
+  if (!requestRes.ok) throw new Error(`Luma cleanup request failed: ${requestRes.status}`);
+  const requestData = await requestRes.json() as { cancellation_token?: string; token?: string };
+  const cancellationToken = requestData.cancellation_token || requestData.token;
+  if (!cancellationToken) throw new Error("Luma cleanup request returned no cancellation token");
+  const cancelRes = await fetch(`${LUMA_BASE}/events/cancel`, {
+    method: "POST",
+    headers: { "x-luma-api-key": apiKey, "Content-Type": "application/json" },
+    body: JSON.stringify({ event_id: eventId, cancellation_token: cancellationToken, should_refund: false }),
+  });
+  if (!cancelRes.ok) throw new Error(`Luma cleanup failed: ${cancelRes.status}`);
+}
+
 async function createLumaEvent(params: {
   name: string;
   startAt: string; // ISO 8601
@@ -235,6 +273,11 @@ async function createLumaEvent(params: {
 
   if (!ticketRes.ok) {
     const err = await ticketRes.text();
+    try {
+      await cancelUnpublishedLumaEvent(apiKey, eventId);
+    } catch (cleanupError) {
+      console.error(`[PrivateEvents] Failed to remove partial Luma event ${eventId}:`, cleanupError);
+    }
     throw new Error(`Luma create ticket type failed: ${ticketRes.status} ${err}`);
   }
 
@@ -270,6 +313,85 @@ async function createLumaEvent(params: {
   }
 
   return { eventId, eventUrl };
+}
+
+function requirePreparedPrivateEvent(inquiry: PrivateEventInquiry) {
+  if (
+    !inquiry.finalPriceCents ||
+    !inquiry.pricingType ||
+    !inquiry.preferredDate ||
+    !inquiry.eventStartTime ||
+    !inquiry.eventEndTime ||
+    !inquiry.eventVenue
+  ) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Complete the price, date, time, and venue before publishing the booking link.",
+    });
+  }
+  if (inquiry.pricingType !== "plus_hst" && inquiry.pricingType !== "all_in") {
+    throw new TRPCError({ code: "BAD_REQUEST", message: "The saved pricing type is invalid." });
+  }
+  return {
+    basePriceCents: inquiry.finalPriceCents,
+    hstCents: inquiry.hstCents ?? 0,
+    totalCents: inquiry.pricingType === "plus_hst"
+      ? inquiry.finalPriceCents + (inquiry.hstCents ?? 0)
+      : inquiry.finalPriceCents,
+    pricingType: inquiry.pricingType,
+    eventDate: inquiry.preferredDate,
+    startTime: inquiry.eventStartTime,
+    endTime: inquiry.eventEndTime,
+    venue: inquiry.eventVenue,
+  };
+}
+
+function buildStoredPrivateEventQuote(inquiry: PrivateEventInquiry, eventUrl: string) {
+  const prepared = requirePreparedPrivateEvent(inquiry);
+  return buildPrivateEventQuoteDraft({
+    customerName: inquiry.name,
+    organization: inquiry.organization,
+    eventType: inquiry.eventType,
+    guests: inquiry.guests,
+    packageType: inquiry.packageType,
+    eventDate: prepared.eventDate,
+    startTime: prepared.startTime,
+    venue: prepared.venue,
+    basePriceCents: prepared.basePriceCents,
+    hstCents: prepared.hstCents,
+    pricingType: prepared.pricingType,
+    eventUrl,
+    puppyBreed: inquiry.puppyBreed,
+  });
+}
+
+async function publishPrivateEvent(inquiry: PrivateEventInquiry) {
+  const prepared = requirePreparedPrivateEvent(inquiry);
+  const orgName = inquiry.organization || inquiry.name;
+  const breed = inquiry.puppyBreed || "adorable puppies";
+  const description = buildEventDescription({
+    eventType: inquiry.eventType,
+    orgName,
+    guests: inquiry.guests,
+    sessions: inquiry.sessions || 1,
+    breed,
+  });
+  const { eventId, eventUrl } = await createLumaEvent({
+    name: `${orgName} — Private PuppyYoga`,
+    startAt: torontoDateTimeIso(prepared.eventDate, prepared.startTime),
+    endAt: torontoDateTimeIso(prepared.eventDate, prepared.endTime),
+    location: prepared.venue,
+    maxCapacity: inquiry.guests,
+    description,
+    priceCents: prepared.totalCents,
+    sessions: inquiry.sessions || 1,
+  });
+  const emailDraft = buildStoredPrivateEventQuote(inquiry, eventUrl);
+  return { eventId, eventUrl, emailDraft, ...prepared };
+}
+
+function actionDetails(value: Record<string, unknown>) {
+  return JSON.stringify(value);
 }
 
 const APY_EMAIL = "afropuppyyoga@gmail.com";
@@ -553,7 +675,7 @@ export const privateEventsRouter = router({
       // 1. Save to database first (source of truth)
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
-      await db.insert(privateEventInquiries).values({
+      const inserted = await db.insert(privateEventInquiries).values({
         name: input.name,
         email: input.email,
         phone: input.phone || null,
@@ -566,8 +688,10 @@ export const privateEventsRouter = router({
         estimatedMin: serverMin,
         estimatedMax: serverMax,
       });
+      const inquiryId = Number(inserted[0].insertId);
 
       // 2. Send branded email to APY inbox
+      let customerConfirmationStatus = "sent";
       try {
         await sendEmail({
           to: APY_EMAIL,
@@ -641,8 +765,33 @@ export const privateEventsRouter = router({
           ].filter(Boolean).join("\n"),
         });
       } catch (e) {
+        customerConfirmationStatus = "failed";
         console.error("Failed to send customer confirmation email:", e);
         // Don't throw — inquiry is already saved to DB
+      }
+
+      if (inquiryId) {
+        await Promise.all([
+          db.insert(privateEventActions).values({
+            inquiryId,
+            action: "inquiry_submitted",
+            actorName: input.name,
+            actorEmail: input.email,
+            details: actionDetails({ estimatedMin: serverMin, estimatedMax: serverMax, packageType: input.packageType }),
+          }),
+          db.insert(communicationsLog).values({
+            entityType: "private_event",
+            entityId: inquiryId,
+            channel: "email",
+            direction: "outbound",
+            action: "inquiry_confirmation_sent",
+            recipient: input.email,
+            subject: `Your AfroPuppyYoga Private Event Inquiry — ${estimateStr}`,
+            bodyPreview: `Inquiry received for ${input.eventType}, ${input.guests} guests, ${input.location}. Estimated quote: ${estimateStr}.`,
+            deliveryStatus: customerConfirmationStatus,
+            actorName: "APY HQ",
+          }),
+        ]);
       }
 
       // 4. Also send Manus owner notification as backup
@@ -675,10 +824,7 @@ export const privateEventsRouter = router({
     }),
 
   // Admin: list all inquiries (newest first)
-  listInquiries: staffProcedure.query(async ({ ctx }) => {
-    if (ctx.user.role !== "admin" && ctx.user.role !== "staff") {
-      throw new TRPCError({ code: "FORBIDDEN" });
-    }
+  listInquiries: staffProcedure.query(async () => {
     const db = await getDb();
     if (!db) return [];
     return db
@@ -697,11 +843,10 @@ export const privateEventsRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (ctx.user.role !== "admin" && ctx.user.role !== "staff") {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      const [inquiry] = await db.select().from(privateEventInquiries).where(eq(privateEventInquiries.id, input.id));
+      if (!inquiry) throw new TRPCError({ code: "NOT_FOUND", message: "Inquiry not found" });
       await db
         .update(privateEventInquiries)
         .set({
@@ -709,6 +854,14 @@ export const privateEventsRouter = router({
           ...(input.adminNotes !== undefined ? { adminNotes: input.adminNotes } : {}),
         })
         .where(eq(privateEventInquiries.id, input.id));
+      await db.insert(privateEventActions).values({
+        inquiryId: input.id,
+        action: "inquiry_updated",
+        actorUserId: ctx.user.id,
+        actorName: ctx.user.name,
+        actorEmail: ctx.user.email,
+        details: actionDetails({ fromStatus: inquiry.status, toStatus: input.status, notesChanged: input.adminNotes !== undefined }),
+      });
       return { success: true };
     }),
 
@@ -729,9 +882,6 @@ export const privateEventsRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (ctx.user.role !== "admin" && ctx.user.role !== "staff") {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
@@ -741,76 +891,26 @@ export const privateEventsRouter = router({
         .from(privateEventInquiries)
         .where(eq(privateEventInquiries.id, input.inquiryId));
       if (!inquiry) throw new TRPCError({ code: "NOT_FOUND", message: "Inquiry not found" });
-
-      // Calculate pricing
-      let totalCents: number;
-      let hstCents: number;
-      if (input.pricingType === "plus_hst") {
-        hstCents = Math.round(input.finalPrice * 100 * HST_RATE);
-        totalCents = input.finalPrice * 100 + hstCents;
-      } else {
-        // all_in: price already includes HST
-        totalCents = input.finalPrice * 100;
-        hstCents = Math.round(totalCents - totalCents / (1 + HST_RATE));
+      if (inquiry.lumaEventId || inquiry.lumaEventUrl) {
+        throw new TRPCError({ code: "CONFLICT", message: "Cancel the existing unused booking page before preparing a replacement." });
+      }
+      if (inquiry.quoteSentAt || inquiry.status === "booked") {
+        throw new TRPCError({ code: "PRECONDITION_FAILED", message: "A sent or booked quote cannot be replaced from this control." });
       }
 
-      // Check if owner approval is needed (discount below estimate or > $3000)
-      const needsApproval = input.finalPrice < inquiry.estimatedMin || input.finalPrice > 3000;
-
-      // Build event name — include org/client name
-      const orgName = input.organization || inquiry.name;
-      const eventName = orgName ? `${orgName} — Private PuppyYoga` : "Private PuppyYoga Experience";
-
-      // Build ISO timestamps. Event times are entered in the Toronto business timezone.
-      const startAt = `${input.eventDate}T${input.startTime}:00-04:00`;
-      const endAt = `${input.eventDate}T${input.endTime}:00-04:00`;
-
+      const { basePriceCents, hstCents, totalCents } = calculatePrivateEventPrice(input.finalPrice, input.pricingType);
+      const needsApproval = privateEventQuoteNeedsApproval(input.finalPrice, inquiry.estimatedMin);
       const eventVenue = input.customLocation || inquiry.location;
+      // Validate Toronto local date/time before any external event is created.
+      torontoDateTimeIso(input.eventDate, input.startTime);
+      torontoDateTimeIso(input.eventDate, input.endTime);
 
-      // Build personalized description based on event type
-      const breed = input.puppyBreed || "adorable puppies";
-      const descLines = buildEventDescription({
-        eventType: inquiry.eventType,
-        orgName,
-        guests: inquiry.guests,
-        sessions: input.sessions,
-        breed,
-      });
-
-      // Create the Luma event
-      const { eventId, eventUrl } = await createLumaEvent({
-        name: eventName,
-        startAt,
-        endAt,
-        location: eventVenue,
-        maxCapacity: inquiry.guests,
-        description: descLines,
-        priceCents: totalCents,
-        sessions: input.sessions,
-      });
-
-      const emailDraft = buildPrivateEventQuoteDraft({
-        customerName: inquiry.name,
-        organization: input.organization || inquiry.organization,
-        eventType: inquiry.eventType,
-        guests: inquiry.guests,
-        packageType: inquiry.packageType,
-        eventDate: input.eventDate,
-        startTime: input.startTime,
-        venue: eventVenue,
-        basePriceCents: Math.round(input.finalPrice * 100),
-        hstCents,
-        pricingType: input.pricingType,
-        eventUrl,
-        puppyBreed: input.puppyBreed,
-      });
-
-      // Store a complete, reviewable offer. The status remains Contacted until the
-      // owner explicitly sends the drafted email from the dashboard.
+      // Save the reviewable commercial terms first. Out-of-policy quotes stop here:
+      // no Luma payment page exists until the owner explicitly approves them.
       await db
         .update(privateEventInquiries)
         .set({
-          finalPriceCents: input.finalPrice * 100,
+          finalPriceCents: basePriceCents,
           hstCents,
           pricingType: input.pricingType,
           sessions: input.sessions,
@@ -820,23 +920,180 @@ export const privateEventsRouter = router({
           eventVenue,
           eventStartTime: input.startTime,
           eventEndTime: input.endTime,
-          lumaEventUrl: eventUrl,
-          lumaEventId: eventId,
-          quoteEmailSubject: emailDraft.subject,
-          quoteEmailBody: emailDraft.body,
-          ownerApproved: !needsApproval, // auto-approved if no flag
+          lumaEventUrl: null,
+          lumaEventId: null,
+          quoteEmailSubject: null,
+          quoteEmailBody: null,
+          ownerApproved: !needsApproval,
+          approvalStatus: needsApproval ? "pending" : "approved",
+          approvalRequestedAt: needsApproval ? new Date() : null,
+          approvalRequestedByUserId: needsApproval ? ctx.user.id : null,
+          approvalRequestedByName: needsApproval ? ctx.user.name : null,
+          approvedAt: needsApproval ? null : new Date(),
+          approvedByUserId: needsApproval ? null : ctx.user.id,
+          approvedByName: needsApproval ? null : ctx.user.name,
+          approvalRejectedAt: null,
+          approvalRejectedByUserId: null,
+          approvalRejectionReason: null,
+          bookingLinkPublishedAt: null,
           status: "contacted",
         })
         .where(eq(privateEventInquiries.id, input.inquiryId));
 
+      await db.insert(privateEventActions).values({
+        inquiryId: inquiry.id,
+        action: needsApproval ? "approval_requested" : "quote_auto_approved",
+        actorUserId: ctx.user.id,
+        actorName: ctx.user.name,
+        actorEmail: ctx.user.email,
+        details: actionDetails({ basePriceCents, hstCents, totalCents, pricingType: input.pricingType }),
+      });
+
+      if (needsApproval) {
+        await notifyOwner({
+          title: `Private Event Quote Needs Approval — ${inquiry.name}`,
+          content: `${inquiry.name}: $${(totalCents / 100).toFixed(2)} CAD for ${input.eventDate}. No Luma payment page or client email has been created yet.`,
+        });
+        return {
+          success: true,
+          eventUrl: null,
+          eventId: null,
+          totalCents,
+          hstCents,
+          needsApproval: true,
+          approvalStatus: "pending" as const,
+          emailDraft: null,
+        };
+      }
+
+      const [preparedInquiry] = await db
+        .select()
+        .from(privateEventInquiries)
+        .where(eq(privateEventInquiries.id, input.inquiryId));
+      if (!preparedInquiry) throw new TRPCError({ code: "NOT_FOUND", message: "Inquiry not found after preparation." });
+      const published = await publishPrivateEvent(preparedInquiry);
+      await db.update(privateEventInquiries).set({
+        lumaEventUrl: published.eventUrl,
+        lumaEventId: published.eventId,
+        quoteEmailSubject: published.emailDraft.subject,
+        quoteEmailBody: published.emailDraft.body,
+        bookingLinkPublishedAt: new Date(),
+      }).where(eq(privateEventInquiries.id, input.inquiryId));
+      await db.insert(privateEventActions).values({
+        inquiryId: inquiry.id,
+        action: "booking_link_published",
+        actorUserId: ctx.user.id,
+        actorName: ctx.user.name,
+        actorEmail: ctx.user.email,
+        details: actionDetails({ eventId: published.eventId, eventUrl: published.eventUrl }),
+      });
+
       return {
         success: true,
-        eventUrl,
-        eventId,
+        eventUrl: published.eventUrl,
+        eventId: published.eventId,
         totalCents,
         hstCents,
-        needsApproval,
-        emailDraft,
+        needsApproval: false,
+        approvalStatus: "approved" as const,
+        emailDraft: published.emailDraft,
+      };
+    }),
+
+  /** Owner-only: approve an exception quote and publish its private payment page. */
+  approveQuote: ownerProcedure
+    .input(z.object({ inquiryId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      const [inquiry] = await db.select().from(privateEventInquiries).where(eq(privateEventInquiries.id, input.inquiryId));
+      if (!inquiry) throw new TRPCError({ code: "NOT_FOUND", message: "Inquiry not found" });
+      if (inquiry.approvalStatus !== "pending" && inquiry.approvalStatus !== "rejected") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "This quote is not waiting for owner approval." });
+      }
+      if (Boolean(inquiry.lumaEventId) !== Boolean(inquiry.lumaEventUrl)) {
+        throw new TRPCError({ code: "CONFLICT", message: "The legacy Luma booking record is incomplete and needs manual review." });
+      }
+
+      // Legacy records may already have an unapproved page from the former flow.
+      // New quotes are published only after approval; legacy pages are adopted in place.
+      const published = inquiry.lumaEventId && inquiry.lumaEventUrl
+        ? {
+            eventId: inquiry.lumaEventId,
+            eventUrl: inquiry.lumaEventUrl,
+            emailDraft: buildStoredPrivateEventQuote(inquiry, inquiry.lumaEventUrl),
+          }
+        : await publishPrivateEvent(inquiry);
+      await db.update(privateEventInquiries).set({
+        ownerApproved: true,
+        approvalStatus: "approved",
+        approvedAt: new Date(),
+        approvedByUserId: ctx.user.id,
+        approvedByName: ctx.user.name,
+        approvalRejectedAt: null,
+        approvalRejectedByUserId: null,
+        approvalRejectionReason: null,
+        lumaEventId: published.eventId,
+        lumaEventUrl: published.eventUrl,
+        quoteEmailSubject: published.emailDraft.subject,
+        quoteEmailBody: published.emailDraft.body,
+        bookingLinkPublishedAt: new Date(),
+      }).where(eq(privateEventInquiries.id, input.inquiryId));
+      await db.insert(privateEventActions).values({
+        inquiryId: inquiry.id,
+        action: inquiry.lumaEventId ? "legacy_quote_approved" : "quote_approved_and_published",
+        actorUserId: ctx.user.id,
+        actorName: ctx.user.name,
+        actorEmail: ctx.user.email,
+        details: actionDetails({ eventId: published.eventId, eventUrl: published.eventUrl }),
+      });
+      return { success: true, eventUrl: published.eventUrl, eventId: published.eventId, emailDraft: published.emailDraft };
+    }),
+
+  /** Owner-only: reject an exception quote without creating anything in Luma. */
+  rejectQuote: ownerProcedure
+    .input(z.object({ inquiryId: z.number(), reason: z.string().trim().min(3).max(2000) }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      const [inquiry] = await db.select().from(privateEventInquiries).where(eq(privateEventInquiries.id, input.inquiryId));
+      if (!inquiry) throw new TRPCError({ code: "NOT_FOUND", message: "Inquiry not found" });
+      if (inquiry.lumaEventId || inquiry.quoteSentAt) {
+        throw new TRPCError({ code: "CONFLICT", message: "A published or sent quote cannot be rejected from this control." });
+      }
+      await db.update(privateEventInquiries).set({
+        ownerApproved: false,
+        approvalStatus: "rejected",
+        approvalRejectedAt: new Date(),
+        approvalRejectedByUserId: ctx.user.id,
+        approvalRejectionReason: input.reason,
+      }).where(eq(privateEventInquiries.id, input.inquiryId));
+      await db.insert(privateEventActions).values({
+        inquiryId: inquiry.id,
+        action: "quote_rejected",
+        actorUserId: ctx.user.id,
+        actorName: ctx.user.name,
+        actorEmail: ctx.user.email,
+        details: actionDetails({ reason: input.reason }),
+      });
+      return { success: true };
+    }),
+
+  getTimeline: staffProcedure
+    .input(z.object({ inquiryId: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { actions: [], communications: [] };
+      const [actions, communications] = await Promise.all([
+        db.select().from(privateEventActions).where(eq(privateEventActions.inquiryId, input.inquiryId)).orderBy(desc(privateEventActions.createdAt)),
+        db.select().from(communicationsLog).where(and(
+          eq(communicationsLog.entityType, "private_event"),
+          eq(communicationsLog.entityId, input.inquiryId),
+        )).orderBy(desc(communicationsLog.createdAt)),
+      ]);
+      return {
+        actions,
+        communications,
       };
     }),
 
@@ -851,9 +1108,6 @@ export const privateEventsRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (ctx.user.role !== "admin" && ctx.user.role !== "staff") {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
@@ -862,7 +1116,16 @@ export const privateEventsRouter = router({
         .from(privateEventInquiries)
         .where(eq(privateEventInquiries.id, input.inquiryId));
       if (!inquiry) throw new TRPCError({ code: "NOT_FOUND" });
+      if (!inquiry.ownerApproved || inquiry.approvalStatus !== "approved") {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "The owner must approve this quote before it can be sent.",
+        });
+      }
       if (!inquiry.lumaEventUrl) throw new TRPCError({ code: "BAD_REQUEST", message: "No booking link generated yet" });
+      if (inquiry.quoteSentAt) {
+        throw new TRPCError({ code: "CONFLICT", message: "This quote email has already been sent." });
+      }
 
       const fallbackDraft = buildPrivateEventQuoteDraft({
         customerName: inquiry.name,
@@ -926,16 +1189,41 @@ export const privateEventsRouter = router({
         })
         .where(eq(privateEventInquiries.id, input.inquiryId));
 
+      try {
+        await Promise.all([
+          db.insert(privateEventActions).values({
+            inquiryId: inquiry.id,
+            action: "quote_email_sent",
+            actorUserId: ctx.user.id,
+            actorName: ctx.user.name,
+            actorEmail: ctx.user.email,
+            details: actionDetails({ subject, recipient: inquiry.email }),
+          }),
+          db.insert(communicationsLog).values({
+            entityType: "private_event",
+            entityId: inquiry.id,
+            channel: "email",
+            direction: "outbound",
+            action: "quote_sent",
+            recipient: inquiry.email,
+            subject,
+            bodyPreview: body.slice(0, 1000),
+            deliveryStatus: "sent",
+            actorUserId: ctx.user.id,
+            actorName: ctx.user.name,
+          }),
+        ]);
+      } catch (error) {
+        console.error(`[PrivateEvents] Quote sent but history write failed for inquiry ${inquiry.id}:`, error);
+      }
+
       return { success: true };
     }),
 
-  /** Delete a generated Luma event and clear the link from the inquiry */
-  deleteLumaEvent: staffProcedure
+  /** Owner-only removal of an unsent, unused Luma page through Luma's two-step cancellation API. */
+  deleteLumaEvent: ownerProcedure
     .input(z.object({ inquiryId: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      if (ctx.user.role !== "admin" && ctx.user.role !== "staff") {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
@@ -945,20 +1233,57 @@ export const privateEventsRouter = router({
         .where(eq(privateEventInquiries.id, input.inquiryId));
       if (!inquiry) throw new TRPCError({ code: "NOT_FOUND", message: "Inquiry not found" });
       if (!inquiry.lumaEventId) throw new TRPCError({ code: "BAD_REQUEST", message: "No Luma event to delete" });
+      if (inquiry.quoteSentAt || inquiry.status === "booked") {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "This booking page was already sent or booked. Use the customer cancellation workflow instead.",
+        });
+      }
 
       const apiKey = process.env.LUMA_API_KEY;
       if (!apiKey) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "LUMA_API_KEY not set" });
 
-      // Delete the event on Luma
-      const delRes = await fetch(`${LUMA_BASE}/events/delete?event_id=${inquiry.lumaEventId}`, {
-        method: "DELETE",
-        headers: { "x-luma-api-key": apiKey },
-      });
+      const guestUrl = new URL(`${LUMA_BASE}/events/guests/list`);
+      guestUrl.searchParams.set("event_id", inquiry.lumaEventId);
+      guestUrl.searchParams.set("approval_status", "approved");
+      guestUrl.searchParams.set("pagination_limit", "1");
+      const guestRes = await fetch(guestUrl, { headers: { "x-luma-api-key": apiKey } });
+      if (!guestRes.ok) {
+        throw new TRPCError({ code: "BAD_GATEWAY", message: "Could not verify whether this Luma event has guests." });
+      }
+      const guestData = await guestRes.json() as { entries?: unknown[] };
+      if ((guestData.entries ?? []).length > 0) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "This event has a registered guest and cannot be removed from this control.",
+        });
+      }
 
-      // Luma returns 404 if already deleted — that's fine
-      if (!delRes.ok && delRes.status !== 404) {
-        const err = await delRes.text();
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `Luma delete failed: ${delRes.status} ${err}` });
+      const requestRes = await fetch(`${LUMA_BASE}/events/cancel/request`, {
+        method: "POST",
+        headers: { "x-luma-api-key": apiKey, "Content-Type": "application/json" },
+        body: JSON.stringify({ event_id: inquiry.lumaEventId }),
+      });
+      if (!requestRes.ok) {
+        const err = await requestRes.text();
+        throw new TRPCError({ code: "BAD_GATEWAY", message: `Luma cancellation request failed: ${requestRes.status} ${err}` });
+      }
+      const requestData = await requestRes.json() as { cancellation_token?: string; token?: string };
+      const cancellationToken = requestData.cancellation_token || requestData.token;
+      if (!cancellationToken) throw new TRPCError({ code: "BAD_GATEWAY", message: "Luma did not return a cancellation token." });
+
+      const cancelRes = await fetch(`${LUMA_BASE}/events/cancel`, {
+        method: "POST",
+        headers: { "x-luma-api-key": apiKey, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event_id: inquiry.lumaEventId,
+          cancellation_token: cancellationToken,
+          should_refund: false,
+        }),
+      });
+      if (!cancelRes.ok) {
+        const err = await cancelRes.text();
+        throw new TRPCError({ code: "BAD_GATEWAY", message: `Luma cancellation failed: ${cancelRes.status} ${err}` });
       }
 
       // Clear the link from the inquiry and revert status
@@ -967,15 +1292,25 @@ export const privateEventsRouter = router({
         .set({
           lumaEventUrl: null,
           lumaEventId: null,
+          bookingLinkPublishedAt: null,
           status: "contacted",
         })
         .where(eq(privateEventInquiries.id, input.inquiryId));
+
+      await db.insert(privateEventActions).values({
+        inquiryId: inquiry.id,
+        action: "unused_booking_page_cancelled",
+        actorUserId: ctx.user.id,
+        actorName: ctx.user.name,
+        actorEmail: ctx.user.email,
+        details: actionDetails({ eventId: inquiry.lumaEventId }),
+      });
 
       return { success: true };
     }),
 
   /** Standalone Quick Booking Link — creates a Luma event without an existing inquiry */
-  generateQuickBookingLink: staffProcedure
+  generateQuickBookingLink: ownerProcedure
     .input(
       z.object({
         clientName: z.string().min(1),
@@ -997,26 +1332,13 @@ export const privateEventsRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (ctx.user.role !== "admin" && ctx.user.role !== "staff") {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
-
-      // Calculate pricing
-      let totalCents: number;
-      let hstCents: number;
-      if (input.pricingType === "plus_hst") {
-        hstCents = Math.round(input.finalPrice * 100 * HST_RATE);
-        totalCents = input.finalPrice * 100 + hstCents;
-      } else {
-        totalCents = input.finalPrice * 100;
-        hstCents = Math.round(totalCents - totalCents / (1 + HST_RATE));
-      }
+      const { totalCents, hstCents } = calculatePrivateEventPrice(input.finalPrice, input.pricingType);
 
       // Use first session start and last session end for the Luma event times
       const firstSession = input.sessionSchedule[0];
       const lastSession = input.sessionSchedule[input.sessionSchedule.length - 1];
-      const startAt = `${input.eventDate}T${firstSession.startTime}:00-04:00`;
-      const endAt = `${input.eventDate}T${lastSession.endTime}:00-04:00`;
+      const startAt = torontoDateTimeIso(input.eventDate, firstSession.startTime);
+      const endAt = torontoDateTimeIso(input.eventDate, lastSession.endTime);
 
       // Build personalized description
       const orgName = input.organization || input.clientName;

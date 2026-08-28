@@ -97,6 +97,13 @@ type PrivateEventInquiry = {
   quoteEmailSubject: string | null;
   quoteEmailBody: string | null;
   ownerApproved: boolean | null;
+  approvalStatus: "draft" | "pending" | "approved" | "rejected";
+  approvalRequestedAt: Date | null;
+  approvedAt: Date | null;
+  approvedByName: string | null;
+  approvalRejectedAt: Date | null;
+  approvalRejectionReason: string | null;
+  bookingLinkPublishedAt: Date | null;
   quoteSentAt: Date | null;
   createdAt: Date;
 };
@@ -207,10 +214,15 @@ export default function PrivateEventsDashboard() {
   const { data: inquiries, isLoading } = trpc.privateEvents.listInquiries.useQuery(undefined, {
     enabled: isAuthenticated,
   });
+  const { data: inquiryTimeline, isLoading: timelineLoading } = trpc.privateEvents.getTimeline.useQuery(
+    { inquiryId: selectedInquiry?.id || 0 },
+    { enabled: Boolean(selectedInquiry) },
+  );
 
   const updateStatus = trpc.privateEvents.updateStatus.useMutation({
     onSuccess: () => {
       utils.privateEvents.listInquiries.invalidate();
+      utils.privateEvents.getTimeline.invalidate();
       toast.success("Inquiry updated successfully");
       setSelectedInquiry(null);
       setIsSaving(false);
@@ -224,15 +236,22 @@ export default function PrivateEventsDashboard() {
   const generateBooking = trpc.privateEvents.generateBookingLink.useMutation({
     onSuccess: (data) => {
       utils.privateEvents.listInquiries.invalidate();
-      setGeneratedLink(data.eventUrl);
-      setQuoteEmailSubject(data.emailDraft.subject);
-      setQuoteEmailBody(data.emailDraft.body);
+      utils.privateEvents.getTimeline.invalidate();
       setShowBookingPanel(false);
-      setShowEmailPanel(true);
       setIsGenerating(false);
       if (data.needsApproval) {
-        toast.info("Payment-ready offer created — review the email before sending.");
+        setGeneratedLink(null);
+        setQuoteEmailSubject("");
+        setQuoteEmailBody("");
+        setShowEmailPanel(false);
+        setSelectedInquiry((current) => current ? { ...current, approvalStatus: "pending", ownerApproved: false } : current);
+        toast.info("Quote saved for owner approval. No Luma page or client email was created.");
       } else {
+        setGeneratedLink(data.eventUrl);
+        setQuoteEmailSubject(data.emailDraft?.subject || "");
+        setQuoteEmailBody(data.emailDraft?.body || "");
+        setShowEmailPanel(true);
+        setSelectedInquiry((current) => current ? { ...current, approvalStatus: "approved", ownerApproved: true, lumaEventUrl: data.eventUrl } : current);
         toast.success("Payment-ready offer created. Review the email, then send it when ready.");
       }
     },
@@ -242,9 +261,40 @@ export default function PrivateEventsDashboard() {
     },
   });
 
+  const approveQuote = trpc.privateEvents.approveQuote.useMutation({
+    onSuccess: (data) => {
+      utils.privateEvents.listInquiries.invalidate();
+      utils.privateEvents.getTimeline.invalidate();
+      setGeneratedLink(data.eventUrl);
+      setQuoteEmailSubject(data.emailDraft.subject);
+      setQuoteEmailBody(data.emailDraft.body);
+      setSelectedInquiry((current) => current ? {
+        ...current,
+        approvalStatus: "approved",
+        ownerApproved: true,
+        lumaEventUrl: data.eventUrl,
+        lumaEventId: data.eventId,
+      } : current);
+      setShowEmailPanel(true);
+      toast.success("Quote approved and private Luma payment page published.");
+    },
+    onError: (err) => toast.error(`Could not approve quote: ${err.message}`),
+  });
+
+  const rejectQuote = trpc.privateEvents.rejectQuote.useMutation({
+    onSuccess: () => {
+      utils.privateEvents.listInquiries.invalidate();
+      utils.privateEvents.getTimeline.invalidate();
+      setSelectedInquiry((current) => current ? { ...current, approvalStatus: "rejected", ownerApproved: false } : current);
+      toast.success("Quote rejected. Nothing was created or sent.");
+    },
+    onError: (err) => toast.error(`Could not reject quote: ${err.message}`),
+  });
+
   const sendQuoteEmail = trpc.privateEvents.sendQuoteEmail.useMutation({
     onSuccess: () => {
       utils.privateEvents.listInquiries.invalidate();
+      utils.privateEvents.getTimeline.invalidate();
       toast.success("Quote email sent successfully!");
       setShowEmailPanel(false);
       setIsSendingEmail(false);
@@ -271,7 +321,8 @@ export default function PrivateEventsDashboard() {
   const deleteLumaEvent = trpc.privateEvents.deleteLumaEvent.useMutation({
     onSuccess: () => {
       utils.privateEvents.listInquiries.invalidate();
-      toast.success("Luma event deleted. Link removed.");
+      utils.privateEvents.getTimeline.invalidate();
+      toast.success("Unused Luma booking page cancelled. Link removed.");
       setGeneratedLink(null);
       setShowBookingPanel(false);
     },
@@ -474,14 +525,16 @@ export default function PrivateEventsDashboard() {
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "inquiries" | "quick-link")} className="mb-6">
+        <Tabs value={user?.role === "admin" ? activeTab : "inquiries"} onValueChange={(v) => setActiveTab(v as "inquiries" | "quick-link")} className="mb-6">
           <TabsList className="bg-[#F2A0B8]/10 border border-[#F2A0B8]/20">
             <TabsTrigger value="inquiries" className="font-body text-sm data-[state=active]:bg-[#8B2252] data-[state=active]:text-white">
               Inquiries
             </TabsTrigger>
-            <TabsTrigger value="quick-link" className="font-body text-sm data-[state=active]:bg-[#8B2252] data-[state=active]:text-white">
-              Quick Booking Link
-            </TabsTrigger>
+            {user?.role === "admin" && (
+              <TabsTrigger value="quick-link" className="font-body text-sm data-[state=active]:bg-[#8B2252] data-[state=active]:text-white">
+                Quick Booking Link
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="inquiries">
@@ -603,7 +656,7 @@ export default function PrivateEventsDashboard() {
 
           </TabsContent>
 
-          <TabsContent value="quick-link">
+          {user?.role === "admin" && <TabsContent value="quick-link">
             <div className="space-y-6">
               {/* Header */}
               <div className="bg-gradient-to-br from-[#8B2252]/5 via-white to-[#D4708A]/5 rounded-2xl border border-[#F2A0B8]/25 p-6">
@@ -894,7 +947,7 @@ export default function PrivateEventsDashboard() {
                 </div>
               )}
             </div>
-          </TabsContent>
+          </TabsContent>}
         </Tabs>
       </div>
 
@@ -954,6 +1007,76 @@ export default function PrivateEventsDashboard() {
                 </div>
               )}
 
+              {selectedInquiry.approvalStatus === "pending" && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-body text-sm font-bold text-amber-800">Owner approval required</p>
+                      <p className="font-body text-xs text-amber-700 mt-1">
+                        This quote is outside APY&apos;s normal price range. No Luma payment page exists and nothing can be sent to the client yet.
+                      </p>
+                    </div>
+                  </div>
+                  {user?.role === "admin" && (
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => approveQuote.mutate({ inquiryId: selectedInquiry.id })}
+                        disabled={approveQuote.isPending}
+                        className="bg-emerald-700 hover:bg-emerald-800 text-white rounded-full"
+                      >
+                        {approveQuote.isPending ? <Loader2 size={13} className="animate-spin mr-1" /> : <CheckCircle2 size={13} className="mr-1" />}
+                        Approve & Publish
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-red-300 text-red-700 rounded-full"
+                        onClick={() => {
+                          const reason = window.prompt("Why is this quote being rejected?");
+                          if (reason?.trim()) rejectQuote.mutate({ inquiryId: selectedInquiry.id, reason: reason.trim() });
+                        }}
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {selectedInquiry.approvalStatus === "rejected" && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                  <p className="font-body text-sm font-bold text-red-800">Quote rejected</p>
+                  <p className="font-body text-xs text-red-700 mt-1">
+                    {selectedInquiry.approvalRejectionReason || "Revise the commercial terms and submit the quote again."}
+                  </p>
+                </div>
+              )}
+
+              <div>
+                <p className="font-body text-xs font-semibold text-[#3D1A2E]/50 uppercase tracking-wider mb-2">Activity & Communications</p>
+                <div className="border border-[#F2A0B8]/20 rounded-xl bg-white divide-y divide-[#F2A0B8]/15">
+                  {timelineLoading ? (
+                    <div className="p-3 flex items-center gap-2 font-body text-xs text-[#6B4658]"><Loader2 size={13} className="animate-spin" /> Loading activity…</div>
+                  ) : !inquiryTimeline?.actions.length ? (
+                    <p className="p-3 font-body text-xs text-[#6B4658]">Workflow actions and sent communications will appear here.</p>
+                  ) : inquiryTimeline.actions.slice(0, 8).map((item) => (
+                    <div key={item.id} className="p-3 flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-body text-xs font-semibold text-[#1A0A12]">
+                          {item.action.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase())}
+                        </p>
+                        <p className="font-body text-[11px] text-[#6B4658] mt-0.5">{item.actorName || item.actorEmail || "APY HQ"}</p>
+                      </div>
+                      <time className="font-body text-[10px] text-[#8B6070] whitespace-nowrap">
+                        {new Date(item.createdAt).toLocaleString("en-CA", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                      </time>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Existing Luma Link */}
               {generatedLink && (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
@@ -976,7 +1099,12 @@ export default function PrivateEventsDashboard() {
                       </a>
                     </Button>
                   </div>
-                  {!showEmailPanel && (
+                  {selectedInquiry.quoteSentAt && (
+                    <p className="font-body text-xs text-emerald-700 mt-3">
+                      Quote sent {new Date(selectedInquiry.quoteSentAt).toLocaleString("en-CA", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                    </p>
+                  )}
+                  {!showEmailPanel && !selectedInquiry.quoteSentAt && selectedInquiry.approvalStatus === "approved" && (
                     <div className="flex items-center gap-2 mt-3">
                       <Button
                         className="bg-[#8B2252] hover:bg-[#6B1A40] text-white font-body font-semibold rounded-full text-sm"
@@ -985,7 +1113,7 @@ export default function PrivateEventsDashboard() {
                         <Send size={14} className="mr-2" />
                         Send Quote Email
                       </Button>
-                      <AlertDialog>
+                      {user?.role === "admin" && <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button
                             size="sm"
@@ -993,14 +1121,14 @@ export default function PrivateEventsDashboard() {
                             className="border-red-300 text-red-600 hover:bg-red-50 rounded-full text-sm"
                           >
                             <Trash2 size={14} className="mr-1" />
-                            Delete Event
+                            Cancel Unused Page
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Luma Event?</AlertDialogTitle>
+                            <AlertDialogTitle>Cancel unused Luma page?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              This will permanently delete the private event on Luma and remove the booking link. The client will no longer be able to pay. This cannot be undone.
+                              APY HQ will first verify that the quote was never sent and no guest registered, then use Luma&apos;s irreversible cancellation flow.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -1009,11 +1137,11 @@ export default function PrivateEventsDashboard() {
                               className="bg-red-600 hover:bg-red-700 text-white"
                               onClick={() => deleteLumaEvent.mutate({ inquiryId: selectedInquiry.id })}
                             >
-                              {deleteLumaEvent.isPending ? "Deleting..." : "Yes, Delete Event"}
+                              {deleteLumaEvent.isPending ? "Cancelling..." : "Yes, Cancel Page"}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
-                      </AlertDialog>
+                      </AlertDialog>}
                     </div>
                   )}
                 </div>
@@ -1127,7 +1255,7 @@ export default function PrivateEventsDashboard() {
               })()}
 
               {/* Generate Booking Link Panel */}
-              {!generatedLink && !showBookingPanel && (
+              {!generatedLink && !showBookingPanel && selectedInquiry.approvalStatus !== "pending" && (
                 <Button
                   className="w-full bg-gradient-to-r from-[#8B2252] to-[#D4708A] hover:from-[#6B1A40] hover:to-[#B85A74] text-white font-body font-bold rounded-full py-3"
                   onClick={() => setShowBookingPanel(true)}
@@ -1200,8 +1328,8 @@ export default function PrivateEventsDashboard() {
                       <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
                       <p className="font-body text-xs text-amber-700">
                         {priceNum < selectedInquiry.estimatedMin
-                          ? "Price is below the estimated minimum — owner approval recommended."
-                          : "Large event (over $3,000) — owner approval recommended."}
+                          ? "Price is below the estimated minimum — owner approval is required before a Luma page can be created."
+                          : "Large event (over $3,000) — owner approval is required before a Luma page can be created."}
                       </p>
                     </div>
                   )}
