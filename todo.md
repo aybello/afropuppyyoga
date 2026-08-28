@@ -847,6 +847,7 @@
 - [x] Correct PR #10's TiDB migration order before adding its breeder confirmation idempotency key
 - [x] Verify the breeder database loads its existing records and management controls after the PR #10 migration
 - [x] Verify Run APY remains fully available after the breeder workflow migration and preserves its normal operational actions
+- [x] Reconcile Run APY's breeder follow-up query with the deployed legacy table so due actions appear without relying on compatibility fallback
 - [x] Review, correct as needed, merge, validate, and publish PR #11 applicant upload resiliency
 - [x] Verify the applicant form renders the resilient 500MB video and resume upload controls without submitting media or an application
 - [x] Make the PR #8 schedule lifecycle migration compatible with TiDB column/index ordering before applying it
