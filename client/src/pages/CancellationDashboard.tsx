@@ -29,6 +29,7 @@ type CancellationResult = {
   failed: number;
   rebookingCode: string;
   couponState: "created" | "reused";
+  registrationClosed: boolean;
   results: CallResult[];
 };
 
@@ -51,6 +52,8 @@ function statusBadge(status: string) {
       return <Badge className="bg-red-100 text-red-800 border-red-200 text-xs">{status}</Badge>;
     case "skipped":
       return <Badge className="bg-gray-100 text-gray-500 border-gray-200 text-xs">no phone</Badge>;
+    case "suppressed":
+      return <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs">opted out</Badge>;
     default:
       return <Badge variant="outline" className="text-xs">{status}</Badge>;
   }
@@ -468,7 +471,7 @@ export default function CancellationDashboard() {
                       Free Luma rebooking code: <span className="font-mono tracking-widest">{cancellationResult.rebookingCode}</span>
                     </p>
                     <p className="mt-0.5 text-xs text-gray-600">
-                      {cancellationResult.couponState === "created" ? "Created" : "Reused"} on the APY Luma calendar with 100% off and no event restriction. Guests can use it on any upcoming APY class.
+                      Registration closed. This 100%-off calendar credit is limited to {cancellationResult.total} uses—one for each affected guest.
                     </p>
                   </div>
                 </div>

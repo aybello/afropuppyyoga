@@ -267,6 +267,13 @@
       "when": 1787884101034,
       "tag": "0039_faithful_black_crow",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "5",
+      "when": 1787894400000,
+      "tag": "0040_apy_hq_integrity",
+      "breakpoints": true
     }
   ]
 }

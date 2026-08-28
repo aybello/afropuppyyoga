@@ -11,6 +11,7 @@
 import { getDb } from "./db";
 import { reviewTextLogs } from "../drizzle/schema";
 import { and, eq } from "drizzle-orm";
+import { isSmsSuppressed } from "./smsConsent";
 
 const GOOGLE_REVIEW_URL = "https://g.page/r/CYyqTsuYY7oGEBM/review";
 const LUMA_BASE = "https://api.lu.ma/public/v1";
@@ -181,6 +182,10 @@ export async function reviewTextSender(): Promise<{ sent: number; skipped: numbe
       const phone = normalisePhone(guest.phone_number);
       if (!phone) {
         console.log(`[ReviewText] No phone for guest ${guest.api_id} — skipping`);
+        skipped++;
+        continue;
+      }
+      if (await isSmsSuppressed(phone)) {
         skipped++;
         continue;
       }

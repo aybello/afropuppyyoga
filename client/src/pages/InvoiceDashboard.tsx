@@ -6,13 +6,6 @@
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   FileText, Loader2, AlertTriangle, Clock, CheckCircle2,
   Copy, Trash2, DollarSign, X, Wallet,
 } from "lucide-react";
@@ -256,9 +249,10 @@ export default function InvoiceDashboard() {
     refetchInterval: 10000,
   });
 
-  const updateStatus = trpc.invoices.updateStatus.useMutation({
+  const reviewInvoice = trpc.invoices.review.useMutation({
     onSuccess: () => utils.invoices.list.invalidate(),
   });
+  const approveInvoice = trpc.invoices.approve.useMutation({ onSuccess: () => utils.invoices.list.invalidate() });
 
   const recordPayment = trpc.invoices.recordPayment.useMutation({
     onSuccess: () => {
@@ -267,7 +261,7 @@ export default function InvoiceDashboard() {
     },
   });
 
-  const deleteInvoice = trpc.invoices.delete.useMutation({
+  const archiveInvoice = trpc.invoices.archive.useMutation({
     onSuccess: () => utils.invoices.list.invalidate(),
   });
 
@@ -367,12 +361,10 @@ export default function InvoiceDashboard() {
           onClose={() => setPaymentModal(null)}
           isSaving={recordPayment.isPending}
           onSave={(amountPaidCents, paymentNotes) => {
-            const totalCents = Math.round(parseAmount(paymentModal.payAmount) * 100);
             recordPayment.mutate({
               id: paymentModal.id,
               amountPaidCents,
               paymentNotes: paymentNotes || undefined,
-              totalAmountCents: totalCents,
             });
           }}
         />
@@ -595,27 +587,15 @@ export default function InvoiceDashboard() {
                           </a>
                         </td>
 
-                        {/* Status dropdown */}
+                        {/* Approval workflow */}
                         <td className="px-5 py-4">
-                          <Select
-                            value={invoice.status}
-                            onValueChange={(value) =>
-                              updateStatus.mutate({
-                                id: invoice.id,
-                                status: value as "pending" | "partial" | "paid" | "overdue",
-                              })
-                            }
-                          >
-                            <SelectTrigger className="w-28 h-8 text-xs font-body border-[#F0D0DC] rounded-full">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pending">Pending</SelectItem>
-                              <SelectItem value="partial">Partial</SelectItem>
-                              <SelectItem value="paid">Paid</SelectItem>
-                              <SelectItem value="overdue">Overdue</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          {invoice.workflowStatus === "submitted" ? (
+                            <button onClick={() => reviewInvoice.mutate({ id: invoice.id })} className="px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Review</button>
+                          ) : invoice.workflowStatus === "reviewed" ? (
+                            <button onClick={() => approveInvoice.mutate({ id: invoice.id })} className="px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Approve</button>
+                          ) : (
+                            <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${invoice.workflowStatus === "paid" ? "bg-emerald-100 text-emerald-700" : "bg-purple-100 text-purple-700"}`}>{invoice.workflowStatus === "paid" ? "Paid" : "Approved"}</span>
+                          )}
                         </td>
 
                         {/* Actions */}
@@ -630,6 +610,7 @@ export default function InvoiceDashboard() {
                                 amountPaidCents: invoice.amountPaidCents ?? 0,
                                 paymentNotes: invoice.paymentNotes,
                               })}
+                              disabled={invoice.workflowStatus !== "approved" && invoice.workflowStatus !== "paid"}
                               className="p-1.5 rounded-lg text-[#1A0A12] hover:text-[#8B2252] hover:bg-[#FFF5F8] transition-colors"
                               title="Record payment"
                             >
@@ -641,7 +622,7 @@ export default function InvoiceDashboard() {
                               <div className="flex items-center gap-1">
                                 <button
                                   onClick={() => {
-                                    deleteInvoice.mutate({ id: invoice.id });
+                                    archiveInvoice.mutate({ id: invoice.id });
                                     setConfirmDeleteId(null);
                                   }}
                                   className="px-2 py-1 text-xs font-body font-semibold rounded-full bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
@@ -659,7 +640,7 @@ export default function InvoiceDashboard() {
                               <button
                                 onClick={() => setConfirmDeleteId(invoice.id)}
                                 className="p-1.5 rounded-lg text-[#1A0A12] hover:text-red-600 hover:bg-red-50 transition-colors"
-                                title="Delete invoice"
+                                title="Archive invoice"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>

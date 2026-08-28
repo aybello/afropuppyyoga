@@ -38,7 +38,6 @@ const Hamilton = lazy(() => import("./pages/Hamilton"));
 const Oakville = lazy(() => import("./pages/Oakville"));
 const Corporate = lazy(() => import("./pages/Corporate"));
 const PrivatePuppyYogaEvents = lazy(() => import("./pages/PrivatePuppyYogaEvents"));
-const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const CancellationDashboard = lazy(() => import("./pages/CancellationDashboard"));
 const SmsBroadcast = lazy(() => import("./pages/SmsBroadcast"));
 
@@ -109,7 +108,7 @@ function Router() {
         <Route path="/oakville">{() => { window.location.replace("/puppy-yoga-oakville"); return null; }}</Route>
         <Route path="/corporate-puppy-yoga" component={Corporate} />
         <Route path="/private-puppy-yoga-events" component={PrivatePuppyYogaEvents} />
-        <Route path="/admin-login" component={AdminLogin} />
+        <Route path="/admin-login">{() => { window.location.replace("/staff-access"); return null; }}</Route>
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>

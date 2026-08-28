@@ -106,7 +106,7 @@ export async function createInvoice(data: InsertInvoice): Promise<number> {
 export async function getAllInvoices() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return db.select().from(invoices).orderBy(desc(invoices.createdAt));
+  return db.select().from(invoices).where(isNull(invoices.deletedAt)).orderBy(desc(invoices.createdAt));
 }
 
 export async function getInvoiceById(id: number) {
@@ -125,7 +125,7 @@ export async function updateInvoice(id: number, data: Partial<InsertInvoice>) {
 export async function deleteInvoice(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.delete(invoices).where(eq(invoices.id, id));
+  await db.update(invoices).set({ deletedAt: new Date() }).where(eq(invoices.id, id));
 }
 
 export async function createJobApplication(data: InsertJobApplication) {

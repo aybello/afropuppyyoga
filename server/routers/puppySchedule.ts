@@ -6,6 +6,7 @@ import { staffScheduleNotifications } from "../../drizzle/schema";
 import { eq, and, gte, lte, desc, isNull } from "drizzle-orm";
 import { sendEmail, buildBreederConfirmationEmail } from "../email";
 import twilio from "twilio";
+import { isSmsSuppressed } from "../smsConsent";
 import { createLumaEventForSchedule } from "../lumaScheduleHelper";
 import { isAwayOnDate } from "../weekendCoverage";
 import { isClassFullyStaffed, scheduleLocationToTeamLocation, staffingGaps, TWO_PUPPY_MONITORS_REQUIRED } from "../classStaffing";
@@ -166,7 +167,9 @@ export const puppyScheduleRouter = router({
             emailStatus = "sent";
           } catch (error) { errors.push(`Email: ${error instanceof Error ? error.message : "failed"}`); }
         }
-        if (recipient.phone && smsClient && from) {
+        if (recipient.phone && await isSmsSuppressed(recipient.phone)) {
+          smsStatus = "suppressed";
+        } else if (recipient.phone && smsClient && from) {
           try {
             const sent = await smsClient.messages.create({ to: recipient.phone, from, body });
             smsSid = sent.sid;

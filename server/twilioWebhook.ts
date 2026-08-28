@@ -16,6 +16,7 @@ import twilio from "twilio";
 import { eq } from "drizzle-orm";
 import { getDb } from "./db";
 import { callLogs, inboundSms, breeders } from "../drizzle/schema";
+import { applyInboundSmsConsent } from "./smsConsent";
 
 const webhookRouter = Router();
 
@@ -146,10 +147,12 @@ webhookRouter.post("/api/twilio/sms-inbound", async (req, res) => {
 
   let breederId: number | null = null;
   let breederName: string | null = null;
+  let consentAction: "stop" | "start" | null = null;
 
   try {
     const db = await getDb();
     if (db) {
+      consentAction = await applyInboundSmsConsent(fromPhone, messageBody, twilioSid);
       // Normalize phone for matching (strip non-digits, add country code)
       const digits = fromPhone.replace(/\D/g, "");
       const normalized = digits.length === 10 ? "1" + digits : digits;
@@ -185,7 +188,7 @@ webhookRouter.post("/api/twilio/sms-inbound", async (req, res) => {
       const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
       const twilioFromNumber = process.env.TWILIO_PHONE_NUMBER;
 
-      if (ownerPhone && twilioAccountSid && twilioAuthToken && twilioFromNumber) {
+      if (!consentAction && ownerPhone && twilioAccountSid && twilioAuthToken && twilioFromNumber) {
         const senderLabel = breederName ?? fromPhone;
         const forwardBody = `📩 Reply from ${senderLabel}:\n"${messageBody}"`;
         const params = new URLSearchParams();

@@ -18,7 +18,8 @@ export default function InvoiceSubmit() {
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const access = trpc.staff.myAccess.useQuery(undefined, { enabled: Boolean(user) });
 
   const submitMutation = trpc.invoices.submit.useMutation({
     onSuccess: () => {
@@ -77,6 +78,11 @@ export default function InvoiceSubmit() {
     }
   };
 
+  if (loading || (user && access.isLoading)) return <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#8B2252]" /></div>;
+  if (!user || access.data?.level === "none") {
+    return <div className="min-h-screen bg-[#FEFAF4] flex flex-col items-center justify-center p-6 text-center"><img src={LOGO_URL} alt="AfroPuppyYoga" className="w-16 h-16 rounded-full object-cover mb-5" /><h1 className="font-display font-bold text-2xl text-[#1A0A12]">Team sign-in required</h1><p className="font-body text-sm text-[#6B4C5A] mt-2 mb-6">Invoices are tied to the team member who submits them.</p><a href="/staff-access" className="px-6 py-3 rounded-full text-white font-semibold bg-[#8B2252]">Sign in to APY HQ</a></div>;
+  }
+
   if (submitted) {
     return (
       <div className="min-h-screen bg-[#FEFAF4] flex flex-col items-center justify-center p-6">
@@ -129,13 +135,13 @@ export default function InvoiceSubmit() {
           </a>
 
           {/* Admin dashboard link — always visible */}
-          <Link
+          {access.data?.level === "owner" && <Link
             href="/admin/invoices"
             className="inline-flex items-center gap-2 px-4 py-2 font-body font-semibold text-sm rounded-full border border-[#F0D0DC] text-[#8B2252] bg-white hover:bg-[#FFF5F8] transition-colors"
           >
             <LayoutDashboard className="w-4 h-4" />
             View Dashboard
-          </Link>
+          </Link>}
         </div>
       </header>
 
