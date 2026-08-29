@@ -1,5 +1,8 @@
 
 ## Current Staff Access Investigation
+- [x] Review and safely integrate the newly announced APY update without regressing published Employee Directory, APY HQ access, staffing-continuity, or public-site safeguards
+- [x] Integrate and validate the measured homepage hero first-paint improvement without changing Luma freshness, APY HQ workflows, or hosting and DNS choices
+- [x] Correct the homepage update so the production build actually excludes development editor instrumentation and verify the resulting HTML size
 - [x] Review and safely integrate the newly available APY update without regressing validated site and staff workflows
 - [x] Preserve Operations Manager location coverage when Employee Directory edits change a linked APY HQ role or location
 - [x] Resolve the Employee Directory merge conflict without losing the validated failed-data state or the new direct editing controls
