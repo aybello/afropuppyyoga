@@ -79,6 +79,7 @@ export default function Hero() {
               if (fallbackImage) {
                 setHeroImage(fallbackImage);
               } else {
+                document.documentElement.classList.remove("home-pending");
                 setHeroImageFailed(true);
               }
             }}
