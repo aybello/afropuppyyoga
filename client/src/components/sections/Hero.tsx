@@ -213,6 +213,8 @@ export default function Hero() {
                 <img
                   src={org.src}
                   alt={org.name}
+                  loading={i < 6 ? "eager" : "lazy"}
+                  decoding="async"
                   style={{ height: org.height }}
                   className="w-auto object-contain transition-all duration-300 hover:scale-105"
                 />

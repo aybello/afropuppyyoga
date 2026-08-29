@@ -1,18 +1,19 @@
 import { trpc } from "@/lib/trpc";
-import { UNAUTHED_ERR_MSG } from '@shared/const';
+import { getApyHqSessionRedirect, isApyUnauthorizedError, shouldRetryApyQuery } from "@shared/apyHqQueryState";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, TRPCClientError } from "@trpc/client";
 import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import App from "./App";
-import { getLoginUrl } from "./const";
 import "./index.css";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Allow slow queries (like revenue dashboard) up to 120s
       networkMode: "always",
+      // Stale phone sessions cannot recover through retries. Return APY HQ
+      // users to passwordless access rather than extending the visible spinner.
+      retry: (failureCount, error) => shouldRetryApyQuery(failureCount, error),
     },
   },
 });
@@ -21,11 +22,11 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
 
-  const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
+  const isUnauthorized = isApyUnauthorizedError(error);
 
   if (!isUnauthorized) return;
-
-  window.location.href = getLoginUrl();
+  const staffAccess = getApyHqSessionRedirect(window.location.pathname, window.location.search);
+  if (staffAccess) window.location.href = staffAccess;
 };
 
 queryClient.getQueryCache().subscribe(event => {

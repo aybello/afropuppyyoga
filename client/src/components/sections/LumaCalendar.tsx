@@ -9,25 +9,54 @@ import { useEffect, useRef, useState } from "react";
 import { CalendarDays, ExternalLink } from "lucide-react";
 import { trackCTAClick } from "@/hooks/useAnalytics";
 import { useMetaPixel } from "@/hooks/useMetaPixel";
+import {
+  LUMA_CALENDAR_EMBED_URL,
+  LUMA_CALENDAR_LOAD_MARGIN,
+  LUMA_CHECKOUT_SCRIPT_URL,
+  shouldActivateLumaCalendar,
+} from "@shared/lumaCalendarEmbed";
 
 export default function LumaCalendar() {
+  const sectionRef = useRef<HTMLElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [loaded, setLoaded] = useState(false);
+  const [nearClasses, setNearClasses] = useState(false);
+  const [requestedByVisitor, setRequestedByVisitor] = useState(false);
   const { track } = useMetaPixel();
+  const calendarActive = shouldActivateLumaCalendar(nearClasses, requestedByVisitor);
 
   useEffect(() => {
+    const target = sectionRef.current;
+    if (!target || typeof IntersectionObserver === "undefined") {
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setNearClasses(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: LUMA_CALENDAR_LOAD_MARGIN },
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!calendarActive) return;
     // Luma's embed script — initializes checkout widgets if any are present
     const script = document.createElement("script");
     script.id = "luma-checkout";
-    script.src = "https://embed.lu.ma/checkout-button.js";
+    script.src = LUMA_CHECKOUT_SCRIPT_URL;
     script.async = true;
     if (!document.getElementById("luma-checkout")) {
       document.body.appendChild(script);
     }
-  }, []);
+  }, [calendarActive]);
 
   return (
-    <section id="classes" className="py-10 md:py-28" style={{ background: "oklch(0.98 0.01 350)" }}>
+    <section ref={sectionRef} id="classes" className="py-10 md:py-28" style={{ background: "oklch(0.98 0.01 350)" }}>
       <div className="container">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
@@ -96,7 +125,7 @@ export default function LumaCalendar() {
             }
           `}</style>
           {/* Loading skeleton — shimmer cards */}
-          {!loaded && (
+          {calendarActive && !loaded && (
             <div className="absolute inset-0 p-6" style={{ background: "#fff" }}>
               <style>{`
                 @keyframes shimmer {
@@ -125,29 +154,45 @@ export default function LumaCalendar() {
               <p className="text-center text-xs mt-4" style={{ color: "#8B2252" }}>Loading upcoming classes…</p>
             </div>
           )}
-
-          <iframe
-            ref={iframeRef}
-            src="https://lu.ma/embed/calendar/cal-Z474jeIbvUXskHE/events?theme=light&lt=light"
-            width="100%"
-            height="500"
-            className="md:!h-[600px]"
-            frameBorder="0"
-            style={{
-              border: "none",
-              borderRadius: "16px",
-              display: "block",
-              opacity: loaded ? 1 : 0,
-              transition: "opacity 0.4s ease",
-              colorScheme: "light",
-              filter: "none",
-            }}
-            allowFullScreen
-            aria-hidden="false"
-            tabIndex={0}
-            onLoad={() => setLoaded(true)}
-            title="AfroPuppyYoga Upcoming Classes"
-          />
+          {!calendarActive ? (
+            <div className="flex min-h-[500px] flex-col items-center justify-center px-6 text-center md:min-h-[600px]">
+              <CalendarDays size={34} style={{ color: "#8B2252" }} />
+              <p className="mt-4 font-semibold" style={{ color: "#3D1A2E" }}>Live upcoming classes</p>
+              <p className="mt-2 max-w-sm text-sm" style={{ color: "#956A7C" }}>The calendar loads when you reach this section, so the rest of the site opens faster.</p>
+              <button
+                type="button"
+                onClick={() => setRequestedByVisitor(true)}
+                className="mt-5 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                style={{ background: "#8B2252" }}
+              >
+                Show upcoming classes
+              </button>
+            </div>
+          ) : (
+            <iframe
+              ref={iframeRef}
+              src={LUMA_CALENDAR_EMBED_URL}
+              width="100%"
+              height="500"
+              loading="lazy"
+              className="md:!h-[600px]"
+              frameBorder="0"
+              style={{
+                border: "none",
+                borderRadius: "16px",
+                display: "block",
+                opacity: loaded ? 1 : 0,
+                transition: "opacity 0.4s ease",
+                colorScheme: "light",
+                filter: "none",
+              }}
+              allowFullScreen
+              aria-hidden="false"
+              tabIndex={0}
+              onLoad={() => setLoaded(true)}
+              title="AfroPuppyYoga Upcoming Classes"
+            />
+          )}
         </div>
 
         {/* Footer note */}

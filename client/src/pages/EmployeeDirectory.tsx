@@ -34,7 +34,7 @@ function formatDate(value: Date | string | null) {
 }
 
 export default function EmployeeDirectory() {
-  const { data, isLoading, refetch } = trpc.staffAvailability.listEmployees.useQuery();
+  const { data, error, isLoading, refetch } = trpc.staffAvailability.listEmployees.useQuery();
   const reactivate = trpc.staffAvailability.reactivateTeamMember.useMutation({
     onSuccess: () => {
       toast.success("Employee restored to APY HQ");
@@ -92,6 +92,19 @@ export default function EmployeeDirectory() {
           </div>
           {isLoading ? (
             <p className="px-5 py-16 text-center font-body text-sm text-[#8B2252]">Loading employee records…</p>
+          ) : error ? (
+            <div className="px-5 py-14 text-center">
+              <UsersRound className="mx-auto h-9 w-9 text-[#D8BFC9]" />
+              <p className="mt-3 font-body text-sm font-semibold text-[#3D1A2E]">Employee records could not be loaded.</p>
+              <p className="mt-1 font-body text-xs text-[#956A7C]">Check your APY HQ access, then try again.</p>
+              <button
+                type="button"
+                onClick={() => refetch()}
+                className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-[#8B2252]/25 bg-[#FFF8FA] px-3 py-2 font-body text-xs font-bold text-[#8B2252] hover:bg-[#FFF0F5]"
+              >
+                <RefreshCw className="h-3.5 w-3.5" /> Try again
+              </button>
+            </div>
           ) : employees.length === 0 ? (
             <div className="px-5 py-16 text-center">
               <UsersRound className="mx-auto h-9 w-9 text-[#D8BFC9]" />

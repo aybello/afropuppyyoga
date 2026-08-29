@@ -1,5 +1,19 @@
 
 ## Current Staff Access Investigation
+- [x] Measure the reported APY page-load delay using page, API, and database timing evidence
+- [x] Complete the public AfroPuppyYoga homepage loading audit across hero media, fonts, bundle, and public data requests
+- [x] Defer the measured 9.4-second live Luma calendar embed until the visitor reaches the class section, without caching Luma data
+- [x] Measure homepage font and JavaScript bundle contributions beyond the Luma embed
+- [x] Review and reduce duplicated or competing public homepage asset loads when they materially affect first render
+- [x] Stop mounting every lazy public homepage section on initial render so their JavaScript and media wait until the visitor approaches each section
+- [ ] Address the measured 1.8–3.6 second public backend first-byte delay before optimizing any page-specific data query
+- [ ] Identify and remove the actual repeated request, blocked query, or render condition causing the visible APY HQ spinner delay
+- [ ] Diagnose the reproduced live Employee Directory query that remains in a loading state beyond ten seconds
+- [ ] Verify and reconcile the public `staffAvailability.listEmployees` route response that appears to return 404 while the client remains loading
+- [ ] Route expired APY HQ sessions to passwordless Staff Access instead of Manus login and prevent auth failures from retrying behind a visible spinner
+- [ ] Give the Employee Directory an explicit failed-data state instead of an indefinite loading view
+- [ ] Return a verified passwordless APY HQ session to its original protected page after re-entry
+- [x] Measure a successful representative APY API route and database query plan to separate startup delay from application data latency
 - [x] Review and safely synchronize newly available APY updates with the validated main branch
 - [x] Integrate the employee-directory and private-event HST updates without duplicating APY HQ staff editing or reintroducing the unreliable hero-image source
 - [x] Apply the confirmed employee-directory migration and private-event HST-at-checkout update after data-integrity validation

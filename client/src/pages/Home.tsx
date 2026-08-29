@@ -12,6 +12,7 @@ import Experience from "@/components/sections/Experience";
 import RewardsStrip from "@/components/RewardsStrip";
 import ScrollToTop from "@/components/ScrollToTop";
 import ChatbotWidget from "@/components/ChatbotWidget";
+import DeferredSection from "@/components/DeferredSection";
 import { useScrollDepthTracking, useTimeOnPageTracking } from "@/hooks/useAnalytics";
 import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { useEffect } from "react";
@@ -56,48 +57,20 @@ export default function Home() {
         <Experience />
 
         {/* Below the fold — lazy loaded */}
-        <Suspense fallback={<SectionFallback />}>
-          <LumaCalendar />
-        </Suspense>
-        <Suspense fallback={<SectionFallback />}>
-          <Memberships />
-        </Suspense>
-        <Suspense fallback={<SectionFallback />}>
-          <About />
-        </Suspense>
-        <Suspense fallback={<SectionFallback />}>
-          <OurStory />
-        </Suspense>
-        <Suspense fallback={<SectionFallback />}>
-          <PrivateEvents />
-        </Suspense>
-        <Suspense fallback={<SectionFallback />}>
-          <Gallery />
-        </Suspense>
-        <Suspense fallback={<SectionFallback />}>
-          <InstagramFeed />
-        </Suspense>
-        <Suspense fallback={<SectionFallback />}>
-          <Reviews />
-        </Suspense>
-        <Suspense fallback={<SectionFallback />}>
-          <OurValues />
-        </Suspense>
-        <Suspense fallback={<SectionFallback />}>
-          <LoyaltyProgram />
-        </Suspense>
-        <Suspense fallback={<SectionFallback />}>
-          <GiftCards />
-        </Suspense>
-        <Suspense fallback={<SectionFallback />}>
-          <EthicalStandards />
-        </Suspense>
-        <Suspense fallback={<SectionFallback />}>
-          <FAQ />
-        </Suspense>
-        <Suspense fallback={<SectionFallback />}>
-          <Contact />
-        </Suspense>
+        <DeferredSection minHeight="34rem"><Suspense fallback={<SectionFallback />}><LumaCalendar /></Suspense></DeferredSection>
+        <DeferredSection><Suspense fallback={<SectionFallback />}><Memberships /></Suspense></DeferredSection>
+        <DeferredSection><Suspense fallback={<SectionFallback />}><About /></Suspense></DeferredSection>
+        <DeferredSection><Suspense fallback={<SectionFallback />}><OurStory /></Suspense></DeferredSection>
+        <DeferredSection><Suspense fallback={<SectionFallback />}><PrivateEvents /></Suspense></DeferredSection>
+        <DeferredSection minHeight="42rem"><Suspense fallback={<SectionFallback />}><Gallery /></Suspense></DeferredSection>
+        <DeferredSection minHeight="40rem"><Suspense fallback={<SectionFallback />}><InstagramFeed /></Suspense></DeferredSection>
+        <DeferredSection><Suspense fallback={<SectionFallback />}><Reviews /></Suspense></DeferredSection>
+        <DeferredSection><Suspense fallback={<SectionFallback />}><OurValues /></Suspense></DeferredSection>
+        <DeferredSection><Suspense fallback={<SectionFallback />}><LoyaltyProgram /></Suspense></DeferredSection>
+        <DeferredSection><Suspense fallback={<SectionFallback />}><GiftCards /></Suspense></DeferredSection>
+        <DeferredSection><Suspense fallback={<SectionFallback />}><EthicalStandards /></Suspense></DeferredSection>
+        <DeferredSection><Suspense fallback={<SectionFallback />}><FAQ /></Suspense></DeferredSection>
+        <DeferredSection><Suspense fallback={<SectionFallback />}><Contact /></Suspense></DeferredSection>
       </main>
       <Suspense fallback={null}>
         <Footer />
