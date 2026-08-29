@@ -1,5 +1,7 @@
 
 ## Current Staff Access Investigation
+- [ ] Review and safely synchronize newly available APY updates with the validated main branch
+- [ ] Integrate the employee-directory and private-event HST updates without duplicating APY HQ staff editing or reintroducing the unreliable hero-image source
 - [x] Synchronize the validated APY HQ individual staff messaging update to the connected GitHub main branch
 - [x] Remove any residual merge-conflict markers from the synchronized staff access files and revalidate the build
 - [x] Add a safe one-at-a-time messaging action for an individual assigned class staff member within APY HQ staffing context
