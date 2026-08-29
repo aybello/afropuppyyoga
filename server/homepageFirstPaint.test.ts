@@ -10,9 +10,12 @@ describe("homepage first paint", () => {
     expect(appSource).toContain('className="min-h-screen bg-transparent"');
   });
 
-  it("paints the preloaded hero behind React before the Home route is ready", () => {
+  it("paints the preloaded hero without a dark intermediate shell before the Home route is ready", () => {
     expect(indexSource).toContain('document.documentElement.classList.add("home-pending")');
-    expect(indexSource).toContain("html.home-pending body");
+    expect(indexSource).toContain("html.home-pending #root");
     expect(indexSource).toContain("apy_hero_bg-aDMPriKGFaJ3ZgQKWVBv5n.webp");
+    expect(indexSource).toContain("background-color: #FFF7FA");
+    expect(indexSource).not.toContain("background-color: #1a0a12");
+    expect(indexSource).not.toContain("rgba(0, 0, 0, 0.8)");
   });
 });
