@@ -6,7 +6,9 @@ import {
 } from "../shared/heroImage";
 
 describe("homepage hero image fallback", () => {
-  it("uses the secondary source when the managed hero image fails", () => {
+  it("uses the managed fallback only when the reliable CDN hero image fails", () => {
+    expect(PRIMARY_HERO_IMAGE).toMatch(/^https:\/\/d2xsxph8kpxj0f\.cloudfront\.net\//);
+    expect(FALLBACK_HERO_IMAGE).toMatch(/^\/manus-storage\//);
     expect(getNextHeroImageOnError(PRIMARY_HERO_IMAGE)).toBe(FALLBACK_HERO_IMAGE);
   });
 

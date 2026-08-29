@@ -41,6 +41,7 @@ const Corporate = lazy(() => import("./pages/Corporate"));
 const PrivatePuppyYogaEvents = lazy(() => import("./pages/PrivatePuppyYogaEvents"));
 const CancellationDashboard = lazy(() => import("./pages/CancellationDashboard"));
 const SmsBroadcast = lazy(() => import("./pages/SmsBroadcast"));
+const EmployeeDirectory = lazy(() => import("./pages/EmployeeDirectory"));
 
 function PageLoader() {
   return (
@@ -94,6 +95,7 @@ function Router() {
         <Route path="/admin/sms-inbox" component={SmsInbox} />
         <Route path="/admin/review-texts" component={ReviewTexts} />
         <Route path="/admin/revenue" component={RevenueDashboard} />
+        <Route path="/admin/employees" component={EmployeeDirectory} />
         <Route path="/admin/breeder-leads/:id" component={BreederLeadDetail} />
           <Route path="/admin/staff-availability" component={StaffAvailability} />
         <Route path="/admin/breeder-leads" component={BreederLeadsDashboard} />

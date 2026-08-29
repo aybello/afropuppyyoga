@@ -910,7 +910,7 @@ export default function PrivateEventsDashboard() {
                   <div className="bg-white rounded-2xl border border-[#F2A0B8]/20 p-5 shadow-sm">
                     <div className="grid grid-cols-2 gap-4 mb-3">
                       <div>
-                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">Base Price (CAD) *</label>
+                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">{quickForm.pricingType === "plus_hst" ? "Quote Before HST (CAD) *" : "All-In Client Total (CAD) *"}</label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm text-[#3D1A2E]/40">$</span>
                           <Input type="number" value={quickForm.finalPrice} onChange={(e) => setQuickForm({ ...quickForm, finalPrice: e.target.value })} placeholder="3000" className="border-[#F2A0B8]/30 font-body pl-7 bg-[#FAFAFA] focus:bg-white transition-colors" />
@@ -927,6 +927,7 @@ export default function PrivateEventsDashboard() {
                         </Select>
                       </div>
                     </div>
+                    <p className="mb-3 font-body text-[11px] leading-4 text-[#765967]">Luma applies HST during checkout. The ticket price is sent before tax so the client is never charged HST twice.</p>
                     {parseFloat(quickForm.finalPrice) > 0 && (
                       <div className="bg-[#FFF5F8] rounded-lg p-3 border border-[#F2A0B8]/15 mb-3">
                         <div className="flex justify-between text-xs font-body">
@@ -938,7 +939,7 @@ export default function PrivateEventsDashboard() {
                           <span className="font-medium">${quickForm.pricingType === "plus_hst" ? (parseFloat(quickForm.finalPrice) * 0.13).toFixed(2) : (parseFloat(quickForm.finalPrice) - parseFloat(quickForm.finalPrice) / 1.13).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-sm font-body font-bold border-t border-[#D4708A]/15 pt-2 mt-2">
-                          <span className="text-[#1A0A12]">Total</span>
+                          <span className="text-[#1A0A12]">Client pays on Luma</span>
                           <span className="text-[#8B2252]">${quickForm.pricingType === "plus_hst" ? (parseFloat(quickForm.finalPrice) * 1.13).toFixed(2) : parseFloat(quickForm.finalPrice).toFixed(2)} CAD</span>
                         </div>
                       </div>
@@ -1293,7 +1294,7 @@ export default function PrivateEventsDashboard() {
                   {/* Price + HST */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Final Price (CAD)</label>
+                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">{bookingForm.pricingType === "plus_hst" ? "Quote Before HST (CAD)" : "All-In Client Total (CAD)"}</label>
                       <Input
                         type="number"
                         value={bookingForm.finalPrice}
@@ -1317,7 +1318,8 @@ export default function PrivateEventsDashboard() {
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
+                    </div>
+                    <p className="col-span-2 -mt-1 font-body text-[11px] leading-4 text-[#765967]">Luma adds HST at checkout. APY sends the correct pre-tax ticket amount so the client pays this quote once, not twice.</p>
 
                   {/* Price preview */}
                   {priceNum > 0 && (
@@ -1331,7 +1333,7 @@ export default function PrivateEventsDashboard() {
                         <span className="font-semibold">${hstPreview.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-sm font-body font-bold border-t border-[#F2A0B8]/20 pt-2 mt-2">
-                        <span className="text-[#1A0A12]">Total charged</span>
+                        <span className="text-[#1A0A12]">Client pays on Luma</span>
                         <span className="text-[#8B2252]">${totalPreview.toFixed(2)} CAD</span>
                       </div>
                     </div>

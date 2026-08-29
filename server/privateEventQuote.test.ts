@@ -37,7 +37,7 @@ describe("buildPrivateEventQuoteDraft", () => {
       eventDate: "2026-11-07",
       startTime: "11:00",
       venue: "Hamilton Community Centre",
-      basePriceCents: 150000,
+      basePriceCents: 132743,
       hstCents: 17257,
       pricingType: "all_in",
       eventUrl: "https://luma.com/afropu-other",

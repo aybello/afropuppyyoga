@@ -21,6 +21,7 @@ import {
   PhoneOff,
   MessageSquare,
   Gauge,
+  UsersRound,
 } from "lucide-react";
 import { Inbox, Star, DollarSign, Dog } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -48,6 +49,7 @@ const MORE_ITEMS = [
   { href: "/admin/sms-inbox",      label: "SMS Inbox",       icon: Inbox,        required: "operations" as ApyHubToolAccess },
   { href: "/admin/review-texts",   label: "Review Texts",    icon: Star,         required: "operations" as ApyHubToolAccess },
   { href: "/admin/revenue",         label: "Revenue",         icon: DollarSign,   required: "owner" as ApyHubToolAccess },
+  { href: "/admin/employees",       label: "Employees",       icon: UsersRound,   required: "owner" as ApyHubToolAccess },
   { href: "/admin/breeder-leads",   label: "Breeder Leads",   icon: Dog,          required: "operations" as ApyHubToolAccess },
 ];
 
