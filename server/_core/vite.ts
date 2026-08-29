@@ -6,6 +6,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import viteConfig from "../../vite.config";
 import { seoRenderMiddleware } from "../seoRenderer";
+import { getDocumentCacheControl } from "../publicDocumentCache";
 
 export async function setupVite(app: Express, server: Server) {
   const serverOptions = {
@@ -78,8 +79,7 @@ export function serveStatic(app: Express) {
       maxAge: "1h",
       setHeaders: (res, filePath) => {
         if (filePath.endsWith(".html")) {
-          // Never cache HTML — always fresh so users get latest app
-          res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+          res.setHeader("Cache-Control", getDocumentCacheControl("/"));
         }
       },
     })
@@ -89,6 +89,7 @@ export function serveStatic(app: Express) {
   app.use("*", (req, res, next) => {
     // Let the SEO renderer intercept crawler requests
     seoRenderMiddleware(req, res, () => {
+      res.setHeader("Cache-Control", getDocumentCacheControl(req.path));
       res.sendFile(path.resolve(distPath, "index.html"));
     });
   });
