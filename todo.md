@@ -1,5 +1,7 @@
 
 ## Current Staff Access Investigation
+- [ ] Review and safely integrate the newly available APY update without regressing validated site and staff workflows
+- [ ] Preserve Operations Manager location coverage when Employee Directory edits change a linked APY HQ role or location
 - [x] Deliver safe in-project homepage improvements: defer live Luma, below-the-fold sections, video work, and off-screen logo media from first load
 - [x] Do not enable Cloudflare or change domain routing; the owner declined external edge delivery
 - [x] Implement and locally validate a cache-first public homepage policy; production currently overrides its public caching headers
