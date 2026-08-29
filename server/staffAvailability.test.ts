@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { directTeamMemberSchema, getTeamRemovalUpdate, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateTeamAssignmentChange } from "./routers/staffAvailability";
+import { directTeamMemberSchema, employeeRecordUpdateSchema, getTeamRemovalUpdate, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateTeamAssignmentChange } from "./routers/staffAvailability";
 
 describe("direct team-member validation", () => {
   it("accepts an Operations Manager assigned to Oakville", () => {
@@ -115,5 +115,25 @@ describe("direct team-member validation", () => {
   it("removes a person from APY HQ instead of leaving an inactive team profile", () => {
     const removedAt = new Date("2026-08-20T12:00:00.000Z");
     expect(getTeamRemovalUpdate(removedAt)).toEqual({ isTeamMember: false, deletedAt: removedAt });
+  });
+
+  it("validates editable employee-directory records and preserves the phone-or-email rule", () => {
+    expect(employeeRecordUpdateSchema.parse({
+      id: 7,
+      name: "Taylor James",
+      email: "taylor@example.com",
+      phone: "",
+      role: "Operations Manager",
+      location: "OAK",
+    }).location).toBe("OAK");
+
+    expect(() => employeeRecordUpdateSchema.parse({
+      id: 7,
+      name: "Taylor James",
+      email: "",
+      phone: "",
+      role: "Operations Manager",
+      location: "OAK",
+    })).toThrow("Add either an email address or phone number");
   });
 });

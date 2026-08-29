@@ -2,6 +2,7 @@
 ## Current Staff Access Investigation
 - [ ] Review and safely integrate the newly available APY update without regressing validated site and staff workflows
 - [ ] Preserve Operations Manager location coverage when Employee Directory edits change a linked APY HQ role or location
+- [ ] Resolve the Employee Directory merge conflict without losing the validated failed-data state or the new direct editing controls
 - [x] Deliver safe in-project homepage improvements: defer live Luma, below-the-fold sections, video work, and off-screen logo media from first load
 - [x] Do not enable Cloudflare or change domain routing; the owner declined external edge delivery
 - [x] Implement and locally validate a cache-first public homepage policy; production currently overrides its public caching headers
@@ -955,3 +956,7 @@
 
 ## Homepage Hero Loading Transition (Aug 29, 2026)
 - [x] Remove the visible purple blur/placeholder that appears before the homepage hero image loads
+
+## Employee Directory Management (Aug 29, 2026)
+- [x] Add direct editing for employee name, email, phone, role, location, and employment status
+- [x] Make Employee Directory summary cards work as filters for all, active, and former employees
