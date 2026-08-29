@@ -43,6 +43,22 @@ export const teamMemberActivitySchema = z.object({
   isActive: z.boolean(),
 });
 
+export const employeeRecordUpdateSchema = z.object({
+  id: z.number().int().positive(),
+  name: z.string().trim().min(2, "Enter the employee's full name."),
+  email: z.string().trim().email("Enter a valid email address.").or(z.literal("")).default(""),
+  phone: z.string().trim().max(50).optional().default(""),
+  role: z.string().trim().min(2, "Enter the employee's role."),
+  location: z.enum(["KW", "OAK", "HAM", "CENTRAL"]),
+}).superRefine((value, ctx) => {
+  if (!value.email && !value.phone) {
+    ctx.addIssue({ code: "custom", path: ["email"], message: "Add either an email address or phone number." });
+  }
+  if (value.phone && !normalizeCanadianPhoneNumber(value.phone)) {
+    ctx.addIssue({ code: "custom", path: ["phone"], message: "Enter a valid Canadian phone number." });
+  }
+});
+
 const isOperationsManagerRole = (role: string) => role.toLowerCase().replaceAll("_", " ") === "operations manager";
 
 export function getTeamRemovalUpdate(removedAt: Date) {
@@ -104,6 +120,39 @@ export const staffAvailabilityRouter = router({
     return db.select().from(employees)
       .orderBy(asc(employees.employmentStatus), asc(employees.location), asc(employees.name));
   }),
+
+  // Update directory contact and assignment details. Linked APY HQ profiles stay synchronized.
+  updateEmployeeRecord: adminProcedure
+    .input(employeeRecordUpdateSchema)
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const [employee] = await db.select().from(employees)
+        .where(eq(employees.id, input.id))
+        .limit(1);
+      if (!employee) throw new Error("Employee record not found.");
+
+      const email = input.email ? input.email.toLowerCase() : null;
+      const phone = input.phone ? normalizeCanadianPhoneNumber(input.phone) : null;
+      const updates = {
+        name: input.name,
+        email,
+        phone,
+        role: input.role,
+        location: input.location,
+      };
+
+      await db.transaction(async (tx) => {
+        await tx.update(employees).set(updates).where(eq(employees.id, employee.id));
+        if (employee.sourceApplicationId !== null) {
+          await tx.update(jobApplications).set(updates)
+            .where(eq(jobApplications.id, employee.sourceApplicationId));
+        }
+      });
+
+      return { success: true };
+    }),
 
   // Get availability for a specific staff member
   getStaffLeaves: staffProcedure

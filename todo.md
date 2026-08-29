@@ -929,3 +929,7 @@
 
 ## Homepage Hero Loading Transition (Aug 29, 2026)
 - [x] Remove the visible purple blur/placeholder that appears before the homepage hero image loads
+
+## Employee Directory Management (Aug 29, 2026)
+- [x] Add direct editing for employee name, email, phone, role, location, and employment status
+- [x] Make Employee Directory summary cards work as filters for all, active, and former employees
