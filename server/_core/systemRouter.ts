@@ -2,6 +2,8 @@ import { z } from "zod";
 import { notifyOwner } from "./notification";
 import { adminProcedure, publicProcedure, router } from "./trpc";
 
+export const STAFF_ACCESS_API_REVISION = "owner-phone-session-r3";
+
 export const systemRouter = router({
   health: publicProcedure
     .input(
@@ -11,6 +13,7 @@ export const systemRouter = router({
     )
     .query(() => ({
       ok: true,
+      staffAccessRevision: STAFF_ACCESS_API_REVISION,
     })),
 
   notifyOwner: adminProcedure

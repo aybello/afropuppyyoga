@@ -7,6 +7,12 @@
 import { useState, useMemo, useCallback } from "react";
 import AdminNav from "@/components/AdminNav";
 import { trpc } from "@/lib/trpc";
+import {
+  APY_MAT_RENTAL_TICKET,
+  APY_REGULAR_CLASS_LUMA_PREVIEW,
+  APY_REGULAR_CLASS_TICKET_OPTIONS,
+  APY_REGULAR_CLASS_TIME_SLOTS,
+} from "@shared/lumaClassConfig";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,6 +54,13 @@ import {
   Clock,
   Dog,
   Lock,
+  Eye,
+  Palette,
+  Ticket,
+  UsersRound,
+  ExternalLink,
+  CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -155,6 +168,73 @@ const EMPTY_FORM = {
   notes: "",
 };
 
+type ScheduleForm = typeof EMPTY_FORM;
+
+function LumaClassPreviewCard({ form }: { form: ScheduleForm }) {
+  const eventName = form.location && form.breed
+    ? `AfroPuppyYoga | 📍${form.location} | 🐶${form.breed}`
+    : "AfroPuppyYoga | 📍Location | 🐶Breed";
+  const dateLabel = form.classDate
+    ? new Date(`${form.classDate}T12:00:00`).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })
+    : "Choose a class date";
+
+  return (
+    <section className="rounded-2xl border border-[#D9A0B5] bg-[#FFF4F8] overflow-hidden shadow-[0_8px_20px_rgba(139,34,82,0.08)]" aria-label="Luma event preview">
+      <div className="relative overflow-hidden border-b border-[#EBC3D1] bg-[#9B2335] px-4 py-3 text-white">
+        <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:12px_12px]" />
+        <div className="relative flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Eye size={16} />
+            <div>
+              <p className="font-body text-[10px] font-bold tracking-[0.16em] uppercase text-white/75">Before you create</p>
+              <h3 className="font-display text-base font-bold">Luma Event Preview</h3>
+            </div>
+          </div>
+          <Badge className="bg-white/15 border border-white/30 text-white font-body text-[10px]">New regular class</Badge>
+        </div>
+      </div>
+
+      <div className="space-y-3 p-4">
+        <div>
+          <p className="font-display text-sm font-bold text-[#3D1A2E] leading-snug">{eventName}</p>
+          <p className="font-body text-xs text-[#6B4C3B] mt-0.5">{dateLabel} · Standard sessions: 10AM, 11:30AM, and 1:30PM</p>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-xl bg-white/80 border border-[#F0D0DC] p-2.5">
+            <UsersRound size={14} className="text-[#8B2252] mb-1" />
+            <p className="font-body text-[10px] text-[#6B4C3B]">Registration</p>
+            <p className="font-body text-xs font-bold text-[#3D1A2E]">Group on</p>
+          </div>
+          <div className="rounded-xl bg-white/80 border border-[#F0D0DC] p-2.5">
+            <Palette size={14} className="text-[#8B2252] mb-1" />
+            <p className="font-body text-[10px] text-[#6B4C3B]">Appearance</p>
+            <p className="font-body text-xs font-bold text-[#3D1A2E]">{APY_REGULAR_CLASS_LUMA_PREVIEW.pattern} · {APY_REGULAR_CLASS_LUMA_PREVIEW.display}</p>
+          </div>
+          <div className="rounded-xl bg-white/80 border border-[#F0D0DC] p-2.5">
+            <span className="block h-3.5 w-3.5 rounded-full border border-[#711936] mb-1" style={{ backgroundColor: APY_REGULAR_CLASS_LUMA_PREVIEW.tintColor }} />
+            <p className="font-body text-[10px] text-[#6B4C3B]">Tint</p>
+            <p className="font-body text-xs font-bold text-[#3D1A2E]">Cranberry</p>
+          </div>
+        </div>
+
+        <div className="rounded-xl bg-white/70 border border-[#F0D0DC] p-3">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Ticket size={14} className="text-[#8B2252]" />
+            <p className="font-body text-xs font-bold text-[#3D1A2E]">Tickets that will be created</p>
+          </div>
+          <p className="font-body text-[11px] leading-relaxed text-[#6B4C3B]">
+            {APY_REGULAR_CLASS_TIME_SLOTS.map((slot) => slot.label).join(", ")}: {APY_REGULAR_CLASS_TICKET_OPTIONS.map((option) => `${option.label} ${option.displayPrice}`).join(" · ")}. {APY_MAT_RENTAL_TICKET.name.replace(" 🧘‍♀️", "")} {APY_MAT_RENTAL_TICKET.displayPrice}.
+          </p>
+          <p className="font-body text-[10px] text-[#8B2252] font-semibold mt-2">No Standard Free ticket will be included.</p>
+        </div>
+
+        <p className="font-body text-[10px] text-[#8B2252]/75">The Luma page is created only after you select <strong>Add Slot</strong>.</p>
+      </div>
+    </section>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ScheduleCalendar() {
@@ -188,9 +268,9 @@ export default function ScheduleCalendar() {
   }, [utils, year, month]);
 
   const createMutation = trpc.puppySchedule.createSlot.useMutation({
-    onSuccess: () => {
+    onSuccess: (result) => {
       invalidate();
-      toast.success("Class slot added!");
+      toast.success(result.lumaSynchronized ? "Class and Luma event created together." : "Private-event slot added.");
       setShowDialog(false);
       setForm({ ...EMPTY_FORM });
     },
@@ -198,9 +278,9 @@ export default function ScheduleCalendar() {
   });
 
   const updateMutation = trpc.puppySchedule.updateSlot.useMutation({
-    onSuccess: () => {
+    onSuccess: (result) => {
       invalidate();
-      toast.success("Slot updated!");
+      toast.success(result.lumaSynchronized ? "APY HQ and Luma updated together." : "Private-event slot updated.");
       setShowDialog(false);
       setEditId(null);
       setForm({ ...EMPTY_FORM });
@@ -211,7 +291,7 @@ export default function ScheduleCalendar() {
   const deleteMutation = trpc.puppySchedule.deleteSlot.useMutation({
     onSuccess: () => {
       invalidate();
-      toast.success("Slot removed.");
+      toast.success("Schedule record archived.");
       setDeleteId(null);
     },
     onError: (e) => toast.error(e.message),
@@ -326,6 +406,7 @@ export default function ScheduleCalendar() {
     oakville: slots.filter((s) => s.location === "Oakville").length,
     private: slots.filter((s) => s.classType === "private").length,
   }), [slots]);
+  const editingSlot = editId === null ? null : slots.find(slot => slot.id === editId) ?? null;
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 
@@ -474,7 +555,7 @@ export default function ScheduleCalendar() {
                               e.stopPropagation();
                               openEdit(slot);
                             }}
-                            className={`rounded px-1.5 py-0.5 text-[10px] font-body font-medium border cursor-pointer hover:brightness-95 transition-all ${colors.bg} ${colors.text} ${colors.border} flex items-start gap-1`}
+                            className={`rounded px-1.5 py-0.5 text-[10px] font-body font-medium border cursor-pointer hover:brightness-95 transition-all ${colors.bg} ${colors.text} ${colors.border} flex items-start gap-1 ${slot.scheduleStatus === "cancelled" ? "opacity-50 line-through" : ""}`}
                             title={`${slot.location} · ${slot.breederName} · ${fmt12(slot.startTime)}–${fmt12(slot.endTime)}`}
                           >
                             <span className={`mt-0.5 w-1.5 h-1.5 rounded-full shrink-0 ${colors.dot}`} />
@@ -485,6 +566,7 @@ export default function ScheduleCalendar() {
                               )}
                               <br />
                               <span className="opacity-70">{fmt12(slot.startTime)}</span>
+                              {slot.scheduleStatus === "cancelled" && <><br /><span className="font-bold text-red-700 no-underline">Cancelled</span></>}
                             </span>
                           </div>
                         );
@@ -672,6 +754,22 @@ export default function ScheduleCalendar() {
               />
             </div>
 
+            {/* Luma preview for new breeder-backed public classes */}
+            {editId === null && form.classType === "regular" && (
+              <LumaClassPreviewCard form={form} />
+            )}
+
+            {editingSlot && (
+              <div className={`rounded-xl border p-3 text-xs ${editingSlot.lumaSyncStatus === "synced" ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-amber-200 bg-amber-50 text-amber-900"}`}>
+                <div className="flex items-center gap-2 font-bold">
+                  {editingSlot.lumaSyncStatus === "synced" ? <CheckCircle2 size={14} /> : <AlertTriangle size={14} />}
+                  {editingSlot.classType === "private" ? "Private event — no public Luma page" : editingSlot.lumaSyncStatus === "synced" ? "APY HQ and Luma are synchronized" : "Luma synchronization required"}
+                </div>
+                {editingSlot.lumaEventUrl && <a href={editingSlot.lumaEventUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 font-bold text-[#8B2252] hover:underline"><ExternalLink size={12} />Open Luma event</a>}
+                {editingSlot.scheduleStatus === "cancelled" && <p className="mt-2 font-semibold text-red-700">This class is cancelled and can only be archived.</p>}
+              </div>
+            )}
+
             {/* Delete button when editing */}
             {editId !== null && (
               <div className="pt-2 border-t border-[#F0D0DC]">
@@ -680,7 +778,7 @@ export default function ScheduleCalendar() {
                   onClick={() => { setShowDialog(false); setDeleteId(editId); }}
                   className="w-full border-red-200 text-red-600 hover:bg-red-50 font-body"
                 >
-                  <Trash2 size={14} className="mr-2" /> Remove this slot
+                  <Trash2 size={14} className="mr-2" /> Archive this record
                 </Button>
               </div>
             )}
@@ -696,7 +794,7 @@ export default function ScheduleCalendar() {
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={createMutation.isPending || updateMutation.isPending}
+              disabled={createMutation.isPending || updateMutation.isPending || editingSlot?.scheduleStatus === "cancelled"}
               className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body font-semibold rounded-full px-6"
             >
               {(createMutation.isPending || updateMutation.isPending) && (
@@ -716,10 +814,10 @@ export default function ScheduleCalendar() {
         <AlertDialogContent className="bg-[#FEFAF4] border-[#F0D0DC]">
           <AlertDialogHeader>
             <AlertDialogTitle className="font-display text-[#1A0A12]">
-              Remove this slot?
+              Archive this schedule record?
             </AlertDialogTitle>
             <AlertDialogDescription className="font-body text-[#6B4C3B]">
-              This will permanently remove the class slot from the schedule. This cannot be undone.
+              APY HQ keeps the record for history. A live Luma-linked class must be cancelled through Cancel Class before it can be archived.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -728,7 +826,7 @@ export default function ScheduleCalendar() {
               onClick={() => deleteId !== null && deleteMutation.mutate({ id: deleteId })}
               className="bg-red-600 hover:bg-red-700 text-white font-body"
             >
-              Remove
+              Archive
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

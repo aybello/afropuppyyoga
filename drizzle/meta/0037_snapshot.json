@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "14238355-a662-45ff-babf-ec9f8ca18315",
+  "id": "fcde7ef3-8677-4914-8a84-6fb243c6b081",
   "prevId": "f2e91a72-262c-4ff8-b20f-54a7f93dd7e0",
   "tables": {
     "birthdayInquiries": {
@@ -1207,134 +1207,6 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
-    "employees": {
-      "name": "employees",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": true
-        },
-        "sourceApplicationId": {
-          "name": "sourceApplicationId",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "email": {
-          "name": "email",
-          "type": "varchar(320)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "phone": {
-          "name": "phone",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "role": {
-          "name": "role",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "location": {
-          "name": "location",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "employmentStatus": {
-          "name": "employmentStatus",
-          "type": "enum('active','inactive')",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'active'"
-        },
-        "startedAt": {
-          "name": "startedAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(now())"
-        },
-        "endedAt": {
-          "name": "endedAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(now())"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "onUpdate": true,
-          "default": "(now())"
-        }
-      },
-      "indexes": {
-        "idx_employees_status": {
-          "name": "idx_employees_status",
-          "columns": [
-            "employmentStatus"
-          ],
-          "isUnique": false
-        },
-        "idx_employees_location": {
-          "name": "idx_employees_location",
-          "columns": [
-            "location"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {
-        "employees_id": {
-          "name": "employees_id",
-          "columns": [
-            "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {
-        "employees_sourceApplicationId_unique": {
-          "name": "employees_sourceApplicationId_unique",
-          "columns": [
-            "sourceApplicationId"
-          ]
-        }
-      },
-      "checkConstraint": {}
-    },
     "inboundSms": {
       "name": "inboundSms",
       "columns": {
@@ -1679,7 +1551,7 @@
         },
         "appStatus": {
           "name": "appStatus",
-          "type": "enum('new','reviewed','shortlisted','interview_scheduled','accepted','rejected','onboarded')",
+          "type": "enum('new','reviewed','shortlisted','interview_requested','interview_scheduled','accepted','rejected','onboarded')",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,

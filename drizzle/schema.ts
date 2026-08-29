@@ -1,4 +1,4 @@
-import { bigint, boolean, index, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { bigint, boolean, index, int, mysqlEnum, mysqlTable, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -41,21 +41,39 @@ export const invoices = mysqlTable("invoices", {
   fileUrl: text("fileUrl").notNull(),
   /** S3 key of the uploaded PDF */
   fileKey: varchar("fileKey", { length: 500 }).notNull(),
+  fileSha256: varchar("fileSha256", { length: 64 }),
   /** Original filename */
   originalFilename: varchar("originalFilename", { length: 255 }),
   /** Amount paid so far (in cents, to avoid floating point issues) */
   amountPaidCents: int("amountPaidCents").default(0).notNull(),
+  totalAmountCents: int("totalAmountCents"),
   /** Payment notes (e.g. "half payment on May 1") */
   paymentNotes: text("paymentNotes"),
   /** Payment status */
   status: mysqlEnum("status", ["pending", "partial", "paid", "overdue"]).default("pending").notNull(),
+  workflowStatus: mysqlEnum("invoiceWorkflowStatus", ["submitted", "reviewed", "approved", "paid"]).default("submitted").notNull(),
+  submittedByUserId: int("submittedByUserId"),
+  submittedByName: varchar("submittedByName", { length: 255 }),
+  submittedByEmail: varchar("submittedByEmail", { length: 320 }),
+  reviewedByUserId: int("reviewedByUserId"),
+  reviewedAt: timestamp("reviewedAt"),
+  approvedByUserId: int("approvedByUserId"),
+  approvedAt: timestamp("approvedAt"),
+  paidByUserId: int("paidByUserId"),
+  paidAt: timestamp("paidAt"),
+  deletedAt: timestamp("deletedAt"),
   /** Whether AI extraction has been completed */
   extractionStatus: mysqlEnum("extractionStatus", ["pending", "completed", "failed"]).default("pending").notNull(),
   /** Raw extracted text for debugging */
   extractedData: text("extractedData"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-}, (t) => [index("idx_invoices_status").on(t.status)]);
+}, (t) => [
+  index("idx_invoices_status").on(t.status),
+  index("idx_invoices_workflow").on(t.workflowStatus),
+  uniqueIndex("uq_invoices_fileKey").on(t.fileKey),
+  uniqueIndex("uq_invoices_fileSha256").on(t.fileSha256),
+]);
 
 export type Invoice = typeof invoices.$inferSelect;
 export type InsertInvoice = typeof invoices.$inferInsert;
@@ -85,8 +103,8 @@ export const jobApplications = mysqlTable("jobApplications", {
   /** S3 key of the uploaded resume */
   resumeKey: varchar("resumeKey", { length: 500 }),
   /** Application status */
-  status: mysqlEnum("appStatus", ["new", "reviewed", "shortlisted", "interview_scheduled", "accepted", "rejected", "onboarded"]).default("new").notNull(),
-  /** Explicit APY HQ membership. Applications remain separate until an admin manually adds the person to the team. */
+  status: mysqlEnum("appStatus", ["new", "reviewed", "shortlisted", "interview_requested", "interview_scheduled", "accepted", "rejected", "onboarded"]).default("new").notNull(),
+  /** Explicit APY HQ membership. Activated when onboarding is sent; the same row retains the hiring history. */
   isTeamMember: boolean("isTeamMember").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   /** Soft-delete timestamp — null means active, non-null means archived */
@@ -96,31 +114,22 @@ export const jobApplications = mysqlTable("jobApplications", {
 export type JobApplication = typeof jobApplications.$inferSelect;
 export type InsertJobApplication = typeof jobApplications.$inferInsert;
 
-/**
- * APY's employee directory. This is intentionally separate from the applicant
- * pipeline so active and former team members have a clear operational record.
- */
-export const employees = mysqlTable("employees", {
+/** Immutable hiring timeline entries. Applicant status changes and outbound actions
+ * are recorded here so the dashboard can answer who did what and when. */
+export const jobApplicationActions = mysqlTable("jobApplicationActions", {
   id: int("id").autoincrement().primaryKey(),
-  /** Link to the originating applicant/direct APY HQ profile. */
-  sourceApplicationId: int("sourceApplicationId").unique(),
-  name: varchar("name", { length: 255 }).notNull(),
-  email: varchar("email", { length: 320 }),
-  phone: varchar("phone", { length: 50 }),
-  role: varchar("role", { length: 255 }).notNull(),
-  location: varchar("location", { length: 100 }).notNull(),
-  employmentStatus: mysqlEnum("employmentStatus", ["active", "inactive"]).default("active").notNull(),
-  startedAt: timestamp("startedAt").defaultNow().notNull(),
-  endedAt: timestamp("endedAt"),
+  applicationId: int("applicationId").notNull(),
+  action: varchar("action", { length: 64 }).notNull(),
+  fromStatus: varchar("fromStatus", { length: 64 }),
+  toStatus: varchar("toStatus", { length: 64 }),
+  actorUserId: int("actorUserId"),
+  actorName: varchar("actorName", { length: 255 }),
+  actorEmail: varchar("actorEmail", { length: 320 }),
+  details: text("details"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-}, (t) => [
-  index("idx_employees_status").on(t.employmentStatus),
-  index("idx_employees_location").on(t.location),
-]);
+}, (t) => [index("idx_jobApplicationActions_application").on(t.applicationId, t.createdAt)]);
 
-export type Employee = typeof employees.$inferSelect;
-export type InsertEmployee = typeof employees.$inferInsert;
+export type JobApplicationAction = typeof jobApplicationActions.$inferSelect;
 
 export const birthdayInquiries = mysqlTable("birthdayInquiries", {
   id: int("id").autoincrement().primaryKey(),
@@ -199,6 +208,19 @@ export const staffInvites = mysqlTable("staffInvites", {
 
 export type StaffInvite = typeof staffInvites.$inferSelect;
 export type InsertStaffInvite = typeof staffInvites.$inferInsert;
+
+/** Short-lived, single-use SMS verification codes for phone-based APY HQ access. */
+export const staffPhoneAccessCodes = mysqlTable("staffPhoneAccessCodes", {
+  id: int("id").autoincrement().primaryKey(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  codeHash: varchar("codeHash", { length: 64 }).notNull(),
+  attempts: int("attempts").default(0).notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  consumedAt: timestamp("consumedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [index("idx_staffPhoneAccess_phone_created").on(t.phone, t.createdAt)]);
+
+export type StaffPhoneAccessCode = typeof staffPhoneAccessCodes.$inferSelect;
 
 export const signingTokens = mysqlTable("signingTokens", {
   id: int("id").autoincrement().primaryKey(),
@@ -286,6 +308,19 @@ export const privateEventInquiries = mysqlTable("privateEventInquiries", {
   quoteEmailBody: text("quoteEmailBody"),
   /** Whether owner approval was required and given */
   ownerApproved: boolean("ownerApproved"),
+  /** Explicit quote approval state. A pending/rejected quote cannot be published or sent. */
+  approvalStatus: mysqlEnum("approvalStatus", ["draft", "pending", "approved", "rejected"]).default("draft").notNull(),
+  approvalRequestedAt: timestamp("approvalRequestedAt"),
+  approvalRequestedByUserId: int("approvalRequestedByUserId"),
+  approvalRequestedByName: varchar("approvalRequestedByName", { length: 255 }),
+  approvedAt: timestamp("approvedAt"),
+  approvedByUserId: int("approvedByUserId"),
+  approvedByName: varchar("approvedByName", { length: 255 }),
+  approvalRejectedAt: timestamp("approvalRejectedAt"),
+  approvalRejectedByUserId: int("approvalRejectedByUserId"),
+  approvalRejectionReason: text("approvalRejectionReason"),
+  /** When the approved payment page was successfully created in Luma. */
+  bookingLinkPublishedAt: timestamp("bookingLinkPublishedAt"),
   /** Quote email sent timestamp */
   quoteSentAt: timestamp("quoteSentAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -294,6 +329,41 @@ export const privateEventInquiries = mysqlTable("privateEventInquiries", {
 
 export type PrivateEventInquiry = typeof privateEventInquiries.$inferSelect;
 export type InsertPrivateEventInquiry = typeof privateEventInquiries.$inferInsert;
+
+/** Immutable private-event workflow history, including approval and publication. */
+export const privateEventActions = mysqlTable("privateEventActions", {
+  id: int("id").autoincrement().primaryKey(),
+  inquiryId: int("inquiryId").notNull(),
+  action: varchar("action", { length: 64 }).notNull(),
+  actorUserId: int("actorUserId"),
+  actorName: varchar("actorName", { length: 255 }),
+  actorEmail: varchar("actorEmail", { length: 320 }),
+  details: text("details"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [index("idx_privateEventActions_inquiry").on(t.inquiryId, t.createdAt)]);
+
+export type PrivateEventAction = typeof privateEventActions.$inferSelect;
+
+/** Cross-workflow communications ledger. This stores delivery metadata and a short
+ * preview, not full attachments or credentials. */
+export const communicationsLog = mysqlTable("communicationsLog", {
+  id: int("id").autoincrement().primaryKey(),
+  entityType: mysqlEnum("communicationEntityType", ["private_event", "job_application", "breeder", "class", "general"]).notNull(),
+  entityId: int("entityId"),
+  channel: mysqlEnum("communicationChannel", ["email", "sms", "call", "system"]).notNull(),
+  direction: mysqlEnum("communicationDirection", ["outbound", "inbound", "system"]).notNull(),
+  action: varchar("action", { length: 64 }).notNull(),
+  recipient: varchar("recipient", { length: 320 }),
+  subject: varchar("subject", { length: 500 }),
+  bodyPreview: text("bodyPreview"),
+  deliveryStatus: varchar("deliveryStatus", { length: 32 }).notNull().default("sent"),
+  providerMessageId: varchar("providerMessageId", { length: 128 }),
+  actorUserId: int("actorUserId"),
+  actorName: varchar("actorName", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [index("idx_communications_entity").on(t.entityType, t.entityId, t.createdAt)]);
+
+export type CommunicationLog = typeof communicationsLog.$inferSelect;
 
 export const breeders = mysqlTable("breeders", {
   id: int("id").autoincrement().primaryKey(),
@@ -350,6 +420,10 @@ export const breederConfirmations = mysqlTable("breederConfirmations", {
   breederName: varchar("breederName", { length: 255 }).notNull(),
   /** Email address it was sent to */
   sentToEmail: varchar("sentToEmail", { length: 320 }).notNull(),
+  /** Phone number used for SMS, if any */
+  sentToPhone: varchar("sentToPhone", { length: 20 }),
+  /** Stable fingerprint used to make retries safe and prevent duplicate classes */
+  requestKey: varchar("requestKey", { length: 64 }).unique(),
   /** JSON array of event blocks */
   events: text("events").notNull(),
   /** Optional availability check note */
@@ -357,7 +431,7 @@ export const breederConfirmations = mysqlTable("breederConfirmations", {
   /** Full email body that was sent (HTML) */
   emailBody: text("emailBody").notNull(),
   /** Send status */
-  status: mysqlEnum("confStatus", ["sent", "failed"]).default("sent").notNull(),
+  status: mysqlEnum("confStatus", ["pending", "sent", "failed"]).default("pending").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (t) => [index("idx_conf_breederId").on(t.breederId)]);
 
@@ -493,12 +567,19 @@ export const puppySchedule = mysqlTable("puppySchedule", {
   lumaEventId: varchar("lumaEventId", { length: 128 }),
   /** Luma event URL — e.g. https://lu.ma/abc123 */
   lumaEventUrl: varchar("lumaEventUrl", { length: 500 }),
+  /** Operational lifecycle — archived rows remain available for audit/history. */
+  scheduleStatus: mysqlEnum("scheduleStatus", ["scheduled", "cancelled", "completed", "archived"]).notNull().default("scheduled"),
+  /** Whether the public Luma record matches this schedule row. */
+  lumaSyncStatus: mysqlEnum("lumaSyncStatus", ["not_required", "pending", "synced", "failed"]).notNull().default("pending"),
+  lumaSyncedAt: timestamp("lumaSyncedAt"),
+  archivedAt: timestamp("archivedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (t) => [
   index("idx_schedule_classDate").on(t.classDate),
   index("idx_schedule_location").on(t.location),
   index("idx_schedule_breederId").on(t.breederId),
+  index("idx_schedule_status").on(t.scheduleStatus),
 ]);
 export type PuppySchedule = typeof puppySchedule.$inferSelect;
 export type InsertPuppySchedule = typeof puppySchedule.$inferInsert;
@@ -535,6 +616,18 @@ export const inboundSms = mysqlTable("inboundSms", {
 
 export type InboundSms = typeof inboundSms.$inferSelect;
 export type InsertInboundSms = typeof inboundSms.$inferInsert;
+
+/** Central STOP/START suppression state checked by every outbound SMS path. */
+export const smsSuppressions = mysqlTable("smsSuppressions", {
+  id: int("id").autoincrement().primaryKey(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  keyword: varchar("keyword", { length: 32 }),
+  sourceTwilioSid: varchar("sourceTwilioSid", { length: 64 }),
+  suppressedAt: timestamp("suppressedAt").defaultNow().notNull(),
+  reactivatedAt: timestamp("reactivatedAt"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (t) => [uniqueIndex("uq_smsSuppressions_phone").on(t.phone)]);
 
 // ─── Meta Conversions API ─────────────────────────────────────────────────────
 /**
@@ -611,6 +704,22 @@ export const callLogs = mysqlTable("callLogs", {
 ]);
 export type CallLog = typeof callLogs.$inferSelect;
 export type InsertCallLog = typeof callLogs.$inferInsert;
+
+/** One idempotent, capped calendar credit for each cancelled Luma event. */
+export const cancellationCredits = mysqlTable("cancellationCredits", {
+  id: int("id").autoincrement().primaryKey(),
+  lumaEventId: varchar("lumaEventId", { length: 128 }).notNull(),
+  eventName: varchar("eventName", { length: 255 }).notNull(),
+  couponCode: varchar("couponCode", { length: 20 }).notNull(),
+  maxUses: int("maxUses").notNull(),
+  registrationClosedAt: timestamp("registrationClosedAt").notNull(),
+  couponCreatedAt: timestamp("couponCreatedAt").notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("uq_cancellationCredits_event").on(t.lumaEventId),
+  uniqueIndex("uq_cancellationCredits_code").on(t.couponCode),
+]);
 
 // ─── Review Text Logs ─────────────────────────────────────────────────────────
 // Tracks post-class Google review SMS sends per guest per event.
@@ -703,14 +812,15 @@ export type BreederLeadActivity = typeof breederLeadActivities.$inferSelect;
 export const breederLeadFollowUps = mysqlTable("breederLeadFollowUps", {
   id: int("id").autoincrement().primaryKey(),
   leadId: int("leadId").notNull(),
-  dueAt: bigint("dueAt", { mode: "number" }).notNull(),
-  note: text("note"),
-  completed: boolean("completed").notNull().default(false),
-  completedAt: bigint("completedAt", { mode: "number" }),
+  scheduledAt: timestamp("scheduledAt").notNull(),
+  message: text("message"),
+  channel: mysqlEnum("channel", ["sms", "email", "kijiji", "phone", "other"]).notNull().default("sms"),
+  status: mysqlEnum("status", ["pending", "sent", "skipped", "cancelled"]).notNull().default("pending"),
+  sentAt: timestamp("sentAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (t) => [
   index("idx_breederLeadFollowUps_leadId").on(t.leadId),
-  index("idx_breederLeadFollowUps_dueAt").on(t.dueAt),
+  index("idx_breederLeadFollowUps_scheduledAt").on(t.scheduledAt),
 ]);
 export type BreederLeadFollowUp = typeof breederLeadFollowUps.$inferSelect;
 
@@ -764,3 +874,35 @@ export const classStaffAssignments = mysqlTable("classStaffAssignments", {
   index("idx_classStaffAssignments_staff").on(t.staffId),
 ]);
 export type ClassStaffAssignment = typeof classStaffAssignments.$inferSelect;
+
+// ─── Staff Training ─────────────────────────────────────────────────────────
+export const staffTrainingProgress = mysqlTable("staffTrainingProgress", {
+  id: int("id").autoincrement().primaryKey(),
+  staffId: int("staffId").notNull(),
+  moduleKey: varchar("moduleKey", { length: 128 }).notNull(),
+  completedAt: timestamp("completedAt").defaultNow().notNull(),
+  acknowledgedBy: varchar("acknowledgedBy", { length: 320 }),
+}, (t) => [
+  index("idx_staffTraining_staff").on(t.staffId),
+  index("idx_staffTraining_module").on(t.moduleKey),
+]);
+export type StaffTrainingProgress = typeof staffTrainingProgress.$inferSelect;
+
+// ─── Event Team Notifications ───────────────────────────────────────────────
+export const staffScheduleNotifications = mysqlTable("staffScheduleNotifications", {
+  id: int("id").autoincrement().primaryKey(),
+  scheduleId: int("scheduleId").notNull(),
+  staffId: int("staffId").notNull(),
+  staffName: varchar("staffName", { length: 255 }).notNull(),
+  role: varchar("role", { length: 100 }).notNull(),
+  emailStatus: varchar("emailStatus", { length: 32 }).notNull().default("not_sent"),
+  smsStatus: varchar("smsStatus", { length: 32 }).notNull().default("not_sent"),
+  smsSid: varchar("smsSid", { length: 64 }),
+  errorMessage: text("errorMessage"),
+  sentBy: varchar("sentBy", { length: 320 }),
+  sentAt: timestamp("sentAt").defaultNow().notNull(),
+}, (t) => [
+  index("idx_staffScheduleNotifications_schedule").on(t.scheduleId),
+  index("idx_staffScheduleNotifications_staff").on(t.staffId),
+]);
+export type StaffScheduleNotification = typeof staffScheduleNotifications.$inferSelect;

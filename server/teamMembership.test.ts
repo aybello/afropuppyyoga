@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { isActiveTeamMember } from "./teamMembership";
 
 describe("isActiveTeamMember", () => {
-  it("requires an explicit APY HQ membership flag in addition to an active status", () => {
+  it("does not treat onboarding as APY HQ membership without the explicit team flag", () => {
     expect(isActiveTeamMember({ isTeamMember: false, status: "onboarded" })).toBe(false);
     expect(isActiveTeamMember({ isTeamMember: true, status: "onboarded" })).toBe(true);
     expect(isActiveTeamMember({ isTeamMember: true, status: "accepted" })).toBe(true);

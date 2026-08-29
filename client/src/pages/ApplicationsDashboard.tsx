@@ -56,14 +56,14 @@ async function openVideo(videoKey: string | null | undefined, videoUrl: string |
       const res = await fetch(`/api/video-url?key=${encodeURIComponent(videoKey)}`);
       if (res.ok) {
         const { url } = await res.json();
-        window.open(url, "_blank");
+        window.open(url, "_blank", "noopener,noreferrer");
         return;
       }
     } catch {
       // fall through to raw URL
     }
   }
-  window.open(videoUrl, "_blank");
+  window.open(videoUrl, "_blank", "noopener,noreferrer");
 }
 
 async function openResume(resumeKey: string | null | undefined, resumeUrl: string | null | undefined) {
@@ -101,7 +101,8 @@ function isExternalVideoLink(url: string): boolean {
   }
 }
 
-type AppStatus = "new" | "reviewed" | "shortlisted" | "interview_scheduled" | "accepted" | "rejected" | "onboarded";
+type AppStatus = "new" | "reviewed" | "shortlisted" | "interview_requested" | "interview_scheduled" | "accepted" | "rejected" | "onboarded";
+type PipelineView = "new" | "active" | "hired" | "rejected" | "all";
 
 type Application = {
   id: number;
@@ -166,6 +167,7 @@ function StatusBadge({ status }: { status: AppStatus }) {
     new: "bg-blue-100 text-blue-700",
     reviewed: "bg-yellow-100 text-yellow-700",
     shortlisted: "bg-emerald-100 text-emerald-700",
+    interview_requested: "bg-violet-100 text-violet-700",
     interview_scheduled: "bg-purple-100 text-purple-700",
     accepted: "bg-green-100 text-green-700",
     rejected: "bg-red-100 text-red-600",
@@ -175,6 +177,7 @@ function StatusBadge({ status }: { status: AppStatus }) {
     new: <Inbox className="w-3 h-3" />,
     reviewed: <Eye className="w-3 h-3" />,
     shortlisted: <Star className="w-3 h-3" />,
+    interview_requested: <Send className="w-3 h-3" />,
     interview_scheduled: <Calendar className="w-3 h-3" />,
     accepted: <CheckCircle className="w-3 h-3" />,
     rejected: <XCircle className="w-3 h-3" />,
@@ -184,6 +187,7 @@ function StatusBadge({ status }: { status: AppStatus }) {
     new: "New",
     reviewed: "Reviewed",
     shortlisted: "Shortlisted",
+    interview_requested: "Interview Request Sent",
     interview_scheduled: "Interview Scheduled",
     accepted: "Accepted",
     rejected: "Rejected",
@@ -214,7 +218,7 @@ function InterviewInviteModal({
 
   const sendInvite = trpc.careers.sendInterviewInvite.useMutation({
     onSuccess: () => {
-      toast.success(`Interview invite sent to ${app.email}!`);
+      toast.success(`Interview request sent to ${app.email}!`);
       utils.careers.list.invalidate();
       onClose();
     },
@@ -230,10 +234,6 @@ function InterviewInviteModal({
     }
     sendInvite.mutate({
       id: app.id,
-      applicantName: app.name,
-      applicantEmail: app.email,
-      role: app.role,
-      location: app.location,
       bookingLink: bookingLink.trim(),
       additionalNotes: additionalNotes || undefined,
     });
@@ -244,7 +244,7 @@ function InterviewInviteModal({
       <DialogContent className="max-w-lg bg-[#FEFAF4] border-[#F0D0DC]">
         <DialogHeader>
           <DialogTitle className="font-display text-xl text-[#1A0A12]">
-            📅 Send Interview Invite
+            📅 Send Interview Request
           </DialogTitle>
           <DialogDescription className="font-body text-sm text-[#1A0A12]">
             Sending to <strong>{app.name}</strong> ({app.email}) for <strong>{app.role}</strong>
@@ -254,7 +254,7 @@ function InterviewInviteModal({
         <div className="space-y-4 py-2">
           <div className="bg-[#FFF5F8] border border-[#F0D0DC] rounded-xl p-4">
             <p className="font-body text-sm text-[#3D1A2E] leading-relaxed">
-              The applicant will receive an email with a button to book their interview at their convenience.
+              The applicant will receive an email with a button to request or book their interview. Their status will remain <strong>Interview Request Sent</strong> until you manually confirm a date and time.
             </p>
           </div>
 
@@ -294,7 +294,7 @@ function InterviewInviteModal({
             {sendInvite.isPending ? (
               <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Sending...</>
             ) : (
-              <><Send className="w-4 h-4 mr-2" /> Send Invite</>
+              <><Send className="w-4 h-4 mr-2" /> Send Request</>
             )}
           </Button>
         </DialogFooter>
@@ -332,11 +332,6 @@ function OfferLetterModal({
   const handleSend = () => {
     sendSigningLink.mutate({
       applicationId: app.id,
-      applicantName: app.name,
-      applicantEmail: app.email,
-      role: app.role,
-      location: app.location,
-      origin: window.location.origin,
     });
   };
 
@@ -427,10 +422,6 @@ function OnboardingEmailModal({
   const handleSend = () => {
     sendOnboarding.mutate({
       id: app.id,
-      applicantName: app.name,
-      applicantEmail: app.email,
-      role: app.role,
-      location: app.location,
       orientationDate: orientationDate.trim() || undefined,
       orientationTime: orientationTime.trim() || undefined,
       additionalNotes: additionalNotes.trim() || undefined,
@@ -602,10 +593,6 @@ function RejectionLetterModal({
             onClick={() =>
               sendRejection.mutate({
                 id: app.id,
-                applicantName: app.name,
-                applicantEmail: app.email,
-                role: app.role,
-                location: app.location,
                 additionalNotes: additionalNotes || undefined,
               })
             }
@@ -635,14 +622,20 @@ function ApplicationDetailModal({
   open: boolean;
   onClose: () => void;
 }) {
+  const utils = trpc.useUtils();
   const [showInterviewModal, setShowInterviewModal] = useState(false);
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const { data: timeline, isLoading: timelineLoading } = trpc.careers.getTimeline.useQuery(
+    { id: app.id },
+    { enabled: open },
+  );
 
   const resendOnboarding = trpc.careers.resendOnboardingEmail.useMutation({
     onSuccess: () => {
       toast.success(`Onboarding email resent to ${app.email}! 📬`);
+      utils.careers.getTimeline.invalidate({ id: app.id });
     },
     onError: (err) => {
       toast.error(`Failed to resend onboarding email: ${err.message}`);
@@ -653,6 +646,7 @@ function ApplicationDetailModal({
   const requestVideo = trpc.careers.requestVideo.useMutation({
     onSuccess: () => {
       toast.success(`Video request sent to ${app.name}! 🎥`);
+      utils.careers.getTimeline.invalidate({ id: app.id });
     },
     onError: (err) => {
       toast.error(`Failed to send video request: ${err.message}`);
@@ -662,10 +656,6 @@ function ApplicationDetailModal({
   const handleResend = () => {
     resendOnboarding.mutate({
       id: app.id,
-      applicantName: app.name,
-      applicantEmail: app.email,
-      role: app.role,
-      location: app.location,
     });
   };
 
@@ -755,6 +745,34 @@ function ApplicationDetailModal({
               <StatusBadge status={app.status as AppStatus} />
             </div>
 
+            <div>
+              <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-3">Hiring Timeline</p>
+              <div className="bg-white rounded-xl border border-[#F0D0DC] divide-y divide-[#F0D0DC]">
+                {timelineLoading ? (
+                  <div className="p-4 flex items-center gap-2 font-body text-sm text-[#6B4658]">
+                    <Loader2 className="w-4 h-4 animate-spin" /> Loading timeline…
+                  </div>
+                ) : !timeline?.actions.length ? (
+                  <p className="p-4 font-body text-sm text-[#6B4658]">New activity will appear here as the application moves through hiring.</p>
+                ) : timeline.actions.map((item) => (
+                  <div key={item.id} className="p-3 flex items-start justify-between gap-4">
+                    <div>
+                      <p className="font-body text-sm font-semibold text-[#1A0A12]">
+                        {item.action.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase())}
+                      </p>
+                      <p className="font-body text-xs text-[#6B4658] mt-0.5">
+                        {item.actorName || item.actorEmail || "APY HQ"}
+                        {item.fromStatus && item.toStatus && item.fromStatus !== item.toStatus ? ` · ${item.fromStatus} → ${item.toStatus}` : ""}
+                      </p>
+                    </div>
+                    <time className="font-body text-[11px] text-[#8B6070] whitespace-nowrap">
+                      {new Date(item.createdAt).toLocaleString("en-CA", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                    </time>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Action Buttons */}
             <div>
               <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-3">Pipeline Actions</p>
@@ -776,10 +794,6 @@ function ApplicationDetailModal({
                   onClick={() => {
                     requestVideo.mutate({
                       id: app.id,
-                      applicantName: app.name,
-                      applicantEmail: app.email,
-                      role: app.role,
-                      location: app.location,
                     });
                   }}
                   disabled={requestVideo.isPending}
@@ -898,8 +912,10 @@ export default function ApplicationsDashboard() {
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   const [applicationQuery, setApplicationQuery] = useState("");
+  const [pipelineView, setPipelineView] = useState<PipelineView>("new");
   const [statusFilter, setStatusFilter] = useState<"all" | AppStatus>("all");
   const [roleFilter, setRoleFilter] = useState("all");
+  const [locationFilter, setLocationFilter] = useState("all");
   const [applicationPage, setApplicationPage] = useState(1);
 
   const { data: applications, isLoading } = trpc.careers.list.useQuery(undefined, {
@@ -937,15 +953,6 @@ export default function ApplicationsDashboard() {
     },
     onError: (err) => toast.error(`Failed to restore: ${err.message}`),
   });
-  const requestVideoMain = trpc.careers.requestVideo.useMutation({
-    onSuccess: (_, vars) => {
-      toast.success(`Video request sent! 🎥`);
-    },
-    onError: (err) => {
-      toast.error(`Failed to send video request: ${err.message}`);
-    },
-  });
-
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
@@ -982,10 +989,12 @@ export default function ApplicationsDashboard() {
   }
 
   const newCount = applications?.filter((a) => a.status === "new").length ?? 0;
-  const shortlistedCount = applications?.filter((a) => a.status === "shortlisted").length ?? 0;
-  const interviewCount = applications?.filter((a) => a.status === "interview_scheduled").length ?? 0;
+  const activeCount = applications?.filter((a) => ["reviewed", "shortlisted", "interview_requested", "interview_scheduled", "accepted"].includes(a.status)).length ?? 0;
+  const hiredCount = applications?.filter((a) => a.status === "onboarded").length ?? 0;
+  const rejectedCount = applications?.filter((a) => a.status === "rejected").length ?? 0;
   const totalCount = applications?.length ?? 0;
   const applicationRoles = Array.from(new Set((applications ?? []).map((app) => app.role))).sort();
+  const applicationLocations = Array.from(new Set((applications ?? []).map((app) => app.location))).sort();
   const normalizedQuery = applicationQuery.trim().toLowerCase();
   const filteredApplications = (applications ?? []).filter((app) => {
     const matchesQuery = !normalizedQuery || [app.name, app.email, app.role, app.location]
@@ -993,9 +1002,15 @@ export default function ApplicationsDashboard() {
       .some((value) => value.toLowerCase().includes(normalizedQuery));
     const matchesStatus = statusFilter === "all" || app.status === statusFilter;
     const matchesRole = roleFilter === "all" || app.role === roleFilter;
-    return matchesQuery && matchesStatus && matchesRole;
+    const matchesLocation = locationFilter === "all" || app.location === locationFilter;
+    const matchesPipeline = pipelineView === "all"
+      || (pipelineView === "new" && app.status === "new")
+      || (pipelineView === "active" && ["reviewed", "shortlisted", "interview_requested", "interview_scheduled", "accepted"].includes(app.status))
+      || (pipelineView === "hired" && app.status === "onboarded")
+      || (pipelineView === "rejected" && app.status === "rejected");
+    return matchesQuery && matchesStatus && matchesRole && matchesLocation && matchesPipeline;
   });
-  const applicationsPerPage = 50;
+  const applicationsPerPage = 20;
   const totalApplicationPages = Math.max(1, Math.ceil(filteredApplications.length / applicationsPerPage));
   const currentApplicationPage = Math.min(applicationPage, totalApplicationPages);
   const displayedApplications = filteredApplications.slice(
@@ -1028,24 +1043,27 @@ export default function ApplicationsDashboard() {
           </Button>
         </div>
 
-        {/* Summary cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-white rounded-2xl p-5 border border-[#F0D0DC]">
-            <p className="font-body text-xs text-[#1A0A12] mb-1">Total</p>
-            <p className="font-display font-bold text-3xl text-[#1A0A12]">{totalCount}</p>
-          </div>
-          <div className="bg-white rounded-2xl p-5 border border-blue-200">
-            <p className="font-body text-xs text-blue-500 mb-1">New</p>
-            <p className="font-display font-bold text-3xl text-blue-600">{newCount}</p>
-          </div>
-          <div className="bg-white rounded-2xl p-5 border border-purple-200">
-            <p className="font-body text-xs text-purple-500 mb-1">Interviews</p>
-            <p className="font-display font-bold text-3xl text-purple-600">{interviewCount}</p>
-          </div>
-          <div className="bg-white rounded-2xl p-5 border border-emerald-200">
-            <p className="font-body text-xs text-emerald-600 mb-1">Shortlisted</p>
-            <p className="font-display font-bold text-3xl text-emerald-600">{shortlistedCount}</p>
-          </div>
+        {/* Hiring queue */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3" role="tablist" aria-label="Application pipeline">
+          {([
+            ["new", "New", newCount],
+            ["active", "In progress", activeCount],
+            ["hired", "Hired", hiredCount],
+            ["rejected", "Rejected", rejectedCount],
+            ["all", "All", totalCount],
+          ] as const).map(([value, label, count]) => (
+            <button
+              key={value}
+              type="button"
+              role="tab"
+              aria-selected={pipelineView === value}
+              onClick={() => { setPipelineView(value); setStatusFilter("all"); setApplicationPage(1); }}
+              className={`rounded-2xl p-4 border text-left transition-all ${pipelineView === value ? "bg-[#8B2252] border-[#8B2252] text-white shadow-sm" : "bg-white border-[#F0D0DC] text-[#1A0A12] hover:border-[#C86B8D]"}`}
+            >
+              <p className={`font-body text-xs ${pipelineView === value ? "text-pink-100" : "text-[#6B4658]"}`}>{label}</p>
+              <p className="font-display font-bold text-2xl mt-1">{count}</p>
+            </button>
+          ))}
         </div>
 
         <div className="bg-white rounded-2xl border border-[#F0D0DC] p-4 flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
@@ -1065,10 +1083,19 @@ export default function ApplicationsDashboard() {
               <option value="new">New</option>
               <option value="reviewed">Reviewed</option>
               <option value="shortlisted">Shortlisted</option>
+              <option value="interview_requested">Interview request sent</option>
               <option value="interview_scheduled">Interview scheduled</option>
               <option value="accepted">Accepted</option>
               <option value="rejected">Rejected</option>
               <option value="onboarded">Onboarded</option>
+            </select>
+            <select
+              value={locationFilter}
+              onChange={(event) => { setLocationFilter(event.target.value); setApplicationPage(1); }}
+              className="h-10 rounded-md border border-[#F0D0DC] bg-white px-3 font-body text-sm text-[#3D1A2E]"
+            >
+              <option value="all">All locations</option>
+              {applicationLocations.map((location) => <option key={location} value={location}>{location}</option>)}
             </select>
             <select
               value={roleFilter}
@@ -1121,14 +1148,10 @@ export default function ApplicationsDashboard() {
                 <thead>
                   <tr className="bg-[#FFF5F8] border-b border-[#F0D0DC]">
                     <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Applicant</th>
-                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Role</th>
-                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Contact</th>
-                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Video</th>
-                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Resume</th>
-                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Signing</th>
-                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Applied</th>
-                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Status</th>
-                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Actions</th>
+                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Position</th>
+                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Application</th>
+                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Stage</th>
+                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Next step</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1144,11 +1167,8 @@ export default function ApplicationsDashboard() {
                           className="text-left hover:text-[#8B2252] transition-colors"
                         >
                           <p className="font-body font-semibold text-sm text-[#1A0A12]">{app.name}</p>
-                          {app.whyAPY && (
-                            <p className="font-body text-xs text-[#1A0A12] mt-0.5 max-w-[180px] truncate" title={app.whyAPY}>
-                              {app.whyAPY}
-                            </p>
-                          )}
+                          <p className="font-body text-xs text-[#8B6070] mt-0.5 max-w-[220px] truncate">{app.email}</p>
+                          {app.phone && <p className="font-body text-xs text-[#8B6070] mt-0.5">{app.phone}</p>}
                         </button>
                       </td>
 
@@ -1156,85 +1176,28 @@ export default function ApplicationsDashboard() {
                       <td className="px-5 py-4">
                         <p className="font-body text-sm text-[#1A0A12]">{app.role}</p>
                         <p className="font-body text-xs text-[#C4A0B0]">{app.location}</p>
+                        <p className="font-body text-xs text-[#8B6070] mt-1">
+                          Applied {new Date(app.createdAt).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}
+                        </p>
                       </td>
 
-                      {/* Contact */}
+                      {/* Application materials */}
                       <td className="px-5 py-4">
-                        <div className="space-y-1">
-                          <a
-                            href={`mailto:${app.email}`}
-                            className="flex items-center gap-1.5 font-body text-xs text-[#8B2252] hover:underline"
-                          >
-                            <Mail className="w-3 h-3 shrink-0" />
-                            {app.email}
-                          </a>
-                          {app.phone && (
-                            <a
-                              href={`tel:${app.phone}`}
-                              className="flex items-center gap-1.5 font-body text-xs text-[#1A0A12] hover:underline"
-                            >
-                              <Phone className="w-3 h-3 shrink-0" />
-                              {app.phone}
-                            </a>
-                          )}
+                        <div className="flex flex-wrap gap-2">
+                          {app.videoUrl ? (
+                            <button onClick={() => openVideo(app.videoKey, app.videoUrl)} className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-[#FFF5F8] border border-[#F2A0B8] rounded-lg font-body text-xs font-semibold text-[#8B2252] hover:bg-[#F2A0B8]/20">
+                              <Play className="w-3 h-3" /> Video
+                            </button>
+                          ) : <span className="font-body text-xs text-[#C4A0B0]">No video</span>}
+                          {app.resumeUrl ? (
+                            <button type="button" onClick={() => openResume(app.resumeKey, app.resumeUrl)} className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 border border-blue-200 rounded-lg font-body text-xs font-semibold text-blue-700 hover:bg-blue-100">
+                              <FileText className="w-3 h-3" /> Resume
+                            </button>
+                          ) : <span className="font-body text-xs text-[#C4A0B0]">No resume</span>}
                         </div>
                       </td>
 
-                      {/* Video */}
-                      <td className="px-5 py-4">
-                        {app.videoUrl ? (
-                          <button
-                            onClick={() => openVideo(app.videoKey, app.videoUrl)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFF5F8] border border-[#F2A0B8] rounded-lg font-body text-xs font-semibold text-[#8B2252] hover:bg-[#F2A0B8]/20 transition-colors"
-                          >
-                            <Play className="w-3 h-3" />
-                            Watch
-                          </button>
-                        ) : (
-                          <span className="font-body text-xs text-[#C4A0B0] italic">No video</span>
-                        )}
-                      </td>
-
-                      {/* Resume */}
-                      <td className="px-5 py-4">
-                        {app.resumeUrl ? (
-                          <button
-                            type="button"
-                            onClick={() => openResume(app.resumeKey, app.resumeUrl)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg font-body text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
-                          >
-                            <FileText className="w-3 h-3" />
-                            View
-                          </button>
-                        ) : (
-                          <span className="font-body text-xs text-[#C4A0B0] italic">No resume</span>
-                        )}
-                      </td>
-
-                      {/* Signing status */}
-                      <td className="px-5 py-4">
-                        {app.signingStatus === "signed" ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-body font-semibold bg-green-100 text-green-700">
-                            <CheckCircle className="w-3 h-3" /> Signed
-                          </span>
-                        ) : app.signingStatus === "pending_signature" ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-body font-semibold bg-yellow-100 text-yellow-700">
-                            <Send className="w-3 h-3" /> Awaiting
-                          </span>
-                        ) : (
-                          <span className="font-body text-xs text-[#C4A0B0] italic">—</span>
-                        )}
-                      </td>
-                      {/* Applied date */}
-                      <td className="px-5 py-4 font-body text-xs text-[#1A0A12]">
-                        {new Date(app.createdAt).toLocaleDateString("en-CA", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                      </td>
-
-                      {/* Status */}
+                      {/* Stage */}
                       <td className="px-5 py-4">
                         <Select
                           value={app.status}
@@ -1251,17 +1214,23 @@ export default function ApplicationsDashboard() {
                             <SelectItem value="new">New</SelectItem>
                             <SelectItem value="reviewed">Reviewed</SelectItem>
                             <SelectItem value="shortlisted">Shortlisted</SelectItem>
+                            <SelectItem value="interview_requested">Interview Request Sent</SelectItem>
                             <SelectItem value="interview_scheduled">Interview Scheduled</SelectItem>
                             <SelectItem value="accepted">Accepted</SelectItem>
                             <SelectItem value="rejected">Rejected</SelectItem>
                             <SelectItem value="onboarded">Onboarded</SelectItem>
                           </SelectContent>
                         </Select>
+                        {app.signingStatus && (
+                          <p className={`font-body text-xs mt-2 ${app.signingStatus === "signed" ? "text-green-700" : "text-amber-700"}`}>
+                            {app.signingStatus === "signed" ? "Offer signed" : "Awaiting signature"}
+                          </p>
+                        )}
                       </td>
 
-                      {/* Actions */}
+                      {/* Contextual next step */}
                       <td className="px-5 py-4">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 whitespace-nowrap">
                           <button
                             onClick={() => setSelectedApp(app as Application)}
                             className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#FFF5F8] border border-[#F0D0DC] rounded-lg font-body text-xs font-semibold text-[#8B2252] hover:bg-[#F9E4EE] transition-colors"
@@ -1269,44 +1238,23 @@ export default function ApplicationsDashboard() {
                           >
                             <Eye className="w-3 h-3" /> View
                           </button>
-                          <button
-                            onClick={() => { setSelectedApp(app as Application); setShowInterviewModal(true); }}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-lg font-body text-xs font-semibold text-purple-700 hover:bg-purple-100 transition-colors"
-                            title="Send interview invite"
-                          >
-                            <Calendar className="w-3 h-3" />
-                          </button>
-                          <button
-                            onClick={() => { setSelectedApp(app as Application); setShowOfferModal(true); }}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg font-body text-xs font-semibold text-green-700 hover:bg-green-100 transition-colors"
-                            title="Send offer letter"
-                          >
-                            <CheckCircle className="w-3 h-3" />
-                          </button>
-                          {app.email ? (
-                            <button
-                              onClick={() => requestVideoMain.mutate({ id: app.id, applicantName: app.name, applicantEmail: app.email!, role: app.role, location: app.location })}
-                              disabled={requestVideoMain.isPending}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-orange-50 border border-orange-200 rounded-lg font-body text-xs font-semibold text-orange-600 hover:bg-orange-100 transition-colors"
-                              title="Request intro video"
-                            >
-                              <VideoIcon className="w-3 h-3" />
+                          {["new", "reviewed", "shortlisted"].includes(app.status) && (
+                            <button onClick={() => { setSelectedApp(app as Application); setShowInterviewModal(true); }} className="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-lg font-body text-xs font-semibold text-purple-700 hover:bg-purple-100">
+                              <Calendar className="w-3 h-3" /> Interview
                             </button>
-                          ) : null}
-                          <button
-                            onClick={() => { setSelectedApp(app as Application); setShowRejectionModal(true); }}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg font-body text-xs font-semibold text-red-600 hover:bg-red-100 transition-colors"
-                            title="Send rejection letter"
-                          >
-                            <XCircle className="w-3 h-3" />
-                          </button>
+                          )}
+                          {["interview_requested", "interview_scheduled"].includes(app.status) && (
+                            <button onClick={() => { setSelectedApp(app as Application); setShowOfferModal(true); }} className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg font-body text-xs font-semibold text-green-700 hover:bg-green-100">
+                              <CheckCircle className="w-3 h-3" /> Offer
+                            </button>
+                          )}
                           {app.signingStatus === "signed" && (
                             <button
                               onClick={() => { setSelectedApp(app as Application); setShowOnboardingModal(true); }}
                               className="inline-flex items-center gap-1 px-3 py-1.5 bg-pink-50 border border-pink-200 rounded-lg font-body text-xs font-semibold text-pink-700 hover:bg-pink-100 transition-colors"
                               title="Send onboarding email"
                             >
-                              <PartyPopper className="w-3 h-3" />
+                              <PartyPopper className="w-3 h-3" /> Onboard
                             </button>
                           )}
                           <button

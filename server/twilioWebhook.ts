@@ -16,8 +16,17 @@ import twilio from "twilio";
 import { eq } from "drizzle-orm";
 import { getDb } from "./db";
 import { callLogs, inboundSms, breeders } from "../drizzle/schema";
+import { applyInboundSmsConsent } from "./smsConsent";
 
 const webhookRouter = Router();
+
+export function getTwilioWebhookBaseUrl(): string {
+  return (process.env.TWILIO_WEBHOOK_BASE_URL ?? "https://afropuppyyoga.ca").replace(/\/+$/, "");
+}
+
+export function getTwilioWebhookUrl(path: string): string {
+  return `${getTwilioWebhookBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
+}
 
 function validateTwilioSignature(req: import("express").Request): boolean {
   const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -26,8 +35,14 @@ function validateTwilioSignature(req: import("express").Request): boolean {
   if (process.env.NODE_ENV === "development") return true;
   const signature = req.headers["x-twilio-signature"] as string | undefined;
   if (!signature) return false;
-  const url = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-  return twilio.validateRequest(authToken, signature, url, req.body as Record<string, string>);
+  const requestBody = req.body as Record<string, string>;
+  // Twilio signs the callback URL supplied at dispatch. Proxies can rewrite the
+  // runtime protocol/host, so verify the configured public callback URL first.
+  const canonicalUrl = getTwilioWebhookUrl(req.originalUrl);
+  const requestUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  return [canonicalUrl, requestUrl].some((url) =>
+    twilio.validateRequest(authToken, signature, url, requestBody)
+  );
 }
 
 /**
@@ -132,10 +147,12 @@ webhookRouter.post("/api/twilio/sms-inbound", async (req, res) => {
 
   let breederId: number | null = null;
   let breederName: string | null = null;
+  let consentAction: "stop" | "start" | null = null;
 
   try {
     const db = await getDb();
     if (db) {
+      consentAction = await applyInboundSmsConsent(fromPhone, messageBody, twilioSid);
       // Normalize phone for matching (strip non-digits, add country code)
       const digits = fromPhone.replace(/\D/g, "");
       const normalized = digits.length === 10 ? "1" + digits : digits;
@@ -171,7 +188,7 @@ webhookRouter.post("/api/twilio/sms-inbound", async (req, res) => {
       const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
       const twilioFromNumber = process.env.TWILIO_PHONE_NUMBER;
 
-      if (ownerPhone && twilioAccountSid && twilioAuthToken && twilioFromNumber) {
+      if (!consentAction && ownerPhone && twilioAccountSid && twilioAuthToken && twilioFromNumber) {
         const senderLabel = breederName ?? fromPhone;
         const forwardBody = `📩 Reply from ${senderLabel}:\n"${messageBody}"`;
         const params = new URLSearchParams();

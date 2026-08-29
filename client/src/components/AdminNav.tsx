@@ -20,38 +20,42 @@ import {
   CalendarDays,
   PhoneOff,
   MessageSquare,
-  UsersRound,
+  Gauge,
 } from "lucide-react";
 import { Inbox, Star, DollarSign, Dog } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
+import { canAccessHubTool, type ApyHubToolAccess } from "@shared/apyPermissions";
 import { useState, useRef, useEffect } from "react";
 
 // Primary tabs always visible in the nav bar
 const PRIMARY_ITEMS = [
-  { href: "/admin/invoices",     label: "Invoices",     icon: FileText,   adminOnly: false },
-  { href: "/admin/applications", label: "Applications", icon: Users,      adminOnly: false },
-  { href: "/admin/breeders",     label: "Breeders",     icon: PawPrint,   adminOnly: false },
-  { href: "/admin/refunds",      label: "Refunds",      icon: RotateCcw,  adminOnly: false },
-  { href: "/admin/staff",        label: "Staff",        icon: UserCog,    adminOnly: true  },
+  { href: "/admin/run-apy",      label: "Run APY",      icon: Gauge,      required: "operations" as ApyHubToolAccess },
+  { href: "/admin/invoices",     label: "Invoices",     icon: FileText,   required: "owner" as ApyHubToolAccess },
+  { href: "/admin/applications", label: "Applications", icon: Users,      required: "operations" as ApyHubToolAccess },
+  { href: "/admin/breeders",     label: "Breeders",     icon: PawPrint,   required: "operations" as ApyHubToolAccess },
+  { href: "/admin/refunds",      label: "Refunds",      icon: RotateCcw,  required: "operations" as ApyHubToolAccess },
+  { href: "/admin/staff",        label: "Staff Access", icon: UserCog,    required: "operations" as ApyHubToolAccess },
 ];
 
 // Secondary tabs collapsed into the "More" dropdown
 const MORE_ITEMS = [
-  { href: "/admin/partnerships",   label: "Partnerships",    icon: Handshake,    adminOnly: false },
-  { href: "/admin/private-events", label: "Private Events",  icon: Sparkles,     adminOnly: false },
-  { href: "/admin/schedule-calendar", label: "Schedule Calendar", icon: CalendarDays, adminOnly: false },
-  { href: "/admin/cancellation", label: "Cancel Class", icon: PhoneOff, adminOnly: false },
-  { href: "/admin/sms-broadcast", label: "SMS Broadcast", icon: MessageSquare, adminOnly: false },
-  { href: "/admin/sms-inbox",      label: "SMS Inbox",       icon: Inbox,        adminOnly: false },
-  { href: "/admin/review-texts",   label: "Review Texts",    icon: Star,         adminOnly: false },
-  { href: "/admin/revenue",         label: "Revenue",         icon: DollarSign,   adminOnly: false },
-  { href: "/admin/employees",       label: "Employees",       icon: UsersRound,   adminOnly: true },
-  { href: "/admin/breeder-leads",   label: "Breeder Leads",   icon: Dog,          adminOnly: false },
+  { href: "/admin/partnerships",   label: "Partnerships",    icon: Handshake,    required: "operations" as ApyHubToolAccess },
+  { href: "/admin/private-events", label: "Private Events",  icon: Sparkles,     required: "operations" as ApyHubToolAccess },
+  { href: "/admin/schedule-calendar", label: "Schedule Calendar", icon: CalendarDays, required: "operations" as ApyHubToolAccess },
+  { href: "/admin/cancellation", label: "Cancel Class", icon: PhoneOff, required: "operations" as ApyHubToolAccess },
+  { href: "/admin/sms-broadcast", label: "SMS Broadcast", icon: MessageSquare, required: "operations" as ApyHubToolAccess },
+  { href: "/admin/sms-inbox",      label: "SMS Inbox",       icon: Inbox,        required: "operations" as ApyHubToolAccess },
+  { href: "/admin/review-texts",   label: "Review Texts",    icon: Star,         required: "operations" as ApyHubToolAccess },
+  { href: "/admin/revenue",         label: "Revenue",         icon: DollarSign,   required: "owner" as ApyHubToolAccess },
+  { href: "/admin/breeder-leads",   label: "Breeder Leads",   icon: Dog,          required: "operations" as ApyHubToolAccess },
 ];
 
 export default function AdminNav() {
   const [location] = useLocation();
   const { user } = useAuth();
+  const access = trpc.staff.myAccess.useQuery(undefined, { enabled: Boolean(user) });
+  const level = access.data?.level ?? "none";
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
 
@@ -66,13 +70,9 @@ export default function AdminNav() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const visiblePrimary = PRIMARY_ITEMS.filter(
-    (item) => !item.adminOnly || user?.role === "admin"
-  );
+  const visiblePrimary = PRIMARY_ITEMS.filter((item) => canAccessHubTool(level, item.required));
 
-  const visibleMore = MORE_ITEMS.filter(
-    (item) => !item.adminOnly || user?.role === "admin"
-  );
+  const visibleMore = MORE_ITEMS.filter((item) => canAccessHubTool(level, item.required));
 
   // Check if any "More" item is currently active (so we can highlight the More button)
   const moreIsActive = visibleMore.some(

@@ -1,4 +1,57 @@
 
+## Current Staff Access Investigation
+- [x] Synchronize the validated APY HQ individual staff messaging update to the connected GitHub main branch
+- [x] Remove any residual merge-conflict markers from the synchronized staff access files and revalidate the build
+- [x] Add a safe one-at-a-time messaging action for an individual assigned class staff member within APY HQ staffing context
+- [x] Limit individual class messages to the current assigned event recipients and retain email, SMS suppression, and delivery history safeguards
+- [x] Report individual class-message delivery accurately instead of showing success when all channels fail or are suppressed
+- [x] Add focused route-level regression coverage for individual message recipients, resend history, SMS suppression, and failed delivery states
+- [x] Add route-level tests for individual message suppression, failed/not-configured delivery reporting, and successful-delivery status
+- [x] Verify the individual message result maps to success versus warning/error client feedback without claiming failed delivery was sent
+- [x] Exercise the notifyIndividualEventStaff mutation itself across recipient, resend, suppression, unavailable, failed, and successful-delivery paths
+- [x] Add direct client feedback mapping coverage for individual schedule delivery results
+- [x] Add unified owner-controlled editing for APY HQ staff profile details, role, location assignment, and availability through the connected leave workflow
+- [x] Confirm active/inactive team-profile controls follow the APY owner-and-Operations-Manager access model and remain unavailable to other roles
+- [x] Verify inactive APY HQ profiles are shown separately from active staffing and are excluded from weekend coverage
+- [x] Prevent an edit from leaving an active Puppy Monitor location without an Operations Manager
+- [x] Add a clear Staff Access link to the existing Team & Availability editor so profile editing is discoverable from APY HQ navigation
+- [x] Verify Staff Access now links directly to the connected Team & Availability editing workflow
+- [x] Verify the loaded Team & Availability board remains connected to weekend coverage and class staffing after adding profile-editing support
+- [x] Verify an existing team member now exposes an Edit team details action alongside their leave and removal controls
+- [x] Verify the connected weekend coverage panel remains available alongside the new team profile controls
+- [x] Create and validate a polished AfroPuppyYoga funding pitch deck from the uploaded source deck and current business evidence
+- [x] Review the newly available Codex update before any integration or deployment decision; retain the stronger current owner-session fallback and staff return-path behavior
+- [x] Diagnose and restore reliable owner and staff access to the APY HQ staff portal
+- [x] Allow the configured APY owner to use secure phone verification for owner-level APY HQ access without Manus sign-in
+- [x] Confirm the legacy live `/staff` portal route renders blank while `/staff-access` loads the intended APY HQ access screen
+- [x] Confirm the current `/staff` command centre renders locally, isolating the reported failure to the live deployment path
+- [x] Verify the live `/staff` route renders the APY HQ command-centre access state after its initial bundle load, without requiring a redirect
+- [x] Retain the owner-account OAuth route only as a backup; the owner approved and verified phone-first APY HQ access instead
+- [x] Verify the owner-account action reaches the configured AfroPuppyYoga identity-provider sign-in page without an application routing failure
+- [x] End-to-end verify a phone OTP session reaches `/staff` with the intended APY HQ access level
+- [x] Confirm delivery of the owner-approved one-time code and complete the passwordless APY HQ session test
+- [x] Confirm the corrected owner recipient receives the second approved verification code
+- [x] Verify the corrected owner-phone request reaches APY HQ code entry without a client-side error
+- [x] Verify the published passwordless APY HQ phone-access form loads before submitting the owner-approved test number
+- [x] Diagnose and restore live delivery of the APY HQ owner verification SMS before sending another code
+- [x] Update the configured owner phone used by passwordless APY HQ access to the owner-confirmed mobile number
+- [x] Diagnose and correct the rejected owner verification code before retesting passwordless APY HQ access
+- [x] Request and verify a fresh, unused owner code after resolving the consumed-code mismatch
+- [x] Resolve the owner session identity from the existing admin record when the production environment omits the owner identifier
+- [x] Confirm the fresh verification form contains the owner-approved mobile number before dispatching the final code
+- [x] Confirm the corrected live owner-session form contains the owner-approved mobile number before requesting the final session code
+- [x] Confirm the latest corrected owner verification redirects to the authenticated APY HQ command centre
+- [x] Fall back to a dedicated verified-owner-phone session identity when owner metadata is unavailable in production
+- [x] Verify the newly published owner-session access form accepts the owner-approved number without a client-side error
+- [x] Verify the final published owner-session request reaches code entry without the earlier production configuration error
+- [x] Reconcile the live staff verification endpoint with the published owner-session source before requesting another code
+- [x] Verify the live API revision through a non-sensitive health marker before another passwordless owner-code attempt
+- [x] Verify the synchronized-production owner verification form accepts the owner-approved number before its test code is sent
+- [x] Retain the owner OAuth callback route as an optional backup; owner access is now verified through the chosen phone-first flow
+- [x] Verify non-owner APY HQ phone-session identity and staff role boundaries remain protected after the owner-phone changes
+- [x] Verify email-invite staff access remains wired to the existing APY HQ identity and role boundaries after the owner-phone changes
+- [x] Add direct regression coverage proving email invitations remain limited to active manually managed APY HQ team members
+
 ## Staff Invoice Portal
 - [x] Add invoices table to drizzle schema (id, staffName, position, payAmount, dueDate, fileUrl, fileKey, status, extractedAt, createdAt)
 - [x] Add tRPC procedure: uploadInvoice (upload PDF to S3, trigger AI extraction)
@@ -750,11 +803,112 @@
 ## APY HQ Team Contact Methods (Aug 19, 2026)
 - [x] Allow team members to be added with either a valid email address or a phone number, while requiring at least one contact method
 
+## Available Project Updates (Aug 19, 2026)
+- [x] Review newly available project updates and assess whether any are safe to apply to the deployed application
+
+## Approved Update Integration (Aug 21, 2026)
+- [x] Integrate PR #2 cancellation refresh and repository cleanup into the deployed codebase
+- [x] Integrate the Stripe production-startup safeguard without replacing current APY features
+
 ## Production Deployment Repair (Aug 20, 2026)
 - [x] Prevent Stripe from crashing server startup when production Stripe credentials are not configured
 - [x] Correct Revenue Dashboard TypeScript errors and verify deployment health
 
-## Staff Directory and Private-Event Pricing Fixes (Aug 20, 2026)
-- [x] Make employee removal remove the person from APY HQ while preserving required historical staffing records
-- [x] Create a database-backed Employee Directory with active and inactive staff records
-- [x] Correct Luma private-event booking prices so HST is charged only once
+## Cancellation Notification Delivery (Aug 21, 2026)
+- [x] Diagnose and fix cancellation SMS and call notifications that remain queued instead of reaching guests
+
+## Hiring Interview Statuses (Aug 21, 2026)
+- [x] Separate Interview Request Sent from Interview Scheduled so only confirmed date-and-time bookings appear as scheduled
+
+## Available Project Updates (Aug 21, 2026)
+- [x] Review newly available project updates and assess whether any are safe to integrate into the deployed application
+- [x] Inspect the newly announced update and compare it with the current deployed code before integration
+
+## Breeder-Scheduled Luma Events (Aug 25, 2026)
+- [x] Enable group registration for Luma events created from a breeder-scheduled class
+- [x] Remove the unnecessary Standard Free ticket from created Luma class events
+- [x] Apply cranberry tint, hypnotic pattern, and light appearance to created Luma class events
+
+## Luma Class Creation Preview (Aug 25, 2026)
+- [x] Add an admin preview card showing the Luma event settings before a breeder-scheduled class is finalized
+
+## Mobile Homepage Hero Image Reliability (Aug 26, 2026)
+- [x] Ensure the mobile homepage hero image loads reliably and provides a graceful fallback instead of exposing an incomplete blank state
+
+## Available Project Update Review (Aug 27, 2026)
+- [x] Inspect the newly available project update and assess whether it is safe to integrate into the deployed application
+
+## Approved PR #4 Integration (Aug 27, 2026)
+- [x] Merge and publish the APY admin workflow and Luma attendance reliability improvements from pull request #4
+
+## Available Project Updates (Aug 27, 2026)
+- [x] Inspect newly available project updates and assess whether they are safe to integrate into the deployed application
+
+## Approved Staff Training & Schedule Notifications (Aug 27, 2026)
+- [x] Merge, migrate, validate, and publish the staff training and guarded event-notification workflow from pull request #5
+- [x] Correct the APY Training Centre route so it is reachable from the admin portal
+
+## Free Luma Cancellation Rebooking Codes (Aug 27, 2026)
+- [x] Create a 100% free calendar-level Luma code when cancelling a class so guests can rebook into any eligible APY class
+
+## APY Training Centre Improvement (Aug 27, 2026)
+- [x] Improve the Training Centre’s role-based lesson flow, progress guidance, completion experience, and visual hierarchy for staff onboarding
+
+## APY HQ Training Administration (Aug 28, 2026)
+- [x] Replace the vague Admin Training Review state with a clear training-management view for completion status, staff follow-up, and lesson oversight
+
+## APY HQ Role-Based Permissions (Aug 28, 2026)
+- [x] Define and enforce separate APY HQ access for Owner/Admin, Operations Manager, Yoga Instructor, and Puppy Monitor roles
+- [x] Allow staff identity matching and access invitations through either their APY HQ email or phone number
+- [x] Give Operations Managers full operational APY HQ access while restricting only Invoice Dashboard and Revenue Dashboard
+
+## Staff Access Command Centre Placement (Aug 28, 2026)
+- [x] Move Staff Access from hidden secondary navigation into the primary APY HQ Command Centre
+
+## APY HQ Command Centre Operational Audit (Aug 28, 2026)
+- [x] Audit all APY HQ tools, workflows, access paths, and integration dependencies from an owner and Operations Manager perspective
+- [x] Deliver a prioritized, practical Command Centre improvement roadmap for operating AfroPuppyYoga
+
+## GitHub Repository Synchronization (Aug 28, 2026)
+- [x] Verify the reconnected aybello GitHub authorization and synchronize the latest published project changes to the repository
+
+## Available Project Update Review (Aug 28, 2026)
+- [x] Inspect the newly available project update and assess whether it is safe to integrate into the deployed codebase
+
+## Approved P0 Security & Operational Integrity Update (Aug 28, 2026)
+- [x] Merge, migrate, validate, and publish the approved P0 security and operational-integrity update from pull request #6
+
+## Remaining Pull Request Review (Aug 28, 2026)
+- [x] Review the remaining dependent pull requests in sequence and recommend the next safe integration
+
+## Approved Run APY Dashboard (Aug 28, 2026)
+- [x] Restrict the Run APY dashboard to Owner and Operations Manager roles, then merge, validate, and publish pull request #7
+- [x] Rebase the Run APY dashboard on current APY HQ authorization and resolve its TypeScript issues before merging
+- [x] Resolve the Run APY dashboard loading state before publishing the operations command centre
+
+## Remaining APY HQ Update Stack (Aug 28, 2026)
+- [x] Review, correct as needed, merge, validate, and publish PR #8 class lifecycle
+- [x] Review, correct as needed, merge, validate, and publish PR #9 private-event and hiring workflows
+- [x] Preserve manual APY HQ team membership when integrating PR #9 hiring workflow changes
+- [x] Preserve Operations Manager access to routine private-event Luma controls while retaining owner approval for exceptions
+- [x] Align PR #9 private-event client controls with APY HQ owner-versus-operations access visibility
+- [x] Diagnose and resolve the private-event inquiry list loading state observed after PR #9 integration
+- [x] Confirm the new private-event audit timeline resolves for existing legacy inquiries without creating or sending anything
+- [x] Review, correct as needed, merge, validate, and publish PR #10 breeder workflow
+- [x] Use APY's approved Warmly sign-off in the PR #10 breeder confirmation email and plain-text message
+- [x] Keep breeder logistics times separate from public Luma class slots in PR #10 and enforce APY's three regular-class start times
+- [x] Correct PR #10's TiDB migration order before adding its breeder confirmation idempotency key
+- [x] Verify the breeder database loads its existing records and management controls after the PR #10 migration
+- [x] Verify Run APY remains fully available after the breeder workflow migration and preserves its normal operational actions
+- [x] Reconcile Run APY's breeder follow-up query with the deployed legacy table so due actions appear without relying on compatibility fallback
+- [x] Review, correct as needed, merge, validate, and publish PR #11 applicant upload resiliency
+- [x] Verify the applicant form renders the resilient 500MB video and resume upload controls without submitting media or an application
+- [x] Make the PR #8 schedule lifecycle migration compatible with TiDB column/index ordering before applying it
+- [x] Verify and resolve the Run APY loading state while validating PR #8 lifecycle changes
+- [x] Keep Run APY available until PR #10 creates the breeder follow-up table it will later consume
+- [x] Confirm Run APY uses the explicit owner-and-Operations-Manager guard and cannot broaden team-member access
+- [x] Diagnose the remaining Run APY client loading state after the backend missing-table repair
+- [x] Complete a fresh owner-browser verification after the Run APY query recovery reloads
+- [x] Inspect the actual TiDB/Drizzle wrapped error shape before finalizing the narrowly scoped Run APY fallback
+- [x] Treat only the verified pre-PR #10 breeder follow-up column mismatch as an empty Run APY feed
+- [x] Verify Schedule Calendar and Puppy Class Schedule load, with the class editor showing the APY HQ and Luma synchronization state

@@ -19,7 +19,10 @@ const Careers = lazy(() => import("./pages/Careers"));
 const StaffPortal = lazy(() => import("./pages/StaffPortal"));
 const Partnerships = lazy(() => import("./pages/Partnerships"));
 const StaffLogin = lazy(() => import("./pages/StaffLogin"));
+const StaffAccess = lazy(() => import("./pages/StaffAccess"));
+const RunApyDashboard = lazy(() => import("./pages/RunApyDashboard"));
 const StaffManagement = lazy(() => import("./pages/StaffManagement"));
+const StaffTraining = lazy(() => import("./pages/StaffTraining"));
 const SignDocuments = lazy(() => import("./pages/SignDocuments"));
 const PrivateEventQuote = lazy(() => import("./pages/PrivateEventQuote"));
 const PrivateEventsDashboard = lazy(() => import("./pages/PrivateEventsDashboard"));
@@ -36,7 +39,6 @@ const Hamilton = lazy(() => import("./pages/Hamilton"));
 const Oakville = lazy(() => import("./pages/Oakville"));
 const Corporate = lazy(() => import("./pages/Corporate"));
 const PrivatePuppyYogaEvents = lazy(() => import("./pages/PrivatePuppyYogaEvents"));
-const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const CancellationDashboard = lazy(() => import("./pages/CancellationDashboard"));
 const SmsBroadcast = lazy(() => import("./pages/SmsBroadcast"));
 const EmployeeDirectory = lazy(() => import("./pages/EmployeeDirectory"));
@@ -71,11 +73,15 @@ function Router() {
         <Route path="/admin/invoices" component={InvoiceDashboard} />
         <Route path="/admin/applications" component={ApplicationsDashboard} />
         <Route path="/admin/partnerships" component={PartnershipsDashboard} />
+        <Route path="/admin/staff-training" component={StaffTraining} />
         <Route path={"/careers"} component={Careers} />
         <Route path={"/staff"} component={StaffPortal} />
+        <Route path={"/staff/training"} component={StaffTraining} />
         <Route path={"/birthday"}>{() => { window.location.replace("/private-events/quote"); return null; }}</Route>
         <Route path={"/partnerships"} component={Partnerships} />
         <Route path={"/staff-login"} component={StaffLogin} />
+        <Route path={"/staff-access"} component={StaffAccess} />
+        <Route path="/admin/run-apy" component={RunApyDashboard} />
         <Route path={"/admin/staff"} component={StaffManagement} />
         <Route path={"/sign"} component={SignDocuments} />
         <Route path={"/private-events/quote"} component={PrivateEventQuote} />
@@ -106,7 +112,7 @@ function Router() {
         <Route path="/oakville">{() => { window.location.replace("/puppy-yoga-oakville"); return null; }}</Route>
         <Route path="/corporate-puppy-yoga" component={Corporate} />
         <Route path="/private-puppy-yoga-events" component={PrivatePuppyYogaEvents} />
-        <Route path="/admin-login" component={AdminLogin} />
+        <Route path="/admin-login">{() => { window.location.replace("/staff-access"); return null; }}</Route>
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>

@@ -1,34 +1,14 @@
 import { z } from "zod";
 import { adminProcedure, staffProcedure, publicProcedure, router } from "../_core/trpc";
-import { createSigningToken, getSigningTokenByToken, updateSigningToken, getSigningTokenByApplicationId } from "../db";
+import { createSigningToken, getSigningTokenByToken, updateSigningToken, getSigningTokenByApplicationId, getJobApplicationById, updateJobApplication, getDb } from "../db";
+import { TRPCError } from "@trpc/server";
 import { notifyOwner } from "../_core/notification";
 import { sendEmail } from "../email";
 import crypto from "crypto";
+import { canReuseSigningToken, detectOfferLetterType, type OfferLetterType } from "../signingPolicy";
+import { communicationsLog, jobApplicationActions } from "../../drizzle/schema";
 
-// CDN URLs for all offer letter PDFs
-type OfferLetterType = "puppy_monitor_kw" | "puppy_monitor_hamilton" | "yoga_instructor" | "puppy_specialist" | "operations_specialist" | "bdr";
-
-export function detectOfferLetterType(role: string, location: string): OfferLetterType {
-  const roleLower = role.toLowerCase();
-  const locationLower = location.toLowerCase();
-
-  if (roleLower.includes("yoga")) {
-    return "yoga_instructor";
-  }
-  if (roleLower.includes("operations specialist") || roleLower.includes("operation specialist")) {
-    return "operations_specialist";
-  }
-  if (roleLower.includes("specialist")) {
-    return "puppy_specialist";
-  }
-  if (roleLower.includes("bdr") || roleLower.includes("business development")) {
-    return "bdr";
-  }
-  if (locationLower.includes("hamilton") || locationLower.includes("ham")) {
-    return "puppy_monitor_hamilton";
-  }
-  return "puppy_monitor_kw";
-}
+export { canReuseSigningToken, detectOfferLetterType } from "../signingPolicy";
 
 export const signingRouter = router({
   /**
@@ -38,41 +18,91 @@ export const signingRouter = router({
     .input(
       z.object({
         applicationId: z.number(),
-        applicantName: z.string(),
-        applicantEmail: z.string().email(),
-        role: z.string(),
-        location: z.string(),
-        origin: z.string().url(), // frontend origin for building the signing link
       })
     )
-    .mutation(async ({ input }) => {
-      const token = crypto.randomBytes(48).toString("hex");
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-      const offerLetterType = detectOfferLetterType(input.role, input.location);
+    .mutation(async ({ input, ctx }) => {
+      const applicant = await getJobApplicationById(input.applicationId);
+      if (!applicant) throw new TRPCError({ code: "NOT_FOUND", message: "Application not found or archived." });
+      if (!applicant.email) throw new TRPCError({ code: "BAD_REQUEST", message: "This applicant does not have an email address." });
+      const latestSigning = await getSigningTokenByApplicationId(applicant.id);
+      if (latestSigning?.signed === 1) {
+        throw new TRPCError({ code: "CONFLICT", message: "This applicant has already signed their offer." });
+      }
+      const reuse = canReuseSigningToken(latestSigning, { ...applicant, email: applicant.email });
+      const token = reuse ? latestSigning!.token : crypto.randomBytes(48).toString("hex");
+      const expiresAt = reuse ? latestSigning!.expiresAt : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      const offerLetterType = detectOfferLetterType(applicant.role, applicant.location);
 
-      await createSigningToken({
-        applicationId: input.applicationId,
-        applicantName: input.applicantName,
-        applicantEmail: input.applicantEmail,
-        role: input.role,
-        location: input.location,
-        offerLetterType,
-        token,
-        signed: 0,
-        expiresAt,
-      });
+      if (!reuse) {
+        await createSigningToken({
+          applicationId: input.applicationId,
+          applicantName: applicant.name,
+          applicantEmail: applicant.email,
+          role: applicant.role,
+          location: applicant.location,
+          offerLetterType,
+          token,
+          signed: 0,
+          expiresAt,
+        });
+      }
 
-      const signingLink = `${input.origin}/sign?token=${token}`;
+      const signingLink = `https://afropuppyyoga.ca/sign?token=${token}`;
+      const subject = "Action Required: Review & Sign Your Offer — AfroPuppyYoga";
+      const text = `Hi ${applicant.name},\n\nCongratulations! Please review and sign your offer letter for the ${applicant.role} position at AfroPuppyYoga (${applicant.location}).\n\nClick the link below to review and sign your documents:\n${signingLink}\n\nThis link is valid for 7 days.\n\nBest regards,\nThe AfroPuppyYoga Team`;
 
       // Send signing email to applicant
       await sendEmail({
-        to: input.applicantEmail,
-        subject: `Action Required: Review & Sign Your Offer — AfroPuppyYoga`,
-        html: buildSigningEmail({ applicantName: input.applicantName, role: input.role, location: input.location, signingLink }),
-        text: `Hi ${input.applicantName},\n\nCongratulations! Please review and sign your offer letter for the ${input.role} position at AfroPuppyYoga (${input.location}).\n\nClick the link below to review and sign your documents:\n${signingLink}\n\nThis link is valid for 7 days.\n\nBest regards,\nThe AfroPuppyYoga Team`,
+        to: applicant.email,
+        subject,
+        html: buildSigningEmail({ applicantName: applicant.name, role: applicant.role, location: applicant.location, signingLink }),
+        text,
       });
+      await updateJobApplication(applicant.id, { status: "accepted" });
 
-      return { success: true, signingLink };
+      const db = await getDb();
+      if (db) {
+        try {
+          await Promise.all([
+            db.insert(jobApplicationActions).values({
+              applicationId: applicant.id,
+              action: reuse ? "offer_resent" : "offer_sent",
+              fromStatus: applicant.status,
+              toStatus: "accepted",
+              actorUserId: ctx.user.id,
+              actorName: ctx.user.name,
+              actorEmail: ctx.user.email,
+              details: JSON.stringify({ offerLetterType, tokenReused: reuse, expiresAt: expiresAt.toISOString() }),
+            }),
+            db.insert(communicationsLog).values({
+              entityType: "job_application",
+              entityId: applicant.id,
+              channel: "email",
+              direction: "outbound",
+              action: reuse ? "offer_resent" : "offer_sent",
+              recipient: applicant.email,
+              subject,
+              bodyPreview: text.slice(0, 1000),
+              deliveryStatus: "sent",
+              actorUserId: ctx.user.id,
+              actorName: ctx.user.name,
+            }),
+          ]);
+        } catch (error) {
+          console.error(`[Signing] Offer sent but history write failed for application ${applicant.id}:`, error);
+        }
+      }
+
+      try {
+        await notifyOwner({
+          title: `Offer Letter Sent: ${applicant.name}`,
+          content: `Offer letter sent to ${applicant.name} (${applicant.email}) for ${applicant.role} (${applicant.location}).`,
+        });
+      } catch (error) {
+        console.error("[Signing] Offer sent, but owner notification failed:", error);
+      }
+
+      return { success: true, signingLink, reused: reuse };
     }),
 
   /**
@@ -121,20 +151,61 @@ export const signingRouter = router({
         signedIp: ip,
         signedAt: new Date(),
       });
+      await updateJobApplication(record.applicationId, { status: "accepted" });
 
       // Notify owner
-      await notifyOwner({
-        title: `Documents Signed: ${record.applicantName}`,
-        content: `${record.applicantName} has signed their offer letter and NDA for the ${record.role} position (${record.location}).\n\nSigned name: ${input.signedName}\nSigned at: ${new Date().toLocaleString("en-CA", { timeZone: "America/Toronto" })}\nIP: ${ip}`,
-      });
+      try {
+        await notifyOwner({
+          title: `Documents Signed: ${record.applicantName}`,
+          content: `${record.applicantName} has signed their offer letter and NDA for the ${record.role} position (${record.location}).\n\nSigned name: ${input.signedName}\nSigned at: ${new Date().toLocaleString("en-CA", { timeZone: "America/Toronto" })}\nIP: ${ip}`,
+        });
+      } catch (error) {
+        console.error("[Signing] Signature saved, but owner notification failed:", error);
+      }
 
       // Send confirmation email to applicant
-      await sendEmail({
-        to: record.applicantEmail,
-        subject: "Documents Signed — Welcome to AfroPuppyYoga! 🐾",
-        html: buildSigningConfirmationEmail({ applicantName: record.applicantName, role: record.role, location: record.location }),
-        text: `Hi ${record.applicantName},\n\nThank you for signing your offer letter and NDA for the ${record.role} position at AfroPuppyYoga (${record.location}). We'll be in touch shortly with your onboarding details.\n\nWelcome to the family!\n\nThe AfroPuppyYoga Team`,
-      });
+      let confirmationStatus = "sent";
+      try {
+        await sendEmail({
+          to: record.applicantEmail,
+          subject: "Documents Signed — Welcome to AfroPuppyYoga! 🐾",
+          html: buildSigningConfirmationEmail({ applicantName: record.applicantName, role: record.role, location: record.location }),
+          text: `Hi ${record.applicantName},\n\nThank you for signing your offer letter and NDA for the ${record.role} position at AfroPuppyYoga (${record.location}). We'll be in touch shortly with your onboarding details.\n\nWelcome to the family!\n\nThe AfroPuppyYoga Team`,
+        });
+      } catch (error) {
+        confirmationStatus = "failed";
+        console.error("[Signing] Signature saved, but confirmation email failed:", error);
+      }
+
+      const db = await getDb();
+      if (db) {
+        try {
+          await Promise.all([
+          db.insert(jobApplicationActions).values({
+            applicationId: record.applicationId,
+            action: "offer_signed",
+            fromStatus: "accepted",
+            toStatus: "accepted",
+            actorName: input.signedName,
+            details: JSON.stringify({ signingTokenId: record.id, signedIp: ip }),
+          }),
+          db.insert(communicationsLog).values({
+            entityType: "job_application",
+            entityId: record.applicationId,
+            channel: "email",
+            direction: "outbound",
+            action: "signature_confirmation_sent",
+            recipient: record.applicantEmail,
+            subject: "Documents Signed — Welcome to AfroPuppyYoga! 🐾",
+            bodyPreview: `Signed documents confirmed for ${record.role} at ${record.location}.`,
+            deliveryStatus: confirmationStatus,
+            actorName: "APY HQ",
+          }),
+          ]);
+        } catch (error) {
+          console.error(`[Signing] Signature saved but history write failed for application ${record.applicationId}:`, error);
+        }
+      }
 
       return { success: true };
     }),

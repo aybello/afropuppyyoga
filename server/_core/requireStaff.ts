@@ -5,6 +5,7 @@
  */
 import type { Request, Response, NextFunction } from "express";
 import { sdk } from "./sdk";
+import { resolveApyAccess } from "../apyAccess";
 
 export async function requireStaffOrAdmin(req: Request, res: Response, next: NextFunction) {
   try {
@@ -12,11 +13,27 @@ export async function requireStaffOrAdmin(req: Request, res: Response, next: Nex
     if (!user) {
       return res.status(401).json({ error: "Authentication required" });
     }
-    if (user.role !== "admin" && user.role !== "staff") {
-      return res.status(403).json({ error: "Staff or admin access required" });
+    const access = await resolveApyAccess(user);
+    if (!access.canManageOperations) {
+      return res.status(403).json({ error: "Operations Manager or owner access required" });
     }
     // Attach user to request for downstream handlers
     (req as any).staffUser = user;
+    (req as any).apyAccess = access;
+    next();
+  } catch {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+}
+
+/** Any active APY HQ team member; intended for self-service uploads only. */
+export async function requireTeamMember(req: Request, res: Response, next: NextFunction) {
+  try {
+    const user = await sdk.authenticateRequest(req as any);
+    const access = await resolveApyAccess(user);
+    if (access.level === "none") return res.status(403).json({ error: "Active APY team access required" });
+    (req as any).staffUser = user;
+    (req as any).apyAccess = access;
     next();
   } catch {
     return res.status(401).json({ error: "Authentication required" });

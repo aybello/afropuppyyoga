@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { directTeamMemberSchema } from "./routers/staffAvailability";
+import { directTeamMemberSchema, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateTeamAssignmentChange } from "./routers/staffAvailability";
 
 describe("direct team-member validation", () => {
   it("accepts an Operations Manager assigned to Oakville", () => {
@@ -49,5 +49,54 @@ describe("direct team-member validation", () => {
 
   it("rejects an unsupported role or location", () => {
     expect(() => directTeamMemberSchema.parse({ name: "Taylor James", email: "taylor@example.com", role: "CEO", location: "TOR" })).toThrow();
+  });
+
+  it("validates editable team profiles with the same secure contact rules", () => {
+    const profile = teamMemberProfileUpdateSchema.parse({
+      id: 42,
+      name: "Taylor James",
+      email: "",
+      phone: "289-788-1885",
+      role: "Yoga Instructor",
+      location: "OAK",
+    });
+
+    expect(profile.id).toBe(42);
+    expect(profile.phone).toBe("289-788-1885");
+    expect(() => teamMemberProfileUpdateSchema.parse({
+      id: 42,
+      name: "Taylor James",
+      email: "",
+      phone: "",
+      role: "Yoga Instructor",
+      location: "OAK",
+    })).toThrow("Add either an email address or phone number");
+  });
+
+  it("does not leave Puppy Monitors without an Operations Manager after an edit", () => {
+    expect(() => validateTeamAssignmentChange({
+      currentRole: "Operations Manager",
+      currentLocation: "KW",
+      nextRole: "Yoga Instructor",
+      nextLocation: "OAK",
+      hasOperationsManagerAtNextLocation: true,
+      hasOtherOperationsManagerAtCurrentLocation: false,
+      hasActivePuppyMonitorsAtCurrentLocation: true,
+    })).toThrow("Assign another Operations Manager");
+
+    expect(() => validateTeamAssignmentChange({
+      currentRole: "Operations Manager",
+      currentLocation: "KW",
+      nextRole: "Yoga Instructor",
+      nextLocation: "KW",
+      hasOperationsManagerAtNextLocation: true,
+      hasOtherOperationsManagerAtCurrentLocation: true,
+      hasActivePuppyMonitorsAtCurrentLocation: true,
+    })).not.toThrow();
+  });
+
+  it("accepts only an explicit staff-profile activity state", () => {
+    expect(teamMemberActivitySchema.parse({ id: 42, isActive: false })).toEqual({ id: 42, isActive: false });
+    expect(() => teamMemberActivitySchema.parse({ id: 0, isActive: true })).toThrow();
   });
 });

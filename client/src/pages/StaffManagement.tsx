@@ -6,6 +6,7 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl, LOGO_URL } from "@/const";
+import { Link } from "wouter";
 import AdminNav from "@/components/AdminNav";
 import { toast } from "sonner";
 import {
@@ -16,6 +17,7 @@ import {
   Clock,
   CheckCircle2,
   UserCog,
+  Users,
   RefreshCw,
 } from "lucide-react";
 import {
@@ -33,9 +35,10 @@ import { Label } from "@/components/ui/label";
 export default function StaffManagement() {
   const { user, loading } = useAuth();
   const utils = trpc.useUtils();
+  const access = trpc.staff.myAccess.useQuery(undefined, { enabled: Boolean(user) });
 
   const { data: staffList, isLoading } = trpc.staff.listStaff.useQuery(undefined, {
-    enabled: !!user && user.role === "admin",
+    enabled: Boolean(access.data?.canManageOperations),
   });
 
   const inviteStaff = trpc.staff.inviteStaff.useMutation({
@@ -100,8 +103,8 @@ export default function StaffManagement() {
     return (
       <div className="min-h-screen bg-[#FEFAF4] flex flex-col items-center justify-center p-6">
         <img src={LOGO_URL} alt="AfroPuppyYoga" className="w-16 h-16 rounded-full object-cover mb-6" />
-        <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Admin Access Required</h2>
-        <p className="font-body text-[#1A0A12] mb-6">Please log in to manage staff.</p>
+        <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Management Access Required</h2>
+        <p className="font-body text-[#1A0A12] mb-6">Please log in to manage APY HQ staff access.</p>
         <button
           onClick={() => (window.location.href = getLoginUrl())}
           className="inline-flex items-center px-6 py-3 font-body font-semibold text-sm rounded-full text-white transition-all duration-200 hover:-translate-y-0.5"
@@ -113,13 +116,13 @@ export default function StaffManagement() {
     );
   }
 
-  // Staff management is admin-only — staff members cannot manage other staff
-  if (user.role !== "admin") {
+  // Staff access is limited to the owner and Operations Managers.
+  if (!access.isLoading && !access.data?.canManageOperations) {
     return (
       <div className="min-h-screen bg-[#FEFAF4] flex flex-col items-center justify-center p-6">
         <img src={LOGO_URL} alt="AfroPuppyYoga" className="w-16 h-16 rounded-full object-cover mb-6" />
         <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Access Denied</h2>
-        <p className="font-body text-[#1A0A12]">This page is for admins only.</p>
+        <p className="font-body text-[#1A0A12]">This page is for the owner and Operations Managers.</p>
       </div>
     );
   }
@@ -140,17 +143,26 @@ export default function StaffManagement() {
             </div>
             <h1 className="font-display font-bold text-3xl text-[#1A0A12]">Staff Access</h1>
             <p className="font-body text-sm text-[#1A0A12] mt-1">
-              Invite team members to the staff portal via magic link — no password required.
+              Manage secure APY HQ access. Email-linked team members use a one-click link; phone-linked team members use a one-time SMS code.
             </p>
           </div>
-          <button
-            onClick={() => setInviteOpen(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 font-body font-semibold text-sm rounded-full text-white transition-all duration-200 hover:-translate-y-0.5 shrink-0"
-            style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}
-          >
-            <UserPlus className="w-4 h-4" />
-            Invite Staff
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/admin/staff-availability"
+              className="inline-flex items-center gap-2 rounded-full border border-[#E5C7D4] bg-white px-4 py-2.5 font-body text-sm font-semibold text-[#8B2252] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#FFF5F8]"
+            >
+              <Users className="h-4 w-4" />
+              Manage Team
+            </Link>
+            <button
+              onClick={() => setInviteOpen(true)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 font-body font-semibold text-sm rounded-full text-white transition-all duration-200 hover:-translate-y-0.5"
+              style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}
+            >
+              <UserPlus className="w-4 h-4" />
+              Invite Staff
+            </button>
+          </div>
         </div>
 
         {/* How it works */}
@@ -160,10 +172,10 @@ export default function StaffManagement() {
         >
           <p className="font-body text-sm font-semibold text-[#8B2252] mb-2">How it works</p>
           <ol className="font-body text-sm text-[#1A0A12] space-y-1 list-decimal list-inside">
-            <li>Enter the staff member's name and email, then click "Invite Staff"</li>
-            <li>They receive an email with a "Access APY Staff Portal" button</li>
-            <li>Clicking the link logs them in instantly — no password needed</li>
-            <li>The link is valid for 7 days and can be reused to log back in</li>
+              <li>For email access, enter the active APY team member's name and the exact email on their Team profile, then click "Invite Staff"</li>
+            <li>For phone access, the active team member visits <strong>/staff-access</strong> and verifies the phone number saved to their APY HQ profile</li>
+            <li>Email links and phone codes both sign staff into their role-specific APY HQ workspace</li>
+            <li>Access can be revoked anytime by clicking the trash icon next to an email invitation</li>
             <li>Revoke access anytime by clicking the trash icon next to their name</li>
           </ol>
         </div>

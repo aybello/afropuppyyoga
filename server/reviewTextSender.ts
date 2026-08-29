@@ -3,41 +3,49 @@
  *
  * Called by heartbeat every 30 minutes.
  * Finds Luma events that ended between 1.5h and 2.5h ago (a 1-hour window centred on 2h post-class).
- * Fetches all registered guests (approval_status = "approved" or registered_at non-null).
- * Sends each guest a personalised Google review request via Twilio SMS.
+ * Fetches approved guests and sends only when Luma records an actual check-in.
  * Logs every send attempt to reviewTextLogs — unique on (lumaEventId, lumaGuestId) prevents duplicates.
  */
 
 import { getDb } from "./db";
-import { reviewTextLogs } from "../drizzle/schema";
+import { communicationsLog, reviewTextLogs } from "../drizzle/schema";
 import { and, eq } from "drizzle-orm";
+import { isSmsSuppressed } from "./smsConsent";
 
 const GOOGLE_REVIEW_URL = "https://g.page/r/CYyqTsuYY7oGEBM/review";
-const LUMA_BASE = "https://api.lu.ma/public/v1";
+const LUMA_BASE = "https://public-api.luma.com/v1";
 
 interface LumaEvent {
-  api_id: string;
+  id?: string;
+  api_id?: string;
   name: string;
   start_at: string;
   end_at: string;
 }
 
 interface LumaGuest {
-  api_id: string;
+  id?: string;
+  api_id?: string;
   user_first_name?: string | null;
   user_last_name?: string | null;
   user_email?: string | null;
   phone_number?: string | null;
   approval_status?: string | null;
   registered_at?: string | null;
+  checked_in_at?: string | null;
+  event_tickets?: Array<{
+    is_captured?: boolean;
+    checked_in_at?: string | null;
+  }>;
 }
 
 async function fetchRecentEndedEvents(apiKey: string): Promise<LumaEvent[]> {
   // Fetch events from the past 24 hours to find ones that ended ~2h ago
   const after = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const url = new URL(`${LUMA_BASE}/calendar/list-events`);
+  const url = new URL(`${LUMA_BASE}/calendars/events/list`);
   url.searchParams.set("pagination_limit", "50");
   url.searchParams.set("after", after);
+  url.searchParams.set("access", "manage");
 
   const res = await fetch(url.toString(), {
     headers: { "x-luma-api-key": apiKey },
@@ -52,8 +60,9 @@ async function fetchAllGuests(apiKey: string, eventId: string): Promise<LumaGues
   let cursor: string | undefined;
 
   do {
-    const url = new URL(`${LUMA_BASE}/event/get-guests`);
-    url.searchParams.set("event_api_id", eventId);
+    const url = new URL(`${LUMA_BASE}/events/guests/list`);
+    url.searchParams.set("event_id", eventId);
+    url.searchParams.set("approval_status", "approved");
     url.searchParams.set("pagination_limit", "100");
     if (cursor) url.searchParams.set("pagination_cursor", cursor);
 
@@ -61,7 +70,7 @@ async function fetchAllGuests(apiKey: string, eventId: string): Promise<LumaGues
       headers: { "x-luma-api-key": apiKey },
     });
     if (!res.ok) {
-      console.error(`[ReviewText] Luma get-guests failed for ${eventId}: ${res.status}`);
+      console.error(`[ReviewText] Luma guests/list failed for ${eventId}: ${res.status}`);
       break;
     }
     const data = await res.json() as { entries: LumaGuest[]; has_more?: boolean; next_cursor?: string };
@@ -106,6 +115,15 @@ function normalisePhone(phone: string | null | undefined): string | null {
   return null;
 }
 
+export function lumaGuestAttended(guest: LumaGuest) {
+  if (guest.checked_in_at) return true;
+  return (guest.event_tickets ?? []).some((ticket) => ticket.is_captured !== false && Boolean(ticket.checked_in_at));
+}
+
+function lumaGuestId(guest: LumaGuest) {
+  return guest.id || guest.api_id || null;
+}
+
 export async function reviewTextSender(): Promise<{ sent: number; skipped: number; errors: number }> {
   const apiKey = process.env.LUMA_API_KEY;
   const twilioSid = process.env.TWILIO_ACCOUNT_SID;
@@ -128,14 +146,6 @@ export async function reviewTextSender(): Promise<{ sent: number; skipped: numbe
   let errors = 0;
 
   const now = Date.now();
-  // Only run on weekends (Saturday = 6, Sunday = 0) — classes are Sat/Sun only.
-  // The triggerNow manual button bypasses this check so staff can always run it manually.
-  const dayOfWeek = new Date(now).getDay(); // 0=Sun, 6=Sat
-  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-  if (!isWeekend) {
-    console.log("[ReviewText] Weekday — skipping (classes run Sat/Sun only)");
-    return { sent: 0, skipped: 0, errors: 0 };
-  }
 
   // Target window: events that ended between 1.5h and 2.5h ago
   const windowStart = now - 2.5 * 60 * 60 * 1000;
@@ -159,28 +169,39 @@ export async function reviewTextSender(): Promise<{ sent: number; skipped: numbe
   console.log(`[ReviewText] Found ${targetEvents.length} event(s) in the 2h window`);
 
   for (const event of targetEvents) {
-    console.log(`[ReviewText] Processing event: ${event.name} (${event.api_id})`);
+    const eventId = event.id || event.api_id;
+    if (!eventId) {
+      errors++;
+      continue;
+    }
+    console.log(`[ReviewText] Processing event: ${event.name} (${eventId})`);
 
     let guests: LumaGuest[];
     try {
-      guests = await fetchAllGuests(apiKey, event.api_id);
+      guests = await fetchAllGuests(apiKey, eventId);
     } catch (err) {
-      console.error(`[ReviewText] Failed to fetch guests for ${event.api_id}:`, err);
+      console.error(`[ReviewText] Failed to fetch guests for ${eventId}:`, err);
       errors++;
       continue;
     }
 
-    // Only send to guests who registered (have a registered_at or approval_status approved/going)
-    const eligibleGuests = guests.filter((g) =>
-      g.registered_at || g.approval_status === "approved" || g.approval_status === "going"
-    );
+    const eligibleGuests = guests.filter(lumaGuestAttended);
 
-    console.log(`[ReviewText] ${eligibleGuests.length} eligible guests for ${event.api_id}`);
+    console.log(`[ReviewText] ${eligibleGuests.length} checked-in guests for ${eventId}`);
 
     for (const guest of eligibleGuests) {
+      const guestId = lumaGuestId(guest);
+      if (!guestId) {
+        skipped++;
+        continue;
+      }
       const phone = normalisePhone(guest.phone_number);
       if (!phone) {
-        console.log(`[ReviewText] No phone for guest ${guest.api_id} — skipping`);
+        console.log(`[ReviewText] No phone for guest ${guestId} — skipping`);
+        skipped++;
+        continue;
+      }
+      if (await isSmsSuppressed(phone)) {
         skipped++;
         continue;
       }
@@ -191,8 +212,8 @@ export async function reviewTextSender(): Promise<{ sent: number; skipped: numbe
         .from(reviewTextLogs)
         .where(
           and(
-            eq(reviewTextLogs.lumaEventId, event.api_id),
-            eq(reviewTextLogs.lumaGuestId, guest.api_id)
+            eq(reviewTextLogs.lumaEventId, eventId),
+            eq(reviewTextLogs.lumaGuestId, guestId)
           )
         )
         .limit(1);
@@ -224,8 +245,8 @@ export async function reviewTextSender(): Promise<{ sent: number; skipped: numbe
       // Log the attempt regardless of success/failure
       try {
         await db.insert(reviewTextLogs).values({
-          lumaEventId: event.api_id,
-          lumaGuestId: guest.api_id,
+          lumaEventId: eventId,
+          lumaGuestId: guestId,
           eventName: event.name,
           eventEndAt: event.end_at,
           guestName: `${guest.user_first_name ?? ""} ${guest.user_last_name ?? ""}`.trim() || "Unknown",
@@ -235,6 +256,19 @@ export async function reviewTextSender(): Promise<{ sent: number; skipped: numbe
           status,
           errorMessage: errorMessage ?? null,
           sentAt: Date.now(),
+        });
+        await db.insert(communicationsLog).values({
+          entityType: "class",
+          entityId: null,
+          channel: "sms",
+          direction: "outbound",
+          action: "review_request",
+          recipient: phone,
+          subject: event.name,
+          bodyPreview: message.slice(0, 1000),
+          deliveryStatus: status,
+          providerMessageId: smsSid ?? null,
+          actorName: "APY HQ",
         });
       } catch (dbErr) {
         console.error("[ReviewText] Failed to log send:", dbErr);

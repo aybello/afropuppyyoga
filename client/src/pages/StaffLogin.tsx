@@ -102,7 +102,7 @@ export default function StaffLogin() {
               {errorMessage}
             </p>
             <p style={{ color: "#C4A0B0", fontSize: "13px" }}>
-              Please contact your manager to request a new invite link, or email us at{" "}
+              Use your email invite link, or <a href="/staff-access" style={{ color: "#8B2252", fontWeight: 700 }}>verify your APY HQ mobile number</a>. You can also contact your manager or email us at{" "}
               <a
                 href="mailto:afropuppyyoga@gmail.com"
                 style={{ color: "#8B2252" }}

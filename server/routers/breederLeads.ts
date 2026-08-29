@@ -7,10 +7,12 @@ import { searchKijiji, scrapeKijijiListing } from "../kijijiScraper";
 import { qualifyBreederLead } from "../breederQualifier";
 import { sendEmail } from "../email";
 import { invokeLLM } from "../_core/llm";
+import { isSmsSuppressed } from "../smsConsent";
 
 const now = () => Date.now();
 
 async function sendTwilioSms(to: string, body: string): Promise<string | null> {
+  if (await isSmsSuppressed(to)) throw new Error("Recipient has opted out of APY text messages");
   const sid = process.env.TWILIO_ACCOUNT_SID;
   const auth = process.env.TWILIO_AUTH_TOKEN;
   const from = process.env.TWILIO_PHONE_NUMBER;

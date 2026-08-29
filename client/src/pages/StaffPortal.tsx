@@ -3,6 +3,8 @@
    ============================================================ */
 import { Link } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
+import { canAccessHubTool, type ApyHubToolAccess } from "@shared/apyPermissions";
 import { LOGO_URL } from "@/const";
 import {
   FileText,
@@ -22,12 +24,44 @@ import {
   Inbox,
   Star,
   CalendarCheck,
-  UsersRound,
+  GraduationCap,
+  UserCog,
+  Gauge,
 } from "lucide-react";
 
 const TEAM_PHOTO = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663824308637/IiwudPwckobbrxIv.jpg";
 
 const TOOLS = [
+  {
+    id: "run-apy",
+    title: "Run APY",
+    description: "Today's classes, staffing gaps, messages, leads, and priority actions.",
+    href: "/admin/run-apy",
+    icon: Gauge,
+    accent: "#2D5A27",
+    adminOnly: true,
+    category: "Operations",
+  },
+  {
+    id: "staff-access",
+    title: "Staff Access",
+    description: "Invite staff by email or manage secure phone access.",
+    href: "/admin/staff",
+    icon: UserCog,
+    accent: "#7C3AED",
+    adminOnly: true,
+    category: "People",
+  },
+  {
+    id: "staff-training",
+    title: "Team Training",
+    description: "Role-based onboarding, safety and event-day playbooks.",
+    href: "/staff/training",
+    icon: GraduationCap,
+    accent: "#8B2252",
+    adminOnly: true,
+    category: "People",
+  },
   {
     id: "submit-invoice",
     title: "Submit Invoice",
@@ -168,19 +202,15 @@ const TOOLS = [
     adminOnly: true,
     category: "People",
   },
-  {
-    id: "employee-directory",
-    title: "Employee Directory",
-    description: "Active and former team members, contact records, and status.",
-    href: "/admin/employees",
-    icon: UsersRound,
-    accent: "#8B2252",
-    adminOnly: true,
-    category: "People",
-  },
 ];
 
-const CATEGORY_ORDER = ["People", "Finance", "Events", "Breeders", "Growth", "Operations"];
+const CATEGORY_ORDER = ["Operations", "People", "Finance", "Events", "Breeders", "Growth"];
+
+function requiredAccessForTool(id: string): ApyHubToolAccess {
+  if (id === "invoices" || id === "revenue") return "owner";
+  if (id === "staff-training" || id === "submit-invoice") return "team";
+  return "operations";
+}
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -191,6 +221,7 @@ function getGreeting() {
 
 export default function StaffPortal() {
   const { user, loading, isAuthenticated } = useAuth();
+  const access = trpc.staff.myAccess.useQuery(undefined, { enabled: isAuthenticated });
 
   if (loading) {
     return (
@@ -200,13 +231,13 @@ export default function StaffPortal() {
     );
   }
 
-  const isAdmin = isAuthenticated && (user?.role === "admin" || user?.role === "staff");
-  const isOwner = isAuthenticated && user?.role === "admin";
+  const accessLevel = access.data?.level ?? "none";
+  const isOwner = accessLevel === "owner";
   const displayName = isOwner ? "Chief Ay" : user?.name?.split(" ")[0] ?? "there";
 
   const grouped = CATEGORY_ORDER.map(cat => ({
     category: cat,
-    tools: TOOLS.filter(t => t.category === cat),
+    tools: TOOLS.filter(t => t.category === cat && canAccessHubTool(accessLevel, requiredAccessForTool(t.id))),
   })).filter(g => g.tools.length > 0);
 
   return (
@@ -266,8 +297,13 @@ export default function StaffPortal() {
             <Lock size={14} className="text-amber-600 shrink-0" />
             <p className="text-xs text-amber-800">
               Some tools require login.{" "}
-              <a href="/admin-login" className="underline font-semibold">Sign in</a> to access admin features.
+              <a href="/staff-access" className="underline font-semibold">Sign in</a> to access team tools.
             </p>
+          </div>
+        )}
+        {isAuthenticated && !access.isLoading && accessLevel === "none" && (
+          <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+            Your sign-in is not linked to an active APY HQ team profile. Ask an Operations Manager to add your exact email or phone number to the Team board.
           </div>
         )}
 
@@ -284,7 +320,7 @@ export default function StaffPortal() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {tools.map((tool) => {
                   const Icon = tool.icon;
-                  const isLocked = tool.adminOnly && !isAdmin;
+                  const isLocked = false;
 
                   return (
                     <Link key={tool.id} href={tool.href}>
