@@ -13,8 +13,9 @@ import {
   PRIMARY_HERO_IMAGE,
 } from "@shared/heroImage";
 
-// The primary copy is served through this web project's managed storage, which
-// avoids relying on an external session CDN for the page's most important image.
+// The stable CDN URL is preconnected and preloaded from client/index.html. The
+// managed-storage route is retained only as a fallback because it adds a
+// redirect and disables caching on every first request.
 
 // Each logo: src = CDN URL, height = display height in px
 // All logos are shown in their natural colors on a white/frosted strip
@@ -53,7 +54,7 @@ export default function Hero() {
 
   return (
     <section id="home" className="relative min-h-screen flex flex-col">
-      {/* The managed image is used as the first-paint background and visual layer; the CDN is only a recovery fallback. */}
+      {/* The direct CDN image is both preloaded and used as the first visual layer. */}
       <div
         className="absolute inset-0 overflow-hidden bg-black"
         style={{
@@ -67,8 +68,10 @@ export default function Hero() {
             src={heroImage}
             alt=""
             aria-hidden="true"
+            width={1920}
+            height={1072}
             loading="eager"
-            decoding="async"
+            decoding="sync"
             fetchPriority="high"
             onError={() => {
               const fallbackImage = getNextHeroImageOnError(heroImage);
