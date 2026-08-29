@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { directTeamMemberSchema, employeeRecordUpdateSchema, getTeamRemovalUpdate, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateTeamAssignmentChange } from "./routers/staffAvailability";
+import { directTeamMemberSchema, employeeRecordUpdateSchema, getTeamRemovalUpdate, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateEmployeeDirectoryAssignmentChange, validateTeamAssignmentChange } from "./routers/staffAvailability";
 
 describe("direct team-member validation", () => {
   it("accepts an Operations Manager assigned to Oakville", () => {
@@ -135,5 +135,67 @@ describe("direct team-member validation", () => {
       role: "Operations Manager",
       location: "OAK",
     })).toThrow("Add either an email address or phone number");
+
+    expect(() => employeeRecordUpdateSchema.parse({
+      id: 7,
+      name: "Taylor James",
+      email: "taylor@example.com",
+      role: "CEO",
+      location: "OAK",
+    })).toThrow();
+
+    expect(() => employeeRecordUpdateSchema.parse({
+      id: 7,
+      name: "Taylor James",
+      email: "taylor@example.com",
+      role: "BDR",
+      location: "OAK",
+    })).toThrow("APY-wide");
+  });
+
+  it("does not let a linked active profile move the sole Operations Manager away from active Puppy Monitors", () => {
+    expect(() => validateEmployeeDirectoryAssignmentChange({
+      linkedActiveTeamProfile: true,
+      currentRole: "Operations Manager",
+      currentLocation: "KW",
+      nextRole: "Operations Manager",
+      nextLocation: "OAK",
+      hasOperationsManagerAtNextLocation: true,
+      hasOtherOperationsManagerAtCurrentLocation: false,
+      hasActivePuppyMonitorsAtCurrentLocation: true,
+    })).toThrow("Assign another Operations Manager");
+
+    expect(() => validateEmployeeDirectoryAssignmentChange({
+      linkedActiveTeamProfile: true,
+      currentRole: "Operations Manager",
+      currentLocation: "KW",
+      nextRole: "Yoga Instructor",
+      nextLocation: "KW",
+      hasOperationsManagerAtNextLocation: false,
+      hasOtherOperationsManagerAtCurrentLocation: false,
+      hasActivePuppyMonitorsAtCurrentLocation: true,
+    })).toThrow("Assign another Operations Manager");
+
+    expect(() => validateEmployeeDirectoryAssignmentChange({
+      linkedActiveTeamProfile: true,
+      currentRole: "Operations Manager",
+      currentLocation: "KW",
+      nextRole: "Operations Manager",
+      nextLocation: "KW",
+      hasOperationsManagerAtNextLocation: true,
+      hasOtherOperationsManagerAtCurrentLocation: false,
+      hasActivePuppyMonitorsAtCurrentLocation: true,
+    })).not.toThrow();
+
+    expect(() => validateEmployeeDirectoryAssignmentChange({
+      linkedActiveTeamProfile: false,
+      currentRole: "Operations Manager",
+      currentLocation: "KW",
+      nextRole: "Operations Manager",
+      nextLocation: "OAK",
+      hasOperationsManagerAtNextLocation: true,
+      hasOtherOperationsManagerAtCurrentLocation: false,
+      hasActivePuppyMonitorsAtCurrentLocation: true,
+    })).not.toThrow();
   });
 });

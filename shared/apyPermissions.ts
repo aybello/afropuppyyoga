@@ -2,6 +2,26 @@ export type ApyAccessLevel = "owner" | "operations_manager" | "team_member" | "n
 
 export type ApyHubToolAccess = "owner" | "operations" | "team";
 
+export const APY_TEAM_ROLES = [
+  "Yoga Instructor",
+  "Operations Manager",
+  "Puppy Monitor",
+  "Puppy Specialist",
+  "BDR",
+  "Social Media Specialist",
+] as const;
+
+export const APY_TEAM_LOCATIONS = ["KW", "OAK", "HAM", "CENTRAL"] as const;
+
+export type ApyTeamRole = (typeof APY_TEAM_ROLES)[number];
+export type ApyTeamLocation = (typeof APY_TEAM_LOCATIONS)[number];
+
+export const APY_CENTRAL_TEAM_ROLES = ["BDR", "Social Media Specialist"] as const;
+
+export function isCentralApyTeamRole(role: string | null | undefined): role is (typeof APY_CENTRAL_TEAM_ROLES)[number] {
+  return APY_CENTRAL_TEAM_ROLES.some((centralRole) => centralRole === role);
+}
+
 export function normalizeApyRole(role: string | null | undefined): string {
   return (role ?? "").trim().toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ");
 }

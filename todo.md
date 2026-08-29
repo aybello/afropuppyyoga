@@ -1,8 +1,12 @@
 
 ## Current Staff Access Investigation
-- [ ] Review and safely integrate the newly available APY update without regressing validated site and staff workflows
-- [ ] Preserve Operations Manager location coverage when Employee Directory edits change a linked APY HQ role or location
-- [ ] Resolve the Employee Directory merge conflict without losing the validated failed-data state or the new direct editing controls
+- [x] Review and safely integrate the newly available APY update without regressing validated site and staff workflows
+- [x] Preserve Operations Manager location coverage when Employee Directory edits change a linked APY HQ role or location
+- [x] Resolve the Employee Directory merge conflict without losing the validated failed-data state or the new direct editing controls
+- [x] Restrict Employee Directory role edits to APY's permitted role model and preserve linked team-profile integrity
+- [x] Verify the Employee Directory loads its 19 records and exposes the direct Edit control beside each profile
+- [x] Verify Employee Directory filters, APY-wide role handling, and the `/admin/employee-directory` compatibility route without changing employee data
+- [x] Run TypeScript, focused staff-availability tests, and the full deterministic regression suite after the integration
 - [x] Deliver safe in-project homepage improvements: defer live Luma, below-the-fold sections, video work, and off-screen logo media from first load
 - [x] Do not enable Cloudflare or change domain routing; the owner declined external edge delivery
 - [x] Implement and locally validate a cache-first public homepage policy; production currently overrides its public caching headers

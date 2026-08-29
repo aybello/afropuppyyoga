@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { APY_TEAM_LOCATIONS, APY_TEAM_ROLES, isCentralApyTeamRole, type ApyTeamRole } from "@shared/apyPermissions";
 
 type Employee = {
   id: number;
@@ -73,7 +74,7 @@ export default function EmployeeDirectory() {
       name: String(formData.get("name") ?? ""),
       email: String(formData.get("email") ?? ""),
       phone: String(formData.get("phone") ?? ""),
-      role: String(formData.get("role") ?? ""),
+      role: String(formData.get("role") ?? "") as ApyTeamRole,
       location: String(formData.get("location") ?? "CENTRAL") as "KW" | "OAK" | "HAM" | "CENTRAL",
     });
   };
@@ -222,16 +223,36 @@ export default function EmployeeDirectory() {
             <form key={editingEmployee.id} onSubmit={handleUpdateEmployee} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="space-y-1.5 font-body text-sm font-semibold text-[#3D1A2E]">Name<Input name="name" defaultValue={editingEmployee.name} required className="border-[#EADBE2] bg-white" /></label>
-                <label className="space-y-1.5 font-body text-sm font-semibold text-[#3D1A2E]">Role<Input name="role" defaultValue={editingEmployee.role} required className="border-[#EADBE2] bg-white" /></label>
+                <label className="space-y-1.5 font-body text-sm font-semibold text-[#3D1A2E]">Role
+                  <select
+                    name="role"
+                    value={editingEmployee.role}
+                    onChange={(event) => setEditingEmployee((current) => current ? {
+                      ...current,
+                      role: event.target.value,
+                      location: isCentralApyTeamRole(event.target.value) ? "CENTRAL" : current.location,
+                    } : current)}
+                    className="h-9 w-full rounded-md border border-[#EADBE2] bg-white px-3 text-sm outline-none focus:border-[#8B2252] focus:ring-2 focus:ring-[#8B2252]/15"
+                  >
+                    {APY_TEAM_ROLES.map((role) => <option key={role} value={role}>{role}</option>)}
+                  </select>
+                </label>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="space-y-1.5 font-body text-sm font-semibold text-[#3D1A2E]">Email<Input name="email" type="email" defaultValue={editingEmployee.email ?? ""} className="border-[#EADBE2] bg-white" /></label>
                 <label className="space-y-1.5 font-body text-sm font-semibold text-[#3D1A2E]">Phone<Input name="phone" type="tel" defaultValue={editingEmployee.phone ?? ""} className="border-[#EADBE2] bg-white" /></label>
               </div>
               <label className="block space-y-1.5 font-body text-sm font-semibold text-[#3D1A2E]">Primary location
-                <select name="location" defaultValue={editingEmployee.location} className="h-9 w-full rounded-md border border-[#EADBE2] bg-white px-3 text-sm outline-none focus:border-[#8B2252] focus:ring-2 focus:ring-[#8B2252]/15">
-                  <option value="KW">Kitchener</option><option value="HAM">Hamilton</option><option value="OAK">Oakville</option><option value="CENTRAL">APY-wide</option>
+                <select
+                  name="location"
+                  value={editingEmployee.location}
+                  disabled={isCentralApyTeamRole(editingEmployee.role)}
+                  onChange={(event) => setEditingEmployee((current) => current ? { ...current, location: event.target.value } : current)}
+                  className="h-9 w-full rounded-md border border-[#EADBE2] bg-white px-3 text-sm outline-none focus:border-[#8B2252] focus:ring-2 focus:ring-[#8B2252]/15 disabled:cursor-not-allowed disabled:bg-[#F7EEF1]"
+                >
+                  {APY_TEAM_LOCATIONS.map((location) => <option key={location} value={location}>{LOCATION_LABELS[location]}</option>)}
                 </select>
+                {isCentralApyTeamRole(editingEmployee.role) && <span className="block text-xs font-normal text-[#956A7C]">This APY-wide role is centrally assigned.</span>}
               </label>
               <DialogFooter className="pt-2">
                 <Button type="button" variant="outline" onClick={() => setEditingEmployee(null)}>Cancel</Button>

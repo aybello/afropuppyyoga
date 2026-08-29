@@ -6,19 +6,23 @@ import { and, asc, desc, eq, gte, isNull, isNotNull } from "drizzle-orm";
 import { getUpcomingWeekendDates, isAwayOnDate, isWeekendDate } from "../weekendCoverage";
 import { isActiveTeamMember } from "../teamMembership";
 import { normalizeCanadianPhoneNumber } from "../../shared/phone";
+import { APY_TEAM_LOCATIONS, APY_TEAM_ROLES, isCentralApyTeamRole } from "../../shared/apyPermissions";
 
 export const directTeamMemberSchema = z.object({
   name: z.string().trim().min(2, "Enter the team member's full name."),
   email: z.string().trim().email("Enter a valid email address.").or(z.literal("")).default(""),
   phone: z.string().trim().max(50).optional().default(""),
-  role: z.enum(["Yoga Instructor", "Operations Manager", "Puppy Monitor", "Puppy Specialist", "BDR", "Social Media Specialist"]),
-  location: z.enum(["KW", "OAK", "HAM", "CENTRAL"]),
+  role: z.enum(APY_TEAM_ROLES),
+  location: z.enum(APY_TEAM_LOCATIONS),
 }).superRefine((value, ctx) => {
   if (!value.email && !value.phone) {
     ctx.addIssue({ code: "custom", path: ["email"], message: "Add either an email address or phone number." });
   }
   if (value.phone && !normalizeCanadianPhoneNumber(value.phone)) {
     ctx.addIssue({ code: "custom", path: ["phone"], message: "Enter a valid Canadian phone number." });
+  }
+  if (isCentralApyTeamRole(value.role) && value.location !== "CENTRAL") {
+    ctx.addIssue({ code: "custom", path: ["location"], message: "BDR and Social Media Specialist roles are APY-wide." });
   }
 });
 
@@ -27,14 +31,17 @@ export const teamMemberProfileUpdateSchema = z.object({
   name: z.string().trim().min(2, "Enter the team member's full name."),
   email: z.string().trim().email("Enter a valid email address.").or(z.literal("")).default(""),
   phone: z.string().trim().max(50).optional().default(""),
-  role: z.enum(["Yoga Instructor", "Operations Manager", "Puppy Monitor", "Puppy Specialist", "BDR", "Social Media Specialist"]),
-  location: z.enum(["KW", "OAK", "HAM", "CENTRAL"]),
+  role: z.enum(APY_TEAM_ROLES),
+  location: z.enum(APY_TEAM_LOCATIONS),
 }).superRefine((value, ctx) => {
   if (!value.email && !value.phone) {
     ctx.addIssue({ code: "custom", path: ["email"], message: "Add either an email address or phone number." });
   }
   if (value.phone && !normalizeCanadianPhoneNumber(value.phone)) {
     ctx.addIssue({ code: "custom", path: ["phone"], message: "Enter a valid Canadian phone number." });
+  }
+  if (isCentralApyTeamRole(value.role) && value.location !== "CENTRAL") {
+    ctx.addIssue({ code: "custom", path: ["location"], message: "BDR and Social Media Specialist roles are APY-wide." });
   }
 });
 
@@ -48,14 +55,17 @@ export const employeeRecordUpdateSchema = z.object({
   name: z.string().trim().min(2, "Enter the employee's full name."),
   email: z.string().trim().email("Enter a valid email address.").or(z.literal("")).default(""),
   phone: z.string().trim().max(50).optional().default(""),
-  role: z.string().trim().min(2, "Enter the employee's role."),
-  location: z.enum(["KW", "OAK", "HAM", "CENTRAL"]),
+  role: z.enum(APY_TEAM_ROLES),
+  location: z.enum(APY_TEAM_LOCATIONS),
 }).superRefine((value, ctx) => {
   if (!value.email && !value.phone) {
     ctx.addIssue({ code: "custom", path: ["email"], message: "Add either an email address or phone number." });
   }
   if (value.phone && !normalizeCanadianPhoneNumber(value.phone)) {
     ctx.addIssue({ code: "custom", path: ["phone"], message: "Enter a valid Canadian phone number." });
+  }
+  if (isCentralApyTeamRole(value.role) && value.location !== "CENTRAL") {
+    ctx.addIssue({ code: "custom", path: ["location"], message: "BDR and Social Media Specialist roles are APY-wide." });
   }
 });
 
@@ -82,6 +92,20 @@ export function validateTeamAssignmentChange(input: {
   if (movesOperationsManager && input.hasActivePuppyMonitorsAtCurrentLocation && !input.hasOtherOperationsManagerAtCurrentLocation) {
     throw new Error("Assign another Operations Manager to this Puppy Monitor location before changing this team member.");
   }
+}
+
+export function validateEmployeeDirectoryAssignmentChange(input: {
+  linkedActiveTeamProfile: boolean;
+  currentRole: string;
+  currentLocation: string;
+  nextRole: string;
+  nextLocation: string;
+  hasOperationsManagerAtNextLocation: boolean;
+  hasOtherOperationsManagerAtCurrentLocation: boolean;
+  hasActivePuppyMonitorsAtCurrentLocation: boolean;
+}) {
+  if (!input.linkedActiveTeamProfile) return;
+  validateTeamAssignmentChange(input);
 }
 
 export const staffAvailabilityRouter = router({
@@ -132,6 +156,48 @@ export const staffAvailabilityRouter = router({
         .where(eq(employees.id, input.id))
         .limit(1);
       if (!employee) throw new Error("Employee record not found.");
+
+      const linkedProfile = employee.sourceApplicationId === null ? null : (await db.select({
+        id: jobApplications.id,
+        role: jobApplications.role,
+        location: jobApplications.location,
+        isTeamMember: jobApplications.isTeamMember,
+        deletedAt: jobApplications.deletedAt,
+      }).from(jobApplications).where(eq(jobApplications.id, employee.sourceApplicationId)).limit(1))[0] ?? null;
+
+      if (linkedProfile) {
+        const [operationsManagersAtTarget, operationsManagersAtCurrentLocation, activePuppyMonitorsAtCurrentLocation] = await Promise.all([
+          db.select({ id: jobApplications.id }).from(jobApplications).where(and(
+            isNull(jobApplications.deletedAt),
+            eq(jobApplications.isTeamMember, true),
+            eq(jobApplications.role, "Operations Manager"),
+            eq(jobApplications.location, input.location),
+          )),
+          db.select({ id: jobApplications.id }).from(jobApplications).where(and(
+            isNull(jobApplications.deletedAt),
+            eq(jobApplications.isTeamMember, true),
+            eq(jobApplications.role, "Operations Manager"),
+            eq(jobApplications.location, linkedProfile.location),
+          )),
+          db.select({ id: jobApplications.id }).from(jobApplications).where(and(
+            isNull(jobApplications.deletedAt),
+            eq(jobApplications.isTeamMember, true),
+            eq(jobApplications.role, "Puppy Monitor"),
+            eq(jobApplications.location, linkedProfile.location),
+          )),
+        ]);
+
+        validateEmployeeDirectoryAssignmentChange({
+          linkedActiveTeamProfile: Boolean(linkedProfile.isTeamMember) && !linkedProfile.deletedAt,
+          currentRole: linkedProfile.role,
+          currentLocation: linkedProfile.location,
+          nextRole: input.role,
+          nextLocation: input.location,
+          hasOperationsManagerAtNextLocation: operationsManagersAtTarget.some((manager) => manager.id !== linkedProfile.id || input.role === "Operations Manager"),
+          hasOtherOperationsManagerAtCurrentLocation: operationsManagersAtCurrentLocation.some((manager) => manager.id !== linkedProfile.id),
+          hasActivePuppyMonitorsAtCurrentLocation: activePuppyMonitorsAtCurrentLocation.length > 0,
+        });
+      }
 
       const email = input.email ? input.email.toLowerCase() : null;
       const phone = input.phone ? normalizeCanadianPhoneNumber(input.phone) : null;
