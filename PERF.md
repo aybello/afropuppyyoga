@@ -27,3 +27,9 @@ The live resource audit identified the embedded Luma calendar as the dominant fi
 On a fresh local homepage load, the first screen rendered without initializing the Luma iframe or checkout script. When the calendar section was reached, the normal uncached Luma load began with its existing skeleton state. This removes the 9.4-second third-party calendar request from the visitor’s initial website load while preserving access to current Luma classes at the moment they are requested.
 
 The first screen also contained a 22-logo marquee rendered twice for the seamless animation. Its off-screen duplicate images could compete with first paint despite not being visible. The first six logos remain high-priority for the visible marquee; the remaining and duplicated marks now use browser lazy loading and asynchronous decoding. Font resources are swap-loaded and the browser requested only the displayed font variants, so no font change is required for this pass.
+
+### External startup limitation
+
+The managed Autoscale service still showed 1.8–3.6 seconds of first-byte time for a lightweight API request after idle periods. This timing is outside the static homepage’s first screen and is not the cause of the former public loading spinner. The current practical mitigation is to keep the homepage independent of server calls at first paint; eliminating the remaining cold-start window requires a hosting-tier change to an always-warm service, which was not selected in this performance pass.
+
+The public same-origin `staffAvailability.listEmployees` procedure was then checked directly on both deployed domains and returned the expected `401 UNAUTHORIZED` response without a staff session. This confirms the procedure is registered and the earlier apparent 404 was not a live route-registration failure.

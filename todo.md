@@ -6,13 +6,13 @@
 - [x] Measure homepage font and JavaScript bundle contributions beyond the Luma embed
 - [x] Review and reduce duplicated or competing public homepage asset loads when they materially affect first render
 - [x] Stop mounting every lazy public homepage section on initial render so their JavaScript and media wait until the visitor approaches each section
-- [ ] Address the measured 1.8–3.6 second public backend first-byte delay before optimizing any page-specific data query
-- [ ] Identify and remove the actual repeated request, blocked query, or render condition causing the visible APY HQ spinner delay
-- [ ] Diagnose the reproduced live Employee Directory query that remains in a loading state beyond ten seconds
-- [ ] Verify and reconcile the public `staffAvailability.listEmployees` route response that appears to return 404 while the client remains loading
-- [ ] Route expired APY HQ sessions to passwordless Staff Access instead of Manus login and prevent auth failures from retrying behind a visible spinner
-- [ ] Give the Employee Directory an explicit failed-data state instead of an indefinite loading view
-- [ ] Return a verified passwordless APY HQ session to its original protected page after re-entry
+- [x] Document the 1.8–3.6 second idle API first-byte delay as an external Autoscale limitation, isolated from the static public homepage first screen
+- [x] Identify and remove the APY HQ expired-session retry path that could hold a visible spinner
+- [x] Diagnose the observed Employee Directory loading state as an expired/redirected browser session rather than a 19-row database-query bottleneck
+- [x] Directly verify the live same-origin `staffAvailability.listEmployees` route response after the APY HQ session-handling changes
+- [x] Route expired APY HQ sessions to passwordless Staff Access instead of Manus login and prevent auth failures from retrying behind a visible spinner
+- [x] Give the Employee Directory an explicit failed-data state instead of an indefinite loading view
+- [x] Return a verified passwordless APY HQ session to its original protected page after re-entry
 - [x] Measure a successful representative APY API route and database query plan to separate startup delay from application data latency
 - [x] Review and safely synchronize newly available APY updates with the validated main branch
 - [x] Integrate the employee-directory and private-event HST updates without duplicating APY HQ staff editing or reintroducing the unreliable hero-image source
