@@ -246,6 +246,20 @@
       "when": 1787181481332,
       "tag": "0036_hesitant_crusher_hogan",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "5",
+      "when": 1787972428913,
+      "tag": "0037_fast_lady_mastermind",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "5",
+      "when": 1787972809575,
+      "tag": "0038_chief_swarm",
+      "breakpoints": true
     }
   ]
 }

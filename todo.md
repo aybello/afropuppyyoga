@@ -753,3 +753,8 @@
 ## Production Deployment Repair (Aug 20, 2026)
 - [x] Prevent Stripe from crashing server startup when production Stripe credentials are not configured
 - [x] Correct Revenue Dashboard TypeScript errors and verify deployment health
+
+## Staff Directory and Private-Event Pricing Fixes (Aug 20, 2026)
+- [x] Make employee removal remove the person from APY HQ while preserving required historical staffing records
+- [x] Create a database-backed Employee Directory with active and inactive staff records
+- [x] Correct Luma private-event booking prices so HST is charged only once

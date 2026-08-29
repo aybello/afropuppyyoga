@@ -22,6 +22,7 @@ import {
   Inbox,
   Star,
   CalendarCheck,
+  UsersRound,
 } from "lucide-react";
 
 const TEAM_PHOTO = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663824308637/IiwudPwckobbrxIv.jpg";
@@ -164,6 +165,16 @@ const TOOLS = [
     href: "/admin/staff-availability",
     icon: CalendarCheck,
     accent: "#0891B2",
+    adminOnly: true,
+    category: "People",
+  },
+  {
+    id: "employee-directory",
+    title: "Employee Directory",
+    description: "Active and former team members, contact records, and status.",
+    href: "/admin/employees",
+    icon: UsersRound,
+    accent: "#8B2252",
     adminOnly: true,
     category: "People",
   },

@@ -12,6 +12,21 @@ import { normalizeCanadianPhoneNumber } from "@shared/phone";
 const LUMA_BASE = "https://public-api.luma.com/v1";
 const HST_RATE = 0.13;
 
+/**
+ * Luma calculates HST at checkout. Ticket prices must therefore always be
+ * pre-tax amounts, even when the APY quote is an all-in total.
+ */
+export function calculateLumaTicketPricing(finalPrice: number, pricingType: "plus_hst" | "all_in") {
+  const enteredCents = Math.round(finalPrice * 100);
+  if (pricingType === "plus_hst") {
+    const hstCents = Math.round(enteredCents * HST_RATE);
+    return { lumaTicketCents: enteredCents, hstCents, totalCents: enteredCents + hstCents };
+  }
+
+  const lumaTicketCents = Math.round(enteredCents / (1 + HST_RATE));
+  return { lumaTicketCents, hstCents: enteredCents - lumaTicketCents, totalCents: enteredCents };
+}
+
 /** APY Studio locations with actual addresses */
 const LOCATION_MAP: Record<string, { address: string; fullAddress: string; lat: number; lng: number; googlePlaceId?: string }> = {
   kitchener: {
@@ -742,17 +757,10 @@ export const privateEventsRouter = router({
         .where(eq(privateEventInquiries.id, input.inquiryId));
       if (!inquiry) throw new TRPCError({ code: "NOT_FOUND", message: "Inquiry not found" });
 
-      // Calculate pricing
-      let totalCents: number;
-      let hstCents: number;
-      if (input.pricingType === "plus_hst") {
-        hstCents = Math.round(input.finalPrice * 100 * HST_RATE);
-        totalCents = input.finalPrice * 100 + hstCents;
-      } else {
-        // all_in: price already includes HST
-        totalCents = input.finalPrice * 100;
-        hstCents = Math.round(totalCents - totalCents / (1 + HST_RATE));
-      }
+      const { lumaTicketCents, hstCents, totalCents } = calculateLumaTicketPricing(
+        input.finalPrice,
+        input.pricingType,
+      );
 
       // Check if owner approval is needed (discount below estimate or > $3000)
       const needsApproval = input.finalPrice < inquiry.estimatedMin || input.finalPrice > 3000;
@@ -785,7 +793,8 @@ export const privateEventsRouter = router({
         location: eventVenue,
         maxCapacity: inquiry.guests,
         description: descLines,
-        priceCents: totalCents,
+        // Luma adds HST at checkout. Sending the client total here would charge it twice.
+        priceCents: lumaTicketCents,
         sessions: input.sessions,
       });
 
@@ -798,7 +807,7 @@ export const privateEventsRouter = router({
         eventDate: input.eventDate,
         startTime: input.startTime,
         venue: eventVenue,
-        basePriceCents: Math.round(input.finalPrice * 100),
+        basePriceCents: lumaTicketCents,
         hstCents,
         pricingType: input.pricingType,
         eventUrl,
@@ -873,7 +882,9 @@ export const privateEventsRouter = router({
         eventDate: inquiry.preferredDate || "",
         startTime: inquiry.eventStartTime || "14:00",
         venue: inquiry.eventVenue || inquiry.location,
-        basePriceCents: inquiry.finalPriceCents || 0,
+        basePriceCents: inquiry.pricingType === "all_in"
+          ? Math.max(0, (inquiry.finalPriceCents || 0) - (inquiry.hstCents || 0))
+          : inquiry.finalPriceCents || 0,
         hstCents: inquiry.hstCents || 0,
         pricingType: inquiry.pricingType === "all_in" ? "all_in" : "plus_hst",
         eventUrl: inquiry.lumaEventUrl,
@@ -1001,16 +1012,10 @@ export const privateEventsRouter = router({
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
-      // Calculate pricing
-      let totalCents: number;
-      let hstCents: number;
-      if (input.pricingType === "plus_hst") {
-        hstCents = Math.round(input.finalPrice * 100 * HST_RATE);
-        totalCents = input.finalPrice * 100 + hstCents;
-      } else {
-        totalCents = input.finalPrice * 100;
-        hstCents = Math.round(totalCents - totalCents / (1 + HST_RATE));
-      }
+      const { lumaTicketCents, hstCents, totalCents } = calculateLumaTicketPricing(
+        input.finalPrice,
+        input.pricingType,
+      );
 
       // Use first session start and last session end for the Luma event times
       const firstSession = input.sessionSchedule[0];
@@ -1046,14 +1051,15 @@ export const privateEventsRouter = router({
         location: input.customLocation || input.location,
         maxCapacity: input.maxCapacity,
         description: fullDescription,
-        priceCents: totalCents,
+        // Luma applies HST separately, so the ticket must be the pre-tax amount.
+        priceCents: lumaTicketCents,
         sessions: input.sessions,
       });
 
       // Notify owner
       await notifyOwner({
         title: "\u{1F517} Quick Booking Link Generated",
-        content: `Event for ${orgName} on ${input.eventDate} — $${(totalCents / 100).toFixed(2)} CAD\n${eventUrl}`,
+        content: `Event for ${orgName} on ${input.eventDate}\nLuma ticket: $${(lumaTicketCents / 100).toFixed(2)} + HST = $${(totalCents / 100).toFixed(2)} CAD\n${eventUrl}`,
       });
 
       return {

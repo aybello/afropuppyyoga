@@ -69,9 +69,7 @@ function firstName(name: string): string {
 
 export function buildPrivateEventQuoteDraft(input: PrivateEventQuoteDraftInput): PrivateEventQuoteDraft {
   const packageName = PACKAGE_NAMES[input.packageType] || "Private Experience";
-  const totalCents = input.pricingType === "plus_hst"
-    ? input.basePriceCents + input.hstCents
-    : input.basePriceCents;
+  const totalCents = input.basePriceCents + input.hstCents;
   const priceLine = input.pricingType === "plus_hst"
     ? `${formatMoney(input.basePriceCents)} + HST (${formatMoney(input.hstCents)}) = ${formatMoney(totalCents)}`
     : `${formatMoney(totalCents)} CAD, HST included`;
