@@ -1,12 +1,14 @@
 
 ## Current Staff Access Investigation
+- [x] Verify the freshly deployed public homepage and remove the avoidable live-calendar, below-the-fold, and off-screen asset work from first load
+- [x] Diagnose the fresh-production application-shell delay as Autoscale startup before the static homepage hero paints
 - [x] Measure the reported APY page-load delay using page, API, and database timing evidence
 - [x] Complete the public AfroPuppyYoga homepage loading audit across hero media, fonts, bundle, and public data requests
 - [x] Defer the measured 9.4-second live Luma calendar embed until the visitor reaches the class section, without caching Luma data
 - [x] Measure homepage font and JavaScript bundle contributions beyond the Luma embed
 - [x] Review and reduce duplicated or competing public homepage asset loads when they materially affect first render
 - [x] Stop mounting every lazy public homepage section on initial render so their JavaScript and media wait until the visitor approaches each section
-- [x] Document the 1.8–3.6 second idle API first-byte delay as an external Autoscale limitation, isolated from the static public homepage first screen
+- [x] Document the 1.8–5.3 second idle API first-byte delay as an accepted Autoscale limitation, isolated from the optimized static public homepage first screen
 - [x] Identify and remove the APY HQ expired-session retry path that could hold a visible spinner
 - [x] Diagnose the observed Employee Directory loading state as an expired/redirected browser session rather than a 19-row database-query bottleneck
 - [x] Directly verify the live same-origin `staffAvailability.listEmployees` route response after the APY HQ session-handling changes

@@ -33,3 +33,9 @@ The first screen also contained a 22-logo marquee rendered twice for the seamles
 The managed Autoscale service still showed 1.8–3.6 seconds of first-byte time for a lightweight API request after idle periods. This timing is outside the static homepage’s first screen and is not the cause of the former public loading spinner. The current practical mitigation is to keep the homepage independent of server calls at first paint; eliminating the remaining cold-start window requires a hosting-tier change to an always-warm service, which was not selected in this performance pass.
 
 The public same-origin `staffAvailability.listEmployees` procedure was then checked directly on both deployed domains and returned the expected `401 UNAUTHORIZED` response without a staff session. This confirms the procedure is registered and the earlier apparent 404 was not a live route-registration failure.
+
+### Fresh production follow-up
+
+A fresh production navigation first rendered the application shell’s blank spinner at 05:04:55 and did not paint the homepage content until the following browser check at 05:05:08, a roughly 13-second user-visible delay. The deferred Luma work therefore removed the later “Loading upcoming classes” hold, but does not explain the initial application-shell delay. The next pass must identify the production JavaScript, third-party script, or startup request that blocks React from painting the already-static hero.
+
+The production Navigation Timing entry then measured **5,327 ms time to first byte**, **7,269 ms to DOM interactive**, and **7,304 ms to load**. The first application CSS and JavaScript began only after that server response and each required a further 1.8–2.4 seconds. This confirms the primary visible delay is the hosted Autoscale application waking before the browser can even begin loading the static client bundle; the deferred Luma and below-fold fixes reduce work after that response but cannot eliminate the server wake delay.
