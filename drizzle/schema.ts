@@ -114,6 +114,32 @@ export const jobApplications = mysqlTable("jobApplications", {
 export type JobApplication = typeof jobApplications.$inferSelect;
 export type InsertJobApplication = typeof jobApplications.$inferInsert;
 
+/**
+ * APY's employee directory. This remains separate from the applicant pipeline
+ * and preserves a former employee's operational record after APY HQ removal.
+ */
+export const employees = mysqlTable("employees", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Linked APY HQ team profile when the employee originated from an application. */
+  sourceApplicationId: int("sourceApplicationId").unique(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 320 }),
+  phone: varchar("phone", { length: 50 }),
+  role: varchar("role", { length: 255 }).notNull(),
+  location: varchar("location", { length: 100 }).notNull(),
+  employmentStatus: mysqlEnum("employmentStatus", ["active", "inactive"]).default("active").notNull(),
+  startedAt: timestamp("startedAt").defaultNow().notNull(),
+  endedAt: timestamp("endedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (t) => [
+  index("idx_employees_status").on(t.employmentStatus),
+  index("idx_employees_location").on(t.location),
+]);
+
+export type Employee = typeof employees.$inferSelect;
+export type InsertEmployee = typeof employees.$inferInsert;
+
 /** Immutable hiring timeline entries. Applicant status changes and outbound actions
  * are recorded here so the dashboard can answer who did what and when. */
 export const jobApplicationActions = mysqlTable("jobApplicationActions", {

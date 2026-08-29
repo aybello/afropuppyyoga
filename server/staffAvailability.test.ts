@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { directTeamMemberSchema, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateTeamAssignmentChange } from "./routers/staffAvailability";
+import { directTeamMemberSchema, getTeamRemovalUpdate, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateTeamAssignmentChange } from "./routers/staffAvailability";
 
 describe("direct team-member validation", () => {
   it("accepts an Operations Manager assigned to Oakville", () => {
@@ -98,5 +98,10 @@ describe("direct team-member validation", () => {
   it("accepts only an explicit staff-profile activity state", () => {
     expect(teamMemberActivitySchema.parse({ id: 42, isActive: false })).toEqual({ id: 42, isActive: false });
     expect(() => teamMemberActivitySchema.parse({ id: 0, isActive: true })).toThrow();
+  });
+
+  it("removes a person from APY HQ instead of leaving an inactive team profile", () => {
+    const removedAt = new Date("2026-08-20T12:00:00.000Z");
+    expect(getTeamRemovalUpdate(removedAt)).toEqual({ isTeamMember: false, deletedAt: removedAt });
   });
 });

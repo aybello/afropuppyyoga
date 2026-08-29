@@ -912,3 +912,8 @@
 - [x] Inspect the actual TiDB/Drizzle wrapped error shape before finalizing the narrowly scoped Run APY fallback
 - [x] Treat only the verified pre-PR #10 breeder follow-up column mismatch as an empty Run APY feed
 - [x] Verify Schedule Calendar and Puppy Class Schedule load, with the class editor showing the APY HQ and Luma synchronization state
+
+## Staff Directory and Private-Event Pricing Fixes (Aug 29, 2026)
+- [x] Make employee removal remove the person from APY HQ while preserving the employee record and clearing active staffing and access
+- [x] Create a database-backed Employee Directory with active and inactive staff records
+- [x] Correct Luma private-event booking prices so HST is charged only once

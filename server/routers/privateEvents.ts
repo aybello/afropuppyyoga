@@ -19,13 +19,21 @@ const LUMA_BASE = "https://public-api.luma.com/v1";
 const HST_RATE = 0.13;
 
 export function calculatePrivateEventPrice(finalPrice: number, pricingType: "plus_hst" | "all_in") {
-  const basePriceCents = Math.round(finalPrice * 100);
+  const enteredCents = Math.round(finalPrice * 100);
   if (pricingType === "plus_hst") {
+    const basePriceCents = enteredCents;
     const hstCents = Math.round(basePriceCents * HST_RATE);
     return { basePriceCents, hstCents, totalCents: basePriceCents + hstCents };
   }
-  const hstCents = Math.round(basePriceCents - basePriceCents / (1 + HST_RATE));
-  return { basePriceCents, hstCents, totalCents: basePriceCents };
+  const basePriceCents = Math.round(enteredCents / (1 + HST_RATE));
+  const hstCents = enteredCents - basePriceCents;
+  return { basePriceCents, hstCents, totalCents: enteredCents };
+}
+
+/** The exact ticket amount sent to Luma, which applies HST separately at checkout. */
+export function calculateLumaTicketPricing(finalPrice: number, pricingType: "plus_hst" | "all_in") {
+  const { basePriceCents, hstCents, totalCents } = calculatePrivateEventPrice(finalPrice, pricingType);
+  return { lumaTicketCents: basePriceCents, hstCents, totalCents };
 }
 
 export function privateEventQuoteNeedsApproval(finalPrice: number, estimatedMin: number) {
@@ -336,9 +344,7 @@ function requirePreparedPrivateEvent(inquiry: PrivateEventInquiry) {
   return {
     basePriceCents: inquiry.finalPriceCents,
     hstCents: inquiry.hstCents ?? 0,
-    totalCents: inquiry.pricingType === "plus_hst"
-      ? inquiry.finalPriceCents + (inquiry.hstCents ?? 0)
-      : inquiry.finalPriceCents,
+    totalCents: inquiry.finalPriceCents + (inquiry.hstCents ?? 0),
     pricingType,
     eventDate: inquiry.preferredDate,
     startTime: inquiry.eventStartTime,
@@ -384,7 +390,8 @@ async function publishPrivateEvent(inquiry: PrivateEventInquiry) {
     location: prepared.venue,
     maxCapacity: inquiry.guests,
     description,
-    priceCents: prepared.totalCents,
+    // Luma applies HST at checkout, so it must receive the pre-tax ticket value.
+    priceCents: prepared.basePriceCents,
     sessions: inquiry.sessions || 1,
   });
   const emailDraft = buildStoredPrivateEventQuote(inquiry, eventUrl);
@@ -1333,7 +1340,7 @@ export const privateEventsRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { totalCents, hstCents } = calculatePrivateEventPrice(input.finalPrice, input.pricingType);
+      const { basePriceCents, totalCents, hstCents } = calculatePrivateEventPrice(input.finalPrice, input.pricingType);
 
       // Use first session start and last session end for the Luma event times
       const firstSession = input.sessionSchedule[0];
@@ -1369,14 +1376,15 @@ export const privateEventsRouter = router({
         location: input.customLocation || input.location,
         maxCapacity: input.maxCapacity,
         description: fullDescription,
-        priceCents: totalCents,
+        // Luma calculates HST separately at checkout.
+        priceCents: basePriceCents,
         sessions: input.sessions,
       });
 
       // Notify owner
       await notifyOwner({
         title: "\u{1F517} Quick Booking Link Generated",
-        content: `Event for ${orgName} on ${input.eventDate} — $${(totalCents / 100).toFixed(2)} CAD\n${eventUrl}`,
+        content: `Event for ${orgName} on ${input.eventDate}\nLuma ticket: $${(basePriceCents / 100).toFixed(2)} + HST = $${(totalCents / 100).toFixed(2)} CAD\n${eventUrl}`,
       });
 
       return {

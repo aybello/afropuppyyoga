@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { adminProcedure, staffProcedure, router } from "../_core/trpc";
-import { getDb } from "../db";
-import { staffAvailability, jobApplications, weekendLeadershipCoverage } from "../../drizzle/schema";
-import { and, eq, gte, isNull, isNotNull, desc } from "drizzle-orm";
+import { getDb, getUserByOpenId, upsertUser } from "../db";
+import { classStaffAssignments, employees, jobApplications, staffAvailability, staffInvites, weekendLeadershipCoverage } from "../../drizzle/schema";
+import { and, asc, desc, eq, gte, isNull, isNotNull } from "drizzle-orm";
 import { getUpcomingWeekendDates, isAwayOnDate, isWeekendDate } from "../weekendCoverage";
 import { isActiveTeamMember } from "../teamMembership";
 import { normalizeCanadianPhoneNumber } from "../../shared/phone";
@@ -44,6 +44,10 @@ export const teamMemberActivitySchema = z.object({
 });
 
 const isOperationsManagerRole = (role: string) => role.toLowerCase().replaceAll("_", " ") === "operations manager";
+
+export function getTeamRemovalUpdate(removedAt: Date) {
+  return { isTeamMember: false, deletedAt: removedAt };
+}
 
 export function validateTeamAssignmentChange(input: {
   currentRole: string;
@@ -91,6 +95,14 @@ export const staffAvailabilityRouter = router({
     ]);
 
     return { staff, inactiveStaff, leaves };
+  }),
+
+  // APY's operational directory for active and former employees.
+  listEmployees: staffProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+    return db.select().from(employees)
+      .orderBy(asc(employees.employmentStatus), asc(employees.location), asc(employees.name));
   }),
 
   // Get availability for a specific staff member
@@ -276,19 +288,32 @@ export const staffAvailabilityRouter = router({
         }
       }
 
-      const result = await db.insert(jobApplications).values({
-        name: input.name,
-        email: input.email ? input.email.toLowerCase() : null,
-        phone: normalizedPhone,
-        role: input.role,
-        location: input.location,
-        whyAPY: "Added directly through APY HQ.",
-        experience: "",
-        status: "onboarded",
-        isTeamMember: true,
+      const memberId = await db.transaction(async (tx) => {
+        const result = await tx.insert(jobApplications).values({
+          name: input.name,
+          email: input.email ? input.email.toLowerCase() : null,
+          phone: normalizedPhone,
+          role: input.role,
+          location: input.location,
+          whyAPY: "Added directly through APY HQ.",
+          experience: "",
+          status: "onboarded",
+          isTeamMember: true,
+        });
+        const sourceApplicationId = Number(result[0].insertId);
+        await tx.insert(employees).values({
+          sourceApplicationId,
+          name: input.name,
+          email: input.email ? input.email.toLowerCase() : null,
+          phone: normalizedPhone,
+          role: input.role,
+          location: input.location,
+          employmentStatus: "active",
+        });
+        return sourceApplicationId;
       });
 
-      return { success: true, id: Number(result[0].insertId) };
+      return { success: true, id: memberId };
     }),
 
   // Edit an active APY HQ team profile without disturbing its hiring history or access audit trail.
@@ -353,6 +378,13 @@ export const staffAvailabilityRouter = router({
         role: input.role,
         location: input.location,
       }).where(eq(jobApplications.id, input.id));
+      await db.update(employees).set({
+        name: input.name,
+        email: input.email ? input.email.toLowerCase() : null,
+        phone: input.phone ? normalizeCanadianPhoneNumber(input.phone) : null,
+        role: input.role,
+        location: input.location,
+      }).where(eq(employees.sourceApplicationId, input.id));
 
       return { success: true };
     }),
@@ -402,22 +434,78 @@ export const staffAvailabilityRouter = router({
         hasActivePuppyMonitorsAtCurrentLocation: activePuppyMonitorsAtLocation.length > 0,
       });
 
-      await db.update(jobApplications).set({
-        isTeamMember: true,
-        deletedAt: input.isActive ? null : new Date(),
-      }).where(eq(jobApplications.id, input.id));
+      const statusChangedAt = new Date();
+      await db.transaction(async (tx) => {
+        await tx.update(jobApplications).set({
+          isTeamMember: true,
+          deletedAt: input.isActive ? null : statusChangedAt,
+        }).where(eq(jobApplications.id, input.id));
+        await tx.update(employees).set({
+          employmentStatus: input.isActive ? "active" : "inactive",
+          endedAt: input.isActive ? null : statusChangedAt,
+        }).where(eq(employees.sourceApplicationId, input.id));
+      });
       return { success: true };
     }),
 
-  // Soft-delete a team member so they disappear from the org chart without losing history.
+  // Remove from APY HQ, staffing, and portal access while retaining employee history.
   removeTeamMember: adminProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      await db.update(jobApplications)
-        .set({ deletedAt: new Date() })
-        .where(eq(jobApplications.id, input.id));
+      const [member] = await db.select({ email: jobApplications.email })
+        .from(jobApplications)
+        .where(eq(jobApplications.id, input.id))
+        .limit(1);
+      if (!member) throw new Error("Team member not found");
+
+      const removedAt = new Date();
+      await db.transaction(async (tx) => {
+        await tx.update(jobApplications)
+          .set(getTeamRemovalUpdate(removedAt))
+          .where(eq(jobApplications.id, input.id));
+        await tx.update(employees)
+          .set({ employmentStatus: "inactive", endedAt: removedAt })
+          .where(eq(employees.sourceApplicationId, input.id));
+        await tx.delete(classStaffAssignments).where(eq(classStaffAssignments.staffId, input.id));
+        await tx.delete(staffAvailability).where(eq(staffAvailability.staffId, input.id));
+        await tx.update(weekendLeadershipCoverage)
+          .set({ coverageStaffId: null, coverageStaffName: null, notes: null })
+          .where(eq(weekendLeadershipCoverage.coverageStaffId, input.id));
+        if (member.email) {
+          await tx.update(staffInvites).set({ isActive: 0 })
+            .where(eq(staffInvites.email, member.email));
+        }
+      });
+      if (member.email) {
+        const staffUser = await getUserByOpenId(`staff:${member.email}`);
+        if (staffUser?.role === "staff") {
+          await upsertUser({ openId: `staff:${member.email}`, role: "user" });
+        }
+      }
       return { success: true };
+    }),
+
+  // Restore a removed employee who has a linked APY HQ team profile.
+  reactivateTeamMember: adminProcedure
+    .input(z.object({ employeeId: z.number().int().positive() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const [employee] = await db.select().from(employees)
+        .where(eq(employees.id, input.employeeId))
+        .limit(1);
+      if (!employee || employee.sourceApplicationId === null) {
+        throw new Error("This employee needs a linked APY HQ team profile before they can be restored.");
+      }
+      const sourceApplicationId = employee.sourceApplicationId;
+      await db.transaction(async (tx) => {
+        await tx.update(employees).set({ employmentStatus: "active", endedAt: null })
+          .where(eq(employees.id, input.employeeId));
+        await tx.update(jobApplications).set({ isTeamMember: true, deletedAt: null, status: "onboarded" })
+          .where(eq(jobApplications.id, sourceApplicationId));
+      });
+      return { success: true, sourceApplicationId };
     }),
 });

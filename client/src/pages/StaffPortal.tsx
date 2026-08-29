@@ -27,6 +27,7 @@ import {
   GraduationCap,
   UserCog,
   Gauge,
+  UsersRound,
 } from "lucide-react";
 
 const TEAM_PHOTO = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663824308637/IiwudPwckobbrxIv.jpg";
@@ -202,12 +203,22 @@ const TOOLS = [
     adminOnly: true,
     category: "People",
   },
+  {
+    id: "employee-directory",
+    title: "Employee Directory",
+    description: "Active and former team members, contact records, and status.",
+    href: "/admin/employees",
+    icon: UsersRound,
+    accent: "#8B2252",
+    adminOnly: true,
+    category: "People",
+  },
 ];
 
 const CATEGORY_ORDER = ["Operations", "People", "Finance", "Events", "Breeders", "Growth"];
 
 function requiredAccessForTool(id: string): ApyHubToolAccess {
-  if (id === "invoices" || id === "revenue") return "owner";
+  if (id === "invoices" || id === "revenue" || id === "employee-directory") return "owner";
   if (id === "staff-training" || id === "submit-invoice") return "team";
   return "operations";
 }
