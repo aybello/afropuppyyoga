@@ -1,7 +1,6 @@
 
 ## Current Staff Access Investigation
-- [x] Review and safely integrate the newly announced APY updates without regressing the published homepage, APY HQ access, Employee Directory, staffing continuity, or operational workflows
-- [x] Selectively integrate and validate the homepage loading-spinner removal without reverting the verified production runtime exclusion
+- [x] Diagnose and remove the loading indicator still visible on the live public homepage without masking an actual failure or regressing APY safeguards
 - [x] Review and safely integrate the newly announced APY update without regressing published Employee Directory, APY HQ access, staffing-continuity, or public-site safeguards
 - [x] Integrate and validate the measured homepage hero first-paint improvement without changing Luma freshness, APY HQ workflows, or hosting and DNS choices
 - [x] Correct the homepage update so the production build actually excludes development editor instrumentation and verify the resulting HTML size

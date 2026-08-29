@@ -32,6 +32,27 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="preconnect" href="https://d2xsxph8kpxj0f.cloudfront.net" crossorigin />
     <link rel="preload" as="image" href="https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/apy_hero_bg-aDMPriKGFaJ3ZgQKWVBv5n.webp" fetchpriority="high" />
+    <script>
+      if (window.location.pathname === "/") document.documentElement.classList.add("home-pending");
+    </script>
+    <style>
+      html.home-pending,
+      html.home-pending body,
+      html.home-pending #root {
+        min-height: 100%;
+        margin: 0;
+        background-color: #1a0a12;
+      }
+      html.home-pending body {
+        background-image:
+          linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.25) 55%, rgba(0, 0, 0, 0.4)),
+          linear-gradient(135deg, rgba(242, 160, 184, 0.1), transparent 55%),
+          url("https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/apy_hero_bg-aDMPriKGFaJ3ZgQKWVBv5n.webp");
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+      }
+    </style>
     <title>AfroPuppyYoga | Ontario's #1 Puppy Yoga Experience</title>
     <!-- Meta Pixel loader script is injected by React via useMetaPixel hook -->
 
