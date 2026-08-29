@@ -6,9 +6,10 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { Loader2 } from "lucide-react";
 import { useMetaPixel } from "./hooks/useMetaPixel";
+import Home from "./pages/Home";
 
-// Lazy load all pages so each page only loads its own code on demand
-const Home = lazy(() => import("./pages/Home"));
+// Keep the public homepage in the initial bundle so its complete hero renders
+// immediately. Operational and secondary pages remain split on demand.
 const FillRatePredictor = lazy(() => import("./pages/FillRatePredictor"));
 const BreederCalculator = lazy(() => import("./pages/BreederCalculator"));
 const InvoiceSubmit = lazy(() => import("./pages/InvoiceSubmit"));
