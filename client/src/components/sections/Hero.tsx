@@ -45,7 +45,6 @@ const trustedBy = [
 
 export default function Hero() {
   const [heroImage, setHeroImage] = useState(PRIMARY_HERO_IMAGE);
-  const [heroImageReady, setHeroImageReady] = useState(false);
   const [heroImageFailed, setHeroImageFailed] = useState(false);
 
   const scrollToExperience = () => {
@@ -54,27 +53,32 @@ export default function Hero() {
 
   return (
     <section id="home" className="relative min-h-screen flex flex-col">
-      {/* Background image with overlay. A solid brand fallback is always present, so a failed image never leaves a white or broken-image state. */}
-      <div className="absolute inset-0 overflow-hidden bg-[#5B2D3E]">
+      {/* The same CDN image is used as the first-paint background and visual layer. This avoids showing a coloured placeholder while the hero loads. */}
+      <div
+        className="absolute inset-0 overflow-hidden bg-black"
+        style={{
+          backgroundImage: `url(${heroImage})`,
+          backgroundPosition: "center",
+          backgroundSize: "cover",
+        }}
+      >
         {!heroImageFailed && (
           <img
             src={heroImage}
             alt=""
             aria-hidden="true"
             loading="eager"
-            decoding="sync"
+            decoding="async"
             fetchPriority="high"
-            onLoad={() => setHeroImageReady(true)}
             onError={() => {
               const fallbackImage = getNextHeroImageOnError(heroImage);
               if (fallbackImage) {
                 setHeroImage(fallbackImage);
-                setHeroImageReady(false);
               } else {
                 setHeroImageFailed(true);
               }
             }}
-            className={`w-full h-full object-cover object-center scale-105 animate-[kenBurns_20s_ease-in-out_infinite_alternate] transition-opacity duration-300 ${heroImageReady ? "opacity-100" : "opacity-0"}`}
+            className="w-full h-full object-cover object-center scale-105 animate-[kenBurns_20s_ease-in-out_infinite_alternate]"
           />
         )}
         {/* Gradient overlay — dark at bottom-left for text legibility, dark at top for nav */}

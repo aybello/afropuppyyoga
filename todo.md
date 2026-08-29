@@ -917,3 +917,6 @@
 - [x] Make employee removal remove the person from APY HQ while preserving the employee record and clearing active staffing and access
 - [x] Create a database-backed Employee Directory with active and inactive staff records
 - [x] Correct Luma private-event booking prices so HST is charged only once
+
+## Homepage Hero Loading Transition (Aug 29, 2026)
+- [x] Remove the visible purple blur/placeholder that appears before the homepage hero image loads
