@@ -24,6 +24,30 @@ function friendlyDate(value: string) {
   return new Date(`${value}T12:00:00`).toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 }
 
+export type EventNotificationRecipient = { id: number; name: string; email: string | null; phone: string | null; role: string; lastSentAt: Date | null };
+
+export function getEventNotificationRecipient(recipients: EventNotificationRecipient[], staffId: number) {
+  const recipient = recipients.find((item) => item.id === staffId);
+  if (!recipient) throw new Error("This person is not currently assigned to this class.");
+  if (!recipient.email && !recipient.phone) throw new Error(`${recipient.name} needs an email address or phone number before they can be contacted.`);
+  return recipient;
+}
+
+export function prepareIndividualEventNotification(recipients: EventNotificationRecipient[], input: { staffId: number; resend: boolean }) {
+  const recipient = getEventNotificationRecipient(recipients, input.staffId);
+  if (recipient.lastSentAt && !input.resend) {
+    throw new Error(`${recipient.name} was already sent this class schedule. Choose Resend only if another delivery is needed.`);
+  }
+  return recipient;
+}
+
+export function resolveIndividualNotificationDelivery(input: { emailStatus: string; smsStatus: string }) {
+  if (input.emailStatus === "sent" || input.smsStatus === "sent") return "sent" as const;
+  if (input.smsStatus === "suppressed") return "sms_suppressed" as const;
+  if (input.emailStatus === "not_configured" || input.smsStatus === "not_configured") return "not_configured" as const;
+  return "failed" as const;
+}
+
 export async function getEventNotificationPreview(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, scheduleId: number) {
   const [schedule] = await db.select().from(puppySchedule).where(eq(puppySchedule.id, scheduleId)).limit(1);
   if (!schedule) throw new Error("Scheduled class not found");
@@ -39,6 +63,12 @@ export async function getEventNotificationPreview(db: NonNullable<Awaited<Return
   ]);
   const active = team.filter(isActiveTeamMember);
   const awayIds = new Set(leaves.map((leave) => leave.staffId));
+  const lastSentByStaffId = new Map<number, Date>();
+  for (const notification of priorNotifications) {
+    if (!lastSentByStaffId.has(notification.staffId) && (notification.emailStatus === "sent" || notification.smsStatus === "sent")) {
+      lastSentByStaffId.set(notification.staffId, notification.sentAt);
+    }
+  }
   const sameRole = (actual: string, expected: string) => actual === expected || actual === expected.toLowerCase().replaceAll(" ", "_");
   const leader = (role: "Operations Manager" | "Yoga Instructor") => {
     const covered = coverage.find((item) => item.role === role && item.coverageStaffId);
@@ -51,7 +81,7 @@ export async function getEventNotificationPreview(db: NonNullable<Awaited<Return
     { person: leader("Yoga Instructor"), role: "Yoga Instructor" },
     ...pmAssignments.map((assignment) => ({ person: active.find((person) => person.id === assignment.staffId) ?? null, role: "Puppy Monitor" })),
   ].filter((item): item is { person: NonNullable<typeof item.person>; role: string } => Boolean(item.person))
-    .map(({ person, role }) => ({ id: person.id, name: person.name, email: person.email, phone: person.phone, role }));
+    .map(({ person, role }) => ({ id: person.id, name: person.name, email: person.email, phone: person.phone, role, lastSentAt: lastSentByStaffId.get(person.id) ?? null }));
   const gaps = staffingGaps({ operationsManager: recipients.some((r) => r.role === "Operations Manager"), yogaInstructor: recipients.some((r) => r.role === "Yoga Instructor"), puppyMonitorCount: recipients.filter((r) => r.role === "Puppy Monitor").length });
   const gapLabels = [gaps.operationsManager ? "Operations Manager" : null, gaps.yogaInstructor ? "Yoga Instructor" : null, gaps.puppyMonitors ? `${gaps.puppyMonitors} Puppy Monitor${gaps.puppyMonitors === 1 ? "" : "s"}` : null].filter((value): value is string => Boolean(value));
   const dateLabel = friendlyDate(schedule.classDate);
@@ -294,6 +324,48 @@ export const puppyScheduleRouter = router({
         results.push({ staffId: recipient.id, name: recipient.name, emailStatus, smsStatus, errors });
       }
       return { success: results.every((r) => r.emailStatus === "sent" || r.smsStatus === "sent"), results };
+    }),
+
+  notifyIndividualEventStaff: staffProcedure
+    .input(z.object({ scheduleId: z.number().int().positive(), staffId: z.number().int().positive(), resend: z.boolean().default(false) }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+      const preview = await getEventNotificationPreview(db, input.scheduleId);
+      const recipient = prepareIndividualEventNotification(preview.recipients, input);
+
+      const accountSid = process.env.TWILIO_ACCOUNT_SID;
+      const authToken = process.env.TWILIO_AUTH_TOKEN;
+      const from = process.env.TWILIO_PHONE_NUMBER;
+      const smsClient = accountSid && authToken && from ? twilio(accountSid, authToken) : null;
+      const dateLabel = friendlyDate(preview.schedule.classDate);
+      const subject = `You're scheduled — APY ${preview.schedule.location}, ${dateLabel}`;
+      const body = preview.message.replace("[Name]", recipient.name.split(" ")[0]).replace("[Role]", recipient.role);
+      let emailStatus = recipient.email ? "failed" : "missing";
+      let smsStatus = recipient.phone ? "failed" : "missing";
+      let smsSid: string | null = null;
+      const errors: string[] = [];
+      if (recipient.email) {
+        try {
+          await sendEmail({ to: recipient.email, subject, text: body, html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto"><h2 style="color:#8B2252">You're on the APY team for this event</h2><p>${body}</p><p><strong>Date:</strong> ${dateLabel}<br/><strong>Location:</strong> ${preview.schedule.location}<br/><strong>Role:</strong> ${recipient.role}<br/><strong>Event:</strong> ${preview.schedule.breed}<br/><strong>Time:</strong> ${preview.schedule.startTime}–${preview.schedule.endTime}</p><p>Please reply to confirm you received your schedule.</p></div>` });
+          emailStatus = "sent";
+        } catch (error) { errors.push(`Email: ${error instanceof Error ? error.message : "failed"}`); }
+      }
+      if (recipient.phone && await isSmsSuppressed(recipient.phone)) {
+        smsStatus = "suppressed";
+      } else if (recipient.phone && smsClient && from) {
+        try {
+          const sent = await smsClient.messages.create({ to: recipient.phone, from, body });
+          smsSid = sent.sid;
+          smsStatus = "sent";
+        } catch (error) { errors.push(`SMS: ${error instanceof Error ? error.message : "failed"}`); }
+      } else if (recipient.phone && !smsClient) {
+        smsStatus = "not_configured";
+        errors.push("SMS: Twilio is not configured");
+      }
+      await db.insert(staffScheduleNotifications).values({ scheduleId: input.scheduleId, staffId: recipient.id, staffName: recipient.name, role: recipient.role, emailStatus, smsStatus, smsSid, errorMessage: errors.join(" | ") || null, sentBy: ctx.user.email ?? ctx.user.name ?? null });
+      const deliveryStatus = resolveIndividualNotificationDelivery({ emailStatus, smsStatus });
+      return { success: deliveryStatus === "sent", deliveryStatus, result: { staffId: recipient.id, name: recipient.name, emailStatus, smsStatus, errors } };
     }),
 
   assignPuppyMonitor: staffProcedure

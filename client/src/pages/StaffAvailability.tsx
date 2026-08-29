@@ -3,6 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Link } from "wouter";
 import { ArrowLeft, Calendar, CalendarCheck, ChevronLeft, ChevronRight, Mail, MessageSquare, Pencil, Plus, Power, Send, Trash2, Users, X } from "lucide-react";
+import { individualScheduleDeliveryFeedback } from "@shared/individualNotification";
 
 const LOCATIONS = ["KW", "OAK", "HAM"] as const;
 const LOCATION_LABELS: Record<string, string> = { KW: "Kitchener", OAK: "Oakville", HAM: "Hamilton", CENTRAL: "APY-wide" };
@@ -141,6 +142,7 @@ export default function StaffAvailabilityPage() {
   const assignPuppyMonitor = trpc.puppySchedule.assignPuppyMonitor.useMutation({ onSuccess: () => { refreshAvailability(); toast.success("PM assigned"); setSelectedClassStaffing(null); setSelectedPuppyMonitor(""); }, onError: (e) => toast.error(e.message) });
   const removePuppyMonitor = trpc.puppySchedule.removePuppyMonitorAssignment.useMutation({ onSuccess: () => { refreshAvailability(); toast.success("PM removed"); setSelectedClassStaffing(null); }, onError: (e) => toast.error(e.message) });
   const notifyEventTeam = trpc.puppySchedule.notifyEventTeam.useMutation({ onSuccess: (result) => { notificationPreview.refetch(); const delivered = result.results.filter((item) => item.emailStatus === "sent" || item.smsStatus === "sent").length; toast.success(`Schedule sent to ${delivered} team members`); }, onError: (e) => toast.error(e.message) });
+  const notifyIndividualEventStaff = trpc.puppySchedule.notifyIndividualEventStaff.useMutation({ onSuccess: (result) => { notificationPreview.refetch(); const feedback = individualScheduleDeliveryFeedback({ deliveryStatus: result.deliveryStatus, name: result.result.name, errors: result.result.errors }); if (feedback.kind === "success") toast.success(feedback.message); else if (feedback.kind === "warning") toast.warning(feedback.message); else toast.error(feedback.message); }, onError: (e) => toast.error(e.message) });
 
   const staff = (data?.staff ?? []) as StaffMember[];
   const inactiveStaff = (data?.inactiveStaff ?? []) as StaffMember[];
@@ -364,10 +366,14 @@ export default function StaffAvailabilityPage() {
         <div className="mt-5 border-t border-[#EDE0D8] pt-4">
           <div className="mb-3 flex items-center justify-between"><div><p className="text-sm font-bold text-[#1A0A12]">Notify event team</p><p className="text-[11px] text-[#7A5A6A]">Preview recipients before sending email + text.</p></div><Send size={18} className="text-[#8B2252]"/></div>
           {notificationPreview.isLoading ? <p className="text-xs text-[#7A5A6A]">Preparing preview…</p> : <>
-            <div className="space-y-1.5">{notificationPreview.data?.recipients.map((recipient) => <div key={`${recipient.role}-${recipient.id}`} className="flex items-center gap-2 rounded-lg bg-[#F7F2EE] px-3 py-2"><span className="min-w-0 flex-1 truncate text-xs font-bold">{recipient.name} · {recipient.role}</span><Mail size={13} className={recipient.email ? "text-emerald-600" : "text-gray-300"}/><MessageSquare size={13} className={recipient.phone ? "text-emerald-600" : "text-gray-300"}/></div>)}</div>
+            <div className="space-y-1.5">{notificationPreview.data?.recipients.map((recipient) => {
+              const canContact = Boolean(recipient.email || recipient.phone);
+              const wasSent = Boolean(recipient.lastSentAt);
+              return <div key={`${recipient.role}-${recipient.id}`} className="flex items-center gap-2 rounded-lg bg-[#F7F2EE] px-3 py-2"><span className="min-w-0 flex-1 truncate text-xs font-bold">{recipient.name} · {recipient.role}</span><Mail size={13} className={recipient.email ? "text-emerald-600" : "text-gray-300"}/><MessageSquare size={13} className={recipient.phone ? "text-emerald-600" : "text-gray-300"}/><button type="button" onClick={() => { if (canContact && confirm(`${wasSent ? "Resend" : "Send"} this class schedule to ${recipient.name} only?`)) notifyIndividualEventStaff.mutate({ scheduleId: selectedClassStaffing.id, staffId: recipient.id, resend: wasSent }); }} disabled={!canContact || notifyIndividualEventStaff.isPending} className="shrink-0 rounded-lg border border-[#8B2252]/30 bg-white px-2 py-1 text-[10px] font-bold text-[#8B2252] transition-colors hover:bg-[#8B2252] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"><Send size={11} className="mr-1 inline"/>{wasSent ? "Resend" : "Message"}</button></div>;
+            })}</div>
             {notificationPreview.data?.gapLabels.length ? <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs font-bold text-amber-800">Still needed: {notificationPreview.data.gapLabels.join(", ")}</p> : null}
             {notificationPreview.data?.fullyStaffed && <div className="mt-3 rounded-lg border border-[#EADBE2] bg-[#FFFCFA] p-3 text-[11px] leading-relaxed text-[#5D4350]">{notificationPreview.data.message}</div>}
-            <button onClick={() => { if (confirm(`Send this schedule by email and text to ${notificationPreview.data?.recipients.length ?? 0} team members?`)) notifyEventTeam.mutate({ scheduleId: selectedClassStaffing.id, resend: Boolean(notificationPreview.data?.lastSentAt) }); }} disabled={!notificationPreview.data?.fullyStaffed || notifyEventTeam.isPending} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#8B2252] py-2.5 text-sm font-bold text-white hover:bg-[#6B1A3E] disabled:opacity-40"><Send size={14}/>{notifyEventTeam.isPending ? "Sending…" : notificationPreview.data?.lastSentAt ? "Resend schedule" : "Send email + text"}</button>
+            <button onClick={() => { if (confirm(`Send this schedule by email and text to ${notificationPreview.data?.recipients.length ?? 0} team members?`)) notifyEventTeam.mutate({ scheduleId: selectedClassStaffing.id, resend: Boolean(notificationPreview.data?.lastSentAt) }); }} disabled={!notificationPreview.data?.fullyStaffed || notifyEventTeam.isPending} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#8B2252] py-2.5 text-sm font-bold text-white hover:bg-[#6B1A3E] disabled:opacity-40"><Send size={14}/>{notifyEventTeam.isPending ? "Sending…" : notificationPreview.data?.lastSentAt ? "Resend to whole team" : "Send to whole team"}</button>
             {notificationPreview.data?.lastSentAt && <p className="mt-2 text-center text-[10px] font-medium text-emerald-700">Last sent {new Date(notificationPreview.data.lastSentAt).toLocaleString("en-CA")}</p>}
           </>}
         </div>

@@ -1,5 +1,13 @@
 
 ## Current Staff Access Investigation
+- [x] Add a safe one-at-a-time messaging action for an individual assigned class staff member within APY HQ staffing context
+- [x] Limit individual class messages to the current assigned event recipients and retain email, SMS suppression, and delivery history safeguards
+- [x] Report individual class-message delivery accurately instead of showing success when all channels fail or are suppressed
+- [x] Add focused route-level regression coverage for individual message recipients, resend history, SMS suppression, and failed delivery states
+- [x] Add route-level tests for individual message suppression, failed/not-configured delivery reporting, and successful-delivery status
+- [x] Verify the individual message result maps to success versus warning/error client feedback without claiming failed delivery was sent
+- [x] Exercise the notifyIndividualEventStaff mutation itself across recipient, resend, suppression, unavailable, failed, and successful-delivery paths
+- [x] Add direct client feedback mapping coverage for individual schedule delivery results
 - [x] Add unified owner-controlled editing for APY HQ staff profile details, role, location assignment, and availability through the connected leave workflow
 - [x] Confirm active/inactive team-profile controls follow the APY owner-and-Operations-Manager access model and remain unavailable to other roles
 - [x] Verify inactive APY HQ profiles are shown separately from active staffing and are excluded from weekend coverage
