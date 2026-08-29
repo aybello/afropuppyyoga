@@ -150,7 +150,17 @@ function vitePluginManusDebugCollector(): Plugin {
   };
 }
 
-const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()];
+const productionBuild = process.env.NODE_ENV === "production";
+
+// Manus' editor runtime and JSX location markers are useful while building in
+// preview, but the runtime inlines hundreds of kilobytes into index.html. Keep
+// those tools out of the public production bundle so the browser can discover
+// and fetch the hero image immediately.
+const plugins = [
+  react(),
+  tailwindcss(),
+  ...(!productionBuild ? [jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()] : []),
+];
 
 export default defineConfig({
   plugins,
