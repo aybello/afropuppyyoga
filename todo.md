@@ -1,7 +1,14 @@
 
 ## Current Staff Access Investigation
-- [ ] Review and safely synchronize newly available APY updates with the validated main branch
-- [ ] Integrate the employee-directory and private-event HST updates without duplicating APY HQ staff editing or reintroducing the unreliable hero-image source
+- [x] Review and safely synchronize newly available APY updates with the validated main branch
+- [x] Integrate the employee-directory and private-event HST updates without duplicating APY HQ staff editing or reintroducing the unreliable hero-image source
+- [x] Apply the confirmed employee-directory migration and private-event HST-at-checkout update after data-integrity validation
+- [x] Backfill existing active and archived APY HQ team profiles into the employee directory and preserve Operations Manager coverage when removing a team member
+- [x] Add a compatible Employee Directory route alias and verify every APY HQ navigation entry reaches the directory without a 404 page
+- [x] Browser-verify the Employee Directory by following the actual APY HQ navigation entry rather than only by direct URL
+- [x] Verify the `/admin/employee-directory` compatibility path loads the backfilled Employee Directory without a 404 response
+- [x] Verify the registered Employee Directory route loads 19 backfilled records with active and inactive employment history
+- [x] Verify the existing Private Event Inquiries workflow loads after the HST calculation update without creating or sending anything
 - [x] Synchronize the validated APY HQ individual staff messaging update to the connected GitHub main branch
 - [x] Remove any residual merge-conflict markers from the synchronized staff access files and revalidate the build
 - [x] Add a safe one-at-a-time messaging action for an individual assigned class staff member within APY HQ staffing context

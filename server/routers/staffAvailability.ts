@@ -454,11 +454,42 @@ export const staffAvailabilityRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const [member] = await db.select({ email: jobApplications.email })
+      const [member] = await db.select({
+        email: jobApplications.email,
+        phone: jobApplications.phone,
+        role: jobApplications.role,
+        location: jobApplications.location,
+        isTeamMember: jobApplications.isTeamMember,
+        deletedAt: jobApplications.deletedAt,
+      })
         .from(jobApplications)
         .where(eq(jobApplications.id, input.id))
         .limit(1);
       if (!member) throw new Error("Team member not found");
+
+      const [operationsManagersAtLocation, activePuppyMonitorsAtLocation] = await Promise.all([
+        db.select({ id: jobApplications.id }).from(jobApplications).where(and(
+          isNull(jobApplications.deletedAt),
+          eq(jobApplications.isTeamMember, true),
+          eq(jobApplications.role, "Operations Manager"),
+          eq(jobApplications.location, member.location),
+        )),
+        db.select({ id: jobApplications.id }).from(jobApplications).where(and(
+          isNull(jobApplications.deletedAt),
+          eq(jobApplications.isTeamMember, true),
+          eq(jobApplications.role, "Puppy Monitor"),
+          eq(jobApplications.location, member.location),
+        )),
+      ]);
+      validateTeamAssignmentChange({
+        currentRole: member.role,
+        currentLocation: member.location,
+        nextRole: "Inactive",
+        nextLocation: member.location,
+        hasOperationsManagerAtNextLocation: operationsManagersAtLocation.some((manager) => manager.id !== input.id),
+        hasOtherOperationsManagerAtCurrentLocation: operationsManagersAtLocation.some((manager) => manager.id !== input.id),
+        hasActivePuppyMonitorsAtCurrentLocation: activePuppyMonitorsAtLocation.length > 0,
+      });
 
       const removedAt = new Date();
       await db.transaction(async (tx) => {
@@ -482,6 +513,13 @@ export const staffAvailabilityRouter = router({
         const staffUser = await getUserByOpenId(`staff:${member.email}`);
         if (staffUser?.role === "staff") {
           await upsertUser({ openId: `staff:${member.email}`, role: "user" });
+        }
+      }
+      const normalizedPhone = member.phone ? normalizeCanadianPhoneNumber(member.phone) : null;
+      if (normalizedPhone) {
+        const phoneUser = await getUserByOpenId(`staff-phone:${normalizedPhone}`);
+        if (phoneUser?.role === "staff") {
+          await upsertUser({ openId: `staff-phone:${normalizedPhone}`, role: "user" });
         }
       }
       return { success: true };

@@ -12,7 +12,7 @@ describe("private event commercial controls", () => {
 
   it("extracts the HST portion from an all-in price", () => {
     expect(calculatePrivateEventPrice(1130, "all_in")).toEqual({
-      basePriceCents: 113000,
+      basePriceCents: 100000,
       hstCents: 13000,
       totalCents: 113000,
     });

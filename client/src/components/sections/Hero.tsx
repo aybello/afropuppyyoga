@@ -53,7 +53,7 @@ export default function Hero() {
 
   return (
     <section id="home" className="relative min-h-screen flex flex-col">
-      {/* The same CDN image is used as the first-paint background and visual layer. This avoids showing a coloured placeholder while the hero loads. */}
+      {/* The managed image is used as the first-paint background and visual layer; the CDN is only a recovery fallback. */}
       <div
         className="absolute inset-0 overflow-hidden bg-black"
         style={{

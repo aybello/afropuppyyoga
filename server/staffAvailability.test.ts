@@ -95,6 +95,18 @@ describe("direct team-member validation", () => {
     })).not.toThrow();
   });
 
+  it("does not permit removing the sole Operations Manager from a location with active Puppy Monitors", () => {
+    expect(() => validateTeamAssignmentChange({
+      currentRole: "Operations Manager",
+      currentLocation: "KW",
+      nextRole: "Inactive",
+      nextLocation: "KW",
+      hasOperationsManagerAtNextLocation: false,
+      hasOtherOperationsManagerAtCurrentLocation: false,
+      hasActivePuppyMonitorsAtCurrentLocation: true,
+    })).toThrow("Assign another Operations Manager");
+  });
+
   it("accepts only an explicit staff-profile activity state", () => {
     expect(teamMemberActivitySchema.parse({ id: 42, isActive: false })).toEqual({ id: 42, isActive: false });
     expect(() => teamMemberActivitySchema.parse({ id: 0, isActive: true })).toThrow();
