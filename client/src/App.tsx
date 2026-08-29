@@ -71,7 +71,6 @@ function PixelPageView() {
 
 function Router() {
   const [location] = useLocation();
-
   return (
     <Suspense fallback={location === "/" ? <HomePageLoader /> : <PageLoader />}>
       <PixelPageView />

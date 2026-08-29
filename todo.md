@@ -1,7 +1,13 @@
 
 ## Current Staff Access Investigation
-- [x] Review and safely integrate the newly announced APY updates without regressing the published homepage, APY HQ access, Employee Directory, staffing continuity, or operational workflows
-- [x] Selectively integrate and validate the homepage loading-spinner removal without reverting the verified production runtime exclusion
+- [ ] Add and verify a deployment-visible light hero override that takes precedence over the legacy dark fallback during homepage initialization
+- [x] Eliminate the visible dark intermediate homepage state before the public hero renders without reintroducing the generic spinner or enlarging the initial bundle unnecessarily
+- [x] Confirm the local dark frame occurs while `#root` is empty and `home-pending` is active; its computed fallback is light image-backed, so the remaining issue is the visible pending period rather than APY content styling
+- [x] Verify locally that the first visible homepage frame is the actual warm hero image, not a dark shell or generic spinner
+- [x] Verify after a clean development-service restart that the initial local public frame is the warm hero image rather than the former dark fallback
+- [ ] Publish the light first-paint homepage correction and verify on both live domains that the dark screen is gone while the generic spinner does not return
+- [ ] Confirm after a clean restart that the homepage hydrates from the light hero-backed pending state into normal content rather than remaining an empty root
+- [x] Diagnose and remove the loading indicator still visible on the live public homepage without masking an actual failure or regressing APY safeguards
 - [x] Review and safely integrate the newly announced APY update without regressing published Employee Directory, APY HQ access, staffing-continuity, or public-site safeguards
 - [x] Integrate and validate the measured homepage hero first-paint improvement without changing Luma freshness, APY HQ workflows, or hosting and DNS choices
 - [x] Correct the homepage update so the production build actually excludes development editor instrumentation and verify the resulting HTML size
