@@ -6,7 +6,10 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import viteConfig from "../../vite.config";
 import { seoRenderMiddleware } from "../seoRenderer";
-import { getDocumentCacheControl } from "../publicDocumentCache";
+import {
+  getDocumentCacheControl,
+  getDocumentSurrogateCacheControl,
+} from "../publicDocumentCache";
 
 export async function setupVite(app: Express, server: Server) {
   const serverOptions = {
@@ -80,6 +83,7 @@ export function serveStatic(app: Express) {
       setHeaders: (res, filePath) => {
         if (filePath.endsWith(".html")) {
           res.setHeader("Cache-Control", getDocumentCacheControl("/"));
+          res.setHeader("Surrogate-Control", getDocumentSurrogateCacheControl("/"));
         }
       },
     })
@@ -90,6 +94,10 @@ export function serveStatic(app: Express) {
     // Let the SEO renderer intercept crawler requests
     seoRenderMiddleware(req, res, () => {
       res.setHeader("Cache-Control", getDocumentCacheControl(req.path));
+      res.setHeader(
+        "Surrogate-Control",
+        getDocumentSurrogateCacheControl(req.path)
+      );
       res.sendFile(path.resolve(distPath, "index.html"));
     });
   });

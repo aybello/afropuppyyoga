@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   getDocumentCacheControl,
+  getDocumentSurrogateCacheControl,
   PRIVATE_DOCUMENT_CACHE_CONTROL,
+  PRIVATE_SURROGATE_CACHE_CONTROL,
   PUBLIC_DOCUMENT_CACHE_CONTROL,
+  PUBLIC_SURROGATE_CACHE_CONTROL,
 } from "./publicDocumentCache";
 
 describe("public document cache policy", () => {
@@ -13,6 +16,9 @@ describe("public document cache policy", () => {
     );
     expect(getDocumentCacheControl("/careers?source=instagram")).toBe(
       PUBLIC_DOCUMENT_CACHE_CONTROL
+    );
+    expect(getDocumentSurrogateCacheControl("/")).toBe(
+      PUBLIC_SURROGATE_CACHE_CONTROL
     );
   });
 
@@ -28,6 +34,9 @@ describe("public document cache policy", () => {
       "/review/abc123",
     ].forEach(pathname => {
       expect(getDocumentCacheControl(pathname)).toBe(PRIVATE_DOCUMENT_CACHE_CONTROL);
+      expect(getDocumentSurrogateCacheControl(pathname)).toBe(
+        PRIVATE_SURROGATE_CACHE_CONTROL
+      );
     });
   });
 });

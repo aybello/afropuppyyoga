@@ -4,6 +4,8 @@
 - [x] Cache only anonymous public HTML at the edge with stale-while-revalidate, while retaining no-store behavior for APY HQ, staff, signing, and API routes
 - [x] Keep the staff invoice-submission route out of the shared public document cache
 - [ ] Verify production public-page cache headers and private-route exclusions after publishing the cache-first path
+- [ ] Add and verify an upstream shared-cache directive because production currently overwrites public Cache-Control with no-store
+- [x] Add and locally validate the upstream public-document shared-cache directive while preserving private no-store boundaries
 - [x] Verify the freshly deployed public homepage and remove the avoidable live-calendar, below-the-fold, and off-screen asset work from first load
 - [x] Diagnose the fresh-production application-shell delay as Autoscale startup before the static homepage hero paints
 - [x] Measure the reported APY page-load delay using page, API, and database timing evidence
