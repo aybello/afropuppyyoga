@@ -1,5 +1,14 @@
 
 ## Current Staff Access Investigation
+- [x] Add unified owner-controlled editing for APY HQ staff profile details, role, location assignment, and availability through the connected leave workflow
+- [x] Confirm active/inactive team-profile controls follow the APY owner-and-Operations-Manager access model and remain unavailable to other roles
+- [x] Verify inactive APY HQ profiles are shown separately from active staffing and are excluded from weekend coverage
+- [x] Prevent an edit from leaving an active Puppy Monitor location without an Operations Manager
+- [x] Add a clear Staff Access link to the existing Team & Availability editor so profile editing is discoverable from APY HQ navigation
+- [x] Verify Staff Access now links directly to the connected Team & Availability editing workflow
+- [x] Verify the loaded Team & Availability board remains connected to weekend coverage and class staffing after adding profile-editing support
+- [x] Verify an existing team member now exposes an Edit team details action alongside their leave and removal controls
+- [x] Verify the connected weekend coverage panel remains available alongside the new team profile controls
 - [x] Create and validate a polished AfroPuppyYoga funding pitch deck from the uploaded source deck and current business evidence
 - [x] Review the newly available Codex update before any integration or deployment decision; retain the stronger current owner-session fallback and staff return-path behavior
 - [x] Diagnose and restore reliable owner and staff access to the APY HQ staff portal

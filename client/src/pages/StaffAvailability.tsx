@@ -2,7 +2,7 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Link } from "wouter";
-import { ArrowLeft, Calendar, CalendarCheck, ChevronLeft, ChevronRight, Mail, MessageSquare, Plus, Send, Trash2, Users, X } from "lucide-react";
+import { ArrowLeft, Calendar, CalendarCheck, ChevronLeft, ChevronRight, Mail, MessageSquare, Pencil, Plus, Power, Send, Trash2, Users, X } from "lucide-react";
 
 const LOCATIONS = ["KW", "OAK", "HAM"] as const;
 const LOCATION_LABELS: Record<string, string> = { KW: "Kitchener", OAK: "Oakville", HAM: "Hamilton", CENTRAL: "APY-wide" };
@@ -19,12 +19,26 @@ const LEAVE_LABELS: Record<string, string> = { vacation: "🌴 Vacation", sick: 
 
 type TeamRole = "Yoga Instructor" | "Operations Manager" | "Puppy Monitor" | "Puppy Specialist" | "BDR" | "Social Media Specialist";
 type TeamLocation = "KW" | "OAK" | "HAM" | "CENTRAL";
-type StaffMember = { id: number; name: string; email: string; phone: string | null; role: string; location: string; appStatus: string };
+type StaffMember = { id: number; name: string; email: string; phone: string | null; role: string; location: string; appStatus: string; archivedAt: Date | null };
 type WeekendShift = { date: string; dayLabel: string; shortLabel: string; location: "KW" | "OAK" | "HAM"; role: "Operations Manager" | "Yoga Instructor"; primary: Pick<StaffMember, "id" | "name" | "role" | "location"> | null; primaryLeave: { leaveType: string } | null; coverage: { coverageStaffId: number | null; coverageStaffName: string | null; notes: string | null } | null; candidates: Pick<StaffMember, "id" | "name" | "role" | "location">[]; status: "available" | "away" | "covered" | "unassigned" };
 type ScheduledClassStaffing = { id: number; classDate: string; location: "Kitchener" | "Hamilton" | "Oakville"; breed: string; breederName: string; startTime: string; endTime: string; staffing: { operationsManager: { id: number; name: string } | null; yogaInstructor: { id: number; name: string } | null; assignedPuppyMonitors: { id: number; staffId: number; name: string }[]; eligiblePuppyMonitors: { id: number; name: string }[]; gaps: { operationsManager: boolean; yogaInstructor: boolean; puppyMonitors: number }; fullyStaffed: boolean } };
 
 function isOnLeave(staffId: number, leaves: any[], today: string) {
   return leaves.find((l) => l.staffId === staffId && l.startDate <= today && l.endDate >= today);
+}
+
+function normalizeTeamRole(role: string): TeamRole {
+  const normalized = role.toLowerCase().replaceAll("_", " ");
+  const match = (["Yoga Instructor", "Operations Manager", "Puppy Monitor", "Puppy Specialist", "BDR", "Social Media Specialist"] as TeamRole[])
+    .find((candidate) => candidate.toLowerCase() === normalized);
+  return match ?? "Puppy Monitor";
+}
+
+function normalizeTeamLocation(location: string): TeamLocation {
+  if (location === "Kitchener") return "KW";
+  if (location === "Oakville") return "OAK";
+  if (location === "Hamilton") return "HAM";
+  return (["KW", "OAK", "HAM", "CENTRAL"] as TeamLocation[]).includes(location as TeamLocation) ? location as TeamLocation : "CENTRAL";
 }
 
 // ─── Compact person chip ──────────────────────────────────────────────
@@ -104,6 +118,7 @@ export default function StaffAvailabilityPage() {
 
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
+  const [showEditMember, setShowEditMember] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
   const [selectedWeekendShift, setSelectedWeekendShift] = useState<WeekendShift | null>(null);
   const [coverageDraft, setCoverageDraft] = useState({ coverageStaffId: "", notes: "" });
@@ -112,11 +127,14 @@ export default function StaffAvailabilityPage() {
   const notificationPreview = trpc.puppySchedule.eventNotificationPreview.useQuery({ scheduleId: selectedClassStaffing?.id ?? 0 }, { enabled: Boolean(selectedClassStaffing) });
   const [leaveForm, setLeaveForm] = useState({ leaveType: "vacation" as "vacation" | "sick" | "personal" | "leave" | "unavailable", startDate: today, endDate: today, notes: "" });
   const [newMember, setNewMember] = useState<{ name: string; email: string; phone: string; role: TeamRole; location: TeamLocation }>({ name: "", email: "", phone: "", role: "Operations Manager", location: "KW" });
+  const [editMember, setEditMember] = useState<{ id: number; name: string; email: string; phone: string; role: TeamRole; location: TeamLocation }>({ id: 0, name: "", email: "", phone: "", role: "Operations Manager", location: "KW" });
 
   const refreshAvailability = () => { refetch(); weekendCoverage.refetch(); classStaffing.refetch(); };
   const addLeave = trpc.staffAvailability.addLeave.useMutation({ onSuccess: () => { refreshAvailability(); toast.success("Leave added"); setShowLeaveModal(false); } });
   const deleteLeave = trpc.staffAvailability.deleteLeave.useMutation({ onSuccess: () => { refreshAvailability(); toast.success("Leave removed"); } });
   const createTeamMember = trpc.staffAvailability.createTeamMember.useMutation({ onSuccess: () => { refreshAvailability(); toast.success("Team member added"); setShowAddMember(false); setNewMember({ name: "", email: "", phone: "", role: "Operations Manager", location: "KW" }); }, onError: (e) => toast.error(e.message) });
+  const updateTeamMember = trpc.staffAvailability.updateTeamMember.useMutation({ onSuccess: () => { refreshAvailability(); toast.success("Team member updated"); setShowEditMember(false); setSelectedStaff(null); }, onError: (e) => toast.error(e.message) });
+  const setTeamMemberActive = trpc.staffAvailability.setTeamMemberActive.useMutation({ onSuccess: (_result, input) => { refreshAvailability(); toast.success(input.isActive ? "Team member reactivated" : "Team member set inactive"); setShowLeaveModal(false); setSelectedStaff(null); }, onError: (e) => toast.error(e.message) });
   const removeTeamMember = trpc.staffAvailability.removeTeamMember.useMutation({ onSuccess: () => { refreshAvailability(); toast.success("Removed"); setShowLeaveModal(false); setSelectedStaff(null); }, onError: (e) => toast.error(e.message) });
   const markWeekendAway = trpc.staffAvailability.addLeave.useMutation({ onSuccess: () => { refreshAvailability(); toast.success("Saved"); setSelectedWeekendShift(null); } });
   const assignWeekendCoverage = trpc.staffAvailability.assignWeekendCoverage.useMutation({ onSuccess: () => { refreshAvailability(); toast.success("Coverage updated"); setSelectedWeekendShift(null); }, onError: (e) => toast.error(e.message) });
@@ -125,6 +143,7 @@ export default function StaffAvailabilityPage() {
   const notifyEventTeam = trpc.puppySchedule.notifyEventTeam.useMutation({ onSuccess: (result) => { notificationPreview.refetch(); const delivered = result.results.filter((item) => item.emailStatus === "sent" || item.smsStatus === "sent").length; toast.success(`Schedule sent to ${delivered} team members`); }, onError: (e) => toast.error(e.message) });
 
   const staff = (data?.staff ?? []) as StaffMember[];
+  const inactiveStaff = (data?.inactiveStaff ?? []) as StaffMember[];
   const leaves = data?.leaves ?? [];
   const matchesRole = (s: StaffMember, role: string) => s.role === role || s.role === role.toLowerCase().replaceAll(" ", "_");
   const byLocationAndRole = (loc: string, role: string) => staff.filter((s) => s.location === loc && matchesRole(s, role));
@@ -132,6 +151,12 @@ export default function StaffAvailabilityPage() {
   const getStatus = (id: number) => { const l = isOnLeave(id, leaves, today); return l ? { label: LEAVE_LABELS[l.leaveType] ?? l.leaveType, color: LEAVE_COLORS[l.leaveType] ?? "#6B7280" } : null; };
   const openStaff = (s: StaffMember) => { setSelectedStaff(s); setShowLeaveModal(true); };
   const setRole = (role: TeamRole) => setNewMember((m) => ({ ...m, role, location: CENTRAL_ROLES.includes(role as any) ? "CENTRAL" : m.location === "CENTRAL" ? "KW" : m.location }));
+  const openEditStaff = (s: StaffMember) => {
+    setEditMember({ id: s.id, name: s.name, email: s.email ?? "", phone: s.phone ?? "", role: normalizeTeamRole(s.role), location: normalizeTeamLocation(s.location) });
+    setShowLeaveModal(false);
+    setShowEditMember(true);
+  };
+  const setEditRole = (role: TeamRole) => setEditMember((m) => ({ ...m, role, location: CENTRAL_ROLES.includes(role as any) ? "CENTRAL" : m.location === "CENTRAL" ? "KW" : m.location }));
   const openWeekendShift = (s: WeekendShift) => { setSelectedWeekendShift(s); setCoverageDraft({ coverageStaffId: s.coverage?.coverageStaffId ? String(s.coverage.coverageStaffId) : "", notes: s.coverage?.notes ?? "" }); };
   const openClassStaffing = (c: ScheduledClassStaffing) => { setSelectedClassStaffing(c); setSelectedPuppyMonitor(""); };
 
@@ -284,6 +309,8 @@ export default function StaffAvailabilityPage() {
                     );
                   })}
                 </div>
+
+                {inactiveStaff.length > 0 && <section className="rounded-2xl border border-dashed border-[#DCCAD3] bg-[#FFF9FB] p-4"><div className="mb-3 flex items-center justify-between"><div><p className="text-[10px] font-bold uppercase tracking-wider text-[#8B2252]">Inactive APY HQ profiles</p><p className="mt-0.5 text-xs text-[#7A5A6A]">Inactive people cannot access APY HQ or appear in staffing coverage. Reactivate only when they return.</p></div><span className="rounded-full bg-[#8B2252]/10 px-2.5 py-1 text-xs font-bold text-[#8B2252]">{inactiveStaff.length}</span></div><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{inactiveStaff.map((s) => <PersonChip key={s.id} staff={s} role={normalizeTeamRole(s.role)} status={{ label: "Inactive", color: "#7A5A6A" }} onClick={() => openStaff(s)} />)}</div></section>}
               </div>
             )}
           </div>
@@ -294,12 +321,23 @@ export default function StaffAvailabilityPage() {
 
       {/* Leave / Remove modal */}
       {showLeaveModal && selectedStaff && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"><div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"><div className="mb-4 flex items-start justify-between"><div><h3 className="text-lg font-bold text-[#1A0A12]">{selectedStaff.name}</h3><p className="text-xs text-[#7A5A6A]">{selectedStaff.role} · {LOCATION_LABELS[selectedStaff.location] ?? selectedStaff.location}</p></div><button onClick={() => setShowLeaveModal(false)} className="text-[#C4A0B0] hover:text-[#8B2252]"><X size={18} /></button></div>
+        <button onClick={() => openEditStaff(selectedStaff)} className="mb-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#E5C7D4] bg-[#FFF5F8] py-2.5 text-sm font-bold text-[#8B2252] hover:bg-[#FBE9EF]"><Pencil size={14} /> Edit team details</button>
         <div className="space-y-3">
           <select value={leaveForm.leaveType} onChange={(e) => setLeaveForm((f) => ({ ...f, leaveType: e.target.value as typeof f.leaveType }))} className="w-full rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm">{Object.entries(LEAVE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
           <div className="grid grid-cols-2 gap-3"><input type="date" value={leaveForm.startDate} onChange={(e) => setLeaveForm((f) => ({ ...f, startDate: e.target.value }))} className="rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm" /><input type="date" value={leaveForm.endDate} onChange={(e) => setLeaveForm((f) => ({ ...f, endDate: e.target.value }))} className="rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm" /></div>
           <textarea value={leaveForm.notes} onChange={(e) => setLeaveForm((f) => ({ ...f, notes: e.target.value }))} rows={2} placeholder="Notes (optional)" className="w-full resize-none rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm" />
         </div>
-        <div className="mt-5 grid grid-cols-2 gap-3"><button onClick={() => addLeave.mutate({ staffId: selectedStaff.id, staffName: selectedStaff.name, ...leaveForm })} disabled={addLeave.isPending} className="rounded-xl bg-[#8B2252] py-2.5 text-sm font-bold text-white hover:bg-[#6B1A3E] disabled:opacity-50">{addLeave.isPending ? "Saving…" : "Save Leave"}</button><button onClick={() => { if (confirm(`Remove ${selectedStaff.name}?`)) removeTeamMember.mutate({ id: selectedStaff.id }); }} disabled={removeTeamMember.isPending} className="inline-flex items-center justify-center gap-1 rounded-xl border border-red-200 bg-red-50 py-2.5 text-sm font-bold text-red-700 hover:bg-red-100 disabled:opacity-50"><Trash2 size={13} />Remove</button></div>
+        <div className="mt-5 grid grid-cols-3 gap-3"><button onClick={() => addLeave.mutate({ staffId: selectedStaff.id, staffName: selectedStaff.name, ...leaveForm })} disabled={addLeave.isPending || Boolean(selectedStaff.archivedAt)} className="rounded-xl bg-[#8B2252] py-2.5 text-sm font-bold text-white hover:bg-[#6B1A3E] disabled:opacity-50">{addLeave.isPending ? "Saving…" : "Save Leave"}</button><button onClick={() => { const isActive = Boolean(selectedStaff.archivedAt); if (confirm(`${isActive ? "Reactivate" : "Set inactive"} ${selectedStaff.name}?`)) setTeamMemberActive.mutate({ id: selectedStaff.id, isActive }); }} disabled={setTeamMemberActive.isPending} className="inline-flex items-center justify-center gap-1 rounded-xl border border-[#E5C7D4] bg-[#FFF5F8] py-2.5 text-sm font-bold text-[#8B2252] hover:bg-[#FBE9EF] disabled:opacity-50"><Power size={13} />{selectedStaff.archivedAt ? "Reactivate" : "Set inactive"}</button><button onClick={() => { if (confirm(`Remove ${selectedStaff.name}?`)) removeTeamMember.mutate({ id: selectedStaff.id }); }} disabled={removeTeamMember.isPending} className="inline-flex items-center justify-center gap-1 rounded-xl border border-red-200 bg-red-50 py-2.5 text-sm font-bold text-red-700 hover:bg-red-100 disabled:opacity-50"><Trash2 size={13} />Remove</button></div>
+      </div></div>}
+
+      {/* Team profile editor */}
+      {showEditMember && <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4"><div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"><div className="mb-1 flex items-start justify-between"><div><p className="text-[10px] font-bold uppercase tracking-wider text-[#8B2252]">APY HQ team profile</p><h3 className="text-lg font-bold text-[#1A0A12]">Edit team member</h3></div><button onClick={() => setShowEditMember(false)} className="text-[#C4A0B0] hover:text-[#8B2252]"><X size={18} /></button></div><p className="mb-5 text-xs leading-relaxed text-[#7A5A6A]">Update the person’s saved contact details and APY HQ assignment. Their hiring and access history remains intact.</p>
+        <div className="space-y-3"><input value={editMember.name} onChange={(e) => setEditMember((m) => ({ ...m, name: e.target.value }))} placeholder="Full name" className="w-full rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm" />
+          <div className="grid grid-cols-2 gap-3"><select value={editMember.role} onChange={(e) => setEditRole(e.target.value as TeamRole)} className="rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm"><option>Operations Manager</option><option>Yoga Instructor</option><option>Puppy Monitor</option><option>Puppy Specialist</option><option>BDR</option><option>Social Media Specialist</option></select><select value={editMember.location} onChange={(e) => setEditMember((m) => ({ ...m, location: e.target.value as TeamLocation }))} disabled={CENTRAL_ROLES.includes(editMember.role as any)} className="rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm disabled:opacity-50"><option value="KW">Kitchener</option><option value="OAK">Oakville</option><option value="HAM">Hamilton</option>{CENTRAL_ROLES.includes(editMember.role as any) && <option value="CENTRAL">APY-wide</option>}</select></div>
+          <input value={editMember.email} onChange={(e) => setEditMember((m) => ({ ...m, email: e.target.value }))} type="email" placeholder="Email (optional if phone is added)" className="w-full rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm" />
+          <input value={editMember.phone} onChange={(e) => setEditMember((m) => ({ ...m, phone: e.target.value }))} type="tel" placeholder="Canadian phone (optional if email is added)" className="w-full rounded-lg border border-[#EDE0D8] px-3 py-2 text-sm" />
+          <p className="text-[11px] text-[#7A5A6A]">Keep at least one contact method so this person can use APY HQ access.</p>{editMember.role === "Puppy Monitor" && <p className="rounded-lg border border-[#E6D6F8] bg-[#FAF5FF] px-3 py-2 text-xs font-medium text-[#4C1D95]">Puppy Monitors stay manually managed and require an Operations Manager at this location.</p>}</div>
+        <div className="mt-5 grid grid-cols-2 gap-3"><button onClick={() => setShowEditMember(false)} className="rounded-xl border border-[#EDE0D8] py-2.5 text-sm text-[#7A5A6A] hover:bg-[#FAF5F2]">Cancel</button><button onClick={() => updateTeamMember.mutate(editMember)} disabled={!editMember.name.trim() || (!editMember.email.trim() && !editMember.phone.trim()) || updateTeamMember.isPending} className="rounded-xl bg-[#8B2252] py-2.5 text-sm font-bold text-white hover:bg-[#6B1A3E] disabled:opacity-50">{updateTeamMember.isPending ? "Saving…" : "Save changes"}</button></div>
       </div></div>}
 
       {/* Weekend shift editor */}

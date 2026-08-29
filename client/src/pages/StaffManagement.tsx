@@ -6,6 +6,7 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl, LOGO_URL } from "@/const";
+import { Link } from "wouter";
 import AdminNav from "@/components/AdminNav";
 import { toast } from "sonner";
 import {
@@ -16,6 +17,7 @@ import {
   Clock,
   CheckCircle2,
   UserCog,
+  Users,
   RefreshCw,
 } from "lucide-react";
 import {
@@ -144,14 +146,23 @@ export default function StaffManagement() {
               Manage secure APY HQ access. Email-linked team members use a one-click link; phone-linked team members use a one-time SMS code.
             </p>
           </div>
-          <button
-            onClick={() => setInviteOpen(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 font-body font-semibold text-sm rounded-full text-white transition-all duration-200 hover:-translate-y-0.5 shrink-0"
-            style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}
-          >
-            <UserPlus className="w-4 h-4" />
-            Invite Staff
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/admin/staff-availability"
+              className="inline-flex items-center gap-2 rounded-full border border-[#E5C7D4] bg-white px-4 py-2.5 font-body text-sm font-semibold text-[#8B2252] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#FFF5F8]"
+            >
+              <Users className="h-4 w-4" />
+              Manage Team
+            </Link>
+            <button
+              onClick={() => setInviteOpen(true)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 font-body font-semibold text-sm rounded-full text-white transition-all duration-200 hover:-translate-y-0.5"
+              style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}
+            >
+              <UserPlus className="w-4 h-4" />
+              Invite Staff
+            </button>
+          </div>
         </div>
 
         {/* How it works */}
