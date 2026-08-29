@@ -51,6 +51,14 @@ function PageLoader() {
   );
 }
 
+function HomePageLoader() {
+  return (
+    <div className="min-h-screen bg-transparent" role="status" aria-label="Loading AfroPuppyYoga">
+      <span className="sr-only">Loading AfroPuppyYoga</span>
+    </div>
+  );
+}
+
 function PixelPageView() {
   const { track } = useMetaPixel();
   const [location] = useLocation();
@@ -62,8 +70,10 @@ function PixelPageView() {
 }
 
 function Router() {
+  const [location] = useLocation();
+
   return (
-    <Suspense fallback={<PageLoader />}>
+    <Suspense fallback={location === "/" ? <HomePageLoader /> : <PageLoader />}>
       <PixelPageView />
       <Switch>
         <Route path={"/"} component={Home} />

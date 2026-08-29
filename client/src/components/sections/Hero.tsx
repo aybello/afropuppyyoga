@@ -73,11 +73,13 @@ export default function Hero() {
             loading="eager"
             decoding="sync"
             fetchPriority="high"
+            onLoad={() => document.documentElement.classList.remove("home-pending")}
             onError={() => {
               const fallbackImage = getNextHeroImageOnError(heroImage);
               if (fallbackImage) {
                 setHeroImage(fallbackImage);
               } else {
+                document.documentElement.classList.remove("home-pending");
                 setHeroImageFailed(true);
               }
             }}
