@@ -1,5 +1,9 @@
 
 ## Current Staff Access Investigation
+- [x] Prevent Breeder Schedule class creation from duplicating an existing matching Luma calendar event; reuse the verified event and preserve APY ticket and theme rules
+- [x] Ensure breeder-confirmation rollback never cancels a pre-existing Luma event that was reused by the duplicate guard
+- [x] Validate live-calendar match, no-create behavior, Luma-check failure safety, existing ticket settings, TypeScript, and the full 164-test deterministic suite
+- [ ] Remove the unresolved merge-marker CSS syntax causing local homepage loading to fail, then revalidate the light first-paint path before further publication
 - [ ] Add and verify a deployment-visible light hero override that takes precedence over the legacy dark fallback during homepage initialization
 - [x] Eliminate the visible dark intermediate homepage state before the public hero renders without reintroducing the generic spinner or enlarging the initial bundle unnecessarily
 - [x] Confirm the local dark frame occurs while `#root` is empty and `home-pending` is active; its computed fallback is light image-backed, so the remaining issue is the visible pending period rather than APY content styling

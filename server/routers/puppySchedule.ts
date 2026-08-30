@@ -141,7 +141,7 @@ async function createScheduleRecord(db: ScheduleDb, input: SlotInput) {
     }).$returningId();
     return { success: true, id: inserted?.id, lumaEventUrl: lumaResult?.lumaEventUrl ?? null, lumaSynchronized: Boolean(lumaResult) };
   } catch (error) {
-    if (lumaResult) await setLumaRegistrationOpen(lumaResult.lumaEventId, false).catch(() => undefined);
+    if (lumaResult?.created) await setLumaRegistrationOpen(lumaResult.lumaEventId, false).catch(() => undefined);
     throw error;
   }
 }
@@ -188,7 +188,7 @@ async function updateScheduleRecord(db: ScheduleDb, id: number, fields: Partial<
   try {
     await db.update(puppySchedule).set(update).where(eq(puppySchedule.id, id));
   } catch (error) {
-    if (createdLuma) await setLumaRegistrationOpen(createdLuma.lumaEventId, false).catch(() => undefined);
+    if (createdLuma?.created) await setLumaRegistrationOpen(createdLuma.lumaEventId, false).catch(() => undefined);
     else if (existing.lumaEventId) await updateLumaEventForSchedule(existing.lumaEventId, {
       classDate: existing.classDate,
       location: existing.location,

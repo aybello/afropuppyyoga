@@ -347,7 +347,7 @@ export const breedersRouter = router({
           }
         }
 
-        const provisioned: Array<{ plan: typeof studioPlans[number]; lumaEventId: string | null; lumaEventUrl: string | null }> = [];
+        const provisioned: Array<{ plan: typeof studioPlans[number]; lumaEventId: string | null; lumaEventUrl: string | null; lumaCreated: boolean }> = [];
         try {
           for (const plan of studioPlans) {
             const luma = await createLumaEventForSchedule({
@@ -361,6 +361,7 @@ export const breedersRouter = router({
               plan,
               lumaEventId: luma?.lumaEventId ?? null,
               lumaEventUrl: luma?.lumaEventUrl ?? null,
+              lumaCreated: luma?.created ?? false,
             });
           }
 
@@ -400,7 +401,7 @@ export const breedersRouter = router({
           scheduleCreated = provisioned.length;
         } catch (error) {
           await Promise.all(provisioned
-            .filter(item => item.lumaEventId !== null)
+            .filter(item => item.lumaCreated && item.lumaEventId !== null)
             .map(item => cancelUnpublishedLumaEvent(item.lumaEventId!).catch(cleanupError => {
               console.error(`[Breeder Confirmation] Could not clean up Luma event ${item.lumaEventId}:`, cleanupError);
             })));

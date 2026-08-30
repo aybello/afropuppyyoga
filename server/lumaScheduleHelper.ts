@@ -35,6 +35,13 @@ export type LumaScheduleParams = {
   classType: "regular" | "private";
 };
 
+export type LumaCalendarEvent = {
+  api_id: string;
+  name: string;
+  start_at: string;
+  url?: string;
+};
+
 /**
  * Turn a Toronto wall-clock time into ISO 8601 while respecting EST/EDT.
  * Class times are daytime hours, so they never fall inside the DST transition gap.
@@ -68,6 +75,63 @@ function regularEventFields(params: LumaScheduleParams) {
     timezone: "America/Toronto",
     geo_address_json: { type: "google", place_id: loc.googlePlaceId },
   };
+}
+
+function torontoCalendarDate(isoDateTime: string) {
+  const timestamp = new Date(isoDateTime);
+  if (Number.isNaN(timestamp.getTime())) return null;
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Toronto",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(timestamp);
+  const value = (type: Intl.DateTimeFormatPartTypes) => parts.find(part => part.type === type)?.value;
+  const year = value("year");
+  const month = value("month");
+  const day = value("day");
+  return year && month && day ? `${year}-${month}-${day}` : null;
+}
+
+/**
+ * A public APY class is one calendar event per studio per date, containing all
+ * of that date's APY ticket slots. Breed and individual class slot can change
+ * without creating another event, so they are intentionally not part of the
+ * duplicate key.
+ */
+export function findExistingLumaScheduleEvent(
+  events: LumaCalendarEvent[],
+  params: Pick<LumaScheduleParams, "classDate" | "location" | "classType">
+): { lumaEventId: string; lumaEventUrl: string } | null {
+  if (params.classType !== "regular") return null;
+  const normalizedLocation = params.location.trim().toLocaleLowerCase();
+  const canonicalPrefix = `afropuppyyoga |📍${normalizedLocation} |🐶`;
+  const match = events.find(event => (
+    torontoCalendarDate(event.start_at) === params.classDate &&
+    event.name.trim().toLocaleLowerCase().replace(/\s+/g, " ").startsWith(canonicalPrefix)
+  ));
+  if (!match) return null;
+  return {
+    lumaEventId: match.api_id,
+    lumaEventUrl: match.url?.trim() || `https://lu.ma/${match.api_id}`,
+  };
+}
+
+async function findExistingLumaEventForSchedule(
+  apiKey: string,
+  params: LumaScheduleParams
+) {
+  const after = torontoDateTimeIso(params.classDate, "00:00");
+  const response = await fetch(
+    `${LUMA_BASE}/calendar/list-events?pagination_limit=100&after=${encodeURIComponent(after)}`,
+    { headers: { "x-luma-api-key": apiKey } }
+  );
+  if (!response.ok) {
+    throw new Error(`Luma calendar duplicate check failed (${response.status})`);
+  }
+  const data = await response.json() as { entries?: Array<{ event?: LumaCalendarEvent }> };
+  const events = (data.entries ?? []).flatMap(entry => entry.event ? [entry.event] : []);
+  return findExistingLumaScheduleEvent(events, params);
 }
 
 export async function setLumaRegistrationOpen(eventId: string, registrationOpen: boolean) {
@@ -189,7 +253,7 @@ We do our best to ensure that the puppies advertised for each class are the ones
 
 Thanks for your understanding and continued support 🐶🧘🏽‍♀️💛`;
 
-export async function createLumaEventForSchedule(params: LumaScheduleParams): Promise<{ lumaEventId: string; lumaEventUrl: string } | null> {
+export async function createLumaEventForSchedule(params: LumaScheduleParams): Promise<{ lumaEventId: string; lumaEventUrl: string; created: boolean } | null> {
   // Private bookings have their own approval/booking workflow. Never expose
   // them as a public regular-class event with public ticket types.
   if (params.classType !== "regular") return null;
@@ -209,6 +273,15 @@ export async function createLumaEventForSchedule(params: LumaScheduleParams): Pr
   const ticketTypes = buildRegularClassTicketTypes();
 
   try {
+    // Always query Luma before creating a public page. The database collision
+    // check only covers APY HQ rows and cannot see a class added directly in
+    // Luma, so it cannot safely prevent calendar duplicates on its own.
+    const existing = await findExistingLumaEventForSchedule(apiKey, params);
+    if (existing) {
+      console.log(`[LumaSchedule] Reusing existing Luma event: ${existing.lumaEventUrl} (${eventFields.name})`);
+      return { ...existing, created: false };
+    }
+
     // 1. Create the event
     const createRes = await fetch(`${LUMA_BASE}/events/create`, {
       method: "POST",
@@ -281,7 +354,7 @@ export async function createLumaEventForSchedule(params: LumaScheduleParams): Pr
     } catch { /* fallback URL is fine */ }
 
     console.log(`[LumaSchedule] Created Luma event: ${lumaEventUrl} (${eventFields.name})`);
-    return { lumaEventId, lumaEventUrl };
+    return { lumaEventId, lumaEventUrl, created: true };
   } catch (err) {
     console.error("[LumaSchedule] Unexpected error:", err);
     return null;

@@ -43,20 +43,26 @@ describe("regular class Luma event defaults", () => {
   it("sends the required registration, appearance, and paid-ticket settings to Luma on creation", async () => {
     process.env.LUMA_API_KEY = "test-key";
     const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [] }) })
       .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "evt_test" }) })
       .mockResolvedValueOnce({ ok: true, json: async () => ({ url: "https://luma.com/test-event" }) });
     vi.stubGlobal("fetch", fetchMock);
 
-    await createLumaEventForSchedule({
+    await expect(createLumaEventForSchedule({
       classDate: "2026-11-14",
       location: "Kitchener",
       breed: "Cavapoos",
       startTime: "09:00",
       endTime: "15:00",
       classType: "regular",
+    })).resolves.toEqual({
+      lumaEventId: "evt_test",
+      lumaEventUrl: "https://luma.com/test-event",
+      created: true,
     });
 
-    const createPayload = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+    expect(String(fetchMock.mock.calls[0][0])).toContain("/calendar/list-events");
+    const createPayload = JSON.parse(fetchMock.mock.calls[1][1].body as string);
     expect(createPayload).toMatchObject(REGULAR_CLASS_LUMA_EVENT_DEFAULTS);
     expect(createPayload.ticket_types).toEqual(buildRegularClassTicketTypes());
     expect(createPayload.ticket_types.some((ticket: { name: string }) => ticket.name === "Standard")).toBe(false);
