@@ -1002,3 +1002,4 @@
 - [x] Add regression coverage for paginated contact and guest retrieval, guest exclusion, duplicate suppression, long invite URLs, empty audiences, and reuse safety
 - [x] Revalidate and publish the class-creation invitation workflow without creating a test event or sending a live communication
 - [ ] Monitor the first unattended Monday/Thursday 10:00 AM ET Invited-only reminder run; the schedule remains configured but its persistent-session reauthentication behavior is not yet verified
+- [x] Enable and attach the owner-approved secure browser connection to the existing Luma reminder schedule without manually triggering a promotion
