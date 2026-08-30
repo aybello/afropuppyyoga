@@ -21,5 +21,7 @@ describe("homepage first paint", () => {
     expect(indexSource.lastIndexOf("background-image: url")).toBeGreaterThan(
       indexSource.lastIndexOf("linear-gradient(to top")
     );
+    expect(indexSource).not.toContain("background-color: #1a0a12");
+    expect(indexSource).not.toContain("rgba(0, 0, 0, 0.8)");
   });
 });
