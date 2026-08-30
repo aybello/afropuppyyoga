@@ -1,16 +1,21 @@
 
 ## Current Staff Access Investigation
+- [x] After a clean development-service restart, verify the homepage hydrates from the light hero-backed pending state into the full page without CSS or Vite transform errors
+- [x] Record deterministic local browser and console evidence for the clean first-paint hydration check
+- [x] Remove the development-only per-request `/src/main.tsx?v=…` rewrite that causes the custom Vite fallback to serve index HTML instead of the client module
+- [x] Resolve the Vite configuration function before creating the development middleware, preserving the `client` root so `/src/main.tsx` is transformed rather than served by the SPA fallback
+- [x] Capture the current clean-restart browser result: the warm first-paint hero renders locally, but the root still had not hydrated into visible page controls by the follow-up check
 - [x] Prevent Breeder Schedule class creation from duplicating an existing matching Luma calendar event; reuse the verified event and preserve APY ticket and theme rules
 - [x] Ensure breeder-confirmation rollback never cancels a pre-existing Luma event that was reused by the duplicate guard
 - [x] Validate live-calendar match, no-create behavior, Luma-check failure safety, existing ticket settings, TypeScript, and the full 164-test deterministic suite
-- [ ] Remove the unresolved merge-marker CSS syntax causing local homepage loading to fail, then revalidate the light first-paint path before further publication
-- [ ] Add and verify a deployment-visible light hero override that takes precedence over the legacy dark fallback during homepage initialization
+- [x] Remove the stale local CSS transform error, confirm no merge markers remain, and revalidate the light first-paint path
+- [x] Add and verify a deployment-visible light hero override that takes precedence over the legacy dark fallback during homepage initialization
 - [x] Eliminate the visible dark intermediate homepage state before the public hero renders without reintroducing the generic spinner or enlarging the initial bundle unnecessarily
 - [x] Confirm the local dark frame occurs while `#root` is empty and `home-pending` is active; its computed fallback is light image-backed, so the remaining issue is the visible pending period rather than APY content styling
 - [x] Verify locally that the first visible homepage frame is the actual warm hero image, not a dark shell or generic spinner
 - [x] Verify after a clean development-service restart that the initial local public frame is the warm hero image rather than the former dark fallback
-- [ ] Publish the light first-paint homepage correction and verify on both live domains that the dark screen is gone while the generic spinner does not return
-- [ ] Confirm after a clean restart that the homepage hydrates from the light hero-backed pending state into normal content rather than remaining an empty root
+- [x] Publish the light first-paint homepage correction and verify on both live domains that the dark screen is gone while the generic spinner does not return
+- [x] Confirm after a clean restart that the homepage hydrates from the light hero-backed pending state into normal content rather than remaining an empty root
 - [x] Diagnose and remove the loading indicator still visible on the live public homepage without masking an actual failure or regressing APY safeguards
 - [x] Review and safely integrate the newly announced APY update without regressing published Employee Directory, APY HQ access, staffing-continuity, or public-site safeguards
 - [x] Integrate and validate the measured homepage hero first-paint improvement without changing Luma freshness, APY HQ workflows, or hosting and DNS choices
