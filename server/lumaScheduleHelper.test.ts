@@ -40,6 +40,27 @@ describe("regular class Luma event defaults", () => {
     expect(tickets.some((ticket) => ticket.name.includes("Mat Rental"))).toBe(true);
   });
 
+  it("uses the approved conservative 4/3/1/7 Fall ladder by location", () => {
+    const paidTicketDetails = (location: "Kitchener" | "Hamilton" | "Oakville") =>
+      buildRegularClassTicketTypes(location)
+        .filter((ticket) => !ticket.name.includes("Mat Rental"))
+        .map((ticket) => ({ name: ticket.name.replace(/^(10AM|11:30AM|1:30PM) /, ""), cents: ticket.cents, maxCapacity: ticket.max_capacity }));
+
+    expect(paidTicketDetails("Kitchener").slice(0, 4)).toEqual([
+      { name: "Early Bird 🐣❤️", cents: 5600, maxCapacity: 4 },
+      { name: "Bring a Friend 👯‍♀️", cents: 10800, maxCapacity: 3 },
+      { name: "Group of 3 👯‍♀️", cents: 15600, maxCapacity: 1 },
+      { name: "Regular", cents: 5800, maxCapacity: 7 },
+    ]);
+    expect(paidTicketDetails("Hamilton").slice(0, 4)).toEqual(paidTicketDetails("Kitchener").slice(0, 4));
+    expect(paidTicketDetails("Oakville").slice(0, 4)).toEqual([
+      { name: "Early Bird 🐣❤️", cents: 6100, maxCapacity: 4 },
+      { name: "Bring a Friend 👯‍♀️", cents: 11800, maxCapacity: 3 },
+      { name: "Group of 3 👯‍♀️", cents: 17100, maxCapacity: 1 },
+      { name: "Regular", cents: 6300, maxCapacity: 7 },
+    ]);
+  });
+
   it("sends the required registration, appearance, and paid-ticket settings to Luma on creation", async () => {
     process.env.LUMA_API_KEY = "test-key";
     const fetchMock = vi.fn()
@@ -64,7 +85,7 @@ describe("regular class Luma event defaults", () => {
     expect(String(fetchMock.mock.calls[0][0])).toContain("/calendar/list-events");
     const createPayload = JSON.parse(fetchMock.mock.calls[1][1].body as string);
     expect(createPayload).toMatchObject(REGULAR_CLASS_LUMA_EVENT_DEFAULTS);
-    expect(createPayload.ticket_types).toEqual(buildRegularClassTicketTypes());
+    expect(createPayload.ticket_types).toEqual(buildRegularClassTicketTypes("Kitchener"));
     expect(createPayload.ticket_types.some((ticket: { name: string }) => ticket.name === "Standard")).toBe(false);
     expect(createPayload.start_at).toBe("2026-11-14T10:00:00-05:00");
     expect(createPayload.end_at).toBe("2026-11-14T14:30:00-05:00");

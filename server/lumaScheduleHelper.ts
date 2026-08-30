@@ -11,8 +11,8 @@
 import {
   APY_MAT_RENTAL_TICKET,
   APY_REGULAR_CLASS_LUMA_PREVIEW,
-  APY_REGULAR_CLASS_TICKET_OPTIONS,
   APY_REGULAR_CLASS_TIME_SLOTS,
+  getRegularClassTicketOptions,
 } from "@shared/lumaClassConfig";
 
 const LUMA_BASE = "https://public-api.luma.com/v1";
@@ -203,13 +203,13 @@ type LumaTicketType = {
  * free Standard ticket, so newly scheduled breeder classes only show APY's
  * actual purchasable options.
  */
-export function buildRegularClassTicketTypes(): LumaTicketType[] {
+export function buildRegularClassTicketTypes(location?: string): LumaTicketType[] {
   const tickets: LumaTicketType[] = [
     { name: APY_MAT_RENTAL_TICKET.name, type: "paid", cents: APY_MAT_RENTAL_TICKET.cents, currency: "cad" },
   ];
 
   for (const slot of APY_REGULAR_CLASS_TIME_SLOTS) {
-    for (const option of APY_REGULAR_CLASS_TICKET_OPTIONS) {
+    for (const option of getRegularClassTicketOptions(location)) {
       tickets.push({
         name: `${slot.label} ${option.suffix}`,
         type: "paid",
@@ -270,7 +270,7 @@ export async function createLumaEventForSchedule(params: LumaScheduleParams): Pr
     console.warn(`[LumaSchedule] ${error instanceof Error ? error.message : "Invalid event settings"} — skipping`);
     return null;
   }
-  const ticketTypes = buildRegularClassTicketTypes();
+  const ticketTypes = buildRegularClassTicketTypes(params.location);
 
   try {
     // Always query Luma before creating a public page. The database collision

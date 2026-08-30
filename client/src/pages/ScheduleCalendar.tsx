@@ -10,8 +10,8 @@ import { trpc } from "@/lib/trpc";
 import {
   APY_MAT_RENTAL_TICKET,
   APY_REGULAR_CLASS_LUMA_PREVIEW,
-  APY_REGULAR_CLASS_TICKET_OPTIONS,
   APY_REGULAR_CLASS_TIME_SLOTS,
+  getRegularClassTicketOptions,
 } from "@shared/lumaClassConfig";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -171,6 +171,8 @@ const EMPTY_FORM = {
 type ScheduleForm = typeof EMPTY_FORM;
 
 function LumaClassPreviewCard({ form }: { form: ScheduleForm }) {
+  const ticketOptions = getRegularClassTicketOptions(form.location);
+  const pricingLabel = form.location === "Oakville" ? "Oakville Fall ladder" : "Kitchener/Hamilton Fall ladder";
   const eventName = form.location && form.breed
     ? `AfroPuppyYoga | 📍${form.location} | 🐶${form.breed}`
     : "AfroPuppyYoga | 📍Location | 🐶Breed";
@@ -224,7 +226,7 @@ function LumaClassPreviewCard({ form }: { form: ScheduleForm }) {
             <p className="font-body text-xs font-bold text-[#3D1A2E]">Tickets that will be created</p>
           </div>
           <p className="font-body text-[11px] leading-relaxed text-[#6B4C3B]">
-            {APY_REGULAR_CLASS_TIME_SLOTS.map((slot) => slot.label).join(", ")}: {APY_REGULAR_CLASS_TICKET_OPTIONS.map((option) => `${option.label} ${option.displayPrice}`).join(" · ")}. {APY_MAT_RENTAL_TICKET.name.replace(" 🧘‍♀️", "")} {APY_MAT_RENTAL_TICKET.displayPrice}.
+            <strong>{pricingLabel}:</strong> {APY_REGULAR_CLASS_TIME_SLOTS.map((slot) => slot.label).join(", ")}: {ticketOptions.map((option) => `${option.label} ${option.displayPrice}`).join(" · ")}. {APY_MAT_RENTAL_TICKET.name.replace(" 🧘‍♀️", "")} {APY_MAT_RENTAL_TICKET.displayPrice}.
           </p>
           <p className="font-body text-[10px] text-[#8B2252] font-semibold mt-2">No Standard Free ticket will be included.</p>
         </div>

@@ -1,5 +1,14 @@
 
 ## Current Staff Access Investigation
+- [x] Apply the approved conservative Fall Pricing and Ticket Ladder to new regular Luma classes and the APY HQ preview: 4/3/1/7 inventory, Kitchener/Hamilton $56/$108/$156/$58, and Oakville $61/$118/$171/$63
+- [x] Verify without saving that the APY HQ new-class preview shows the Kitchener/Hamilton Fall ladder and preserves the existing Luma registration, pattern, tint, and paid mat-rental settings
+- [x] Verify without saving that selecting Oakville changes the APY HQ preview to $61/$118 for 2/$171 for 3/$63, with unchanged Luma visual and registration settings
+- [x] Trace the current Luma class-creation pricing and inventory source, compare it with the reviewed fall ticket-ladder decision, and identify the canonical rule to apply
+- [x] Read the Pricing and Ticket Ladder Decision Report and reconcile its decisions with APY's current Luma ticket setup
+- [x] Review newly added files in Google Drive `04_Bus_Plan & Strategy` and synthesize applicable decisions and next actions for AfroPuppyYoga
+- [x] Write a consolidated business-plan decision summary that reconciles the four new strategy files' financial, valuation, growth, and exit assumptions
+- [x] Deliver the completed `04_Bus_Plan & Strategy` synthesis to Ay with the key decisions, risks, and next actions
+- [x] Record the reviewed strategy documents and resulting decisions in the shared AI Context Hub
 - [x] After a clean development-service restart, verify the homepage hydrates from the light hero-backed pending state into the full page without CSS or Vite transform errors
 - [x] Record deterministic local browser and console evidence for the clean first-paint hydration check
 - [x] Remove the development-only per-request `/src/main.tsx?v=…` rewrite that causes the custom Vite fallback to serve index HTML instead of the client module
