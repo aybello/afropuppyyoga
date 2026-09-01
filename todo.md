@@ -1021,3 +1021,12 @@
 ## Expired Summer Promotion Removal (Aug 31, 2026)
 - [x] Remove the expired public "Summer Sale — 20% Off" promotion and any related display from the AfroPuppyYoga website
 - [x] Validate and publish the public homepage without the expired sale message
+
+## Luma Reminder Run Verification (Aug 31, 2026)
+- [ ] Assess the recorded Monday reminder run without exposing recipient data or triggering a duplicate promotion
+- [ ] Restore the owner-approved secure browser connection to the active Luma reminder schedule if it was not retained after the reset
+
+## Local Dogs in Need Ticket Donation (Aug 31, 2026)
+- [x] Read the documented donation decision and capture only the approved public wording, recipient scope, and any amount or reporting commitment
+- [x] Add an accurate public statement that a portion of every AfroPuppyYoga ticket supports local dogs in need
+- [x] Add focused regression coverage and validate the donation message before publishing
