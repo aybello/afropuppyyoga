@@ -1003,3 +1003,21 @@
 - [x] Revalidate and publish the class-creation invitation workflow without creating a test event or sending a live communication
 - [ ] Monitor the first unattended Monday/Thursday 10:00 AM ET Invited-only reminder run; the schedule remains configured but its persistent-session reauthentication behavior is not yet verified
 - [x] Enable and attach the owner-approved secure browser connection to the existing Luma reminder schedule without manually triggering a promotion
+
+## Expired Summer Promotion Removal (Aug 31, 2026)
+- [x] Remove the expired public "Summer Sale — 20% Off" promotion and any related display from the AfroPuppyYoga website
+- [x] Validate and publish the public homepage without the expired sale message
+
+## Luma Public-Class Invitations and Reminders (Aug 30, 2026)
+- [x] Confirm the owner-approved recipient policy: invite the full existing APY Luma calendar-contact audience when a newly created eligible public regular class is available
+- [x] Record that the calendar-contact audit found 1,575 contacts with no exposed tags or per-contact subscription field; the owner explicitly approved the full-calendar audience
+- [x] Add automatic full-calendar Luma invitations after a newly created eligible public regular class, excluding event guests and duplicate emails
+- [x] Ensure invitation eligibility excludes private, hidden, cancelled, sold-out, gift-card, and reused events, and stops without sending if Luma recipient verification fails
+- [x] Add regression coverage for paginated contact and guest retrieval, guest exclusion, duplicate suppression, long invite URLs, empty audiences, and reuse safety
+- [x] Revalidate and publish the class-creation invitation workflow without creating a test event or sending a live communication
+- [ ] Monitor the first unattended Monday/Thursday 10:00 AM ET Invited-only reminder run; the schedule remains configured but its persistent-session reauthentication behavior is not yet verified
+- [x] Enable and attach the owner-approved secure browser connection to the existing Luma reminder schedule without manually triggering a promotion
+
+## Expired Summer Promotion Removal (Aug 31, 2026)
+- [x] Remove the expired public "Summer Sale — 20% Off" promotion and any related display from the AfroPuppyYoga website
+- [x] Validate and publish the public homepage without the expired sale message

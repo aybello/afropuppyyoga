@@ -6,7 +6,6 @@
    ============================================================ */
 import { lazy, Suspense } from "react";
 import Navbar from "@/components/Navbar";
-import SummerSaleBanner from "@/components/SummerSaleBanner";
 import Hero from "@/components/sections/Hero";
 import Experience from "@/components/sections/Experience";
 import RewardsStrip from "@/components/RewardsStrip";
