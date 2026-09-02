@@ -1053,4 +1053,4 @@
 ## Top-Banner Local Dogs Announcement (Sep 2, 2026)
 - [x] Move the approved local-dogs-in-need ticket contribution announcement into the former top-of-page Summer Sale banner position
 - [x] Remove the public three-month pilot reference while retaining the accurate $0.50 eligible-ticket contribution and unnamed-partner boundary
-- [ ] Validate that the production domain serves the relocated public announcement, then republish if the deployment remains on the prior asset revision
+- [x] Validate that the production domain serves the relocated public announcement after republishing the deployment
