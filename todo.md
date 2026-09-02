@@ -1060,3 +1060,20 @@
 - [x] Replace it with a more refined, visually integrated local-dogs-in-need announcement using the approved public commitment
 - [x] Validate the redesigned announcement on desktop and mobile before publishing
 - [x] Verify that the production domain switched from the retired fixed top banner to the refined hero impact note after republishing
+
+## Uptime Monitoring and Public-Site Warmth (Sep 2, 2026)
+- [ ] Inspect whether an existing uptime monitor or health check is already configured for the APY public site and determine its interval and target safely
+- [ ] Compare safe options for reducing Autoscale cold starts before changing hosting or monitoring behavior
+- [ ] Diagnose and correct the existing 10-minute APY availability check, whose recent execution history shows unauthenticated 401 failures
+
+## Post-Monitoring Public-Site Performance (Sep 2, 2026)
+- [ ] Measure live homepage loading and interaction performance after the external uptime monitor was enabled
+- [ ] Identify the proven source of remaining lag and propose only improvements supported by before-and-after measurements
+
+## Invoice Feature Status Audit (Sep 2, 2026)
+- [x] Inspect the current invoice submission and dashboard routes, role access, and recent implementation state before changing invoice behavior
+
+## Invoice Paid-Status Correction (Sep 2, 2026)
+- [x] Diagnose why the owner cannot mark an approved invoice as paid without changing existing financial records during investigation
+- [x] Correct the dashboard and protected payment workflow while preserving approval, cumulative-payment, amount-limit, and audit safeguards
+- [x] Add regression coverage and validate the paid-status correction without modifying a live invoice

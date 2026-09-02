@@ -7,7 +7,7 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import {
   FileText, Loader2, AlertTriangle, Clock, CheckCircle2,
-  Copy, Trash2, DollarSign, X, Wallet,
+  Copy, Trash2, DollarSign, X, Wallet, PencilLine,
 } from "lucide-react";
 import { useState } from "react";
 import { getLoginUrl, LOGO_URL } from "@/const";
@@ -93,6 +93,74 @@ type InvoiceRow = {
   amountPaidCents: number;
   paymentNotes: string | null;
 };
+
+function SetInvoiceTotalModal({
+  invoice,
+  onClose,
+  onSave,
+  isSaving,
+}: {
+  invoice: Pick<InvoiceRow, "id" | "staffName" | "payAmount">;
+  onClose: () => void;
+  onSave: (totalAmountCents: number) => void;
+  isSaving: boolean;
+}) {
+  const [amountStr, setAmountStr] = useState(() => {
+    const amount = parseAmount(invoice.payAmount);
+    return amount > 0 ? amount.toFixed(2) : "";
+  });
+  const amountCents = Math.round(Number.parseFloat(amountStr || "0") * 100);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-md rounded-2xl border border-[#F0D0DC] bg-white shadow-xl">
+        <div className="flex items-center justify-between border-b border-[#F0D0DC] px-6 py-4">
+          <div>
+            <h2 className="font-display text-lg font-bold text-[#1A0A12]">Confirm Invoice Total</h2>
+            <p className="mt-0.5 font-body text-xs text-[#1A0A12]">{invoice.staffName ?? "Staff invoice"}</p>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-[#1A0A12] transition-colors hover:bg-[#FFF5F8]" aria-label="Close invoice total dialog">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="px-6 py-5">
+          <p className="mb-4 font-body text-sm leading-relaxed text-[#1A0A12]">
+            The uploaded PDF did not provide a usable total. Enter the invoice total before you review and approve it.
+          </p>
+          <label className="mb-1.5 block font-body text-xs font-semibold text-[#1A0A12]" htmlFor={`invoice-total-${invoice.id}`}>
+            Invoice Total (CAD)
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm text-[#1A0A12]">$</span>
+            <input
+              id={`invoice-total-${invoice.id}`}
+              type="number"
+              min="0.01"
+              step="0.01"
+              value={amountStr}
+              onChange={(event) => setAmountStr(event.target.value)}
+              placeholder="0.00"
+              className="w-full rounded-xl border border-[#F0D0DC] bg-[#FEFAF4] py-2.5 pl-7 pr-4 font-body text-sm text-[#1A0A12] focus:outline-none focus:ring-2 focus:ring-[#8B2252]/30"
+            />
+          </div>
+        </div>
+        <div className="flex gap-3 border-t border-[#F0D0DC] px-6 py-4">
+          <button onClick={onClose} className="flex-1 rounded-full border border-[#F0D0DC] bg-white px-4 py-2.5 font-body text-sm font-semibold text-[#1A0A12] transition-colors hover:bg-[#FFF5F8]">
+            Cancel
+          </button>
+          <button
+            onClick={() => onSave(amountCents)}
+            disabled={isSaving || !Number.isFinite(amountCents) || amountCents <= 0}
+            className="flex-1 rounded-full px-4 py-2.5 font-body text-sm font-semibold text-white transition-all disabled:opacity-50"
+            style={{ background: "linear-gradient(135deg, #8B2252, #c2410c)" }}
+          >
+            {isSaving ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : "Save Total"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function RecordPaymentModal({
   invoice,
@@ -225,11 +293,11 @@ function RecordPaymentModal({
           </button>
           <button
             onClick={() => onSave(amountCents, notes)}
-            disabled={isSaving || amountCents < 0}
+            disabled={isSaving || amountCents < 0 || (totalCents > 0 && amountCents > totalCents)}
             className="flex-1 px-4 py-2.5 font-body font-semibold text-sm rounded-full text-white transition-all disabled:opacity-50"
             style={{ background: "linear-gradient(135deg, #8B2252, #c2410c)" }}
           >
-            {isSaving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Save Payment"}
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : totalCents > 0 && amountCents === totalCents ? "Mark Fully Paid" : "Save Payment"}
           </button>
         </div>
       </div>
@@ -258,7 +326,16 @@ export default function InvoiceDashboard() {
     onSuccess: () => {
       utils.invoices.list.invalidate();
       setPaymentModal(null);
+      setActionError(null);
     },
+  });
+  const setTotal = trpc.invoices.setTotal.useMutation({
+    onSuccess: () => {
+      utils.invoices.list.invalidate();
+      setTotalModal(null);
+      setActionError(null);
+    },
+    onError: (error) => setActionError(error.message),
   });
 
   const archiveInvoice = trpc.invoices.archive.useMutation({
@@ -268,6 +345,8 @@ export default function InvoiceDashboard() {
   const [activeTab, setActiveTab] = useState<TabId>("all");
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [paymentModal, setPaymentModal] = useState<InvoiceRow | null>(null);
+  const [totalModal, setTotalModal] = useState<Pick<InvoiceRow, "id" | "staffName" | "payAmount"> | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   if (loading) {
     return (
@@ -361,12 +440,24 @@ export default function InvoiceDashboard() {
           onClose={() => setPaymentModal(null)}
           isSaving={recordPayment.isPending}
           onSave={(amountPaidCents, paymentNotes) => {
-            recordPayment.mutate({
-              id: paymentModal.id,
-              amountPaidCents,
-              paymentNotes: paymentNotes || undefined,
-            });
+            setActionError(null);
+            recordPayment.mutate(
+              {
+                id: paymentModal.id,
+                amountPaidCents,
+                paymentNotes: paymentNotes || undefined,
+              },
+              { onError: (error) => setActionError(error.message) },
+            );
           }}
+        />
+      )}
+      {totalModal && (
+        <SetInvoiceTotalModal
+          invoice={totalModal}
+          onClose={() => setTotalModal(null)}
+          isSaving={setTotal.isPending}
+          onSave={(totalAmountCents) => setTotal.mutate({ id: totalModal.id, totalAmountCents })}
         />
       )}
 
@@ -380,6 +471,15 @@ export default function InvoiceDashboard() {
           <h1 className="font-display font-bold text-3xl text-[#1A0A12]">Staff Invoices</h1>
           <p className="font-body text-sm text-[#1A0A12] mt-1">Manage and track staff payment requests</p>
         </div>
+
+        {actionError && (
+          <div className="flex items-start justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 font-body text-sm text-red-700" role="alert">
+            <span>{actionError}</span>
+            <button onClick={() => setActionError(null)} className="shrink-0 rounded p-0.5 hover:bg-red-100" aria-label="Dismiss invoice action error">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         {/* Summary cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -589,10 +689,20 @@ export default function InvoiceDashboard() {
 
                         {/* Approval workflow */}
                         <td className="px-5 py-4">
-                          {invoice.workflowStatus === "submitted" ? (
-                            <button onClick={() => reviewInvoice.mutate({ id: invoice.id })} className="px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Review</button>
+                          {(invoice.totalAmountCents ?? 0) <= 0 && invoice.workflowStatus !== "paid" && invoice.status !== "paid" && (invoice.amountPaidCents ?? 0) === 0 ? (
+                            <button
+                              onClick={() => {
+                                setActionError(null);
+                                setTotalModal({ id: invoice.id, staffName: invoice.staffName, payAmount: invoice.payAmount });
+                              }}
+                              className="inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-3 py-1.5 text-xs font-semibold text-violet-800 transition-colors hover:bg-violet-200"
+                            >
+                              <PencilLine className="h-3 w-3" /> Set total
+                            </button>
+                          ) : invoice.workflowStatus === "submitted" ? (
+                            <button onClick={() => { setActionError(null); reviewInvoice.mutate({ id: invoice.id }, { onError: (error) => setActionError(error.message) }); }} className="rounded-full bg-blue-100 px-3 py-1.5 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-200">Review</button>
                           ) : invoice.workflowStatus === "reviewed" ? (
-                            <button onClick={() => approveInvoice.mutate({ id: invoice.id })} className="px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Approve</button>
+                            <button onClick={() => { setActionError(null); approveInvoice.mutate({ id: invoice.id }, { onError: (error) => setActionError(error.message) }); }} className="rounded-full bg-amber-100 px-3 py-1.5 text-xs font-semibold text-amber-800 transition-colors hover:bg-amber-200">Approve</button>
                           ) : (
                             <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${invoice.workflowStatus === "paid" ? "bg-emerald-100 text-emerald-700" : "bg-purple-100 text-purple-700"}`}>{invoice.workflowStatus === "paid" ? "Paid" : "Approved"}</span>
                           )}
@@ -611,10 +721,11 @@ export default function InvoiceDashboard() {
                                 paymentNotes: invoice.paymentNotes,
                               })}
                               disabled={invoice.workflowStatus !== "approved" && invoice.workflowStatus !== "paid"}
-                              className="p-1.5 rounded-lg text-[#1A0A12] hover:text-[#8B2252] hover:bg-[#FFF5F8] transition-colors"
-                              title="Record payment"
+                              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 font-body text-xs font-semibold text-[#8B2252] transition-colors hover:bg-[#FFF5F8] disabled:cursor-not-allowed disabled:opacity-40"
+                              title="Record payment or mark the full invoice paid"
                             >
                               <DollarSign className="w-4 h-4" />
+                              Record payment
                             </button>
 
                             {/* Delete */}
