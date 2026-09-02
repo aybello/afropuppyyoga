@@ -4,8 +4,10 @@ import {
   buildLumaClassInviteRecipients,
   buildRegularClassTicketTypes,
   createLumaEventForSchedule,
+  getExistingLumaEventInvitationReadiness,
   isEligibleCreatedLumaEventForInvites,
   REGULAR_CLASS_LUMA_EVENT_DEFAULTS,
+  sendExistingLumaEventInvitations,
   torontoDateTimeIso,
   updateLumaEventForSchedule,
 } from "./lumaScheduleHelper";
@@ -14,6 +16,7 @@ const originalApiKey = process.env.LUMA_API_KEY;
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.useRealTimers();
   if (originalApiKey === undefined) delete process.env.LUMA_API_KEY;
   else process.env.LUMA_API_KEY = originalApiKey;
 });
@@ -287,5 +290,73 @@ describe("automatic Luma class invitations", () => {
       new Set(["b@example.com"])
     );
     expect(recipients).toEqual([{ email: "a@example.com" }]);
+  });
+
+  it("returns only aggregate readiness for an eligible existing event and excludes registered guests from a confirmed send", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-01T12:00:00Z"));
+    process.env.LUMA_API_KEY = "test-key";
+    const fetchMock = vi.fn(async (url: string, options?: RequestInit) => {
+      if (url.includes("/events/get")) return { ok: true, json: async () => ({
+        url: "https://lu.ma/kitchener-dachshunds",
+        name: "AfroPuppyYoga | 📍Kitchener | 🐶Dachshunds",
+        start_at: "2026-09-05T14:00:00.000Z",
+        visibility: "public",
+        registration_open: true,
+      }) };
+      if (url.includes("/calendars/contacts/list")) return { ok: true, json: async () => ({
+        entries: [{ email: "calendar@example.com" }, { email: "registered@example.com" }],
+      }) };
+      if (url.includes("/events/guests/list")) return { ok: true, json: async () => ({
+        entries: [{ user_email: "registered@example.com", registered_at: "2026-09-01T10:00:00Z" }],
+      }) };
+      if (url.includes("/events/guests/send-invites")) {
+        expect(options?.method).toBe("POST");
+        const body = JSON.parse(String(options?.body));
+        expect(body.guests).toEqual([{ email: "calendar@example.com" }]);
+        return { ok: true, json: async () => ({}) };
+      }
+      throw new Error(`Unexpected URL: ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const existingParams = { ...params, classDate: "2026-09-05", location: "Kitchener", breed: "Dachshunds" };
+
+    await expect(getExistingLumaEventInvitationReadiness("evt_existing", existingParams)).resolves.toEqual({
+      status: "ready",
+      recipientCount: 1,
+      registeredGuestCount: 1,
+      existingInvitationCount: 0,
+    });
+    await expect(sendExistingLumaEventInvitations("evt_existing", existingParams)).resolves.toMatchObject({
+      status: "ready",
+      recipientCount: 1,
+    });
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/events/guests/send-invites"))).toBe(true);
+  });
+
+  it("refuses to resend an existing class that already has Luma invitation records", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-01T12:00:00Z"));
+    process.env.LUMA_API_KEY = "test-key";
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes("/events/get")) return { ok: true, json: async () => ({
+        url: "https://lu.ma/already-invited",
+        name: "AfroPuppyYoga |📍Kitchener |🐶Dachshunds",
+        start_at: "2026-09-05T14:00:00.000Z",
+        visibility: "public",
+        registration_open: true,
+      }) };
+      if (url.includes("/calendars/contacts/list")) return { ok: true, json: async () => ({ entries: [{ email: "calendar@example.com" }] }) };
+      if (url.includes("/events/guests/list")) return { ok: true, json: async () => ({ entries: [{ user_email: "calendar@example.com", invited_at: "2026-09-01T10:00:00Z" }] }) };
+      throw new Error(`Unexpected URL: ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(sendExistingLumaEventInvitations("evt_existing", { ...params, classDate: "2026-09-05", location: "Kitchener", breed: "Dachshunds" })).resolves.toMatchObject({
+      status: "already_invited",
+      existingInvitationCount: 1,
+      recipientCount: 0,
+    });
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/events/guests/send-invites"))).toBe(false);
   });
 });

@@ -1023,10 +1023,24 @@
 - [x] Validate and publish the public homepage without the expired sale message
 
 ## Luma Reminder Run Verification (Aug 31, 2026)
-- [ ] Assess the recorded Monday reminder run without exposing recipient data or triggering a duplicate promotion
+- [x] Assess the recorded Monday reminder run without exposing recipient data or triggering a duplicate promotion
 - [ ] Restore the owner-approved secure browser connection to the active Luma reminder schedule if it was not retained after the reset
 
 ## Local Dogs in Need Ticket Donation (Aug 31, 2026)
 - [x] Read the documented donation decision and capture only the approved public wording, recipient scope, and any amount or reporting commitment
 - [x] Add an accurate public statement that a portion of every AfroPuppyYoga ticket supports local dogs in need
 - [x] Add focused regression coverage and validate the donation message before publishing
+
+## Luma Monday Reminder Read-Only Review (Aug 31, 2026)
+- [x] Use the available browser only to inspect the Monday reminder outcome; do not create, edit, invite, or send a Luma communication
+
+## Missing Upcoming-Class Luma Invitations (Sep 1, 2026)
+- [x] Audit each upcoming eligible public APY Luma event for its existing invitation status without exposing recipient information or sending communications
+- [x] Identify why the published automatic class-creation invitation helper did not backfill current classes: it intentionally runs only after APY creates a new Luma event and never retroactively sends for existing or reused events
+- [x] Obtain explicit confirmation before sending any live invitation backfill to the owner-approved APY calendar-contact audience
+- [x] Revalidate and send the owner-confirmed one-time Luma invitation backfill only for the Sep 5 and Sep 6 Kitchener Dachshunds public classes
+
+## Owner-Controlled Existing-Event Luma Invitations (Sep 1, 2026)
+- [x] Add an owner-only APY HQ readiness check for an existing eligible public Luma event that returns aggregate invitation information only
+- [x] Add an owner-only confirmed send control that revalidates event state, prevents duplicate invitations, excludes registered guests, and never exposes recipient data
+- [x] Add focused regression coverage and validate the APY HQ experience without sending a live Luma invitation

@@ -1,13 +1,13 @@
 import { z } from "zod";
-import { staffProcedure, router } from "../_core/trpc";
+import { ownerProcedure, staffProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { puppySchedule, breeders, classStaffAssignments, jobApplications, staffAvailability, weekendLeadershipCoverage } from "../../drizzle/schema";
+import { puppySchedule, breeders, classStaffAssignments, communicationsLog, jobApplications, staffAvailability, weekendLeadershipCoverage } from "../../drizzle/schema";
 import { staffScheduleNotifications } from "../../drizzle/schema";
 import { eq, and, gte, lte, desc, isNull, ne } from "drizzle-orm";
 import { sendEmail, buildBreederConfirmationEmail } from "../email";
 import twilio from "twilio";
 import { isSmsSuppressed } from "../smsConsent";
-import { createLumaEventForSchedule, setLumaRegistrationOpen, updateLumaEventForSchedule } from "../lumaScheduleHelper";
+import { createLumaEventForSchedule, getExistingLumaEventInvitationReadiness, sendExistingLumaEventInvitations, setLumaRegistrationOpen, updateLumaEventForSchedule } from "../lumaScheduleHelper";
 import { isAwayOnDate } from "../weekendCoverage";
 import { isClassFullyStaffed, scheduleLocationToTeamLocation, staffingGaps, TWO_PUPPY_MONITORS_REQUIRED } from "../classStaffing";
 import { isActiveTeamMember } from "../teamMembership";
@@ -105,6 +105,29 @@ const slotInputBase = z.object({
 
 type SlotInput = z.infer<typeof slotInputBase>;
 type ScheduleDb = NonNullable<Awaited<ReturnType<typeof getDb>>>;
+
+function toLumaScheduleParams(schedule: typeof puppySchedule.$inferSelect) {
+  return {
+    classDate: schedule.classDate,
+    location: schedule.location,
+    breed: schedule.breed,
+    startTime: schedule.startTime,
+    endTime: schedule.endTime,
+    classType: schedule.classType as "regular" | "private",
+  };
+}
+
+async function getExistingEventInvitationReadiness(db: ScheduleDb, scheduleId: number) {
+  const [schedule] = await db.select().from(puppySchedule).where(eq(puppySchedule.id, scheduleId)).limit(1);
+  if (!schedule) throw new Error("Scheduled class not found.");
+  if (schedule.scheduleStatus !== "scheduled") throw new Error("Only an active scheduled class can receive invitations.");
+  if (schedule.classType !== "regular" || !schedule.lumaEventId) throw new Error("This class is not linked to an eligible public Luma event.");
+  const readiness = await getExistingLumaEventInvitationReadiness(schedule.lumaEventId, toLumaScheduleParams(schedule));
+  return {
+    schedule: { id: schedule.id, classDate: schedule.classDate, location: schedule.location, breed: schedule.breed, lumaEventUrl: schedule.lumaEventUrl },
+    readiness,
+  };
+}
 
 async function assertNoScheduleConflict(db: ScheduleDb, candidate: SlotInput, excludeId?: number) {
   const sameStudioDay = await db.select({
@@ -279,6 +302,44 @@ export const puppyScheduleRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
       return getEventNotificationPreview(db, input.scheduleId);
+    }),
+
+  /** Owner-only: inspect an existing event's aggregate Luma invitation readiness. */
+  lumaInvitationReadiness: ownerProcedure
+    .input(z.object({ scheduleId: z.number().int().positive() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+      return getExistingEventInvitationReadiness(db, input.scheduleId);
+    }),
+
+  /** Owner-only: recheck all safeguards and send one explicitly confirmed Luma invitation set. */
+  sendLumaInvitations: ownerProcedure
+    .input(z.object({ scheduleId: z.number().int().positive(), confirm: z.literal(true) }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+      const [schedule] = await db.select().from(puppySchedule).where(eq(puppySchedule.id, input.scheduleId)).limit(1);
+      if (!schedule) throw new Error("Scheduled class not found.");
+      if (schedule.scheduleStatus !== "scheduled" || schedule.classType !== "regular" || !schedule.lumaEventId) {
+        throw new Error("This class is not an active eligible public Luma event.");
+      }
+      const result = await sendExistingLumaEventInvitations(schedule.lumaEventId, toLumaScheduleParams(schedule));
+      if (result.status !== "ready") throw new Error(result.reason ?? "No Luma invitations were sent because the event is not ready.");
+      await db.insert(communicationsLog).values({
+        entityType: "class",
+        entityId: schedule.id,
+        channel: "system",
+        direction: "outbound",
+        action: "luma_invites",
+        recipient: null,
+        subject: `Luma invitations — ${schedule.location}, ${schedule.classDate}`,
+        bodyPreview: `Owner-confirmed invitation set submitted to ${result.recipientCount} eligible calendar contacts; registered guests excluded.`,
+        deliveryStatus: "submitted",
+        actorUserId: ctx.user.id,
+        actorName: ctx.user.name ?? ctx.user.email ?? "APY owner",
+      });
+      return { success: true, recipientCount: result.recipientCount, registeredGuestCount: result.registeredGuestCount };
     }),
 
   notifyEventTeam: staffProcedure

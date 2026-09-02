@@ -61,6 +61,8 @@ import {
   ExternalLink,
   CheckCircle2,
   AlertTriangle,
+  Send,
+  ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -247,6 +249,8 @@ export default function ScheduleCalendar() {
   const [showDialog, setShowDialog] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [invitationSlotId, setInvitationSlotId] = useState<number | null>(null);
+  const [invitationConfirmId, setInvitationConfirmId] = useState<number | null>(null);
   const [form, setForm] = useState({ ...EMPTY_FORM });
 
   const utils = trpc.useUtils();
@@ -258,6 +262,7 @@ export default function ScheduleCalendar() {
   );
 
   const { data: breeders = [] } = trpc.breeders.list.useQuery();
+  const { data: access } = trpc.staff.myAccess.useQuery();
   const activeBreeders = useMemo(
     () => (breeders as any[]).filter((b) => b.isActive === 1),
     [breeders]
@@ -297,6 +302,19 @@ export default function ScheduleCalendar() {
       setDeleteId(null);
     },
     onError: (e) => toast.error(e.message),
+  });
+
+  const invitationReadinessQuery = trpc.puppySchedule.lumaInvitationReadiness.useQuery(
+    { scheduleId: invitationSlotId ?? 0 },
+    { enabled: access?.level === "owner" && invitationSlotId !== null, retry: false }
+  );
+  const sendLumaInvitationsMutation = trpc.puppySchedule.sendLumaInvitations.useMutation({
+    onSuccess: (result) => {
+      toast.success(`Luma invitation set submitted to ${result.recipientCount} eligible contacts.`);
+      setInvitationConfirmId(null);
+      invitationReadinessQuery.refetch();
+    },
+    onError: (error) => toast.error(error.message),
   });
 
   // ─── Navigation ─────────────────────────────────────────────────────────────
@@ -339,6 +357,7 @@ export default function ScheduleCalendar() {
       notes: slot.notes ?? "",
     });
     setEditId(slot.id);
+    setInvitationSlotId(null);
     setShowDialog(true);
   }
 
@@ -772,6 +791,41 @@ export default function ScheduleCalendar() {
               </div>
             )}
 
+            {access?.level === "owner" && editingSlot?.classType === "regular" && editingSlot.lumaEventId && editingSlot.scheduleStatus === "scheduled" && (
+              <section className="rounded-xl border border-[#D9A0B5] bg-[#FFF4F8] p-3" aria-label="Owner Luma invitation control">
+                <div className="flex items-start gap-2">
+                  <ShieldCheck size={16} className="mt-0.5 shrink-0 text-[#8B2252]" />
+                  <div>
+                    <p className="font-body text-xs font-bold text-[#3D1A2E]">Luma invitations <span className="font-normal text-[#8B2252]">· Owner only</span></p>
+                    <p className="mt-0.5 font-body text-[11px] leading-relaxed text-[#6B4C3B]">Checks the live event first. Registered guests and duplicate emails are excluded; recipient details never appear in APY HQ.</p>
+                  </div>
+                </div>
+
+                {invitationSlotId === editingSlot.id && invitationReadinessQuery.isLoading && (
+                  <p className="mt-3 flex items-center gap-1.5 font-body text-xs text-[#6B4C3B]"><Loader2 size={13} className="animate-spin" /> Checking the live Luma event…</p>
+                )}
+                {invitationSlotId === editingSlot.id && invitationReadinessQuery.data && (
+                  <div className="mt-3 rounded-lg border border-[#F0D0DC] bg-white/80 p-2.5 font-body text-xs text-[#3D1A2E]">
+                    {invitationReadinessQuery.data.readiness.status === "ready" && <p><strong>{invitationReadinessQuery.data.readiness.recipientCount} contacts are ready.</strong> {invitationReadinessQuery.data.readiness.registeredGuestCount} registered guest{invitationReadinessQuery.data.readiness.registeredGuestCount === 1 ? " is" : "s are"} excluded.</p>}
+                    {invitationReadinessQuery.data.readiness.status === "already_invited" && <p><strong>Already invited.</strong> Luma has {invitationReadinessQuery.data.readiness.existingInvitationCount} invitation record{invitationReadinessQuery.data.readiness.existingInvitationCount === 1 ? "" : "s"} for this event, so APY HQ will not resend.</p>}
+                    {invitationReadinessQuery.data.readiness.status === "no_recipients" && <p><strong>No eligible recipients.</strong> There is no invitation set to send.</p>}
+                    {invitationReadinessQuery.data.readiness.status === "ineligible" && <p><strong>Not eligible.</strong> {invitationReadinessQuery.data.readiness.reason}</p>}
+                  </div>
+                )}
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button type="button" variant="outline" onClick={() => setInvitationSlotId(editingSlot.id)} disabled={invitationReadinessQuery.isFetching || sendLumaInvitationsMutation.isPending} className="h-8 border-[#D9A0B5] bg-white text-[#8B2252] hover:bg-[#FFF0F6] font-body text-xs">
+                    {invitationReadinessQuery.isFetching ? <Loader2 size={13} className="mr-1.5 animate-spin" /> : <ShieldCheck size={13} className="mr-1.5" />} Check readiness
+                  </Button>
+                  {invitationSlotId === editingSlot.id && invitationReadinessQuery.data?.readiness.status === "ready" && (
+                    <Button type="button" onClick={() => setInvitationConfirmId(editingSlot.id)} disabled={sendLumaInvitationsMutation.isPending} className="h-8 bg-[#8B2252] text-white hover:bg-[#711936] font-body text-xs">
+                      <Send size={13} className="mr-1.5" /> Send invitations
+                    </Button>
+                  )}
+                </div>
+              </section>
+            )}
+
             {/* Delete button when editing */}
             {editId !== null && (
               <div className="pt-2 border-t border-[#F0D0DC]">
@@ -829,6 +883,27 @@ export default function ScheduleCalendar() {
               className="bg-red-600 hover:bg-red-700 text-white font-body"
             >
               Archive
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={invitationConfirmId !== null} onOpenChange={(open) => !open && setInvitationConfirmId(null)}>
+        <AlertDialogContent className="bg-[#FEFAF4] border-[#F0D0DC]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-display text-[#1A0A12]">Send this Luma invitation set?</AlertDialogTitle>
+            <AlertDialogDescription className="font-body text-[#6B4C3B]">
+              APY HQ will recheck the live event immediately before sending. It will invite only the current eligible calendar contacts, exclude registered guests and duplicate emails, and stop if the event is no longer eligible or already invited.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="font-body border-[#F0D0DC]">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => invitationConfirmId !== null && sendLumaInvitationsMutation.mutate({ scheduleId: invitationConfirmId, confirm: true })}
+              disabled={sendLumaInvitationsMutation.isPending}
+              className="bg-[#8B2252] hover:bg-[#711936] text-white font-body"
+            >
+              {sendLumaInvitationsMutation.isPending && <Loader2 size={14} className="mr-2 animate-spin" />} Send invitations
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
