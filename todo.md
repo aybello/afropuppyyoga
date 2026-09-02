@@ -1059,3 +1059,4 @@
 - [x] Remove the current full-width top-of-page donation banner that crowds the header
 - [x] Replace it with a more refined, visually integrated local-dogs-in-need announcement using the approved public commitment
 - [x] Validate the redesigned announcement on desktop and mobile before publishing
+- [ ] Verify that the production domain has switched from the retired fixed top banner to the refined hero impact note, and republish if necessary
