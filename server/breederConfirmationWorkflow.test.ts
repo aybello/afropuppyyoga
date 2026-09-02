@@ -4,6 +4,7 @@ import {
   normalizeBreederPhone,
   parseBreederEventTime,
   planBreederConfirmationEvents,
+  prepareExistingCalendarConfirmation,
   type BreederConfirmationEvent,
 } from "./breederConfirmationWorkflow";
 import { generateConfirmationEmail } from "./routers/breeders";
@@ -68,5 +69,31 @@ describe("breeder confirmation workflow", () => {
     const changed = breederConfirmationRequestKey({ breederId: 4, events: [{ ...studioEvent, compensation: "$550" }] });
     expect(first).toBe(same);
     expect(changed).not.toBe(first);
+  });
+
+  it("anchors a calendar-originated confirmation to its saved class and blocks an unsafe selection", () => {
+    const [prepared] = prepareExistingCalendarConfirmation({
+      schedule: { id: 88, breederId: 4, classDate: "2026-11-15", location: "Oakville", classType: "regular", scheduleStatus: "scheduled" },
+      breederId: 4,
+      events: [{ ...studioEvent, city: "Hamilton", date: "2026-11-14" }],
+    });
+    expect(prepared).toMatchObject({ city: "Oakville", date: "2026-11-15", isPrivateEvent: false });
+
+    expect(() => prepareExistingCalendarConfirmation({
+      schedule: { id: 88, breederId: 4, classDate: "2026-11-15", location: "Oakville", classType: "regular", scheduleStatus: "cancelled" },
+      breederId: 4,
+      events: [studioEvent],
+    })).toThrow("active scheduled class");
+    expect(() => prepareExistingCalendarConfirmation({
+      schedule: { id: 88, breederId: 4, classDate: "2026-11-15", location: "Oakville", classType: "regular", scheduleStatus: "scheduled" },
+      breederId: 5,
+      events: [studioEvent],
+    })).toThrow("different breeder");
+  });
+
+  it("keeps a calendar confirmation idempotency key distinct from a new booking confirmation", () => {
+    const standard = breederConfirmationRequestKey({ breederId: 4, events: [studioEvent] });
+    const fromCalendar = breederConfirmationRequestKey({ breederId: 4, events: [studioEvent], sourceScheduleId: 88 });
+    expect(fromCalendar).not.toBe(standard);
   });
 });

@@ -41,7 +41,7 @@ import {
   ChevronDown, ChevronUp, Send, Eye, History, MapPin, X, Clock,
   CalendarCheck, CheckCircle2, AlertCircle, Loader2, CalendarDays, Dog
 } from "lucide-react";
-import ScheduleCalendarPanel from "@/components/ScheduleCalendarPanel";
+import ScheduleCalendarPanel, { type CalendarBreederConfirmationSlot } from "@/components/ScheduleCalendarPanel";
 
 type ContractStatus = "No contract yet" | "Contract sent" | "Contract completed";
 
@@ -134,6 +134,7 @@ export default function BreedersDashboard() {
 
   // Confirmation state
   const [confirmBreeder, setConfirmBreeder] = useState<any>(null);
+  const [calendarConfirmationScheduleId, setCalendarConfirmationScheduleId] = useState<number | null>(null);
   const [events, setEvents] = useState<typeof EMPTY_EVENT[]>([{ ...EMPTY_EVENT }]);
   const [availabilityNote, setAvailabilityNote] = useState<string>("");
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
@@ -206,6 +207,7 @@ export default function BreedersDashboard() {
       if (confirmBreeder) localStorage.removeItem(`apy-confirm-draft-${confirmBreeder.id}`);
       setDeliveryFailed(false);
       setConfirmBreeder(null);
+      setCalendarConfirmationScheduleId(null);
       setEvents([{ ...EMPTY_EVENT }]);
       setAvailabilityNote("");
       setPreviewHtml(null);
@@ -264,6 +266,7 @@ export default function BreedersDashboard() {
 
   function openConfirm(b: any) {
     setConfirmBreeder(b);
+    setCalendarConfirmationScheduleId(null);
     setPreviewHtml(null);
     setDeliveryFailed(false);
     // Restore draft from localStorage if one exists for this breeder
@@ -283,6 +286,34 @@ export default function BreedersDashboard() {
     setAvailabilityNote("");
   }
 
+  function openCalendarConfirmation(slot: CalendarBreederConfirmationSlot) {
+    const breeder = breeders.find((candidate: any) => candidate.id === slot.breederId);
+    if (!breeder) {
+      alert("This calendar class's breeder could not be found. Refresh the Breeder Database and try again.");
+      return;
+    }
+    const studio = STUDIO_LOCATIONS.find((item) => item.city === slot.location);
+    const publicSlot = slot.startTime === "11:30" ? "11:30" : slot.startTime === "13:30" ? "13:30" : "10:00";
+    setConfirmBreeder(breeder);
+    setCalendarConfirmationScheduleId(slot.id);
+    setPreviewHtml(null);
+    setDeliveryFailed(false);
+    setAvailabilityNote("");
+    setEvents([{
+      city: slot.location,
+      date: slot.classDate,
+      location: studio?.address ?? slot.location,
+      isPrivateEvent: slot.classType === "private",
+      classSlot: publicSlot,
+      apyTransport: false,
+      dropOffTime: slot.startTime,
+      pickUpTime: slot.endTime,
+      pickupTime: "",
+      returnTime: "",
+      compensation: breeder.typicalRate ? `$${breeder.typicalRate}` : "",
+    }]);
+  }
+
   function hasDraft(breederId: number): boolean {
     return !!localStorage.getItem(`apy-confirm-draft-${breederId}`);
   }
@@ -296,7 +327,7 @@ export default function BreedersDashboard() {
   function updateEvent(idx: number, field: string, value: any) {
     setEvents(ev => {
       const updated = ev.map((e, i) => i === idx ? { ...e, [field]: value } : e);
-      if (confirmBreeder) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events: updated, availabilityNote }));
+      if (confirmBreeder && calendarConfirmationScheduleId === null) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events: updated, availabilityNote }));
       return updated;
     });
   }
@@ -305,7 +336,7 @@ export default function BreedersDashboard() {
     if (studioLabel === "private") {
       setEvents(ev => {
         const updated = ev.map((e, i) => i === idx ? { ...e, city: "", location: "", isPrivateEvent: true } : e);
-        if (confirmBreeder) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events: updated, availabilityNote }));
+        if (confirmBreeder && calendarConfirmationScheduleId === null) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events: updated, availabilityNote }));
         return updated;
       });
     } else {
@@ -313,7 +344,7 @@ export default function BreedersDashboard() {
       if (studio) {
         setEvents(ev => {
           const updated = ev.map((e, i) => i === idx ? { ...e, city: studio.city, location: studio.address, isPrivateEvent: false } : e);
-          if (confirmBreeder) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events: updated, availabilityNote }));
+          if (confirmBreeder && calendarConfirmationScheduleId === null) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events: updated, availabilityNote }));
           return updated;
         });
       }
@@ -336,7 +367,12 @@ export default function BreedersDashboard() {
   function handlePreview() {
     if (!confirmBreeder) return;
     const firstName = (confirmBreeder.contactName || confirmBreeder.name).split(" ")[0];
-    previewMutation.mutate({ breederFirstName: firstName, events: confirmationEventsPayload(), availabilityNote: availabilityNote || undefined });
+    previewMutation.mutate({
+      breederFirstName: firstName,
+      events: confirmationEventsPayload(),
+      availabilityNote: availabilityNote || undefined,
+      existingScheduleId: calendarConfirmationScheduleId ?? undefined,
+    });
   }
 
   function handleSend() {
@@ -348,6 +384,7 @@ export default function BreedersDashboard() {
       breederId: confirmBreeder.id,
       events: confirmationEventsPayload(),
       availabilityNote: availabilityNote || undefined,
+      existingScheduleId: calendarConfirmationScheduleId ?? undefined,
     });
   }
 
@@ -630,7 +667,7 @@ export default function BreedersDashboard() {
 
         {/* ── Schedule Calendar View ─────────────────────────────────────────────── */}
         {activeView === "schedule" && (
-          <ScheduleCalendarPanel />
+          <ScheduleCalendarPanel onOpenBreederConfirmation={openCalendarConfirmation} />
         )}
       </div>
 
@@ -852,7 +889,7 @@ export default function BreedersDashboard() {
       </Dialog>
 
       {/* ── Send Confirmation Modal ─────────────────────────────────────────── */}
-      <Dialog open={!!confirmBreeder} onOpenChange={(open) => { if (!open) { setConfirmBreeder(null); setPreviewHtml(null); } }}>
+      <Dialog open={!!confirmBreeder} onOpenChange={(open) => { if (!open) { setConfirmBreeder(null); setCalendarConfirmationScheduleId(null); setPreviewHtml(null); } }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display text-xl text-[#1A0A12]">
@@ -861,7 +898,7 @@ export default function BreedersDashboard() {
           </DialogHeader>
 
           {/* Draft restored banner */}
-          {confirmBreeder && hasDraft(confirmBreeder.id) && !previewHtml && (
+          {confirmBreeder && calendarConfirmationScheduleId === null && hasDraft(confirmBreeder.id) && !previewHtml && (
             <div className="flex items-center justify-between px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs font-body text-amber-800">
               <span>📝 Draft restored — your unsent changes are still here.</span>
               <button
@@ -911,7 +948,7 @@ export default function BreedersDashboard() {
                       <button
                         onClick={() => setEvents(ev => {
                           const updated = ev.filter((_, i) => i !== idx);
-                          if (confirmBreeder) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events: updated, availabilityNote }));
+                          if (confirmBreeder && calendarConfirmationScheduleId === null) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events: updated, availabilityNote }));
                           return updated;
                         })}
                         className="text-red-400 hover:text-red-600"
@@ -927,6 +964,7 @@ export default function BreedersDashboard() {
                     <Select
                       value={ev.isPrivateEvent ? "private" : (STUDIO_LOCATIONS.find(s => s.address === ev.location)?.label ?? "")}
                       onValueChange={(val) => applyStudio(idx, val)}
+                      disabled={calendarConfirmationScheduleId !== null}
                     >
                       <SelectTrigger className="mt-1 border-[#F0D0DC] font-body text-sm">
                         <SelectValue placeholder="Select a studio..." />
@@ -958,6 +996,7 @@ export default function BreedersDashboard() {
                       type="date"
                       value={ev.date}
                       onChange={(e) => updateEvent(idx, "date", e.target.value)}
+                      disabled={calendarConfirmationScheduleId !== null}
                       className="mt-1 w-full border border-[#F0D0DC] rounded-md px-3 py-2 font-body text-sm bg-white text-[#1A0A12] focus:outline-none focus:ring-2 focus:ring-[#8B2252]/30"
                     />
                     {ev.date && (
@@ -968,7 +1007,7 @@ export default function BreedersDashboard() {
                   {!ev.isPrivateEvent && ev.city && (
                     <div className="mb-3 rounded-lg border border-[#F0D0DC] bg-[#FFF8FA] p-3">
                       <Label className="font-body text-xs text-[#6B4C3B] font-semibold uppercase tracking-wider">APY Public Class Slot *</Label>
-                      <Select value={ev.classSlot || ""} onValueChange={(v) => updateEvent(idx, "classSlot", v)}>
+                      <Select value={ev.classSlot || ""} onValueChange={(v) => updateEvent(idx, "classSlot", v)} disabled={calendarConfirmationScheduleId !== null}>
                         <SelectTrigger className="mt-1 border-[#F0D0DC] bg-white font-body text-sm">
                           <SelectValue placeholder="Choose 10:00, 11:30, or 1:30" />
                         </SelectTrigger>
@@ -1021,7 +1060,7 @@ export default function BreedersDashboard() {
                 </div>
               ))}
 
-              <Button
+              {calendarConfirmationScheduleId === null && <Button
                 variant="outline"
                 onClick={() => setEvents(ev => {
                   const updated = [...ev, { ...EMPTY_EVENT, compensation: confirmBreeder?.typicalRate ? `$${confirmBreeder.typicalRate}` : "" }];
@@ -1032,7 +1071,7 @@ export default function BreedersDashboard() {
               >
                 <Plus className="w-4 h-4" />
                 Add Another Event
-              </Button>
+              </Button>}
 
               <div>
                 <Label className="font-body text-sm text-[#1A0A12] font-semibold">Checking Availability For (optional)</Label>
@@ -1041,7 +1080,7 @@ export default function BreedersDashboard() {
                   onChange={(e) => {
                     const val = e.target.value;
                     setAvailabilityNote(val);
-                    if (confirmBreeder) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events, availabilityNote: val }));
+                    if (confirmBreeder && calendarConfirmationScheduleId === null) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events, availabilityNote: val }));
                   }}
                   className="mt-1 border-[#F0D0DC] font-body"
                   placeholder="e.g. Saturday, July 11"
@@ -1062,7 +1101,7 @@ export default function BreedersDashboard() {
 
           {!previewHtml && (
             <DialogFooter>
-              <Button variant="outline" onClick={() => setConfirmBreeder(null)} className="font-body border-[#F0D0DC]">Cancel</Button>
+              <Button variant="outline" onClick={() => { setConfirmBreeder(null); setCalendarConfirmationScheduleId(null); }} className="font-body border-[#F0D0DC]">Cancel</Button>
               <Button
                 onClick={handlePreview}
                 disabled={previewMutation.isPending}

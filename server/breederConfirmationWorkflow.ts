@@ -30,10 +30,52 @@ export type BreederConfirmationEvent = {
   compensation: string;
 };
 
+export type PreparedCalendarConfirmationEvent = Omit<BreederConfirmationEvent, "isPrivateEvent"> & {
+  isPrivateEvent: boolean;
+};
+
 export type PlannedBreederEvent = {
   event: BreederConfirmationEvent;
   schedule: (ScheduleCandidate & { location: ApyStudioLocation }) | null;
 };
+
+export type ExistingCalendarConfirmationSchedule = {
+  id: number;
+  breederId: number;
+  classDate: string;
+  location: string;
+  classType: string;
+  scheduleStatus: string;
+};
+
+/**
+ * A confirmation opened from the breeder calendar must describe the existing
+ * class rather than creating a new schedule or Luma event. Calendar-controlled
+ * public details are therefore replaced from the saved schedule before send.
+ */
+export function prepareExistingCalendarConfirmation(input: {
+  schedule: ExistingCalendarConfirmationSchedule;
+  breederId: number;
+  events: BreederConfirmationEvent[];
+}): PreparedCalendarConfirmationEvent[] {
+  if (input.schedule.scheduleStatus !== "scheduled") {
+    throw new Error("Only an active scheduled class can receive a breeder confirmation.");
+  }
+  if (input.schedule.breederId !== input.breederId) {
+    throw new Error("This calendar class is assigned to a different breeder.");
+  }
+  if (input.events.length !== 1) {
+    throw new Error("A calendar confirmation can include only its selected class.");
+  }
+
+  const [event] = input.events;
+  return [{
+    ...event,
+    city: input.schedule.location,
+    date: input.schedule.classDate,
+    isPrivateEvent: input.schedule.classType === "private",
+  }];
+}
 
 export function parseBreederEventTime(value: string | undefined, label: string) {
   const time = value?.trim();
@@ -137,10 +179,12 @@ export function breederConfirmationRequestKey(input: {
   breederId: number;
   events: BreederConfirmationEvent[];
   availabilityNote?: string;
+  sourceScheduleId?: number;
 }) {
   return crypto.createHash("sha256").update(JSON.stringify({
     breederId: input.breederId,
     events: input.events,
     availabilityNote: input.availabilityNote?.trim() || null,
+    sourceScheduleId: input.sourceScheduleId ?? null,
   })).digest("hex");
 }

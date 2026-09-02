@@ -1044,3 +1044,8 @@
 - [x] Add an owner-only APY HQ readiness check for an existing eligible public Luma event that returns aggregate invitation information only
 - [x] Add an owner-only confirmed send control that revalidates event state, prevents duplicate invitations, excludes registered guests, and never exposes recipient data
 - [x] Add focused regression coverage and validate the APY HQ experience without sending a live Luma invitation
+
+## Breeder Calendar Confirmation Unification (Sep 2, 2026)
+- [x] Replace the calendar-specific breeder message path with the existing detailed confirmation review and email-plus-SMS delivery workflow
+- [x] Preserve Canadian-phone validation, SMS suppression, email fallback, confirmation review, and accurate delivery feedback
+- [x] Add regression coverage and validate the unified calendar action without sending a live breeder confirmation

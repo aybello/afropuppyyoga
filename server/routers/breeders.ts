@@ -15,6 +15,7 @@ import {
   breederConfirmationRequestKey,
   normalizeBreederPhone,
   planBreederConfirmationEvents,
+  prepareExistingCalendarConfirmation,
   type PlannedBreederEvent,
 } from "../breederConfirmationWorkflow";
 
@@ -275,10 +276,23 @@ export const breedersRouter = router({
       breederFirstName: z.string().min(1),
       events: z.array(eventBlockSchema).min(1),
       availabilityNote: z.string().optional(),
+      existingScheduleId: z.number().int().positive().optional(),
     }))
     .mutation(async ({ input }) => {
-      planBreederConfirmationEvents(input.events);
-      const { html, text } = generateConfirmationEmail(input);
+      let confirmationEvents = input.events;
+      if (input.existingScheduleId) {
+        const db = await getDb();
+        if (!db) throw new Error("Database unavailable");
+        const [schedule] = await db.select().from(puppySchedule).where(eq(puppySchedule.id, input.existingScheduleId)).limit(1);
+        if (!schedule) throw new Error("Calendar class not found.");
+        confirmationEvents = prepareExistingCalendarConfirmation({
+          schedule,
+          breederId: schedule.breederId,
+          events: input.events,
+        });
+      }
+      planBreederConfirmationEvents(confirmationEvents);
+      const { html, text } = generateConfirmationEmail({ ...input, events: confirmationEvents });
       return { html, text };
     }),
 
@@ -287,6 +301,7 @@ export const breedersRouter = router({
       breederId: z.number(),
       events: z.array(eventBlockSchema).min(1),
       availabilityNote: z.string().optional(),
+      existingScheduleId: z.number().int().positive().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
@@ -300,8 +315,23 @@ export const breedersRouter = router({
       }
       const breederName = breeder.name;
       const breederFirstName = (breeder.contactName?.trim() || breeder.name).split(/\s+/)[0];
-      const { html, text } = generateConfirmationEmail({ breederFirstName, events: input.events, availabilityNote: input.availabilityNote });
-      const requestKey = breederConfirmationRequestKey(input);
+      let confirmationEvents = input.events;
+      if (input.existingScheduleId) {
+        const [schedule] = await db.select().from(puppySchedule).where(eq(puppySchedule.id, input.existingScheduleId)).limit(1);
+        if (!schedule) throw new Error("Calendar class not found.");
+        confirmationEvents = prepareExistingCalendarConfirmation({
+          schedule,
+          breederId: input.breederId,
+          events: input.events,
+        });
+      }
+      const { html, text } = generateConfirmationEmail({ breederFirstName, events: confirmationEvents, availabilityNote: input.availabilityNote });
+      const requestKey = breederConfirmationRequestKey({
+        breederId: input.breederId,
+        events: confirmationEvents,
+        availabilityNote: input.availabilityNote,
+        sourceScheduleId: input.existingScheduleId,
+      });
       const [prior] = await db.select().from(breederConfirmations).where(eq(breederConfirmations.requestKey, requestKey)).limit(1);
       if (prior?.status === "sent") {
         return {
@@ -312,7 +342,7 @@ export const breedersRouter = router({
           emailError: undefined,
           smsError: undefined,
           scheduleCreated: 0,
-          customCommitmentsRecorded: input.events.filter(event => event.isPrivateEvent).length,
+          customCommitmentsRecorded: input.existingScheduleId ? 0 : confirmationEvents.filter(event => event.isPrivateEvent).length,
         };
       }
       if (prior?.status === "pending" && Date.now() - prior.createdAt.getTime() < 2 * 60 * 1000) {
@@ -321,14 +351,17 @@ export const breedersRouter = router({
 
       let confirmationId = prior?.id;
       let scheduleCreated = 0;
-      let customCommitmentsRecorded = input.events.filter(event => event.isPrivateEvent).length;
+      let customCommitmentsRecorded = input.existingScheduleId ? 0 : confirmationEvents.filter(event => event.isPrivateEvent).length;
 
       if (!prior) {
-        // Validate every commitment and every collision before creating Luma
-        // pages, schedule rows, or customer-facing messages.
-        const plans = planBreederConfirmationEvents(input.events);
-        const studioPlans = plans.filter((plan): plan is PlannedBreederEvent & { schedule: NonNullable<PlannedBreederEvent["schedule"]> } => plan.schedule !== null);
-        customCommitmentsRecorded = plans.length - studioPlans.length;
+        // Calendar-originated confirmations refer to a saved class and must not
+        // create another schedule row or Luma event. New confirmations preserve
+        // the existing commitment and collision checks.
+        const plans = planBreederConfirmationEvents(confirmationEvents);
+        const studioPlans = input.existingScheduleId
+          ? []
+          : plans.filter((plan): plan is PlannedBreederEvent & { schedule: NonNullable<PlannedBreederEvent["schedule"]> } => plan.schedule !== null);
+        customCommitmentsRecorded = input.existingScheduleId ? 0 : plans.length - studioPlans.length;
         for (const plan of studioPlans) {
           const existing = await db.select({
             id: puppySchedule.id,
@@ -372,7 +405,7 @@ export const breedersRouter = router({
               sentToEmail: toEmail ?? "",
               sentToPhone: toPhone,
               requestKey,
-              events: JSON.stringify(input.events),
+              events: JSON.stringify(confirmationEvents),
               availabilityNote: input.availabilityNote ?? null,
               emailBody: html,
               status: "pending",
@@ -443,7 +476,7 @@ export const breedersRouter = router({
           if (await isSmsSuppressed(toPhone)) throw new Error("Recipient has opted out of APY text messages");
 
           // Build condensed SMS — one line per event
-          const eventLines = input.events.map((ev) => {
+          const eventLines = confirmationEvents.map((ev) => {
             const date = formatDateHuman(ev.date);
             const time = ev.apyTransport
               ? `Pickup ${ev.pickupTime ?? ""}, Return ${ev.returnTime ?? ""}`
@@ -508,7 +541,7 @@ export const breedersRouter = router({
         action: "booking_confirmation",
         recipient: toPhone,
         subject: null,
-        bodyPreview: `Breeder booking confirmation for ${input.events.length} event(s)`,
+        bodyPreview: `Breeder booking confirmation for ${confirmationEvents.length} event(s)`,
         deliveryStatus: smsSent ? "sent" : "failed",
         providerMessageId: smsSid ?? null,
         actorUserId: ctx.user.id,

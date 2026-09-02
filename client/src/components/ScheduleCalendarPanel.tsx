@@ -116,9 +116,26 @@ const EMPTY_FORM = {
   repeatWeekly: false,
 };
 
+export type CalendarBreederConfirmationSlot = {
+  id: number;
+  classDate: string;
+  location: string;
+  breed: string;
+  breederId: number;
+  breederName: string;
+  startTime: string;
+  endTime: string;
+  classType: string;
+  notes: string | null;
+};
+
+type ScheduleCalendarPanelProps = {
+  onOpenBreederConfirmation?: (slot: CalendarBreederConfirmationSlot) => void;
+};
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function ScheduleCalendarPanel() {
+export default function ScheduleCalendarPanel({ onOpenBreederConfirmation }: ScheduleCalendarPanelProps) {
   const today = new Date();
   const [year, setYear]   = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1);
@@ -127,7 +144,6 @@ export default function ScheduleCalendarPanel() {
   const [editId, setEditId]         = useState<number | null>(null);
   const [deleteId, setDeleteId]     = useState<number | null>(null);
   const [form, setForm]             = useState({ ...EMPTY_FORM });
-  const [notifyingId, setNotifyingId] = useState<number | null>(null);
   const [weekendOnly, setWeekendOnly] = useState(false);
 
   const utils = trpc.useUtils();
@@ -168,17 +184,6 @@ export default function ScheduleCalendarPanel() {
     onSuccess: () => { invalidate(); toast.success("Slot removed."); setDeleteId(null); },
     onError: (e) => toast.error(e.message),
   });
-  const notifyMutation = trpc.puppySchedule.notifyBreeder.useMutation({
-    onSuccess: (data) => {
-      toast.success(`Confirmation email sent to ${data.sentTo}!`);
-      setNotifyingId(null);
-    },
-    onError: (e) => {
-      toast.error(e.message);
-      setNotifyingId(null);
-    },
-  });
-
   // ─── Navigation ─────────────────────────────────────────────────────────────
 
   function prevMonth() { if (month === 1) { setYear(y => y - 1); setMonth(12); } else setMonth(m => m - 1); }
@@ -238,10 +243,13 @@ export default function ScheduleCalendarPanel() {
     }
   }
 
-  function handleNotify(e: React.MouseEvent, slotId: number) {
+  function handleOpenBreederConfirmation(e: React.MouseEvent, slot: CalendarBreederConfirmationSlot) {
     e.stopPropagation();
-    setNotifyingId(slotId);
-    notifyMutation.mutate({ slotId });
+    if (!onOpenBreederConfirmation) {
+      toast.error("The detailed breeder confirmation is unavailable here.");
+      return;
+    }
+    onOpenBreederConfirmation(slot);
   }
 
   // ─── Derived data ────────────────────────────────────────────────────────────
@@ -498,22 +506,18 @@ export default function ScheduleCalendarPanel() {
                                 </span>
                               )}
                             </span>
-                            {/* Notify Breeder button */}
+                            {/* Open the same detailed breeder confirmation workflow used by the Breeder Database. */}
                             <button
-                              onClick={(e) => handleNotify(e, slot.id)}
-                              disabled={notifyingId === slot.id}
+                              onClick={(e) => handleOpenBreederConfirmation(e, slot)}
                               className={`shrink-0 mt-0.5 rounded p-0.5 transition-colors ${
                                 isConflict
                                   ? "text-red-400 hover:bg-red-100"
                                   : "text-current opacity-50 hover:opacity-100 hover:bg-white/60"
                               }`}
-                              title="Send confirmation email to breeder"
-                              aria-label="Notify breeder"
+                              title="Open detailed breeder confirmation"
+                              aria-label="Open breeder confirmation"
                             >
-                              {notifyingId === slot.id
-                                ? <Loader2 size={11} className="animate-spin" />
-                                : <Mail size={11} />
-                              }
+                              <Mail size={11} />
                             </button>
                           </div>
                         );
@@ -570,7 +574,7 @@ export default function ScheduleCalendarPanel() {
           <AlertTriangle size={10} /> Conflict
         </span>
         <span className="flex items-center gap-1.5 font-body text-xs font-semibold px-2.5 py-1 rounded-full border bg-white text-[#6B4C3B] border-[#F0D0DC]">
-          <Mail size={10} /> Notify Breeder
+          <Mail size={10} /> Detailed Confirmation
         </span>
       </div>
 
