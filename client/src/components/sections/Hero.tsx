@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { trackCTAClick } from "@/hooks/useAnalytics";
+import LocalDogsImpact from "@/components/sections/LocalDogsImpact";
 import {
   getNextHeroImageOnError,
   PRIMARY_HERO_IMAGE,
@@ -93,7 +94,7 @@ export default function Hero() {
       </div>
 
       {/* Content — bottom-left anchored editorial layout */}
-      <div className="relative flex-1 flex flex-col justify-end container pb-20 pt-36 md:pb-28 md:pt-40">
+      <div className="relative flex-1 flex flex-col justify-end container pb-20 pt-28 md:pb-28 md:pt-36">
         <div className="max-w-2xl">
           {/* Eyebrow */}
           <motion.div
@@ -175,8 +176,26 @@ export default function Hero() {
           >
             Trusted by universities, brands, and wellness communities across Ontario.
           </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.95 }}
+            className="lg:hidden"
+          >
+            <LocalDogsImpact />
+          </motion.div>
         </div>
       </div>
+
+      <motion.div
+        initial={{ opacity: 0, x: 18 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6, delay: 0.8 }}
+        className="absolute right-10 top-28 z-10 hidden w-[340px] lg:block xl:right-14"
+      >
+        <LocalDogsImpact />
+      </motion.div>
 
       {/* Trusted By — infinite scrolling marquee on a frosted white strip */}
       <motion.div

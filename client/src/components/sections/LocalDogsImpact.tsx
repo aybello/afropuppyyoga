@@ -1,26 +1,21 @@
 import { HeartHandshake } from "lucide-react";
-import { BOOK_URL } from "@/const";
 
 export default function LocalDogsImpact() {
   return (
     <aside
       aria-label="Local dogs in need contribution"
-      className="w-full border-b border-white/15 bg-gradient-to-r from-[#702044] via-[#8B2252] to-[#B95F3D] text-white"
+      className="mt-6 flex max-w-xl items-center gap-3 rounded-2xl border border-[#F2A0B8]/45 bg-[#2C1320]/70 px-4 py-3 text-left text-white shadow-[0_16px_42px_rgba(17,5,10,0.28)] backdrop-blur-md sm:mt-7 sm:gap-4 sm:px-5"
     >
-      <div className="container flex min-h-9 items-center justify-center gap-2 py-2 text-center sm:gap-3">
-        <HeartHandshake className="size-4 shrink-0 text-[#FFD9A3]" aria-hidden="true" />
-        <p className="font-body text-[11px] leading-snug sm:text-xs md:text-sm">
-          <strong className="font-bold tracking-wide">Every APY ticket gives back.</strong>{" "}
-          $0.50 from every eligible paid public-class ticket supports local dogs in need.
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[#FFD9A3]/40 bg-[#FFD9A3]/10 sm:size-10">
+        <HeartHandshake className="size-4 text-[#FFD9A3] sm:size-[18px]" aria-hidden="true" />
+      </span>
+      <div className="min-w-0">
+        <p className="font-body text-[10px] font-bold uppercase tracking-[0.16em] text-[#FFD9A3]">
+          Puppy love, shared forward
         </p>
-        <a
-          href={BOOK_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hidden shrink-0 rounded-full border border-white/35 bg-white/15 px-3 py-0.5 font-body text-xs font-bold text-white transition-colors hover:bg-white/25 sm:inline-flex"
-        >
-          Book a class
-        </a>
+        <p className="mt-0.5 font-body text-xs leading-relaxed text-white/90 sm:text-sm">
+          Your visit helps, too. <strong className="font-semibold text-white">$0.50 from every eligible paid public-class ticket</strong> supports local dogs in need.
+        </p>
       </div>
     </aside>
   );
