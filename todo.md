@@ -1049,3 +1049,8 @@
 - [x] Replace the calendar-specific breeder message path with the existing detailed confirmation review and email-plus-SMS delivery workflow
 - [x] Preserve Canadian-phone validation, SMS suppression, email fallback, confirmation review, and accurate delivery feedback
 - [x] Add regression coverage and validate the unified calendar action without sending a live breeder confirmation
+
+## Top-Banner Local Dogs Announcement (Sep 2, 2026)
+- [x] Move the approved local-dogs-in-need ticket contribution announcement into the former top-of-page Summer Sale banner position
+- [x] Remove the public three-month pilot reference while retaining the accurate $0.50 eligible-ticket contribution and unnamed-partner boundary
+- [x] Validate and publish the relocated public announcement

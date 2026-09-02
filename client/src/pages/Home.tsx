@@ -18,7 +18,6 @@ import { useEffect } from "react";
 
 // Lazy-load below-the-fold sections — they load as the user scrolls, not on initial paint
 const LumaCalendar = lazy(() => import("@/components/sections/LumaCalendar"));
-const LocalDogsImpact = lazy(() => import("@/components/sections/LocalDogsImpact"));
 const Memberships = lazy(() => import("@/components/sections/Memberships"));
 const About = lazy(() => import("@/components/sections/About"));
 const OurStory = lazy(() => import("@/components/sections/OurStory"));
@@ -58,7 +57,6 @@ export default function Home() {
 
         {/* Below the fold — lazy loaded */}
         <DeferredSection minHeight="34rem"><Suspense fallback={<SectionFallback />}><LumaCalendar /></Suspense></DeferredSection>
-        <DeferredSection minHeight="13rem"><Suspense fallback={<SectionFallback />}><LocalDogsImpact /></Suspense></DeferredSection>
         <DeferredSection><Suspense fallback={<SectionFallback />}><Memberships /></Suspense></DeferredSection>
         <DeferredSection><Suspense fallback={<SectionFallback />}><About /></Suspense></DeferredSection>
         <DeferredSection><Suspense fallback={<SectionFallback />}><OurStory /></Suspense></DeferredSection>

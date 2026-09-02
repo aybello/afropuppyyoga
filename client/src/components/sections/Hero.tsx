@@ -93,7 +93,7 @@ export default function Hero() {
       </div>
 
       {/* Content — bottom-left anchored editorial layout */}
-      <div className="relative flex-1 flex flex-col justify-end container pb-20 md:pb-28 pt-24">
+      <div className="relative flex-1 flex flex-col justify-end container pb-20 pt-36 md:pb-28 md:pt-40">
         <div className="max-w-2xl">
           {/* Eyebrow */}
           <motion.div

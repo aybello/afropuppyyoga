@@ -8,6 +8,7 @@ import { BOOK_URL, LOGO_URL  } from "@/const";
 import { useState, useEffect, useRef } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { trackCTAClick } from "@/hooks/useAnalytics";
+import LocalDogsImpact from "@/components/sections/LocalDogsImpact";
 
 
 const primaryLinks = [
@@ -87,6 +88,7 @@ export default function Navbar() {
             : "bg-transparent"
         }`}
       >
+        <LocalDogsImpact />
         <div className="container">
           <nav className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
