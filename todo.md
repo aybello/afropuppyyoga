@@ -1064,6 +1064,7 @@
 ## Local Dogs Impact Note Color Refinement (Sep 2, 2026)
 - [x] Replace the current local-dogs hero impact-note color with a softer hero-aligned treatment while maintaining readable contrast
 - [x] Verify the refined color treatment on desktop and mobile before publishing
+- [ ] Verify the live domain serves the softer blush-and-cream impact-note asset rather than the prior dark card, then republish if required
 
 ## Uptime Monitoring and Public-Site Warmth (Sep 2, 2026)
 - [ ] Inspect whether an existing uptime monitor or health check is already configured for the APY public site and determine its interval and target safely
