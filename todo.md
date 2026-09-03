@@ -1123,4 +1123,4 @@
 - [x] Prevent duplicate employee, team-profile, or access records; retain the source application and preserve location-coverage safeguards
 - [x] Add a confirmed employee-departure action that marks the directory record inactive, retains history, and never deletes the source application or grants/revokes access beyond existing APY HQ safeguards
 - [x] Add focused tests for permissions, onboarding eligibility, duplicate prevention, contact validation, and coverage protection
-- [ ] Publish, verify, and record the Employee Directory improvements
+- [x] Publish, verify, and record the Employee Directory improvements
