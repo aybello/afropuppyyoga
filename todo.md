@@ -1114,4 +1114,4 @@
 - [x] Use one combined checkout for the full two-session total and display both booked time slots to the client, with the second class marked as included rather than separately charged
 - [x] Preserve existing single-session and already-approved private-event records without silently creating, moving, or charging additional classes
 - [x] Add focused regression coverage for multi-session pricing, two-class timing, and single-session compatibility
-- [ ] Publish, verify, and record the repaired private-event workflow
+- [x] Publish, verify, and record the repaired private-event workflow
