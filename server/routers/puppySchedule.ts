@@ -9,7 +9,7 @@ import twilio from "twilio";
 import { isSmsSuppressed } from "../smsConsent";
 import { createLumaEventForSchedule, getExistingLumaEventInvitationReadiness, sendExistingLumaEventInvitations, setLumaRegistrationOpen, updateLumaEventForSchedule } from "../lumaScheduleHelper";
 import { isAwayOnDate } from "../weekendCoverage";
-import { isClassFullyStaffed, scheduleLocationToTeamLocation, staffingGaps, TWO_PUPPY_MONITORS_REQUIRED } from "../classStaffing";
+import { getPuppyMonitorAssignmentEligibility, isClassFullyStaffed, scheduleLocationToTeamLocation, staffingGaps, TWO_PUPPY_MONITORS_REQUIRED } from "../classStaffing";
 import { isActiveTeamMember } from "../teamMembership";
 import { schedulesOverlap, validateScheduleCandidate } from "../scheduleValidation";
 
@@ -444,8 +444,11 @@ export const puppyScheduleRouter = router({
       const [away] = await db.select().from(staffAvailability).where(and(eq(staffAvailability.staffId, staffMember.id), lte(staffAvailability.startDate, schedule.classDate), gte(staffAvailability.endDate, schedule.classDate))).limit(1);
       if (away) throw new Error(`${staffMember.name} is unavailable on this class date.`);
       const existing = await db.select().from(classStaffAssignments).where(eq(classStaffAssignments.scheduleId, input.scheduleId));
-      if (existing.some((assignment) => assignment.staffId === staffMember.id)) throw new Error(`${staffMember.name} is already assigned to this class.`);
-      if (existing.length >= TWO_PUPPY_MONITORS_REQUIRED) throw new Error(`This class already has its required ${TWO_PUPPY_MONITORS_REQUIRED} Puppy Monitors.`);
+      const eligibility = getPuppyMonitorAssignmentEligibility({
+        assignedCount: existing.length,
+        alreadyAssigned: existing.some((assignment) => assignment.staffId === staffMember.id),
+      });
+      if (!eligibility.eligible) throw new Error(eligibility.reason);
       await db.insert(classStaffAssignments).values({ scheduleId: input.scheduleId, staffId: staffMember.id, staffName: staffMember.name, role: "Puppy Monitor" });
       return { success: true };
     }),

@@ -1132,3 +1132,13 @@
 - [x] Add a clearly destructive confirmation flow in Employee Directory and hide the option for active records
 - [x] Add focused regression coverage for permission, inactive-only eligibility, linked-record handling, and active-staff protection
 - [x] Publish, verify, and record the former-employee deletion control
+
+## Individual Class Staff Messaging Location (Sep 3, 2026)
+- [x] Verify and communicate the APY HQ navigation path for individual yoga-instructor and puppy-monitor email/SMS messaging
+
+## Run APY Class Staffing and Messaging (Sep 3, 2026)
+- [x] Trace the Run APY class-staffing workflow and its relationship to individual email/SMS messaging controls
+- [x] Expose individual class-staff messaging from Run APY without widening the recipient set beyond assigned staff
+- [x] Allow an optional third assigned Puppy Monitor while retaining the requirement for at least two monitors and preventing duplicate assignments
+- [x] Add focused tests for third-monitor capacity, duplicate prevention, and individual message-recipient safety
+- [x] Validate Run APY user interface behavior, publish, and record the staffing improvement
