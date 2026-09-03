@@ -356,6 +356,29 @@ export const privateEventInquiries = mysqlTable("privateEventInquiries", {
 export type PrivateEventInquiry = typeof privateEventInquiries.$inferSelect;
 export type InsertPrivateEventInquiry = typeof privateEventInquiries.$inferInsert;
 
+/**
+ * Private Luma class records belonging to one combined private-event booking.
+ * The first record is the combined checkout; remaining records are included
+ * time slots and deliberately have no purchasable ticket.
+ */
+export const privateEventClasses = mysqlTable("privateEventClasses", {
+  id: int("id").autoincrement().primaryKey(),
+  inquiryId: int("inquiryId").notNull(),
+  sessionNumber: int("sessionNumber").notNull(),
+  startTime: varchar("startTime", { length: 5 }).notNull(),
+  endTime: varchar("endTime", { length: 5 }).notNull(),
+  paymentMode: mysqlEnum("privateEventClassPaymentMode", ["combined_checkout", "included"]).notNull(),
+  lumaEventId: varchar("lumaEventId", { length: 100 }).notNull(),
+  lumaEventUrl: varchar("lumaEventUrl", { length: 500 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("uq_privateEventClasses_inquiry_session").on(t.inquiryId, t.sessionNumber),
+  uniqueIndex("uq_privateEventClasses_lumaEvent").on(t.lumaEventId),
+  index("idx_privateEventClasses_inquiry").on(t.inquiryId),
+]);
+
+export type PrivateEventClass = typeof privateEventClasses.$inferSelect;
+
 /** Immutable private-event workflow history, including approval and publication. */
 export const privateEventActions = mysqlTable("privateEventActions", {
   id: int("id").autoincrement().primaryKey(),

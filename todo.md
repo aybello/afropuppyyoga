@@ -1106,3 +1106,12 @@
 - [x] Prevent duplicate owner reports when a scheduled attempt is retried and surface delivery-channel failure safely
 - [x] Add focused regression coverage for outcome formatting, redaction, idempotency, and notification failure handling
 - [x] Publish and record the chosen notification workflow, while keeping scheduled Luma delivery reliability separately auditable
+
+## Private Event Multi-Session Pricing and Scheduling (Sep 3, 2026)
+- [x] Reproduce the reported two-session quote defect and trace session-count handling through private-event inquiry, approval, and class creation
+- [x] Make a two-session private-event quote equal exactly two times the applicable one-session price, preserving HST and any approved adjustments
+- [x] On approval, create one class per booked session with a 30-minute break between the first and second class while retaining duplicate-prevention safeguards
+- [x] Use one combined checkout for the full two-session total and display both booked time slots to the client, with the second class marked as included rather than separately charged
+- [x] Preserve existing single-session and already-approved private-event records without silently creating, moving, or charging additional classes
+- [x] Add focused regression coverage for multi-session pricing, two-class timing, and single-session compatibility
+- [ ] Publish, verify, and record the repaired private-event workflow
