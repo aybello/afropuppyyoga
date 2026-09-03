@@ -1102,7 +1102,7 @@
 ## Luma Reminder Owner Outcome Notifications (Sep 3, 2026)
 - [x] Verify available owner-email and text-delivery routes without using or exposing personal contact data
 - [x] Present a privacy-preserving delivery comparison and obtain the owner’s preferred notification channel
-- [ ] Implement one concise owner outcome report after every scheduled Luma reminder attempt, including each eligible event’s sent or safely-stopped status without attendee data
-- [ ] Prevent duplicate owner reports when a scheduled attempt is retried and surface delivery-channel failure safely
+- [x] Implement one concise owner outcome report after every scheduled Luma reminder attempt, including each eligible event’s sent or safely-stopped status without attendee data
+- [x] Prevent duplicate owner reports when a scheduled attempt is retried and surface delivery-channel failure safely
 - [x] Add focused regression coverage for outcome formatting, redaction, idempotency, and notification failure handling
-- [ ] Publish and record the chosen notification workflow, while keeping scheduled Luma delivery reliability separately auditable
+- [x] Publish and record the chosen notification workflow, while keeping scheduled Luma delivery reliability separately auditable
