@@ -59,6 +59,16 @@ function EventStaffControls({ event, staffing, onChanged }: { event: RunApySched
     },
     onError: (error) => toast.error(error.message),
   });
+  const notifyWholeTeam = trpc.puppySchedule.notifyEventTeam.useMutation({
+    onSuccess: (result) => {
+      notificationPreview.refetch();
+      const delivered = result.results.filter((item) => item.emailStatus === "sent" || item.smsStatus === "sent").length;
+      if (result.success) toast.success(`Schedule sent to ${delivered} team member${delivered === 1 ? "" : "s"}`);
+      else toast.warning(`Schedule delivery completed with issues. ${delivered} team member${delivered === 1 ? "" : "s"} received a message.`);
+      onChanged();
+    },
+    onError: (error) => toast.error(error.message),
+  });
   const assignPuppyMonitor = trpc.puppySchedule.assignPuppyMonitor.useMutation({
     onSuccess: () => {
       toast.success("Puppy Monitor assigned to this class");
@@ -81,7 +91,7 @@ function EventStaffControls({ event, staffing, onChanged }: { event: RunApySched
       const canContact = Boolean(recipient.email || recipient.phone);
       const wasSent = Boolean(recipient.lastSentAt);
       return <div key={`${recipient.role}-${recipient.id}`} className="flex flex-wrap items-center gap-2 rounded-lg border border-[#EEE4DF] bg-white px-3 py-2"><span className="min-w-0 flex-1 text-xs font-bold text-[#3D1A2E]">{recipient.name} · {recipient.role}</span><Mail size={13} className={recipient.email ? "text-emerald-600" : "text-gray-300"} /><MessageSquare size={13} className={recipient.phone ? "text-emerald-600" : "text-gray-300"} /><button type="button" onClick={() => { if (canContact && confirm(`${wasSent ? "Resend" : "Send"} this class schedule to ${recipient.name} only?`)) notifyIndividual.mutate({ scheduleId: event.id, staffId: recipient.id, resend: wasSent }); }} disabled={!canContact || notifyIndividual.isPending} className="rounded-md border border-[#8B2252]/25 bg-[#FFF8FA] px-2 py-1 text-[10px] font-bold text-[#8B2252] hover:bg-[#FFF0F5] disabled:cursor-not-allowed disabled:opacity-40"><Send size={10} className="mr-1 inline" />{wasSent ? "Resend" : "Message"}</button></div>;
-    })}</div>}
+    })}<div className="rounded-lg border border-[#DDE8D9] bg-[#F7FBF4] p-3"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold text-[#29472A]">Message the whole team</p><p className="mt-0.5 text-[11px] text-[#5B705A]">This sends to every currently assigned person. To contact only someone newly added, use their Message button above.</p></div><button type="button" onClick={() => { if (confirm(`Send this class schedule by email and text to ${notificationPreview.data?.recipients.length ?? 0} assigned team members?`)) notifyWholeTeam.mutate({ scheduleId: event.id, resend: Boolean(notificationPreview.data?.lastSentAt) }); }} disabled={!notificationPreview.data?.fullyStaffed || notifyWholeTeam.isPending} className="rounded-md bg-[#2D5A27] px-3 py-2 text-xs font-bold text-white hover:bg-[#23471F] disabled:cursor-not-allowed disabled:opacity-45"><Send size={12} className="mr-1 inline" />{notifyWholeTeam.isPending ? "Sending…" : notificationPreview.data?.lastSentAt ? "Resend to whole team" : "Send to whole team"}</button></div>{!notificationPreview.data?.fullyStaffed && <p className="mt-2 text-[11px] font-semibold text-amber-800">Finish staffing this class before sending to the whole team.</p>}</div></div>}
     <div className="mt-3 border-t border-[#EEE4DF] pt-3"><div className="flex flex-wrap items-center justify-between gap-2"><div><p className="text-xs font-bold text-[#3D1A2E]">Puppy Monitors · {assignedCount}/2 required</p><p className="text-[11px] text-[#77725F]">Up to 3 can be assigned for this class.</p></div></div>{canAddPuppyMonitor && staffing && <div className="mt-2 flex flex-wrap gap-2"><select value={selectedPuppyMonitor} onChange={(event) => setSelectedPuppyMonitor(event.target.value)} className="min-w-52 rounded-md border border-[#E7D8DE] bg-white px-3 py-2 text-xs"><option value="">Select an available Puppy Monitor</option>{staffing.staffing.eligiblePuppyMonitors.map((monitor) => <option key={monitor.id} value={monitor.id}>{monitor.name}</option>)}</select><button type="button" onClick={() => selectedPuppyMonitor && assignPuppyMonitor.mutate({ scheduleId: event.id, staffId: Number(selectedPuppyMonitor) })} disabled={!selectedPuppyMonitor || assignPuppyMonitor.isPending} className="rounded-md bg-[#7C3AED] px-3 py-2 text-xs font-bold text-white hover:bg-[#6D28D9] disabled:opacity-50"><UserPlus size={12} className="mr-1 inline" />{assignedCount >= 2 ? "Add 3rd PM" : "Assign PM"}</button></div>}{!staffing && <p className="mt-2 text-[11px] text-[#77725F]">Staffing options are loading. If they do not appear, open the schedule.</p>}</div>
   </div>;
 }

@@ -1142,3 +1142,9 @@
 - [x] Allow an optional third assigned Puppy Monitor while retaining the requirement for at least two monitors and preventing duplicate assignments
 - [x] Add focused tests for third-monitor capacity, duplicate prevention, and individual message-recipient safety
 - [x] Validate Run APY user interface behavior, publish, and record the staffing improvement
+
+## Run APY Individual and Group Class Messaging (Sep 3, 2026)
+- [x] Review the current Run APY individual-message panel and the existing whole-team delivery safeguards
+- [x] Add an explicit Send to whole team action alongside the existing per-person Message or Resend actions
+- [x] Keep individual messaging restricted to the selected assigned staff member so newly added staff can be contacted without re-sending to others
+- [x] Validate recipient scope, whole-team resend confirmation, delivery-status feedback, interface clarity, publish, and record the improvement
