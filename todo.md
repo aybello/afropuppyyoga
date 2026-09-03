@@ -1044,6 +1044,13 @@
 - [x] Add an owner-only APY HQ readiness check for an existing eligible public Luma event that returns aggregate invitation information only
 - [x] Add an owner-only confirmed send control that revalidates event state, prevents duplicate invitations, excludes registered guests, and never exposes recipient data
 - [x] Add focused regression coverage and validate the APY HQ experience without sending a live Luma invitation
+## Recurring Luma Promotion Rule Verification (Sep 3, 2026)
+- [x] Confirm the active Monday/Thursday 10:00 AM Eastern Luma reminder schedule already contains the owner-approved eligibility, Invited-only audience, one-time-code, same-day duplicate-prevention, exact-message, and safe no-send rules
+
+## Missed Thursday Luma Promotion Investigation (Sep 3, 2026)
+- [ ] Inspect all current eligible public APY Luma events and their Blasts read-only to determine whether the 10:00 AM schedule created the required Invited-only promotion
+- [ ] Identify the schedule-run failure or safe-stop reason without exposing recipient information, changing Luma records, or claiming delivery without evidence
+- [ ] Obtain explicit confirmation before sending any corrective live blast for an affected event
 
 ## Breeder Calendar Confirmation Unification (Sep 2, 2026)
 - [x] Replace the calendar-specific breeder message path with the existing detailed confirmation review and email-plus-SMS delivery workflow
@@ -1064,7 +1071,7 @@
 ## Local Dogs Impact Note Color Refinement (Sep 2, 2026)
 - [x] Replace the current local-dogs hero impact-note color with a softer hero-aligned treatment while maintaining readable contrast
 - [x] Verify the refined color treatment on desktop and mobile before publishing
-- [ ] Verify the live domain serves the softer blush-and-cream impact-note asset rather than the prior dark card, then republish if required
+- [x] Verify the live domain serves the softer blush-and-cream impact-note asset rather than the prior dark card after republishing
 
 ## Uptime Monitoring and Public-Site Warmth (Sep 2, 2026)
 - [ ] Inspect whether an existing uptime monitor or health check is already configured for the APY public site and determine its interval and target safely
@@ -1082,3 +1089,20 @@
 - [x] Diagnose why the owner cannot mark an approved invoice as paid without changing existing financial records during investigation
 - [x] Correct the dashboard and protected payment workflow while preserving approval, cumulative-payment, amount-limit, and audit safeguards
 - [x] Add regression coverage and validate the paid-status correction without modifying a live invoice
+
+## Confirmed Kitchener Reminder-Blast Correction (Sep 3, 2026)
+- [x] Revalidate only the Sep 5 and Sep 6 Kitchener Dachshunds events, their existing Invited audiences, and their current Blasts without exposing recipient data
+- [x] Send the owner-confirmed approved Luma reminder blast only to the existing Invited audience for those two Kitchener events
+- [x] Exclude the Oakville class and all other events; do not send new invitations or duplicate any same-day promotional blast
+- [x] Verify and document aggregate send outcomes without retaining recipient data
+- [ ] Resolve the Luma visible-composer 140-character limit without truncating the required full event message or sending an unapproved rewrite
+- [ ] Clear the unsent incorrect compact draft and use the exact approved reminder wording before any live send
+- [ ] Use a warm event-specific reminder without an event link, relying on Luma’s native event access and its 140-character composer limit
+
+## Luma Reminder Owner Outcome Notifications (Sep 3, 2026)
+- [x] Verify available owner-email and text-delivery routes without using or exposing personal contact data
+- [x] Present a privacy-preserving delivery comparison and obtain the owner’s preferred notification channel
+- [ ] Implement one concise owner outcome report after every scheduled Luma reminder attempt, including each eligible event’s sent or safely-stopped status without attendee data
+- [ ] Prevent duplicate owner reports when a scheduled attempt is retried and surface delivery-channel failure safely
+- [x] Add focused regression coverage for outcome formatting, redaction, idempotency, and notification failure handling
+- [ ] Publish and record the chosen notification workflow, while keeping scheduled Luma delivery reliability separately auditable

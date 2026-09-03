@@ -2,6 +2,7 @@ import express from "express";
 import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
+import { z } from "zod";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
@@ -17,6 +18,15 @@ import lumaWebhookRouter from "../lumaWebhook";
 import { requireStaffOrAdmin } from "./requireStaff";
 import { registerStorageProxy } from "./storageProxy";
 import crypto from "crypto";
+import { sdk } from "./sdk";
+import { sendEmail } from "../email";
+import { notifyOwner } from "./notification";
+import {
+  createLumaReminderOutcomeRepository,
+  deliverLumaReminderOutcomeReport,
+  isAuthorizedLumaReminderSchedule,
+  parseLumaReminderOutcomeReport,
+} from "../lumaReminderOutcome";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -339,6 +349,36 @@ async function startServer() {
     } catch (err) {
       console.error("[ReviewText] Handler error:", err);
       res.status(500).json({ ok: false, error: String(err) });
+    }
+  });
+
+  // POST /api/scheduled/luma-reminder-outcome — called only by the existing
+  // agent schedule after its Luma reminder attempt. The agent never receives
+  // SMTP credentials; this endpoint owns the private owner-email delivery.
+  app.post("/api/scheduled/luma-reminder-outcome", async (req, res) => {
+    let scheduledUser;
+    try {
+      scheduledUser = await sdk.authenticateRequest(req);
+    } catch {
+      return res.status(403).json({ ok: false, error: "Scheduled Luma reminder task required" });
+    }
+    if (!scheduledUser.isCron || !isAuthorizedLumaReminderSchedule(scheduledUser.taskUid)) {
+      return res.status(403).json({ ok: false, error: "Scheduled Luma reminder task required" });
+    }
+    try {
+      const report = parseLumaReminderOutcomeReport(req.body);
+      const result = await deliverLumaReminderOutcomeReport(report, {
+        repository: createLumaReminderOutcomeRepository(),
+        sendEmail,
+        notifyOwner,
+      });
+      return res.json({ ok: result.delivery !== "failed", delivery: result.delivery, attemptDate: result.attemptDate });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ ok: false, error: "Invalid Luma reminder outcome report" });
+      }
+      console.error("[LumaReminderOutcome] Scheduled outcome callback failed:", error instanceof Error ? error.message : "unknown error");
+      return res.status(500).json({ ok: false, error: "Luma reminder outcome report could not be recorded" });
     }
   });
 

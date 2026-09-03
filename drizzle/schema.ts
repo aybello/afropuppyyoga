@@ -391,6 +391,27 @@ export const communicationsLog = mysqlTable("communicationsLog", {
 
 export type CommunicationLog = typeof communicationsLog.$inferSelect;
 
+/**
+ * One privacy-preserving owner-outcome report per Luma reminder schedule and
+ * Toronto calendar date. No Luma attendee or recipient data belongs here.
+ */
+export const lumaReminderOutcomeReports = mysqlTable("lumaReminderOutcomeReports", {
+  id: int("id").autoincrement().primaryKey(),
+  scheduleTaskUid: varchar("scheduleTaskUid", { length: 65 }).notNull(),
+  attemptDate: varchar("attemptDate", { length: 10 }).notNull(),
+  runStatus: mysqlEnum("lumaReminderOutcomeRunStatus", ["completed", "safely_stopped", "no_eligible_events"]).notNull(),
+  outcomeSummary: text("outcomeSummary").notNull(),
+  deliveryStatus: mysqlEnum("lumaReminderOutcomeDeliveryStatus", ["pending", "sent", "failed"]).notNull().default("pending"),
+  failureCode: varchar("failureCode", { length: 64 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (t) => [
+  uniqueIndex("uq_lumaReminderOutcomeReports_task_date").on(t.scheduleTaskUid, t.attemptDate),
+  index("idx_lumaReminderOutcomeReports_delivery").on(t.deliveryStatus, t.createdAt),
+]);
+
+export type LumaReminderOutcomeReport = typeof lumaReminderOutcomeReports.$inferSelect;
+
 export const breeders = mysqlTable("breeders", {
   id: int("id").autoincrement().primaryKey(),
   /** Breeder / kennel name */
