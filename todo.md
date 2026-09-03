@@ -1124,3 +1124,11 @@
 - [x] Add a confirmed employee-departure action that marks the directory record inactive, retains history, and never deletes the source application or grants/revokes access beyond existing APY HQ safeguards
 - [x] Add focused tests for permissions, onboarding eligibility, duplicate prevention, contact validation, and coverage protection
 - [x] Publish, verify, and record the Employee Directory improvements
+
+## Former Employee Directory Record Deletion (Sep 3, 2026)
+- [x] Trace Employee Directory dependencies before permitting permanent deletion of a former record
+- [x] Permit only owners to permanently delete an inactive directory record that has no active APY HQ profile, preserving all active-staff, coverage, and access safeguards
+- [x] Retain job applications and immutable hiring/audit history when a linked former directory record is deleted
+- [x] Add a clearly destructive confirmation flow in Employee Directory and hide the option for active records
+- [x] Add focused regression coverage for permission, inactive-only eligibility, linked-record handling, and active-staff protection
+- [ ] Publish, verify, and record the former-employee deletion control

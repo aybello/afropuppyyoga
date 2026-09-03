@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { directEmployeeSchema, directTeamMemberSchema, employeeRecordUpdateSchema, getEmployeeDepartureUpdate, getOnboardedApplicantDirectoryEligibility, getTeamRemovalUpdate, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateEmployeeDirectoryAssignmentChange, validateTeamAssignmentChange } from "./routers/staffAvailability";
+import { directEmployeeSchema, directTeamMemberSchema, employeeRecordUpdateSchema, getEmployeeDepartureUpdate, getFormerEmployeeDeletionEligibility, getOnboardedApplicantDirectoryEligibility, getTeamRemovalUpdate, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateEmployeeDirectoryAssignmentChange, validateTeamAssignmentChange } from "./routers/staffAvailability";
 
 describe("direct team-member validation", () => {
   it("accepts an Operations Manager assigned to Oakville", () => {
@@ -80,6 +80,18 @@ describe("direct team-member validation", () => {
   it("marks a departed employee inactive while retaining their source application and employment history", () => {
     const endedAt = new Date("2026-09-03T12:00:00.000Z");
     expect(getEmployeeDepartureUpdate(endedAt)).toEqual({ employmentStatus: "inactive", endedAt });
+  });
+
+  it("allows permanent deletion only for former directory records that have no active APY HQ profile", () => {
+    expect(getFormerEmployeeDeletionEligibility({ employmentStatus: "inactive", linkedActiveTeamProfile: false })).toEqual({ eligible: true });
+    expect(getFormerEmployeeDeletionEligibility({ employmentStatus: "active", linkedActiveTeamProfile: false })).toEqual({
+      eligible: false,
+      reason: "Only former or removed Employee Directory records can be deleted permanently.",
+    });
+    expect(getFormerEmployeeDeletionEligibility({ employmentStatus: "inactive", linkedActiveTeamProfile: true })).toEqual({
+      eligible: false,
+      reason: "Remove this person from APY HQ Team first so staffing coverage and portal access are handled safely.",
+    });
   });
 
   it("rejects an unsupported role or location", () => {

@@ -2,7 +2,7 @@ import AdminNav from "@/components/AdminNav";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
 import { useState } from "react";
-import { ArrowLeft, CheckCircle2, Clock3, Mail, Pencil, Phone, RefreshCw, UserMinus, UserPlus, UsersRound } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock3, Mail, Pencil, Phone, RefreshCw, Trash2, UserMinus, UserPlus, UsersRound } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -65,6 +65,7 @@ export default function EmployeeDirectory() {
   const [showAddEmployee, setShowAddEmployee] = useState(false);
   const [newEmployee, setNewEmployee] = useState<NewEmployeeForm>(createEmptyEmployeeForm);
   const [departingEmployee, setDepartingEmployee] = useState<Employee | null>(null);
+  const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(null);
   const reactivate = trpc.staffAvailability.reactivateTeamMember.useMutation({
     onSuccess: () => {
       toast.success("Employee restored to APY HQ");
@@ -93,6 +94,14 @@ export default function EmployeeDirectory() {
     onSuccess: () => {
       toast.success("Employee marked as no longer active");
       setDepartingEmployee(null);
+      refetch();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+  const deleteFormerEmployee = trpc.staffAvailability.deleteFormerEmployeeRecord.useMutation({
+    onSuccess: () => {
+      toast.success("Former employee record deleted permanently");
+      setDeletingEmployee(null);
       refetch();
     },
     onError: (error) => toast.error(error.message),
@@ -256,6 +265,11 @@ export default function EmployeeDirectory() {
                                 <UserMinus className="h-3.5 w-3.5" /> Mark departed
                               </button>
                             )}
+                            {!isActive && (
+                              <button type="button" onClick={() => setDeletingEmployee(employee)} className="inline-flex items-center gap-1.5 font-body text-xs font-bold text-[#A33A36] hover:text-[#7D2825]">
+                                <Trash2 className="h-3.5 w-3.5" /> Delete permanently
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -321,6 +335,20 @@ export default function EmployeeDirectory() {
           <DialogFooter className="pt-2">
             <Button type="button" variant="outline" onClick={() => setDepartingEmployee(null)}>Keep active</Button>
             <Button type="button" disabled={markEmployeeDeparted.isPending} onClick={() => departingEmployee && markEmployeeDeparted.mutate({ employeeId: departingEmployee.id })} className="bg-[#9A3B51] text-white hover:bg-[#7B263B]">{markEmployeeDeparted.isPending ? "Updating…" : "Mark departed"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(deletingEmployee)} onOpenChange={(open) => !open && setDeletingEmployee(null)}>
+        <DialogContent className="max-w-lg border-[#F1D4D1] bg-[#FEFAF4]">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl text-[#1A0A12]">Delete former employee record permanently?</DialogTitle>
+            <DialogDescription className="font-body leading-6 text-[#6E5360]">This will remove {deletingEmployee?.name} from the Employee Directory. Their original application and APY hiring history will remain available.</DialogDescription>
+          </DialogHeader>
+          <p className="rounded-lg border border-red-200 bg-red-50 p-3 font-body text-sm leading-5 text-red-800">This cannot be undone. Only inactive former-record entries can be deleted; active staff must be managed through the APY HQ team workflow.</p>
+          <DialogFooter className="pt-2">
+            <Button type="button" variant="outline" onClick={() => setDeletingEmployee(null)}>Cancel</Button>
+            <Button type="button" disabled={deleteFormerEmployee.isPending} onClick={() => deletingEmployee && deleteFormerEmployee.mutate({ employeeId: deletingEmployee.id })} className="bg-[#A33A36] text-white hover:bg-[#7D2825]">{deleteFormerEmployee.isPending ? "Deleting…" : "Delete permanently"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

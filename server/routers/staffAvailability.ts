@@ -99,6 +99,16 @@ export function getEmployeeDepartureUpdate(endedAt: Date) {
   return { employmentStatus: "inactive" as const, endedAt };
 }
 
+export function getFormerEmployeeDeletionEligibility(input: { employmentStatus: string; linkedActiveTeamProfile: boolean }) {
+  if (input.employmentStatus !== "inactive") {
+    return { eligible: false as const, reason: "Only former or removed Employee Directory records can be deleted permanently." };
+  }
+  if (input.linkedActiveTeamProfile) {
+    return { eligible: false as const, reason: "Remove this person from APY HQ Team first so staffing coverage and portal access are handled safely." };
+  }
+  return { eligible: true as const };
+}
+
 export function getOnboardedApplicantDirectoryEligibility(input: { status: string; existingEmployee: boolean }) {
   if (input.status !== "onboarded") {
     return { eligible: false as const, reason: "Only onboarding-complete applicants can be added to the Employee Directory." };
@@ -393,6 +403,41 @@ export const staffAvailabilityRouter = router({
         }
       });
       return { success: true, alreadyInactive: false };
+    }),
+
+  // Permanently delete a former directory record only. Hiring/application history is intentionally retained.
+  deleteFormerEmployeeRecord: adminProcedure
+    .input(z.object({ employeeId: z.number().int().positive() }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const [employee] = await db.select().from(employees).where(eq(employees.id, input.employeeId)).limit(1);
+      if (!employee) throw new Error("Employee record not found.");
+
+      const linkedProfile = employee.sourceApplicationId === null ? null : (await db.select({
+        isTeamMember: jobApplications.isTeamMember,
+        deletedAt: jobApplications.deletedAt,
+      }).from(jobApplications).where(eq(jobApplications.id, employee.sourceApplicationId)).limit(1))[0] ?? null;
+      const eligibility = getFormerEmployeeDeletionEligibility({
+        employmentStatus: employee.employmentStatus,
+        linkedActiveTeamProfile: Boolean(linkedProfile?.isTeamMember) && !linkedProfile?.deletedAt,
+      });
+      if (!eligibility.eligible) throw new Error(eligibility.reason);
+
+      await db.transaction(async (tx) => {
+        if (employee.sourceApplicationId !== null) {
+          await tx.insert(jobApplicationActions).values({
+            applicationId: employee.sourceApplicationId,
+            action: "employee_directory_record_deleted",
+            actorUserId: ctx.user.id,
+            actorName: ctx.user.name,
+            actorEmail: ctx.user.email,
+            details: JSON.stringify({ directoryRecordDeleted: true }),
+          });
+        }
+        await tx.delete(employees).where(eq(employees.id, employee.id));
+      });
+      return { success: true };
     }),
 
   // Get availability for a specific staff member
