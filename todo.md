@@ -1131,4 +1131,4 @@
 - [x] Retain job applications and immutable hiring/audit history when a linked former directory record is deleted
 - [x] Add a clearly destructive confirmation flow in Employee Directory and hide the option for active records
 - [x] Add focused regression coverage for permission, inactive-only eligibility, linked-record handling, and active-staff protection
-- [ ] Publish, verify, and record the former-employee deletion control
+- [x] Publish, verify, and record the former-employee deletion control
