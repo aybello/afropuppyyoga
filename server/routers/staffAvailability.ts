@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { adminProcedure, staffProcedure, router } from "../_core/trpc";
 import { getDb, getUserByOpenId, upsertUser } from "../db";
-import { classStaffAssignments, employees, jobApplications, staffAvailability, staffInvites, weekendLeadershipCoverage } from "../../drizzle/schema";
+import { classStaffAssignments, employees, jobApplicationActions, jobApplications, staffAvailability, staffInvites, weekendLeadershipCoverage } from "../../drizzle/schema";
 import { and, asc, desc, eq, gte, isNull, isNotNull } from "drizzle-orm";
 import { getUpcomingWeekendDates, isAwayOnDate, isWeekendDate } from "../weekendCoverage";
 import { isActiveTeamMember } from "../teamMembership";
@@ -69,10 +69,44 @@ export const employeeRecordUpdateSchema = z.object({
   }
 });
 
+/** A directory-only employee record. It intentionally does not create APY HQ membership or portal access. */
+export const directEmployeeSchema = z.object({
+  name: z.string().trim().min(2, "Enter the employee's full name."),
+  email: z.string().trim().email("Enter a valid email address.").or(z.literal("")).default(""),
+  phone: z.string().trim().max(50).optional().default(""),
+  role: z.enum(APY_TEAM_ROLES),
+  location: z.enum(APY_TEAM_LOCATIONS),
+  startedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a valid start date."),
+}).superRefine((value, ctx) => {
+  if (!value.email && !value.phone) {
+    ctx.addIssue({ code: "custom", path: ["email"], message: "Add either an email address or phone number." });
+  }
+  if (value.phone && !normalizeCanadianPhoneNumber(value.phone)) {
+    ctx.addIssue({ code: "custom", path: ["phone"], message: "Enter a valid Canadian phone number." });
+  }
+  if (isCentralApyTeamRole(value.role) && value.location !== "CENTRAL") {
+    ctx.addIssue({ code: "custom", path: ["location"], message: "BDR and Social Media Specialist roles are APY-wide." });
+  }
+});
+
 const isOperationsManagerRole = (role: string) => role.toLowerCase().replaceAll("_", " ") === "operations manager";
 
 export function getTeamRemovalUpdate(removedAt: Date) {
   return { isTeamMember: false, deletedAt: removedAt };
+}
+
+export function getEmployeeDepartureUpdate(endedAt: Date) {
+  return { employmentStatus: "inactive" as const, endedAt };
+}
+
+export function getOnboardedApplicantDirectoryEligibility(input: { status: string; existingEmployee: boolean }) {
+  if (input.status !== "onboarded") {
+    return { eligible: false as const, reason: "Only onboarding-complete applicants can be added to the Employee Directory." };
+  }
+  if (input.existingEmployee) {
+    return { eligible: false as const, reason: "This applicant already has an Employee Directory record." };
+  }
+  return { eligible: true as const };
 }
 
 export function validateTeamAssignmentChange(input: {
@@ -218,6 +252,147 @@ export const staffAvailabilityRouter = router({
       });
 
       return { success: true };
+    }),
+
+  // Create a directory record for a manually added employee. It deliberately does not create a hiring application, APY HQ profile, or portal access.
+  createEmployeeRecord: adminProcedure
+    .input(directEmployeeSchema)
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const email = input.email ? input.email.toLowerCase() : null;
+      const phone = input.phone ? normalizeCanadianPhoneNumber(input.phone) : null;
+      const [emailMatch, phoneMatch] = await Promise.all([
+        email
+          ? db.select({ id: employees.id }).from(employees).where(eq(employees.email, email)).limit(1)
+          : Promise.resolve([]),
+        phone
+          ? db.select({ id: employees.id }).from(employees).where(eq(employees.phone, phone)).limit(1)
+          : Promise.resolve([]),
+      ]);
+      if (emailMatch[0] || phoneMatch[0]) {
+        throw new Error("An Employee Directory record already uses this email address or phone number. Update or restore that record instead of creating a duplicate.");
+      }
+
+      const result = await db.insert(employees).values({
+        name: input.name,
+        email,
+        phone,
+        role: input.role,
+        location: input.location,
+        employmentStatus: "active",
+        startedAt: new Date(`${input.startedAt}T12:00:00`),
+      });
+      return { success: true, id: Number(result[0].insertId) };
+    }),
+
+  // Add an onboarding-complete applicant to the directory without automatically granting APY HQ membership or any staff portal access.
+  addOnboardedApplicantToEmployeeDirectory: adminProcedure
+    .input(z.object({ applicationId: z.number().int().positive() }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const [applicant] = await db.select({
+        id: jobApplications.id,
+        name: jobApplications.name,
+        email: jobApplications.email,
+        phone: jobApplications.phone,
+        role: jobApplications.role,
+        location: jobApplications.location,
+        status: jobApplications.status,
+        deletedAt: jobApplications.deletedAt,
+      }).from(jobApplications).where(eq(jobApplications.id, input.applicationId)).limit(1);
+      if (!applicant || applicant.deletedAt) throw new Error("This application is no longer available.");
+
+      const [existingForApplication] = await db.select({ id: employees.id }).from(employees)
+        .where(eq(employees.sourceApplicationId, applicant.id)).limit(1);
+      const eligibility = getOnboardedApplicantDirectoryEligibility({
+        status: applicant.status,
+        existingEmployee: Boolean(existingForApplication),
+      });
+      if (!eligibility.eligible) throw new Error(eligibility.reason);
+
+      const email = applicant.email?.toLowerCase() ?? null;
+      const phone = applicant.phone ? normalizeCanadianPhoneNumber(applicant.phone) : null;
+      const [emailMatches, phoneMatches] = await Promise.all([
+        email ? db.select().from(employees).where(eq(employees.email, email)) : Promise.resolve([]),
+        phone ? db.select().from(employees).where(eq(employees.phone, phone)) : Promise.resolve([]),
+      ]);
+      const matchingEmployees = Array.from(new Map([...emailMatches, ...phoneMatches].map((employee) => [employee.id, employee])).values());
+      if (matchingEmployees.length > 1) {
+        throw new Error("Multiple Employee Directory records match this applicant. Resolve the duplicate records before adding them.");
+      }
+      const matchingEmployee = matchingEmployees[0];
+      if (matchingEmployee?.sourceApplicationId !== null) {
+        throw new Error("An active Employee Directory record is already linked to another application using this contact information.");
+      }
+
+      const directoryValues = {
+        sourceApplicationId: applicant.id,
+        name: applicant.name,
+        email,
+        phone,
+        role: applicant.role,
+        location: applicant.location,
+        employmentStatus: "active" as const,
+        endedAt: null,
+      };
+      const employeeId = await db.transaction(async (tx) => {
+        if (matchingEmployee) {
+          await tx.update(employees).set(directoryValues).where(eq(employees.id, matchingEmployee.id));
+        } else {
+          await tx.insert(employees).values(directoryValues);
+        }
+        const [directoryEmployee] = await tx.select({ id: employees.id }).from(employees)
+          .where(eq(employees.sourceApplicationId, applicant.id)).limit(1);
+        if (!directoryEmployee) throw new Error("Employee Directory record could not be created.");
+        await tx.insert(jobApplicationActions).values({
+          applicationId: applicant.id,
+          action: matchingEmployee ? "employee_directory_linked" : "employee_directory_added",
+          fromStatus: applicant.status,
+          toStatus: applicant.status,
+          actorUserId: ctx.user.id,
+          actorName: ctx.user.name,
+          actorEmail: ctx.user.email,
+          details: JSON.stringify({ createsApyHqMembership: false, grantsPortalAccess: false }),
+        });
+        return directoryEmployee.id;
+      });
+      return { success: true, id: employeeId, linkedExistingRecord: Boolean(matchingEmployee) };
+    }),
+
+  // Mark a directory-only employee inactive while retaining the directory history and original application. APY HQ removals remain in the existing protected team workflow.
+  markEmployeeDeparted: adminProcedure
+    .input(z.object({ employeeId: z.number().int().positive() }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const [employee] = await db.select().from(employees).where(eq(employees.id, input.employeeId)).limit(1);
+      if (!employee) throw new Error("Employee record not found.");
+      if (employee.employmentStatus === "inactive") return { success: true, alreadyInactive: true };
+
+      if (employee.sourceApplicationId !== null) {
+        const [linkedProfile] = await db.select({ isTeamMember: jobApplications.isTeamMember, deletedAt: jobApplications.deletedAt })
+          .from(jobApplications).where(eq(jobApplications.id, employee.sourceApplicationId)).limit(1);
+        if (linkedProfile?.isTeamMember && !linkedProfile.deletedAt) {
+          throw new Error("Remove this person from APY HQ Team first so staffing coverage and portal access are handled safely.");
+        }
+      }
+
+      const endedAt = new Date();
+      await db.transaction(async (tx) => {
+        await tx.update(employees).set(getEmployeeDepartureUpdate(endedAt)).where(eq(employees.id, employee.id));
+        if (employee.sourceApplicationId !== null) {
+          await tx.insert(jobApplicationActions).values({
+            applicationId: employee.sourceApplicationId,
+            action: "employee_directory_departed",
+            actorUserId: ctx.user.id,
+            actorName: ctx.user.name,
+            actorEmail: ctx.user.email,
+          });
+        }
+      });
+      return { success: true, alreadyInactive: false };
     }),
 
   // Get availability for a specific staff member
@@ -387,6 +562,18 @@ export const staffAvailabilityRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       const normalizedPhone = input.phone ? normalizeCanadianPhoneNumber(input.phone) : null;
+      const normalizedEmail = input.email ? input.email.toLowerCase() : null;
+      const [emailMatch, phoneMatch] = await Promise.all([
+        normalizedEmail
+          ? db.select({ id: employees.id }).from(employees).where(eq(employees.email, normalizedEmail)).limit(1)
+          : Promise.resolve([]),
+        normalizedPhone
+          ? db.select({ id: employees.id }).from(employees).where(eq(employees.phone, normalizedPhone)).limit(1)
+          : Promise.resolve([]),
+      ]);
+      if (emailMatch[0] || phoneMatch[0]) {
+        throw new Error("An Employee Directory record already uses this email address or phone number. Update or restore the existing record instead of adding a duplicate.");
+      }
 
       if (input.role === "Puppy Monitor") {
         const [operationsManager] = await db.select({ id: jobApplications.id })
@@ -406,7 +593,7 @@ export const staffAvailabilityRouter = router({
       const memberId = await db.transaction(async (tx) => {
         const result = await tx.insert(jobApplications).values({
           name: input.name,
-          email: input.email ? input.email.toLowerCase() : null,
+          email: normalizedEmail,
           phone: normalizedPhone,
           role: input.role,
           location: input.location,
@@ -419,7 +606,7 @@ export const staffAvailabilityRouter = router({
         await tx.insert(employees).values({
           sourceApplicationId,
           name: input.name,
-          email: input.email ? input.email.toLowerCase() : null,
+          email: normalizedEmail,
           phone: normalizedPhone,
           role: input.role,
           location: input.location,

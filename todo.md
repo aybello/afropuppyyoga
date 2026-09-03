@@ -1115,3 +1115,12 @@
 - [x] Preserve existing single-session and already-approved private-event records without silently creating, moving, or charging additional classes
 - [x] Add focused regression coverage for multi-session pricing, two-class timing, and single-session compatibility
 - [x] Publish, verify, and record the repaired private-event workflow
+
+## Employee Directory Creation and Onboarding Conversion (Sep 3, 2026)
+- [x] Trace Employee Directory records, team-profile creation, and job-application onboarding status to define a safe shared employee-creation path
+- [x] Add an owner/Operations-Manager direct Add Employee action with role, location, start date, and email-or-phone contact validation
+- [x] Add an eligible onboarding-complete job-application action that creates or links an employee record without auto-granting staff portal access
+- [x] Prevent duplicate employee, team-profile, or access records; retain the source application and preserve location-coverage safeguards
+- [x] Add a confirmed employee-departure action that marks the directory record inactive, retains history, and never deletes the source application or grants/revokes access beyond existing APY HQ safeguards
+- [x] Add focused tests for permissions, onboarding eligibility, duplicate prevention, contact validation, and coverage protection
+- [ ] Publish, verify, and record the Employee Directory improvements

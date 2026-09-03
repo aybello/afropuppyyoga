@@ -2,7 +2,7 @@ import AdminNav from "@/components/AdminNav";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
 import { useState } from "react";
-import { ArrowLeft, CheckCircle2, Clock3, Mail, Pencil, Phone, RefreshCw, UsersRound } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock3, Mail, Pencil, Phone, RefreshCw, UserMinus, UserPlus, UsersRound } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -22,6 +22,15 @@ type Employee = {
   endedAt: Date | string | null;
 };
 
+type NewEmployeeForm = {
+  name: string;
+  email: string;
+  phone: string;
+  role: ApyTeamRole;
+  location: "KW" | "OAK" | "HAM" | "CENTRAL";
+  startedAt: string;
+};
+
 const LOCATION_LABELS: Record<string, string> = {
   KW: "Kitchener",
   HAM: "Hamilton",
@@ -38,10 +47,24 @@ function formatDate(value: Date | string | null) {
   });
 }
 
+function createEmptyEmployeeForm(): NewEmployeeForm {
+  return {
+    name: "",
+    email: "",
+    phone: "",
+    role: "Yoga Instructor",
+    location: "KW",
+    startedAt: new Date().toISOString().slice(0, 10),
+  };
+}
+
 export default function EmployeeDirectory() {
   const { data, error, isLoading, refetch } = trpc.staffAvailability.listEmployees.useQuery();
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [showAddEmployee, setShowAddEmployee] = useState(false);
+  const [newEmployee, setNewEmployee] = useState<NewEmployeeForm>(createEmptyEmployeeForm);
+  const [departingEmployee, setDepartingEmployee] = useState<Employee | null>(null);
   const reactivate = trpc.staffAvailability.reactivateTeamMember.useMutation({
     onSuccess: () => {
       toast.success("Employee restored to APY HQ");
@@ -53,6 +76,23 @@ export default function EmployeeDirectory() {
     onSuccess: () => {
       toast.success("Employee record updated");
       setEditingEmployee(null);
+      refetch();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+  const createEmployee = trpc.staffAvailability.createEmployeeRecord.useMutation({
+    onSuccess: () => {
+      toast.success("Employee added to the directory");
+      setShowAddEmployee(false);
+      setNewEmployee(createEmptyEmployeeForm());
+      refetch();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+  const markEmployeeDeparted = trpc.staffAvailability.markEmployeeDeparted.useMutation({
+    onSuccess: () => {
+      toast.success("Employee marked as no longer active");
+      setDepartingEmployee(null);
       refetch();
     },
     onError: (error) => toast.error(error.message),
@@ -79,6 +119,11 @@ export default function EmployeeDirectory() {
     });
   };
 
+  const handleCreateEmployee = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    createEmployee.mutate(newEmployee);
+  };
+
   return (
     <div className="min-h-screen bg-[#FEFAF4]">
       <AdminNav />
@@ -98,9 +143,14 @@ export default function EmployeeDirectory() {
               APY's record of active and former team members. Removing someone from APY HQ clears their staffing access and keeps their history here.
             </p>
           </div>
-          <Link href="/admin/staff-availability" className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#8B2252] px-5 py-3 font-body text-sm font-bold text-white hover:bg-[#6B1A3E]">
-            Manage Active Team
-          </Link>
+          <div className="flex flex-wrap gap-3">
+            <Button type="button" onClick={() => setShowAddEmployee(true)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#8B2252] px-5 py-3 font-body text-sm font-bold text-white hover:bg-[#6B1A3E]">
+              <UserPlus className="h-4 w-4" /> Add Employee
+            </Button>
+            <Link href="/admin/staff-availability" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#8B2252]/25 bg-white px-5 py-3 font-body text-sm font-bold text-[#8B2252] hover:bg-[#FFF5F8]">
+              Manage Active Team
+            </Link>
+          </div>
         </section>
 
         <section className="mb-6 grid gap-4 sm:grid-cols-3">
@@ -201,6 +251,11 @@ export default function EmployeeDirectory() {
                             ) : (
                               <span className="font-body text-xs text-[#956A7C]">APY HQ profile not set</span>
                             )}
+                            {isActive && (
+                              <button type="button" onClick={() => setDepartingEmployee(employee)} className="inline-flex items-center gap-1.5 font-body text-xs font-bold text-[#9A3B51] hover:text-[#7B263B]">
+                                <UserMinus className="h-3.5 w-3.5" /> Mark departed
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -212,6 +267,63 @@ export default function EmployeeDirectory() {
           )}
         </section>
       </main>
+
+      <Dialog open={showAddEmployee} onOpenChange={(open) => {
+        setShowAddEmployee(open);
+        if (!open) setNewEmployee(createEmptyEmployeeForm());
+      }}>
+        <DialogContent className="max-w-xl border-[#EADBE2] bg-[#FEFAF4]">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl text-[#1A0A12]">Add employee</DialogTitle>
+            <DialogDescription className="font-body leading-6 text-[#6E5360]">Create an Employee Directory record without creating APY HQ membership or staff portal access.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateEmployee} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="space-y-1.5 font-body text-sm font-semibold text-[#3D1A2E]">Full name<Input value={newEmployee.name} onChange={(event) => setNewEmployee((current) => ({ ...current, name: event.target.value }))} required className="border-[#EADBE2] bg-white" /></label>
+              <label className="space-y-1.5 font-body text-sm font-semibold text-[#3D1A2E]">Start date<Input type="date" value={newEmployee.startedAt} onChange={(event) => setNewEmployee((current) => ({ ...current, startedAt: event.target.value }))} required className="border-[#EADBE2] bg-white" /></label>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="space-y-1.5 font-body text-sm font-semibold text-[#3D1A2E]">Email<Input type="email" value={newEmployee.email} onChange={(event) => setNewEmployee((current) => ({ ...current, email: event.target.value }))} className="border-[#EADBE2] bg-white" /></label>
+              <label className="space-y-1.5 font-body text-sm font-semibold text-[#3D1A2E]">Phone<Input type="tel" value={newEmployee.phone} onChange={(event) => setNewEmployee((current) => ({ ...current, phone: event.target.value }))} className="border-[#EADBE2] bg-white" /></label>
+            </div>
+            <p className="-mt-2 font-body text-xs text-[#956A7C]">Enter at least one contact method.</p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="space-y-1.5 font-body text-sm font-semibold text-[#3D1A2E]">Role
+                <select value={newEmployee.role} onChange={(event) => setNewEmployee((current) => ({
+                  ...current,
+                  role: event.target.value as ApyTeamRole,
+                  location: isCentralApyTeamRole(event.target.value) ? "CENTRAL" : current.location,
+                }))} className="h-9 w-full rounded-md border border-[#EADBE2] bg-white px-3 text-sm outline-none focus:border-[#8B2252] focus:ring-2 focus:ring-[#8B2252]/15">
+                  {APY_TEAM_ROLES.map((role) => <option key={role} value={role}>{role}</option>)}
+                </select>
+              </label>
+              <label className="space-y-1.5 font-body text-sm font-semibold text-[#3D1A2E]">Primary location
+                <select value={newEmployee.location} disabled={isCentralApyTeamRole(newEmployee.role)} onChange={(event) => setNewEmployee((current) => ({ ...current, location: event.target.value as NewEmployeeForm["location"] }))} className="h-9 w-full rounded-md border border-[#EADBE2] bg-white px-3 text-sm outline-none focus:border-[#8B2252] focus:ring-2 focus:ring-[#8B2252]/15 disabled:cursor-not-allowed disabled:bg-[#F7EEF1]">
+                  {APY_TEAM_LOCATIONS.map((location) => <option key={location} value={location}>{LOCATION_LABELS[location]}</option>)}
+                </select>
+              </label>
+            </div>
+            <DialogFooter className="pt-2">
+              <Button type="button" variant="outline" onClick={() => setShowAddEmployee(false)}>Cancel</Button>
+              <Button type="submit" disabled={createEmployee.isPending} className="bg-[#8B2252] text-white hover:bg-[#6B1A3E]">{createEmployee.isPending ? "Adding…" : "Add employee"}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(departingEmployee)} onOpenChange={(open) => !open && setDepartingEmployee(null)}>
+        <DialogContent className="max-w-lg border-[#EADBE2] bg-[#FEFAF4]">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl text-[#1A0A12]">Mark employee as departed?</DialogTitle>
+            <DialogDescription className="font-body leading-6 text-[#6E5360]">{departingEmployee?.name} will move to former employees. Their employment history and any source application will be retained.</DialogDescription>
+          </DialogHeader>
+          {departingEmployee?.sourceApplicationId && <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 font-body text-sm leading-5 text-amber-800">If this person is still active in APY HQ, remove them from the active team first so staffing coverage and portal access are handled safely.</p>}
+          <DialogFooter className="pt-2">
+            <Button type="button" variant="outline" onClick={() => setDepartingEmployee(null)}>Keep active</Button>
+            <Button type="button" disabled={markEmployeeDeparted.isPending} onClick={() => departingEmployee && markEmployeeDeparted.mutate({ employeeId: departingEmployee.id })} className="bg-[#9A3B51] text-white hover:bg-[#7B263B]">{markEmployeeDeparted.isPending ? "Updating…" : "Mark departed"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={Boolean(editingEmployee)} onOpenChange={(open) => !open && setEditingEmployee(null)}>
         <DialogContent className="max-w-xl border-[#EADBE2] bg-[#FEFAF4]">

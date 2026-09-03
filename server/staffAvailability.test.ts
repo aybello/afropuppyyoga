@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { directTeamMemberSchema, employeeRecordUpdateSchema, getTeamRemovalUpdate, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateEmployeeDirectoryAssignmentChange, validateTeamAssignmentChange } from "./routers/staffAvailability";
+import { directEmployeeSchema, directTeamMemberSchema, employeeRecordUpdateSchema, getEmployeeDepartureUpdate, getOnboardedApplicantDirectoryEligibility, getTeamRemovalUpdate, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateEmployeeDirectoryAssignmentChange, validateTeamAssignmentChange } from "./routers/staffAvailability";
 
 describe("direct team-member validation", () => {
   it("accepts an Operations Manager assigned to Oakville", () => {
@@ -45,6 +45,41 @@ describe("direct team-member validation", () => {
     expect(phoneOnly.email).toBe("");
     expect(phoneOnly.phone).toBe("289-788-1885");
     expect(() => directTeamMemberSchema.parse({ name: "Jordan Miles", email: "", phone: "", role: "Puppy Monitor", location: "KW" })).toThrow();
+  });
+
+  it("accepts a direct employee record without creating an APY HQ team profile", () => {
+    const employee = directEmployeeSchema.parse({
+      name: "Jordan Miles",
+      email: "",
+      phone: "289-788-1885",
+      role: "Yoga Instructor",
+      location: "KW",
+      startedAt: "2026-09-03",
+    });
+
+    expect(employee).toMatchObject({
+      name: "Jordan Miles",
+      role: "Yoga Instructor",
+      location: "KW",
+      startedAt: "2026-09-03",
+    });
+  });
+
+  it("permits only an onboarding-complete applicant without an existing directory record to be added", () => {
+    expect(getOnboardedApplicantDirectoryEligibility({ status: "onboarded", existingEmployee: false })).toEqual({ eligible: true });
+    expect(getOnboardedApplicantDirectoryEligibility({ status: "accepted", existingEmployee: false })).toEqual({
+      eligible: false,
+      reason: "Only onboarding-complete applicants can be added to the Employee Directory.",
+    });
+    expect(getOnboardedApplicantDirectoryEligibility({ status: "onboarded", existingEmployee: true })).toEqual({
+      eligible: false,
+      reason: "This applicant already has an Employee Directory record.",
+    });
+  });
+
+  it("marks a departed employee inactive while retaining their source application and employment history", () => {
+    const endedAt = new Date("2026-09-03T12:00:00.000Z");
+    expect(getEmployeeDepartureUpdate(endedAt)).toEqual({ employmentStatus: "inactive", endedAt });
   });
 
   it("rejects an unsupported role or location", () => {
