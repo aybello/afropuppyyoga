@@ -30,6 +30,16 @@ export default function QuickBooksDashboard() {
     },
     onError: error => toast.error(error.message),
   });
+  const exportToGoogleSheet = trpc.quickbooks.exportToGoogleSheet.useMutation({
+    onSuccess: result => {
+      if (result.status === "not_configured") {
+        toast.error("Google Sheets export is not configured yet.");
+        return;
+      }
+      toast.success(`Private Sheet refreshed with ${result.exportedCount} transaction records.`);
+    },
+    onError: error => toast.error(error.message),
+  });
   const disconnect = trpc.quickbooks.disconnect.useMutation({
     onSuccess: result => {
       toast.success(result.schedulePaused ? "QuickBooks access was revoked and daily imports are paused." : "QuickBooks access was revoked. The scheduled job will stop safely because the connection is inactive.");
@@ -89,6 +99,10 @@ export default function QuickBooksDashboard() {
                 <RefreshCw className={`mr-2 h-4 w-4 ${sync.isPending ? "animate-spin" : ""}`} />
                 {sync.isPending ? "Syncing…" : "Sync now"}
               </Button>
+              <Button onClick={() => exportToGoogleSheet.mutate()} disabled={exportToGoogleSheet.isPending} variant="outline" className="border-[#1F6B52] text-[#1F6B52] hover:bg-emerald-50 rounded-full">
+                <Download className={`mr-2 h-4 w-4 ${exportToGoogleSheet.isPending ? "animate-pulse" : ""}`} />
+                {exportToGoogleSheet.isPending ? "Exporting…" : "Export to Sheet"}
+              </Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild><Button variant="outline" className="rounded-full border-rose-300 text-rose-800 hover:bg-rose-50">Disconnect</Button></AlertDialogTrigger>
                 <AlertDialogContent>
@@ -126,7 +140,7 @@ export default function QuickBooksDashboard() {
             </section>
             <section className="grid lg:grid-cols-2 gap-6">
               <Card className="rounded-2xl border-[#F0D0DC] bg-white"><CardHeader><CardTitle className="font-display text-lg">Top expense categories</CardTitle></CardHeader><CardContent className="space-y-3">{overview.data.byCategory.map(row => <div key={row.name} className="flex items-center justify-between gap-4"><span className="font-body text-sm text-[#3D1A2E] truncate">{row.name}</span><strong className="font-body text-sm text-[#1A0A12]">{money(row.expenseCents)}</strong></div>)}{overview.data.byCategory.length === 0 && <p className="font-body text-sm text-[#9B7A69]">No imported expense categories yet. Run the first sync after connecting.</p>}</CardContent></Card>
-              <Card className="rounded-2xl border-[#D5E8DD] bg-[#F8FCF9]"><CardHeader><CardTitle className="font-display text-lg flex items-center gap-2"><BrainCircuit className="h-5 w-5 text-[#1F6B52]" />AI analysis and export</CardTitle></CardHeader><CardContent className="space-y-3"><p className="font-body text-sm text-[#416557]">Download a clean, aggregate-only summary for another AI, or ask APY’s private analysis assistant. No account numbers or individual transaction descriptions are included in the AI context.</p><Textarea value={question} onChange={event => setQuestion(event.target.value)} className="bg-white border-[#BFD9C9] min-h-24" maxLength={600} /><label className="flex gap-2 items-start font-body text-xs text-[#416557]"><input type="checkbox" checked={analysisConsent} onChange={event => setAnalysisConsent(event.target.checked)} className="mt-0.5" />I approve sending this aggregate finance summary to the configured AI service for this one analysis.</label><div className="flex flex-wrap gap-2"><Button variant="outline" onClick={downloadAiSummary} disabled={aiExport.isFetching} className="border-[#1F6B52] text-[#1F6B52]"><Download className="mr-2 h-4 w-4" />Download AI summary</Button><Button onClick={() => analyze.mutate({ question, confirmExternalAnalysis: true })} disabled={!analysisConsent || analyze.isPending} className="bg-[#1F6B52] hover:bg-[#15503D] text-white"><BrainCircuit className="mr-2 h-4 w-4" />{analyze.isPending ? "Analyzing…" : "Ask AI"}</Button></div>{analyze.data?.analysis && <div className="rounded-xl border border-[#D5E8DD] bg-white p-4 whitespace-pre-wrap font-body text-sm text-[#234738]">{analyze.data.analysis}</div>}</CardContent></Card>
+              <Card className="rounded-2xl border-[#D5E8DD] bg-[#F8FCF9]"><CardHeader><CardTitle className="font-display text-lg flex items-center gap-2"><BrainCircuit className="h-5 w-5 text-[#1F6B52]" />AI analysis and export</CardTitle></CardHeader><CardContent className="space-y-3"><p className="font-body text-sm text-[#416557]">Use <strong>Export to Sheet</strong> above to refresh the private transaction Sheet with source-traceable rows. Download a clean, aggregate-only summary for another AI, or ask APY’s private analysis assistant. No account numbers or individual transaction descriptions are included in the AI context.</p><Textarea value={question} onChange={event => setQuestion(event.target.value)} className="bg-white border-[#BFD9C9] min-h-24" maxLength={600} /><label className="flex gap-2 items-start font-body text-xs text-[#416557]"><input type="checkbox" checked={analysisConsent} onChange={event => setAnalysisConsent(event.target.checked)} className="mt-0.5" />I approve sending this aggregate finance summary to the configured AI service for this one analysis.</label><div className="flex flex-wrap gap-2"><Button variant="outline" onClick={downloadAiSummary} disabled={aiExport.isFetching} className="border-[#1F6B52] text-[#1F6B52]"><Download className="mr-2 h-4 w-4" />Download AI summary</Button><Button onClick={() => analyze.mutate({ question, confirmExternalAnalysis: true })} disabled={!analysisConsent || analyze.isPending} className="bg-[#1F6B52] hover:bg-[#15503D] text-white"><BrainCircuit className="mr-2 h-4 w-4" />{analyze.isPending ? "Analyzing…" : "Ask AI"}</Button></div>{analyze.data?.analysis && <div className="rounded-xl border border-[#D5E8DD] bg-white p-4 whitespace-pre-wrap font-body text-sm text-[#234738]">{analyze.data.analysis}</div>}</CardContent></Card>
             </section>
             <Card className="rounded-2xl border-[#F0D0DC] bg-white"><CardHeader><CardTitle className="font-display text-lg">Recent imported transaction records</CardTitle></CardHeader><CardContent className="overflow-x-auto"><table className="w-full min-w-[720px] text-left font-body text-sm"><thead className="text-xs uppercase text-[#8B6876]"><tr><th className="pb-3">Date</th><th className="pb-3">Type</th><th className="pb-3">Category</th><th className="pb-3">Payee</th><th className="pb-3">Direction</th><th className="pb-3 text-right">Amount</th></tr></thead><tbody>{overview.data.recentTransactions.map(row => <tr key={row.id} className="border-t border-[#F7E8EE]"><td className="py-3">{row.transactionDate}</td><td className="py-3">{row.sourceType}</td><td className="py-3">{row.categoryName ?? "—"}</td><td className="py-3">{row.payeeName ?? "—"}</td><td className="py-3 capitalize">{row.direction}</td><td className="py-3 text-right font-semibold">{money(row.amountCents)}</td></tr>)}</tbody></table>{overview.data.recentTransactions.length === 0 && <p className="py-5 font-body text-sm text-[#9B7A69]">No QuickBooks data has been imported yet.</p>}</CardContent></Card>
           </>

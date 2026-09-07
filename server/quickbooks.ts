@@ -18,6 +18,9 @@ const DEFAULT_GRAPH_MINOR_VERSION = "75";
 const DAILY_SYNC_CRON = "0 0 12 * * *";
 const OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
 const REFRESH_EARLY_MS = 2 * 60 * 1000;
+const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+const GOOGLE_SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets";
+const GOOGLE_SHEET_NAME = "QuickBooks Transactions";
 
 type QboTokenResponse = {
   access_token: string;
@@ -39,6 +42,132 @@ export type QuickbooksNormalizedTransaction = {
   description: string | null;
   sourceUpdatedAt: Date | null;
 };
+
+type GoogleSheetsExportRow = Pick<QuickbooksNormalizedTransaction,
+  "sourceType" | "sourceTransactionId" | "transactionDate" | "direction" | "amountCents" |
+  "categoryName" | "accountName" | "payeeName" | "description" | "sourceUpdatedAt"
+>;
+
+export function buildGoogleSheetsExportPayload({
+  exportedAt,
+  rows,
+}: {
+  exportedAt: Date;
+  rows: GoogleSheetsExportRow[];
+}) {
+  return {
+    sheetName: "QuickBooks Transactions",
+    replaceSnapshot: true,
+    exportedAt: exportedAt.toISOString(),
+    headers: [
+      "Source type",
+      "Source transaction ID",
+      "Date",
+      "Direction",
+      "Amount (CAD)",
+      "Category",
+      "Account",
+      "Payee",
+      "Description",
+      "Source updated at",
+    ],
+    rows: rows.map(row => [
+      row.sourceType,
+      row.sourceTransactionId,
+      row.transactionDate,
+      row.direction,
+      Math.round(row.amountCents) / 100,
+      row.categoryName ?? "",
+      row.accountName ?? "",
+      row.payeeName ?? "",
+      row.description ?? "",
+      row.sourceUpdatedAt?.toISOString() ?? "",
+    ]),
+  };
+}
+
+type GoogleServiceAccount = {
+  client_email: string;
+  private_key: string;
+};
+
+function base64UrlEncode(value: string | Buffer) {
+  return Buffer.from(value).toString("base64url");
+}
+
+function googleSheetsExportConfig() {
+  const spreadsheetId = process.env.GOOGLE_SHEETS_APY_TRANSACTION_SPREADSHEET_ID?.trim();
+  const serviceAccountJson = process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_JSON?.trim();
+  if (!spreadsheetId || !serviceAccountJson) return null;
+  if (!/^[A-Za-z0-9_-]{20,200}$/.test(spreadsheetId)) throw new Error("Google Sheet destination is invalid");
+  let serviceAccount: GoogleServiceAccount;
+  try {
+    serviceAccount = JSON.parse(serviceAccountJson) as GoogleServiceAccount;
+  } catch {
+    throw new Error("Google service account credentials are invalid");
+  }
+  if (!serviceAccount.client_email || !serviceAccount.private_key) {
+    throw new Error("Google service account credentials are incomplete");
+  }
+  return { spreadsheetId, serviceAccount };
+}
+
+export function isGoogleSheetsExportConfigured() {
+  return Boolean(process.env.GOOGLE_SHEETS_APY_TRANSACTION_SPREADSHEET_ID?.trim()
+    && process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_JSON?.trim());
+}
+
+async function getGoogleSheetsAccessToken(serviceAccount: GoogleServiceAccount) {
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const unsignedToken = `${base64UrlEncode(JSON.stringify({ alg: "RS256", typ: "JWT" }))}.${base64UrlEncode(JSON.stringify({
+    iss: serviceAccount.client_email,
+    scope: GOOGLE_SHEETS_SCOPE,
+    aud: GOOGLE_TOKEN_URL,
+    iat: nowSeconds,
+    exp: nowSeconds + 3_600,
+  }))}`;
+  const signer = crypto.createSign("RSA-SHA256");
+  signer.update(unsignedToken);
+  signer.end();
+  const assertion = `${unsignedToken}.${signer.sign(serviceAccount.private_key, "base64url")}`;
+  const response = await fetch(GOOGLE_TOKEN_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion,
+    }),
+  });
+  const payload = await response.json().catch(() => ({})) as { access_token?: string };
+  if (!response.ok || !payload.access_token) throw new Error("Google Sheets authorization failed");
+  return payload.access_token;
+}
+
+async function writeGoogleSheetsSnapshot({ spreadsheetId, serviceAccount }: NonNullable<ReturnType<typeof googleSheetsExportConfig>>, payload: ReturnType<typeof buildGoogleSheetsExportPayload>) {
+  const accessToken = await getGoogleSheetsAccessToken(serviceAccount);
+  const spreadsheetBase = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}`;
+  const headers = { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" };
+  const range = `'${GOOGLE_SHEET_NAME}'!A:Z`;
+  const clearResponse = await fetch(`${spreadsheetBase}/values/${encodeURIComponent(range)}:clear`, {
+    method: "POST",
+    headers,
+    body: "{}",
+  });
+  if (!clearResponse.ok) throw new Error("Google Sheet could not be cleared for refresh");
+
+  const values = [payload.headers, ...payload.rows];
+  const chunkSize = 2_000;
+  for (let start = 0; start < values.length; start += chunkSize) {
+    const chunk = values.slice(start, start + chunkSize);
+    const updateRange = `'${GOOGLE_SHEET_NAME}'!A${start + 1}`;
+    const updateResponse = await fetch(`${spreadsheetBase}/values/${encodeURIComponent(updateRange)}?valueInputOption=RAW`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({ majorDimension: "ROWS", values: chunk }),
+    });
+    if (!updateResponse.ok) throw new Error("Google Sheet transaction export failed");
+  }
+}
 
 function requireQuickbooksCredentials() {
   const clientId = process.env.QBO_CLIENT_ID;
@@ -390,11 +519,33 @@ export async function syncQuickbooksConnection(connection: QuickbooksConnection,
       importedCount: normalized.length,
       completedAt,
     }).where(eq(quickbooksSyncRuns.id, runId));
-    return { importedCount: normalized.length, since, completedAt };
+    const sheetExport = isGoogleSheetsExportConfigured()
+      ? await exportQuickbooksTransactionsToGoogleSheet(connection)
+      : { status: "not_configured" as const, exportedCount: 0 };
+    return { importedCount: normalized.length, since, completedAt, sheetExport };
   } catch (error) {
     await markSyncFailure(connection, runId, error instanceof Error ? error.message : "QuickBooks sync failed");
     throw error;
   }
+}
+
+export async function exportQuickbooksTransactionsToGoogleSheet(connection?: QuickbooksConnection) {
+  const config = googleSheetsExportConfig();
+  if (!config) return { status: "not_configured" as const, exportedCount: 0 };
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const activeConnection = connection ?? await latestConnection();
+  if (!activeConnection) throw new Error("QuickBooks Online is not connected yet");
+  const transactions = await db.select().from(quickbooksTransactions)
+    .where(eq(quickbooksTransactions.connectionId, activeConnection.id))
+    .orderBy(quickbooksTransactions.transactionDate, quickbooksTransactions.sourceType, quickbooksTransactions.sourceTransactionId);
+  const payload = buildGoogleSheetsExportPayload({ exportedAt: new Date(), rows: transactions });
+  await writeGoogleSheetsSnapshot(config, payload);
+  return { status: "exported" as const, exportedCount: transactions.length, exportedAt: payload.exportedAt };
+}
+
+export async function exportActiveQuickbooksTransactionsToGoogleSheet() {
+  return exportQuickbooksTransactionsToGoogleSheet();
 }
 
 export async function syncActiveQuickbooksConnection(trigger: "manual" | "daily") {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createCancellationCode, isInFlightTwilioStatus } from "./cancellation";
+import { createCancellationCode, isCancellationCommunicationEnabled, isInFlightTwilioStatus } from "./cancellation";
 
 describe("cancellation delivery reconciliation", () => {
   it("reconciles only active Twilio delivery statuses", () => {
@@ -14,9 +14,13 @@ describe("cancellation delivery reconciliation", () => {
 });
 
 describe("cancellation credit codes", () => {
-  it("generates unique, Luma-safe codes", () => {
-    const codes = new Set(Array.from({ length: 50 }, () => createCancellationCode()));
-    expect(codes.size).toBe(50);
-    for (const code of codes) expect(code).toMatch(/^APY-[A-F0-9]{14}$/);
+  it("uses the Ontario class date in the owner-required Luma-safe code format", () => {
+    expect(createCancellationCode("2026-08-05T18:00:00.000Z")).toBe("AUG5");
+  });
+
+  it("fails closed unless cancellation communications are explicitly enabled", () => {
+    expect(isCancellationCommunicationEnabled(undefined)).toBe(false);
+    expect(isCancellationCommunicationEnabled("false")).toBe(false);
+    expect(isCancellationCommunicationEnabled("true")).toBe(true);
   });
 });

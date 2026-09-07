@@ -1177,10 +1177,17 @@
 - [ ] Publish the QuickBooks finance hub, then authorize the owner-controlled QuickBooks company connection and verify the first read-only import
 
 ## QuickBooks Transaction Export to Google Sheets (Sep 7, 2026)
-- [ ] Verify the owner-controlled Google Sheets destination and privacy boundaries for QuickBooks transaction exports
+- [x] Verify the owner-controlled Google Sheets destination and privacy boundaries for QuickBooks transaction exports
 - [ ] Add a read-only, owner-only export that writes imported QuickBooks transaction rows to a private Google Sheet without changing QuickBooks
 - [ ] Preserve source identifiers, prevent duplicate sheet rows on refresh, and keep transaction data inaccessible to non-owners
+- [ ] Add both a daily Sheet refresh and owner-only on-demand export after a manual QuickBooks sync
 - [ ] Authorize the selected Sheet, validate the first export, publish, and record the Google Sheets workflow
+
+## Google Service Account for APY Finance Sheet (Sep 7, 2026)
+- [ ] Define the least-privilege Google Cloud service-account permissions and single-Sheet sharing boundary for APY financial exports
+- [ ] Add a secure owner-only transaction export using the service-account credentials, with a repeat-safe snapshot replacement and explicit source identifiers
+- [ ] Configure the approved service account without exposing its key and share only the selected APY QuickBooks Transactions Sheet
+- [ ] Enable daily plus on-demand Sheet exports, validate the first private export after QuickBooks authorization, and record operational failure handling
 
 ## QuickBooks OAuth Redirect URI Correction (Sep 7, 2026)
 - [ ] Verify the exact production APY QuickBooks callback URL and ensure it is registered verbatim in the Intuit app’s production Redirect URIs
@@ -1203,3 +1210,14 @@
 - [x] Merge the reviewed Meta/Luma purchase-attribution repair with the owner’s approval to retain the active attribution sender and allow its deduplicated replay
 - [x] Validate the integrated production build and protect unrelated APY workflows and the planned QuickBooks Online finance hub
 - [x] Publish, confirm the active Meta sender remains enabled, and record the approved attribution repair
+
+## Urgent Cancellation and Rebooking Email Investigation (Sep 7, 2026)
+- [ ] Contain any further cancellation and rebooking communications while preserving existing audit records
+- [ ] Identify the privacy-preserving scope and trigger of the unexpected cancellation email and generated rebooking code
+- [ ] Correct the cancellation, rebooking-code, and suggested-class communication safeguards with focused regression coverage
+- [ ] Validate and report the incident findings without recipient data; publish any repair only with owner approval
+
+## Date-Based Cancellation Rebooking Codes (Sep 7, 2026)
+- [ ] Replace the incorrect random cancellation-code generation with the owner-required Ontario class-date format, such as AUG5
+- [ ] Block cancellation communications until the date-based code and the recipient workflow are verified
+- [ ] Add focused regression coverage for date-code format, duplicate-code handling, and no-send safety

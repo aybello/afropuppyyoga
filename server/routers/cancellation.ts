@@ -12,7 +12,6 @@
  * Only accessible to admin/staff roles.
  */
 import { TRPCError } from "@trpc/server";
-import { randomBytes } from "crypto";
 import { desc, eq } from "drizzle-orm";
 import twilio from "twilio";
 import { z } from "zod";
@@ -23,6 +22,7 @@ import { staffProcedure, router } from "../_core/trpc";
 import { sendClassCancellationEmail } from "../email";
 import { getTwilioWebhookUrl } from "../twilioWebhook";
 import { createCappedCalendarRebookingCoupon } from "../lumaCalendarCoupon";
+import { rebookingCodeForClassDate } from "../lumaCalendarCoupon";
 import { isSmsSuppressed } from "../smsConsent";
 import { setLumaRegistrationOpen } from "../lumaScheduleHelper";
 
@@ -33,8 +33,12 @@ export function isInFlightTwilioStatus(status: string | null | undefined): boole
   return !!status && IN_FLIGHT_TWILIO_STATUSES.has(status.toLowerCase());
 }
 
-export function createCancellationCode() {
-  return `APY-${randomBytes(7).toString("hex").toUpperCase()}`;
+export function createCancellationCode(eventStartAt: string | Date) {
+  return rebookingCodeForClassDate(eventStartAt);
+}
+
+export function isCancellationCommunicationEnabled(value = process.env.CANCELLATION_COMMUNICATIONS_ENABLED) {
+  return value === "true";
 }
 
 /** Fetch all guests for a Luma event (handles pagination) */
@@ -165,6 +169,12 @@ export const cancellationRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      if (!isCancellationCommunicationEnabled()) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Cancellation communications are paused for review. No calls, texts, emails, or rebooking codes were sent.",
+        });
+      }
       const accountSid = process.env.TWILIO_ACCOUNT_SID;
       const authToken = process.env.TWILIO_AUTH_TOKEN;
       const fromNumber = process.env.TWILIO_PHONE_NUMBER;
@@ -189,7 +199,7 @@ export const cancellationRouter = router({
       const canonicalEventName = cancelledEvent.name;
       const guests = await fetchLumaGuests(input.eventApiId);
       if (guests.length === 0) throw new TRPCError({ code: "BAD_REQUEST", message: "This event has no approved guests to notify." });
-      const rebookingCode = createCancellationCode();
+      const rebookingCode = createCancellationCode(cancelledEvent.start_at);
       await setLumaRegistrationOpen(input.eventApiId, false);
       try {
         await createCappedCalendarRebookingCoupon(rebookingCode, guests.length, { apiKey: process.env.LUMA_API_KEY ?? "" });
