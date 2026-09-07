@@ -471,7 +471,7 @@ export default function CancellationDashboard() {
                       Free Luma rebooking code: <span className="font-mono tracking-widest">{cancellationResult.rebookingCode}</span>
                     </p>
                     <p className="mt-0.5 text-xs text-gray-600">
-                      Registration closed. This 100%-off calendar credit is limited to {cancellationResult.total} uses—one for each affected guest.
+                      Registration closed. This date-based 100%-off calendar credit applies to any upcoming APY class.
                     </p>
                   </div>
                 </div>

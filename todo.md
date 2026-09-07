@@ -1212,12 +1212,14 @@
 - [x] Publish, confirm the active Meta sender remains enabled, and record the approved attribution repair
 
 ## Urgent Cancellation and Rebooking Email Investigation (Sep 7, 2026)
-- [ ] Contain any further cancellation and rebooking communications while preserving existing audit records
-- [ ] Identify the privacy-preserving scope and trigger of the unexpected cancellation email and generated rebooking code
-- [ ] Correct the cancellation, rebooking-code, and suggested-class communication safeguards with focused regression coverage
-- [ ] Validate and report the incident findings without recipient data; publish any repair only with owner approval
+- [x] Contain any further cancellation and rebooking communications while preserving existing audit records
+- [x] Identify the privacy-preserving scope and trigger of the unexpected cancellation email and generated rebooking code
+- [x] Correct the cancellation, rebooking-code, and suggested-class communication safeguards with focused regression coverage
+- [x] Validate and report the incident findings without recipient data; retain the paused sender until the owner explicitly approves re-enablement
 
 ## Date-Based Cancellation Rebooking Codes (Sep 7, 2026)
-- [ ] Replace the incorrect random cancellation-code generation with the owner-required Ontario class-date format, such as AUG5
-- [ ] Block cancellation communications until the date-based code and the recipient workflow are verified
-- [ ] Add focused regression coverage for date-code format, duplicate-code handling, and no-send safety
+- [x] Replace the incorrect random cancellation-code generation with the owner-required Ontario class-date format, such as AUG5
+- [x] Block cancellation communications until the date-based code and the recipient workflow are verified
+- [x] Add focused regression coverage for date-code format, duplicate-code handling, and no-send safety
+- [x] Verify every historic and future correction creates or reuses a 100% off Luma calendar-level date code usable for any upcoming APY class
+- [x] Remove automatic promotion of one specific next class from cancellation notices because the calendar-level date code is valid for any upcoming APY class

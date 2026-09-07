@@ -21,8 +21,7 @@ import { callLogs, cancellationCredits, puppySchedule } from "../../drizzle/sche
 import { staffProcedure, router } from "../_core/trpc";
 import { sendClassCancellationEmail } from "../email";
 import { getTwilioWebhookUrl } from "../twilioWebhook";
-import { createCappedCalendarRebookingCoupon } from "../lumaCalendarCoupon";
-import { rebookingCodeForClassDate } from "../lumaCalendarCoupon";
+import { ensureFreeCalendarRebookingCoupon, rebookingCodeForClassDate } from "../lumaCalendarCoupon";
 import { isSmsSuppressed } from "../smsConsent";
 import { setLumaRegistrationOpen } from "../lumaScheduleHelper";
 
@@ -201,8 +200,10 @@ export const cancellationRouter = router({
       if (guests.length === 0) throw new TRPCError({ code: "BAD_REQUEST", message: "This event has no approved guests to notify." });
       const rebookingCode = createCancellationCode(cancelledEvent.start_at);
       await setLumaRegistrationOpen(input.eventApiId, false);
+      let couponState: "created" | "reused";
       try {
-        await createCappedCalendarRebookingCoupon(rebookingCode, guests.length, { apiKey: process.env.LUMA_API_KEY ?? "" });
+        const coupon = await ensureFreeCalendarRebookingCoupon(rebookingCode, { apiKey: process.env.LUMA_API_KEY ?? "" });
+        couponState = coupon.state;
       } catch (error) {
         await setLumaRegistrationOpen(input.eventApiId, true).catch((rollbackError) => console.error("[Cancellation] Could not reopen registration", rollbackError));
         throw new TRPCError({
@@ -211,36 +212,17 @@ export const cancellationRouter = router({
         });
       }
       const provisionedAt = new Date();
-      await db.insert(cancellationCredits).values({ lumaEventId: input.eventApiId, eventName: canonicalEventName, couponCode: rebookingCode, maxUses: guests.length, registrationClosedAt: provisionedAt, couponCreatedAt: provisionedAt, createdByUserId: ctx.user.id });
+      await db.insert(cancellationCredits).values({ lumaEventId: input.eventApiId, eventName: canonicalEventName, couponCode: rebookingCode, maxUses: 1_000_000, registrationClosedAt: provisionedAt, couponCreatedAt: provisionedAt, createdByUserId: ctx.user.id });
       await db.update(puppySchedule).set({ scheduleStatus: "cancelled", lumaSyncStatus: "synced", lumaSyncedAt: provisionedAt }).where(eq(puppySchedule.lumaEventId, input.eventApiId));
-
-      // ── Find next upcoming class (any location) ───────────────────────────
-      const nextEvent = allEvents
-        .filter((e) => e.api_id !== input.eventApiId && new Date(e.start_at) > new Date())
-        .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())[0];
-
-      const nextClassName = nextEvent?.name;
-      const nextClassDate = nextEvent
-        ? new Date(nextEvent.start_at).toLocaleDateString("en-CA", {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-          })
-        : undefined;
 
       // Voice message (TTS — slightly more formal for spoken delivery)
       const voiceMessage = input.customMessage
         ? `${input.customMessage} Please check your email for the free rebooking code ${rebookingCode}, valid across the AfroPuppyYoga calendar.`
         : `Hello, this is a message from AfroPuppyYoga. We regret to inform you that your upcoming class, ${canonicalEventName}, has been cancelled. We apologize for the inconvenience. Please check your email for your free rebooking code, valid across the AfroPuppyYoga calendar. Thank you for your understanding.`;
 
-      // SMS message (concise for text — includes rebooking code and next class)
-      const nextClassSmsHint = nextClassName && nextClassDate
-        ? ` Our next class is ${nextClassName} on ${nextClassDate} — we'd love to see you there!`
-        : " We'd love to see you at a future class at any of our locations — Hamilton, Kitchener & Oakville. Book at afropuppyyoga.ca.";
-
       const smsMessage = input.customMessage
         ? `${input.customMessage}\n\nUse free code ${rebookingCode} for 100% off any future APY class booked through our Luma calendar.`
-        : `Hi from AfroPuppyYoga! Your class "${canonicalEventName}" has been cancelled. Sorry for the inconvenience! Use free code ${rebookingCode} for 100% off any future APY class booked through our Luma calendar.${nextClassSmsHint}`;
+        : `Hi from AfroPuppyYoga! Your class "${canonicalEventName}" has been cancelled. Sorry for the inconvenience! Use free code ${rebookingCode} for 100% off any future APY class booked through our Luma calendar. Browse upcoming classes at afropuppyyoga.ca.`;
       const now = Date.now();
 
       const results: Array<{
@@ -318,8 +300,6 @@ export const cancellationRouter = router({
                   guestName: guest.name,
                   eventName: canonicalEventName,
                   rebookingCode,
-                  nextClassName,
-                  nextClassDate,
                   customMessage: input.customMessage,
                 });
                 emailStatus = "sent";
@@ -385,7 +365,7 @@ export const cancellationRouter = router({
         r.callStatus === "failed" || r.smsStatus === "failed" || r.emailStatus === "failed"
       ).length;
 
-      return { total: guests.length, called, texted, emailed, failed, results, rebookingCode, couponState: "created" as const, registrationClosed: true };
+      return { total: guests.length, called, texted, emailed, failed, results, rebookingCode, couponState, registrationClosed: true };
     }),
 
   /** Reconcile in-flight delivery records with Twilio when an admin refreshes the notification log. */

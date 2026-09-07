@@ -860,7 +860,7 @@ export const cancellationCredits = mysqlTable("cancellationCredits", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (t) => [
   uniqueIndex("uq_cancellationCredits_event").on(t.lumaEventId),
-  uniqueIndex("uq_cancellationCredits_code").on(t.couponCode),
+  index("idx_cancellationCredits_code").on(t.couponCode),
 ]);
 
 // ─── Review Text Logs ─────────────────────────────────────────────────────────

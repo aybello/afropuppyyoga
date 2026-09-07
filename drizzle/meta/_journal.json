@@ -337,6 +337,13 @@
       "when": 1788761645069,
       "tag": "0049_naive_true_believers",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "5",
+      "when": 1788809411103,
+      "tag": "0050_vengeful_cargill",
+      "breakpoints": true
     }
   ]
 }
