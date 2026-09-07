@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ownerProcedure, router } from "../_core/trpc";
 import {
   buildQuickbooksAnalysisContext,
+  disconnectActiveQuickbooksConnection,
   getQuickbooksOverview,
   startQuickbooksAuthorization,
   syncActiveQuickbooksConnection,
@@ -42,6 +43,7 @@ export const quickbooksRouter = router({
   overview: ownerProcedure.query(() => getQuickbooksOverview()),
   beginAuthorization: ownerProcedure.mutation(() => startQuickbooksAuthorization()),
   syncNow: ownerProcedure.mutation(async () => syncActiveQuickbooksConnection("manual")),
+  disconnect: ownerProcedure.input(z.object({ confirmDisconnect: z.literal(true) })).mutation(() => disconnectActiveQuickbooksConnection()),
   exportForAi: ownerProcedure.query(async () => {
     const overview = await getQuickbooksOverview();
     if (!overview.aiExport) throw new Error("Sync QuickBooks data before creating an analysis export");

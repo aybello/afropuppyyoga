@@ -164,6 +164,8 @@ export default function Footer() {
             >
               Staff Portal
             </a>
+            <a href="/privacy" className="font-body text-xs text-white/20 hover:text-white/40 transition-colors">Privacy</a>
+            <a href="/terms" className="font-body text-xs text-white/20 hover:text-white/40 transition-colors">Terms</a>
           </div>
         </div>
       </div>

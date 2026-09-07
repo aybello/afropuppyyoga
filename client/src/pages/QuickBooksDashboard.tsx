@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Landmark, RefreshCw, ShieldCheck, Download, BrainCircuit, AlertCircle, ArrowUpRight, ArrowDownRight, Clock3 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -25,6 +26,13 @@ export default function QuickBooksDashboard() {
   const sync = trpc.quickbooks.syncNow.useMutation({
     onSuccess: result => {
       toast.success(`QuickBooks sync completed: ${result.importedCount} transaction records refreshed.`);
+      utils.quickbooks.overview.invalidate();
+    },
+    onError: error => toast.error(error.message),
+  });
+  const disconnect = trpc.quickbooks.disconnect.useMutation({
+    onSuccess: result => {
+      toast.success(result.schedulePaused ? "QuickBooks access was revoked and daily imports are paused." : "QuickBooks access was revoked. The scheduled job will stop safely because the connection is inactive.");
       utils.quickbooks.overview.invalidate();
     },
     onError: error => toast.error(error.message),
@@ -76,10 +84,19 @@ export default function QuickBooksDashboard() {
             <p className="font-body text-sm text-[#6B4C3B] mt-1 max-w-2xl">Read-only QuickBooks Online expenses and bank activity for management analysis. APY cannot create payments, edit transactions, or reconcile your books.</p>
           </div>
           {overview.data?.connection?.connected ? (
-            <Button onClick={() => sync.mutate()} disabled={sync.isPending} className="bg-[#1F6B52] hover:bg-[#15503D] text-white rounded-full">
-              <RefreshCw className={`mr-2 h-4 w-4 ${sync.isPending ? "animate-spin" : ""}`} />
-              {sync.isPending ? "Syncing…" : "Sync now"}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={() => sync.mutate()} disabled={sync.isPending} className="bg-[#1F6B52] hover:bg-[#15503D] text-white rounded-full">
+                <RefreshCw className={`mr-2 h-4 w-4 ${sync.isPending ? "animate-spin" : ""}`} />
+                {sync.isPending ? "Syncing…" : "Sync now"}
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild><Button variant="outline" className="rounded-full border-rose-300 text-rose-800 hover:bg-rose-50">Disconnect</Button></AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader><AlertDialogTitle>Disconnect QuickBooks Online?</AlertDialogTitle><AlertDialogDescription>This revokes APY’s QuickBooks access, stops future imports, and pauses the daily sync. Existing APY-imported records remain in APY HQ and any prior Google Sheet export remains in your Google account.</AlertDialogDescription></AlertDialogHeader>
+                  <AlertDialogFooter><AlertDialogCancel>Keep connected</AlertDialogCancel><AlertDialogAction onClick={() => disconnect.mutate({ confirmDisconnect: true })} className="bg-rose-700 hover:bg-rose-800">{disconnect.isPending ? "Disconnecting…" : "Disconnect QuickBooks"}</AlertDialogAction></AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           ) : null}
         </header>
 

@@ -15,3 +15,24 @@ Intuit’s OAuth documentation requires an authorization code exchange and ident
 Intuit’s best-practices guidance recommends change-aware synchronization rather than repeatedly retrieving all entities. APY will use a daily managed synchronization with a fourteen-day overlap and source-key deduplication so corrected or late-updated transaction facts can be refreshed without duplicate records. A manual owner-only Sync now action is also required.
 
 The first implementation imports read-only Purchase, Bill, Check, Deposit, and Transfer entities. Expense and income totals are management analysis only; transfers are excluded from net cash movement. APY keeps encrypted OAuth tokens server-side, masks account detail in the interface, and gives the owner a downloadable aggregate AI summary with no account numbers or individual transaction descriptions.
+
+## Production app activation notes
+
+Intuit requires the production redirect URI to be added in the developer dashboard under **Settings → Redirect URIs → Production**. The registered URI must match the OAuth request exactly and must use HTTPS; IP-address redirect destinations are not allowed. APY’s exact production callback is:
+
+`https://afropuppyyoga.ca/api/integrations/quickbooks/callback`
+
+The Intuit production key experience shown to the owner has an incomplete production checklist. The official redirect-URI guidance confirms production and sandbox environments have distinct URI registrations. Intuit’s public production-keys guidance also states that production app details and the app-assessment questionnaire are required before live production keys/data can be activated. The owner must complete these developer-portal fields and retain control of the credentials.
+
+### APY URL mapping for the Intuit app profile
+
+| Intuit field | APY value or behavior |
+| --- | --- |
+| Product website / host domain | `https://afropuppyyoga.ca` |
+| Launch URL | `https://afropuppyyoga.ca/admin/quickbooks` |
+| Connect / reconnect URL | `https://afropuppyyoga.ca/admin/quickbooks` |
+| OAuth redirect URI | `https://afropuppyyoga.ca/api/integrations/quickbooks/callback` |
+| App purpose | Internal, owner-controlled read-only QuickBooks Online reporting and export to a private Google Sheet |
+| Data access | Accounting read scope only; no payments, writes, transaction edits, or reconciliation |
+
+Before entering a privacy-policy or disconnect URL, APY must add a public privacy notice and a truthful internal disconnect flow. Do not claim those pages exist before they have been implemented.

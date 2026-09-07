@@ -8,9 +8,10 @@ import {
   type QuickbooksConnection,
 } from "../drizzle/schema";
 import { getDb } from "./db";
-import { createHeartbeatJob } from "./_core/heartbeat";
+import { createHeartbeatJob, updateHeartbeatJob } from "./_core/heartbeat";
 
 const OAUTH_TOKEN_URL = "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer";
+const OAUTH_REVOKE_URL = "https://developer.api.intuit.com/v2/oauth2/tokens/revoke";
 const OAUTH_AUTHORIZE_URL = "https://appcenter.intuit.com/connect/oauth2";
 const DEFAULT_REDIRECT_URI = "https://afropuppyyoga.ca/api/integrations/quickbooks/callback";
 const DEFAULT_GRAPH_MINOR_VERSION = "75";
@@ -160,6 +161,21 @@ async function postToken(body: URLSearchParams): Promise<QboTokenResponse> {
     throw new Error(`QuickBooks authorization failed${payload.error ? `: ${payload.error}` : ""}`);
   }
   return payload as QboTokenResponse;
+}
+
+async function revokeQuickbooksRefreshToken(connection: QuickbooksConnection) {
+  const { clientId, clientSecret } = requireQuickbooksCredentials();
+  const basic = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+  const response = await fetch(OAUTH_REVOKE_URL, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Basic ${basic}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({ token: decryptQuickbooksSecret(connection.refreshTokenCiphertext) }),
+  });
+  if (!response.ok) throw new Error("QuickBooks could not confirm access revocation");
 }
 
 async function refreshQuickbooksConnection(connection: QuickbooksConnection) {
@@ -385,6 +401,35 @@ export async function syncActiveQuickbooksConnection(trigger: "manual" | "daily"
   const connection = await latestConnection();
   if (!connection) throw new Error("QuickBooks Online is not connected yet");
   return syncQuickbooksConnection(connection, trigger);
+}
+
+/**
+ * Revokes Intuit access before deactivating the local connection. Imported APY
+ * records remain for the owner’s operational history, but no future import can run.
+ */
+export async function disconnectActiveQuickbooksConnection() {
+  const connection = await latestConnection();
+  if (!connection) return { disconnected: false, schedulePaused: true };
+
+  await revokeQuickbooksRefreshToken(connection);
+  let schedulePaused = true;
+  if (connection.scheduleTaskUid) {
+    try {
+      await updateHeartbeatJob(connection.scheduleTaskUid, { enable: false }, "");
+    } catch {
+      schedulePaused = false;
+    }
+  }
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.update(quickbooksConnections).set({
+    isActive: false,
+    scheduleTaskUid: null,
+    accessTokenCiphertext: encryptQuickbooksSecret("revoked"),
+    refreshTokenCiphertext: encryptQuickbooksSecret("revoked"),
+    updatedAt: new Date(),
+  }).where(eq(quickbooksConnections.id, connection.id));
+  return { disconnected: true, schedulePaused };
 }
 
 export async function syncQuickbooksConnectionForSchedule(taskUid: string) {

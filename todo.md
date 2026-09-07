@@ -1176,6 +1176,23 @@
 - [x] Configure the approved daily synchronization trigger, tests, monitoring, and operational failure alerts without using in-process timers
 - [ ] Publish the QuickBooks finance hub, then authorize the owner-controlled QuickBooks company connection and verify the first read-only import
 
+## QuickBooks Transaction Export to Google Sheets (Sep 7, 2026)
+- [ ] Verify the owner-controlled Google Sheets destination and privacy boundaries for QuickBooks transaction exports
+- [ ] Add a read-only, owner-only export that writes imported QuickBooks transaction rows to a private Google Sheet without changing QuickBooks
+- [ ] Preserve source identifiers, prevent duplicate sheet rows on refresh, and keep transaction data inaccessible to non-owners
+- [ ] Authorize the selected Sheet, validate the first export, publish, and record the Google Sheets workflow
+
+## QuickBooks OAuth Redirect URI Correction (Sep 7, 2026)
+- [ ] Verify the exact production APY QuickBooks callback URL and ensure it is registered verbatim in the Intuit app’s production Redirect URIs
+- [ ] Retry owner-authorized QuickBooks Online read-only consent after the redirect setting is saved
+- [ ] Verify the first import and corresponding private Google Sheet export after authorization succeeds
+
+## Intuit Production App Completion (Sep 7, 2026)
+- [x] Map the APY read-only QuickBooks integration to the required Intuit production app-details and compliance fields
+- [x] Add a public APY privacy notice and owner-controlled QuickBooks disconnect flow before registering those production URLs
+- [ ] Complete the owner-controlled Intuit production app configuration without changing client credentials or QuickBooks records
+- [ ] Register the exact production APY callback, authorize the real QuickBooks Online company, and verify the first Google Sheet export
+
 ## Incoming APY Repository Update Review (Sep 5, 2026)
 - [x] Inspect the newly available repository update and current working tree before integration
 - [x] Assess compatibility with APY’s published operations, role/access safeguards, and the planned QuickBooks Online finance hub
