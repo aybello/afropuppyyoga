@@ -1190,6 +1190,7 @@
 ## Intuit Production App Completion (Sep 7, 2026)
 - [x] Map the APY read-only QuickBooks integration to the required Intuit production app-details and compliance fields
 - [x] Add a public APY privacy notice and owner-controlled QuickBooks disconnect flow before registering those production URLs
+- [x] Expose stable public policy and disconnect documents through the deployed API gateway because the production static bundle is serving a prior route revision
 - [ ] Complete the owner-controlled Intuit production app configuration without changing client credentials or QuickBooks records
 - [ ] Register the exact production APY callback, authorize the real QuickBooks Online company, and verify the first Google Sheet export
 
