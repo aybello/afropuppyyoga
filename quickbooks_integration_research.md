@@ -42,3 +42,7 @@ Before entering a privacy-policy or disconnect URL, APY must add a public privac
 The Privacy, Terms, and QuickBooks Disconnect routes were built and passed local visual validation, then published in checkpoint `c6c83b37`. Immediately after publication, the custom domain `https://afropuppyyoga.ca/privacy` still returned APY’s client-side 404 on two checks. Do not enter the public privacy, terms, or disconnect URLs in the Intuit production form until a post-propagation live-domain check confirms the deployed route is available.
 
 At the next check, the custom domain still returned the prior 404 implementation, while the managed `afropuppy-euumx9tb.manus.space` domain began loading the updated shell. Treat this as deployment propagation rather than a confirmed production-route defect; recheck the custom domain before submitting the Intuit form.
+
+After republishing in checkpoint `42518a05`, the custom-domain Privacy route still returned the old client-side 404 both normally and with a cache-busting query string. The public production-app URLs must remain pending until this deployment discrepancy is resolved.
+
+The managed production domain was then checked with the same cache-busting release marker and also served the prior 404 page. This is consistent with stale production bundle propagation across both domains, not an App route mismatch: local build and preview include the new route. Do not enter the policy URLs in Intuit until a live-domain verification succeeds.
