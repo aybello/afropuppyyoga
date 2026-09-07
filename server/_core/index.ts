@@ -27,6 +27,7 @@ import {
   isAuthorizedLumaReminderSchedule,
   parseLumaReminderOutcomeReport,
 } from "../lumaReminderOutcome";
+import { completeQuickbooksAuthorization, syncQuickbooksConnectionForSchedule } from "../quickbooks";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -392,6 +393,58 @@ async function startServer() {
       }
       console.error("[LumaReminderOutcome] Scheduled outcome callback failed:", error instanceof Error ? error.message : "unknown error");
       return res.status(500).json({ ok: false, error: "Luma reminder outcome report could not be recorded" });
+    }
+  });
+
+  // QuickBooks Online returns the owner here after consent. This callback stores
+  // encrypted server-side OAuth tokens only; APY never writes back to QuickBooks.
+  app.get("/api/integrations/quickbooks/callback", async (req, res) => {
+    const code = typeof req.query.code === "string" ? req.query.code : "";
+    const state = typeof req.query.state === "string" ? req.query.state : "";
+    const realmId = typeof req.query.realmId === "string" ? req.query.realmId : "";
+    const denied = typeof req.query.error === "string" ? req.query.error : "";
+    if (denied || !code || !state || !realmId) {
+      return res.redirect("/admin/quickbooks?quickbooks=cancelled");
+    }
+    try {
+      await completeQuickbooksAuthorization(code, state, realmId);
+      return res.redirect("/admin/quickbooks?quickbooks=connected");
+    } catch (error) {
+      console.error("[QuickBooks] OAuth callback failed:", error instanceof Error ? error.message : "unknown error");
+      return res.redirect("/admin/quickbooks?quickbooks=error");
+    }
+  });
+
+  app.post("/api/scheduled/quickbooks-sync", async (req, res) => {
+    let scheduledUser;
+    try {
+      scheduledUser = await sdk.authenticateRequest(req);
+    } catch {
+      return res.status(403).json({ ok: false, error: "QuickBooks daily sync requires a scheduled task" });
+    }
+    if (!scheduledUser.isCron || !scheduledUser.taskUid) {
+      return res.status(403).json({ ok: false, error: "QuickBooks daily sync requires a scheduled task" });
+    }
+    try {
+      const result = await syncQuickbooksConnectionForSchedule(scheduledUser.taskUid);
+      return res.json({ ok: true, ...result });
+    } catch (error) {
+      console.error("[QuickBooks] Daily sync failed:", error instanceof Error ? error.message : "unknown error");
+      const content = "The read-only daily QuickBooks import stopped safely. No QuickBooks data was changed. Open APY HQ → QuickBooks Finance to review the sync status or retry manually.";
+      const ownerAlerted = await notifyOwner({ title: "QuickBooks daily sync needs attention", content });
+      if (!ownerAlerted) {
+        try {
+          await sendEmail({
+            to: "afropuppyyoga@gmail.com",
+            subject: "APY QuickBooks daily sync needs attention",
+            text: content,
+            html: `<p>${content}</p>`,
+          });
+        } catch (emailError) {
+          console.error("[QuickBooks] Owner email fallback failed:", emailError instanceof Error ? emailError.message : "unknown error");
+        }
+      }
+      return res.status(500).json({ ok: false, error: "QuickBooks daily sync failed" });
     }
   });
 

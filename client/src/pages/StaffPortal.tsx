@@ -28,6 +28,7 @@ import {
   UserCog,
   Gauge,
   UsersRound,
+  Landmark,
 } from "lucide-react";
 
 const TEAM_PHOTO = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663824308637/IiwudPwckobbrxIv.jpg";
@@ -90,6 +91,16 @@ const TOOLS = [
     href: "/admin/revenue",
     icon: DollarSign,
     accent: "#2E7D32",
+    adminOnly: true,
+    category: "Finance",
+  },
+  {
+    id: "quickbooks",
+    title: "QuickBooks Finance",
+    description: "Read-only expenses, bank activity, daily sync, and AI-ready summaries.",
+    href: "/admin/quickbooks",
+    icon: Landmark,
+    accent: "#1F6B52",
     adminOnly: true,
     category: "Finance",
   },
@@ -218,7 +229,7 @@ const TOOLS = [
 const CATEGORY_ORDER = ["Operations", "People", "Finance", "Events", "Breeders", "Growth"];
 
 function requiredAccessForTool(id: string): ApyHubToolAccess {
-  if (id === "invoices" || id === "revenue" || id === "employee-directory") return "owner";
+  if (id === "invoices" || id === "revenue" || id === "quickbooks" || id === "employee-directory") return "owner";
   if (id === "staff-training" || id === "submit-invoice") return "team";
   return "operations";
 }

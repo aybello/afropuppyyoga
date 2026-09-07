@@ -435,6 +435,78 @@ export const lumaReminderOutcomeReports = mysqlTable("lumaReminderOutcomeReports
 
 export type LumaReminderOutcomeReport = typeof lumaReminderOutcomeReports.$inferSelect;
 
+/** Short-lived, hashed OAuth state records for the owner-authorized QuickBooks connection. */
+export const quickbooksOAuthStates = mysqlTable("quickbooksOAuthStates", {
+  id: int("id").autoincrement().primaryKey(),
+  stateHash: varchar("stateHash", { length: 64 }).notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("uq_quickbooksOAuthStates_hash").on(t.stateHash),
+  index("idx_quickbooksOAuthStates_expiry").on(t.expiresAt),
+]);
+
+/** Owner-authorized, read-only QuickBooks Online connection. OAuth tokens are encrypted server-side. */
+export const quickbooksConnections = mysqlTable("quickbooksConnections", {
+  id: int("id").autoincrement().primaryKey(),
+  realmId: varchar("realmId", { length: 64 }).notNull(),
+  companyName: varchar("companyName", { length: 255 }),
+  accessTokenCiphertext: text("accessTokenCiphertext").notNull(),
+  refreshTokenCiphertext: text("refreshTokenCiphertext").notNull(),
+  tokenExpiresAt: timestamp("tokenExpiresAt").notNull(),
+  refreshTokenExpiresAt: timestamp("refreshTokenExpiresAt"),
+  isActive: boolean("isActive").notNull().default(true),
+  scheduleTaskUid: varchar("scheduleTaskUid", { length: 65 }),
+  lastSyncAt: timestamp("lastSyncAt"),
+  lastSyncStatus: mysqlEnum("quickbooksLastSyncStatus", ["never", "running", "succeeded", "failed"]).notNull().default("never"),
+  lastSyncError: text("lastSyncError"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (t) => [
+  uniqueIndex("uq_quickbooksConnections_realm").on(t.realmId),
+  uniqueIndex("uq_quickbooksConnections_schedule").on(t.scheduleTaskUid),
+]);
+
+/** Imported QuickBooks transaction facts. No reconciliation, payment, or write-back actions are supported. */
+export const quickbooksTransactions = mysqlTable("quickbooksTransactions", {
+  id: int("id").autoincrement().primaryKey(),
+  connectionId: int("connectionId").notNull(),
+  sourceType: varchar("sourceType", { length: 64 }).notNull(),
+  sourceTransactionId: varchar("sourceTransactionId", { length: 100 }).notNull(),
+  transactionDate: varchar("transactionDate", { length: 10 }).notNull(),
+  direction: mysqlEnum("quickbooksTransactionDirection", ["expense", "income", "transfer", "other"]).notNull(),
+  amountCents: int("amountCents").notNull(),
+  currency: varchar("currency", { length: 8 }).notNull().default("CAD"),
+  categoryName: varchar("categoryName", { length: 255 }),
+  accountName: varchar("accountName", { length: 255 }),
+  payeeName: varchar("payeeName", { length: 255 }),
+  description: text("description"),
+  sourceUpdatedAt: timestamp("sourceUpdatedAt"),
+  importedAt: timestamp("importedAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (t) => [
+  uniqueIndex("uq_quickbooksTransactions_source").on(t.connectionId, t.sourceType, t.sourceTransactionId),
+  index("idx_quickbooksTransactions_connection_date").on(t.connectionId, t.transactionDate),
+  index("idx_quickbooksTransactions_direction").on(t.connectionId, t.direction, t.transactionDate),
+]);
+
+/** Immutable metadata for manual and scheduled QuickBooks import attempts. */
+export const quickbooksSyncRuns = mysqlTable("quickbooksSyncRuns", {
+  id: int("id").autoincrement().primaryKey(),
+  connectionId: int("connectionId").notNull(),
+  trigger: mysqlEnum("quickbooksSyncTrigger", ["manual", "daily"]).notNull(),
+  status: mysqlEnum("quickbooksSyncStatus", ["running", "succeeded", "failed", "skipped"]).notNull(),
+  importedCount: int("importedCount").notNull().default(0),
+  updatedCount: int("updatedCount").notNull().default(0),
+  errorSummary: text("errorSummary"),
+  startedAt: timestamp("startedAt").defaultNow().notNull(),
+  completedAt: timestamp("completedAt"),
+}, (t) => [index("idx_quickbooksSyncRuns_connection").on(t.connectionId, t.startedAt)]);
+
+export type QuickbooksConnection = typeof quickbooksConnections.$inferSelect;
+export type QuickbooksTransaction = typeof quickbooksTransactions.$inferSelect;
+export type QuickbooksSyncRun = typeof quickbooksSyncRuns.$inferSelect;
+
 export const breeders = mysqlTable("breeders", {
   id: int("id").autoincrement().primaryKey(),
   /** Breeder / kennel name */

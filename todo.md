@@ -1171,17 +1171,17 @@
 ## QuickBooks Financial Data and AI Analysis (Sep 5, 2026)
 - [x] Confirm the desired QuickBooks Online data scope, refresh frequency, owner-only access boundaries, and AI analysis questions before connecting an accounting company
 - [x] Compare a connected QuickBooks synchronization workflow with a lighter-weight export-import alternative and record the selected approach
-- [ ] Implement the selected read-only financial-data import with encrypted credential handling, transaction deduplication, source lineage, and owner-only visibility
-- [ ] Provide AI-assisted expense and bank-data analysis that distinguishes transaction facts from generated interpretation and does not make payments, reconcile accounts, or modify QuickBooks records
-- [ ] Configure the approved daily synchronization trigger, tests, monitoring, and operational failure alerts without using in-process timers
-- [ ] Publish, verify, and record the selected QuickBooks and AI analysis workflow
+- [x] Implement the selected read-only financial-data import with encrypted credential handling, transaction deduplication, source lineage, and owner-only visibility
+- [x] Provide AI-assisted expense and bank-data analysis that distinguishes transaction facts from generated interpretation and does not make payments, reconcile accounts, or modify QuickBooks records
+- [x] Configure the approved daily synchronization trigger, tests, monitoring, and operational failure alerts without using in-process timers
+- [ ] Publish the QuickBooks finance hub, then authorize the owner-controlled QuickBooks company connection and verify the first read-only import
 
 ## Incoming APY Repository Update Review (Sep 5, 2026)
 - [x] Inspect the newly available repository update and current working tree before integration
 - [x] Assess compatibility with APY’s published operations, role/access safeguards, and the planned QuickBooks Online finance hub
-- [ ] Integrate, test, publish, and record only the compatible incoming changes
+- [x] Integrate, test, publish, and record only the compatible incoming changes
 
 ## Approved Meta Purchase Attribution Repair (Sep 5, 2026)
 - [x] Merge the reviewed Meta/Luma purchase-attribution repair with the owner’s approval to retain the active attribution sender and allow its deduplicated replay
 - [x] Validate the integrated production build and protect unrelated APY workflows and the planned QuickBooks Online finance hub
-- [ ] Publish, confirm the active Meta sender remains enabled, and record the approved attribution repair
+- [x] Publish, confirm the active Meta sender remains enabled, and record the approved attribution repair

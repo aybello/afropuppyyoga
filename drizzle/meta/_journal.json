@@ -330,6 +330,13 @@
       "when": 1788465720284,
       "tag": "0048_private_event_multisession_classes",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "5",
+      "when": 1788761645069,
+      "tag": "0049_naive_true_believers",
+      "breakpoints": true
     }
   ]
 }
