@@ -1162,3 +1162,26 @@
 - [x] Add an explicit Send to whole team action alongside the existing per-person Message or Resend actions
 - [x] Keep individual messaging restricted to the selected assigned staff member so newly added staff can be contacted without re-sending to others
 - [x] Validate recipient scope, whole-team resend confirmation, delivery-status feedback, interface clarity, publish, and record the improvement
+
+## Operations Manager Employee and APY HQ Access Audit (Sep 3, 2026)
+- [ ] Verify Operations Manager authority to add Employee Directory records, create/manage active APY HQ staff profiles, and use operational APY HQ routes
+- [ ] Preserve owner-only invoice/revenue access and existing location-coverage safeguards while correcting any Operations Manager permission gap
+- [ ] Add or update focused authorization coverage, publish any required correction, and record the verified access matrix
+
+## QuickBooks Financial Data and AI Analysis (Sep 5, 2026)
+- [x] Confirm the desired QuickBooks Online data scope, refresh frequency, owner-only access boundaries, and AI analysis questions before connecting an accounting company
+- [x] Compare a connected QuickBooks synchronization workflow with a lighter-weight export-import alternative and record the selected approach
+- [ ] Implement the selected read-only financial-data import with encrypted credential handling, transaction deduplication, source lineage, and owner-only visibility
+- [ ] Provide AI-assisted expense and bank-data analysis that distinguishes transaction facts from generated interpretation and does not make payments, reconcile accounts, or modify QuickBooks records
+- [ ] Configure the approved daily synchronization trigger, tests, monitoring, and operational failure alerts without using in-process timers
+- [ ] Publish, verify, and record the selected QuickBooks and AI analysis workflow
+
+## Incoming APY Repository Update Review (Sep 5, 2026)
+- [x] Inspect the newly available repository update and current working tree before integration
+- [x] Assess compatibility with APY’s published operations, role/access safeguards, and the planned QuickBooks Online finance hub
+- [ ] Integrate, test, publish, and record only the compatible incoming changes
+
+## Approved Meta Purchase Attribution Repair (Sep 5, 2026)
+- [x] Merge the reviewed Meta/Luma purchase-attribution repair with the owner’s approval to retain the active attribution sender and allow its deduplicated replay
+- [x] Validate the integrated production build and protect unrelated APY workflows and the planned QuickBooks Online finance hub
+- [ ] Publish, confirm the active Meta sender remains enabled, and record the approved attribution repair
