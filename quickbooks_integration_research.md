@@ -36,3 +36,9 @@ The Intuit production key experience shown to the owner has an incomplete produc
 | Data access | Accounting read scope only; no payments, writes, transaction edits, or reconciliation |
 
 Before entering a privacy-policy or disconnect URL, APY must add a public privacy notice and a truthful internal disconnect flow. Do not claim those pages exist before they have been implemented.
+
+### Deployment verification note — September 7, 2026
+
+The Privacy, Terms, and QuickBooks Disconnect routes were built and passed local visual validation, then published in checkpoint `c6c83b37`. Immediately after publication, the custom domain `https://afropuppyyoga.ca/privacy` still returned APY’s client-side 404 on two checks. Do not enter the public privacy, terms, or disconnect URLs in the Intuit production form until a post-propagation live-domain check confirms the deployed route is available.
+
+At the next check, the custom domain still returned the prior 404 implementation, while the managed `afropuppy-euumx9tb.manus.space` domain began loading the updated shell. Treat this as deployment propagation rather than a confirmed production-route defect; recheck the custom domain before submitting the Intuit form.
