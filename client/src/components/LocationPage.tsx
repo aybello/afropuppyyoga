@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BOOK_URL, LOGO_URL } from "@/const";
 import { useSeoMeta } from "@/hooks/useSeoMeta";
 import Navbar from "@/components/Navbar";
@@ -8,6 +8,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import { MapPin, Clock, Users, Star, ChevronDown, Quote, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { useMetaPixel } from "@/hooks/useMetaPixel";
+import { appendAttributionToLumaUrl } from "@/lib/lumaAttribution";
 
 /* ============================================================
    LocationPage — Shared template for all city SEO pages.
@@ -127,6 +128,11 @@ const avatarColors = [
 export default function LocationPage({ config }: Props) {
   const canonicalUrl = `https://afropuppyyoga.ca/${config.slug}`;
   const { track } = useMetaPixel();
+  const attributedBookUrl = useMemo(() => appendAttributionToLumaUrl(BOOK_URL), []);
+  const attributedEmbedUrl = useMemo(
+    () => appendAttributionToLumaUrl(`https://lu.ma/embed/calendar/cal-Z474jeIbvUXskHE/events?theme=light&lt=light${config.lumaTag ? `&tag=${encodeURIComponent(config.lumaTag)}` : ""}`),
+    [config.lumaTag],
+  );
 
   useSeoMeta({
     title: config.pageTitle,
@@ -235,7 +241,7 @@ export default function LocationPage({ config }: Props) {
             ) : (
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <a
-                  href={BOOK_URL}
+                  href={attributedBookUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => track("InitiateCheckout", { content_name: `Book Class — ${config.city}` })}
@@ -423,7 +429,7 @@ export default function LocationPage({ config }: Props) {
                 <p className="font-body text-sm text-[#3D1A2E]/60">Loading upcoming classes…</p>
               </div>
               <iframe
-                src={`https://lu.ma/embed/calendar/cal-Z474jeIbvUXskHE/events?theme=light&lt=light${config.lumaTag ? `&tag=${encodeURIComponent(config.lumaTag)}` : ""}`}
+                src={attributedEmbedUrl}
                 width="100%"
                 height="500"
                 frameBorder="0"
@@ -435,7 +441,7 @@ export default function LocationPage({ config }: Props) {
             </div>
             <div className="mt-8">
               <a
-                href={BOOK_URL}
+                href={attributedBookUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => track("InitiateCheckout", { content_name: `View Classes — ${config.city}` })}
@@ -469,7 +475,7 @@ export default function LocationPage({ config }: Props) {
                 Follow on Instagram
               </a>
               <a
-                href={BOOK_URL}
+                href={attributedBookUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center px-8 py-3.5 border-2 border-[#8B2252] text-[#8B2252] font-body font-bold text-sm rounded-full hover:bg-[#8B2252] hover:text-white transition-all"
@@ -639,7 +645,7 @@ export default function LocationPage({ config }: Props) {
           </p>
           {config.comingSoon ? (
             <a
-              href={BOOK_URL}
+              href={attributedBookUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => track("InitiateCheckout", { content_name: `Book Class — ${config.city} (Coming Soon)` })}
@@ -650,7 +656,7 @@ export default function LocationPage({ config }: Props) {
           ) : (
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a
-                href={BOOK_URL}
+                href={attributedBookUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => track("InitiateCheckout", { content_name: `Book Class CTA — ${config.city}` })}

@@ -729,7 +729,7 @@ export const metaConversionEvents = mysqlTable("metaConversionEvents", {
   hashedFirstName: varchar("hashedFirstName", { length: 64 }),
   /** SHA-256 hash of lowercased trimmed last name */
   hashedLastName: varchar("hashedLastName", { length: 64 }),
-  /** UTM source from Luma guest record (may be null) */
+  /** Luma UTM source, or packed Meta attribution values carried in utm_content */
   utmSource: varchar("utmSource", { length: 255 }),
   /** Processing status */
   // 'processing' = atomically claimed by a sender run (prevents double-send if two runs overlap)

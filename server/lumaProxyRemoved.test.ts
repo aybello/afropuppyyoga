@@ -8,9 +8,9 @@
  * phone numbers — to unauthenticated callers.
  *
  * The endpoint has zero callers in the codebase. All server-side Luma
- * access goes through server/metaCapi.ts, server-to-server. The route
- * is tombstoned with HTTP 410 so this test fails loudly if anyone
- * reintroduces a live proxy under the same path.
+ * access goes through server/metaCapi.ts, server-to-server. The signed
+ * /api/luma/webhook route is the only exception; every proxy-like path is
+ * tombstoned with HTTP 410.
  */
 import { describe, expect, it } from "vitest";
 import express from "express";
@@ -79,5 +79,14 @@ describe("/api/luma proxy removal", () => {
     const lumaBlock = src.slice(src.indexOf('"/api/luma"'), src.indexOf('"/api/luma"') + 600);
     expect(lumaBlock).not.toContain("createProxyMiddleware");
     expect(lumaBlock).not.toContain("api.lu.ma");
+  });
+
+  it("mounts the signed webhook before the /api/luma tombstone", async () => {
+    const fs = await import("fs/promises");
+    const src = await fs.readFile(new URL("./_core/index.ts", import.meta.url), "utf-8");
+    const webhookIndex = src.indexOf("app.use(lumaWebhookRouter)");
+    const tombstoneIndex = src.indexOf('app.use("/api/luma"');
+    expect(webhookIndex).toBeGreaterThan(-1);
+    expect(tombstoneIndex).toBeGreaterThan(webhookIndex);
   });
 });

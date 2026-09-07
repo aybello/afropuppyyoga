@@ -23,9 +23,10 @@ describe("Meta CAPI credentials", () => {
     const pixelId = process.env.META_PIXEL_ID;
     const accessToken = process.env.META_CAPI_ACCESS_TOKEN;
     const testEventCode = process.env.META_TEST_EVENT_CODE;
+    const graphApiVersion = process.env.META_GRAPH_API_VERSION || "v25.0";
 
-    if (!pixelId || !accessToken) {
-      console.warn("[MetaCAPI] Credentials not set — skipping live API test");
+    if (!pixelId || !accessToken || !testEventCode) {
+      console.warn("[MetaCAPI] Credentials or test event code not set — skipping live API test");
       return;
     }
 
@@ -45,10 +46,13 @@ describe("Meta CAPI credentials", () => {
     };
 
     const res = await fetch(
-      `https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${accessToken}`,
+      `https://graph.facebook.com/${graphApiVersion}/${pixelId}/events`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
+        },
         body: JSON.stringify(payload),
       }
     );

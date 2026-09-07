@@ -12,7 +12,7 @@ import uploadRouter from "../uploadRoute";
 import chunkedUploadRouter from "../chunkedUploadRoute";
 import rateLimit from "express-rate-limit";
 import { storageGet } from "../storage";
-import { lumaPoller, capiSender } from "../metaCapi";
+import { capiSender, syncMetaPurchases } from "../metaCapi";
 import twilioWebhookRouter from "../twilioWebhook";
 import lumaWebhookRouter from "../lumaWebhook";
 import { requireStaffOrAdmin } from "./requireStaff";
@@ -139,7 +139,14 @@ async function startServer() {
   });
 
   // Configure body parser with larger size limit for file uploads
-  app.use(express.json({ limit: "50mb" }));
+  app.use(express.json({
+    limit: "50mb",
+    verify: (req, _res, buffer) => {
+      if ((req.url ?? "").startsWith("/api/luma/webhook")) {
+        (req as express.Request & { rawBody?: string }).rawBody = buffer.toString("utf8");
+      }
+    },
+  }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
   // OAuth callback under /api/oauth/callback
@@ -270,6 +277,11 @@ async function startServer() {
     }
   });
 
+  // The signed Luma webhook must be mounted before the /api/luma tombstone.
+  // Otherwise the prefix handler returns 410 first, which causes Luma to pause
+  // the webhook automatically.
+  app.use(lumaWebhookRouter);
+
   // /api/luma proxy REMOVED (2026-07-13).
   // Even with a path allowlist, /public/v1/event/get-guests returns attendee
   // names, emails, and phone numbers to unauthenticated callers. The endpoint
@@ -314,11 +326,12 @@ async function startServer() {
   };
 
   // POST /api/scheduled/luma-poll — called by heartbeat every 10 min
-  // Polls recent/upcoming Luma events and inserts new paid registrations as pending rows.
+  // Polls recent/upcoming Luma events and immediately flushes paid purchases to Meta.
+  // The separate sender route below remains a backlog/retry safety net.
   app.post("/api/scheduled/luma-poll", async (req, res) => {
     if (!requireCronAuth(req, res)) return;
     try {
-      const result = await lumaPoller();
+      const result = await syncMetaPurchases();
       res.json({ ok: true, ...result });
     } catch (err) {
       console.error("[MetaCAPI] Luma poller error:", err);
@@ -384,9 +397,6 @@ async function startServer() {
 
   // Twilio webhook callbacks — must be registered before tRPC
   app.use(twilioWebhookRouter);
-  // Luma webhook for payment/registration notifications
-  app.use(lumaWebhookRouter);
-
   // tRPC API
   app.use(
     "/api/trpc",

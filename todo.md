@@ -491,6 +491,20 @@
 - [x] Heartbeat jobs registered: apy-luma-poll (every 10 min) + apy-meta-capi-send (offset 5 min)
 - [x] 38/38 tests passing after all changes
 
+## Meta Purchase Attribution Repair (Sep 7 2026)
+
+- [x] Replace retired opt-in flag with explicit `META_CAPI_PAUSED` kill switch so production purchases send by default when credentials exist
+- [x] Require explicit `META_CAPI_TEST_MODE=true` before attaching `META_TEST_EVENT_CODE`
+- [x] Upgrade the default Meta Graph API endpoint to v25.0 and require at least one accepted event
+- [x] Add one-time, stable-event-ID replay for eligible purchases sent before the repair cutoff
+- [x] Recover stale `processing` rows and fix overlapping sender claims that could double-send
+- [x] Carry Meta `_fbc`/`_fbp` identifiers through Luma UTM content for stronger off-domain checkout matching
+- [x] Add `event_source_url` to website Purchase payloads
+- [x] Make the Luma poll schedule flush the CAPI queue immediately, while retaining the sender retry schedule
+- [x] Mount the signed Luma webhook before the `/api/luma` tombstone and implement Luma's current timestamped signature format
+- [x] Remove the committed Luma webhook secret; rotate it and configure `LUMA_WEBHOOK_SECRET` in production before resuming the webhook
+- [x] Add focused coverage for production/test mode, Purchase payloads, Meta browser IDs, Luma URL attribution, signature verification, and route ordering
+
 ## Security Audit Priorities 1–6 (Jul 13 2026)
 
 - [x] Priority 6 quick wins: deleted SECURITY_AUDIT_NOTES.md from GitHub, fixed rating (4.9) / price ($55) / reviews (494) across index.html and seoRenderer.ts

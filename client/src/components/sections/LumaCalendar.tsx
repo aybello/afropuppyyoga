@@ -5,7 +5,7 @@
  * The embed URL format is: https://lu.ma/embed/calendar/{calendar-api-id}/events
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CalendarDays, ExternalLink } from "lucide-react";
 import { trackCTAClick } from "@/hooks/useAnalytics";
 import { useMetaPixel } from "@/hooks/useMetaPixel";
@@ -15,6 +15,7 @@ import {
   LUMA_CHECKOUT_SCRIPT_URL,
   shouldActivateLumaCalendar,
 } from "@shared/lumaCalendarEmbed";
+import { appendAttributionToLumaUrl } from "@/lib/lumaAttribution";
 
 export default function LumaCalendar() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -24,6 +25,14 @@ export default function LumaCalendar() {
   const [requestedByVisitor, setRequestedByVisitor] = useState(false);
   const { track } = useMetaPixel();
   const calendarActive = shouldActivateLumaCalendar(nearClasses, requestedByVisitor);
+  const attributedCalendarUrl = useMemo(
+    () => appendAttributionToLumaUrl("https://luma.com/AfroPuppyYoga?k=c"),
+    [],
+  );
+  const attributedEmbedUrl = useMemo(
+    () => appendAttributionToLumaUrl(LUMA_CALENDAR_EMBED_URL),
+    [],
+  );
 
   useEffect(() => {
     const target = sectionRef.current;
@@ -85,7 +94,7 @@ export default function LumaCalendar() {
           </div>
 
           <a
-            href="https://luma.com/AfroPuppyYoga?k=c"
+            href={attributedCalendarUrl}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => {
@@ -171,7 +180,7 @@ export default function LumaCalendar() {
           ) : (
             <iframe
               ref={iframeRef}
-              src={LUMA_CALENDAR_EMBED_URL}
+              src={attributedEmbedUrl}
               width="100%"
               height="500"
               loading="lazy"
