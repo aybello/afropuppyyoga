@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { directEmployeeSchema, directTeamMemberSchema, employeeRecordUpdateSchema, getAutomaticEmployeeAccessPlan, getDirectEmployeeContactEligibility, getEmployeeDepartureUpdate, getExistingEmployeeAccessProvisioningEligibility, getFormerEmployeeDeletionEligibility, getOnboardedApplicantDirectoryEligibility, getTeamRemovalUpdate, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateEmployeeDirectoryAssignmentChange, validateTeamAssignmentChange } from "./routers/staffAvailability";
+import { directEmployeeSchema, directTeamMemberSchema, employeeRecordUpdateSchema, getAutomaticEmployeeAccessPlan, getDirectEmployeeContactEligibility, getEmployeeDepartureUpdate, getExistingEmployeeAccessProvisioningEligibility, getFormerEmployeeDeletionEligibility, getLegacyEmployeeProfileLinkEligibility, getOnboardedApplicantDirectoryEligibility, getTeamRemovalUpdate, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateEmployeeDirectoryAssignmentChange, validateTeamAssignmentChange } from "./routers/staffAvailability";
 
 describe("direct team-member validation", () => {
   it("accepts an Operations Manager assigned to Oakville", () => {
@@ -84,6 +84,58 @@ describe("direct team-member validation", () => {
       eligible: false,
       reason: "This employee already has an APY HQ profile.",
     });
+  });
+
+  it("links one matching onboarding-complete legacy profile when the role and location agree", () => {
+    expect(getLegacyEmployeeProfileLinkEligibility({
+      matchingProfileCount: 1,
+      matchingProfileIsActiveTeamMember: false,
+      matchingProfileIsArchived: false,
+      matchingProfileStatus: "onboarded",
+      roleMatches: true,
+      locationMatches: true,
+      alreadyLinkedToAnotherEmployee: false,
+    })).toEqual({ eligible: true, action: "link_existing_profile" });
+
+    expect(getLegacyEmployeeProfileLinkEligibility({
+      matchingProfileCount: 1,
+      matchingProfileIsActiveTeamMember: false,
+      matchingProfileIsArchived: false,
+      matchingProfileStatus: "onboarded",
+      roleMatches: false,
+      locationMatches: true,
+      alreadyLinkedToAnotherEmployee: false,
+    })).toMatchObject({ eligible: false });
+
+    expect(getLegacyEmployeeProfileLinkEligibility({
+      matchingProfileCount: 2,
+      matchingProfileIsActiveTeamMember: false,
+      matchingProfileIsArchived: false,
+      matchingProfileStatus: "onboarded",
+      roleMatches: true,
+      locationMatches: true,
+      alreadyLinkedToAnotherEmployee: false,
+    })).toMatchObject({ eligible: false });
+
+    expect(getLegacyEmployeeProfileLinkEligibility({
+      matchingProfileCount: 1,
+      matchingProfileIsActiveTeamMember: false,
+      matchingProfileIsArchived: false,
+      matchingProfileStatus: "accepted",
+      roleMatches: true,
+      locationMatches: true,
+      alreadyLinkedToAnotherEmployee: false,
+    })).toMatchObject({ eligible: false });
+
+    expect(getLegacyEmployeeProfileLinkEligibility({
+      matchingProfileCount: 1,
+      matchingProfileIsActiveTeamMember: false,
+      matchingProfileIsArchived: false,
+      matchingProfileStatus: "onboarded",
+      roleMatches: true,
+      locationMatches: true,
+      alreadyLinkedToAnotherEmployee: true,
+    })).toMatchObject({ eligible: false });
   });
 
   it("does not create a duplicate APY HQ profile when a contact already belongs to an applicant or staff profile", () => {

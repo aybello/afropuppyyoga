@@ -1224,6 +1224,12 @@
 - [x] Make access status clear in Employee Directory and validate the unified workflow end to end
 - [x] Prevent direct employee creation from duplicating an existing applicant or APY HQ profile that uses the same contact information
 
+## Legacy Employee APY HQ Access Linking Repair (Sep 9, 2026)
+- [x] Inspect the affected legacy Employee Directory record and matching application or APY HQ profile without exposing personal data
+- [x] Allow the owner-only Grant APY HQ access action to safely link a single eligible matching legacy profile instead of treating it as an unrecoverable duplicate
+- [x] Reject ambiguous, role-conflicting, location-conflicting, inactive, or already-linked matches while preserving Operations Manager coverage safeguards
+- [ ] Add focused regression coverage, validate the corrected flow, publish, and record the legacy-access repair
+
 ## Date-Based Cancellation Rebooking Codes (Sep 7, 2026)
 - [x] Replace the incorrect random cancellation-code generation with the owner-required Ontario class-date format, such as AUG5
 - [x] Block cancellation communications until the date-based code and the recipient workflow are verified

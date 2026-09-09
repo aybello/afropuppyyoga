@@ -138,6 +138,37 @@ export function getExistingEmployeeAccessProvisioningEligibility(input: { employ
   return { eligible: true as const };
 }
 
+export function getLegacyEmployeeProfileLinkEligibility(input: {
+  matchingProfileCount: number;
+  matchingProfileIsActiveTeamMember: boolean;
+  matchingProfileIsArchived: boolean;
+  matchingProfileStatus: string;
+  roleMatches: boolean;
+  locationMatches: boolean;
+  alreadyLinkedToAnotherEmployee: boolean;
+}) {
+  if (input.matchingProfileCount === 0) return { eligible: true as const, action: "create_profile" as const };
+  if (input.matchingProfileCount !== 1) {
+    return { eligible: false as const, reason: "More than one applicant or APY HQ profile matches this employee. Resolve the duplicate profiles before granting access." };
+  }
+  if (input.alreadyLinkedToAnotherEmployee) {
+    return { eligible: false as const, reason: "The matching APY HQ profile is already linked to another Employee Directory record." };
+  }
+  if (input.matchingProfileIsActiveTeamMember) {
+    return { eligible: false as const, reason: "The matching APY HQ profile is already active. Refresh the Employee Directory before trying again." };
+  }
+  if (input.matchingProfileIsArchived) {
+    return { eligible: false as const, reason: "The matching applicant or APY HQ profile is archived. Restore or review that profile before granting access." };
+  }
+  if (input.matchingProfileStatus !== "onboarded") {
+    return { eligible: false as const, reason: "The matching applicant must be onboarding-complete before APY HQ access can be granted." };
+  }
+  if (!input.roleMatches || !input.locationMatches) {
+    return { eligible: false as const, reason: "The matching profile has a different role or location. Review it before granting APY HQ access." };
+  }
+  return { eligible: true as const, action: "link_existing_profile" as const };
+}
+
 export function getDirectEmployeeContactEligibility(input: { hasEmployeeRecord: boolean; hasApplicantOrApyProfile: boolean }) {
   if (input.hasEmployeeRecord) {
     return { eligible: false as const, reason: "An Employee Directory record already uses this email address or phone number. Update or restore that record instead of creating a duplicate." };
@@ -489,15 +520,52 @@ export const staffAvailabilityRouter = router({
         }
       }
 
+      const matchingProfileFields = {
+        id: jobApplications.id,
+        role: jobApplications.role,
+        location: jobApplications.location,
+        status: jobApplications.status,
+        isTeamMember: jobApplications.isTeamMember,
+        deletedAt: jobApplications.deletedAt,
+      };
       const [emailProfileMatches, phoneProfileMatches] = await Promise.all([
-        employee.email ? db.select({ id: jobApplications.id }).from(jobApplications).where(eq(jobApplications.email, employee.email)).limit(1) : Promise.resolve([]),
-        employee.phone ? db.select({ id: jobApplications.id }).from(jobApplications).where(eq(jobApplications.phone, employee.phone)).limit(1) : Promise.resolve([]),
+        employee.email ? db.select(matchingProfileFields).from(jobApplications).where(eq(jobApplications.email, employee.email)) : Promise.resolve([]),
+        employee.phone ? db.select(matchingProfileFields).from(jobApplications).where(eq(jobApplications.phone, employee.phone)) : Promise.resolve([]),
       ]);
-      if (emailProfileMatches[0] || phoneProfileMatches[0]) {
-        throw new Error("A job application or APY HQ profile already uses this contact information. Resolve that record before granting access.");
-      }
+      const matchingProfiles = Array.from(new Map([...emailProfileMatches, ...phoneProfileMatches]
+        .map((profile) => [profile.id, profile])).values());
+      const matchingProfile = matchingProfiles[0] ?? null;
+      const [linkedEmployee] = matchingProfile
+        ? await db.select({ id: employees.id }).from(employees).where(eq(employees.sourceApplicationId, matchingProfile.id)).limit(1)
+        : [];
+      const linkEligibility = getLegacyEmployeeProfileLinkEligibility({
+        matchingProfileCount: matchingProfiles.length,
+        matchingProfileIsActiveTeamMember: Boolean(matchingProfile?.isTeamMember) && !matchingProfile?.deletedAt,
+        matchingProfileIsArchived: Boolean(matchingProfile?.deletedAt),
+        matchingProfileStatus: matchingProfile?.status ?? "",
+        roleMatches: matchingProfile?.role === employee.role,
+        locationMatches: matchingProfile?.location === employee.location,
+        alreadyLinkedToAnotherEmployee: Boolean(linkedEmployee),
+      });
+      if (!linkEligibility.eligible) throw new Error(linkEligibility.reason);
 
       const profileId = await db.transaction(async (tx) => {
+        if (linkEligibility.action === "link_existing_profile" && matchingProfile) {
+          await tx.update(jobApplications).set({ isTeamMember: true, deletedAt: null })
+            .where(eq(jobApplications.id, matchingProfile.id));
+          await tx.update(employees).set({ sourceApplicationId: matchingProfile.id })
+            .where(eq(employees.id, employee.id));
+          await tx.insert(jobApplicationActions).values({
+            applicationId: matchingProfile.id,
+            action: "employee_directory_apy_hq_access_linked",
+            toStatus: "onboarded",
+            actorUserId: ctx.user.id,
+            actorName: ctx.user.name,
+            actorEmail: ctx.user.email,
+            details: JSON.stringify({ grantsApyHqAccess: true, linkedExistingProfile: true, employeeId: employee.id }),
+          });
+          return matchingProfile.id;
+        }
         const profileResult = await tx.insert(jobApplications).values({
           name: employee.name,
           email: employee.email,
