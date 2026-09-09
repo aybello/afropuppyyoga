@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Link } from "wouter";
 import { ArrowLeft, Calendar, CalendarCheck, ChevronLeft, ChevronRight, Mail, MessageSquare, Pencil, Plus, Power, Send, Trash2, Users, X } from "lucide-react";
 import { individualScheduleDeliveryFeedback } from "@shared/individualNotification";
+import { getPuppyMonitorLocationCoverage } from "@shared/puppyMonitorLocationCoverage";
 
 const LOCATIONS = ["KW", "OAK", "HAM"] as const;
 const LOCATION_LABELS: Record<string, string> = { KW: "Kitchener", OAK: "Oakville", HAM: "Hamilton", CENTRAL: "APY-wide" };
@@ -296,16 +297,18 @@ export default function StaffAvailabilityPage() {
                     const ops = byLocationAndRole(loc, "Operations Manager");
                     const yoga = byLocationAndRole(loc, "Yoga Instructor");
                     const pms = byLocationAndRole(loc, "Puppy Monitor");
-                    const openPMs = Math.max(0, 6 - pms.length);
+                    const puppyMonitorCoverage = getPuppyMonitorLocationCoverage(pms.length);
                     return (
                       <section key={loc} className="rounded-2xl border border-[#EADBE2] bg-white p-4">
                         <div className="mb-3 rounded-lg bg-[#8B2252] px-3 py-2 text-center text-sm font-bold text-white">{LOCATION_LABELS[loc]}</div>
                         <div className="space-y-2">
                           {ops.length ? ops.map((s) => <PersonChip key={s.id} staff={s} role="Operations Manager" status={getStatus(s.id)} onClick={() => openStaff(s)} />) : <div className="rounded-lg border-2 border-dashed border-[#DCCAD3] px-3 py-3 text-center text-xs text-[#B39AA5]">Ops Manager · Open</div>}
                           {yoga.length ? yoga.map((s) => <PersonChip key={s.id} staff={s} role="Yoga Instructor" status={getStatus(s.id)} onClick={() => openStaff(s)} />) : <div className="rounded-lg border-2 border-dashed border-[#DCCAD3] px-3 py-3 text-center text-xs text-[#B39AA5]">Yoga Instructor · Open</div>}
-                          <p className="pt-1 text-[10px] font-bold uppercase tracking-wider text-[#7C3AED]">Puppy Monitors · {pms.length}/6</p>
+                          <p className="pt-1 text-[10px] font-bold uppercase tracking-wider text-[#7C3AED]">Puppy Monitors · {puppyMonitorCoverage.activeCount} active · minimum {puppyMonitorCoverage.minimum}</p>
                           {pms.map((s) => <PersonChip key={s.id} staff={s} role="Puppy Monitor" status={getStatus(s.id)} onClick={() => openStaff(s)} />)}
-                          {openPMs > 0 && <div className="rounded-lg border-2 border-dashed border-[#DCCAD3] px-3 py-2 text-center text-xs text-[#B39AA5]">+{openPMs} open</div>}
+                          {puppyMonitorCoverage.meetsMinimum
+                            ? <p className="pt-1 text-[11px] font-medium text-emerald-700">Minimum coverage met · no maximum</p>
+                            : <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-center text-xs font-semibold text-amber-800">Need {puppyMonitorCoverage.shortfall} more active PM{puppyMonitorCoverage.shortfall === 1 ? "" : "s"} to reach the minimum of {puppyMonitorCoverage.minimum}</div>}
                         </div>
                       </section>
                     );

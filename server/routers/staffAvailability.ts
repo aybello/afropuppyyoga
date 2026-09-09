@@ -7,6 +7,7 @@ import { getUpcomingWeekendDates, isAwayOnDate, isWeekendDate } from "../weekend
 import { isActiveTeamMember } from "../teamMembership";
 import { normalizeCanadianPhoneNumber } from "../../shared/phone";
 import { APY_TEAM_LOCATIONS, APY_TEAM_ROLES, isCentralApyTeamRole } from "../../shared/apyPermissions";
+import { getPuppyMonitorLocationCoverage } from "../../shared/puppyMonitorLocationCoverage";
 
 export const directTeamMemberSchema = z.object({
   name: z.string().trim().min(2, "Enter the team member's full name."),
@@ -90,6 +91,7 @@ export const directEmployeeSchema = z.object({
 });
 
 const isOperationsManagerRole = (role: string) => role.toLowerCase().replaceAll("_", " ") === "operations manager";
+const isPuppyMonitorRole = (role: string) => role.toLowerCase().replaceAll("_", " ") === "puppy monitor";
 
 export function getTeamRemovalUpdate(removedAt: Date) {
   return { isTeamMember: false, deletedAt: removedAt };
@@ -187,6 +189,7 @@ export function validateTeamAssignmentChange(input: {
   hasOperationsManagerAtNextLocation: boolean;
   hasOtherOperationsManagerAtCurrentLocation: boolean;
   hasActivePuppyMonitorsAtCurrentLocation: boolean;
+  activePuppyMonitorCountAtCurrentLocation?: number;
 }) {
   if (input.nextRole === "Puppy Monitor" && !input.hasOperationsManagerAtNextLocation) {
     throw new Error("Add or retain an Operations Manager at this location before assigning Puppy Monitors.");
@@ -195,6 +198,13 @@ export function validateTeamAssignmentChange(input: {
     && (input.nextRole !== "Operations Manager" || input.nextLocation !== input.currentLocation);
   if (movesOperationsManager && input.hasActivePuppyMonitorsAtCurrentLocation && !input.hasOtherOperationsManagerAtCurrentLocation) {
     throw new Error("Assign another Operations Manager to this Puppy Monitor location before changing this team member.");
+  }
+  const movesOrChangesPuppyMonitor = isPuppyMonitorRole(input.currentRole)
+    && (!isPuppyMonitorRole(input.nextRole) || input.nextLocation !== input.currentLocation);
+  const remainingPuppyMonitorCount = Math.max(0, (input.activePuppyMonitorCountAtCurrentLocation ?? 0) - (movesOrChangesPuppyMonitor ? 1 : 0));
+  const puppyMonitorCoverage = getPuppyMonitorLocationCoverage(remainingPuppyMonitorCount);
+  if (movesOrChangesPuppyMonitor && !puppyMonitorCoverage.meetsMinimum) {
+    throw new Error(`Keep at least ${puppyMonitorCoverage.minimum} active Puppy Monitors at ${input.currentLocation} before moving, changing role, or removing this person.`);
   }
 }
 
@@ -207,6 +217,7 @@ export function validateEmployeeDirectoryAssignmentChange(input: {
   hasOperationsManagerAtNextLocation: boolean;
   hasOtherOperationsManagerAtCurrentLocation: boolean;
   hasActivePuppyMonitorsAtCurrentLocation: boolean;
+  activePuppyMonitorCountAtCurrentLocation?: number;
 }) {
   if (!input.linkedActiveTeamProfile) return;
   validateTeamAssignmentChange(input);
@@ -300,6 +311,7 @@ export const staffAvailabilityRouter = router({
           hasOperationsManagerAtNextLocation: operationsManagersAtTarget.some((manager) => manager.id !== linkedProfile.id || input.role === "Operations Manager"),
           hasOtherOperationsManagerAtCurrentLocation: operationsManagersAtCurrentLocation.some((manager) => manager.id !== linkedProfile.id),
           hasActivePuppyMonitorsAtCurrentLocation: activePuppyMonitorsAtCurrentLocation.length > 0,
+          activePuppyMonitorCountAtCurrentLocation: activePuppyMonitorsAtCurrentLocation.length,
         });
       }
 
@@ -938,6 +950,7 @@ export const staffAvailabilityRouter = router({
         hasOperationsManagerAtNextLocation: operationsManagersAtTarget.some((manager) => manager.id !== existing.id || input.role === "Operations Manager"),
         hasOtherOperationsManagerAtCurrentLocation: operationsManagersAtCurrentLocation.some((manager) => manager.id !== existing.id),
         hasActivePuppyMonitorsAtCurrentLocation: activePuppyMonitorsAtCurrentLocation.length > 0,
+        activePuppyMonitorCountAtCurrentLocation: activePuppyMonitorsAtCurrentLocation.length,
       });
 
       await db.update(jobApplications).set({
@@ -1001,6 +1014,7 @@ export const staffAvailabilityRouter = router({
         hasOperationsManagerAtNextLocation: operationsManagersAtLocation.some((manager) => manager.id !== existing.id || existing.role === "Operations Manager"),
         hasOtherOperationsManagerAtCurrentLocation: operationsManagersAtLocation.some((manager) => manager.id !== existing.id),
         hasActivePuppyMonitorsAtCurrentLocation: activePuppyMonitorsAtLocation.length > 0,
+        activePuppyMonitorCountAtCurrentLocation: activePuppyMonitorsAtLocation.length,
       });
 
       const statusChangedAt = new Date();
@@ -1058,6 +1072,7 @@ export const staffAvailabilityRouter = router({
         hasOperationsManagerAtNextLocation: operationsManagersAtLocation.some((manager) => manager.id !== input.id),
         hasOtherOperationsManagerAtCurrentLocation: operationsManagersAtLocation.some((manager) => manager.id !== input.id),
         hasActivePuppyMonitorsAtCurrentLocation: activePuppyMonitorsAtLocation.length > 0,
+        activePuppyMonitorCountAtCurrentLocation: activePuppyMonitorsAtLocation.length,
       });
 
       const removedAt = new Date();

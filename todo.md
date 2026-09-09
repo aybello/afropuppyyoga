@@ -1230,6 +1230,11 @@
 - [x] Reject ambiguous, role-conflicting, location-conflicting, inactive, or already-linked matches while preserving Operations Manager coverage safeguards
 - [x] Add focused regression coverage, validate the corrected flow, publish, and record the legacy-access repair
 
+## Puppy Monitor Location Coverage Rule (Sep 9, 2026)
+- [x] Remove any maximum Puppy Monitor limit applied at the location level
+- [x] Preserve the requirement that each active location has at least six active Puppy Monitors
+- [ ] Add focused regression coverage, validate, publish, and record the uncapped coverage rule
+
 ## Date-Based Cancellation Rebooking Codes (Sep 7, 2026)
 - [x] Replace the incorrect random cancellation-code generation with the owner-required Ontario class-date format, such as AUG5
 - [x] Block cancellation communications until the date-based code and the recipient workflow are verified
