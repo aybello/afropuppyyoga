@@ -1222,6 +1222,7 @@
 - [x] Create a matching active APY HQ profile and role-based access when the owner adds an employee with a valid email or phone
 - [x] Preserve manual onboarding eligibility, duplicate prevention, Operations Manager coverage, and role restrictions
 - [x] Make access status clear in Employee Directory and validate the unified workflow end to end
+- [x] Prevent direct employee creation from duplicating an existing applicant or APY HQ profile that uses the same contact information
 
 ## Date-Based Cancellation Rebooking Codes (Sep 7, 2026)
 - [x] Replace the incorrect random cancellation-code generation with the owner-required Ontario class-date format, such as AUG5

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { directEmployeeSchema, directTeamMemberSchema, employeeRecordUpdateSchema, getAutomaticEmployeeAccessPlan, getEmployeeDepartureUpdate, getExistingEmployeeAccessProvisioningEligibility, getFormerEmployeeDeletionEligibility, getOnboardedApplicantDirectoryEligibility, getTeamRemovalUpdate, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateEmployeeDirectoryAssignmentChange, validateTeamAssignmentChange } from "./routers/staffAvailability";
+import { directEmployeeSchema, directTeamMemberSchema, employeeRecordUpdateSchema, getAutomaticEmployeeAccessPlan, getDirectEmployeeContactEligibility, getEmployeeDepartureUpdate, getExistingEmployeeAccessProvisioningEligibility, getFormerEmployeeDeletionEligibility, getOnboardedApplicantDirectoryEligibility, getTeamRemovalUpdate, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateEmployeeDirectoryAssignmentChange, validateTeamAssignmentChange } from "./routers/staffAvailability";
 
 describe("direct team-member validation", () => {
   it("accepts an Operations Manager assigned to Oakville", () => {
@@ -84,6 +84,18 @@ describe("direct team-member validation", () => {
       eligible: false,
       reason: "This employee already has an APY HQ profile.",
     });
+  });
+
+  it("does not create a duplicate APY HQ profile when a contact already belongs to an applicant or staff profile", () => {
+    expect(getDirectEmployeeContactEligibility({ hasEmployeeRecord: false, hasApplicantOrApyProfile: true })).toEqual({
+      eligible: false,
+      reason: "An existing applicant or APY HQ profile already uses this email address or phone number. Use that record instead of creating a duplicate.",
+    });
+    expect(getDirectEmployeeContactEligibility({ hasEmployeeRecord: true, hasApplicantOrApyProfile: false })).toEqual({
+      eligible: false,
+      reason: "An Employee Directory record already uses this email address or phone number. Update or restore that record instead of creating a duplicate.",
+    });
+    expect(getDirectEmployeeContactEligibility({ hasEmployeeRecord: false, hasApplicantOrApyProfile: false })).toEqual({ eligible: true });
   });
 
   it("permits only an onboarding-complete applicant without an existing directory record to be added", () => {

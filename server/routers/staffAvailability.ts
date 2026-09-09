@@ -138,6 +138,16 @@ export function getExistingEmployeeAccessProvisioningEligibility(input: { employ
   return { eligible: true as const };
 }
 
+export function getDirectEmployeeContactEligibility(input: { hasEmployeeRecord: boolean; hasApplicantOrApyProfile: boolean }) {
+  if (input.hasEmployeeRecord) {
+    return { eligible: false as const, reason: "An Employee Directory record already uses this email address or phone number. Update or restore that record instead of creating a duplicate." };
+  }
+  if (input.hasApplicantOrApyProfile) {
+    return { eligible: false as const, reason: "An existing applicant or APY HQ profile already uses this email address or phone number. Use that record instead of creating a duplicate." };
+  }
+  return { eligible: true as const };
+}
+
 export function validateTeamAssignmentChange(input: {
   currentRole: string;
   currentLocation: string;
@@ -299,9 +309,15 @@ export const staffAvailabilityRouter = router({
           ? db.select({ id: employees.id }).from(employees).where(eq(employees.phone, phone)).limit(1)
           : Promise.resolve([]),
       ]);
-      if (emailMatch[0] || phoneMatch[0]) {
-        throw new Error("An Employee Directory record already uses this email address or phone number. Update or restore that record instead of creating a duplicate.");
-      }
+      const [emailProfileMatch, phoneProfileMatch] = await Promise.all([
+        email ? db.select({ id: jobApplications.id }).from(jobApplications).where(eq(jobApplications.email, email)).limit(1) : Promise.resolve([]),
+        phone ? db.select({ id: jobApplications.id }).from(jobApplications).where(eq(jobApplications.phone, phone)).limit(1) : Promise.resolve([]),
+      ]);
+      const contactEligibility = getDirectEmployeeContactEligibility({
+        hasEmployeeRecord: Boolean(emailMatch[0] || phoneMatch[0]),
+        hasApplicantOrApyProfile: Boolean(emailProfileMatch[0] || phoneProfileMatch[0]),
+      });
+      if (!contactEligibility.eligible) throw new Error(contactEligibility.reason);
 
       if (input.role === "Puppy Monitor") {
         const [operationsManager] = await db.select({ id: jobApplications.id })
