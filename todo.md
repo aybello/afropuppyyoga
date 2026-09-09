@@ -1217,6 +1217,12 @@
 - [x] Correct the cancellation, rebooking-code, and suggested-class communication safeguards with focused regression coverage
 - [x] Validate and report the incident findings without recipient data; retain the paused sender until the owner explicitly approves re-enablement
 
+## Unified Employee Directory and APY HQ Access (Sep 7, 2026)
+- [x] Trace direct employee creation and applicant-conversion paths against active APY HQ profile safeguards
+- [x] Create a matching active APY HQ profile and role-based access when the owner adds an employee with a valid email or phone
+- [x] Preserve manual onboarding eligibility, duplicate prevention, Operations Manager coverage, and role restrictions
+- [x] Make access status clear in Employee Directory and validate the unified workflow end to end
+
 ## Date-Based Cancellation Rebooking Codes (Sep 7, 2026)
 - [x] Replace the incorrect random cancellation-code generation with the owner-required Ontario class-date format, such as AUG5
 - [x] Block cancellation communications until the date-based code and the recipient workflow are verified

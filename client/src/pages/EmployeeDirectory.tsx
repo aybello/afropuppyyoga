@@ -2,7 +2,7 @@ import AdminNav from "@/components/AdminNav";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
 import { useState } from "react";
-import { ArrowLeft, CheckCircle2, Clock3, Mail, Pencil, Phone, RefreshCw, Trash2, UserMinus, UserPlus, UsersRound } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock3, KeyRound, Mail, Pencil, Phone, RefreshCw, Trash2, UserMinus, UserPlus, UsersRound } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -83,9 +83,16 @@ export default function EmployeeDirectory() {
   });
   const createEmployee = trpc.staffAvailability.createEmployeeRecord.useMutation({
     onSuccess: () => {
-      toast.success("Employee added to the directory");
+      toast.success("Employee added with APY HQ access");
       setShowAddEmployee(false);
       setNewEmployee(createEmptyEmployeeForm());
+      refetch();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+  const provisionApyHqAccess = trpc.staffAvailability.provisionEmployeeApyHqAccess.useMutation({
+    onSuccess: () => {
+      toast.success("APY HQ access added for this employee");
       refetch();
     },
     onError: (error) => toast.error(error.message),
@@ -247,7 +254,7 @@ export default function EmployeeDirectory() {
                               <Pencil className="h-3.5 w-3.5" /> Edit
                             </button>
                             {isActive && employee.sourceApplicationId ? (
-                              <Link href="/admin/staff-availability" className="font-body text-xs font-bold text-[#8B2252] hover:text-[#6B1A3E]">Manage</Link>
+                              <Link href="/admin/staff-availability" className="inline-flex items-center gap-1.5 font-body text-xs font-bold text-[#8B2252] hover:text-[#6B1A3E]"><KeyRound className="h-3.5 w-3.5" /> APY HQ access</Link>
                             ) : !isActive && employee.sourceApplicationId ? (
                               <button
                                 type="button"
@@ -257,8 +264,17 @@ export default function EmployeeDirectory() {
                               >
                                 <RefreshCw className={`h-3.5 w-3.5 ${reactivate.isPending ? "animate-spin" : ""}`} /> Restore to APY HQ
                               </button>
+                            ) : isActive ? (
+                              <button
+                                type="button"
+                                onClick={() => provisionApyHqAccess.mutate({ employeeId: employee.id })}
+                                disabled={provisionApyHqAccess.isPending}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-[#8B2252]/25 bg-[#FFF8FA] px-3 py-2 text-xs font-bold text-[#8B2252] hover:bg-[#FFF0F5] disabled:opacity-50"
+                              >
+                                <KeyRound className="h-3.5 w-3.5" /> {provisionApyHqAccess.isPending ? "Granting access…" : "Grant APY HQ access"}
+                              </button>
                             ) : (
-                              <span className="font-body text-xs text-[#956A7C]">APY HQ profile not set</span>
+                              <span className="font-body text-xs text-[#956A7C]">No APY HQ access</span>
                             )}
                             {isActive && (
                               <button type="button" onClick={() => setDepartingEmployee(employee)} className="inline-flex items-center gap-1.5 font-body text-xs font-bold text-[#9A3B51] hover:text-[#7B263B]">
@@ -289,7 +305,7 @@ export default function EmployeeDirectory() {
         <DialogContent className="max-w-xl border-[#EADBE2] bg-[#FEFAF4]">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl text-[#1A0A12]">Add employee</DialogTitle>
-            <DialogDescription className="font-body leading-6 text-[#6E5360]">Create an Employee Directory record without creating APY HQ membership or staff portal access.</DialogDescription>
+            <DialogDescription className="font-body leading-6 text-[#6E5360]">Create the Employee Directory record and a matching active APY HQ profile. They receive role-based access when they sign in with this email or phone number.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreateEmployee} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
@@ -319,7 +335,7 @@ export default function EmployeeDirectory() {
             </div>
             <DialogFooter className="pt-2">
               <Button type="button" variant="outline" onClick={() => setShowAddEmployee(false)}>Cancel</Button>
-              <Button type="submit" disabled={createEmployee.isPending} className="bg-[#8B2252] text-white hover:bg-[#6B1A3E]">{createEmployee.isPending ? "Adding…" : "Add employee"}</Button>
+              <Button type="submit" disabled={createEmployee.isPending} className="bg-[#8B2252] text-white hover:bg-[#6B1A3E]">{createEmployee.isPending ? "Adding…" : "Add employee & grant access"}</Button>
             </DialogFooter>
           </form>
         </DialogContent>

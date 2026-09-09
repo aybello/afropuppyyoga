@@ -69,7 +69,7 @@ export const employeeRecordUpdateSchema = z.object({
   }
 });
 
-/** A directory-only employee record. It intentionally does not create APY HQ membership or portal access. */
+/** An owner-created employee record also provisions the matching APY HQ profile and role-based access. */
 export const directEmployeeSchema = z.object({
   name: z.string().trim().min(2, "Enter the employee's full name."),
   email: z.string().trim().email("Enter a valid email address.").or(z.literal("")).default(""),
@@ -115,6 +115,25 @@ export function getOnboardedApplicantDirectoryEligibility(input: { status: strin
   }
   if (input.existingEmployee) {
     return { eligible: false as const, reason: "This applicant already has an Employee Directory record." };
+  }
+  return { eligible: true as const };
+}
+
+export function getAutomaticEmployeeAccessPlan(_input: z.infer<typeof directEmployeeSchema>) {
+  return {
+    employmentStatus: "active" as const,
+    applicationStatus: "onboarded" as const,
+    isTeamMember: true,
+    grantsApyHqAccess: true,
+  };
+}
+
+export function getExistingEmployeeAccessProvisioningEligibility(input: { employmentStatus: string; sourceApplicationId: number | null }) {
+  if (input.employmentStatus !== "active") {
+    return { eligible: false as const, reason: "Only active employees can be given APY HQ access." };
+  }
+  if (input.sourceApplicationId !== null) {
+    return { eligible: false as const, reason: "This employee already has an APY HQ profile." };
   }
   return { eligible: true as const };
 }
@@ -264,10 +283,10 @@ export const staffAvailabilityRouter = router({
       return { success: true };
     }),
 
-  // Create a directory record for a manually added employee. It deliberately does not create a hiring application, APY HQ profile, or portal access.
+  // Owner-created employees receive a matching active APY HQ profile and role-based access.
   createEmployeeRecord: adminProcedure
     .input(directEmployeeSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       const email = input.email ? input.email.toLowerCase() : null;
@@ -284,19 +303,60 @@ export const staffAvailabilityRouter = router({
         throw new Error("An Employee Directory record already uses this email address or phone number. Update or restore that record instead of creating a duplicate.");
       }
 
-      const result = await db.insert(employees).values({
-        name: input.name,
-        email,
-        phone,
-        role: input.role,
-        location: input.location,
-        employmentStatus: "active",
-        startedAt: new Date(`${input.startedAt}T12:00:00`),
+      if (input.role === "Puppy Monitor") {
+        const [operationsManager] = await db.select({ id: jobApplications.id })
+          .from(jobApplications)
+          .where(and(
+            isNull(jobApplications.deletedAt),
+            eq(jobApplications.isTeamMember, true),
+            eq(jobApplications.role, "Operations Manager"),
+            eq(jobApplications.location, input.location),
+          ))
+          .limit(1);
+        if (!operationsManager) {
+          throw new Error("Add this location's Operations Manager to APY HQ before adding Puppy Monitors.");
+        }
+      }
+
+      const plan = getAutomaticEmployeeAccessPlan(input);
+      const employeeId = await db.transaction(async (tx) => {
+        const profileResult = await tx.insert(jobApplications).values({
+          name: input.name,
+          email,
+          phone,
+          role: input.role,
+          location: input.location,
+          whyAPY: "Added directly through Employee Directory.",
+          experience: "",
+          status: plan.applicationStatus,
+          isTeamMember: plan.isTeamMember,
+        });
+        const sourceApplicationId = Number(profileResult[0].insertId);
+        const employeeResult = await tx.insert(employees).values({
+          sourceApplicationId,
+          name: input.name,
+          email,
+          phone,
+          role: input.role,
+          location: input.location,
+          employmentStatus: plan.employmentStatus,
+          startedAt: new Date(`${input.startedAt}T12:00:00`),
+        });
+        await tx.insert(jobApplicationActions).values({
+          applicationId: sourceApplicationId,
+          action: "employee_directory_and_apy_hq_created",
+          toStatus: plan.applicationStatus,
+          actorUserId: ctx.user.id,
+          actorName: ctx.user.name,
+          actorEmail: ctx.user.email,
+          details: JSON.stringify({ grantsApyHqAccess: true, source: "employee_directory" }),
+        });
+        return Number(employeeResult[0].insertId);
       });
-      return { success: true, id: Number(result[0].insertId) };
+      return { success: true, id: employeeId, grantsApyHqAccess: true };
     }),
 
-  // Add an onboarding-complete applicant to the directory without automatically granting APY HQ membership or any staff portal access.
+  // Add an onboarding-complete applicant to the directory and deliberately activate their APY HQ profile.
   addOnboardedApplicantToEmployeeDirectory: adminProcedure
     .input(z.object({ applicationId: z.number().int().positive() }))
     .mutation(async ({ input, ctx }) => {
@@ -347,6 +407,20 @@ export const staffAvailabilityRouter = router({
         employmentStatus: "active" as const,
         endedAt: null,
       };
+      if (applicant.role === "Puppy Monitor") {
+        const [operationsManager] = await db.select({ id: jobApplications.id })
+          .from(jobApplications)
+          .where(and(
+            isNull(jobApplications.deletedAt),
+            eq(jobApplications.isTeamMember, true),
+            eq(jobApplications.role, "Operations Manager"),
+            eq(jobApplications.location, applicant.location),
+          ))
+          .limit(1);
+        if (!operationsManager) {
+          throw new Error("Add this location's Operations Manager to APY HQ before giving Puppy Monitors access.");
+        }
+      }
       const employeeId = await db.transaction(async (tx) => {
         if (matchingEmployee) {
           await tx.update(employees).set(directoryValues).where(eq(employees.id, matchingEmployee.id));
@@ -364,14 +438,78 @@ export const staffAvailabilityRouter = router({
           actorUserId: ctx.user.id,
           actorName: ctx.user.name,
           actorEmail: ctx.user.email,
-          details: JSON.stringify({ createsApyHqMembership: false, grantsPortalAccess: false }),
+          details: JSON.stringify({ createsApyHqMembership: true, grantsPortalAccess: true }),
         });
+        await tx.update(jobApplications).set({ isTeamMember: true, deletedAt: null })
+          .where(eq(jobApplications.id, applicant.id));
         return directoryEmployee.id;
       });
-      return { success: true, id: employeeId, linkedExistingRecord: Boolean(matchingEmployee) };
+      return { success: true, id: employeeId, linkedExistingRecord: Boolean(matchingEmployee), grantsApyHqAccess: true };
     }),
 
-  // Mark a directory-only employee inactive while retaining the directory history and original application. APY HQ removals remain in the existing protected team workflow.
+  // Give an existing active directory employee a matching APY HQ profile when the owner explicitly provisions access.
+  provisionEmployeeApyHqAccess: adminProcedure
+    .input(z.object({ employeeId: z.number().int().positive() }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const [employee] = await db.select().from(employees).where(eq(employees.id, input.employeeId)).limit(1);
+      if (!employee) throw new Error("Employee record not found.");
+      const eligibility = getExistingEmployeeAccessProvisioningEligibility(employee);
+      if (!eligibility.eligible) throw new Error(eligibility.reason);
+
+      if (employee.role === "Puppy Monitor") {
+        const [operationsManager] = await db.select({ id: jobApplications.id })
+          .from(jobApplications)
+          .where(and(
+            isNull(jobApplications.deletedAt),
+            eq(jobApplications.isTeamMember, true),
+            eq(jobApplications.role, "Operations Manager"),
+            eq(jobApplications.location, employee.location),
+          ))
+          .limit(1);
+        if (!operationsManager) {
+          throw new Error("Add this location's Operations Manager to APY HQ before giving Puppy Monitors access.");
+        }
+      }
+
+      const [emailProfileMatches, phoneProfileMatches] = await Promise.all([
+        employee.email ? db.select({ id: jobApplications.id }).from(jobApplications).where(eq(jobApplications.email, employee.email)).limit(1) : Promise.resolve([]),
+        employee.phone ? db.select({ id: jobApplications.id }).from(jobApplications).where(eq(jobApplications.phone, employee.phone)).limit(1) : Promise.resolve([]),
+      ]);
+      if (emailProfileMatches[0] || phoneProfileMatches[0]) {
+        throw new Error("A job application or APY HQ profile already uses this contact information. Resolve that record before granting access.");
+      }
+
+      const profileId = await db.transaction(async (tx) => {
+        const profileResult = await tx.insert(jobApplications).values({
+          name: employee.name,
+          email: employee.email,
+          phone: employee.phone,
+          role: employee.role,
+          location: employee.location,
+          whyAPY: "APY HQ access provisioned from Employee Directory.",
+          experience: "",
+          status: "onboarded",
+          isTeamMember: true,
+        });
+        const sourceApplicationId = Number(profileResult[0].insertId);
+        await tx.update(employees).set({ sourceApplicationId }).where(eq(employees.id, employee.id));
+        await tx.insert(jobApplicationActions).values({
+          applicationId: sourceApplicationId,
+          action: "employee_directory_apy_hq_access_granted",
+          toStatus: "onboarded",
+          actorUserId: ctx.user.id,
+          actorName: ctx.user.name,
+          actorEmail: ctx.user.email,
+          details: JSON.stringify({ grantsApyHqAccess: true, employeeId: employee.id }),
+        });
+        return sourceApplicationId;
+      });
+      return { success: true, id: profileId, grantsApyHqAccess: true };
+    }),
+
+  // Mark a directory employee inactive while retaining the directory history and original application. APY HQ removals remain in the existing protected team workflow.
   markEmployeeDeparted: adminProcedure
     .input(z.object({ employeeId: z.number().int().positive() }))
     .mutation(async ({ input, ctx }) => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { directEmployeeSchema, directTeamMemberSchema, employeeRecordUpdateSchema, getEmployeeDepartureUpdate, getFormerEmployeeDeletionEligibility, getOnboardedApplicantDirectoryEligibility, getTeamRemovalUpdate, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateEmployeeDirectoryAssignmentChange, validateTeamAssignmentChange } from "./routers/staffAvailability";
+import { directEmployeeSchema, directTeamMemberSchema, employeeRecordUpdateSchema, getAutomaticEmployeeAccessPlan, getEmployeeDepartureUpdate, getExistingEmployeeAccessProvisioningEligibility, getFormerEmployeeDeletionEligibility, getOnboardedApplicantDirectoryEligibility, getTeamRemovalUpdate, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateEmployeeDirectoryAssignmentChange, validateTeamAssignmentChange } from "./routers/staffAvailability";
 
 describe("direct team-member validation", () => {
   it("accepts an Operations Manager assigned to Oakville", () => {
@@ -47,7 +47,7 @@ describe("direct team-member validation", () => {
     expect(() => directTeamMemberSchema.parse({ name: "Jordan Miles", email: "", phone: "", role: "Puppy Monitor", location: "KW" })).toThrow();
   });
 
-  it("accepts a direct employee record without creating an APY HQ team profile", () => {
+  it("plans APY HQ access automatically when the owner adds a direct employee", () => {
     const employee = directEmployeeSchema.parse({
       name: "Jordan Miles",
       email: "",
@@ -57,11 +57,32 @@ describe("direct team-member validation", () => {
       startedAt: "2026-09-03",
     });
 
-    expect(employee).toMatchObject({
-      name: "Jordan Miles",
-      role: "Yoga Instructor",
-      location: "KW",
-      startedAt: "2026-09-03",
+    expect(getAutomaticEmployeeAccessPlan(employee)).toEqual({
+      employmentStatus: "active",
+      applicationStatus: "onboarded",
+      isTeamMember: true,
+      grantsApyHqAccess: true,
+    });
+  });
+
+  it("allows an existing active directory-only employee to be provisioned into APY HQ once", () => {
+    expect(getExistingEmployeeAccessProvisioningEligibility({
+      employmentStatus: "active",
+      sourceApplicationId: null,
+    })).toEqual({ eligible: true });
+    expect(getExistingEmployeeAccessProvisioningEligibility({
+      employmentStatus: "inactive",
+      sourceApplicationId: null,
+    })).toEqual({
+      eligible: false,
+      reason: "Only active employees can be given APY HQ access.",
+    });
+    expect(getExistingEmployeeAccessProvisioningEligibility({
+      employmentStatus: "active",
+      sourceApplicationId: 42,
+    })).toEqual({
+      eligible: false,
+      reason: "This employee already has an APY HQ profile.",
     });
   });
 
