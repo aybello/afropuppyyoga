@@ -1251,3 +1251,15 @@
 - [x] Use all verified 11:00 AM Hamilton Pomskies ticket categories as the owner-selected rebooking-email scope
 - [x] Create and verify SEP12 as a 100%-off calendar-level rebooking code before delivery
 - [x] Send the approved rebooking message by email, call, and SMS only to the six owner-selected 11:00 AM Hamilton Pomskies registrations
+
+## Owner Mobile SMS Replies (Sep 10, 2026)
+- [x] Trace why inbound APY guest-text notifications cannot be replied to directly from the owner’s phone
+- [x] Evaluate a privacy-safe mobile two-way messaging option that preserves the APY business number and SMS-consent safeguards
+- [x] Present the owner with implementation options before enabling any new message-routing or external mobile service
+- [x] Prepare a staged transition plan for the owner-selected mobile business-texting app, including APY-number porting and automation continuity safeguards
+
+## Monday/Thursday Luma Reminder Review (Sep 10, 2026)
+- [x] Review eligible public AfroPuppyYoga regular classes within 10 days through the official Luma management account and visible controls only
+- [x] Confirm Invited-only audience, same-day blast history, and approved compact-message availability per eligible event before any blast
+- [x] Send only compliant reminders or safely stop each event with an approved non-sensitive reason
+- [ ] Post exactly one privacy-preserving result to the deployed APY scheduled-outcome endpoint after the review — one safe attempt failed before connecting because its configured base URL was unavailable; do not retry this review
