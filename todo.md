@@ -1263,3 +1263,14 @@
 - [x] Confirm Invited-only audience, same-day blast history, and approved compact-message availability per eligible event before any blast
 - [x] Send only compliant reminders or safely stop each event with an approved non-sensitive reason
 - [ ] Post exactly one privacy-preserving result to the deployed APY scheduled-outcome endpoint after the review — one safe attempt failed before connecting because its configured base URL was unavailable; do not retry this review
+
+## Upcoming-Only Puppy Class Schedule (Sep 10, 2026)
+- [x] Trace the Puppy Class Schedule data query and identify why completed classes remain visible
+- [x] Filter the active Puppy Class Schedule to future and upcoming classes only without deleting historical records
+- [x] Add regression coverage, validate the view, publish, and record the schedule-display correction
+
+## APY HQ Class Staff Assignment Controls (Sep 10, 2026)
+- [x] Trace why the class-staff UI permits Puppy Monitor changes but does not expose equivalent Operations Manager and Yoga Instructor assignment controls
+- [x] Allow authorized APY HQ users to assign or replace an Operations Manager and Yoga Instructor from the eligible active team roster while retaining role, location, and class-staffing safeguards
+- [x] Keep the existing individual email/SMS Message or Resend controls available to notify only the newly selected Operations Manager or Yoga Instructor
+- [x] Add regression coverage, validate the class-staff workflow, publish, and record the role-assignment correction

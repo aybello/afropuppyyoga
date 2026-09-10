@@ -9,9 +9,10 @@ import twilio from "twilio";
 import { isSmsSuppressed } from "../smsConsent";
 import { createLumaEventForSchedule, getExistingLumaEventInvitationReadiness, sendExistingLumaEventInvitations, setLumaRegistrationOpen, updateLumaEventForSchedule } from "../lumaScheduleHelper";
 import { isAwayOnDate } from "../weekendCoverage";
-import { getPuppyMonitorAssignmentEligibility, isClassFullyStaffed, scheduleLocationToTeamLocation, staffingGaps, TWO_PUPPY_MONITORS_REQUIRED } from "../classStaffing";
+import { getLeadershipAssignmentEligibility, getPuppyMonitorAssignmentEligibility, isClassFullyStaffed, scheduleLocationToTeamLocation, staffingGaps, TWO_PUPPY_MONITORS_REQUIRED, type LeadershipRole } from "../classStaffing";
 import { isActiveTeamMember } from "../teamMembership";
 import { schedulesOverlap, validateScheduleCandidate } from "../scheduleValidation";
+import { getScheduleVisibilityStartDate, getTorontoCalendarDate } from "../../shared/scheduleVisibility";
 
 const LOCATIONS = ["Kitchener", "Hamilton", "Oakville"] as const;
 const ALL_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
@@ -241,14 +242,16 @@ export const puppyScheduleRouter = router({
   list: staffProcedure.query(async () => {
     const db = await getDb();
     if (!db) return [];
-    return db.select().from(puppySchedule).where(ne(puppySchedule.scheduleStatus, "archived")).orderBy(desc(puppySchedule.classDate));
+    const today = getTorontoCalendarDate();
+    return db.select().from(puppySchedule).where(and(ne(puppySchedule.scheduleStatus, "archived"), gte(puppySchedule.classDate, today))).orderBy(desc(puppySchedule.classDate));
   }),
 
   // The operational view: breeder/class calendar plus leadership and Puppy Monitor coverage.
   listWithStaffing: staffProcedure.query(async () => {
     const db = await getDb();
     if (!db) return [];
-    const schedules = await db.select().from(puppySchedule).where(eq(puppySchedule.scheduleStatus, "scheduled")).orderBy(desc(puppySchedule.classDate));
+    const today = getTorontoCalendarDate();
+    const schedules = await db.select().from(puppySchedule).where(and(eq(puppySchedule.scheduleStatus, "scheduled"), gte(puppySchedule.classDate, today))).orderBy(desc(puppySchedule.classDate));
     if (!schedules.length) return [];
     const earliestDate = schedules.reduce((earliest, schedule) => schedule.classDate < earliest ? schedule.classDate : earliest, schedules[0].classDate);
     const [assignments, staff, leaves, leadershipCoverage] = await Promise.all([
@@ -280,12 +283,18 @@ export const puppyScheduleRouter = router({
         .filter((person) => person.location === location && sameRole(person.role, "Puppy Monitor"))
         .filter((person) => !isAway(person.id) && !assignedIds.has(person.id))
         .map((person) => ({ id: person.id, name: person.name }));
+      const eligibleLeadership = (role: LeadershipRole) => activeStaff
+        .filter((person) => person.location === location && sameRole(person.role, role))
+        .filter((person) => !isAway(person.id))
+        .map((person) => ({ id: person.id, name: person.name }));
       const gaps = staffingGaps({ operationsManager: Boolean(operationsManager), yogaInstructor: Boolean(yogaInstructor), puppyMonitorCount: assignedPuppyMonitors.length });
       return {
         ...schedule,
         staffing: {
           operationsManager,
           yogaInstructor,
+          eligibleOperationsManagers: eligibleLeadership("Operations Manager"),
+          eligibleYogaInstructors: eligibleLeadership("Yoga Instructor"),
           assignedPuppyMonitors,
           eligiblePuppyMonitors,
           requiredPuppyMonitors: TWO_PUPPY_MONITORS_REQUIRED,
@@ -453,6 +462,59 @@ export const puppyScheduleRouter = router({
       return { success: true };
     }),
 
+  assignLeadership: staffProcedure
+    .input(z.object({
+      scheduleId: z.number().int().positive(),
+      role: z.enum(["Operations Manager", "Yoga Instructor"]),
+      staffId: z.number().int().positive(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+      const [schedule] = await db.select().from(puppySchedule).where(eq(puppySchedule.id, input.scheduleId)).limit(1);
+      if (!schedule || schedule.scheduleStatus !== "scheduled") throw new Error("Choose an active scheduled class.");
+      if (schedule.classDate < getTorontoCalendarDate()) throw new Error("Leadership can only be assigned to an upcoming class.");
+
+      const [staffMember] = await db.select({
+        id: jobApplications.id,
+        name: jobApplications.name,
+        role: jobApplications.role,
+        location: jobApplications.location,
+        status: jobApplications.status,
+        isTeamMember: jobApplications.isTeamMember,
+        deletedAt: jobApplications.deletedAt,
+      }).from(jobApplications).where(eq(jobApplications.id, input.staffId)).limit(1);
+      if (!staffMember) throw new Error("Choose an active APY HQ team member for this class.");
+      const [away] = await db.select().from(staffAvailability).where(and(
+        eq(staffAvailability.staffId, staffMember.id),
+        lte(staffAvailability.startDate, schedule.classDate),
+        gte(staffAvailability.endDate, schedule.classDate),
+      )).limit(1);
+      const eligibility = getLeadershipAssignmentEligibility({
+        role: input.role,
+        staffRole: staffMember.role,
+        staffLocation: staffMember.location,
+        scheduleLocation: schedule.location,
+        isAway: Boolean(away),
+        isActive: isActiveTeamMember(staffMember),
+      });
+      if (!eligibility.eligible) throw new Error(eligibility.reason);
+
+      const location = scheduleLocationToTeamLocation(schedule.location);
+      const existing = await db.select().from(weekendLeadershipCoverage).where(and(
+        eq(weekendLeadershipCoverage.coverageDate, schedule.classDate),
+        eq(weekendLeadershipCoverage.location, location),
+        eq(weekendLeadershipCoverage.role, input.role),
+      )).limit(1);
+      const values = { coverageStaffId: staffMember.id, coverageStaffName: staffMember.name, notes: "Assigned from class staffing" };
+      if (existing[0]) {
+        await db.update(weekendLeadershipCoverage).set(values).where(eq(weekendLeadershipCoverage.id, existing[0].id));
+      } else {
+        await db.insert(weekendLeadershipCoverage).values({ coverageDate: schedule.classDate, location, role: input.role, ...values });
+      }
+      return { success: true };
+    }),
+
   removePuppyMonitorAssignment: staffProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ input }) => {
@@ -479,6 +541,7 @@ export const puppyScheduleRouter = router({
       const { year, month } = input;
       const pad = (n: number) => String(n).padStart(2, "0");
       const firstDay = `${year}-${pad(month)}-01`;
+      const visibleFirstDay = getScheduleVisibilityStartDate(firstDay, getTorontoCalendarDate());
       // Last day: go to first day of next month minus 1
       const lastDate = new Date(year, month, 0); // day 0 of next month = last day of this month
       const lastDay = `${year}-${pad(month)}-${pad(lastDate.getDate())}`;
@@ -486,7 +549,7 @@ export const puppyScheduleRouter = router({
         .select()
         .from(puppySchedule)
         .where(and(
-          gte(puppySchedule.classDate, firstDay),
+          gte(puppySchedule.classDate, visibleFirstDay),
           lte(puppySchedule.classDate, lastDay),
           ne(puppySchedule.scheduleStatus, "archived"),
         ))

@@ -30,6 +30,10 @@ type RunApyScheduleEvent = {
 type StaffingEntry = {
   id: number;
   staffing: {
+    operationsManager: { id: number; name: string } | null;
+    yogaInstructor: { id: number; name: string } | null;
+    eligibleOperationsManagers: Array<{ id: number; name: string }>;
+    eligibleYogaInstructors: Array<{ id: number; name: string }>;
     assignedPuppyMonitors: Array<{ id: number; staffId: number; name: string }>;
     eligiblePuppyMonitors: Array<{ id: number; name: string }>;
   };
@@ -44,6 +48,8 @@ const severityClass: Record<RunApyAction["severity"], string> = {
 function EventStaffControls({ event, staffing, onChanged }: { event: RunApyScheduleEvent; staffing: StaffingEntry | undefined; onChanged: () => void }) {
   const [open, setOpen] = useState(false);
   const [selectedPuppyMonitor, setSelectedPuppyMonitor] = useState("");
+  const [selectedOperationsManager, setSelectedOperationsManager] = useState("");
+  const [selectedYogaInstructor, setSelectedYogaInstructor] = useState("");
   const notificationPreview = trpc.puppySchedule.eventNotificationPreview.useQuery(
     { scheduleId: event.id },
     { enabled: open },
@@ -77,6 +83,16 @@ function EventStaffControls({ event, staffing, onChanged }: { event: RunApySched
     },
     onError: (error) => toast.error(error.message),
   });
+  const assignLeadership = trpc.puppySchedule.assignLeadership.useMutation({
+    onSuccess: () => {
+      toast.success("Class leadership updated");
+      setSelectedOperationsManager("");
+      setSelectedYogaInstructor("");
+      notificationPreview.refetch();
+      onChanged();
+    },
+    onError: (error) => toast.error(error.message),
+  });
 
   const assignedCount = staffing?.staffing.assignedPuppyMonitors.length ?? 0;
   const canAddPuppyMonitor = assignedCount < 3;
@@ -86,13 +102,13 @@ function EventStaffControls({ event, staffing, onChanged }: { event: RunApySched
   }
 
   return <div className="mt-3 rounded-xl border border-[#E7D8DE] bg-[#FFFDFC] p-3 md:col-span-4">
-    <div className="flex flex-wrap items-start justify-between gap-2"><div><p className="text-sm font-bold text-[#1E241C]">Class team</p><p className="text-[11px] text-[#77725F]">Message an assigned instructor or Puppy Monitor individually, or add an optional third monitor.</p></div><button type="button" onClick={() => setOpen(false)} className="text-xs font-bold text-[#8B2252] hover:underline">Close</button></div>
+    <div className="flex flex-wrap items-start justify-between gap-2"><div><p className="text-sm font-bold text-[#1E241C]">Class team</p><p className="text-[11px] text-[#77725F]">Assign or replace class leadership, then message any assigned team member individually.</p></div><button type="button" onClick={() => setOpen(false)} className="text-xs font-bold text-[#8B2252] hover:underline">Close</button></div>
     {notificationPreview.isLoading ? <p className="mt-3 text-xs text-[#77725F]">Loading assigned class staff…</p> : notificationPreview.error ? <p className="mt-3 text-xs font-semibold text-red-700">Class staff could not be loaded. Open the schedule to review staffing.</p> : <div className="mt-3 space-y-2">{notificationPreview.data?.recipients.map((recipient) => {
       const canContact = Boolean(recipient.email || recipient.phone);
       const wasSent = Boolean(recipient.lastSentAt);
       return <div key={`${recipient.role}-${recipient.id}`} className="flex flex-wrap items-center gap-2 rounded-lg border border-[#EEE4DF] bg-white px-3 py-2"><span className="min-w-0 flex-1 text-xs font-bold text-[#3D1A2E]">{recipient.name} · {recipient.role}</span><Mail size={13} className={recipient.email ? "text-emerald-600" : "text-gray-300"} /><MessageSquare size={13} className={recipient.phone ? "text-emerald-600" : "text-gray-300"} /><button type="button" onClick={() => { if (canContact && confirm(`${wasSent ? "Resend" : "Send"} this class schedule to ${recipient.name} only?`)) notifyIndividual.mutate({ scheduleId: event.id, staffId: recipient.id, resend: wasSent }); }} disabled={!canContact || notifyIndividual.isPending} className="rounded-md border border-[#8B2252]/25 bg-[#FFF8FA] px-2 py-1 text-[10px] font-bold text-[#8B2252] hover:bg-[#FFF0F5] disabled:cursor-not-allowed disabled:opacity-40"><Send size={10} className="mr-1 inline" />{wasSent ? "Resend" : "Message"}</button></div>;
     })}<div className="rounded-lg border border-[#DDE8D9] bg-[#F7FBF4] p-3"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold text-[#29472A]">Message the whole team</p><p className="mt-0.5 text-[11px] text-[#5B705A]">This sends to every currently assigned person. To contact only someone newly added, use their Message button above.</p></div><button type="button" onClick={() => { if (confirm(`Send this class schedule by email and text to ${notificationPreview.data?.recipients.length ?? 0} assigned team members?`)) notifyWholeTeam.mutate({ scheduleId: event.id, resend: Boolean(notificationPreview.data?.lastSentAt) }); }} disabled={!notificationPreview.data?.fullyStaffed || notifyWholeTeam.isPending} className="rounded-md bg-[#2D5A27] px-3 py-2 text-xs font-bold text-white hover:bg-[#23471F] disabled:cursor-not-allowed disabled:opacity-45"><Send size={12} className="mr-1 inline" />{notifyWholeTeam.isPending ? "Sending…" : notificationPreview.data?.lastSentAt ? "Resend to whole team" : "Send to whole team"}</button></div>{!notificationPreview.data?.fullyStaffed && <p className="mt-2 text-[11px] font-semibold text-amber-800">Finish staffing this class before sending to the whole team.</p>}</div></div>}
-    <div className="mt-3 border-t border-[#EEE4DF] pt-3"><div className="flex flex-wrap items-center justify-between gap-2"><div><p className="text-xs font-bold text-[#3D1A2E]">Puppy Monitors · {assignedCount}/2 required</p><p className="text-[11px] text-[#77725F]">Up to 3 can be assigned for this class.</p></div></div>{canAddPuppyMonitor && staffing && <div className="mt-2 flex flex-wrap gap-2"><select value={selectedPuppyMonitor} onChange={(event) => setSelectedPuppyMonitor(event.target.value)} className="min-w-52 rounded-md border border-[#E7D8DE] bg-white px-3 py-2 text-xs"><option value="">Select an available Puppy Monitor</option>{staffing.staffing.eligiblePuppyMonitors.map((monitor) => <option key={monitor.id} value={monitor.id}>{monitor.name}</option>)}</select><button type="button" onClick={() => selectedPuppyMonitor && assignPuppyMonitor.mutate({ scheduleId: event.id, staffId: Number(selectedPuppyMonitor) })} disabled={!selectedPuppyMonitor || assignPuppyMonitor.isPending} className="rounded-md bg-[#7C3AED] px-3 py-2 text-xs font-bold text-white hover:bg-[#6D28D9] disabled:opacity-50"><UserPlus size={12} className="mr-1 inline" />{assignedCount >= 2 ? "Add 3rd PM" : "Assign PM"}</button></div>}{!staffing && <p className="mt-2 text-[11px] text-[#77725F]">Staffing options are loading. If they do not appear, open the schedule.</p>}</div>
+    <div className="mt-3 border-t border-[#EEE4DF] pt-3"><div className="grid gap-2 md:grid-cols-2">{staffing && <><div className="rounded-lg border border-[#EEE4DF] bg-white p-2.5"><p className="text-xs font-bold text-[#3D1A2E]">Operations Manager · {staffing.staffing.operationsManager?.name ?? "Coverage gap"}</p><div className="mt-2 flex gap-2"><select value={selectedOperationsManager} onChange={(event) => setSelectedOperationsManager(event.target.value)} className="min-w-0 flex-1 rounded-md border border-[#E7D8DE] bg-white px-2 py-1.5 text-xs"><option value="">Select Operations Manager</option>{staffing.staffing.eligibleOperationsManagers.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select><button type="button" onClick={() => selectedOperationsManager && assignLeadership.mutate({ scheduleId: event.id, role: "Operations Manager", staffId: Number(selectedOperationsManager) })} disabled={!selectedOperationsManager || assignLeadership.isPending} className="rounded-md bg-[#C05A35] px-2.5 py-1.5 text-xs font-bold text-white disabled:opacity-50">Save</button></div></div><div className="rounded-lg border border-[#EEE4DF] bg-white p-2.5"><p className="text-xs font-bold text-[#3D1A2E]">Yoga Instructor · {staffing.staffing.yogaInstructor?.name ?? "Coverage gap"}</p><div className="mt-2 flex gap-2"><select value={selectedYogaInstructor} onChange={(event) => setSelectedYogaInstructor(event.target.value)} className="min-w-0 flex-1 rounded-md border border-[#E7D8DE] bg-white px-2 py-1.5 text-xs"><option value="">Select Yoga Instructor</option>{staffing.staffing.eligibleYogaInstructors.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select><button type="button" onClick={() => selectedYogaInstructor && assignLeadership.mutate({ scheduleId: event.id, role: "Yoga Instructor", staffId: Number(selectedYogaInstructor) })} disabled={!selectedYogaInstructor || assignLeadership.isPending} className="rounded-md bg-[#C05A35] px-2.5 py-1.5 text-xs font-bold text-white disabled:opacity-50">Save</button></div></div></>}</div><div className="mt-3 flex flex-wrap items-center justify-between gap-2"><div><p className="text-xs font-bold text-[#3D1A2E]">Puppy Monitors · {assignedCount}/2 required</p><p className="text-[11px] text-[#77725F]">Up to 3 can be assigned for this class.</p></div></div>{canAddPuppyMonitor && staffing && <div className="mt-2 flex flex-wrap gap-2"><select value={selectedPuppyMonitor} onChange={(event) => setSelectedPuppyMonitor(event.target.value)} className="min-w-52 rounded-md border border-[#E7D8DE] bg-white px-3 py-2 text-xs"><option value="">Select an available Puppy Monitor</option>{staffing.staffing.eligiblePuppyMonitors.map((monitor) => <option key={monitor.id} value={monitor.id}>{monitor.name}</option>)}</select><button type="button" onClick={() => selectedPuppyMonitor && assignPuppyMonitor.mutate({ scheduleId: event.id, staffId: Number(selectedPuppyMonitor) })} disabled={!selectedPuppyMonitor || assignPuppyMonitor.isPending} className="rounded-md bg-[#7C3AED] px-3 py-2 text-xs font-bold text-white hover:bg-[#6D28D9] disabled:opacity-50"><UserPlus size={12} className="mr-1 inline" />{assignedCount >= 2 ? "Add 3rd PM" : "Assign PM"}</button></div>}{!staffing && <p className="mt-2 text-[11px] text-[#77725F]">Staffing options are loading. If they do not appear, open the schedule.</p>}</div>
   </div>;
 }
 

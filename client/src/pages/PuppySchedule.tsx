@@ -90,6 +90,8 @@ export default function PuppySchedule() {
   const [filterLocation, setFilterLocation] = useState<string>("all");
   const [staffingEntry, setStaffingEntry] = useState<any | null>(null);
   const [selectedPuppyMonitor, setSelectedPuppyMonitor] = useState("");
+  const [selectedOperationsManager, setSelectedOperationsManager] = useState("");
+  const [selectedYogaInstructor, setSelectedYogaInstructor] = useState("");
 
   const utils = trpc.useUtils();
   const { data: schedules = [], isLoading } = trpc.puppySchedule.listWithStaffing.useQuery();
@@ -144,6 +146,16 @@ export default function PuppySchedule() {
     },
     onError: (error) => toast.error(error.message),
   });
+  const assignLeadership = trpc.puppySchedule.assignLeadership.useMutation({
+    onSuccess: () => {
+      utils.puppySchedule.listWithStaffing.invalidate();
+      toast.success("Class leadership updated");
+      setSelectedOperationsManager("");
+      setSelectedYogaInstructor("");
+      setStaffingEntry(null);
+    },
+    onError: (error) => toast.error(error.message),
+  });
 
   function openAdd() {
     setForm({ ...EMPTY_FORM });
@@ -168,6 +180,8 @@ export default function PuppySchedule() {
   function openStaffing(entry: typeof schedules[0]) {
     setStaffingEntry(entry);
     setSelectedPuppyMonitor("");
+    setSelectedOperationsManager("");
+    setSelectedYogaInstructor("");
   }
 
   function handleDateChange(dateStr: string) {
@@ -404,7 +418,11 @@ export default function PuppySchedule() {
                 <div className={`rounded-lg border px-3 py-2 ${staffingEntry.staffing.operationsManager ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50"}`}><p className="text-[10px] font-bold uppercase tracking-wide text-[#6B4C3B]">Operations Manager</p><p className="mt-0.5 text-xs font-bold text-[#1A0A12]">{staffingEntry.staffing.operationsManager?.name ?? "Coverage gap"}</p></div>
                 <div className={`rounded-lg border px-3 py-2 ${staffingEntry.staffing.yogaInstructor ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50"}`}><p className="text-[10px] font-bold uppercase tracking-wide text-[#6B4C3B]">Yoga Instructor</p><p className="mt-0.5 text-xs font-bold text-[#1A0A12]">{staffingEntry.staffing.yogaInstructor?.name ?? "Coverage gap"}</p></div>
               </div>
-              {(!staffingEntry.staffing.operationsManager || !staffingEntry.staffing.yogaInstructor) && <p className="mt-2 flex items-center gap-1 text-xs font-medium text-rose-700"><ShieldAlert size={13} /> Fix leadership coverage in Team & Availability.</p>}
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <div className="rounded-lg border border-[#EADBE2] bg-white p-2.5"><Label className="text-[10px] font-bold uppercase tracking-wide text-[#6B4C3B]">Assign or replace Operations Manager</Label><div className="mt-1.5 flex gap-2"><select value={selectedOperationsManager} onChange={(event) => setSelectedOperationsManager(event.target.value)} className="min-w-0 flex-1 rounded-md border border-[#F0D0DC] bg-white px-2 py-1.5 text-xs"><option value="">Select Operations Manager</option>{staffingEntry.staffing.eligibleOperationsManagers.map((person: any) => <option key={person.id} value={person.id}>{person.name}</option>)}</select><Button size="sm" onClick={() => selectedOperationsManager && assignLeadership.mutate({ scheduleId: staffingEntry.id, role: "Operations Manager", staffId: Number(selectedOperationsManager) })} disabled={!selectedOperationsManager || assignLeadership.isPending} className="bg-[#8B2252] text-xs text-white hover:bg-[#6B1A3E]">Save</Button></div></div>
+                <div className="rounded-lg border border-[#EADBE2] bg-white p-2.5"><Label className="text-[10px] font-bold uppercase tracking-wide text-[#6B4C3B]">Assign or replace Yoga Instructor</Label><div className="mt-1.5 flex gap-2"><select value={selectedYogaInstructor} onChange={(event) => setSelectedYogaInstructor(event.target.value)} className="min-w-0 flex-1 rounded-md border border-[#F0D0DC] bg-white px-2 py-1.5 text-xs"><option value="">Select Yoga Instructor</option>{staffingEntry.staffing.eligibleYogaInstructors.map((person: any) => <option key={person.id} value={person.id}>{person.name}</option>)}</select><Button size="sm" onClick={() => selectedYogaInstructor && assignLeadership.mutate({ scheduleId: staffingEntry.id, role: "Yoga Instructor", staffId: Number(selectedYogaInstructor) })} disabled={!selectedYogaInstructor || assignLeadership.isPending} className="bg-[#8B2252] text-xs text-white hover:bg-[#6B1A3E]">Save</Button></div></div>
+              </div>
+              {(!staffingEntry.staffing.operationsManager || !staffingEntry.staffing.yogaInstructor) && <p className="mt-2 flex items-center gap-1 text-xs font-medium text-rose-700"><ShieldAlert size={13} /> Assign available class leadership above before messaging the whole team.</p>}
             </div>
 
             <div>
