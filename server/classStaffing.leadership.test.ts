@@ -12,7 +12,25 @@ describe("class leadership assignment eligibility", () => {
     })).toEqual({ eligible: true });
   });
 
-  it("rejects role, location, and availability mismatches before a leader is assigned to a class", () => {
+  it("permits active, available Operations Managers and Yoga Instructors from another APY location", () => {
+    expect(getLeadershipAssignmentEligibility({
+      role: "Operations Manager",
+      staffRole: "Operations Manager",
+      staffLocation: "HAM",
+      scheduleLocation: "Kitchener",
+      isAway: false,
+    })).toEqual({ eligible: true });
+
+    expect(getLeadershipAssignmentEligibility({
+      role: "Yoga Instructor",
+      staffRole: "yoga_instructor",
+      staffLocation: "OAK",
+      scheduleLocation: "Hamilton",
+      isAway: false,
+    })).toEqual({ eligible: true });
+  });
+
+  it("rejects role and availability mismatches before a leader is assigned to a class", () => {
     expect(getLeadershipAssignmentEligibility({
       role: "Yoga Instructor",
       staffRole: "Operations Manager",
@@ -20,14 +38,6 @@ describe("class leadership assignment eligibility", () => {
       scheduleLocation: "Kitchener",
       isAway: false,
     })).toEqual({ eligible: false, reason: "Choose an active Yoga Instructor for this class." });
-
-    expect(getLeadershipAssignmentEligibility({
-      role: "Operations Manager",
-      staffRole: "Operations Manager",
-      staffLocation: "HAM",
-      scheduleLocation: "Kitchener",
-      isAway: false,
-    })).toEqual({ eligible: false, reason: "Choose an Operations Manager assigned to this studio." });
 
     expect(getLeadershipAssignmentEligibility({
       role: "Yoga Instructor",

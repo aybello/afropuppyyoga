@@ -59,6 +59,19 @@ describe("assignLeadership mutation", () => {
     }]);
   });
 
+  it("assigns an eligible Operations Manager from another APY location as coverage for the selected class", async () => {
+    const prepared = createDb([[schedule], [{ ...leadershipCandidate, location: "HAM" }], [], []]);
+    getDb.mockResolvedValue(prepared.db);
+
+    await expect(caller().assignLeadership({ scheduleId: 77, role: "Operations Manager", staffId: 15 })).resolves.toEqual({ success: true });
+    expect(prepared.inserts).toEqual([expect.objectContaining({
+      coverageDate: "2026-09-12",
+      location: "KW",
+      role: "Operations Manager",
+      coverageStaffId: 15,
+    })]);
+  });
+
   it("rejects a leader whose role does not match the coverage role", async () => {
     const prepared = createDb([[schedule], [{ ...leadershipCandidate, role: "Yoga Instructor" }], []]);
     getDb.mockResolvedValue(prepared.db);

@@ -32,9 +32,6 @@ export function getLeadershipAssignmentEligibility(input: {
   if (input.staffRole !== input.role && input.staffRole !== normalizedRole) {
     return { eligible: false as const, reason: `Choose an active ${input.role} for this class.` };
   }
-  if (input.staffLocation !== scheduleLocationToTeamLocation(input.scheduleLocation)) {
-    return { eligible: false as const, reason: `Choose an ${input.role} assigned to this studio.` };
-  }
   if (input.isAway) {
     return { eligible: false as const, reason: `This ${input.role} is unavailable on this class date.` };
   }

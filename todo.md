@@ -1274,3 +1274,9 @@
 - [x] Allow authorized APY HQ users to assign or replace an Operations Manager and Yoga Instructor from the eligible active team roster while retaining role, location, and class-staffing safeguards
 - [x] Keep the existing individual email/SMS Message or Resend controls available to notify only the newly selected Operations Manager or Yoga Instructor
 - [x] Add regression coverage, validate the class-staff workflow, publish, and record the role-assignment correction
+
+## Cross-Location Class Leadership Assignment (Sep 10, 2026)
+- [x] Trace the same-location filter currently restricting Operations Manager and Yoga Instructor assignment choices
+- [x] Allow any active and available Operations Manager or Yoga Instructor on the APY roster to be assigned to an upcoming class regardless of home location
+- [x] Preserve role validation, availability checks, individual Message or Resend actions, and Puppy Monitor staffing/location rules
+- [x] Add regression coverage, validate, publish, and record the cross-location leadership assignment update

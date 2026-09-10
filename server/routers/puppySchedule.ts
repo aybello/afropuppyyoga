@@ -284,7 +284,7 @@ export const puppyScheduleRouter = router({
         .filter((person) => !isAway(person.id) && !assignedIds.has(person.id))
         .map((person) => ({ id: person.id, name: person.name }));
       const eligibleLeadership = (role: LeadershipRole) => activeStaff
-        .filter((person) => person.location === location && sameRole(person.role, role))
+        .filter((person) => sameRole(person.role, role))
         .filter((person) => !isAway(person.id))
         .map((person) => ({ id: person.id, name: person.name }));
       const gaps = staffingGaps({ operationsManager: Boolean(operationsManager), yogaInstructor: Boolean(yogaInstructor), puppyMonitorCount: assignedPuppyMonitors.length });
