@@ -1241,3 +1241,13 @@
 - [x] Add focused regression coverage for date-code format, duplicate-code handling, and no-send safety
 - [x] Verify every historic and future correction creates or reuses a 100% off Luma calendar-level date code usable for any upcoming APY class
 - [x] Remove automatic promotion of one specific next class from cancellation notices because the calendar-level date code is valid for any upcoming APY class
+
+## Hamilton Pomskies 11 AM Rebooking Email (Sep 9, 2026)
+- [x] Verify the upcoming Hamilton Pomskies 11:00 AM class, valid SEP12 rebooking code, and eligible attendee scope without exposing attendee data
+- [x] Prepare a privacy-safe rebooking email that directs affected guests to the other available time slots
+- [x] Keep cancellation communications paused until explicit re-enablement and final send authorization are confirmed
+- [x] Record the outcome without retaining or exposing attendee email addresses
+- [x] Distinguish the exact affected 11:00 AM session from other 11:00 AM registrations before selecting any recipient segment
+- [x] Use all verified 11:00 AM Hamilton Pomskies ticket categories as the owner-selected rebooking-email scope
+- [x] Create and verify SEP12 as a 100%-off calendar-level rebooking code before delivery
+- [x] Send the approved rebooking message by email, call, and SMS only to the six owner-selected 11:00 AM Hamilton Pomskies registrations
