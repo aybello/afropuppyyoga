@@ -1293,4 +1293,5 @@
 - [x] Trace the existing class-edit path to determine how an active Luma event can retain its class details while the linked breeder is replaced
 - [x] Add a previewed, owner-confirmed replacement workflow that notifies only the outgoing breeder while preserving the active Luma event, class staffing, and customer communications guard
 - [x] Validate the breeder replacement workflow without changing a live class or sending any breeder message during testing
-- [ ] Publish, synchronize, and record the breeder replacement workflow after final checklist verification
+- [x] Publish and synchronize the breeder replacement workflow after final checklist verification
+- [x] Record the published breeder replacement workflow in the APY Context Hub and final project task record
