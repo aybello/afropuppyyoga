@@ -1288,3 +1288,9 @@
 - [x] Preserve the separately paused customer cancellation workflow and do not delete, modify, or message the September 20 class during implementation validation
 - [x] Add regression coverage, validate, publish, and record the previewed breeder cancellation workflow
 - [x] Confirm the owner-selected flow: preview the linked breeder’s cancellation notice, then notify automatically only after the owner confirms class deletion
+
+## Active-Luma Breeder Replacement (Sep 11, 2026)
+- [x] Trace the existing class-edit path to determine how an active Luma event can retain its class details while the linked breeder is replaced
+- [x] Add a previewed, owner-confirmed replacement workflow that notifies only the outgoing breeder while preserving the active Luma event, class staffing, and customer communications guard
+- [x] Validate the breeder replacement workflow without changing a live class or sending any breeder message during testing
+- [ ] Publish, synchronize, and record the breeder replacement workflow after final checklist verification

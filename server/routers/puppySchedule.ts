@@ -15,6 +15,7 @@ import { schedulesOverlap, validateScheduleCandidate } from "../scheduleValidati
 import { getScheduleVisibilityStartDate, getTorontoCalendarDate } from "../../shared/scheduleVisibility";
 import { buildBreederClassCancellationPreview } from "../breederClassCancellation";
 import { normalizeBreederPhone } from "../breederConfirmationWorkflow";
+import { buildBreederReplacementPreview } from "../breederReplacement";
 
 const LOCATIONS = ["Kitchener", "Hamilton", "Oakville"] as const;
 const ALL_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
@@ -281,6 +282,67 @@ async function getBreederCancellationPreviewForSchedule(db: ScheduleDb, id: numb
     canNotify: preview.channels.email === "ready" || preview.channels.sms === "ready",
     recipient: { name: breeder.contactName?.trim() || breeder.name },
     delivery: { email: breeder.email?.trim() || null, phone },
+  };
+}
+
+async function getBreederReplacementPreviewForSchedule(db: ScheduleDb, id: number, newBreederId: number, newBreed: string) {
+  const [schedule] = await db.select().from(puppySchedule).where(eq(puppySchedule.id, id)).limit(1);
+  if (!schedule || schedule.scheduleStatus === "archived") throw new Error("Scheduled class not found.");
+  if (schedule.scheduleStatus !== "scheduled") throw new Error("Only scheduled classes can change breeders.");
+  if (schedule.breederId === newBreederId) throw new Error("Choose a different active breeder to replace the current breeder.");
+
+  const [outgoingBreeder] = await db.select().from(breeders).where(eq(breeders.id, schedule.breederId)).limit(1);
+  const [incomingBreeder] = await db.select().from(breeders).where(eq(breeders.id, newBreederId)).limit(1);
+  if (!outgoingBreeder) throw new Error("The current breeder could not be found.");
+  if (!incomingBreeder || incomingBreeder.isActive !== 1) throw new Error("Choose an active replacement breeder.");
+
+  let outgoingPhone: string | null = null;
+  try {
+    outgoingPhone = normalizeBreederPhone(outgoingBreeder.phone);
+  } catch {
+    outgoingPhone = null;
+  }
+  const candidate: SlotInput = {
+    classDate: schedule.classDate,
+    dayOfWeek: schedule.dayOfWeek as SlotInput["dayOfWeek"],
+    location: schedule.location as SlotInput["location"],
+    breed: newBreed,
+    breederId: incomingBreeder.id,
+    breederName: incomingBreeder.name,
+    startTime: schedule.startTime,
+    endTime: schedule.endTime,
+    classType: schedule.classType as SlotInput["classType"],
+    notes: schedule.notes ?? undefined,
+  };
+  validateScheduleCandidate(candidate);
+  const preview = buildBreederReplacementPreview({
+    id: schedule.id,
+    outgoingBreederId: outgoingBreeder.id,
+    incomingBreederId: incomingBreeder.id,
+    outgoingBreederName: outgoingBreeder.name,
+    incomingBreederName: incomingBreeder.name,
+    contactName: outgoingBreeder.contactName,
+    classDate: schedule.classDate,
+    dayOfWeek: schedule.dayOfWeek,
+    location: schedule.location,
+    breed: candidate.breed,
+    startTime: schedule.startTime,
+    endTime: schedule.endTime,
+    emailAvailable: Boolean(outgoingBreeder.email?.trim()),
+    smsAvailable: Boolean(outgoingPhone),
+  });
+  return {
+    schedule,
+    candidate,
+    outgoingBreeder,
+    incomingBreeder,
+    outgoingPhone,
+    delivery: { email: outgoingBreeder.email?.trim() || null, phone: outgoingPhone },
+    recipient: { name: outgoingBreeder.contactName?.trim() || outgoingBreeder.name },
+    currentBreeder: { name: outgoingBreeder.name },
+    replacementBreeder: { name: incomingBreeder.name },
+    canNotify: preview.channels.email === "ready" || preview.channels.sms === "ready",
+    ...preview,
   };
 }
 
@@ -737,6 +799,153 @@ export const puppyScheduleRouter = router({
       }
       return {
         success: true,
+        emailStatus,
+        smsStatus,
+        notificationSent: emailStatus === "sent" || smsStatus === "sent",
+        errors,
+      };
+    }),
+
+  /** Preview the outgoing breeder notice before replacing a breeder on a live or local class. */
+  getBreederReplacementPreview: staffProcedure
+    .input(z.object({ id: z.number().int().positive(), newBreederId: z.number().int().positive(), newBreed: z.string().min(1) }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+      const preview = await getBreederReplacementPreviewForSchedule(db, input.id, input.newBreederId, input.newBreed);
+      return {
+        class: {
+          id: preview.schedule.id,
+          classDate: preview.schedule.classDate,
+          dayOfWeek: preview.schedule.dayOfWeek,
+          location: preview.schedule.location,
+          breed: preview.candidate.breed,
+          startTime: preview.schedule.startTime,
+          endTime: preview.schedule.endTime,
+          lumaLinked: Boolean(preview.schedule.lumaEventId),
+        },
+        currentBreeder: preview.currentBreeder,
+        replacementBreeder: preview.replacementBreeder,
+        recipient: preview.recipient,
+        subject: preview.subject,
+        html: preview.html,
+        emailText: preview.emailText,
+        smsText: preview.smsText,
+        channels: preview.channels,
+        confirmationKey: preview.confirmationKey,
+        canNotify: preview.canNotify,
+      };
+    }),
+
+  /** Preserve the class and active Luma event, then notify only the outgoing breeder after a fresh owner confirmation. */
+  replaceBreederWithNotice: staffProcedure
+    .input(z.object({ id: z.number().int().positive(), newBreederId: z.number().int().positive(), newBreed: z.string().min(1), confirmationKey: z.string().length(64) }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+      const preview = await getBreederReplacementPreviewForSchedule(db, input.id, input.newBreederId, input.newBreed);
+      if (preview.confirmationKey !== input.confirmationKey) {
+        throw new Error("The class, breeder, or available notification channels changed. Review the breeder replacement preview again before changing this class.");
+      }
+      if (!preview.canNotify) {
+        throw new Error("The outgoing breeder has no available email or SMS channel. Add valid contact information before replacing this breeder.");
+      }
+
+      if (preview.schedule.lumaEventId) {
+        await updateLumaEventForSchedule(preview.schedule.lumaEventId, preview.candidate);
+      }
+      try {
+        await db.update(puppySchedule).set({
+          breederId: preview.candidate.breederId,
+          breederName: preview.candidate.breederName,
+          breed: preview.candidate.breed,
+          lumaSyncStatus: preview.schedule.lumaEventId ? "synced" : preview.schedule.lumaSyncStatus,
+          lumaSyncedAt: preview.schedule.lumaEventId ? new Date() : preview.schedule.lumaSyncedAt,
+        }).where(eq(puppySchedule.id, input.id));
+      } catch (error) {
+        if (preview.schedule.lumaEventId) {
+          await updateLumaEventForSchedule(preview.schedule.lumaEventId, {
+            classDate: preview.schedule.classDate,
+            location: preview.schedule.location,
+            breed: preview.schedule.breed,
+            startTime: preview.schedule.startTime,
+            endTime: preview.schedule.endTime,
+            classType: preview.schedule.classType as "regular" | "private",
+          }).catch(() => undefined);
+        }
+        throw error;
+      }
+
+      let emailStatus = preview.delivery.email ? "failed" : "missing";
+      let smsStatus = preview.delivery.phone ? "failed" : "missing";
+      let smsSid: string | null = null;
+      const errors: string[] = [];
+      if (preview.delivery.email) {
+        try {
+          await sendEmail({ to: preview.delivery.email, subject: preview.subject, html: preview.html, text: preview.emailText });
+          emailStatus = "sent";
+        } catch (error) {
+          errors.push(`Email: ${error instanceof Error ? error.message : "failed"}`);
+        }
+      }
+      if (preview.delivery.phone && await isSmsSuppressed(preview.delivery.phone)) {
+        smsStatus = "suppressed";
+      } else if (preview.delivery.phone) {
+        const accountSid = process.env.TWILIO_ACCOUNT_SID;
+        const authToken = process.env.TWILIO_AUTH_TOKEN;
+        const from = process.env.TWILIO_PHONE_NUMBER;
+        if (!accountSid || !authToken || !from) {
+          smsStatus = "not_configured";
+          errors.push("SMS: Twilio is not configured");
+        } else {
+          try {
+            const sent = await twilio(accountSid, authToken).messages.create({ to: preview.delivery.phone, from, body: preview.smsText });
+            smsSid = sent.sid;
+            smsStatus = "sent";
+          } catch (error) {
+            errors.push(`SMS: ${error instanceof Error ? error.message : "failed"}`);
+          }
+        }
+      }
+
+      const communicationRows: Array<typeof communicationsLog.$inferInsert> = [];
+      if (preview.delivery.email) communicationRows.push({
+        entityType: "breeder",
+        entityId: preview.outgoingBreeder.id,
+        channel: "email",
+        direction: "outbound",
+        action: "breeder_replacement",
+        recipient: preview.delivery.email,
+        subject: preview.subject,
+        bodyPreview: preview.emailText.slice(0, 1000),
+        deliveryStatus: emailStatus,
+        actorUserId: ctx.user.id,
+        actorName: ctx.user.name,
+      });
+      if (preview.delivery.phone) communicationRows.push({
+        entityType: "breeder",
+        entityId: preview.outgoingBreeder.id,
+        channel: "sms",
+        direction: "outbound",
+        action: "breeder_replacement",
+        recipient: preview.delivery.phone,
+        subject: null,
+        bodyPreview: preview.smsText.slice(0, 1000),
+        deliveryStatus: smsStatus,
+        providerMessageId: smsSid,
+        actorUserId: ctx.user.id,
+        actorName: ctx.user.name,
+      });
+      if (communicationRows.length) {
+        try {
+          await db.insert(communicationsLog).values(communicationRows);
+        } catch (error) {
+          errors.push(`Audit: ${error instanceof Error ? error.message : "failed"}`);
+        }
+      }
+      return {
+        success: true,
+        lumaSynchronized: Boolean(preview.schedule.lumaEventId),
         emailStatus,
         smsStatus,
         notificationSent: emailStatus === "sent" || smsStatus === "sent",

@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BreederCancellationArchiveDialog } from "@/components/BreederCancellationArchiveDialog";
+import { BreederReplacementDialog } from "@/components/BreederReplacementDialog";
 import { CalendarDays, Plus, Pencil, Trash2, MapPin, PawPrint, Loader2, Dog, ExternalLink, UsersRound, ShieldAlert, CheckCircle2, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -76,8 +77,10 @@ export default function PuppySchedule() {
   const weekends = useMemo(() => getUpcomingWeekends(), []);
   const [form, setForm] = useState({ ...EMPTY_FORM });
   const [editId, setEditId] = useState<number | null>(null);
+  const [originalBreederId, setOriginalBreederId] = useState<number | null>(null);
   const [showDialog, setShowDialog] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [replacementRequest, setReplacementRequest] = useState<{ scheduleId: number; breederId: number; breederName: string; breed: string } | null>(null);
   const [filterLocation, setFilterLocation] = useState<string>("all");
   const [staffingEntry, setStaffingEntry] = useState<any | null>(null);
   const [selectedPuppyMonitor, setSelectedPuppyMonitor] = useState("");
@@ -142,6 +145,7 @@ export default function PuppySchedule() {
   function openAdd() {
     setForm({ ...EMPTY_FORM });
     setEditId(null);
+    setOriginalBreederId(null);
     setShowDialog(true);
   }
 
@@ -156,6 +160,7 @@ export default function PuppySchedule() {
       notes: s.notes ?? "",
     });
     setEditId(s.id);
+    setOriginalBreederId(s.breederId);
     setShowDialog(true);
   }
 
@@ -191,6 +196,16 @@ export default function PuppySchedule() {
       return;
     }
     if (editId !== null) {
+      if (originalBreederId !== null && originalBreederId !== form.breederId) {
+        setReplacementRequest({
+          scheduleId: editId,
+          breederId: form.breederId,
+          breederName: form.breederName,
+          breed: form.breed,
+        });
+        setShowDialog(false);
+        return;
+      }
       updateMutation.mutate({
         id: editId,
         classDate: form.classDate,
@@ -529,6 +544,28 @@ export default function PuppySchedule() {
         scheduleId={deleteId}
         open={deleteId !== null}
         onOpenChange={(open) => !open && setDeleteId(null)}
+      />
+      <BreederReplacementDialog
+        scheduleId={replacementRequest?.scheduleId ?? null}
+        replacement={replacementRequest ? {
+          breederId: replacementRequest.breederId,
+          breederName: replacementRequest.breederName,
+          breed: replacementRequest.breed,
+        } : null}
+        open={replacementRequest !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setReplacementRequest(null);
+            setEditId(null);
+            setOriginalBreederId(null);
+            setForm({ ...EMPTY_FORM });
+          }
+        }}
+        onReplaced={() => {
+          setEditId(null);
+          setOriginalBreederId(null);
+          setForm({ ...EMPTY_FORM });
+        }}
       />
     </div>
   );

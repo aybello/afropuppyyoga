@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 import { BreederCancellationArchiveDialog } from "@/components/BreederCancellationArchiveDialog";
+import { BreederReplacementDialog } from "@/components/BreederReplacementDialog";
 import {
   ChevronLeft,
   ChevronRight,
@@ -143,7 +144,9 @@ export default function ScheduleCalendarPanel({ onOpenBreederConfirmation }: Sch
 
   const [showDialog, setShowDialog] = useState(false);
   const [editId, setEditId]         = useState<number | null>(null);
+  const [originalBreederId, setOriginalBreederId] = useState<number | null>(null);
   const [deleteId, setDeleteId]     = useState<number | null>(null);
+  const [replacementRequest, setReplacementRequest] = useState<{ scheduleId: number; breederId: number; breederName: string; breed: string } | null>(null);
   const [form, setForm]             = useState({ ...EMPTY_FORM });
   const [weekendOnly, setWeekendOnly] = useState(false);
 
@@ -195,7 +198,7 @@ export default function ScheduleCalendarPanel({ onOpenBreederConfirmation }: Sch
       f.classDate = dateStr;
       f.dayOfWeek = DOW_FROM_JS[d.getDay()];
     }
-    setForm(f); setEditId(null); setShowDialog(true);
+    setForm(f); setEditId(null); setOriginalBreederId(null); setShowDialog(true);
   }
 
   function openEdit(slot: (typeof slots)[0]) {
@@ -207,7 +210,7 @@ export default function ScheduleCalendarPanel({ onOpenBreederConfirmation }: Sch
       classType: slot.classType as "regular" | "private", notes: slot.notes ?? "",
       repeatWeekly: false,
     });
-    setEditId(slot.id); setShowDialog(true);
+    setEditId(slot.id); setOriginalBreederId(slot.breederId); setShowDialog(true);
   }
 
   function handleDateChange(dateStr: string) {
@@ -232,6 +235,16 @@ export default function ScheduleCalendarPanel({ onOpenBreederConfirmation }: Sch
       classType: form.classType, notes: form.notes || undefined,
     };
     if (editId !== null) {
+      if (originalBreederId !== null && originalBreederId !== form.breederId) {
+        setReplacementRequest({
+          scheduleId: editId,
+          breederId: form.breederId,
+          breederName: form.breederName,
+          breed: form.breed,
+        });
+        setShowDialog(false);
+        return;
+      }
       updateMutation.mutate({ id: editId, ...payload });
     } else if (form.repeatWeekly) {
       recurringMutation.mutate({ ...payload, year, month });
@@ -712,6 +725,29 @@ export default function ScheduleCalendarPanel({ onOpenBreederConfirmation }: Sch
         open={deleteId !== null}
         onOpenChange={(open) => !open && setDeleteId(null)}
         onArchived={invalidate}
+      />
+      <BreederReplacementDialog
+        scheduleId={replacementRequest?.scheduleId ?? null}
+        replacement={replacementRequest ? {
+          breederId: replacementRequest.breederId,
+          breederName: replacementRequest.breederName,
+          breed: replacementRequest.breed,
+        } : null}
+        open={replacementRequest !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setReplacementRequest(null);
+            setEditId(null);
+            setOriginalBreederId(null);
+            setForm({ ...EMPTY_FORM });
+          }
+        }}
+        onReplaced={() => {
+          setEditId(null);
+          setOriginalBreederId(null);
+          setForm({ ...EMPTY_FORM });
+          invalidate();
+        }}
       />
     </div>
   );

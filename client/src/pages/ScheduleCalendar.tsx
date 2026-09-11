@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { BreederCancellationArchiveDialog } from "@/components/BreederCancellationArchiveDialog";
+import { BreederReplacementDialog } from "@/components/BreederReplacementDialog";
 import {
   Dialog,
   DialogContent,
@@ -249,7 +250,9 @@ export default function ScheduleCalendar() {
 
   const [showDialog, setShowDialog] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
+  const [originalBreederId, setOriginalBreederId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [replacementRequest, setReplacementRequest] = useState<{ scheduleId: number; breederId: number; breederName: string; breed: string } | null>(null);
   const [invitationSlotId, setInvitationSlotId] = useState<number | null>(null);
   const [invitationConfirmId, setInvitationConfirmId] = useState<number | null>(null);
   const [form, setForm] = useState({ ...EMPTY_FORM });
@@ -332,6 +335,7 @@ export default function ScheduleCalendar() {
     }
     setForm(f);
     setEditId(null);
+    setOriginalBreederId(null);
     setShowDialog(true);
   }
 
@@ -349,6 +353,7 @@ export default function ScheduleCalendar() {
       notes: slot.notes ?? "",
     });
     setEditId(slot.id);
+    setOriginalBreederId(slot.breederId);
     setInvitationSlotId(null);
     setShowDialog(true);
   }
@@ -390,6 +395,16 @@ export default function ScheduleCalendar() {
       notes: form.notes || undefined,
     };
     if (editId !== null) {
+      if (originalBreederId !== null && originalBreederId !== form.breederId) {
+        setReplacementRequest({
+          scheduleId: editId,
+          breederId: form.breederId,
+          breederName: form.breederName,
+          breed: form.breed,
+        });
+        setShowDialog(false);
+        return;
+      }
       updateMutation.mutate({ id: editId, ...payload });
     } else {
       createMutation.mutate(payload);
@@ -859,6 +874,29 @@ export default function ScheduleCalendar() {
         open={deleteId !== null}
         onOpenChange={(open) => !open && setDeleteId(null)}
         onArchived={invalidate}
+      />
+      <BreederReplacementDialog
+        scheduleId={replacementRequest?.scheduleId ?? null}
+        replacement={replacementRequest ? {
+          breederId: replacementRequest.breederId,
+          breederName: replacementRequest.breederName,
+          breed: replacementRequest.breed,
+        } : null}
+        open={replacementRequest !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setReplacementRequest(null);
+            setEditId(null);
+            setOriginalBreederId(null);
+            setForm({ ...EMPTY_FORM });
+          }
+        }}
+        onReplaced={() => {
+          setEditId(null);
+          setOriginalBreederId(null);
+          setForm({ ...EMPTY_FORM });
+          invalidate();
+        }}
       />
 
       <AlertDialog open={invitationConfirmId !== null} onOpenChange={(open) => !open && setInvitationConfirmId(null)}>
