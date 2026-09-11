@@ -24,16 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { BreederCancellationArchiveDialog } from "@/components/BreederCancellationArchiveDialog";
 import { CalendarDays, Plus, Pencil, Trash2, MapPin, PawPrint, Loader2, Dog, ExternalLink, UsersRound, ShieldAlert, CheckCircle2, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -120,15 +111,6 @@ export default function PuppySchedule() {
     onError: (e) => toast.error(e.message),
   });
 
-  const deleteMutation = trpc.puppySchedule.delete.useMutation({
-    onSuccess: () => {
-      utils.puppySchedule.list.invalidate();
-      utils.puppySchedule.listWithStaffing.invalidate();
-      toast.success("Schedule record archived.");
-      setDeleteId(null);
-    },
-    onError: (e) => toast.error(e.message),
-  });
   const assignPuppyMonitor = trpc.puppySchedule.assignPuppyMonitor.useMutation({
     onSuccess: () => {
       utils.puppySchedule.listWithStaffing.invalidate();
@@ -543,26 +525,11 @@ export default function PuppySchedule() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
-      <AlertDialog open={deleteId !== null} onOpenChange={open => !open && setDeleteId(null)}>
-        <AlertDialogContent className="bg-[#FEFAF4] border-[#F0D0DC]">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-[#1A0A12]">Archive this schedule record?</AlertDialogTitle>
-            <AlertDialogDescription className="font-body text-[#6B4C3B]">
-              A live Luma-linked class must be cancelled through Cancel Class first. Archived records remain available for audit history.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="font-body border-[#F0D0DC]">Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteId !== null && deleteMutation.mutate({ id: deleteId })}
-              className="bg-red-600 hover:bg-red-700 text-white font-body"
-            >
-              Archive
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <BreederCancellationArchiveDialog
+        scheduleId={deleteId}
+        open={deleteId !== null}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+      />
     </div>
   );
 }

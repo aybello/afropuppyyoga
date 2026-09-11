@@ -13,6 +13,8 @@ import { getLeadershipAssignmentEligibility, getPuppyMonitorAssignmentEligibilit
 import { isActiveTeamMember } from "../teamMembership";
 import { schedulesOverlap, validateScheduleCandidate } from "../scheduleValidation";
 import { getScheduleVisibilityStartDate, getTorontoCalendarDate } from "../../shared/scheduleVisibility";
+import { buildBreederClassCancellationPreview } from "../breederClassCancellation";
+import { normalizeBreederPhone } from "../breederConfirmationWorkflow";
 
 const LOCATIONS = ["Kitchener", "Hamilton", "Oakville"] as const;
 const ALL_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
@@ -234,6 +236,52 @@ async function archiveScheduleRecord(db: ScheduleDb, id: number) {
   }
   await db.update(puppySchedule).set({ scheduleStatus: "archived", archivedAt: new Date() }).where(eq(puppySchedule.id, id));
   return { success: true };
+}
+
+async function getBreederCancellationPreviewForSchedule(db: ScheduleDb, id: number) {
+  const [schedule] = await db.select().from(puppySchedule).where(eq(puppySchedule.id, id)).limit(1);
+  if (!schedule || schedule.scheduleStatus === "archived") throw new Error("Scheduled class not found.");
+  if (schedule.lumaEventId && schedule.scheduleStatus !== "cancelled") {
+    throw new Error("Cancel this Luma class through Cancel Class before archiving it.");
+  }
+  const [breeder] = await db.select().from(breeders).where(eq(breeders.id, schedule.breederId)).limit(1);
+  if (!breeder) throw new Error("The linked breeder could not be found.");
+  let phone: string | null = null;
+  try {
+    phone = normalizeBreederPhone(breeder.phone);
+  } catch {
+    phone = null;
+  }
+  const preview = buildBreederClassCancellationPreview({
+    id: schedule.id,
+    breederId: breeder.id,
+    breederName: breeder.name,
+    contactName: breeder.contactName,
+    classDate: schedule.classDate,
+    dayOfWeek: schedule.dayOfWeek,
+    location: schedule.location,
+    breed: schedule.breed,
+    startTime: schedule.startTime,
+    endTime: schedule.endTime,
+    emailAvailable: Boolean(breeder.email?.trim()),
+    smsAvailable: Boolean(phone),
+  });
+  return {
+    breederId: breeder.id,
+    class: {
+      id: schedule.id,
+      classDate: schedule.classDate,
+      dayOfWeek: schedule.dayOfWeek,
+      location: schedule.location,
+      breed: schedule.breed,
+      startTime: schedule.startTime,
+      endTime: schedule.endTime,
+    },
+    ...preview,
+    canNotify: preview.channels.email === "ready" || preview.channels.sms === "ready",
+    recipient: { name: breeder.contactName?.trim() || breeder.name },
+    delivery: { email: breeder.email?.trim() || null, phone },
+  };
 }
 
 export const puppyScheduleRouter = router({
@@ -582,6 +630,118 @@ export const puppyScheduleRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
       return archiveScheduleRecord(db, input.id);
+    }),
+
+  /** Preview the exact breeder-only cancellation notice before archiving a class. */
+  getBreederCancellationPreview: staffProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+      const preview = await getBreederCancellationPreviewForSchedule(db, input.id);
+      return {
+        class: preview.class,
+        recipient: preview.recipient,
+        subject: preview.subject,
+        html: preview.html,
+        emailText: preview.emailText,
+        smsText: preview.smsText,
+        channels: preview.channels,
+        confirmationKey: preview.confirmationKey,
+        canNotify: preview.canNotify,
+      };
+    }),
+
+  /** Archive an eligible class, then send the previously previewed breeder-only cancellation notice. */
+  archiveWithBreederCancellationNotice: staffProcedure
+    .input(z.object({ id: z.number().int().positive(), confirmationKey: z.string().length(64) }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+      const preview = await getBreederCancellationPreviewForSchedule(db, input.id);
+      if (preview.confirmationKey !== input.confirmationKey) {
+        throw new Error("The class details or available notification channels changed. Review the breeder cancellation preview again before archiving.");
+      }
+      if (!preview.canNotify) {
+        throw new Error("This breeder has no available email or SMS channel. Add valid contact information before archiving this class.");
+      }
+
+      await db.update(puppySchedule).set({ scheduleStatus: "archived", archivedAt: new Date() }).where(eq(puppySchedule.id, input.id));
+
+      let emailStatus = preview.delivery.email ? "failed" : "missing";
+      let smsStatus = preview.delivery.phone ? "failed" : "missing";
+      let smsSid: string | null = null;
+      const errors: string[] = [];
+      if (preview.delivery.email) {
+        try {
+          await sendEmail({ to: preview.delivery.email, subject: preview.subject, html: preview.html, text: preview.emailText });
+          emailStatus = "sent";
+        } catch (error) {
+          errors.push(`Email: ${error instanceof Error ? error.message : "failed"}`);
+        }
+      }
+      if (preview.delivery.phone && await isSmsSuppressed(preview.delivery.phone)) {
+        smsStatus = "suppressed";
+      } else if (preview.delivery.phone) {
+        const accountSid = process.env.TWILIO_ACCOUNT_SID;
+        const authToken = process.env.TWILIO_AUTH_TOKEN;
+        const from = process.env.TWILIO_PHONE_NUMBER;
+        if (!accountSid || !authToken || !from) {
+          smsStatus = "not_configured";
+          errors.push("SMS: Twilio is not configured");
+        } else {
+          try {
+            const sent = await twilio(accountSid, authToken).messages.create({ to: preview.delivery.phone, from, body: preview.smsText });
+            smsSid = sent.sid;
+            smsStatus = "sent";
+          } catch (error) {
+            errors.push(`SMS: ${error instanceof Error ? error.message : "failed"}`);
+          }
+        }
+      }
+
+      const communicationRows: Array<typeof communicationsLog.$inferInsert> = [];
+      if (preview.delivery.email) communicationRows.push({
+        entityType: "breeder",
+        entityId: preview.breederId,
+        channel: "email",
+        direction: "outbound",
+        action: "class_cancellation",
+        recipient: preview.delivery.email,
+        subject: preview.subject,
+        bodyPreview: preview.emailText.slice(0, 1000),
+        deliveryStatus: emailStatus,
+        actorUserId: ctx.user.id,
+        actorName: ctx.user.name,
+      });
+      if (preview.delivery.phone) communicationRows.push({
+        entityType: "breeder",
+        entityId: preview.breederId,
+        channel: "sms",
+        direction: "outbound",
+        action: "class_cancellation",
+        recipient: preview.delivery.phone,
+        subject: null,
+        bodyPreview: preview.smsText.slice(0, 1000),
+        deliveryStatus: smsStatus,
+        providerMessageId: smsSid,
+        actorUserId: ctx.user.id,
+        actorName: ctx.user.name,
+      });
+      if (communicationRows.length) {
+        try {
+          await db.insert(communicationsLog).values(communicationRows);
+        } catch (error) {
+          errors.push(`Audit: ${error instanceof Error ? error.message : "failed"}`);
+        }
+      }
+      return {
+        success: true,
+        emailStatus,
+        smsStatus,
+        notificationSent: emailStatus === "sent" || smsStatus === "sent",
+        errors,
+      };
     }),
 
   /**

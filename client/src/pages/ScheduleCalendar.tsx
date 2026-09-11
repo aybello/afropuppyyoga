@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { BreederCancellationArchiveDialog } from "@/components/BreederCancellationArchiveDialog";
 import {
   Dialog,
   DialogContent,
@@ -291,15 +292,6 @@ export default function ScheduleCalendar() {
       setShowDialog(false);
       setEditId(null);
       setForm({ ...EMPTY_FORM });
-    },
-    onError: (e) => toast.error(e.message),
-  });
-
-  const deleteMutation = trpc.puppySchedule.deleteSlot.useMutation({
-    onSuccess: () => {
-      invalidate();
-      toast.success("Schedule record archived.");
-      setDeleteId(null);
     },
     onError: (e) => toast.error(e.message),
   });
@@ -862,31 +854,12 @@ export default function ScheduleCalendar() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Delete Confirmation ────────────────────────────────────────────── */}
-      <AlertDialog
+      <BreederCancellationArchiveDialog
+        scheduleId={deleteId}
         open={deleteId !== null}
         onOpenChange={(open) => !open && setDeleteId(null)}
-      >
-        <AlertDialogContent className="bg-[#FEFAF4] border-[#F0D0DC]">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-[#1A0A12]">
-              Archive this schedule record?
-            </AlertDialogTitle>
-            <AlertDialogDescription className="font-body text-[#6B4C3B]">
-              APY HQ keeps the record for history. A live Luma-linked class must be cancelled through Cancel Class before it can be archived.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="font-body border-[#F0D0DC]">Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteId !== null && deleteMutation.mutate({ id: deleteId })}
-              className="bg-red-600 hover:bg-red-700 text-white font-body"
-            >
-              Archive
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onArchived={invalidate}
+      />
 
       <AlertDialog open={invitationConfirmId !== null} onOpenChange={(open) => !open && setInvitationConfirmId(null)}>
         <AlertDialogContent className="bg-[#FEFAF4] border-[#F0D0DC]">

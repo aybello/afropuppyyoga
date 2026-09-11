@@ -1280,3 +1280,11 @@
 - [x] Allow any active and available Operations Manager or Yoga Instructor on the APY roster to be assigned to an upcoming class regardless of home location
 - [x] Preserve role validation, availability checks, individual Message or Resend actions, and Puppy Monitor staffing/location rules
 - [x] Add regression coverage, validate, publish, and record the cross-location leadership assignment update
+
+## Previewed Breeder Class-Cancellation Notice (Sep 10, 2026)
+- [x] Trace the breeder-backed class deletion action and existing breeder email/SMS confirmation logic
+- [x] Add a privacy-safe preview of the exact breeder cancellation notice and delivery channels before deletion confirmation
+- [x] After the owner confirms deletion, notify only the linked breeder by the available original email/SMS channels and report actual delivery status
+- [x] Preserve the separately paused customer cancellation workflow and do not delete, modify, or message the September 20 class during implementation validation
+- [x] Add regression coverage, validate, publish, and record the previewed breeder cancellation workflow
+- [x] Confirm the owner-selected flow: preview the linked breeder’s cancellation notice, then notify automatically only after the owner confirms class deletion

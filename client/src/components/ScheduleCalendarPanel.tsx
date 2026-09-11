@@ -34,6 +34,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
+import { BreederCancellationArchiveDialog } from "@/components/BreederCancellationArchiveDialog";
 import {
   ChevronLeft,
   ChevronRight,
@@ -178,10 +179,6 @@ export default function ScheduleCalendarPanel({ onOpenBreederConfirmation }: Sch
   });
   const updateMutation = trpc.puppySchedule.updateSlot.useMutation({
     onSuccess: () => { invalidate(); toast.success("Slot updated!"); setShowDialog(false); setEditId(null); setForm({ ...EMPTY_FORM }); },
-    onError: (e) => toast.error(e.message),
-  });
-  const deleteMutation = trpc.puppySchedule.deleteSlot.useMutation({
-    onSuccess: () => { invalidate(); toast.success("Slot removed."); setDeleteId(null); },
     onError: (e) => toast.error(e.message),
   });
   // ─── Navigation ─────────────────────────────────────────────────────────────
@@ -710,19 +707,12 @@ export default function ScheduleCalendarPanel({ onOpenBreederConfirmation }: Sch
         </DialogContent>
       </Dialog>
 
-      {/* ── Delete Confirmation ────────────────────────────────────────────── */}
-      <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent className="bg-[#FEFAF4] border-[#F0D0DC]">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-[#1A0A12]">Remove this slot?</AlertDialogTitle>
-            <AlertDialogDescription className="font-body text-[#6B4C3B]">This will permanently remove the class slot. This cannot be undone.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="font-body border-[#F0D0DC]">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleteId !== null && deleteMutation.mutate({ id: deleteId })} className="bg-red-600 hover:bg-red-700 text-white font-body">Remove</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <BreederCancellationArchiveDialog
+        scheduleId={deleteId}
+        open={deleteId !== null}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+        onArchived={invalidate}
+      />
     </div>
   );
 }
