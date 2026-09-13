@@ -5,6 +5,11 @@ import {
   createCancellationPreviewKey,
   isCurrentCancellationPreviewKey,
 } from "./cancellationPreview";
+import {
+  CANCELLATION_CLASS_CREDIT_NOTICE,
+  FINAL_SALE_REFUND_NOTICE,
+  REFUND_POLICY_URL,
+} from "../shared/refundPolicy";
 
 const previewInput = {
   eventApiId: "evt-kitchener-dachshunds",
@@ -25,6 +30,17 @@ describe("preview-gated cancellation delivery", () => {
     expect(preview.smsText).toContain("SEP12");
     expect(preview.smsText).toContain("100% off any future APY class");
     expect(preview.voiceText).toContain("has been cancelled");
+  });
+
+  it("states the final-sale class-credit policy and links to the canonical public policy in every written cancellation channel", () => {
+    const preview = buildCancellationMessagePreview(previewInput);
+
+    expect(preview.email.text).toContain(FINAL_SALE_REFUND_NOTICE);
+    expect(preview.email.text).toContain(CANCELLATION_CLASS_CREDIT_NOTICE);
+    expect(preview.email.text).toContain(REFUND_POLICY_URL);
+    expect(preview.smsText).toContain(FINAL_SALE_REFUND_NOTICE);
+    expect(preview.smsText).toContain(CANCELLATION_CLASS_CREDIT_NOTICE);
+    expect(preview.smsText).toContain(REFUND_POLICY_URL);
   });
 
   it("rejects a confirmation when the reviewed class, message, or approved audience has changed", () => {

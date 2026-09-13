@@ -4,6 +4,11 @@
  * Set GMAIL_APP_PASSWORD in environment variables.
  */
 import nodemailer from "nodemailer";
+import {
+  CANCELLATION_CLASS_CREDIT_NOTICE,
+  FINAL_SALE_REFUND_NOTICE,
+  REFUND_POLICY_URL,
+} from "@shared/refundPolicy";
 
 const GMAIL_USER = "afropuppyyoga@gmail.com";
 const REPLY_TO = "afropuppyyoga@gmail.com";
@@ -778,6 +783,7 @@ export function buildClassCancellationEmail(opts: {
     ${bodyText(`We regret to inform you that your upcoming class <strong>"${opts.eventName}"</strong> has been cancelled. We sincerely apologize for the inconvenience this may cause.`)}
     ${customNote}
     ${rebookingBlock}
+    ${bodyText(`<strong>${FINAL_SALE_REFUND_NOTICE}</strong> ${CANCELLATION_CLASS_CREDIT_NOTICE} <a href="${REFUND_POLICY_URL}" style="color:#C2185B;">Read our Refund Policy</a>.`)}
     ${bodyText(rebookingInvitation)}
     ${pillButton("https://lu.ma/AfroPuppyYoga", "Browse Upcoming Classes")}
     ${fallbackLink("https://lu.ma/AfroPuppyYoga")}
@@ -787,7 +793,7 @@ export function buildClassCancellationEmail(opts: {
 
   const html = wrapInBrandedLayout(hero, body);
 
-  const text = `Hi ${opts.guestName},\n\nWe regret to inform you that your upcoming class "${opts.eventName}" has been cancelled. We sincerely apologize for the inconvenience.\n\n${opts.customMessage ? `Message from our team: ${opts.customMessage}\n\n` : ""}Your free rebooking code: ${opts.rebookingCode}\nEnter this code at Luma checkout for 100% off any upcoming APY class.\n\nWe'd love to have you join us at a future session at any of our locations.\n\nBrowse upcoming classes at https://lu.ma/AfroPuppyYoga\n\nIf you have questions, email us at afropuppyyoga@gmail.com or DM @afropuppyyoga on Instagram.\n\nWith warmth,\nThe AfroPuppyYoga Team`;
+  const text = `Hi ${opts.guestName},\n\nWe regret to inform you that your upcoming class "${opts.eventName}" has been cancelled. We sincerely apologize for the inconvenience.\n\n${opts.customMessage ? `Message from our team: ${opts.customMessage}\n\n` : ""}Your free rebooking code: ${opts.rebookingCode}\nEnter this code at Luma checkout for 100% off any upcoming APY class.\n\n${FINAL_SALE_REFUND_NOTICE}\n${CANCELLATION_CLASS_CREDIT_NOTICE}\nRefund Policy: ${REFUND_POLICY_URL}\n\nWe'd love to have you join us at a future session at any of our locations.\n\nBrowse upcoming classes at https://lu.ma/AfroPuppyYoga\n\nIf you have questions, email us at afropuppyyoga@gmail.com or DM @afropuppyyoga on Instagram.\n\nWith warmth,\nThe AfroPuppyYoga Team`;
 
   return { subject, html, text };
 }

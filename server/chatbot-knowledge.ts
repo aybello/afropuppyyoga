@@ -107,7 +107,7 @@ APY currently hosts classes in Hamilton and Kitchener, with Oakville coming soon
 
 APY never wants to cancel a class. Cancellations cost APY just as much as they cost guests — lost revenue, puppies missing socialization, and team members losing a shift. When APY does cancel, it is always due to circumstances outside their control: puppy availability, instructor emergencies, safety concerns, or venue issues.
 
-Because of the nature of the business and the stage APY is at, issuing cash refunds is not practical. APY operates on a class credit system.
+All AfroPuppyYoga tickets are final sale. APY does not issue refunds and operates on a class credit system.
 
 APY-initiated cancellations:
 - Guests automatically receive a full class credit delivered as a coupon code

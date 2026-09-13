@@ -166,6 +166,7 @@ export default function Footer() {
             </a>
             <a href="/privacy" className="font-body text-xs text-white/20 hover:text-white/40 transition-colors">Privacy</a>
             <a href="/terms" className="font-body text-xs text-white/20 hover:text-white/40 transition-colors">Terms</a>
+            <a href="/refund-policy" className="font-body text-xs text-white/20 hover:text-white/40 transition-colors">Refund Policy</a>
           </div>
         </div>
       </div>

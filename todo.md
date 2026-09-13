@@ -1251,6 +1251,12 @@
 - [x] Publish and synchronize the preview-key repair after final checklist verification
 - [x] Record the published preview-key repair in the APY Context Hub and final project task record
 
+## Cancellation Refund-Policy Communication (Sep 13, 2026)
+- [x] Verify the public APY refund-policy wording and canonical link before reusing it in cancellation messages
+- [x] State clearly in cancellation email/SMS that tickets are final sale, refunds are not issued, and the date-based class credit is the rebooking alternative
+- [x] Add the refund-policy link to the exact cancellation email preview without silently changing any other cancellation terms
+- [x] Add focused regression coverage, validate, publish, and record the policy-consistent communication update
+
 - [x] Replace the incorrect random cancellation-code generation with the owner-required Ontario class-date format, such as AUG5
 - [x] Block cancellation communications until the date-based code and the recipient workflow are verified
 - [x] Add focused regression coverage for date-code format, duplicate-code handling, and no-send safety

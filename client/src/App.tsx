@@ -45,6 +45,7 @@ const EmployeeDirectory = lazy(() => import("./pages/EmployeeDirectory"));
 const QuickBooksDashboard = lazy(() => import("./pages/QuickBooksDashboard"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
+const RefundPolicy = lazy(() => import("./pages/RefundPolicy"));
 const QuickBooksDisconnect = lazy(() => import("./pages/QuickBooksDisconnect"));
 
 function PageLoader() {
@@ -119,6 +120,7 @@ function Router() {
         <Route path="/ethics" component={Ethics} />
         <Route path="/privacy" component={Privacy} />
         <Route path="/terms" component={Terms} />
+        <Route path="/refund-policy" component={RefundPolicy} />
         <Route path="/quickbooks-disconnect" component={QuickBooksDisconnect} />
         {/* City SEO pages — plan-specified slugs */}
         <Route path="/puppy-yoga-kitchener" component={Kitchener} />

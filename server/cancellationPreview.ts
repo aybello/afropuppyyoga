@@ -2,6 +2,11 @@ import { createHash, createHmac, timingSafeEqual } from "crypto";
 
 import { buildClassCancellationEmail } from "./email";
 import { rebookingCodeForClassDate } from "./lumaCalendarCoupon";
+import {
+  CANCELLATION_CLASS_CREDIT_NOTICE,
+  FINAL_SALE_REFUND_NOTICE,
+  REFUND_POLICY_URL,
+} from "../shared/refundPolicy";
 
 export type CancellationPreviewInput = {
   eventApiId: string;
@@ -69,9 +74,10 @@ export function buildCancellationMessagePreview(input: CancellationPreviewInput)
     ? `${customMessage} Please check your email for the free rebooking code ${rebookingCode}, valid across the AfroPuppyYoga calendar.`
     : `Hello, this is a message from AfroPuppyYoga. We regret to inform you that your upcoming class, ${input.eventName}, has been cancelled. We apologize for the inconvenience. Please check your email for your free rebooking code, valid across the AfroPuppyYoga calendar. Thank you for your understanding.`;
 
+  const smsPolicy = `${FINAL_SALE_REFUND_NOTICE} ${CANCELLATION_CLASS_CREDIT_NOTICE} Details: ${REFUND_POLICY_URL}`;
   const smsText = customMessage
-    ? `${customMessage}\n\nUse free code ${rebookingCode} for 100% off any future APY class booked through our Luma calendar.`
-    : `Hi from AfroPuppyYoga! Your class "${input.eventName}" has been cancelled. Sorry for the inconvenience! Use free code ${rebookingCode} for 100% off any future APY class booked through our Luma calendar. Browse upcoming classes at afropuppyyoga.ca.`;
+    ? `${customMessage}\n\nUse free code ${rebookingCode} for 100% off any future APY class booked through our Luma calendar.\n\n${smsPolicy}`
+    : `Hi from AfroPuppyYoga! Your class "${input.eventName}" has been cancelled. Sorry for the inconvenience! Use free code ${rebookingCode} for 100% off any future APY class booked through our Luma calendar.\n\n${smsPolicy}`;
 
   return {
     rebookingCode,
