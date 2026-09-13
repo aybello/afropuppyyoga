@@ -76,7 +76,7 @@ export default function CancellationDashboard() {
     isLoading: previewLoading,
     refetch: refetchPreview,
   } = trpc.cancellation.previewCancellation.useQuery(
-    { eventApiId: selectedEventApiId },
+    { eventApiId: selectedEventApiId, customMessage: customMessage.trim() || undefined },
     { enabled: showPreview && !!selectedEventApiId }
   );
 
@@ -157,9 +157,14 @@ export default function CancellationDashboard() {
   }
 
   function handleFinalSend() {
+    if (!previewData?.previewKey) {
+      toast.error("Review the cancellation messages again before sending.");
+      setConfirming(false);
+      return;
+    }
     cancelMutation.mutate({
       eventApiId: selectedEventApiId,
-      eventName: selectedEventName,
+      previewKey: previewData.previewKey,
       customMessage: customMessage.trim() || undefined,
     });
   }
@@ -177,7 +182,7 @@ export default function CancellationDashboard() {
             Class Cancellation
           </h1>
           <p className="text-gray-600 text-sm">
-            Select an upcoming class to cancel. You will see a <strong>preview of all recipients</strong>{" "}
+            Select an upcoming class to cancel. You will review the <strong>exact email, SMS, code, and recipients</strong>{" "}
             before any notifications are sent. Every registered attendee will receive a{" "}
             <strong>phone call</strong>, an <strong>SMS</strong>, and a <strong>cancellation email</strong>.
           </p>
@@ -241,7 +246,10 @@ export default function CancellationDashboard() {
               </Label>
               <Textarea
                 value={customMessage}
-                onChange={(e) => setCustomMessage(e.target.value)}
+                onChange={(e) => {
+                  setCustomMessage(e.target.value);
+                  setConfirming(false);
+                }}
                 placeholder={`Default: "Hi from AfroPuppyYoga! Your class "${selectedEventName}" has been cancelled. We're sorry — visit afropuppyyoga.ca to rebook."`}
                 rows={4}
                 className="text-sm"
@@ -259,10 +267,10 @@ export default function CancellationDashboard() {
                 className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white"
               >
                 <Eye className="w-4 h-4 mr-2" />
-                Preview Recipients Before Sending
+                Review Messages &amp; Recipients
               </Button>
               <p className="text-xs text-gray-500 mt-2">
-                This will fetch the list of registered attendees from Luma so you can review before sending any notifications. When sent, APY will create or reuse a free calendar-wide Luma rebooking code.
+                This will fetch the approved attendee list and render the exact email and SMS before sending any notifications. When confirmed, APY will create or reuse the reviewed free calendar-wide Luma rebooking code.
               </p>
             </CardContent>
           </Card>
@@ -299,6 +307,35 @@ export default function CancellationDashboard() {
                 </div>
               ) : previewData ? (
                 <>
+                  <div className="mb-5 space-y-4 rounded-xl border border-[#d8c7ec] bg-white p-4">
+                    <div className="flex items-center gap-2">
+                      <Eye className="h-4 w-4 text-[#8b5cf6]" />
+                      <div>
+                        <p className="text-sm font-semibold text-[#2d1b4e]">Review the exact messages before delivery</p>
+                        <p className="text-xs text-gray-500">The personalised email uses each recipient’s first name; the text below is otherwise the delivery copy.</p>
+                      </div>
+                    </div>
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      <div className="rounded-lg border border-green-200 bg-green-50 p-3">
+                        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-green-900">
+                          <Mail className="h-4 w-4" /> Email
+                        </div>
+                        <p className="mb-2 text-xs font-medium text-green-800">Subject: {previewData.emailPreview.subject}</p>
+                        <pre className="whitespace-pre-wrap font-sans text-xs leading-5 text-gray-700">{previewData.emailPreview.text}</pre>
+                      </div>
+                      <div className="rounded-lg border border-purple-200 bg-purple-50 p-3">
+                        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-purple-900">
+                          <MessageSquare className="h-4 w-4" /> SMS
+                        </div>
+                        <p className="whitespace-pre-wrap text-sm leading-6 text-gray-700">{previewData.smsPreview}</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-[#6f1630]">
+                      <Ticket className="h-4 w-4" />
+                      <span>Verified calendar-level 100%-off rebooking code: <strong className="font-mono tracking-widest">{previewData.rebookingCode}</strong></span>
+                    </div>
+                  </div>
+
                   {/* Summary badges */}
                   <div className="flex flex-wrap gap-3 mb-4">
                     <div className="flex items-center gap-1.5 bg-white rounded-lg px-3 py-2 border border-[#e8dff5]">
@@ -365,7 +402,7 @@ export default function CancellationDashboard() {
                               <strong>{selectedEventName}</strong>
                             </p>
                             <p className="text-xs text-orange-700 mt-1">
-                              This will send phone calls, SMS messages, and emails. This action cannot be undone.
+                              The reviewed email and SMS above, plus the matching call notice, will be sent. This action cannot be undone.
                             </p>
                           </div>
                         </div>
@@ -391,9 +428,8 @@ export default function CancellationDashboard() {
                     <div className="mt-4 bg-red-50 border border-red-300 rounded-lg p-4">
                       <p className="font-bold text-red-800 mb-1">Final confirmation</p>
                       <p className="text-red-700 text-sm mb-3">
-                        You are about to send <strong>phone calls</strong>, <strong>SMS messages</strong>, and{" "}
-                        <strong>emails</strong> to <strong>{previewData.total}</strong> attendee{previewData.total !== 1 ? "s" : ""}.
-                        This cannot be undone.
+                        You are about to send the exact reviewed <strong>phone-call notice</strong>, <strong>SMS</strong>, and{" "}
+                        <strong>email</strong> to <strong>{previewData.total}</strong> attendee{previewData.total !== 1 ? "s" : ""}. The confirmed preview is checked again before any delivery.
                       </p>
                       <div className="flex gap-3">
                         <Button

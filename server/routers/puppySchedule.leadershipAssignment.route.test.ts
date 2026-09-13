@@ -8,7 +8,7 @@ vi.mock("../smsConsent", () => ({ isSmsSuppressed: vi.fn() }));
 
 import { puppyScheduleRouter } from "./puppySchedule";
 
-const schedule = { id: 77, scheduleStatus: "scheduled", classDate: "2026-09-12", location: "Kitchener" };
+const schedule = { id: 77, scheduleStatus: "scheduled", classDate: "2026-10-20", location: "Kitchener" };
 const leadershipCandidate = {
   id: 15,
   name: "Alex Operations",
@@ -50,7 +50,7 @@ describe("assignLeadership mutation", () => {
 
     await expect(caller().assignLeadership({ scheduleId: 77, role: "Operations Manager", staffId: 15 })).resolves.toEqual({ success: true });
     expect(prepared.inserts).toEqual([{
-      coverageDate: "2026-09-12",
+      coverageDate: "2026-10-20",
       location: "KW",
       role: "Operations Manager",
       coverageStaffId: 15,
@@ -65,7 +65,7 @@ describe("assignLeadership mutation", () => {
 
     await expect(caller().assignLeadership({ scheduleId: 77, role: "Operations Manager", staffId: 15 })).resolves.toEqual({ success: true });
     expect(prepared.inserts).toEqual([expect.objectContaining({
-      coverageDate: "2026-09-12",
+      coverageDate: "2026-10-20",
       location: "KW",
       role: "Operations Manager",
       coverageStaffId: 15,

@@ -24,6 +24,12 @@ import { getTwilioWebhookUrl } from "../twilioWebhook";
 import { ensureFreeCalendarRebookingCoupon, rebookingCodeForClassDate } from "../lumaCalendarCoupon";
 import { isSmsSuppressed } from "../smsConsent";
 import { setLumaRegistrationOpen } from "../lumaScheduleHelper";
+import {
+  buildCancellationMessagePreview,
+  createCancellationAudienceFingerprint,
+  createCancellationPreviewKey,
+  isCurrentCancellationPreviewKey,
+} from "../cancellationPreview";
 
 const LUMA_BASE = "https://public-api.luma.com/v1";
 const IN_FLIGHT_TWILIO_STATUSES = new Set(["accepted", "queued", "sending", "sent", "in-progress", "ringing"]);
@@ -36,8 +42,12 @@ export function createCancellationCode(eventStartAt: string | Date) {
   return rebookingCodeForClassDate(eventStartAt);
 }
 
-export function isCancellationCommunicationEnabled(value = process.env.CANCELLATION_COMMUNICATIONS_ENABLED) {
-  return value === "true";
+/**
+ * The legacy global sender pause has been retired. Delivery is now enabled only
+ * through the per-cancellation preview key verified immediately before sending.
+ */
+export function isCancellationCommunicationEnabled() {
+  return true;
 }
 
 /** Fetch all guests for a Luma event (handles pagination) */
@@ -142,10 +152,26 @@ export const cancellationRouter = router({
     .input(
       z.object({
         eventApiId: z.string().min(1),
+        customMessage: z.string().max(800).optional(),
       })
     )
     .query(async ({ input }) => {
+      const previewSecret = process.env.JWT_SECRET;
+      if (!previewSecret) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Cancellation preview verification is unavailable." });
+      }
+      const events = await fetchLumaEvents();
+      const event = events.find((candidate) => candidate.api_id === input.eventApiId);
+      if (!event) throw new TRPCError({ code: "NOT_FOUND", message: "That upcoming Luma event could not be found." });
       const guests = await fetchLumaGuests(input.eventApiId);
+      const previewInput = {
+        eventApiId: input.eventApiId,
+        eventName: event.name,
+        eventStartAt: event.start_at,
+        customMessage: input.customMessage?.trim() || undefined,
+        audienceFingerprint: createCancellationAudienceFingerprint(guests),
+      };
+      const messages = buildCancellationMessagePreview(previewInput);
       return {
         total: guests.length,
         guests: guests.map((g) => ({
@@ -154,6 +180,11 @@ export const cancellationRouter = router({
           phone: g.phone,
           hasPhone: !!g.phone,
         })),
+        rebookingCode: messages.rebookingCode,
+        emailPreview: messages.email,
+        smsPreview: messages.smsText,
+        voicePreview: messages.voiceText,
+        previewKey: createCancellationPreviewKey(previewInput, previewSecret),
       };
     }),
 
@@ -162,18 +193,12 @@ export const cancellationRouter = router({
     .input(
       z.object({
         eventApiId: z.string().min(1),
-        eventName: z.string().min(1),
+        previewKey: z.string().length(64),
         /** Optional custom message override */
-        customMessage: z.string().optional(),
+        customMessage: z.string().max(800).optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      if (!isCancellationCommunicationEnabled()) {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "Cancellation communications are paused for review. No calls, texts, emails, or rebooking codes were sent.",
-        });
-      }
       const accountSid = process.env.TWILIO_ACCOUNT_SID;
       const authToken = process.env.TWILIO_AUTH_TOKEN;
       const fromNumber = process.env.TWILIO_PHONE_NUMBER;
@@ -187,18 +212,33 @@ export const cancellationRouter = router({
 
       const client = twilio(accountSid, authToken);
 
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
-      const [existingCredit] = await db.select().from(cancellationCredits).where(eq(cancellationCredits.lumaEventId, input.eventApiId)).limit(1);
-      if (existingCredit) throw new TRPCError({ code: "CONFLICT", message: `This class was already cancelled with credit ${existingCredit.couponCode}.` });
-
       const allEvents = await fetchLumaEvents();
       const cancelledEvent = allEvents.find((e) => e.api_id === input.eventApiId);
       if (!cancelledEvent) throw new TRPCError({ code: "NOT_FOUND", message: "That upcoming Luma event could not be found." });
       const canonicalEventName = cancelledEvent.name;
       const guests = await fetchLumaGuests(input.eventApiId);
       if (guests.length === 0) throw new TRPCError({ code: "BAD_REQUEST", message: "This event has no approved guests to notify." });
-      const rebookingCode = createCancellationCode(cancelledEvent.start_at);
+      const previewSecret = process.env.JWT_SECRET;
+      if (!previewSecret) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Cancellation preview verification is unavailable." });
+      const previewInput = {
+        eventApiId: input.eventApiId,
+        eventName: canonicalEventName,
+        eventStartAt: cancelledEvent.start_at,
+        customMessage: input.customMessage?.trim() || undefined,
+        audienceFingerprint: createCancellationAudienceFingerprint(guests),
+      };
+      if (!isCurrentCancellationPreviewKey(input.previewKey, previewInput, previewSecret)) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "This cancellation preview is no longer current. Review the messages and recipients again before sending.",
+        });
+      }
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      const [existingCredit] = await db.select().from(cancellationCredits).where(eq(cancellationCredits.lumaEventId, input.eventApiId)).limit(1);
+      if (existingCredit) throw new TRPCError({ code: "CONFLICT", message: `This class was already cancelled with credit ${existingCredit.couponCode}.` });
+      const messagePreview = buildCancellationMessagePreview(previewInput);
+      const rebookingCode = messagePreview.rebookingCode;
       await setLumaRegistrationOpen(input.eventApiId, false);
       let couponState: "created" | "reused";
       try {
@@ -215,14 +255,8 @@ export const cancellationRouter = router({
       await db.insert(cancellationCredits).values({ lumaEventId: input.eventApiId, eventName: canonicalEventName, couponCode: rebookingCode, maxUses: 1_000_000, registrationClosedAt: provisionedAt, couponCreatedAt: provisionedAt, createdByUserId: ctx.user.id });
       await db.update(puppySchedule).set({ scheduleStatus: "cancelled", lumaSyncStatus: "synced", lumaSyncedAt: provisionedAt }).where(eq(puppySchedule.lumaEventId, input.eventApiId));
 
-      // Voice message (TTS — slightly more formal for spoken delivery)
-      const voiceMessage = input.customMessage
-        ? `${input.customMessage} Please check your email for the free rebooking code ${rebookingCode}, valid across the AfroPuppyYoga calendar.`
-        : `Hello, this is a message from AfroPuppyYoga. We regret to inform you that your upcoming class, ${canonicalEventName}, has been cancelled. We apologize for the inconvenience. Please check your email for your free rebooking code, valid across the AfroPuppyYoga calendar. Thank you for your understanding.`;
-
-      const smsMessage = input.customMessage
-        ? `${input.customMessage}\n\nUse free code ${rebookingCode} for 100% off any future APY class booked through our Luma calendar.`
-        : `Hi from AfroPuppyYoga! Your class "${canonicalEventName}" has been cancelled. Sorry for the inconvenience! Use free code ${rebookingCode} for 100% off any future APY class booked through our Luma calendar. Browse upcoming classes at afropuppyyoga.ca.`;
+      const voiceMessage = messagePreview.voiceText;
+      const smsMessage = messagePreview.smsText;
       const now = Date.now();
 
       const results: Array<{

@@ -18,9 +18,7 @@ describe("cancellation credit codes", () => {
     expect(createCancellationCode("2026-08-05T18:00:00.000Z")).toBe("AUG5");
   });
 
-  it("fails closed unless cancellation communications are explicitly enabled", () => {
-    expect(isCancellationCommunicationEnabled(undefined)).toBe(false);
-    expect(isCancellationCommunicationEnabled("false")).toBe(false);
-    expect(isCancellationCommunicationEnabled("true")).toBe(true);
+  it("uses the preview-key gate rather than the retired global communications pause", () => {
+    expect(isCancellationCommunicationEnabled()).toBe(true);
   });
 });

@@ -740,13 +740,12 @@ export function buildSigningInviteEmail(opts: {
  * Sends a branded class cancellation email to every attendee.
  * Includes a free calendar-wide Luma rebooking code valid for any upcoming class.
  */
-export async function sendClassCancellationEmail(opts: {
-  to: string;
+export function buildClassCancellationEmail(opts: {
   guestName: string;
   eventName: string;
   rebookingCode: string;
   customMessage?: string;
-}): Promise<void> {
+}): { subject: string; html: string; text: string } {
   const subject = `Important: Your AfroPuppyYoga class has been cancelled`;
   const firstName = opts.guestName.split(" ")[0] || opts.guestName;
 
@@ -790,5 +789,16 @@ export async function sendClassCancellationEmail(opts: {
 
   const text = `Hi ${opts.guestName},\n\nWe regret to inform you that your upcoming class "${opts.eventName}" has been cancelled. We sincerely apologize for the inconvenience.\n\n${opts.customMessage ? `Message from our team: ${opts.customMessage}\n\n` : ""}Your free rebooking code: ${opts.rebookingCode}\nEnter this code at Luma checkout for 100% off any upcoming APY class.\n\nWe'd love to have you join us at a future session at any of our locations.\n\nBrowse upcoming classes at https://lu.ma/AfroPuppyYoga\n\nIf you have questions, email us at afropuppyyoga@gmail.com or DM @afropuppyyoga on Instagram.\n\nWith warmth,\nThe AfroPuppyYoga Team`;
 
-  await sendEmail({ to: opts.to, subject, html, text });
+  return { subject, html, text };
+}
+
+export async function sendClassCancellationEmail(opts: {
+  to: string;
+  guestName: string;
+  eventName: string;
+  rebookingCode: string;
+  customMessage?: string;
+}): Promise<void> {
+  const email = buildClassCancellationEmail(opts);
+  await sendEmail({ to: opts.to, ...email });
 }
