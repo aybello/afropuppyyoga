@@ -1248,7 +1248,8 @@
 - [x] Reproduce why the cancellation dashboard exposes Proceed to Send while the required preview key is undefined
 - [x] Require a fresh server-issued preview key before enabling cancellation delivery and show a recoverable preview-loading state
 - [x] Validate the preview-key repair without sending a live cancellation communication
-- [ ] Publish, synchronize, and record the preview-key repair after final checklist verification
+- [x] Publish and synchronize the preview-key repair after final checklist verification
+- [x] Record the published preview-key repair in the APY Context Hub and final project task record
 
 - [x] Replace the incorrect random cancellation-code generation with the owner-required Ontario class-date format, such as AUG5
 - [x] Block cancellation communications until the date-based code and the recipient workflow are verified
