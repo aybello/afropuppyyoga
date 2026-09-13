@@ -1240,6 +1240,16 @@
 - [x] Preserve per-cancellation explicit confirmation so no email, SMS, call, or rebooking code is sent from a stale or bypassed preview
 - [x] Validate, publish, and record the preview-first cancellation re-enablement without sending any live cancellation communication during testing
 
+## Operations Manager Cancellation Access (Sep 13, 2026)
+- [x] Verify Operations Managers can review and confirm class cancellations through the mandatory preview-first workflow
+- [x] Confirm no authorization change is needed: Operations Managers already have the approved operational-management access boundary; revenue and invoice access remain owner-only
+
+## Cancellation Preview-Key Repair (Sep 13, 2026)
+- [x] Reproduce why the cancellation dashboard exposes Proceed to Send while the required preview key is undefined
+- [x] Require a fresh server-issued preview key before enabling cancellation delivery and show a recoverable preview-loading state
+- [x] Validate the preview-key repair without sending a live cancellation communication
+- [ ] Publish, synchronize, and record the preview-key repair after final checklist verification
+
 - [x] Replace the incorrect random cancellation-code generation with the owner-required Ontario class-date format, such as AUG5
 - [x] Block cancellation communications until the date-based code and the recipient workflow are verified
 - [x] Add focused regression coverage for date-code format, duplicate-code handling, and no-send safety

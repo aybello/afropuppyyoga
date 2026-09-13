@@ -193,12 +193,18 @@ export const cancellationRouter = router({
     .input(
       z.object({
         eventApiId: z.string().min(1),
-        previewKey: z.string().length(64),
+        previewKey: z.string().length(64).optional(),
         /** Optional custom message override */
         customMessage: z.string().max(800).optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
+      if (!input.previewKey) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "This cancellation page is out of date. Reload it, review the messages and recipients again, then confirm delivery.",
+        });
+      }
       const accountSid = process.env.TWILIO_ACCOUNT_SID;
       const authToken = process.env.TWILIO_AUTH_TOKEN;
       const fromNumber = process.env.TWILIO_PHONE_NUMBER;

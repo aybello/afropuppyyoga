@@ -13,4 +13,9 @@ describe("preview-first cancellation dashboard", () => {
     expect(dashboard).toContain("previewKey: previewData.previewKey");
     expect(dashboard).toContain("The confirmed preview is checked again before any delivery.");
   });
+
+  it("does not expose the send action when a fresh server-issued preview key is unavailable", () => {
+    expect(dashboard).toContain("if (!previewData?.previewKey)");
+    expect(dashboard).toContain("disabled={!previewData?.previewKey || previewLoading || cancelMutation.isPending}");
+  });
 });

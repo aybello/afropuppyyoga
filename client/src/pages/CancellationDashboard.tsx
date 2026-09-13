@@ -148,11 +148,16 @@ export default function CancellationDashboard() {
       toast.error("Please select an event first");
       return;
     }
+    setConfirming(false);
     setShowPreview(true);
     refetchPreview();
   }
 
   function handleConfirmSend() {
+    if (!previewData?.previewKey) {
+      toast.error("The cancellation preview is still loading. Review the messages again before sending.");
+      return;
+    }
     setConfirming(true);
   }
 
@@ -249,6 +254,7 @@ export default function CancellationDashboard() {
                 onChange={(e) => {
                   setCustomMessage(e.target.value);
                   setConfirming(false);
+                  setShowPreview(false);
                 }}
                 placeholder={`Default: "Hi from AfroPuppyYoga! Your class "${selectedEventName}" has been cancelled. We're sorry — visit afropuppyyoga.ca to rebook."`}
                 rows={4}
@@ -305,7 +311,7 @@ export default function CancellationDashboard() {
                     There are no approved guests for this event. No notifications will be sent.
                   </p>
                 </div>
-              ) : previewData ? (
+              ) : previewData?.previewKey ? (
                 <>
                   <div className="mb-5 space-y-4 rounded-xl border border-[#d8c7ec] bg-white p-4">
                     <div className="flex items-center gap-2">
@@ -410,6 +416,7 @@ export default function CancellationDashboard() {
                       <div className="flex flex-col gap-2">
                         <Button
                           onClick={handleConfirmSend}
+                          disabled={!previewData?.previewKey || previewLoading || previewData.total === 0}
                           className="bg-orange-600 hover:bg-orange-700 text-white"
                         >
                           <Send className="w-4 h-4 mr-1.5" />
@@ -434,7 +441,7 @@ export default function CancellationDashboard() {
                       <div className="flex gap-3">
                         <Button
                           onClick={handleFinalSend}
-                          disabled={cancelMutation.isPending}
+                          disabled={!previewData?.previewKey || previewLoading || cancelMutation.isPending}
                           className="bg-red-600 hover:bg-red-700 text-white"
                         >
                           {cancelMutation.isPending ? (
@@ -456,7 +463,11 @@ export default function CancellationDashboard() {
                     </div>
                   )}
                 </>
-              ) : null}
+              ) : (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                  The cancellation preview could not be verified. Reload this page, then review the messages and recipients again before sending.
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
