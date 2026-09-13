@@ -1238,7 +1238,7 @@
 ## Date-Based Cancellation Rebooking Codes (Sep 7, 2026)
 - [x] Re-enable cancellation communications only after a mandatory owner-visible preview confirms the exact email and SMS, code, and active channels
 - [x] Preserve per-cancellation explicit confirmation so no email, SMS, call, or rebooking code is sent from a stale or bypassed preview
-- [ ] Validate, publish, and record the preview-first cancellation re-enablement without sending any live cancellation communication during testing
+- [x] Validate, publish, and record the preview-first cancellation re-enablement without sending any live cancellation communication during testing
 
 - [x] Replace the incorrect random cancellation-code generation with the owner-required Ontario class-date format, such as AUG5
 - [x] Block cancellation communications until the date-based code and the recipient workflow are verified
