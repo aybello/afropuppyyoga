@@ -9,6 +9,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
 import { recoverCompletedVideoUpload } from "@/lib/videoUploadRecovery";
+import { createLocalVideoPreview, releaseLocalVideoPreview } from "@/lib/localVideoPreview";
 import { MapPin, Clock, Heart, Upload, CheckCircle, X, ChevronDown, Link as LinkIcon, Video, Share2, Copy, Check } from "lucide-react";
 
 /// ── Job listings ────────────────────────────────────────────
@@ -373,6 +374,8 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
     experience: "",
   });
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
+  const [videoPreviewError, setVideoPreviewError] = useState<string | null>(null);
   const [videoLink, setVideoLink] = useState("");
   const [videoMode, setVideoMode] = useState<"upload" | "link">("upload");
   const [resumeFile, setResumeFile] = useState<File | null>(null);
@@ -395,6 +398,19 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
     }
   }, [error]);
 
+  // Keep the selected video on the applicant's device until they submit. The
+  // browser-local object URL is released whenever the file changes or the form closes.
+  useEffect(() => {
+    if (!videoFile) {
+      setVideoPreviewUrl(null);
+      return;
+    }
+
+    const previewUrl = createLocalVideoPreview(videoFile);
+    setVideoPreviewUrl(previewUrl);
+    return () => releaseLocalVideoPreview(previewUrl);
+  }, [videoFile]);
+
   const applyMutation = trpc.careers.submitApplication.useMutation({
     onSuccess: () => setSubmitted(true),
     onError: (err) => setError(err.message || "Something went wrong. Please try again."),
@@ -409,7 +425,15 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
     }
     setVideoFile(file);
     setUploadedVideo(null);
+    setVideoPreviewError(null);
     setError(null);
+  };
+
+  const clearVideoSelection = () => {
+    setVideoFile(null);
+    setUploadedVideo(null);
+    setVideoPreviewError(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -864,7 +888,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setVideoMode("link"); setVideoFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+                  onClick={() => { setVideoMode("link"); clearVideoSelection(); }}
                   className={`flex-1 flex items-center justify-center gap-2 py-2.5 font-body text-xs font-semibold transition-colors ${
                     videoMode === "link"
                       ? "bg-[#8B2252] text-white"
@@ -884,16 +908,51 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
               />
               {videoMode === "upload" ? (
                 videoFile ? (
-                  <div className="flex items-center gap-3 p-3 bg-[#F9E4EE] border border-[#F0D0DC] rounded-xl">
-                    <CheckCircle size={18} className="text-[#8B2252] shrink-0" />
-                    <span className="font-body text-sm text-[#1A0A12] truncate flex-1">{videoFile.name}</span>
-                    <button
-                      type="button"
-                      onClick={() => { setVideoFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
-                      className="p-1 hover:bg-[#F0D0DC] rounded-full transition-colors text-[#3D1A2E]"
-                    >
-                      <X size={14} />
-                    </button>
+                  <div className="space-y-3 p-3 bg-[#F9E4EE] border border-[#F0D0DC] rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle size={18} className="text-[#8B2252] shrink-0" />
+                      <span className="font-body text-sm text-[#1A0A12] truncate flex-1">{videoFile.name}</span>
+                      <button
+                        type="button"
+                        onClick={clearVideoSelection}
+                        aria-label="Remove selected video"
+                        className="p-1 hover:bg-[#F0D0DC] rounded-full transition-colors text-[#3D1A2E]"
+                      >
+                        <X size={14} aria-hidden="true" />
+                      </button>
+                    </div>
+                    {videoPreviewUrl && (
+                      <video
+                        controls
+                        playsInline
+                        preload="metadata"
+                        src={videoPreviewUrl}
+                        onLoadedMetadata={() => setVideoPreviewError(null)}
+                        onError={() => setVideoPreviewError("This video cannot play in this browser. You can choose another video or still submit this selected file.")}
+                        aria-label={`Preview of selected video: ${videoFile.name}`}
+                        className="w-full max-h-64 rounded-lg bg-[#1A0A12]"
+                      >
+                        Your browser does not support video playback. You can choose another video or submit this selected file.
+                      </video>
+                    )}
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="font-body text-xs text-[#3D1A2E]">
+                        Preview is only on this device. Your video is uploaded only when you submit the application.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (fileInputRef.current) fileInputRef.current.value = "";
+                          fileInputRef.current?.click();
+                        }}
+                        className="font-body text-xs font-semibold text-[#8B2252] underline underline-offset-2 hover:text-[#5C1438]"
+                      >
+                        Change video
+                      </button>
+                    </div>
+                    {videoPreviewError && (
+                      <p className="font-body text-xs text-[#8B2252]" role="status">{videoPreviewError}</p>
+                    )}
                   </div>
                 ) : (
                   <button
