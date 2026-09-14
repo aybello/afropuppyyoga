@@ -1273,7 +1273,7 @@
 - [x] Review the existing Careers video upload state and identify a privacy-safe preview source for the applicant's selected or completed video
 - [x] Add accessible playback preview and replacement controls before final application submission without exposing video data in logs or storage beyond the existing upload flow
 - [x] Add focused regression coverage and validate the preview alongside upload-recovery, build, and public Careers-form checks
-- [ ] Publish, synchronize, and record the applicant video preview release
+- [x] Publish, synchronize, and record the applicant video preview release
 
 - [x] Replace the incorrect random cancellation-code generation with the owner-required Ontario class-date format, such as AUG5
 - [x] Block cancellation communications until the date-based code and the recipient workflow are verified
