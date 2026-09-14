@@ -1267,7 +1267,7 @@
 - [x] Reproduce the applicant-facing video upload and pasted-link submission paths without storing real applicant files or data
 - [x] Identify and repair the exact upload or validation failure while retaining file-size, file-type, privacy, and submission safeguards
 - [x] Provide a clear applicant-facing recovery path if a file cannot be accepted
-- [ ] Add regression coverage, validate, publish, and record the job-application video submission repair
+- [x] Add regression coverage, validate, publish, and record the job-application video submission repair
 
 - [x] Replace the incorrect random cancellation-code generation with the owner-required Ontario class-date format, such as AUG5
 - [x] Block cancellation communications until the date-based code and the recipient workflow are verified
