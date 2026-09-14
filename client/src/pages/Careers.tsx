@@ -8,6 +8,7 @@ import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
+import { recoverCompletedVideoUpload } from "@/lib/videoUploadRecovery";
 import { MapPin, Clock, Heart, Upload, CheckCircle, X, ChevronDown, Link as LinkIcon, Video, Share2, Copy, Check } from "lucide-react";
 
 /// ── Job listings ────────────────────────────────────────────
@@ -446,8 +447,16 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
         setError("A video introduction is required. Please upload a video or paste a link.");
         return;
       }
-      try { new URL(trimmed); } catch {
-        setError("Please enter a valid video URL (e.g. a YouTube, Google Drive, or Dropbox link).");
+      try {
+        const videoUrl = new URL(trimmed);
+        if (videoUrl.protocol !== "https:") {
+          throw new Error("Please use a secure https:// video link.");
+        }
+        if (videoUrl.hostname === "linkedin.com" || videoUrl.hostname.endsWith(".linkedin.com")) {
+          throw new Error("LinkedIn profile links are not video submissions. Please use a viewable YouTube, Google Drive, Dropbox, Loom, or similar video link.");
+        }
+      } catch (linkError: any) {
+        setError(linkError?.message ?? "Please enter a valid secure video URL (e.g. a YouTube, Google Drive, Dropbox, or Loom link).");
         return;
       }
     }
@@ -574,18 +583,35 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       await Promise.all(Array.from({ length: parallelUploads }, () => uploadNextChunk()));
 
       // 3. Synchronous assembly — server assembles all chunks and returns { url, key } directly.
-      // No polling needed. The request may take up to 2 minutes for large files.
+      // The status endpoint provides durable recovery if the final response is interrupted.
       setUploadProgress(90);
       setUploadStatus("Processing video... (this may take up to 2 minutes for large files)");
-      const completeRes = await retryRequest(() => fetch("/api/upload-video-complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uploadId }),
-        signal: AbortSignal.timeout(180_000), // allow the server's 170s processing window to finish
-      }), "Processing video", 8);
+      let completeRes: Response | null = null;
+      try {
+        completeRes = await retryRequest(() => fetch("/api/upload-video-complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ uploadId }),
+          signal: AbortSignal.timeout(180_000), // allow the server's 170s processing window to finish
+        }), "Processing video", 3);
+      } catch {
+        setUploadStatus("Checking whether your video finished processing...");
+        const recovered = await recoverCompletedVideoUpload(uploadId);
+        if (recovered) {
+          setUploadProgress(100);
+          return recovered;
+        }
+        throw new Error("We could not confirm your video upload. Please try the upload again, or paste a viewable YouTube, Google Drive, Dropbox, or Loom link instead.");
+      }
       if (!completeRes.ok) {
+        setUploadStatus("Checking whether your video finished processing...");
+        const recovered = await recoverCompletedVideoUpload(uploadId);
+        if (recovered) {
+          setUploadProgress(100);
+          return recovered;
+        }
         const err = await completeRes.json().catch(() => ({}));
-        throw new Error(err.error ?? "Failed to process video. Please try again.");
+        throw new Error(err.error ?? "We could not process your video. Please try again, or paste a viewable YouTube, Google Drive, Dropbox, or Loom link instead.");
       }
       const result = await completeRes.json();
       if (!result.url || !result.key) {
