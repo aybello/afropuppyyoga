@@ -1257,6 +1257,12 @@
 - [x] Add the refund-policy link to the exact cancellation email preview without silently changing any other cancellation terms
 - [x] Add focused regression coverage, validate, publish, and record the policy-consistent communication update
 
+## Monday/Thursday Luma Reminder Review (Sep 13, 2026)
+- [x] Review public, visible, open, non-cancelled, non-sold-out APY regular classes starting within the next 10 days through the official Luma management account only
+- [x] Verify Invited-only audience, same-day blast history, and an explicitly approved compact event-specific message before any Luma blast
+- [x] Send only compliant reminders or safely stop each candidate event with a permitted non-sensitive reason
+- [x] Attempt exactly one privacy-preserving scheduled result after the review and record the endpoint operational failure without retrying communications
+
 - [x] Replace the incorrect random cancellation-code generation with the owner-required Ontario class-date format, such as AUG5
 - [x] Block cancellation communications until the date-based code and the recipient workflow are verified
 - [x] Add focused regression coverage for date-code format, duplicate-code handling, and no-send safety
