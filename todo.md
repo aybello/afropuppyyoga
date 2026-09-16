@@ -1022,6 +1022,11 @@
 ## Root Domain TLS Repair (Sep 16, 2026)
 - [x] Resolve the browser-facing ERR_SSL_PROTOCOL_ERROR on afropuppyyoga.ca while keeping www.afropuppyyoga.ca live
 
+## Staff Login Code Delivery Repair (Sep 16, 2026)
+- [ ] Diagnose why eligible APY staff are not receiving passwordless login verification codes
+- [ ] Restore reliable staff code delivery without weakening APY HQ access controls
+- [ ] Add regression coverage and validate the staff login recovery path safely
+
 ## Luma Public-Class Invitations and Reminders (Aug 30, 2026)
 - [x] Confirm the owner-approved recipient policy: invite the full existing APY Luma calendar-contact audience when a newly created eligible public regular class is available
 - [x] Record that the calendar-contact audit found 1,575 contacts with no exposed tags or per-contact subscription field; the owner explicitly approved the full-calendar audience
@@ -1348,3 +1353,9 @@
 - [x] Validate the breeder replacement workflow without changing a live class or sending any breeder message during testing
 - [x] Publish and synchronize the breeder replacement workflow after final checklist verification
 - [x] Record the published breeder replacement workflow in the APY Context Hub and final project task record
+
+## Staff Verification-Code Delivery Repair (Sep 16, 2026)
+- [x] Restore the missing passwordless staff-code table and record its migration to prevent future deployment drift
+- [x] Configure and live-validate the Twilio sender, account credentials, and owner phone access configuration
+- [x] Add a clear Employee Directory action to restore APY HQ access for active linked employees who are not currently eligible for code delivery
+- [ ] Deploy the repair and validate one staff code request after the owner confirms the staff member to test

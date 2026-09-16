@@ -18,6 +18,7 @@ type Employee = {
   role: string;
   location: string;
   employmentStatus: "active" | "inactive";
+  hasApyHqAccess: boolean;
   startedAt: Date | string;
   endedAt: Date | string | null;
 };
@@ -253,17 +254,19 @@ export default function EmployeeDirectory() {
                             <button type="button" onClick={() => setEditingEmployee(employee)} className="inline-flex items-center gap-1.5 font-body text-xs font-bold text-[#8B2252] hover:text-[#6B1A3E]">
                               <Pencil className="h-3.5 w-3.5" /> Edit
                             </button>
-                            {isActive && employee.sourceApplicationId ? (
+                            {isActive && employee.sourceApplicationId && employee.hasApyHqAccess ? (
                               <Link href="/admin/staff-availability" className="inline-flex items-center gap-1.5 font-body text-xs font-bold text-[#8B2252] hover:text-[#6B1A3E]"><KeyRound className="h-3.5 w-3.5" /> APY HQ access</Link>
-                            ) : !isActive && employee.sourceApplicationId ? (
+                            ) : employee.sourceApplicationId && isActive ? (
                               <button
                                 type="button"
                                 onClick={() => reactivate.mutate({ employeeId: employee.id })}
                                 disabled={reactivate.isPending}
                                 className="inline-flex items-center gap-1.5 rounded-lg border border-[#8B2252]/25 bg-[#FFF8FA] px-3 py-2 text-xs font-bold text-[#8B2252] hover:bg-[#FFF0F5] disabled:opacity-50"
                               >
-                                <RefreshCw className={`h-3.5 w-3.5 ${reactivate.isPending ? "animate-spin" : ""}`} /> Restore to APY HQ
+                                <RefreshCw className={`h-3.5 w-3.5 ${reactivate.isPending ? "animate-spin" : ""}`} /> {reactivate.isPending ? "Restoring…" : "Restore APY HQ access"}
                               </button>
+                            ) : !isActive && employee.sourceApplicationId ? (
+                              <span className="font-body text-xs text-[#956A7C]">Reactivate employment first</span>
                             ) : isActive ? (
                               <button
                                 type="button"

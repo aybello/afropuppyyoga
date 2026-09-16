@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { directEmployeeSchema, directTeamMemberSchema, employeeRecordUpdateSchema, getAutomaticEmployeeAccessPlan, getDirectEmployeeContactEligibility, getEmployeeDepartureUpdate, getExistingEmployeeAccessProvisioningEligibility, getFormerEmployeeDeletionEligibility, getLegacyEmployeeProfileLinkEligibility, getOnboardedApplicantDirectoryEligibility, getTeamRemovalUpdate, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateEmployeeDirectoryAssignmentChange, validateTeamAssignmentChange } from "./routers/staffAvailability";
+import { directEmployeeSchema, directTeamMemberSchema, employeeRecordUpdateSchema, getAutomaticEmployeeAccessPlan, getDirectEmployeeContactEligibility, getEmployeeDepartureUpdate, getExistingEmployeeAccessProvisioningEligibility, getFormerEmployeeDeletionEligibility, getLegacyEmployeeProfileLinkEligibility, getOnboardedApplicantDirectoryEligibility, getTeamRemovalUpdate, hasActiveApyHqAccess, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateEmployeeDirectoryAssignmentChange, validateTeamAssignmentChange } from "./routers/staffAvailability";
 
 describe("direct team-member validation", () => {
+  it("identifies whether a linked employee is eligible for APY HQ phone access", () => {
+    expect(hasActiveApyHqAccess({ isTeamMember: true, deletedAt: null })).toBe(true);
+    expect(hasActiveApyHqAccess({ isTeamMember: false, deletedAt: null })).toBe(false);
+    expect(hasActiveApyHqAccess({ isTeamMember: true, deletedAt: new Date() })).toBe(false);
+    expect(hasActiveApyHqAccess(undefined)).toBe(false);
+  });
+
   it("accepts an Operations Manager assigned to Oakville", () => {
     const member = directTeamMemberSchema.parse({
       name: "Taylor James",

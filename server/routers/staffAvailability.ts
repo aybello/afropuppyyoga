@@ -2,7 +2,7 @@ import { z } from "zod";
 import { adminProcedure, staffProcedure, router } from "../_core/trpc";
 import { getDb, getUserByOpenId, upsertUser } from "../db";
 import { classStaffAssignments, employees, jobApplicationActions, jobApplications, staffAvailability, staffInvites, weekendLeadershipCoverage } from "../../drizzle/schema";
-import { and, asc, desc, eq, gte, isNull, isNotNull } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNull, isNotNull } from "drizzle-orm";
 import { getUpcomingWeekendDates, isAwayOnDate, isWeekendDate } from "../weekendCoverage";
 import { isActiveTeamMember } from "../teamMembership";
 import { normalizeCanadianPhoneNumber } from "../../shared/phone";
@@ -99,6 +99,10 @@ export function getTeamRemovalUpdate(removedAt: Date) {
 
 export function getEmployeeDepartureUpdate(endedAt: Date) {
   return { employmentStatus: "inactive" as const, endedAt };
+}
+
+export function hasActiveApyHqAccess(profile: { isTeamMember: boolean | number | null; deletedAt: Date | null } | undefined) {
+  return Boolean(profile?.isTeamMember) && profile?.deletedAt == null;
 }
 
 export function getFormerEmployeeDeletionEligibility(input: { employmentStatus: string; linkedActiveTeamProfile: boolean }) {
@@ -256,8 +260,25 @@ export const staffAvailabilityRouter = router({
   listEmployees: staffProcedure.query(async () => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    return db.select().from(employees)
+    const directory = await db.select().from(employees)
       .orderBy(asc(employees.employmentStatus), asc(employees.location), asc(employees.name));
+    const linkedProfileIds = directory
+      .map((employee) => employee.sourceApplicationId)
+      .filter((id): id is number => id !== null);
+    const profiles = linkedProfileIds.length === 0
+      ? []
+      : await db.select({
+        id: jobApplications.id,
+        isTeamMember: jobApplications.isTeamMember,
+        deletedAt: jobApplications.deletedAt,
+      }).from(jobApplications).where(inArray(jobApplications.id, linkedProfileIds));
+    const profilesById = new Map(profiles.map((profile) => [profile.id, profile]));
+    return directory.map((employee) => ({
+      ...employee,
+      hasApyHqAccess: employee.sourceApplicationId === null
+        ? false
+        : hasActiveApyHqAccess(profilesById.get(employee.sourceApplicationId)),
+    }));
   }),
 
   // Update directory contact and assignment details. Linked APY HQ profiles stay synchronized.
@@ -1122,6 +1143,35 @@ export const staffAvailabilityRouter = router({
         throw new Error("This employee needs a linked APY HQ team profile before they can be restored.");
       }
       const sourceApplicationId = employee.sourceApplicationId;
+      if (employee.employmentStatus !== "active") {
+        throw new Error("Restore this person to active employment before granting APY HQ access.");
+      }
+      const [profile] = await db.select({
+        role: jobApplications.role,
+        location: jobApplications.location,
+        status: jobApplications.status,
+        isTeamMember: jobApplications.isTeamMember,
+        deletedAt: jobApplications.deletedAt,
+      }).from(jobApplications).where(eq(jobApplications.id, sourceApplicationId)).limit(1);
+      if (!profile) throw new Error("The linked APY HQ team profile could not be found.");
+      if (profile.status !== "onboarded" && profile.status !== "accepted") {
+        throw new Error("Complete this employee's onboarding before granting APY HQ access.");
+      }
+      if (hasActiveApyHqAccess(profile)) return { success: true, sourceApplicationId, alreadyActive: true };
+      if (profile.role === "Puppy Monitor") {
+        const [operationsManager] = await db.select({ id: jobApplications.id })
+          .from(jobApplications)
+          .where(and(
+            isNull(jobApplications.deletedAt),
+            eq(jobApplications.isTeamMember, true),
+            eq(jobApplications.role, "Operations Manager"),
+            eq(jobApplications.location, profile.location),
+          ))
+          .limit(1);
+        if (!operationsManager) {
+          throw new Error("Add this location's Operations Manager to APY HQ before restoring Puppy Monitor access.");
+        }
+      }
       await db.transaction(async (tx) => {
         await tx.update(employees).set({ employmentStatus: "active", endedAt: null })
           .where(eq(employees.id, input.employeeId));
