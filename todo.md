@@ -1363,3 +1363,7 @@
 ## Invoice Visibility Incident (Sep 16, 2026)
 - [x] Determine why existing invoices are not visible after APY HQ phone login without modifying invoice data
 - [ ] Restore the owner invoice view and add regression coverage for phone-session permissions
+
+## Employee Directory Visibility Incident (Sep 16, 2026)
+- [x] Determine why previously visible APY employees are absent from the current directory without modifying staff records
+- [x] Restore the complete employee directory from verified APY staff, invoice, onboarding, and Gmail evidence without granting portal access
