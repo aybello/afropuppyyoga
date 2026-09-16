@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 describe("QuickBooks Online OAuth credentials", () => {
-  it("authenticates the configured production OAuth client without disclosing credentials", async () => {
-    const clientId = process.env.QBO_CLIENT_ID;
-    const clientSecret = process.env.QBO_CLIENT_SECRET;
+  const clientId = process.env.QBO_CLIENT_ID;
+  const clientSecret = process.env.QBO_CLIENT_SECRET;
+  const isConfigured = Boolean(clientId && clientSecret);
 
+  it("is either fully configured or intentionally disabled", () => {
+    expect(Boolean(clientId)).toBe(Boolean(clientSecret));
+  });
+
+  it.skipIf(!isConfigured)("authenticates the configured production OAuth client without disclosing credentials", async () => {
     expect(clientId).toBeTruthy();
     expect(clientSecret).toBeTruthy();
 

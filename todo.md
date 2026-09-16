@@ -1367,3 +1367,9 @@
 ## Employee Directory Visibility Incident (Sep 16, 2026)
 - [x] Determine why previously visible APY employees are absent from the current directory without modifying staff records
 - [x] Restore the complete employee directory from verified APY staff, invoice, onboarding, and Gmail evidence without granting portal access
+
+## Post-Transfer Reliability and Database Audit (Sep 16, 2026)
+- [x] Establish the current GitHub, deployment, environment, and database migration baseline after the account transfer
+- [x] Audit core public pages, staff access, invoices, Employee Directory, application uploads, Luma, and email/SMS delivery paths
+- [x] Repair verified transfer regressions and reconcile missing non-destructive database schema or data state
+- [x] Run build, focused regression, and live-safe workflow validation before recording the verified audit outcome
