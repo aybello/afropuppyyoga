@@ -1011,6 +1011,17 @@
 ## GitHub Synchronization (Sep 16, 2026)
 - [x] Pull and validate the 84 newer commits from GitHub main without losing the current Employee Directory work
 
+## Custom Domain Connection (Sep 16, 2026)
+- [x] Connect afropuppyyoga.ca and www.afropuppyyoga.ca to the current AfroPuppyYoga project using Hostinger-managed DNS
+- [x] Retire the temporary Hostinger-forwarding path after both direct root and www domain bindings became available
+
+## Restored Direct Domain Connection (Sep 16, 2026)
+- [x] Configure and verify direct Hostinger DNS for the newly available afroPuppyYoga.ca and www.afropuppyyoga.ca bindings
+- [ ] Connect and verify echeloninstitute.ca only in the current Echelon Institute project
+
+## Root Domain TLS Repair (Sep 16, 2026)
+- [x] Resolve the browser-facing ERR_SSL_PROTOCOL_ERROR on afropuppyyoga.ca while keeping www.afropuppyyoga.ca live
+
 ## Luma Public-Class Invitations and Reminders (Aug 30, 2026)
 - [x] Confirm the owner-approved recipient policy: invite the full existing APY Luma calendar-contact audience when a newly created eligible public regular class is available
 - [x] Record that the calendar-contact audit found 1,575 contacts with no exposed tags or per-contact subscription field; the owner explicitly approved the full-calendar audience
