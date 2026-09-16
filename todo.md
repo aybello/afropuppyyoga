@@ -1359,3 +1359,7 @@
 - [x] Configure and live-validate the Twilio sender, account credentials, and owner phone access configuration
 - [x] Add a clear Employee Directory action to restore APY HQ access for active linked employees who are not currently eligible for code delivery
 - [ ] Deploy the repair and validate one staff code request after the owner confirms the staff member to test
+
+## Invoice Visibility Incident (Sep 16, 2026)
+- [x] Determine why existing invoices are not visible after APY HQ phone login without modifying invoice data
+- [ ] Restore the owner invoice view and add regression coverage for phone-session permissions

@@ -313,7 +313,7 @@ export default function InvoiceDashboard() {
   const { user, loading } = useAuth();
   const utils = trpc.useUtils();
 
-  const { data: invoices, isLoading } = trpc.invoices.list.useQuery(undefined, {
+  const { data: invoices, isLoading, error: invoiceError, refetch: refetchInvoices, isFetching } = trpc.invoices.list.useQuery(undefined, {
     refetchInterval: 10000,
   });
 
@@ -545,7 +545,25 @@ export default function InvoiceDashboard() {
 
         {/* Invoices table */}
         <div className="bg-white rounded-2xl border border-[#F0D0DC] overflow-hidden">
-          {isLoading ? (
+          {invoiceError ? (
+            <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+              <div className="w-16 h-16 rounded-full bg-rose-50 flex items-center justify-center mb-4">
+                <AlertTriangle className="w-8 h-8 text-rose-700" />
+              </div>
+              <h3 className="font-display font-bold text-xl text-[#1A0A12] mb-2">Could not load invoices</h3>
+              <p className="font-body text-[#1A0A12] text-sm max-w-md mb-5">
+                The invoice records are still safely stored. Please retry the connection before assuming anything was removed.
+              </p>
+              <button
+                type="button"
+                onClick={() => void refetchInvoices()}
+                disabled={isFetching}
+                className="px-5 py-2.5 rounded-full font-body font-semibold text-sm bg-[#8B2252] text-white disabled:opacity-60"
+              >
+                {isFetching ? "Retrying…" : "Retry invoices"}
+              </button>
+            </div>
+          ) : isLoading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="w-8 h-8 animate-spin text-[#8B2252]" />
             </div>

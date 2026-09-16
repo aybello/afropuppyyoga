@@ -23,4 +23,11 @@ describe("invoice paid-status workflow", () => {
     expect(dashboardSource).toContain("invoice.workflowStatus !== \"approved\" && invoice.workflowStatus !== \"paid\"");
     expect(dashboardSource).toContain("The uploaded PDF did not provide a usable total.");
   });
+
+  it("distinguishes a failed invoice query from an empty invoice list", () => {
+    expect(dashboardSource).toContain("error: invoiceError");
+    expect(dashboardSource).toContain("Could not load invoices");
+    expect(dashboardSource).toContain("The invoice records are still safely stored.");
+    expect(dashboardSource).toContain("Retry invoices");
+  });
 });
