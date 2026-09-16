@@ -66,4 +66,6 @@ export interface GetUserInfoWithJwtResponse {
   email?: string | null;
   platform?: string | null;
   loginMethod?: string | null;
+  /** Present only for a Manus-managed scheduled callback. */
+  taskUid?: string | null;
 }

@@ -91,7 +91,7 @@ const config: LocationConfig = {
     {
       question: "What is the refund policy for Kitchener classes?",
       answer:
-        "We operate a credit-first refund policy. If you can no longer attend, your ticket value is converted to APY credit for a future session. Cash refunds are only issued if AfroPuppyYoga cancels the class.",
+        "All AfroPuppyYoga tickets are final sale and refunds are not issued. If AfroPuppyYoga cancels a class, you receive a full class credit code for a future session instead.",
     },
     {
       question: "Can I book a private event at the Kitchener location?",

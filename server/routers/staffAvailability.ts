@@ -1,24 +1,29 @@
 import { z } from "zod";
 import { adminProcedure, staffProcedure, router } from "../_core/trpc";
 import { getDb, getUserByOpenId, upsertUser } from "../db";
-import { classStaffAssignments, employees, jobApplications, staffAvailability, staffInvites, weekendLeadershipCoverage } from "../../drizzle/schema";
+import { classStaffAssignments, employees, jobApplicationActions, jobApplications, staffAvailability, staffInvites, weekendLeadershipCoverage } from "../../drizzle/schema";
 import { and, asc, desc, eq, gte, isNull, isNotNull } from "drizzle-orm";
 import { getUpcomingWeekendDates, isAwayOnDate, isWeekendDate } from "../weekendCoverage";
 import { isActiveTeamMember } from "../teamMembership";
 import { normalizeCanadianPhoneNumber } from "../../shared/phone";
+import { APY_TEAM_LOCATIONS, APY_TEAM_ROLES, isCentralApyTeamRole } from "../../shared/apyPermissions";
+import { getPuppyMonitorLocationCoverage } from "../../shared/puppyMonitorLocationCoverage";
 
 export const directTeamMemberSchema = z.object({
   name: z.string().trim().min(2, "Enter the team member's full name."),
   email: z.string().trim().email("Enter a valid email address.").or(z.literal("")).default(""),
   phone: z.string().trim().max(50).optional().default(""),
-  role: z.enum(["Yoga Instructor", "Operations Manager", "Puppy Monitor", "Puppy Specialist", "BDR", "Social Media Specialist"]),
-  location: z.enum(["KW", "OAK", "HAM", "CENTRAL"]),
+  role: z.enum(APY_TEAM_ROLES),
+  location: z.enum(APY_TEAM_LOCATIONS),
 }).superRefine((value, ctx) => {
   if (!value.email && !value.phone) {
     ctx.addIssue({ code: "custom", path: ["email"], message: "Add either an email address or phone number." });
   }
   if (value.phone && !normalizeCanadianPhoneNumber(value.phone)) {
     ctx.addIssue({ code: "custom", path: ["phone"], message: "Enter a valid Canadian phone number." });
+  }
+  if (isCentralApyTeamRole(value.role) && value.location !== "CENTRAL") {
+    ctx.addIssue({ code: "custom", path: ["location"], message: "BDR and Social Media Specialist roles are APY-wide." });
   }
 });
 
@@ -27,14 +32,17 @@ export const teamMemberProfileUpdateSchema = z.object({
   name: z.string().trim().min(2, "Enter the team member's full name."),
   email: z.string().trim().email("Enter a valid email address.").or(z.literal("")).default(""),
   phone: z.string().trim().max(50).optional().default(""),
-  role: z.enum(["Yoga Instructor", "Operations Manager", "Puppy Monitor", "Puppy Specialist", "BDR", "Social Media Specialist"]),
-  location: z.enum(["KW", "OAK", "HAM", "CENTRAL"]),
+  role: z.enum(APY_TEAM_ROLES),
+  location: z.enum(APY_TEAM_LOCATIONS),
 }).superRefine((value, ctx) => {
   if (!value.email && !value.phone) {
     ctx.addIssue({ code: "custom", path: ["email"], message: "Add either an email address or phone number." });
   }
   if (value.phone && !normalizeCanadianPhoneNumber(value.phone)) {
     ctx.addIssue({ code: "custom", path: ["phone"], message: "Enter a valid Canadian phone number." });
+  }
+  if (isCentralApyTeamRole(value.role) && value.location !== "CENTRAL") {
+    ctx.addIssue({ code: "custom", path: ["location"], message: "BDR and Social Media Specialist roles are APY-wide." });
   }
 });
 
@@ -48,8 +56,8 @@ export const employeeRecordUpdateSchema = z.object({
   name: z.string().trim().min(2, "Enter the employee's full name."),
   email: z.string().trim().email("Enter a valid email address.").or(z.literal("")).default(""),
   phone: z.string().trim().max(50).optional().default(""),
-  role: z.string().trim().min(2, "Enter the employee's role."),
-  location: z.enum(["KW", "OAK", "HAM", "CENTRAL"]),
+  role: z.enum(APY_TEAM_ROLES),
+  location: z.enum(APY_TEAM_LOCATIONS),
 }).superRefine((value, ctx) => {
   if (!value.email && !value.phone) {
     ctx.addIssue({ code: "custom", path: ["email"], message: "Add either an email address or phone number." });
@@ -57,12 +65,120 @@ export const employeeRecordUpdateSchema = z.object({
   if (value.phone && !normalizeCanadianPhoneNumber(value.phone)) {
     ctx.addIssue({ code: "custom", path: ["phone"], message: "Enter a valid Canadian phone number." });
   }
+  if (isCentralApyTeamRole(value.role) && value.location !== "CENTRAL") {
+    ctx.addIssue({ code: "custom", path: ["location"], message: "BDR and Social Media Specialist roles are APY-wide." });
+  }
+});
+
+/** An owner-created employee record also provisions the matching APY HQ profile and role-based access. */
+export const directEmployeeSchema = z.object({
+  name: z.string().trim().min(2, "Enter the employee's full name."),
+  email: z.string().trim().email("Enter a valid email address.").or(z.literal("")).default(""),
+  phone: z.string().trim().max(50).optional().default(""),
+  role: z.enum(APY_TEAM_ROLES),
+  location: z.enum(APY_TEAM_LOCATIONS),
+  startedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a valid start date."),
+}).superRefine((value, ctx) => {
+  if (!value.email && !value.phone) {
+    ctx.addIssue({ code: "custom", path: ["email"], message: "Add either an email address or phone number." });
+  }
+  if (value.phone && !normalizeCanadianPhoneNumber(value.phone)) {
+    ctx.addIssue({ code: "custom", path: ["phone"], message: "Enter a valid Canadian phone number." });
+  }
+  if (isCentralApyTeamRole(value.role) && value.location !== "CENTRAL") {
+    ctx.addIssue({ code: "custom", path: ["location"], message: "BDR and Social Media Specialist roles are APY-wide." });
+  }
 });
 
 const isOperationsManagerRole = (role: string) => role.toLowerCase().replaceAll("_", " ") === "operations manager";
+const isPuppyMonitorRole = (role: string) => role.toLowerCase().replaceAll("_", " ") === "puppy monitor";
 
 export function getTeamRemovalUpdate(removedAt: Date) {
   return { isTeamMember: false, deletedAt: removedAt };
+}
+
+export function getEmployeeDepartureUpdate(endedAt: Date) {
+  return { employmentStatus: "inactive" as const, endedAt };
+}
+
+export function getFormerEmployeeDeletionEligibility(input: { employmentStatus: string; linkedActiveTeamProfile: boolean }) {
+  if (input.employmentStatus !== "inactive") {
+    return { eligible: false as const, reason: "Only former or removed Employee Directory records can be deleted permanently." };
+  }
+  if (input.linkedActiveTeamProfile) {
+    return { eligible: false as const, reason: "Remove this person from APY HQ Team first so staffing coverage and portal access are handled safely." };
+  }
+  return { eligible: true as const };
+}
+
+export function getOnboardedApplicantDirectoryEligibility(input: { status: string; existingEmployee: boolean }) {
+  if (input.status !== "onboarded") {
+    return { eligible: false as const, reason: "Only onboarding-complete applicants can be added to the Employee Directory." };
+  }
+  if (input.existingEmployee) {
+    return { eligible: false as const, reason: "This applicant already has an Employee Directory record." };
+  }
+  return { eligible: true as const };
+}
+
+export function getAutomaticEmployeeAccessPlan(_input: z.infer<typeof directEmployeeSchema>) {
+  return {
+    employmentStatus: "active" as const,
+    applicationStatus: "onboarded" as const,
+    isTeamMember: true,
+    grantsApyHqAccess: true,
+  };
+}
+
+export function getExistingEmployeeAccessProvisioningEligibility(input: { employmentStatus: string; sourceApplicationId: number | null }) {
+  if (input.employmentStatus !== "active") {
+    return { eligible: false as const, reason: "Only active employees can be given APY HQ access." };
+  }
+  if (input.sourceApplicationId !== null) {
+    return { eligible: false as const, reason: "This employee already has an APY HQ profile." };
+  }
+  return { eligible: true as const };
+}
+
+export function getLegacyEmployeeProfileLinkEligibility(input: {
+  matchingProfileCount: number;
+  matchingProfileIsActiveTeamMember: boolean;
+  matchingProfileIsArchived: boolean;
+  matchingProfileStatus: string;
+  roleMatches: boolean;
+  locationMatches: boolean;
+  alreadyLinkedToAnotherEmployee: boolean;
+}) {
+  if (input.matchingProfileCount === 0) return { eligible: true as const, action: "create_profile" as const };
+  if (input.matchingProfileCount !== 1) {
+    return { eligible: false as const, reason: "More than one applicant or APY HQ profile matches this employee. Resolve the duplicate profiles before granting access." };
+  }
+  if (input.alreadyLinkedToAnotherEmployee) {
+    return { eligible: false as const, reason: "The matching APY HQ profile is already linked to another Employee Directory record." };
+  }
+  if (input.matchingProfileIsActiveTeamMember) {
+    return { eligible: false as const, reason: "The matching APY HQ profile is already active. Refresh the Employee Directory before trying again." };
+  }
+  if (input.matchingProfileIsArchived) {
+    return { eligible: false as const, reason: "The matching applicant or APY HQ profile is archived. Restore or review that profile before granting access." };
+  }
+  if (input.matchingProfileStatus !== "onboarded") {
+    return { eligible: false as const, reason: "The matching applicant must be onboarding-complete before APY HQ access can be granted." };
+  }
+  if (!input.roleMatches || !input.locationMatches) {
+    return { eligible: false as const, reason: "The matching profile has a different role or location. Review it before granting APY HQ access." };
+  }
+  return { eligible: true as const, action: "link_existing_profile" as const };
+}
+
+export function getDirectEmployeeContactEligibility(input: { hasEmployeeRecord: boolean; hasApplicantOrApyProfile: boolean }) {
+  if (input.hasEmployeeRecord) {
+    return { eligible: false as const, reason: "An Employee Directory record already uses this email address or phone number. Update or restore that record instead of creating a duplicate." };
+  }
+  if (input.hasApplicantOrApyProfile) {
+    return { eligible: false as const, reason: "An existing applicant or APY HQ profile already uses this email address or phone number. Use that record instead of creating a duplicate." };
+  }
+  return { eligible: true as const };
 }
 
 export function validateTeamAssignmentChange(input: {
@@ -73,6 +189,7 @@ export function validateTeamAssignmentChange(input: {
   hasOperationsManagerAtNextLocation: boolean;
   hasOtherOperationsManagerAtCurrentLocation: boolean;
   hasActivePuppyMonitorsAtCurrentLocation: boolean;
+  activePuppyMonitorCountAtCurrentLocation?: number;
 }) {
   if (input.nextRole === "Puppy Monitor" && !input.hasOperationsManagerAtNextLocation) {
     throw new Error("Add or retain an Operations Manager at this location before assigning Puppy Monitors.");
@@ -82,6 +199,28 @@ export function validateTeamAssignmentChange(input: {
   if (movesOperationsManager && input.hasActivePuppyMonitorsAtCurrentLocation && !input.hasOtherOperationsManagerAtCurrentLocation) {
     throw new Error("Assign another Operations Manager to this Puppy Monitor location before changing this team member.");
   }
+  const movesOrChangesPuppyMonitor = isPuppyMonitorRole(input.currentRole)
+    && (!isPuppyMonitorRole(input.nextRole) || input.nextLocation !== input.currentLocation);
+  const remainingPuppyMonitorCount = Math.max(0, (input.activePuppyMonitorCountAtCurrentLocation ?? 0) - (movesOrChangesPuppyMonitor ? 1 : 0));
+  const puppyMonitorCoverage = getPuppyMonitorLocationCoverage(remainingPuppyMonitorCount);
+  if (movesOrChangesPuppyMonitor && !puppyMonitorCoverage.meetsMinimum) {
+    throw new Error(`Keep at least ${puppyMonitorCoverage.minimum} active Puppy Monitors at ${input.currentLocation} before moving, changing role, or removing this person.`);
+  }
+}
+
+export function validateEmployeeDirectoryAssignmentChange(input: {
+  linkedActiveTeamProfile: boolean;
+  currentRole: string;
+  currentLocation: string;
+  nextRole: string;
+  nextLocation: string;
+  hasOperationsManagerAtNextLocation: boolean;
+  hasOtherOperationsManagerAtCurrentLocation: boolean;
+  hasActivePuppyMonitorsAtCurrentLocation: boolean;
+  activePuppyMonitorCountAtCurrentLocation?: number;
+}) {
+  if (!input.linkedActiveTeamProfile) return;
+  validateTeamAssignmentChange(input);
 }
 
 export const staffAvailabilityRouter = router({
@@ -133,6 +272,49 @@ export const staffAvailabilityRouter = router({
         .limit(1);
       if (!employee) throw new Error("Employee record not found.");
 
+      const linkedProfile = employee.sourceApplicationId === null ? null : (await db.select({
+        id: jobApplications.id,
+        role: jobApplications.role,
+        location: jobApplications.location,
+        isTeamMember: jobApplications.isTeamMember,
+        deletedAt: jobApplications.deletedAt,
+      }).from(jobApplications).where(eq(jobApplications.id, employee.sourceApplicationId)).limit(1))[0] ?? null;
+
+      if (linkedProfile) {
+        const [operationsManagersAtTarget, operationsManagersAtCurrentLocation, activePuppyMonitorsAtCurrentLocation] = await Promise.all([
+          db.select({ id: jobApplications.id }).from(jobApplications).where(and(
+            isNull(jobApplications.deletedAt),
+            eq(jobApplications.isTeamMember, true),
+            eq(jobApplications.role, "Operations Manager"),
+            eq(jobApplications.location, input.location),
+          )),
+          db.select({ id: jobApplications.id }).from(jobApplications).where(and(
+            isNull(jobApplications.deletedAt),
+            eq(jobApplications.isTeamMember, true),
+            eq(jobApplications.role, "Operations Manager"),
+            eq(jobApplications.location, linkedProfile.location),
+          )),
+          db.select({ id: jobApplications.id }).from(jobApplications).where(and(
+            isNull(jobApplications.deletedAt),
+            eq(jobApplications.isTeamMember, true),
+            eq(jobApplications.role, "Puppy Monitor"),
+            eq(jobApplications.location, linkedProfile.location),
+          )),
+        ]);
+
+        validateEmployeeDirectoryAssignmentChange({
+          linkedActiveTeamProfile: Boolean(linkedProfile.isTeamMember) && !linkedProfile.deletedAt,
+          currentRole: linkedProfile.role,
+          currentLocation: linkedProfile.location,
+          nextRole: input.role,
+          nextLocation: input.location,
+          hasOperationsManagerAtNextLocation: operationsManagersAtTarget.some((manager) => manager.id !== linkedProfile.id || input.role === "Operations Manager"),
+          hasOtherOperationsManagerAtCurrentLocation: operationsManagersAtCurrentLocation.some((manager) => manager.id !== linkedProfile.id),
+          hasActivePuppyMonitorsAtCurrentLocation: activePuppyMonitorsAtCurrentLocation.length > 0,
+          activePuppyMonitorCountAtCurrentLocation: activePuppyMonitorsAtCurrentLocation.length,
+        });
+      }
+
       const email = input.email ? input.email.toLowerCase() : null;
       const phone = input.phone ? normalizeCanadianPhoneNumber(input.phone) : null;
       const updates = {
@@ -151,6 +333,344 @@ export const staffAvailabilityRouter = router({
         }
       });
 
+      return { success: true };
+    }),
+
+  // Owner-created employees receive a matching active APY HQ profile and role-based access.
+  createEmployeeRecord: adminProcedure
+    .input(directEmployeeSchema)
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const email = input.email ? input.email.toLowerCase() : null;
+      const phone = input.phone ? normalizeCanadianPhoneNumber(input.phone) : null;
+      const [emailMatch, phoneMatch] = await Promise.all([
+        email
+          ? db.select({ id: employees.id }).from(employees).where(eq(employees.email, email)).limit(1)
+          : Promise.resolve([]),
+        phone
+          ? db.select({ id: employees.id }).from(employees).where(eq(employees.phone, phone)).limit(1)
+          : Promise.resolve([]),
+      ]);
+      const [emailProfileMatch, phoneProfileMatch] = await Promise.all([
+        email ? db.select({ id: jobApplications.id }).from(jobApplications).where(eq(jobApplications.email, email)).limit(1) : Promise.resolve([]),
+        phone ? db.select({ id: jobApplications.id }).from(jobApplications).where(eq(jobApplications.phone, phone)).limit(1) : Promise.resolve([]),
+      ]);
+      const contactEligibility = getDirectEmployeeContactEligibility({
+        hasEmployeeRecord: Boolean(emailMatch[0] || phoneMatch[0]),
+        hasApplicantOrApyProfile: Boolean(emailProfileMatch[0] || phoneProfileMatch[0]),
+      });
+      if (!contactEligibility.eligible) throw new Error(contactEligibility.reason);
+
+      if (input.role === "Puppy Monitor") {
+        const [operationsManager] = await db.select({ id: jobApplications.id })
+          .from(jobApplications)
+          .where(and(
+            isNull(jobApplications.deletedAt),
+            eq(jobApplications.isTeamMember, true),
+            eq(jobApplications.role, "Operations Manager"),
+            eq(jobApplications.location, input.location),
+          ))
+          .limit(1);
+        if (!operationsManager) {
+          throw new Error("Add this location's Operations Manager to APY HQ before adding Puppy Monitors.");
+        }
+      }
+
+      const plan = getAutomaticEmployeeAccessPlan(input);
+      const employeeId = await db.transaction(async (tx) => {
+        const profileResult = await tx.insert(jobApplications).values({
+          name: input.name,
+          email,
+          phone,
+          role: input.role,
+          location: input.location,
+          whyAPY: "Added directly through Employee Directory.",
+          experience: "",
+          status: plan.applicationStatus,
+          isTeamMember: plan.isTeamMember,
+        });
+        const sourceApplicationId = Number(profileResult[0].insertId);
+        const employeeResult = await tx.insert(employees).values({
+          sourceApplicationId,
+          name: input.name,
+          email,
+          phone,
+          role: input.role,
+          location: input.location,
+          employmentStatus: plan.employmentStatus,
+          startedAt: new Date(`${input.startedAt}T12:00:00`),
+        });
+        await tx.insert(jobApplicationActions).values({
+          applicationId: sourceApplicationId,
+          action: "employee_directory_and_apy_hq_created",
+          toStatus: plan.applicationStatus,
+          actorUserId: ctx.user.id,
+          actorName: ctx.user.name,
+          actorEmail: ctx.user.email,
+          details: JSON.stringify({ grantsApyHqAccess: true, source: "employee_directory" }),
+        });
+        return Number(employeeResult[0].insertId);
+      });
+      return { success: true, id: employeeId, grantsApyHqAccess: true };
+    }),
+
+  // Add an onboarding-complete applicant to the directory and deliberately activate their APY HQ profile.
+  addOnboardedApplicantToEmployeeDirectory: adminProcedure
+    .input(z.object({ applicationId: z.number().int().positive() }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const [applicant] = await db.select({
+        id: jobApplications.id,
+        name: jobApplications.name,
+        email: jobApplications.email,
+        phone: jobApplications.phone,
+        role: jobApplications.role,
+        location: jobApplications.location,
+        status: jobApplications.status,
+        deletedAt: jobApplications.deletedAt,
+      }).from(jobApplications).where(eq(jobApplications.id, input.applicationId)).limit(1);
+      if (!applicant || applicant.deletedAt) throw new Error("This application is no longer available.");
+
+      const [existingForApplication] = await db.select({ id: employees.id }).from(employees)
+        .where(eq(employees.sourceApplicationId, applicant.id)).limit(1);
+      const eligibility = getOnboardedApplicantDirectoryEligibility({
+        status: applicant.status,
+        existingEmployee: Boolean(existingForApplication),
+      });
+      if (!eligibility.eligible) throw new Error(eligibility.reason);
+
+      const email = applicant.email?.toLowerCase() ?? null;
+      const phone = applicant.phone ? normalizeCanadianPhoneNumber(applicant.phone) : null;
+      const [emailMatches, phoneMatches] = await Promise.all([
+        email ? db.select().from(employees).where(eq(employees.email, email)) : Promise.resolve([]),
+        phone ? db.select().from(employees).where(eq(employees.phone, phone)) : Promise.resolve([]),
+      ]);
+      const matchingEmployees = Array.from(new Map([...emailMatches, ...phoneMatches].map((employee) => [employee.id, employee])).values());
+      if (matchingEmployees.length > 1) {
+        throw new Error("Multiple Employee Directory records match this applicant. Resolve the duplicate records before adding them.");
+      }
+      const matchingEmployee = matchingEmployees[0];
+      if (matchingEmployee?.sourceApplicationId !== null) {
+        throw new Error("An active Employee Directory record is already linked to another application using this contact information.");
+      }
+
+      const directoryValues = {
+        sourceApplicationId: applicant.id,
+        name: applicant.name,
+        email,
+        phone,
+        role: applicant.role,
+        location: applicant.location,
+        employmentStatus: "active" as const,
+        endedAt: null,
+      };
+      if (applicant.role === "Puppy Monitor") {
+        const [operationsManager] = await db.select({ id: jobApplications.id })
+          .from(jobApplications)
+          .where(and(
+            isNull(jobApplications.deletedAt),
+            eq(jobApplications.isTeamMember, true),
+            eq(jobApplications.role, "Operations Manager"),
+            eq(jobApplications.location, applicant.location),
+          ))
+          .limit(1);
+        if (!operationsManager) {
+          throw new Error("Add this location's Operations Manager to APY HQ before giving Puppy Monitors access.");
+        }
+      }
+      const employeeId = await db.transaction(async (tx) => {
+        if (matchingEmployee) {
+          await tx.update(employees).set(directoryValues).where(eq(employees.id, matchingEmployee.id));
+        } else {
+          await tx.insert(employees).values(directoryValues);
+        }
+        const [directoryEmployee] = await tx.select({ id: employees.id }).from(employees)
+          .where(eq(employees.sourceApplicationId, applicant.id)).limit(1);
+        if (!directoryEmployee) throw new Error("Employee Directory record could not be created.");
+        await tx.insert(jobApplicationActions).values({
+          applicationId: applicant.id,
+          action: matchingEmployee ? "employee_directory_linked" : "employee_directory_added",
+          fromStatus: applicant.status,
+          toStatus: applicant.status,
+          actorUserId: ctx.user.id,
+          actorName: ctx.user.name,
+          actorEmail: ctx.user.email,
+          details: JSON.stringify({ createsApyHqMembership: true, grantsPortalAccess: true }),
+        });
+        await tx.update(jobApplications).set({ isTeamMember: true, deletedAt: null })
+          .where(eq(jobApplications.id, applicant.id));
+        return directoryEmployee.id;
+      });
+      return { success: true, id: employeeId, linkedExistingRecord: Boolean(matchingEmployee), grantsApyHqAccess: true };
+    }),
+
+  // Give an existing active directory employee a matching APY HQ profile when the owner explicitly provisions access.
+  provisionEmployeeApyHqAccess: adminProcedure
+    .input(z.object({ employeeId: z.number().int().positive() }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const [employee] = await db.select().from(employees).where(eq(employees.id, input.employeeId)).limit(1);
+      if (!employee) throw new Error("Employee record not found.");
+      const eligibility = getExistingEmployeeAccessProvisioningEligibility(employee);
+      if (!eligibility.eligible) throw new Error(eligibility.reason);
+
+      if (employee.role === "Puppy Monitor") {
+        const [operationsManager] = await db.select({ id: jobApplications.id })
+          .from(jobApplications)
+          .where(and(
+            isNull(jobApplications.deletedAt),
+            eq(jobApplications.isTeamMember, true),
+            eq(jobApplications.role, "Operations Manager"),
+            eq(jobApplications.location, employee.location),
+          ))
+          .limit(1);
+        if (!operationsManager) {
+          throw new Error("Add this location's Operations Manager to APY HQ before giving Puppy Monitors access.");
+        }
+      }
+
+      const matchingProfileFields = {
+        id: jobApplications.id,
+        role: jobApplications.role,
+        location: jobApplications.location,
+        status: jobApplications.status,
+        isTeamMember: jobApplications.isTeamMember,
+        deletedAt: jobApplications.deletedAt,
+      };
+      const [emailProfileMatches, phoneProfileMatches] = await Promise.all([
+        employee.email ? db.select(matchingProfileFields).from(jobApplications).where(eq(jobApplications.email, employee.email)) : Promise.resolve([]),
+        employee.phone ? db.select(matchingProfileFields).from(jobApplications).where(eq(jobApplications.phone, employee.phone)) : Promise.resolve([]),
+      ]);
+      const matchingProfiles = Array.from(new Map([...emailProfileMatches, ...phoneProfileMatches]
+        .map((profile) => [profile.id, profile])).values());
+      const matchingProfile = matchingProfiles[0] ?? null;
+      const [linkedEmployee] = matchingProfile
+        ? await db.select({ id: employees.id }).from(employees).where(eq(employees.sourceApplicationId, matchingProfile.id)).limit(1)
+        : [];
+      const linkEligibility = getLegacyEmployeeProfileLinkEligibility({
+        matchingProfileCount: matchingProfiles.length,
+        matchingProfileIsActiveTeamMember: Boolean(matchingProfile?.isTeamMember) && !matchingProfile?.deletedAt,
+        matchingProfileIsArchived: Boolean(matchingProfile?.deletedAt),
+        matchingProfileStatus: matchingProfile?.status ?? "",
+        roleMatches: matchingProfile?.role === employee.role,
+        locationMatches: matchingProfile?.location === employee.location,
+        alreadyLinkedToAnotherEmployee: Boolean(linkedEmployee),
+      });
+      if (!linkEligibility.eligible) throw new Error(linkEligibility.reason);
+
+      const profileId = await db.transaction(async (tx) => {
+        if (linkEligibility.action === "link_existing_profile" && matchingProfile) {
+          await tx.update(jobApplications).set({ isTeamMember: true, deletedAt: null })
+            .where(eq(jobApplications.id, matchingProfile.id));
+          await tx.update(employees).set({ sourceApplicationId: matchingProfile.id })
+            .where(eq(employees.id, employee.id));
+          await tx.insert(jobApplicationActions).values({
+            applicationId: matchingProfile.id,
+            action: "employee_directory_apy_hq_access_linked",
+            toStatus: "onboarded",
+            actorUserId: ctx.user.id,
+            actorName: ctx.user.name,
+            actorEmail: ctx.user.email,
+            details: JSON.stringify({ grantsApyHqAccess: true, linkedExistingProfile: true, employeeId: employee.id }),
+          });
+          return matchingProfile.id;
+        }
+        const profileResult = await tx.insert(jobApplications).values({
+          name: employee.name,
+          email: employee.email,
+          phone: employee.phone,
+          role: employee.role,
+          location: employee.location,
+          whyAPY: "APY HQ access provisioned from Employee Directory.",
+          experience: "",
+          status: "onboarded",
+          isTeamMember: true,
+        });
+        const sourceApplicationId = Number(profileResult[0].insertId);
+        await tx.update(employees).set({ sourceApplicationId }).where(eq(employees.id, employee.id));
+        await tx.insert(jobApplicationActions).values({
+          applicationId: sourceApplicationId,
+          action: "employee_directory_apy_hq_access_granted",
+          toStatus: "onboarded",
+          actorUserId: ctx.user.id,
+          actorName: ctx.user.name,
+          actorEmail: ctx.user.email,
+          details: JSON.stringify({ grantsApyHqAccess: true, employeeId: employee.id }),
+        });
+        return sourceApplicationId;
+      });
+      return { success: true, id: profileId, grantsApyHqAccess: true };
+    }),
+
+  // Mark a directory employee inactive while retaining the directory history and original application. APY HQ removals remain in the existing protected team workflow.
+  markEmployeeDeparted: adminProcedure
+    .input(z.object({ employeeId: z.number().int().positive() }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const [employee] = await db.select().from(employees).where(eq(employees.id, input.employeeId)).limit(1);
+      if (!employee) throw new Error("Employee record not found.");
+      if (employee.employmentStatus === "inactive") return { success: true, alreadyInactive: true };
+
+      if (employee.sourceApplicationId !== null) {
+        const [linkedProfile] = await db.select({ isTeamMember: jobApplications.isTeamMember, deletedAt: jobApplications.deletedAt })
+          .from(jobApplications).where(eq(jobApplications.id, employee.sourceApplicationId)).limit(1);
+        if (linkedProfile?.isTeamMember && !linkedProfile.deletedAt) {
+          throw new Error("Remove this person from APY HQ Team first so staffing coverage and portal access are handled safely.");
+        }
+      }
+
+      const endedAt = new Date();
+      await db.transaction(async (tx) => {
+        await tx.update(employees).set(getEmployeeDepartureUpdate(endedAt)).where(eq(employees.id, employee.id));
+        if (employee.sourceApplicationId !== null) {
+          await tx.insert(jobApplicationActions).values({
+            applicationId: employee.sourceApplicationId,
+            action: "employee_directory_departed",
+            actorUserId: ctx.user.id,
+            actorName: ctx.user.name,
+            actorEmail: ctx.user.email,
+          });
+        }
+      });
+      return { success: true, alreadyInactive: false };
+    }),
+
+  // Permanently delete a former directory record only. Hiring/application history is intentionally retained.
+  deleteFormerEmployeeRecord: adminProcedure
+    .input(z.object({ employeeId: z.number().int().positive() }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const [employee] = await db.select().from(employees).where(eq(employees.id, input.employeeId)).limit(1);
+      if (!employee) throw new Error("Employee record not found.");
+
+      const linkedProfile = employee.sourceApplicationId === null ? null : (await db.select({
+        isTeamMember: jobApplications.isTeamMember,
+        deletedAt: jobApplications.deletedAt,
+      }).from(jobApplications).where(eq(jobApplications.id, employee.sourceApplicationId)).limit(1))[0] ?? null;
+      const eligibility = getFormerEmployeeDeletionEligibility({
+        employmentStatus: employee.employmentStatus,
+        linkedActiveTeamProfile: Boolean(linkedProfile?.isTeamMember) && !linkedProfile?.deletedAt,
+      });
+      if (!eligibility.eligible) throw new Error(eligibility.reason);
+
+      await db.transaction(async (tx) => {
+        if (employee.sourceApplicationId !== null) {
+          await tx.insert(jobApplicationActions).values({
+            applicationId: employee.sourceApplicationId,
+            action: "employee_directory_record_deleted",
+            actorUserId: ctx.user.id,
+            actorName: ctx.user.name,
+            actorEmail: ctx.user.email,
+            details: JSON.stringify({ directoryRecordDeleted: true }),
+          });
+        }
+        await tx.delete(employees).where(eq(employees.id, employee.id));
+      });
       return { success: true };
     }),
 
@@ -321,6 +841,18 @@ export const staffAvailabilityRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       const normalizedPhone = input.phone ? normalizeCanadianPhoneNumber(input.phone) : null;
+      const normalizedEmail = input.email ? input.email.toLowerCase() : null;
+      const [emailMatch, phoneMatch] = await Promise.all([
+        normalizedEmail
+          ? db.select({ id: employees.id }).from(employees).where(eq(employees.email, normalizedEmail)).limit(1)
+          : Promise.resolve([]),
+        normalizedPhone
+          ? db.select({ id: employees.id }).from(employees).where(eq(employees.phone, normalizedPhone)).limit(1)
+          : Promise.resolve([]),
+      ]);
+      if (emailMatch[0] || phoneMatch[0]) {
+        throw new Error("An Employee Directory record already uses this email address or phone number. Update or restore the existing record instead of adding a duplicate.");
+      }
 
       if (input.role === "Puppy Monitor") {
         const [operationsManager] = await db.select({ id: jobApplications.id })
@@ -340,7 +872,7 @@ export const staffAvailabilityRouter = router({
       const memberId = await db.transaction(async (tx) => {
         const result = await tx.insert(jobApplications).values({
           name: input.name,
-          email: input.email ? input.email.toLowerCase() : null,
+          email: normalizedEmail,
           phone: normalizedPhone,
           role: input.role,
           location: input.location,
@@ -353,7 +885,7 @@ export const staffAvailabilityRouter = router({
         await tx.insert(employees).values({
           sourceApplicationId,
           name: input.name,
-          email: input.email ? input.email.toLowerCase() : null,
+          email: normalizedEmail,
           phone: normalizedPhone,
           role: input.role,
           location: input.location,
@@ -418,6 +950,7 @@ export const staffAvailabilityRouter = router({
         hasOperationsManagerAtNextLocation: operationsManagersAtTarget.some((manager) => manager.id !== existing.id || input.role === "Operations Manager"),
         hasOtherOperationsManagerAtCurrentLocation: operationsManagersAtCurrentLocation.some((manager) => manager.id !== existing.id),
         hasActivePuppyMonitorsAtCurrentLocation: activePuppyMonitorsAtCurrentLocation.length > 0,
+        activePuppyMonitorCountAtCurrentLocation: activePuppyMonitorsAtCurrentLocation.length,
       });
 
       await db.update(jobApplications).set({
@@ -481,6 +1014,7 @@ export const staffAvailabilityRouter = router({
         hasOperationsManagerAtNextLocation: operationsManagersAtLocation.some((manager) => manager.id !== existing.id || existing.role === "Operations Manager"),
         hasOtherOperationsManagerAtCurrentLocation: operationsManagersAtLocation.some((manager) => manager.id !== existing.id),
         hasActivePuppyMonitorsAtCurrentLocation: activePuppyMonitorsAtLocation.length > 0,
+        activePuppyMonitorCountAtCurrentLocation: activePuppyMonitorsAtLocation.length,
       });
 
       const statusChangedAt = new Date();
@@ -538,6 +1072,7 @@ export const staffAvailabilityRouter = router({
         hasOperationsManagerAtNextLocation: operationsManagersAtLocation.some((manager) => manager.id !== input.id),
         hasOtherOperationsManagerAtCurrentLocation: operationsManagersAtLocation.some((manager) => manager.id !== input.id),
         hasActivePuppyMonitorsAtCurrentLocation: activePuppyMonitorsAtLocation.length > 0,
+        activePuppyMonitorCountAtCurrentLocation: activePuppyMonitorsAtLocation.length,
       });
 
       const removedAt = new Date();

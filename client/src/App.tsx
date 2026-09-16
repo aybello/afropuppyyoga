@@ -42,11 +42,24 @@ const PrivatePuppyYogaEvents = lazy(() => import("./pages/PrivatePuppyYogaEvents
 const CancellationDashboard = lazy(() => import("./pages/CancellationDashboard"));
 const SmsBroadcast = lazy(() => import("./pages/SmsBroadcast"));
 const EmployeeDirectory = lazy(() => import("./pages/EmployeeDirectory"));
+const QuickBooksDashboard = lazy(() => import("./pages/QuickBooksDashboard"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
+const RefundPolicy = lazy(() => import("./pages/RefundPolicy"));
+const QuickBooksDisconnect = lazy(() => import("./pages/QuickBooksDisconnect"));
 
 function PageLoader() {
   return (
     <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
       <Loader2 className="w-8 h-8 animate-spin text-[#8B2252]" />
+    </div>
+  );
+}
+
+function HomePageLoader() {
+  return (
+    <div className="min-h-screen bg-transparent" role="status" aria-label="Loading AfroPuppyYoga">
+      <span className="sr-only">Loading AfroPuppyYoga</span>
     </div>
   );
 }
@@ -62,8 +75,9 @@ function PixelPageView() {
 }
 
 function Router() {
+  const [location] = useLocation();
   return (
-    <Suspense fallback={<PageLoader />}>
+    <Suspense fallback={location === "/" ? <HomePageLoader /> : <PageLoader />}>
       <PixelPageView />
       <Switch>
         <Route path={"/"} component={Home} />
@@ -95,6 +109,7 @@ function Router() {
         <Route path="/admin/sms-inbox" component={SmsInbox} />
         <Route path="/admin/review-texts" component={ReviewTexts} />
         <Route path="/admin/revenue" component={RevenueDashboard} />
+        <Route path="/admin/quickbooks" component={QuickBooksDashboard} />
         <Route path="/admin/employees" component={EmployeeDirectory} />
         <Route path="/admin/employee-directory" component={EmployeeDirectory} />
         <Route path="/admin/breeder-leads/:id" component={BreederLeadDetail} />
@@ -103,6 +118,10 @@ function Router() {
         <Route path="/breeder-availability" component={BreederAvailability} />
         <Route path="/loyalty" component={Loyalty} />
         <Route path="/ethics" component={Ethics} />
+        <Route path="/privacy" component={Privacy} />
+        <Route path="/terms" component={Terms} />
+        <Route path="/refund-policy" component={RefundPolicy} />
+        <Route path="/quickbooks-disconnect" component={QuickBooksDisconnect} />
         {/* City SEO pages — plan-specified slugs */}
         <Route path="/puppy-yoga-kitchener" component={Kitchener} />
         <Route path="/puppy-yoga-hamilton" component={Hamilton} />

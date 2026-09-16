@@ -11,7 +11,12 @@
 
 import { describe, it, expect } from "vitest";
 import crypto from "crypto";
-import { hashUserData } from "./metaCapi";
+import {
+  buildMetaPurchasePayload,
+  extractMetaBrowserIds,
+  hashUserData,
+  resolveMetaCapiRuntimeConfig,
+} from "./metaCapi";
 
 function sha256(value: string): string {
   return crypto.createHash("sha256").update(value).digest("hex");
@@ -80,15 +85,15 @@ describe("hashUserData", () => {
 
   it("hashes all four fields when all are provided", () => {
     const result = hashUserData({
-      email: "ay@afropuppyyoga.ca",
-      phone: "2895551234",
-      firstName: "Ay",
-      lastName: "Bello",
+      email: "customer@example.com",
+      phone: "4165551234",
+      firstName: "Sample",
+      lastName: "Customer",
     });
-    expect(result.hashedEmail).toBe(sha256("ay@afropuppyyoga.ca"));
-    expect(result.hashedPhone).toBe(sha256("12895551234"));
-    expect(result.hashedFirstName).toBe(sha256("ay"));
-    expect(result.hashedLastName).toBe(sha256("bello"));
+    expect(result.hashedEmail).toBe(sha256("customer@example.com"));
+    expect(result.hashedPhone).toBe(sha256("14165551234"));
+    expect(result.hashedFirstName).toBe(sha256("sample"));
+    expect(result.hashedLastName).toBe(sha256("customer"));
   });
 
   it("produces consistent output for the same input (deterministic)", () => {
@@ -101,5 +106,93 @@ describe("hashUserData", () => {
     const a = hashUserData({ email: "a@test.com" });
     const b = hashUserData({ email: "b@test.com" });
     expect(a.hashedEmail).not.toBe(b.hashedEmail);
+  });
+});
+
+describe("resolveMetaCapiRuntimeConfig", () => {
+  it("sends real events by default even when the retired enable flag is false", () => {
+    expect(resolveMetaCapiRuntimeConfig({
+      META_CAPI_ENABLED: "false",
+      META_TEST_EVENT_CODE: "TEST123",
+    })).toEqual({
+      paused: false,
+      testMode: false,
+      testEventCode: undefined,
+      graphApiVersion: "v25.0",
+    });
+  });
+
+  it("supports an explicit production pause", () => {
+    expect(resolveMetaCapiRuntimeConfig({ META_CAPI_PAUSED: "true" }).paused).toBe(true);
+  });
+
+  it("uses a test event code only when test mode is explicitly enabled", () => {
+    const config = resolveMetaCapiRuntimeConfig({
+      META_CAPI_TEST_MODE: "true",
+      META_TEST_EVENT_CODE: "TEST123",
+      META_GRAPH_API_VERSION: "v24.0",
+    });
+    expect(config.testMode).toBe(true);
+    expect(config.testEventCode).toBe("TEST123");
+    expect(config.graphApiVersion).toBe("v24.0");
+  });
+});
+
+describe("buildMetaPurchasePayload", () => {
+  const row = {
+    lumaGuestId: "gst-123",
+    lumaEventId: "evt-456",
+    lumaEventName: "Puppy Yoga — Kitchener",
+    amountCents: 11865,
+    currency: "cad",
+    lumaRegisteredAt: 1_800_000_000_000,
+    hashedEmail: "email-hash",
+    hashedPhone: "phone-hash",
+    hashedFirstName: null,
+    hashedLastName: null,
+    utmSource: "video-a|apy_fbc=fb.1.1800000000.click-123|apy_fbp=fb.1.1800000000.browser-456",
+  };
+
+  it("builds a real, deduplicated website Purchase event", () => {
+    const payload = buildMetaPurchasePayload(row);
+    expect(payload.test_event_code).toBeUndefined();
+    expect(payload.data[0]).toMatchObject({
+      event_name: "Purchase",
+      event_time: 1_800_000_000,
+      event_id: "apy_purchase_gst-123",
+      action_source: "website",
+      event_source_url: "https://afropuppyyoga.ca/kitchener",
+      user_data: {
+        em: "email-hash",
+        ph: "phone-hash",
+        fbc: "fb.1.1800000000.click-123",
+        fbp: "fb.1.1800000000.browser-456",
+      },
+      custom_data: {
+        currency: "CAD",
+        value: 118.65,
+        content_name: "Puppy Yoga — Kitchener",
+      },
+    });
+  });
+
+  it("adds the test event code only when supplied by explicit test mode", () => {
+    expect(buildMetaPurchasePayload(row, "TEST123").test_event_code).toBe("TEST123");
+  });
+});
+
+describe("extractMetaBrowserIds", () => {
+  it("extracts valid plaintext fbc and fbp values from Luma utm_content", () => {
+    expect(extractMetaBrowserIds(
+      "creative-a|apy_fbc=fb.1.1800000000.click-123|apy_fbp=fb.1.1800000000.browser-456",
+    )).toEqual({
+      fbc: "fb.1.1800000000.click-123",
+      fbp: "fb.1.1800000000.browser-456",
+    });
+  });
+
+  it("rejects malformed browser identifiers", () => {
+    expect(extractMetaBrowserIds("apy_fbc=not-valid|apy_fbp=<script>"))
+      .toEqual({ fbc: null, fbp: null });
   });
 });

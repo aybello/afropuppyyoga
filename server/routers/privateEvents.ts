@@ -5,21 +5,24 @@ import { sendEmail } from "../email";
 import { getDb } from "../db";
 import {
   communicationsLog,
+  privateEventClasses,
   privateEventActions,
   privateEventInquiries,
   type PrivateEventInquiry,
 } from "../../drizzle/schema";
-import { and, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { buildPrivateEventQuoteDraft } from "../privateEventQuote";
 import { normalizeCanadianPhoneNumber } from "@shared/phone";
 import { torontoDateTimeIso } from "../lumaScheduleHelper";
+import { buildPrivateEventSessionPlan } from "../privateEventMultiSession";
 
 const LUMA_BASE = "https://public-api.luma.com/v1";
 const HST_RATE = 0.13;
 
-export function calculatePrivateEventPrice(finalPrice: number, pricingType: "plus_hst" | "all_in") {
-  const enteredCents = Math.round(finalPrice * 100);
+export function calculatePrivateEventPrice(finalPrice: number, pricingType: "plus_hst" | "all_in", sessions = 1) {
+  if (!Number.isInteger(sessions) || sessions < 1) throw new Error("At least one private-event session is required.");
+  const enteredCents = Math.round(finalPrice * 100) * sessions;
   if (pricingType === "plus_hst") {
     const basePriceCents = enteredCents;
     const hstCents = Math.round(basePriceCents * HST_RATE);
@@ -31,8 +34,8 @@ export function calculatePrivateEventPrice(finalPrice: number, pricingType: "plu
 }
 
 /** The exact ticket amount sent to Luma, which applies HST separately at checkout. */
-export function calculateLumaTicketPricing(finalPrice: number, pricingType: "plus_hst" | "all_in") {
-  const { basePriceCents, hstCents, totalCents } = calculatePrivateEventPrice(finalPrice, pricingType);
+export function calculateLumaTicketPricing(finalPrice: number, pricingType: "plus_hst" | "all_in", sessions = 1) {
+  const { basePriceCents, hstCents, totalCents } = calculatePrivateEventPrice(finalPrice, pricingType, sessions);
   return { lumaTicketCents: basePriceCents, hstCents, totalCents };
 }
 
@@ -204,7 +207,7 @@ async function createLumaEvent(params: {
   location: string;
   maxCapacity: number;
   description: string;
-  priceCents: number;
+  priceCents?: number;
   sessions: number;
   coverUrl?: string;
   tintColor?: string;
@@ -262,31 +265,34 @@ async function createLumaEvent(params: {
   const createData = (await createRes.json()) as { id: string };
   const eventId = createData.id;
 
-  // 2. Create a paid ticket type
-  const ticketRes = await fetch(`${LUMA_BASE}/events/ticket-types/create`, {
-    method: "POST",
-    headers: {
-      "x-luma-api-key": apiKey,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      event_id: eventId,
-      name: params.sessions > 1 ? `Private (${params.sessions} Sessions)` : "Private Experience",
-      type: "paid",
-      cents: params.priceCents,
-      currency: "cad",
-      max_capacity: 1, // One ticket = entire booking
-    }),
-  });
+  // The primary class hosts the one combined checkout. Included follow-on
+  // classes intentionally receive no ticket, so they cannot be purchased alone.
+  if (params.priceCents !== undefined) {
+    const ticketRes = await fetch(`${LUMA_BASE}/events/ticket-types/create`, {
+      method: "POST",
+      headers: {
+        "x-luma-api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        event_id: eventId,
+        name: params.sessions > 1 ? `Private (${params.sessions} Sessions — Combined Booking)` : "Private Experience",
+        type: "paid",
+        cents: params.priceCents,
+        currency: "cad",
+        max_capacity: 1, // One ticket = the entire combined booking
+      }),
+    });
 
-  if (!ticketRes.ok) {
-    const err = await ticketRes.text();
-    try {
-      await cancelUnpublishedLumaEvent(apiKey, eventId);
-    } catch (cleanupError) {
-      console.error(`[PrivateEvents] Failed to remove partial Luma event ${eventId}:`, cleanupError);
+    if (!ticketRes.ok) {
+      const err = await ticketRes.text();
+      try {
+        await cancelUnpublishedLumaEvent(apiKey, eventId);
+      } catch (cleanupError) {
+        console.error(`[PrivateEvents] Failed to remove partial Luma event ${eventId}:`, cleanupError);
+      }
+      throw new Error(`Luma create ticket type failed: ${ticketRes.status} ${err}`);
     }
-    throw new Error(`Luma create ticket type failed: ${ticketRes.status} ${err}`);
   }
 
   // 3. Remove the default "Standard" free ticket that Luma auto-creates
@@ -298,16 +304,32 @@ async function createLumaEvent(params: {
       const { entries } = (await listRes.json()) as { entries: Array<{ id: string; type: string; name: string }> };
       for (const ticket of entries) {
         if (ticket.type === "free" && ticket.name === "Standard") {
-          await fetch(`${LUMA_BASE}/events/ticket-types/delete`, {
+          const deleteRes = await fetch(`${LUMA_BASE}/events/ticket-types/delete`, {
             method: "POST",
             headers: { "x-luma-api-key": apiKey, "Content-Type": "application/json" },
             body: JSON.stringify({ event_ticket_type_id: ticket.id }),
           });
+          if (!deleteRes.ok && params.priceCents === undefined) {
+            throw new Error("Luma did not remove the included-session ticket.");
+          }
         }
       }
+      if (params.priceCents === undefined && !entries.some(ticket => ticket.type === "free" && ticket.name === "Standard")) {
+        throw new Error("Luma did not expose the default ticket required for the included-session safeguard.");
+      }
+    } else if (params.priceCents === undefined) {
+      throw new Error("Luma included-session ticket safeguard could not be verified.");
     }
   } catch (e) {
-    // Non-critical — the free ticket just stays visible if this fails
+    if (params.priceCents === undefined) {
+      try {
+        await cancelUnpublishedLumaEvent(apiKey, eventId);
+      } catch (cleanupError) {
+        console.error(`[PrivateEvents] Failed to remove unsafe included-session event ${eventId}:`, cleanupError);
+      }
+      throw e;
+    }
+    // The primary checkout remains usable if its default free ticket cannot be removed.
   }
 
   // 4. Fetch the actual event URL from Luma (they generate a slug-based URL)
@@ -355,6 +377,11 @@ function requirePreparedPrivateEvent(inquiry: PrivateEventInquiry) {
 
 function buildStoredPrivateEventQuote(inquiry: PrivateEventInquiry, eventUrl: string) {
   const prepared = requirePreparedPrivateEvent(inquiry);
+  const sessionSchedule = buildPrivateEventSessionPlan({
+    startTime: prepared.startTime,
+    endTime: prepared.endTime,
+    sessions: inquiry.sessions || 1,
+  });
   return buildPrivateEventQuoteDraft({
     customerName: inquiry.name,
     organization: inquiry.organization,
@@ -363,6 +390,7 @@ function buildStoredPrivateEventQuote(inquiry: PrivateEventInquiry, eventUrl: st
     packageType: inquiry.packageType,
     eventDate: prepared.eventDate,
     startTime: prepared.startTime,
+    sessionSchedule,
     venue: prepared.venue,
     basePriceCents: prepared.basePriceCents,
     hstCents: prepared.hstCents,
@@ -383,19 +411,78 @@ async function publishPrivateEvent(inquiry: PrivateEventInquiry) {
     sessions: inquiry.sessions || 1,
     breed,
   });
-  const { eventId, eventUrl } = await createLumaEvent({
-    name: `${orgName} — Private PuppyYoga`,
-    startAt: torontoDateTimeIso(prepared.eventDate, prepared.startTime),
-    endAt: torontoDateTimeIso(prepared.eventDate, prepared.endTime),
-    location: prepared.venue,
-    maxCapacity: inquiry.guests,
-    description,
-    // Luma applies HST at checkout, so it must receive the pre-tax ticket value.
-    priceCents: prepared.basePriceCents,
+  const sessionPlan = buildPrivateEventSessionPlan({
+    startTime: prepared.startTime,
+    endTime: prepared.endTime,
     sessions: inquiry.sessions || 1,
   });
-  const emailDraft = buildStoredPrivateEventQuote(inquiry, eventUrl);
-  return { eventId, eventUrl, emailDraft, ...prepared };
+  const scheduleDescription = sessionPlan.length > 1
+    ? `${description}\n\n---\n\n## 📅 Your Included Time Slots\n${sessionPlan.map(slot => `• Session ${slot.sessionNumber}: ${slot.startTime} to ${slot.endTime}`).join("\n")}\n\nOne combined payment covers both sessions. There is a 30-minute break between them.`
+    : description;
+  const created: Array<{ eventId: string; eventUrl: string; sessionNumber: number; startTime: string; endTime: string; paymentMode: "combined_checkout" | "included" }> = [];
+  try {
+    for (const slot of sessionPlan) {
+      const isCheckoutClass = slot.paymentMode === "combined_checkout";
+      const createdEvent = await createLumaEvent({
+        name: sessionPlan.length > 1 ? `${orgName} — Private PuppyYoga (Session ${slot.sessionNumber} of ${sessionPlan.length})` : `${orgName} — Private PuppyYoga`,
+        startAt: torontoDateTimeIso(prepared.eventDate, slot.startTime),
+        endAt: torontoDateTimeIso(prepared.eventDate, slot.endTime),
+        location: prepared.venue,
+        maxCapacity: inquiry.guests,
+        description: scheduleDescription,
+        // Luma applies HST at checkout; only the first class owns the combined ticket.
+        ...(isCheckoutClass ? { priceCents: prepared.basePriceCents } : {}),
+        sessions: sessionPlan.length,
+      });
+      created.push({ ...createdEvent, sessionNumber: slot.sessionNumber, startTime: slot.startTime, endTime: slot.endTime, paymentMode: slot.paymentMode });
+    }
+  } catch (error) {
+    const apiKey = process.env.LUMA_API_KEY;
+    if (apiKey) {
+      await Promise.all(created.map(async event => {
+        try { await cancelUnpublishedLumaEvent(apiKey, event.eventId); } catch (cleanupError) {
+          console.error(`[PrivateEvents] Failed to remove partial multi-session event ${event.eventId}:`, cleanupError);
+        }
+      }));
+    }
+    throw error;
+  }
+  const primary = created[0];
+  const emailDraft = buildStoredPrivateEventQuote(inquiry, primary.eventUrl);
+  return { eventId: primary.eventId, eventUrl: primary.eventUrl, emailDraft, classes: created, ...prepared };
+}
+
+async function savePrivateEventClasses(inquiryId: number, classes: Array<{
+  eventId: string;
+  eventUrl: string;
+  sessionNumber: number;
+  startTime: string;
+  endTime: string;
+  paymentMode: "combined_checkout" | "included";
+}>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable while saving private-event classes");
+  await db.insert(privateEventClasses).values(classes.map(eventClass => ({
+    inquiryId,
+    sessionNumber: eventClass.sessionNumber,
+    startTime: eventClass.startTime,
+    endTime: eventClass.endTime,
+    paymentMode: eventClass.paymentMode,
+    lumaEventId: eventClass.eventId,
+    lumaEventUrl: eventClass.eventUrl,
+  })));
+}
+
+async function cancelPartialPrivateEventClasses(classes: Array<{ eventId: string }>) {
+  const apiKey = process.env.LUMA_API_KEY;
+  if (!apiKey) return;
+  await Promise.all(classes.map(async eventClass => {
+    try {
+      await cancelUnpublishedLumaEvent(apiKey, eventClass.eventId);
+    } catch (cleanupError) {
+      console.error(`[PrivateEvents] Failed to remove partial multi-session event ${eventClass.eventId}:`, cleanupError);
+    }
+  }));
 }
 
 function actionDetails(value: Record<string, unknown>) {
@@ -906,8 +993,8 @@ export const privateEventsRouter = router({
         throw new TRPCError({ code: "PRECONDITION_FAILED", message: "A sent or booked quote cannot be replaced from this control." });
       }
 
-      const { basePriceCents, hstCents, totalCents } = calculatePrivateEventPrice(input.finalPrice, input.pricingType);
-      const needsApproval = privateEventQuoteNeedsApproval(input.finalPrice, inquiry.estimatedMin);
+      const { basePriceCents, hstCents, totalCents } = calculatePrivateEventPrice(input.finalPrice, input.pricingType, input.sessions);
+      const needsApproval = privateEventQuoteNeedsApproval(input.finalPrice * input.sessions, inquiry.estimatedMin);
       const eventVenue = input.customLocation || inquiry.location;
       // Validate Toronto local date/time before any external event is created.
       torontoDateTimeIso(input.eventDate, input.startTime);
@@ -980,6 +1067,12 @@ export const privateEventsRouter = router({
         .where(eq(privateEventInquiries.id, input.inquiryId));
       if (!preparedInquiry) throw new TRPCError({ code: "NOT_FOUND", message: "Inquiry not found after preparation." });
       const published = await publishPrivateEvent(preparedInquiry);
+      try {
+        await savePrivateEventClasses(inquiry.id, published.classes);
+      } catch (error) {
+        await cancelPartialPrivateEventClasses(published.classes);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not save the private-event class schedule. No payment page was kept." });
+      }
       await db.update(privateEventInquiries).set({
         lumaEventUrl: published.eventUrl,
         lumaEventId: published.eventId,
@@ -1025,13 +1118,39 @@ export const privateEventsRouter = router({
 
       // Legacy records may already have an unapproved page from the former flow.
       // New quotes are published only after approval; legacy pages are adopted in place.
+      const existingClasses = await db.select().from(privateEventClasses)
+        .where(eq(privateEventClasses.inquiryId, inquiry.id))
+        .orderBy(asc(privateEventClasses.sessionNumber));
+      const requestedSessions = inquiry.sessions || 1;
+      if (inquiry.lumaEventId && inquiry.lumaEventUrl && requestedSessions > 1 && existingClasses.length !== requestedSessions) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "This legacy multi-session quote has an incomplete class schedule and needs manual review before approval.",
+        });
+      }
       const published = inquiry.lumaEventId && inquiry.lumaEventUrl
         ? {
             eventId: inquiry.lumaEventId,
             eventUrl: inquiry.lumaEventUrl,
             emailDraft: buildStoredPrivateEventQuote(inquiry, inquiry.lumaEventUrl),
+            classes: existingClasses.map(eventClass => ({
+              eventId: eventClass.lumaEventId,
+              eventUrl: eventClass.lumaEventUrl,
+              sessionNumber: eventClass.sessionNumber,
+              startTime: eventClass.startTime,
+              endTime: eventClass.endTime,
+              paymentMode: eventClass.paymentMode,
+            })),
           }
         : await publishPrivateEvent(inquiry);
+      if (!inquiry.lumaEventId) {
+        try {
+          await savePrivateEventClasses(inquiry.id, published.classes);
+        } catch (error) {
+          await cancelPartialPrivateEventClasses(published.classes);
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not save the private-event class schedule. No payment page was kept." });
+        }
+      }
       await db.update(privateEventInquiries).set({
         ownerApproved: true,
         approvalStatus: "approved",
@@ -1135,6 +1254,9 @@ export const privateEventsRouter = router({
         throw new TRPCError({ code: "CONFLICT", message: "This quote email has already been sent." });
       }
 
+      const savedClasses = await db.select().from(privateEventClasses)
+        .where(eq(privateEventClasses.inquiryId, inquiry.id))
+        .orderBy(asc(privateEventClasses.sessionNumber));
       const fallbackDraft = buildPrivateEventQuoteDraft({
         customerName: inquiry.name,
         organization: inquiry.organization,
@@ -1143,6 +1265,9 @@ export const privateEventsRouter = router({
         packageType: inquiry.packageType,
         eventDate: inquiry.preferredDate || "",
         startTime: inquiry.eventStartTime || "14:00",
+        sessionSchedule: savedClasses.length > 0
+          ? savedClasses.map(eventClass => ({ startTime: eventClass.startTime, endTime: eventClass.endTime }))
+          : undefined,
         venue: inquiry.eventVenue || inquiry.location,
         basePriceCents: inquiry.finalPriceCents || 0,
         hstCents: inquiry.hstCents || 0,
@@ -1251,47 +1376,33 @@ export const privateEventsRouter = router({
       const apiKey = process.env.LUMA_API_KEY;
       if (!apiKey) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "LUMA_API_KEY not set" });
 
-      const guestUrl = new URL(`${LUMA_BASE}/events/guests/list`);
-      guestUrl.searchParams.set("event_id", inquiry.lumaEventId);
-      guestUrl.searchParams.set("approval_status", "approved");
-      guestUrl.searchParams.set("pagination_limit", "1");
-      const guestRes = await fetch(guestUrl, { headers: { "x-luma-api-key": apiKey } });
-      if (!guestRes.ok) {
-        throw new TRPCError({ code: "BAD_GATEWAY", message: "Could not verify whether this Luma event has guests." });
+      const savedClasses = await db.select().from(privateEventClasses)
+        .where(eq(privateEventClasses.inquiryId, inquiry.id));
+      const eventIds = [inquiry.lumaEventId, ...savedClasses.map(eventClass => eventClass.lumaEventId)]
+        .filter((eventId, index, all) => all.indexOf(eventId) === index);
+      for (const eventId of eventIds) {
+        const guestUrl = new URL(`${LUMA_BASE}/events/guests/list`);
+        guestUrl.searchParams.set("event_id", eventId);
+        guestUrl.searchParams.set("approval_status", "approved");
+        guestUrl.searchParams.set("pagination_limit", "1");
+        const guestRes = await fetch(guestUrl, { headers: { "x-luma-api-key": apiKey } });
+        if (!guestRes.ok) {
+          throw new TRPCError({ code: "BAD_GATEWAY", message: "Could not verify whether every class in this booking has guests." });
+        }
+        const guestData = await guestRes.json() as { entries?: unknown[] };
+        if ((guestData.entries ?? []).length > 0) {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "At least one class has a registered guest and cannot be removed from this control.",
+          });
+        }
       }
-      const guestData = await guestRes.json() as { entries?: unknown[] };
-      if ((guestData.entries ?? []).length > 0) {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "This event has a registered guest and cannot be removed from this control.",
-        });
-      }
-
-      const requestRes = await fetch(`${LUMA_BASE}/events/cancel/request`, {
-        method: "POST",
-        headers: { "x-luma-api-key": apiKey, "Content-Type": "application/json" },
-        body: JSON.stringify({ event_id: inquiry.lumaEventId }),
-      });
-      if (!requestRes.ok) {
-        const err = await requestRes.text();
-        throw new TRPCError({ code: "BAD_GATEWAY", message: `Luma cancellation request failed: ${requestRes.status} ${err}` });
-      }
-      const requestData = await requestRes.json() as { cancellation_token?: string; token?: string };
-      const cancellationToken = requestData.cancellation_token || requestData.token;
-      if (!cancellationToken) throw new TRPCError({ code: "BAD_GATEWAY", message: "Luma did not return a cancellation token." });
-
-      const cancelRes = await fetch(`${LUMA_BASE}/events/cancel`, {
-        method: "POST",
-        headers: { "x-luma-api-key": apiKey, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          event_id: inquiry.lumaEventId,
-          cancellation_token: cancellationToken,
-          should_refund: false,
-        }),
-      });
-      if (!cancelRes.ok) {
-        const err = await cancelRes.text();
-        throw new TRPCError({ code: "BAD_GATEWAY", message: `Luma cancellation failed: ${cancelRes.status} ${err}` });
+      for (const eventId of eventIds) {
+        try {
+          await cancelUnpublishedLumaEvent(apiKey, eventId);
+        } catch (error) {
+          throw new TRPCError({ code: "BAD_GATEWAY", message: "Luma could not cancel every class in this booking. No local booking record was removed." });
+        }
       }
 
       // Clear the link from the inquiry and revert status
@@ -1304,6 +1415,7 @@ export const privateEventsRouter = router({
           status: "contacted",
         })
         .where(eq(privateEventInquiries.id, input.inquiryId));
+      await db.delete(privateEventClasses).where(eq(privateEventClasses.inquiryId, inquiry.id));
 
       await db.insert(privateEventActions).values({
         inquiryId: inquiry.id,
@@ -1311,7 +1423,7 @@ export const privateEventsRouter = router({
         actorUserId: ctx.user.id,
         actorName: ctx.user.name,
         actorEmail: ctx.user.email,
-        details: actionDetails({ eventId: inquiry.lumaEventId }),
+        details: actionDetails({ eventCount: eventIds.length }),
       });
 
       return { success: true };
@@ -1340,13 +1452,15 @@ export const privateEventsRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { basePriceCents, totalCents, hstCents } = calculatePrivateEventPrice(input.finalPrice, input.pricingType);
-
-      // Use first session start and last session end for the Luma event times
-      const firstSession = input.sessionSchedule[0];
-      const lastSession = input.sessionSchedule[input.sessionSchedule.length - 1];
-      const startAt = torontoDateTimeIso(input.eventDate, firstSession.startTime);
-      const endAt = torontoDateTimeIso(input.eventDate, lastSession.endTime);
+      if (input.sessionSchedule.length !== input.sessions) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Provide one time slot for each private-event session." });
+      }
+      const { basePriceCents, totalCents, hstCents } = calculatePrivateEventPrice(input.finalPrice, input.pricingType, input.sessions);
+      const sessionPlan = buildPrivateEventSessionPlan({
+        startTime: input.sessionSchedule[0].startTime,
+        endTime: input.sessionSchedule[0].endTime,
+        sessions: input.sessions,
+      });
 
       // Build personalized description
       const orgName = input.organization || input.clientName;
@@ -1361,36 +1475,44 @@ export const privateEventsRouter = router({
 
       // Add session schedule to description if multi-session
       let fullDescription = descLines;
-      if (input.sessions > 1 && input.sessionSchedule.length > 1) {
-        const scheduleLines = input.sessionSchedule.map((s, i) => 
-          `\n\u{1F436} **Session ${i + 1}:** ${s.startTime} to ${s.endTime}`
+      if (sessionPlan.length > 1) {
+        const scheduleLines = sessionPlan.map((s, i) =>
+          `\n🐶 **Session ${i + 1}:** ${s.startTime} to ${s.endTime}`
         ).join("");
-        fullDescription = `${descLines}\n\n---\n\n## \u{1F4C5} Schedule\n${scheduleLines}`;
+        fullDescription = `${descLines}\n\n---\n\n## 📅 Your Included Time Slots\n${scheduleLines}\n\nOne combined payment covers both sessions. There is a 30-minute break between them.`;
       }
 
-      // Create the Luma event
-      const { eventId, eventUrl } = await createLumaEvent({
-        name: orgName ? `${orgName} — Private PuppyYoga` : "Private PuppyYoga Experience",
-        startAt,
-        endAt,
-        location: input.customLocation || input.location,
-        maxCapacity: input.maxCapacity,
-        description: fullDescription,
-        // Luma calculates HST separately at checkout.
-        priceCents: basePriceCents,
-        sessions: input.sessions,
-      });
+      const createdClasses: Array<{ eventId: string; eventUrl: string; sessionNumber: number }> = [];
+      try {
+        for (const slot of sessionPlan) {
+          const created = await createLumaEvent({
+            name: sessionPlan.length > 1 ? `${orgName} — Private PuppyYoga (Session ${slot.sessionNumber} of ${sessionPlan.length})` : `${orgName} — Private PuppyYoga`,
+            startAt: torontoDateTimeIso(input.eventDate, slot.startTime),
+            endAt: torontoDateTimeIso(input.eventDate, slot.endTime),
+            location: input.customLocation || input.location,
+            maxCapacity: input.maxCapacity,
+            description: fullDescription,
+            ...(slot.paymentMode === "combined_checkout" ? { priceCents: basePriceCents } : {}),
+            sessions: input.sessions,
+          });
+          createdClasses.push({ ...created, sessionNumber: slot.sessionNumber });
+        }
+      } catch (error) {
+        await cancelPartialPrivateEventClasses(createdClasses);
+        throw error;
+      }
+      const primary = createdClasses[0];
 
       // Notify owner
       await notifyOwner({
         title: "\u{1F517} Quick Booking Link Generated",
-        content: `Event for ${orgName} on ${input.eventDate}\nLuma ticket: $${(basePriceCents / 100).toFixed(2)} + HST = $${(totalCents / 100).toFixed(2)} CAD\n${eventUrl}`,
+        content: `Event for ${orgName} on ${input.eventDate}\nCombined ${input.sessions}-session checkout: $${(basePriceCents / 100).toFixed(2)} + HST = $${(totalCents / 100).toFixed(2)} CAD\n${primary.eventUrl}`,
       });
 
       return {
         success: true,
-        eventUrl,
-        eventId,
+        eventUrl: primary.eventUrl,
+        eventId: primary.eventId,
         totalCents,
         hstCents,
         clientName: input.clientName,

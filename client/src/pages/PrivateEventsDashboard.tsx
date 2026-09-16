@@ -138,6 +138,40 @@ const PACKAGE_LABELS: Record<string, string> = {
   luxury: "Luxury Experience",
 };
 
+function toMinutes(value: string): number | null {
+  if (!/^\d{2}:\d{2}$/.test(value)) return null;
+  const [hours, minutes] = value.split(":").map(Number);
+  if (hours > 23 || minutes > 59) return null;
+  return hours * 60 + minutes;
+}
+
+function formatSlotTime(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+function buildSessionSlots(startTime: string, endTime: string, sessions: number) {
+  const start = toMinutes(startTime);
+  const end = toMinutes(endTime);
+  if (start === null || end === null || end <= start || sessions < 1) return [];
+  const duration = end - start;
+  return Array.from({ length: sessions }, (_, index) => {
+    const slotStart = start + index * (duration + 30);
+    const slotEnd = slotStart + duration;
+    if (slotEnd > 24 * 60) return null;
+    return { startTime: formatSlotTime(slotStart), endTime: formatSlotTime(slotEnd) };
+  }).filter((slot): slot is { startTime: string; endTime: string } => slot !== null);
+}
+
+function displayTime(value: string): string {
+  const minutes = toMinutes(value);
+  if (minutes === null) return value;
+  const hour = Math.floor(minutes / 60);
+  const minute = minutes % 60;
+  return `${hour % 12 || 12}:${String(minute).padStart(2, "0")} ${hour >= 12 ? "PM" : "AM"}`;
+}
+
 function organizationSuggestion(inquiry: PrivateEventInquiry): string {
   if (inquiry.organization?.trim()) return inquiry.organization.trim();
   const emailDomain = inquiry.email.split("@")[1]?.split(".")[0] || "";
@@ -456,12 +490,13 @@ export default function PrivateEventsDashboard() {
     const price = parseFloat(quickForm.finalPrice);
     if (!price || price <= 0) { toast.error("Please enter a valid price"); return; }
     setIsQuickGenerating(true);
+    const sessionCount = quickForm.sessionSchedule.length;
     generateQuickLink.mutate({
       clientName: quickForm.clientName,
       organization: quickForm.organization || undefined,
       eventType: quickForm.eventType,
       eventDate: quickForm.eventDate,
-      sessions: parseInt(quickForm.sessions) || 1,
+      sessions: sessionCount,
       sessionSchedule: quickForm.sessionSchedule,
       location: quickForm.location,
       customLocation: quickForm.customLocation.startsWith("__custom__")
@@ -476,37 +511,59 @@ export default function PrivateEventsDashboard() {
   }
 
   function addSession() {
-    const last = quickForm.sessionSchedule[quickForm.sessionSchedule.length - 1];
-    // Default: 30 min break after last session end
-    const [h, m] = last.endTime.split(":").map(Number);
-    const breakEnd = `${String(h).padStart(2, "0")}:${String(m + 30).padStart(2, "0")}`;
-    const newEnd = `${String(h + 1).padStart(2, "0")}:${String(m + 30).padStart(2, "0")}`;
+    const firstSession = quickForm.sessionSchedule[0];
+    const sessionSchedule = buildSessionSlots(
+      firstSession.startTime,
+      firstSession.endTime,
+      quickForm.sessionSchedule.length + 1,
+    );
+    if (sessionSchedule.length !== quickForm.sessionSchedule.length + 1) {
+      toast.error("The additional session must fit on the selected date.");
+      return;
+    }
     setQuickForm({
       ...quickForm,
-      sessions: String(quickForm.sessionSchedule.length + 1),
-      sessionSchedule: [...quickForm.sessionSchedule, { startTime: breakEnd, endTime: newEnd }],
+      sessions: String(sessionSchedule.length),
+      sessionSchedule,
     });
   }
 
-  function removeSession(idx: number) {
-    const updated = quickForm.sessionSchedule.filter((_, i) => i !== idx);
-    setQuickForm({ ...quickForm, sessions: String(updated.length), sessionSchedule: updated });
+  function removeSession() {
+    const sessionSchedule = quickForm.sessionSchedule.slice(0, -1);
+    setQuickForm({ ...quickForm, sessions: String(sessionSchedule.length), sessionSchedule });
   }
 
   function updateSession(idx: number, field: "startTime" | "endTime", value: string) {
+    if (idx > 0) return;
     const updated = [...quickForm.sessionSchedule];
     updated[idx] = { ...updated[idx], [field]: value };
-    setQuickForm({ ...quickForm, sessionSchedule: updated });
+    const sessionSchedule = buildSessionSlots(updated[0].startTime, updated[0].endTime, updated.length);
+    setQuickForm({
+      ...quickForm,
+      sessionSchedule: sessionSchedule.length === updated.length ? sessionSchedule : updated,
+    });
   }
 
   // Calculate HST preview
   const priceNum = parseFloat(bookingForm.finalPrice) || 0;
+  const sessionCount = Math.max(1, parseInt(bookingForm.sessions) || 1);
+  const combinedQuoteInput = priceNum * sessionCount;
   const hstPreview = bookingForm.pricingType === "plus_hst"
-    ? Math.round(priceNum * 13) / 100
-    : Math.round((priceNum - priceNum / 1.13) * 100) / 100;
+    ? Math.round(combinedQuoteInput * 13) / 100
+    : Math.round((combinedQuoteInput - combinedQuoteInput / 1.13) * 100) / 100;
   const totalPreview = bookingForm.pricingType === "plus_hst"
-    ? priceNum + hstPreview
-    : priceNum;
+    ? combinedQuoteInput + hstPreview
+    : combinedQuoteInput;
+  const bookingSessionSlots = buildSessionSlots(bookingForm.startTime, bookingForm.endTime, sessionCount);
+  const quickSessionCount = quickForm.sessionSchedule.length;
+  const quickPricePerSession = parseFloat(quickForm.finalPrice) || 0;
+  const quickCombinedInput = quickPricePerSession * quickSessionCount;
+  const quickHstPreview = quickForm.pricingType === "plus_hst"
+    ? Math.round(quickCombinedInput * 13) / 100
+    : Math.round((quickCombinedInput - quickCombinedInput / 1.13) * 100) / 100;
+  const quickTotalPreview = quickForm.pricingType === "plus_hst"
+    ? quickCombinedInput + quickHstPreview
+    : quickCombinedInput;
 
   return (
     <div className="min-h-screen bg-[#FEFAF4]">
@@ -723,13 +780,15 @@ export default function PrivateEventsDashboard() {
                     const locAddr = quickForm.location !== "__custom__" ? locationAddresses[quickForm.location] : null;
                     const date = quickForm.eventDate ? new Date(quickForm.eventDate + "T00:00:00") : null;
                     const formattedDate = date ? date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : "[DATE]";
-                    const startTime = quickForm.sessionSchedule[0]?.startTime || "11:00";
-                    const [h, m] = startTime.split(":").map(Number);
-                    const ampm = h >= 12 ? "PM" : "AM";
-                    const h12 = h % 12 || 12;
-                    const formattedTime = `${h12}:${m.toString().padStart(2, "0")} ${ampm}`;
+                    const quickSessionSlots = buildSessionSlots(
+                      quickForm.sessionSchedule[0]?.startTime || "11:00",
+                      quickForm.sessionSchedule[0]?.endTime || "12:00",
+                      quickForm.sessionSchedule.length,
+                    );
+                    const formattedTime = displayTime(quickSessionSlots[0]?.startTime || "11:00");
                     const guests = quickForm.maxCapacity || "20";
-                    const sessions = quickForm.sessionSchedule.length;
+                    const sessions = quickSessionSlots.length || quickForm.sessionSchedule.length;
+                    const combinedCheckoutPrice = (parseFloat(quickForm.finalPrice) || 0) * sessions;
                     const breed = quickForm.puppyBreed ? `${quickForm.puppyBreed} puppies` : "Puppies";
 
                     // Event-type-specific intro lines
@@ -752,6 +811,9 @@ export default function PrivateEventsDashboard() {
                       "Baby Shower": sessions > 1 ? `${sessions} private puppy yoga sessions` : "A private one-hour puppy yoga experience",
                     };
                     const sessionDesc = sessionDescriptions[quickForm.eventType] || (sessions > 1 ? `${sessions} private puppy yoga sessions` : "A private one-hour puppy yoga experience");
+                    const timeSlotBlock = quickSessionSlots.length > 1
+                      ? `\n\nYour included time slots:\n${quickSessionSlots.map((slot, index) => `• Session ${index + 1}: ${displayTime(slot.startTime)}–${displayTime(slot.endTime)}`).join("\n")}\n\nThere will be a 30-minute break between sessions.`
+                      : "";
 
                     let locationBlock = "";
                     if (locAddr) {
@@ -762,7 +824,7 @@ export default function PrivateEventsDashboard() {
 
                     const subject = `Private AfroPuppyYoga Experience | ${date ? date.toLocaleDateString("en-US", { month: "long", day: "numeric" }) : "[DATE]"} at ${formattedTime} \uD83D\uDC36`;
 
-                    const body = `Hi ${firstName},\n\nThank you for reaching out! ${intro} on ${formattedDate} at ${formattedTime}.${locationBlock}\n\nThe Classic Experience for your group of ${guests} guests includes:\n\n\uD83D\uDC36 ${sessionDesc}\n\uD83E\uDDD8 Beginner-friendly guided yoga instruction\n\uD83D\uDC3E ${breed} and dedicated puppy handlers\n\uD83D\uDC9B Supervised puppy interaction and playtime\n\uD83E\uDDD8 Yoga mats for participants\n\uD83C\uDFB6 Curated music\n\uD83E\uDDF4 Venue, setup and cleanup\n\nYou can secure the event using the private booking link below:\n\n${quickGeneratedLink}\n\nThe booking will be confirmed once payment has been completed. The puppy breed and final venue details will be confirmed closer to the event based on availability.\n\nWarmly,`;
+                    const body = `Hi ${firstName},\n\nThank you for reaching out! ${intro} on ${formattedDate} at ${formattedTime}.${timeSlotBlock}${locationBlock}\n\nThe Classic Experience for your group of ${guests} guests includes:\n\n\uD83D\uDC36 ${sessionDesc}\n\uD83E\uDDD8 Beginner-friendly guided yoga instruction\n\uD83D\uDC3E ${breed} and dedicated puppy handlers\n\uD83D\uDC9B Supervised puppy interaction and playtime\n\uD83E\uDDD8 Yoga mats for participants\n\uD83C\uDFB6 Curated music\n\uD83E\uDDF4 Venue, setup and cleanup\n\nYour combined ${sessions}-session price is $${combinedCheckoutPrice.toFixed(2)} CAD${quickForm.pricingType === "plus_hst" ? " + HST" : " (HST included)"}. One private booking link covers both time slots:\n\n${quickGeneratedLink}\n\nThe booking will be confirmed once payment has been completed. The puppy breed and final venue details will be confirmed closer to the event based on availability.\n\nWarmly,`;
 
                     const fullEmail = `Subject: ${subject}\n\n${body}`;
 
@@ -858,11 +920,11 @@ export default function PrivateEventsDashboard() {
                       {quickForm.sessionSchedule.map((session, idx) => (
                         <div key={idx} className="flex items-center gap-2 bg-[#FAFAFA] rounded-lg p-2 border border-[#F2A0B8]/10">
                           <span className="w-5 h-5 rounded-full bg-gradient-to-br from-[#8B2252] to-[#D4708A] flex items-center justify-center shrink-0 text-white text-[9px] font-bold">{idx + 1}</span>
-                          <Input type="time" value={session.startTime} onChange={(e) => updateSession(idx, "startTime", e.target.value)} className="border-[#F2A0B8]/30 font-body text-sm w-32 bg-white h-8" />
+                          <Input type="time" value={session.startTime} onChange={(e) => updateSession(idx, "startTime", e.target.value)} disabled={idx > 0} className="border-[#F2A0B8]/30 font-body text-sm w-32 bg-white h-8 disabled:opacity-60" />
                           <span className="font-body text-xs text-[#3D1A2E]/40">to</span>
-                          <Input type="time" value={session.endTime} onChange={(e) => updateSession(idx, "endTime", e.target.value)} className="border-[#F2A0B8]/30 font-body text-sm w-32 bg-white h-8" />
+                          <Input type="time" value={session.endTime} onChange={(e) => updateSession(idx, "endTime", e.target.value)} disabled={idx > 0} className="border-[#F2A0B8]/30 font-body text-sm w-32 bg-white h-8 disabled:opacity-60" />
                           {quickForm.sessionSchedule.length > 1 && (
-                            <Button type="button" variant="ghost" size="sm" className="text-red-400 hover:text-red-600 text-xs px-2 h-7 ml-auto" onClick={() => removeSession(idx)}>Remove</Button>
+                            idx === quickForm.sessionSchedule.length - 1 && <Button type="button" variant="ghost" size="sm" className="text-red-400 hover:text-red-600 text-xs px-2 h-7 ml-auto" onClick={removeSession}>Remove</Button>
                           )}
                         </div>
                       ))}
@@ -910,10 +972,10 @@ export default function PrivateEventsDashboard() {
                   <div className="bg-white rounded-2xl border border-[#F2A0B8]/20 p-5 shadow-sm">
                     <div className="grid grid-cols-2 gap-4 mb-3">
                       <div>
-                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">{quickForm.pricingType === "plus_hst" ? "Quote Before HST (CAD) *" : "All-In Client Total (CAD) *"}</label>
+                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">{quickForm.pricingType === "plus_hst" ? "Price Per Session Before HST (CAD) *" : "All-In Price Per Session (CAD) *"}</label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm text-[#3D1A2E]/40">$</span>
-                          <Input type="number" value={quickForm.finalPrice} onChange={(e) => setQuickForm({ ...quickForm, finalPrice: e.target.value })} placeholder="3000" className="border-[#F2A0B8]/30 font-body pl-7 bg-[#FAFAFA] focus:bg-white transition-colors" />
+                          <Input type="number" value={quickForm.finalPrice} onChange={(e) => setQuickForm({ ...quickForm, finalPrice: e.target.value })} placeholder="1200" className="border-[#F2A0B8]/30 font-body pl-7 bg-[#FAFAFA] focus:bg-white transition-colors" />
                         </div>
                       </div>
                       <div>
@@ -927,20 +989,20 @@ export default function PrivateEventsDashboard() {
                         </Select>
                       </div>
                     </div>
-                    <p className="mb-3 font-body text-[11px] leading-4 text-[#765967]">Luma applies HST during checkout. The ticket price is sent before tax so the client is never charged HST twice.</p>
-                    {parseFloat(quickForm.finalPrice) > 0 && (
+                    <p className="mb-3 font-body text-[11px] leading-4 text-[#765967]">For multiple sessions, APY multiplies the per-session amount before HST and issues one combined checkout. The second class is included, not separately charged.</p>
+                    {quickPricePerSession > 0 && (
                       <div className="bg-[#FFF5F8] rounded-lg p-3 border border-[#F2A0B8]/15 mb-3">
                         <div className="flex justify-between text-xs font-body">
-                          <span className="text-[#3D1A2E]/50">Base</span>
-                          <span className="font-medium">${quickForm.pricingType === "plus_hst" ? parseFloat(quickForm.finalPrice).toLocaleString() : (parseFloat(quickForm.finalPrice) / 1.13).toFixed(2)}</span>
+                          <span className="text-[#3D1A2E]/50">{quickSessionCount > 1 ? `${quickSessionCount} sessions × $${quickPricePerSession.toFixed(2)}` : "Base"}</span>
+                          <span className="font-medium">${quickForm.pricingType === "plus_hst" ? quickCombinedInput.toLocaleString() : (quickCombinedInput - quickHstPreview).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-xs font-body mt-1">
                           <span className="text-[#3D1A2E]/50">HST (13%)</span>
-                          <span className="font-medium">${quickForm.pricingType === "plus_hst" ? (parseFloat(quickForm.finalPrice) * 0.13).toFixed(2) : (parseFloat(quickForm.finalPrice) - parseFloat(quickForm.finalPrice) / 1.13).toFixed(2)}</span>
+                          <span className="font-medium">${quickHstPreview.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-sm font-body font-bold border-t border-[#D4708A]/15 pt-2 mt-2">
                           <span className="text-[#1A0A12]">Client pays on Luma</span>
-                          <span className="text-[#8B2252]">${quickForm.pricingType === "plus_hst" ? (parseFloat(quickForm.finalPrice) * 1.13).toFixed(2) : parseFloat(quickForm.finalPrice).toFixed(2)} CAD</span>
+                          <span className="text-[#8B2252]">${quickTotalPreview.toFixed(2)} CAD</span>
                         </div>
                       </div>
                     )}
@@ -1294,7 +1356,7 @@ export default function PrivateEventsDashboard() {
                   {/* Price + HST */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">{bookingForm.pricingType === "plus_hst" ? "Quote Before HST (CAD)" : "All-In Client Total (CAD)"}</label>
+                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">{bookingForm.pricingType === "plus_hst" ? "Price Per Session Before HST (CAD)" : "All-In Price Per Session (CAD)"}</label>
                       <Input
                         type="number"
                         value={bookingForm.finalPrice}
@@ -1319,14 +1381,14 @@ export default function PrivateEventsDashboard() {
                       </Select>
                     </div>
                     </div>
-                    <p className="col-span-2 -mt-1 font-body text-[11px] leading-4 text-[#765967]">Luma adds HST at checkout. APY sends the correct pre-tax ticket amount so the client pays this quote once, not twice.</p>
+                    <p className="col-span-2 -mt-1 font-body text-[11px] leading-4 text-[#765967]">For multiple sessions, APY multiplies this per-session amount before HST and creates one combined Luma checkout. The additional class is included, not separately charged.</p>
 
                   {/* Price preview */}
                   {priceNum > 0 && (
                     <div className="bg-white rounded-lg p-3 border border-[#F2A0B8]/20">
                       <div className="flex justify-between text-sm font-body">
-                        <span className="text-[#3D1A2E]/55">Base price</span>
-                        <span className="font-semibold">${bookingForm.pricingType === "plus_hst" ? priceNum.toLocaleString() : (priceNum - hstPreview).toFixed(2)}</span>
+                        <span className="text-[#3D1A2E]/55">{sessionCount > 1 ? `${sessionCount} sessions × $${priceNum.toFixed(2)}` : "Base price"}</span>
+                        <span className="font-semibold">${bookingForm.pricingType === "plus_hst" ? combinedQuoteInput.toLocaleString() : (combinedQuoteInput - hstPreview).toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-sm font-body">
                         <span className="text-[#3D1A2E]/55">HST (13%)</span>
@@ -1340,11 +1402,11 @@ export default function PrivateEventsDashboard() {
                   )}
 
                   {/* Approval warning */}
-                  {priceNum > 0 && (priceNum < selectedInquiry.estimatedMin || priceNum > 3000) && (
+                  {priceNum > 0 && (combinedQuoteInput < selectedInquiry.estimatedMin || combinedQuoteInput > 3000) && (
                     <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3">
                       <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
                       <p className="font-body text-xs text-amber-700">
-                        {priceNum < selectedInquiry.estimatedMin
+                        {combinedQuoteInput < selectedInquiry.estimatedMin
                           ? "Price is below the estimated minimum — owner approval is required before a Luma page can be created."
                           : "Large event (over $3,000) — owner approval is required before a Luma page can be created."}
                       </p>
@@ -1413,6 +1475,18 @@ export default function PrivateEventsDashboard() {
                       />
                     </div>
                   </div>
+
+                  {bookingSessionSlots.length > 1 && (
+                    <div className="rounded-lg border border-[#F2A0B8]/25 bg-white p-3">
+                      <p className="font-body text-xs font-semibold text-[#8B2252]">Client-facing schedule — one combined checkout</p>
+                      <div className="mt-2 space-y-1 font-body text-xs text-[#3D1A2E]/70">
+                        {bookingSessionSlots.map((slot, index) => (
+                          <p key={`${slot.startTime}-${slot.endTime}`}>Session {index + 1}: {displayTime(slot.startTime)}–{displayTime(slot.endTime)}{index > 0 ? " (included)" : " (checkout)"}</p>
+                        ))}
+                      </div>
+                      <p className="mt-2 font-body text-[11px] text-[#765967]">A 30-minute break is automatically placed between classes.</p>
+                    </div>
+                  )}
 
                   {/* Location */}
                   <div>

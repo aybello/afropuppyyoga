@@ -96,7 +96,7 @@ const config: LocationConfig = {
     {
       question: "What is the cancellation policy?",
       answer:
-        "We use a credit-first refund policy. If you can't make it, your ticket converts to APY credit for a future session. Cash refunds are only available if AfroPuppyYoga cancels the event.",
+        "All AfroPuppyYoga tickets are final sale and refunds are not issued. If AfroPuppyYoga cancels a class, you receive a full class credit code for a future session instead.",
     },
     {
       question: "Can I book a private event in Hamilton?",

@@ -23,6 +23,7 @@ import { breederLeadsRouter } from "./routers/breederLeads";
 import { staffAvailabilityRouter } from "./routers/staffAvailability";
 import { trainingRouter } from "./routers/training";
 import { operationsDashboardRouter } from "./routers/operationsDashboard";
+import { quickbooksRouter } from "./routers/quickbooks";
 import { z } from "zod";
 
 const messageSchema = z.object({
@@ -51,6 +52,7 @@ export const appRouter = router({
   staffAvailability: staffAvailabilityRouter,
   training: trainingRouter,
   operationsDashboard: operationsDashboardRouter,
+  quickbooks: quickbooksRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

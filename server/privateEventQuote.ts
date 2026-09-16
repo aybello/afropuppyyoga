@@ -6,6 +6,7 @@ export type PrivateEventQuoteDraftInput = {
   packageType: string;
   eventDate: string;
   startTime: string;
+  sessionSchedule?: Array<{ startTime: string; endTime: string }>;
   venue: string;
   basePriceCents: number;
   hstCents: number;
@@ -81,6 +82,15 @@ export function buildPrivateEventQuoteDraft(input: PrivateEventQuoteDraftInput):
     : "private AfroPuppyYoga experience";
   const dateText = formatDate(input.eventDate);
   const timeText = formatTime(input.startTime);
+  const sessionSchedule = input.sessionSchedule?.length
+    ? input.sessionSchedule
+    : [{ startTime: input.startTime, endTime: input.startTime }];
+  const sessionTiming = sessionSchedule.length > 1
+    ? `Your booking includes ${sessionSchedule.length} private sessions on ${dateText}:\n${sessionSchedule.map((session, index) => `• Session ${index + 1}: ${formatTime(session.startTime)}–${formatTime(session.endTime)}`).join("\n")}\n\nThere will be a 30-minute break between sessions.`
+    : `We have prepared a private booking page for ${dateText} at ${timeText}.`;
+  const sessionExperience = sessionSchedule.length > 1
+    ? `🐶 ${sessionSchedule.length} private puppy yoga sessions, including both booked time slots`
+    : "🐶 A private one-hour puppy yoga experience";
   const venueText = formatVenue(input.venue);
   const breedLine = input.puppyBreed?.trim()
     ? `🐾 ${input.puppyBreed.trim()} puppies and dedicated puppy handlers`
@@ -89,6 +99,6 @@ export function buildPrivateEventQuoteDraft(input: PrivateEventQuoteDraftInput):
 
   return {
     subject: `${subjectPrefix}Private AfroPuppyYoga Experience | ${dateText} 🐶`,
-    body: `Hi ${firstName(input.customerName)},\n\nThank you for reaching out! We would love to host ${groupName} for a ${experienceName}.\n\nWe have prepared a private booking page for ${dateText} at ${timeText}. The event would take place at ${venueText}.\n\nThe ${packageName} for up to ${input.guests} guests includes:\n\n🐶 A private one-hour puppy yoga experience\n🧘 Beginner-friendly guided yoga instruction\n${breedLine}\n💛 Supervised puppy interaction and playtime\n🧘 Yoga mats for participants\n🎶 Curated music\n🧼 Venue, setup and cleanup\n\nYour private quote:\n${priceLine}\n\nYou can secure the event using the private booking link below:\n\n${input.eventUrl}\n\nThe booking will be confirmed once payment has been completed. The puppy breed will be confirmed closer to the event based on availability.\n\nWarmly,\nThe AfroPuppyYoga Team`,
+    body: `Hi ${firstName(input.customerName)},\n\nThank you for reaching out! We would love to host ${groupName} for a ${experienceName}.\n\n${sessionTiming} The event would take place at ${venueText}.\n\nThe ${packageName} for up to ${input.guests} guests includes:\n\n${sessionExperience}\n🧘 Beginner-friendly guided yoga instruction\n${breedLine}\n💛 Supervised puppy interaction and playtime\n🧘 Yoga mats for participants\n🎶 Curated music\n🧼 Venue, setup and cleanup\n\nYour private combined quote:\n${priceLine}\n\nYou can secure both booked sessions with this one private booking link:\n\n${input.eventUrl}\n\nThe booking will be confirmed once payment has been completed. The puppy breed will be confirmed closer to the event based on availability.\n\nWarmly,\nThe AfroPuppyYoga Team`,
   };
 }

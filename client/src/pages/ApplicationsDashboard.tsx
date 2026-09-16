@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Users, Loader2, Video, Mail, Phone, Star, Eye, XCircle, Inbox,
-  Calendar, CheckCircle, Send, Trash2, FileText, Play, PartyPopper, VideoIcon,
+  Calendar, CheckCircle, Send, Trash2, FileText, Play, PartyPopper, UserPlus, VideoIcon,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -641,6 +641,13 @@ function ApplicationDetailModal({
       toast.error(`Failed to resend onboarding email: ${err.message}`);
     },
   });
+  const addToEmployeeDirectory = trpc.staffAvailability.addOnboardedApplicantToEmployeeDirectory.useMutation({
+    onSuccess: () => {
+      toast.success(`${app.name} was added to the Employee Directory`);
+      utils.careers.getTimeline.invalidate({ id: app.id });
+    },
+    onError: (err) => toast.error(err.message),
+  });
 
 
   const requestVideo = trpc.careers.requestVideo.useMutation({
@@ -836,6 +843,20 @@ function ApplicationDetailModal({
                     )}
                   </Button>
                 )}
+                {app.status === "onboarded" && (
+                  <Button
+                    onClick={() => addToEmployeeDirectory.mutate({ applicationId: app.id })}
+                    disabled={addToEmployeeDirectory.isPending}
+                    variant="outline"
+                    className="font-body text-sm border-[#8B2252]/30 text-[#8B2252] hover:bg-[#FFF5F8]"
+                  >
+                    {addToEmployeeDirectory.isPending ? (
+                      <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Adding…</>
+                    ) : (
+                      <><UserPlus className="w-4 h-4 mr-2" /> Add to Employee Directory</>
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -929,6 +950,14 @@ export default function ApplicationsDashboard() {
   const updateStatus = trpc.careers.updateStatus.useMutation({
     onSuccess: () => utils.careers.list.invalidate(),
     onError: (err) => toast.error(`Error updating status: ${err.message}`),
+  });
+  const addToEmployeeDirectory = trpc.staffAvailability.addOnboardedApplicantToEmployeeDirectory.useMutation({
+    onSuccess: (_result, variables) => {
+      const applicant = applications?.find((item) => item.id === variables.applicationId);
+      toast.success(`${applicant?.name ?? "Applicant"} was added to the Employee Directory`);
+      utils.careers.list.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
   });
 
   const deleteApplication = trpc.careers.deleteApplication.useMutation({
@@ -1255,6 +1284,16 @@ export default function ApplicationsDashboard() {
                               title="Send onboarding email"
                             >
                               <PartyPopper className="w-3 h-3" /> Onboard
+                            </button>
+                          )}
+                          {app.status === "onboarded" && (
+                            <button
+                              onClick={() => addToEmployeeDirectory.mutate({ applicationId: app.id })}
+                              disabled={addToEmployeeDirectory.isPending}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-teal-50 border border-teal-200 rounded-lg font-body text-xs font-semibold text-teal-700 hover:bg-teal-100 transition-colors disabled:opacity-50"
+                              title="Add this onboarded applicant to the Employee Directory"
+                            >
+                              {addToEmployeeDirectory.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserPlus className="w-3 h-3" />} Directory
                             </button>
                           )}
                           <button

@@ -356,6 +356,29 @@ export const privateEventInquiries = mysqlTable("privateEventInquiries", {
 export type PrivateEventInquiry = typeof privateEventInquiries.$inferSelect;
 export type InsertPrivateEventInquiry = typeof privateEventInquiries.$inferInsert;
 
+/**
+ * Private Luma class records belonging to one combined private-event booking.
+ * The first record is the combined checkout; remaining records are included
+ * time slots and deliberately have no purchasable ticket.
+ */
+export const privateEventClasses = mysqlTable("privateEventClasses", {
+  id: int("id").autoincrement().primaryKey(),
+  inquiryId: int("inquiryId").notNull(),
+  sessionNumber: int("sessionNumber").notNull(),
+  startTime: varchar("startTime", { length: 5 }).notNull(),
+  endTime: varchar("endTime", { length: 5 }).notNull(),
+  paymentMode: mysqlEnum("privateEventClassPaymentMode", ["combined_checkout", "included"]).notNull(),
+  lumaEventId: varchar("lumaEventId", { length: 100 }).notNull(),
+  lumaEventUrl: varchar("lumaEventUrl", { length: 500 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("uq_privateEventClasses_inquiry_session").on(t.inquiryId, t.sessionNumber),
+  uniqueIndex("uq_privateEventClasses_lumaEvent").on(t.lumaEventId),
+  index("idx_privateEventClasses_inquiry").on(t.inquiryId),
+]);
+
+export type PrivateEventClass = typeof privateEventClasses.$inferSelect;
+
 /** Immutable private-event workflow history, including approval and publication. */
 export const privateEventActions = mysqlTable("privateEventActions", {
   id: int("id").autoincrement().primaryKey(),
@@ -390,6 +413,99 @@ export const communicationsLog = mysqlTable("communicationsLog", {
 }, (t) => [index("idx_communications_entity").on(t.entityType, t.entityId, t.createdAt)]);
 
 export type CommunicationLog = typeof communicationsLog.$inferSelect;
+
+/**
+ * One privacy-preserving owner-outcome report per Luma reminder schedule and
+ * Toronto calendar date. No Luma attendee or recipient data belongs here.
+ */
+export const lumaReminderOutcomeReports = mysqlTable("lumaReminderOutcomeReports", {
+  id: int("id").autoincrement().primaryKey(),
+  scheduleTaskUid: varchar("scheduleTaskUid", { length: 65 }).notNull(),
+  attemptDate: varchar("attemptDate", { length: 10 }).notNull(),
+  runStatus: mysqlEnum("lumaReminderOutcomeRunStatus", ["completed", "safely_stopped", "no_eligible_events"]).notNull(),
+  outcomeSummary: text("outcomeSummary").notNull(),
+  deliveryStatus: mysqlEnum("lumaReminderOutcomeDeliveryStatus", ["pending", "sent", "failed"]).notNull().default("pending"),
+  failureCode: varchar("failureCode", { length: 64 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (t) => [
+  uniqueIndex("uq_lumaReminderOutcomeReports_task_date").on(t.scheduleTaskUid, t.attemptDate),
+  index("idx_lumaReminderOutcomeReports_delivery").on(t.deliveryStatus, t.createdAt),
+]);
+
+export type LumaReminderOutcomeReport = typeof lumaReminderOutcomeReports.$inferSelect;
+
+/** Short-lived, hashed OAuth state records for the owner-authorized QuickBooks connection. */
+export const quickbooksOAuthStates = mysqlTable("quickbooksOAuthStates", {
+  id: int("id").autoincrement().primaryKey(),
+  stateHash: varchar("stateHash", { length: 64 }).notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("uq_quickbooksOAuthStates_hash").on(t.stateHash),
+  index("idx_quickbooksOAuthStates_expiry").on(t.expiresAt),
+]);
+
+/** Owner-authorized, read-only QuickBooks Online connection. OAuth tokens are encrypted server-side. */
+export const quickbooksConnections = mysqlTable("quickbooksConnections", {
+  id: int("id").autoincrement().primaryKey(),
+  realmId: varchar("realmId", { length: 64 }).notNull(),
+  companyName: varchar("companyName", { length: 255 }),
+  accessTokenCiphertext: text("accessTokenCiphertext").notNull(),
+  refreshTokenCiphertext: text("refreshTokenCiphertext").notNull(),
+  tokenExpiresAt: timestamp("tokenExpiresAt").notNull(),
+  refreshTokenExpiresAt: timestamp("refreshTokenExpiresAt"),
+  isActive: boolean("isActive").notNull().default(true),
+  scheduleTaskUid: varchar("scheduleTaskUid", { length: 65 }),
+  lastSyncAt: timestamp("lastSyncAt"),
+  lastSyncStatus: mysqlEnum("quickbooksLastSyncStatus", ["never", "running", "succeeded", "failed"]).notNull().default("never"),
+  lastSyncError: text("lastSyncError"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (t) => [
+  uniqueIndex("uq_quickbooksConnections_realm").on(t.realmId),
+  uniqueIndex("uq_quickbooksConnections_schedule").on(t.scheduleTaskUid),
+]);
+
+/** Imported QuickBooks transaction facts. No reconciliation, payment, or write-back actions are supported. */
+export const quickbooksTransactions = mysqlTable("quickbooksTransactions", {
+  id: int("id").autoincrement().primaryKey(),
+  connectionId: int("connectionId").notNull(),
+  sourceType: varchar("sourceType", { length: 64 }).notNull(),
+  sourceTransactionId: varchar("sourceTransactionId", { length: 100 }).notNull(),
+  transactionDate: varchar("transactionDate", { length: 10 }).notNull(),
+  direction: mysqlEnum("quickbooksTransactionDirection", ["expense", "income", "transfer", "other"]).notNull(),
+  amountCents: int("amountCents").notNull(),
+  currency: varchar("currency", { length: 8 }).notNull().default("CAD"),
+  categoryName: varchar("categoryName", { length: 255 }),
+  accountName: varchar("accountName", { length: 255 }),
+  payeeName: varchar("payeeName", { length: 255 }),
+  description: text("description"),
+  sourceUpdatedAt: timestamp("sourceUpdatedAt"),
+  importedAt: timestamp("importedAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (t) => [
+  uniqueIndex("uq_quickbooksTransactions_source").on(t.connectionId, t.sourceType, t.sourceTransactionId),
+  index("idx_quickbooksTransactions_connection_date").on(t.connectionId, t.transactionDate),
+  index("idx_quickbooksTransactions_direction").on(t.connectionId, t.direction, t.transactionDate),
+]);
+
+/** Immutable metadata for manual and scheduled QuickBooks import attempts. */
+export const quickbooksSyncRuns = mysqlTable("quickbooksSyncRuns", {
+  id: int("id").autoincrement().primaryKey(),
+  connectionId: int("connectionId").notNull(),
+  trigger: mysqlEnum("quickbooksSyncTrigger", ["manual", "daily"]).notNull(),
+  status: mysqlEnum("quickbooksSyncStatus", ["running", "succeeded", "failed", "skipped"]).notNull(),
+  importedCount: int("importedCount").notNull().default(0),
+  updatedCount: int("updatedCount").notNull().default(0),
+  errorSummary: text("errorSummary"),
+  startedAt: timestamp("startedAt").defaultNow().notNull(),
+  completedAt: timestamp("completedAt"),
+}, (t) => [index("idx_quickbooksSyncRuns_connection").on(t.connectionId, t.startedAt)]);
+
+export type QuickbooksConnection = typeof quickbooksConnections.$inferSelect;
+export type QuickbooksTransaction = typeof quickbooksTransactions.$inferSelect;
+export type QuickbooksSyncRun = typeof quickbooksSyncRuns.$inferSelect;
 
 export const breeders = mysqlTable("breeders", {
   id: int("id").autoincrement().primaryKey(),
@@ -685,7 +801,7 @@ export const metaConversionEvents = mysqlTable("metaConversionEvents", {
   hashedFirstName: varchar("hashedFirstName", { length: 64 }),
   /** SHA-256 hash of lowercased trimmed last name */
   hashedLastName: varchar("hashedLastName", { length: 64 }),
-  /** UTM source from Luma guest record (may be null) */
+  /** Luma UTM source, or packed Meta attribution values carried in utm_content */
   utmSource: varchar("utmSource", { length: 255 }),
   /** Processing status */
   // 'processing' = atomically claimed by a sender run (prevents double-send if two runs overlap)
@@ -744,7 +860,7 @@ export const cancellationCredits = mysqlTable("cancellationCredits", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (t) => [
   uniqueIndex("uq_cancellationCredits_event").on(t.lumaEventId),
-  uniqueIndex("uq_cancellationCredits_code").on(t.couponCode),
+  index("idx_cancellationCredits_code").on(t.couponCode),
 ]);
 
 // ─── Review Text Logs ─────────────────────────────────────────────────────────

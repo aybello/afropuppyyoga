@@ -150,10 +150,16 @@ function vitePluginManusDebugCollector(): Plugin {
   };
 }
 
-const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()];
-
-export default defineConfig({
-  plugins,
+// Manus' editor runtime and JSX location markers are useful while building in
+// preview, but the runtime inlines hundreds of kilobytes into index.html. Keep
+// those tools out of the public production bundle so the browser can discover
+// and fetch the hero image immediately.
+export default defineConfig(({ command }) => ({
+  plugins: [
+    react(),
+    tailwindcss(),
+    ...(command === "serve" ? [jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()] : []),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
@@ -201,4 +207,4 @@ export default defineConfig({
       deny: ["**/.*"],
     },
   },
-});
+}));

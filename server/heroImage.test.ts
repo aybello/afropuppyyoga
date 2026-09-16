@@ -6,9 +6,9 @@ import {
 } from "../shared/heroImage";
 
 describe("homepage hero image fallback", () => {
-  it("uses the managed hero image first and reserves the CDN only for recovery", () => {
-    expect(PRIMARY_HERO_IMAGE).toMatch(/^\/manus-storage\//);
-    expect(FALLBACK_HERO_IMAGE).toMatch(/^https:\/\/d2xsxph8kpxj0f\.cloudfront\.net\//);
+  it("uses the stable CDN hero image first and reserves the redirecting managed route for recovery", () => {
+    expect(PRIMARY_HERO_IMAGE).toMatch(/^https:\/\/d2xsxph8kpxj0f\.cloudfront\.net\//);
+    expect(FALLBACK_HERO_IMAGE).toMatch(/^\/manus-storage\//);
     expect(getNextHeroImageOnError(PRIMARY_HERO_IMAGE)).toBe(FALLBACK_HERO_IMAGE);
   });
 

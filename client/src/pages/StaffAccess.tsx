@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { KeyRound, Loader2, MessageSquareText, ShieldCheck } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { getLoginUrl, LOGO_URL } from "@/const";
+import { getSafeApyHqReturnPath } from "@shared/apyHqQueryState";
 
 export default function StaffAccess() {
   const [, navigate] = useLocation();
@@ -14,7 +15,7 @@ export default function StaffAccess() {
     onSuccess: () => setCodeSent(true),
   });
   const verifyCode = trpc.staff.verifyPhoneAccessCode.useMutation({
-    onSuccess: () => navigate("/staff"),
+    onSuccess: () => navigate(getSafeApyHqReturnPath(window.location.search)),
   });
 
   return (

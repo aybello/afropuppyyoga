@@ -34,6 +34,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
+import { BreederCancellationArchiveDialog } from "@/components/BreederCancellationArchiveDialog";
+import { BreederReplacementDialog } from "@/components/BreederReplacementDialog";
 import {
   ChevronLeft,
   ChevronRight,
@@ -116,18 +118,36 @@ const EMPTY_FORM = {
   repeatWeekly: false,
 };
 
+export type CalendarBreederConfirmationSlot = {
+  id: number;
+  classDate: string;
+  location: string;
+  breed: string;
+  breederId: number;
+  breederName: string;
+  startTime: string;
+  endTime: string;
+  classType: string;
+  notes: string | null;
+};
+
+type ScheduleCalendarPanelProps = {
+  onOpenBreederConfirmation?: (slot: CalendarBreederConfirmationSlot) => void;
+};
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function ScheduleCalendarPanel() {
+export default function ScheduleCalendarPanel({ onOpenBreederConfirmation }: ScheduleCalendarPanelProps) {
   const today = new Date();
   const [year, setYear]   = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1);
 
   const [showDialog, setShowDialog] = useState(false);
   const [editId, setEditId]         = useState<number | null>(null);
+  const [originalBreederId, setOriginalBreederId] = useState<number | null>(null);
   const [deleteId, setDeleteId]     = useState<number | null>(null);
+  const [replacementRequest, setReplacementRequest] = useState<{ scheduleId: number; breederId: number; breederName: string; breed: string } | null>(null);
   const [form, setForm]             = useState({ ...EMPTY_FORM });
-  const [notifyingId, setNotifyingId] = useState<number | null>(null);
   const [weekendOnly, setWeekendOnly] = useState(false);
 
   const utils = trpc.useUtils();
@@ -164,21 +184,6 @@ export default function ScheduleCalendarPanel() {
     onSuccess: () => { invalidate(); toast.success("Slot updated!"); setShowDialog(false); setEditId(null); setForm({ ...EMPTY_FORM }); },
     onError: (e) => toast.error(e.message),
   });
-  const deleteMutation = trpc.puppySchedule.deleteSlot.useMutation({
-    onSuccess: () => { invalidate(); toast.success("Slot removed."); setDeleteId(null); },
-    onError: (e) => toast.error(e.message),
-  });
-  const notifyMutation = trpc.puppySchedule.notifyBreeder.useMutation({
-    onSuccess: (data) => {
-      toast.success(`Confirmation email sent to ${data.sentTo}!`);
-      setNotifyingId(null);
-    },
-    onError: (e) => {
-      toast.error(e.message);
-      setNotifyingId(null);
-    },
-  });
-
   // ─── Navigation ─────────────────────────────────────────────────────────────
 
   function prevMonth() { if (month === 1) { setYear(y => y - 1); setMonth(12); } else setMonth(m => m - 1); }
@@ -193,7 +198,7 @@ export default function ScheduleCalendarPanel() {
       f.classDate = dateStr;
       f.dayOfWeek = DOW_FROM_JS[d.getDay()];
     }
-    setForm(f); setEditId(null); setShowDialog(true);
+    setForm(f); setEditId(null); setOriginalBreederId(null); setShowDialog(true);
   }
 
   function openEdit(slot: (typeof slots)[0]) {
@@ -205,7 +210,7 @@ export default function ScheduleCalendarPanel() {
       classType: slot.classType as "regular" | "private", notes: slot.notes ?? "",
       repeatWeekly: false,
     });
-    setEditId(slot.id); setShowDialog(true);
+    setEditId(slot.id); setOriginalBreederId(slot.breederId); setShowDialog(true);
   }
 
   function handleDateChange(dateStr: string) {
@@ -230,6 +235,16 @@ export default function ScheduleCalendarPanel() {
       classType: form.classType, notes: form.notes || undefined,
     };
     if (editId !== null) {
+      if (originalBreederId !== null && originalBreederId !== form.breederId) {
+        setReplacementRequest({
+          scheduleId: editId,
+          breederId: form.breederId,
+          breederName: form.breederName,
+          breed: form.breed,
+        });
+        setShowDialog(false);
+        return;
+      }
       updateMutation.mutate({ id: editId, ...payload });
     } else if (form.repeatWeekly) {
       recurringMutation.mutate({ ...payload, year, month });
@@ -238,10 +253,13 @@ export default function ScheduleCalendarPanel() {
     }
   }
 
-  function handleNotify(e: React.MouseEvent, slotId: number) {
+  function handleOpenBreederConfirmation(e: React.MouseEvent, slot: CalendarBreederConfirmationSlot) {
     e.stopPropagation();
-    setNotifyingId(slotId);
-    notifyMutation.mutate({ slotId });
+    if (!onOpenBreederConfirmation) {
+      toast.error("The detailed breeder confirmation is unavailable here.");
+      return;
+    }
+    onOpenBreederConfirmation(slot);
   }
 
   // ─── Derived data ────────────────────────────────────────────────────────────
@@ -498,22 +516,18 @@ export default function ScheduleCalendarPanel() {
                                 </span>
                               )}
                             </span>
-                            {/* Notify Breeder button */}
+                            {/* Open the same detailed breeder confirmation workflow used by the Breeder Database. */}
                             <button
-                              onClick={(e) => handleNotify(e, slot.id)}
-                              disabled={notifyingId === slot.id}
+                              onClick={(e) => handleOpenBreederConfirmation(e, slot)}
                               className={`shrink-0 mt-0.5 rounded p-0.5 transition-colors ${
                                 isConflict
                                   ? "text-red-400 hover:bg-red-100"
                                   : "text-current opacity-50 hover:opacity-100 hover:bg-white/60"
                               }`}
-                              title="Send confirmation email to breeder"
-                              aria-label="Notify breeder"
+                              title="Open detailed breeder confirmation"
+                              aria-label="Open breeder confirmation"
                             >
-                              {notifyingId === slot.id
-                                ? <Loader2 size={11} className="animate-spin" />
-                                : <Mail size={11} />
-                              }
+                              <Mail size={11} />
                             </button>
                           </div>
                         );
@@ -570,7 +584,7 @@ export default function ScheduleCalendarPanel() {
           <AlertTriangle size={10} /> Conflict
         </span>
         <span className="flex items-center gap-1.5 font-body text-xs font-semibold px-2.5 py-1 rounded-full border bg-white text-[#6B4C3B] border-[#F0D0DC]">
-          <Mail size={10} /> Notify Breeder
+          <Mail size={10} /> Detailed Confirmation
         </span>
       </div>
 
@@ -706,19 +720,35 @@ export default function ScheduleCalendarPanel() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Delete Confirmation ────────────────────────────────────────────── */}
-      <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent className="bg-[#FEFAF4] border-[#F0D0DC]">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-[#1A0A12]">Remove this slot?</AlertDialogTitle>
-            <AlertDialogDescription className="font-body text-[#6B4C3B]">This will permanently remove the class slot. This cannot be undone.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="font-body border-[#F0D0DC]">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleteId !== null && deleteMutation.mutate({ id: deleteId })} className="bg-red-600 hover:bg-red-700 text-white font-body">Remove</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <BreederCancellationArchiveDialog
+        scheduleId={deleteId}
+        open={deleteId !== null}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+        onArchived={invalidate}
+      />
+      <BreederReplacementDialog
+        scheduleId={replacementRequest?.scheduleId ?? null}
+        replacement={replacementRequest ? {
+          breederId: replacementRequest.breederId,
+          breederName: replacementRequest.breederName,
+          breed: replacementRequest.breed,
+        } : null}
+        open={replacementRequest !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setReplacementRequest(null);
+            setEditId(null);
+            setOriginalBreederId(null);
+            setForm({ ...EMPTY_FORM });
+          }
+        }}
+        onReplaced={() => {
+          setEditId(null);
+          setOriginalBreederId(null);
+          setForm({ ...EMPTY_FORM });
+          invalidate();
+        }}
+      />
     </div>
   );
 }

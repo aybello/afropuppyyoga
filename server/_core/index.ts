@@ -2,6 +2,7 @@ import express from "express";
 import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
+import { z } from "zod";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
@@ -11,12 +12,27 @@ import uploadRouter from "../uploadRoute";
 import chunkedUploadRouter from "../chunkedUploadRoute";
 import rateLimit from "express-rate-limit";
 import { storageGet } from "../storage";
-import { lumaPoller, capiSender } from "../metaCapi";
+import { capiSender, syncMetaPurchases } from "../metaCapi";
 import twilioWebhookRouter from "../twilioWebhook";
 import lumaWebhookRouter from "../lumaWebhook";
 import { requireStaffOrAdmin } from "./requireStaff";
 import { registerStorageProxy } from "./storageProxy";
 import crypto from "crypto";
+import { sdk } from "./sdk";
+import { sendEmail } from "../email";
+import {
+  CANCELLATION_CLASS_CREDIT_NOTICE,
+  CUSTOMER_CHANGE_CLASS_CREDIT_NOTICE,
+  FINAL_SALE_REFUND_NOTICE,
+} from "../../shared/refundPolicy";
+import { notifyOwner } from "./notification";
+import {
+  createLumaReminderOutcomeRepository,
+  deliverLumaReminderOutcomeReport,
+  isAuthorizedLumaReminderSchedule,
+  parseLumaReminderOutcomeReport,
+} from "../lumaReminderOutcome";
+import { completeQuickbooksAuthorization, syncQuickbooksConnectionForSchedule } from "../quickbooks";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -129,7 +145,14 @@ async function startServer() {
   });
 
   // Configure body parser with larger size limit for file uploads
-  app.use(express.json({ limit: "50mb" }));
+  app.use(express.json({
+    limit: "50mb",
+    verify: (req, _res, buffer) => {
+      if ((req.url ?? "").startsWith("/api/luma/webhook")) {
+        (req as express.Request & { rawBody?: string }).rawBody = buffer.toString("utf8");
+      }
+    },
+  }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
   // OAuth callback under /api/oauth/callback
@@ -260,6 +283,11 @@ async function startServer() {
     }
   });
 
+  // The signed Luma webhook must be mounted before the /api/luma tombstone.
+  // Otherwise the prefix handler returns 410 first, which causes Luma to pause
+  // the webhook automatically.
+  app.use(lumaWebhookRouter);
+
   // /api/luma proxy REMOVED (2026-07-13).
   // Even with a path allowlist, /public/v1/event/get-guests returns attendee
   // names, emails, and phone numbers to unauthenticated callers. The endpoint
@@ -304,11 +332,12 @@ async function startServer() {
   };
 
   // POST /api/scheduled/luma-poll — called by heartbeat every 10 min
-  // Polls recent/upcoming Luma events and inserts new paid registrations as pending rows.
+  // Polls recent/upcoming Luma events and immediately flushes paid purchases to Meta.
+  // The separate sender route below remains a backlog/retry safety net.
   app.post("/api/scheduled/luma-poll", async (req, res) => {
     if (!requireCronAuth(req, res)) return;
     try {
-      const result = await lumaPoller();
+      const result = await syncMetaPurchases();
       res.json({ ok: true, ...result });
     } catch (err) {
       console.error("[MetaCAPI] Luma poller error:", err);
@@ -342,11 +371,90 @@ async function startServer() {
     }
   });
 
+  // POST /api/scheduled/luma-reminder-outcome — called only by the existing
+  // agent schedule after its Luma reminder attempt. The agent never receives
+  // SMTP credentials; this endpoint owns the private owner-email delivery.
+  app.post("/api/scheduled/luma-reminder-outcome", async (req, res) => {
+    let scheduledUser;
+    try {
+      scheduledUser = await sdk.authenticateRequest(req);
+    } catch {
+      return res.status(403).json({ ok: false, error: "Scheduled Luma reminder task required" });
+    }
+    if (!scheduledUser.isCron || !isAuthorizedLumaReminderSchedule(scheduledUser.taskUid)) {
+      return res.status(403).json({ ok: false, error: "Scheduled Luma reminder task required" });
+    }
+    try {
+      const report = parseLumaReminderOutcomeReport(req.body);
+      const result = await deliverLumaReminderOutcomeReport(report, {
+        repository: createLumaReminderOutcomeRepository(),
+        sendEmail,
+        notifyOwner,
+      });
+      return res.json({ ok: result.delivery !== "failed", delivery: result.delivery, attemptDate: result.attemptDate });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ ok: false, error: "Invalid Luma reminder outcome report" });
+      }
+      console.error("[LumaReminderOutcome] Scheduled outcome callback failed:", error instanceof Error ? error.message : "unknown error");
+      return res.status(500).json({ ok: false, error: "Luma reminder outcome report could not be recorded" });
+    }
+  });
+
+  // QuickBooks Online returns the owner here after consent. This callback stores
+  // encrypted server-side OAuth tokens only; APY never writes back to QuickBooks.
+  app.get("/api/integrations/quickbooks/callback", async (req, res) => {
+    const code = typeof req.query.code === "string" ? req.query.code : "";
+    const state = typeof req.query.state === "string" ? req.query.state : "";
+    const realmId = typeof req.query.realmId === "string" ? req.query.realmId : "";
+    const denied = typeof req.query.error === "string" ? req.query.error : "";
+    if (denied || !code || !state || !realmId) {
+      return res.redirect("/admin/quickbooks?quickbooks=cancelled");
+    }
+    try {
+      await completeQuickbooksAuthorization(code, state, realmId);
+      return res.redirect("/admin/quickbooks?quickbooks=connected");
+    } catch (error) {
+      console.error("[QuickBooks] OAuth callback failed:", error instanceof Error ? error.message : "unknown error");
+      return res.redirect("/admin/quickbooks?quickbooks=error");
+    }
+  });
+
+  app.post("/api/scheduled/quickbooks-sync", async (req, res) => {
+    let scheduledUser;
+    try {
+      scheduledUser = await sdk.authenticateRequest(req);
+    } catch {
+      return res.status(403).json({ ok: false, error: "QuickBooks daily sync requires a scheduled task" });
+    }
+    if (!scheduledUser.isCron || !scheduledUser.taskUid) {
+      return res.status(403).json({ ok: false, error: "QuickBooks daily sync requires a scheduled task" });
+    }
+    try {
+      const result = await syncQuickbooksConnectionForSchedule(scheduledUser.taskUid);
+      return res.json({ ok: true, ...result });
+    } catch (error) {
+      console.error("[QuickBooks] Daily sync failed:", error instanceof Error ? error.message : "unknown error");
+      const content = "The read-only daily QuickBooks import stopped safely. No QuickBooks data was changed. Open APY HQ → QuickBooks Finance to review the sync status or retry manually.";
+      const ownerAlerted = await notifyOwner({ title: "QuickBooks daily sync needs attention", content });
+      if (!ownerAlerted) {
+        try {
+          await sendEmail({
+            to: "afropuppyyoga@gmail.com",
+            subject: "APY QuickBooks daily sync needs attention",
+            text: content,
+            html: `<p>${content}</p>`,
+          });
+        } catch (emailError) {
+          console.error("[QuickBooks] Owner email fallback failed:", emailError instanceof Error ? emailError.message : "unknown error");
+        }
+      }
+      return res.status(500).json({ ok: false, error: "QuickBooks daily sync failed" });
+    }
+  });
+
   // Twilio webhook callbacks — must be registered before tRPC
   app.use(twilioWebhookRouter);
-  // Luma webhook for payment/registration notifications
-  app.use(lumaWebhookRouter);
-
   // tRPC API
   app.use(
     "/api/trpc",
@@ -355,6 +463,29 @@ async function startServer() {
       createContext,
     })
   );
+
+  // Intuit validates public production-app policy URLs independently of the
+  // client bundle. Serve these small, truthful notices from Express so they
+  // remain available during a client asset rollout and do not depend on SPA
+  // route hydration.
+  const publicCompliancePage = (title: string, body: string) => `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${title} | AfroPuppyYoga</title><meta name="robots" content="index,follow">
+<style>body{margin:0;background:#fefaf4;color:#1a0a12;font-family:Arial,sans-serif;line-height:1.6}.page{max-width:760px;margin:0 auto;padding:56px 24px}h1{font-family:Georgia,serif;font-size:2.4rem;line-height:1.15;margin:0 0 8px}.eyebrow{color:#8b2252;font-size:.75rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase}.card{margin-top:28px;padding:28px;background:#fff;border:1px solid #f0dce5;border-radius:18px}h2{font-family:Georgia,serif;font-size:1.35rem;margin:26px 0 8px}a{color:#8b2252}footer{margin-top:32px;font-size:.85rem;color:#6b4c3b}</style></head>
+<body><main class="page"><p class="eyebrow">AfroPuppyYoga</p>${body}<footer><a href="https://afropuppyyoga.ca/">Return to AfroPuppyYoga</a></footer></main></body></html>`;
+  app.get(["/privacy", "/api/public/privacy"], (_req, res) => {
+    res.type("html").status(200).send(publicCompliancePage("Privacy Notice", `<h1>Privacy Notice</h1><p>Last updated September 7, 2026. This notice explains how AfroPuppyYoga handles information in its public website, APY HQ, and owner-controlled business integrations.</p><section class="card"><h2>Information and use</h2><p>AfroPuppyYoga handles the information reasonably needed to provide classes, private events, customer support, staffing, operations, and business administration. We use it to provide services, respond to requests, operate APY, protect our systems, and meet reasonable recordkeeping needs.</p><h2>Optional QuickBooks Online integration</h2><p>QuickBooks Online is owner-controlled and read-only. When the APY owner connects it, APY imports transaction facts for internal management reporting. APY does not create payments, edit QuickBooks transactions, or reconcile accounts.</p><h2>Google Sheets and AI analysis</h2><p>The APY owner may export imported QuickBooks data to a private Google Sheet under the owner-selected Google account. Optional AI analysis uses an aggregate summary without account numbers or individual transaction descriptions and requires owner approval for each request.</p><h2>Sharing, security, and retention</h2><p>We use service providers to operate the website, bookings, communications, storage, and approved integrations. We do not sell personal information. We apply reasonable safeguards and retain information only as reasonably needed for the purposes described here, operational records, and applicable obligations.</p><h2>Questions</h2><p>For questions or requests about your information, contact <a href="mailto:afropuppyyoga@gmail.com">afropuppyyoga@gmail.com</a>. We may need to verify identity before acting on a request.</p></section>`));
+  });
+  app.get(["/terms", "/api/public/terms"], (_req, res) => {
+    res.type("html").status(200).send(publicCompliancePage("Terms of Use", `<h1>Terms of Use</h1><p>Last updated September 7, 2026. These terms describe appropriate use of the AfroPuppyYoga website, APY HQ, and optional business integrations.</p><section class="card"><h2>Using AfroPuppyYoga services</h2><p>Bookings, waivers, availability, and event details may have additional terms shown when you book or communicate with APY.</p><h2>APY HQ and QuickBooks</h2><p>APY HQ is for authorized team members and the APY owner. The optional QuickBooks Online integration is read-only internal reporting. It does not create payments, change transactions, or reconcile accounts. Reports and AI summaries are management tools, not accounting, tax, legal, or financial advice.</p><h2>Contact</h2><p>For questions, contact <a href="mailto:afropuppyyoga@gmail.com">afropuppyyoga@gmail.com</a>.</p></section>`));
+  });
+  app.get(["/refund-policy", "/api/public/refund-policy"], (_req, res) => {
+    res.type("html").status(200).send(publicCompliancePage("Refund Policy", `<h1>Refund Policy</h1><p>Last updated September 13, 2026. This policy applies to AfroPuppyYoga class tickets and class-credit codes.</p><section class="card"><h2>Final-sale tickets</h2><p>${FINAL_SALE_REFUND_NOTICE}</p><h2>When AfroPuppyYoga cancels a class</h2><p>${CANCELLATION_CLASS_CREDIT_NOTICE} The code gives 100% off a future AfroPuppyYoga class booked through our calendar. Class-credit codes do not expire and may be transferred to another person.</p><h2>If you need to change your own booking</h2><p>${CUSTOMER_CHANGE_CLASS_CREDIT_NOTICE} Where a class credit is available, it is issued as a code for a future class rather than as a refund. Credits are not issued for late cancellations or no-shows, except where APY approves a documented emergency.</p><h2>Transfers and questions</h2><p>Tickets and class-credit codes may be transferred to another person. Contact <a href="mailto:afropuppyyoga@gmail.com">afropuppyyoga@gmail.com</a> before class begins if you need help with a transfer, booking change, or credit code.</p></section>`));
+  });
+  app.get(["/quickbooks-disconnect", "/api/public/quickbooks-disconnect"], (_req, res) => {
+    res.type("html").status(200).send(publicCompliancePage("Disconnect QuickBooks Online", `<h1>Disconnect QuickBooks Online</h1><section class="card"><p>The APY QuickBooks Online connection is an internal, owner-controlled reporting integration. It is read-only and does not create payments, change transactions, or reconcile accounts.</p><p>To revoke APY’s access, the APY owner can sign in to APY HQ, open <strong>More → QuickBooks</strong>, and choose <strong>Disconnect</strong>. This revokes APY’s QuickBooks access and stops future imports. Existing APY-imported records and any already-exported Google Sheet remain under the owner’s control.</p><p>For assistance, contact <a href="mailto:afropuppyyoga@gmail.com">afropuppyyoga@gmail.com</a>.</p></section>`));
+  });
+
   // SEO dynamic rendering: intercept crawler requests BEFORE Vite/static
   // so bots receive pre-rendered HTML with per-page title/description/canonical/JSON-LD.
   // Real users fall through to the SPA. See server/seoRenderer.ts.

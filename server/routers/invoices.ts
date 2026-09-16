@@ -109,6 +109,32 @@ export const invoicesRouter = router({
   }),
 
   /**
+   * Owner-only: correct a missing or unusable extracted invoice total before approval.
+   * Totals cannot be changed after approval or payment so the payment audit remains stable.
+   */
+  setTotal: ownerProcedure
+    .input(z.object({ id: z.number().int().positive(), totalAmountCents: z.number().int().positive() }))
+    .mutation(async ({ input }) => {
+      const invoice = await getInvoiceById(input.id);
+      if (!invoice || invoice.deletedAt) throw new TRPCError({ code: "NOT_FOUND", message: "Invoice not found" });
+      if (
+        invoice.workflowStatus === "approved" ||
+        invoice.workflowStatus === "paid" ||
+        invoice.status === "paid" ||
+        invoice.status === "partial" ||
+        invoice.amountPaidCents > 0
+      ) {
+        throw new TRPCError({ code: "CONFLICT", message: "Invoice totals cannot be changed after approval or payment." });
+      }
+
+      await updateInvoice(input.id, {
+        totalAmountCents: input.totalAmountCents,
+        payAmount: `$${(input.totalAmountCents / 100).toFixed(2)}`,
+      });
+      return { success: true, totalAmountCents: input.totalAmountCents };
+    }),
+
+  /**
    * Owner-only: record a payment (full or partial) against an invoice.
    * amountPaidCents is the NEW total paid so far (cumulative), not the incremental amount.
    */

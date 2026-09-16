@@ -1,5 +1,65 @@
 
 ## Current Staff Access Investigation
+- [x] Apply the approved conservative Fall Pricing and Ticket Ladder to new regular Luma classes and the APY HQ preview: 4/3/1/7 inventory, Kitchener/Hamilton $56/$108/$156/$58, and Oakville $61/$118/$171/$63
+- [x] Verify without saving that the APY HQ new-class preview shows the Kitchener/Hamilton Fall ladder and preserves the existing Luma registration, pattern, tint, and paid mat-rental settings
+- [x] Verify without saving that selecting Oakville changes the APY HQ preview to $61/$118 for 2/$171 for 3/$63, with unchanged Luma visual and registration settings
+- [x] Trace the current Luma class-creation pricing and inventory source, compare it with the reviewed fall ticket-ladder decision, and identify the canonical rule to apply
+- [x] Read the Pricing and Ticket Ladder Decision Report and reconcile its decisions with APY's current Luma ticket setup
+- [x] Review newly added files in Google Drive `04_Bus_Plan & Strategy` and synthesize applicable decisions and next actions for AfroPuppyYoga
+- [x] Write a consolidated business-plan decision summary that reconciles the four new strategy files' financial, valuation, growth, and exit assumptions
+- [x] Deliver the completed `04_Bus_Plan & Strategy` synthesis to Ay with the key decisions, risks, and next actions
+- [x] Record the reviewed strategy documents and resulting decisions in the shared AI Context Hub
+- [x] After a clean development-service restart, verify the homepage hydrates from the light hero-backed pending state into the full page without CSS or Vite transform errors
+- [x] Record deterministic local browser and console evidence for the clean first-paint hydration check
+- [x] Remove the development-only per-request `/src/main.tsx?v=…` rewrite that causes the custom Vite fallback to serve index HTML instead of the client module
+- [x] Resolve the Vite configuration function before creating the development middleware, preserving the `client` root so `/src/main.tsx` is transformed rather than served by the SPA fallback
+- [x] Capture the current clean-restart browser result: the warm first-paint hero renders locally, but the root still had not hydrated into visible page controls by the follow-up check
+- [x] Prevent Breeder Schedule class creation from duplicating an existing matching Luma calendar event; reuse the verified event and preserve APY ticket and theme rules
+- [x] Ensure breeder-confirmation rollback never cancels a pre-existing Luma event that was reused by the duplicate guard
+- [x] Validate live-calendar match, no-create behavior, Luma-check failure safety, existing ticket settings, TypeScript, and the full 164-test deterministic suite
+- [x] Remove the stale local CSS transform error, confirm no merge markers remain, and revalidate the light first-paint path
+- [x] Add and verify a deployment-visible light hero override that takes precedence over the legacy dark fallback during homepage initialization
+- [x] Eliminate the visible dark intermediate homepage state before the public hero renders without reintroducing the generic spinner or enlarging the initial bundle unnecessarily
+- [x] Confirm the local dark frame occurs while `#root` is empty and `home-pending` is active; its computed fallback is light image-backed, so the remaining issue is the visible pending period rather than APY content styling
+- [x] Verify locally that the first visible homepage frame is the actual warm hero image, not a dark shell or generic spinner
+- [x] Verify after a clean development-service restart that the initial local public frame is the warm hero image rather than the former dark fallback
+- [x] Publish the light first-paint homepage correction and verify on both live domains that the dark screen is gone while the generic spinner does not return
+- [x] Confirm after a clean restart that the homepage hydrates from the light hero-backed pending state into normal content rather than remaining an empty root
+- [x] Diagnose and remove the loading indicator still visible on the live public homepage without masking an actual failure or regressing APY safeguards
+- [x] Review and safely integrate the newly announced APY update without regressing published Employee Directory, APY HQ access, staffing-continuity, or public-site safeguards
+- [x] Integrate and validate the measured homepage hero first-paint improvement without changing Luma freshness, APY HQ workflows, or hosting and DNS choices
+- [x] Correct the homepage update so the production build actually excludes development editor instrumentation and verify the resulting HTML size
+- [x] Review and safely integrate the newly available APY update without regressing validated site and staff workflows
+- [x] Preserve Operations Manager location coverage when Employee Directory edits change a linked APY HQ role or location
+- [x] Resolve the Employee Directory merge conflict without losing the validated failed-data state or the new direct editing controls
+- [x] Restrict Employee Directory role edits to APY's permitted role model and preserve linked team-profile integrity
+- [x] Verify the Employee Directory loads its 19 records and exposes the direct Edit control beside each profile
+- [x] Verify Employee Directory filters, APY-wide role handling, and the `/admin/employee-directory` compatibility route without changing employee data
+- [x] Run TypeScript, focused staff-availability tests, and the full deterministic regression suite after the integration
+- [x] Deliver safe in-project homepage improvements: defer live Luma, below-the-fold sections, video work, and off-screen logo media from first load
+- [x] Do not enable Cloudflare or change domain routing; the owner declined external edge delivery
+- [x] Implement and locally validate a cache-first public homepage policy; production currently overrides its public caching headers
+- [x] Keep anonymous public-cache policy separate from no-store APY HQ, staff, signing, and API routes in the application source
+- [x] Keep the staff invoice-submission route out of the shared public document cache
+- [x] Verify production public-page and private-route headers; the platform overrides all documents to `no-cache, no-store, must-revalidate`
+- [x] Add and test an upstream shared-cache directive; confirm the production platform does not expose or honour it for public documents
+- [x] Add and locally validate the upstream public-document shared-cache directive while preserving private no-store boundaries
+- [x] Verify the freshly deployed public homepage and remove the avoidable live-calendar, below-the-fold, and off-screen asset work from first load
+- [x] Diagnose the fresh-production application-shell delay as Autoscale startup before the static homepage hero paints
+- [x] Measure the reported APY page-load delay using page, API, and database timing evidence
+- [x] Complete the public AfroPuppyYoga homepage loading audit across hero media, fonts, bundle, and public data requests
+- [x] Defer the measured 9.4-second live Luma calendar embed until the visitor reaches the class section, without caching Luma data
+- [x] Measure homepage font and JavaScript bundle contributions beyond the Luma embed
+- [x] Review and reduce duplicated or competing public homepage asset loads when they materially affect first render
+- [x] Stop mounting every lazy public homepage section on initial render so their JavaScript and media wait until the visitor approaches each section
+- [x] Document the 1.8–5.3 second idle API first-byte delay as an accepted Autoscale limitation, isolated from the optimized static public homepage first screen
+- [x] Identify and remove the APY HQ expired-session retry path that could hold a visible spinner
+- [x] Diagnose the observed Employee Directory loading state as an expired/redirected browser session rather than a 19-row database-query bottleneck
+- [x] Directly verify the live same-origin `staffAvailability.listEmployees` route response after the APY HQ session-handling changes
+- [x] Route expired APY HQ sessions to passwordless Staff Access instead of Manus login and prevent auth failures from retrying behind a visible spinner
+- [x] Give the Employee Directory an explicit failed-data state instead of an indefinite loading view
+- [x] Return a verified passwordless APY HQ session to its original protected page after re-entry
+- [x] Measure a successful representative APY API route and database query plan to separate startup delay from application data latency
 - [x] Review and safely synchronize newly available APY updates with the validated main branch
 - [x] Integrate the employee-directory and private-event HST updates without duplicating APY HQ staff editing or reintroducing the unreliable hero-image source
 - [x] Apply the confirmed employee-directory migration and private-event HST-at-checkout update after data-integrity validation
@@ -430,6 +490,20 @@
 - [x] SCHEDULED_JOB_SECRET set in production secrets
 - [x] Heartbeat jobs registered: apy-luma-poll (every 10 min) + apy-meta-capi-send (offset 5 min)
 - [x] 38/38 tests passing after all changes
+
+## Meta Purchase Attribution Repair (Sep 7 2026)
+
+- [x] Replace retired opt-in flag with explicit `META_CAPI_PAUSED` kill switch so production purchases send by default when credentials exist
+- [x] Require explicit `META_CAPI_TEST_MODE=true` before attaching `META_TEST_EVENT_CODE`
+- [x] Upgrade the default Meta Graph API endpoint to v25.0 and require at least one accepted event
+- [x] Add one-time, stable-event-ID replay for eligible purchases sent before the repair cutoff
+- [x] Recover stale `processing` rows and fix overlapping sender claims that could double-send
+- [x] Carry Meta `_fbc`/`_fbp` identifiers through Luma UTM content for stronger off-domain checkout matching
+- [x] Add `event_source_url` to website Purchase payloads
+- [x] Make the Luma poll schedule flush the CAPI queue immediately, while retaining the sender retry schedule
+- [x] Mount the signed Luma webhook before the `/api/luma` tombstone and implement Luma's current timestamped signature format
+- [x] Remove the committed Luma webhook secret; rotate it and configure `LUMA_WEBHOOK_SECRET` in production before resuming the webhook
+- [x] Add focused coverage for production/test mode, Purchase payloads, Meta browser IDs, Luma URL attribution, signature verification, and route ordering
 
 ## Security Audit Priorities 1–6 (Jul 13 2026)
 
@@ -935,4 +1009,331 @@
 - [x] Make Employee Directory summary cards work as filters for all, active, and former employees
 
 ## GitHub Synchronization (Sep 16, 2026)
-- [ ] Pull and validate the 84 newer commits from GitHub main without losing the current Employee Directory work
+- [x] Pull and validate the 84 newer commits from GitHub main without losing the current Employee Directory work
+
+## Luma Public-Class Invitations and Reminders (Aug 30, 2026)
+- [x] Confirm the owner-approved recipient policy: invite the full existing APY Luma calendar-contact audience when a newly created eligible public regular class is available
+- [x] Record that the calendar-contact audit found 1,575 contacts with no exposed tags or per-contact subscription field; the owner explicitly approved the full-calendar audience
+- [x] Add automatic full-calendar Luma invitations after a newly created eligible public regular class, excluding event guests and duplicate emails
+- [x] Ensure invitation eligibility excludes private, hidden, cancelled, sold-out, gift-card, and reused events, and stops without sending if Luma recipient verification fails
+- [x] Add regression coverage for paginated contact and guest retrieval, guest exclusion, duplicate suppression, long invite URLs, empty audiences, and reuse safety
+- [x] Revalidate and publish the class-creation invitation workflow without creating a test event or sending a live communication
+- [ ] Monitor the first unattended Monday/Thursday 10:00 AM ET Invited-only reminder run; the schedule remains configured but its persistent-session reauthentication behavior is not yet verified
+- [x] Enable and attach the owner-approved secure browser connection to the existing Luma reminder schedule without manually triggering a promotion
+
+## Expired Summer Promotion Removal (Aug 31, 2026)
+- [x] Remove the expired public "Summer Sale — 20% Off" promotion and any related display from the AfroPuppyYoga website
+- [x] Validate and publish the public homepage without the expired sale message
+
+## Luma Public-Class Invitations and Reminders (Aug 30, 2026)
+- [x] Confirm the owner-approved recipient policy: invite the full existing APY Luma calendar-contact audience when a newly created eligible public regular class is available
+- [x] Record that the calendar-contact audit found 1,575 contacts with no exposed tags or per-contact subscription field; the owner explicitly approved the full-calendar audience
+- [x] Add automatic full-calendar Luma invitations after a newly created eligible public regular class, excluding event guests and duplicate emails
+- [x] Ensure invitation eligibility excludes private, hidden, cancelled, sold-out, gift-card, and reused events, and stops without sending if Luma recipient verification fails
+- [x] Add regression coverage for paginated contact and guest retrieval, guest exclusion, duplicate suppression, long invite URLs, empty audiences, and reuse safety
+- [x] Revalidate and publish the class-creation invitation workflow without creating a test event or sending a live communication
+- [ ] Monitor the first unattended Monday/Thursday 10:00 AM ET Invited-only reminder run; the schedule remains configured but its persistent-session reauthentication behavior is not yet verified
+- [x] Enable and attach the owner-approved secure browser connection to the existing Luma reminder schedule without manually triggering a promotion
+
+## Expired Summer Promotion Removal (Aug 31, 2026)
+- [x] Remove the expired public "Summer Sale — 20% Off" promotion and any related display from the AfroPuppyYoga website
+- [x] Validate and publish the public homepage without the expired sale message
+
+## Luma Reminder Run Verification (Aug 31, 2026)
+- [x] Assess the recorded Monday reminder run without exposing recipient data or triggering a duplicate promotion
+- [ ] Restore the owner-approved secure browser connection to the active Luma reminder schedule if it was not retained after the reset
+
+## Local Dogs in Need Ticket Donation (Aug 31, 2026)
+- [x] Read the documented donation decision and capture only the approved public wording, recipient scope, and any amount or reporting commitment
+- [x] Add an accurate public statement that a portion of every AfroPuppyYoga ticket supports local dogs in need
+- [x] Add focused regression coverage and validate the donation message before publishing
+
+## Luma Monday Reminder Read-Only Review (Aug 31, 2026)
+- [x] Use the available browser only to inspect the Monday reminder outcome; do not create, edit, invite, or send a Luma communication
+
+## Missing Upcoming-Class Luma Invitations (Sep 1, 2026)
+- [x] Audit each upcoming eligible public APY Luma event for its existing invitation status without exposing recipient information or sending communications
+- [x] Identify why the published automatic class-creation invitation helper did not backfill current classes: it intentionally runs only after APY creates a new Luma event and never retroactively sends for existing or reused events
+- [x] Obtain explicit confirmation before sending any live invitation backfill to the owner-approved APY calendar-contact audience
+- [x] Revalidate and send the owner-confirmed one-time Luma invitation backfill only for the Sep 5 and Sep 6 Kitchener Dachshunds public classes
+
+## Owner-Controlled Existing-Event Luma Invitations (Sep 1, 2026)
+- [x] Add an owner-only APY HQ readiness check for an existing eligible public Luma event that returns aggregate invitation information only
+- [x] Add an owner-only confirmed send control that revalidates event state, prevents duplicate invitations, excludes registered guests, and never exposes recipient data
+- [x] Add focused regression coverage and validate the APY HQ experience without sending a live Luma invitation
+## Recurring Luma Promotion Rule Verification (Sep 3, 2026)
+- [x] Confirm the active Monday/Thursday 10:00 AM Eastern Luma reminder schedule already contains the owner-approved eligibility, Invited-only audience, one-time-code, same-day duplicate-prevention, exact-message, and safe no-send rules
+
+## Missed Thursday Luma Promotion Investigation (Sep 3, 2026)
+- [ ] Inspect all current eligible public APY Luma events and their Blasts read-only to determine whether the 10:00 AM schedule created the required Invited-only promotion
+- [ ] Identify the schedule-run failure or safe-stop reason without exposing recipient information, changing Luma records, or claiming delivery without evidence
+- [ ] Obtain explicit confirmation before sending any corrective live blast for an affected event
+
+## Breeder Calendar Confirmation Unification (Sep 2, 2026)
+- [x] Replace the calendar-specific breeder message path with the existing detailed confirmation review and email-plus-SMS delivery workflow
+- [x] Preserve Canadian-phone validation, SMS suppression, email fallback, confirmation review, and accurate delivery feedback
+- [x] Add regression coverage and validate the unified calendar action without sending a live breeder confirmation
+
+## Top-Banner Local Dogs Announcement (Sep 2, 2026)
+- [x] Move the approved local-dogs-in-need ticket contribution announcement into the former top-of-page Summer Sale banner position
+- [x] Remove the public three-month pilot reference while retaining the accurate $0.50 eligible-ticket contribution and unnamed-partner boundary
+- [x] Validate that the production domain serves the relocated public announcement after republishing the deployment
+
+## Refined Local Dogs Announcement (Sep 2, 2026)
+- [x] Remove the current full-width top-of-page donation banner that crowds the header
+- [x] Replace it with a more refined, visually integrated local-dogs-in-need announcement using the approved public commitment
+- [x] Validate the redesigned announcement on desktop and mobile before publishing
+- [x] Verify that the production domain switched from the retired fixed top banner to the refined hero impact note after republishing
+
+## Local Dogs Impact Note Color Refinement (Sep 2, 2026)
+- [x] Replace the current local-dogs hero impact-note color with a softer hero-aligned treatment while maintaining readable contrast
+- [x] Verify the refined color treatment on desktop and mobile before publishing
+- [x] Verify the live domain serves the softer blush-and-cream impact-note asset rather than the prior dark card after republishing
+
+## Uptime Monitoring and Public-Site Warmth (Sep 2, 2026)
+- [ ] Inspect whether an existing uptime monitor or health check is already configured for the APY public site and determine its interval and target safely
+- [ ] Compare safe options for reducing Autoscale cold starts before changing hosting or monitoring behavior
+- [ ] Diagnose and correct the existing 10-minute APY availability check, whose recent execution history shows unauthenticated 401 failures
+
+## Post-Monitoring Public-Site Performance (Sep 2, 2026)
+- [ ] Measure live homepage loading and interaction performance after the external uptime monitor was enabled
+- [ ] Identify the proven source of remaining lag and propose only improvements supported by before-and-after measurements
+
+## Invoice Feature Status Audit (Sep 2, 2026)
+- [x] Inspect the current invoice submission and dashboard routes, role access, and recent implementation state before changing invoice behavior
+
+## Invoice Paid-Status Correction (Sep 2, 2026)
+- [x] Diagnose why the owner cannot mark an approved invoice as paid without changing existing financial records during investigation
+- [x] Correct the dashboard and protected payment workflow while preserving approval, cumulative-payment, amount-limit, and audit safeguards
+- [x] Add regression coverage and validate the paid-status correction without modifying a live invoice
+
+## Confirmed Kitchener Reminder-Blast Correction (Sep 3, 2026)
+- [x] Revalidate only the Sep 5 and Sep 6 Kitchener Dachshunds events, their existing Invited audiences, and their current Blasts without exposing recipient data
+- [x] Send the owner-confirmed approved Luma reminder blast only to the existing Invited audience for those two Kitchener events
+- [x] Exclude the Oakville class and all other events; do not send new invitations or duplicate any same-day promotional blast
+- [x] Verify and document aggregate send outcomes without retaining recipient data
+- [ ] Resolve the Luma visible-composer 140-character limit without truncating the required full event message or sending an unapproved rewrite
+- [ ] Clear the unsent incorrect compact draft and use the exact approved reminder wording before any live send
+- [ ] Use a warm event-specific reminder without an event link, relying on Luma’s native event access and its 140-character composer limit
+
+## Luma Reminder Owner Outcome Notifications (Sep 3, 2026)
+- [x] Verify available owner-email and text-delivery routes without using or exposing personal contact data
+- [x] Present a privacy-preserving delivery comparison and obtain the owner’s preferred notification channel
+- [x] Implement one concise owner outcome report after every scheduled Luma reminder attempt, including each eligible event’s sent or safely-stopped status without attendee data
+- [x] Prevent duplicate owner reports when a scheduled attempt is retried and surface delivery-channel failure safely
+- [x] Add focused regression coverage for outcome formatting, redaction, idempotency, and notification failure handling
+- [x] Publish and record the chosen notification workflow, while keeping scheduled Luma delivery reliability separately auditable
+
+## Private Event Multi-Session Pricing and Scheduling (Sep 3, 2026)
+- [x] Reproduce the reported two-session quote defect and trace session-count handling through private-event inquiry, approval, and class creation
+- [x] Make a two-session private-event quote equal exactly two times the applicable one-session price, preserving HST and any approved adjustments
+- [x] On approval, create one class per booked session with a 30-minute break between the first and second class while retaining duplicate-prevention safeguards
+- [x] Use one combined checkout for the full two-session total and display both booked time slots to the client, with the second class marked as included rather than separately charged
+- [x] Preserve existing single-session and already-approved private-event records without silently creating, moving, or charging additional classes
+- [x] Add focused regression coverage for multi-session pricing, two-class timing, and single-session compatibility
+- [x] Publish, verify, and record the repaired private-event workflow
+
+## Employee Directory Creation and Onboarding Conversion (Sep 3, 2026)
+- [x] Trace Employee Directory records, team-profile creation, and job-application onboarding status to define a safe shared employee-creation path
+- [x] Add an owner/Operations-Manager direct Add Employee action with role, location, start date, and email-or-phone contact validation
+- [x] Add an eligible onboarding-complete job-application action that creates or links an employee record without auto-granting staff portal access
+- [x] Prevent duplicate employee, team-profile, or access records; retain the source application and preserve location-coverage safeguards
+- [x] Add a confirmed employee-departure action that marks the directory record inactive, retains history, and never deletes the source application or grants/revokes access beyond existing APY HQ safeguards
+- [x] Add focused tests for permissions, onboarding eligibility, duplicate prevention, contact validation, and coverage protection
+- [x] Publish, verify, and record the Employee Directory improvements
+
+## Former Employee Directory Record Deletion (Sep 3, 2026)
+- [x] Trace Employee Directory dependencies before permitting permanent deletion of a former record
+- [x] Permit only owners to permanently delete an inactive directory record that has no active APY HQ profile, preserving all active-staff, coverage, and access safeguards
+- [x] Retain job applications and immutable hiring/audit history when a linked former directory record is deleted
+- [x] Add a clearly destructive confirmation flow in Employee Directory and hide the option for active records
+- [x] Add focused regression coverage for permission, inactive-only eligibility, linked-record handling, and active-staff protection
+- [x] Publish, verify, and record the former-employee deletion control
+
+## Individual Class Staff Messaging Location (Sep 3, 2026)
+- [x] Verify and communicate the APY HQ navigation path for individual yoga-instructor and puppy-monitor email/SMS messaging
+
+## Run APY Class Staffing and Messaging (Sep 3, 2026)
+- [x] Trace the Run APY class-staffing workflow and its relationship to individual email/SMS messaging controls
+- [x] Expose individual class-staff messaging from Run APY without widening the recipient set beyond assigned staff
+- [x] Allow an optional third assigned Puppy Monitor while retaining the requirement for at least two monitors and preventing duplicate assignments
+- [x] Add focused tests for third-monitor capacity, duplicate prevention, and individual message-recipient safety
+- [x] Validate Run APY user interface behavior, publish, and record the staffing improvement
+
+## Run APY Individual and Group Class Messaging (Sep 3, 2026)
+- [x] Review the current Run APY individual-message panel and the existing whole-team delivery safeguards
+- [x] Add an explicit Send to whole team action alongside the existing per-person Message or Resend actions
+- [x] Keep individual messaging restricted to the selected assigned staff member so newly added staff can be contacted without re-sending to others
+- [x] Validate recipient scope, whole-team resend confirmation, delivery-status feedback, interface clarity, publish, and record the improvement
+
+## Operations Manager Employee and APY HQ Access Audit (Sep 3, 2026)
+- [ ] Verify Operations Manager authority to add Employee Directory records, create/manage active APY HQ staff profiles, and use operational APY HQ routes
+- [ ] Preserve owner-only invoice/revenue access and existing location-coverage safeguards while correcting any Operations Manager permission gap
+- [ ] Add or update focused authorization coverage, publish any required correction, and record the verified access matrix
+
+## QuickBooks Financial Data and AI Analysis (Sep 5, 2026)
+- [x] Confirm the desired QuickBooks Online data scope, refresh frequency, owner-only access boundaries, and AI analysis questions before connecting an accounting company
+- [x] Compare a connected QuickBooks synchronization workflow with a lighter-weight export-import alternative and record the selected approach
+- [x] Implement the selected read-only financial-data import with encrypted credential handling, transaction deduplication, source lineage, and owner-only visibility
+- [x] Provide AI-assisted expense and bank-data analysis that distinguishes transaction facts from generated interpretation and does not make payments, reconcile accounts, or modify QuickBooks records
+- [x] Configure the approved daily synchronization trigger, tests, monitoring, and operational failure alerts without using in-process timers
+- [ ] Publish the QuickBooks finance hub, then authorize the owner-controlled QuickBooks company connection and verify the first read-only import
+
+## QuickBooks Transaction Export to Google Sheets (Sep 7, 2026)
+- [x] Verify the owner-controlled Google Sheets destination and privacy boundaries for QuickBooks transaction exports
+- [ ] Add a read-only, owner-only export that writes imported QuickBooks transaction rows to a private Google Sheet without changing QuickBooks
+- [ ] Preserve source identifiers, prevent duplicate sheet rows on refresh, and keep transaction data inaccessible to non-owners
+- [ ] Add both a daily Sheet refresh and owner-only on-demand export after a manual QuickBooks sync
+- [ ] Authorize the selected Sheet, validate the first export, publish, and record the Google Sheets workflow
+
+## Google Service Account for APY Finance Sheet (Sep 7, 2026)
+- [ ] Define the least-privilege Google Cloud service-account permissions and single-Sheet sharing boundary for APY financial exports
+- [ ] Add a secure owner-only transaction export using the service-account credentials, with a repeat-safe snapshot replacement and explicit source identifiers
+- [ ] Configure the approved service account without exposing its key and share only the selected APY QuickBooks Transactions Sheet
+- [ ] Enable daily plus on-demand Sheet exports, validate the first private export after QuickBooks authorization, and record operational failure handling
+
+## QuickBooks OAuth Redirect URI Correction (Sep 7, 2026)
+- [ ] Verify the exact production APY QuickBooks callback URL and ensure it is registered verbatim in the Intuit app’s production Redirect URIs
+- [ ] Retry owner-authorized QuickBooks Online read-only consent after the redirect setting is saved
+- [ ] Verify the first import and corresponding private Google Sheet export after authorization succeeds
+
+## Intuit Production App Completion (Sep 7, 2026)
+- [x] Map the APY read-only QuickBooks integration to the required Intuit production app-details and compliance fields
+- [x] Add a public APY privacy notice and owner-controlled QuickBooks disconnect flow before registering those production URLs
+- [x] Expose stable public policy and disconnect documents through the deployed API gateway because the production static bundle is serving a prior route revision
+- [ ] Complete the owner-controlled Intuit production app configuration without changing client credentials or QuickBooks records
+- [ ] Register the exact production APY callback, authorize the real QuickBooks Online company, and verify the first Google Sheet export
+
+## Incoming APY Repository Update Review (Sep 5, 2026)
+- [x] Inspect the newly available repository update and current working tree before integration
+- [x] Assess compatibility with APY’s published operations, role/access safeguards, and the planned QuickBooks Online finance hub
+- [x] Integrate, test, publish, and record only the compatible incoming changes
+
+## Approved Meta Purchase Attribution Repair (Sep 5, 2026)
+- [x] Merge the reviewed Meta/Luma purchase-attribution repair with the owner’s approval to retain the active attribution sender and allow its deduplicated replay
+- [x] Validate the integrated production build and protect unrelated APY workflows and the planned QuickBooks Online finance hub
+- [x] Publish, confirm the active Meta sender remains enabled, and record the approved attribution repair
+
+## Urgent Cancellation and Rebooking Email Investigation (Sep 7, 2026)
+- [x] Contain any further cancellation and rebooking communications while preserving existing audit records
+- [x] Identify the privacy-preserving scope and trigger of the unexpected cancellation email and generated rebooking code
+- [x] Correct the cancellation, rebooking-code, and suggested-class communication safeguards with focused regression coverage
+- [x] Validate and report the incident findings without recipient data; retain the paused sender until the owner explicitly approves re-enablement
+
+## Unified Employee Directory and APY HQ Access (Sep 7, 2026)
+- [x] Trace direct employee creation and applicant-conversion paths against active APY HQ profile safeguards
+- [x] Create a matching active APY HQ profile and role-based access when the owner adds an employee with a valid email or phone
+- [x] Preserve manual onboarding eligibility, duplicate prevention, Operations Manager coverage, and role restrictions
+- [x] Make access status clear in Employee Directory and validate the unified workflow end to end
+- [x] Prevent direct employee creation from duplicating an existing applicant or APY HQ profile that uses the same contact information
+
+## Legacy Employee APY HQ Access Linking Repair (Sep 9, 2026)
+- [x] Inspect the affected legacy Employee Directory record and matching application or APY HQ profile without exposing personal data
+- [x] Allow the owner-only Grant APY HQ access action to safely link a single eligible matching legacy profile instead of treating it as an unrecoverable duplicate
+- [x] Reject ambiguous, role-conflicting, location-conflicting, inactive, or already-linked matches while preserving Operations Manager coverage safeguards
+- [x] Add focused regression coverage, validate the corrected flow, publish, and record the legacy-access repair
+
+## Puppy Monitor Location Coverage Rule (Sep 9, 2026)
+- [x] Remove any maximum Puppy Monitor limit applied at the location level
+- [x] Preserve the requirement that each active location has at least six active Puppy Monitors
+- [x] Add focused regression coverage, validate, publish, and record the uncapped coverage rule
+
+## Date-Based Cancellation Rebooking Codes (Sep 7, 2026)
+- [x] Re-enable cancellation communications only after a mandatory owner-visible preview confirms the exact email and SMS, code, and active channels
+- [x] Preserve per-cancellation explicit confirmation so no email, SMS, call, or rebooking code is sent from a stale or bypassed preview
+- [x] Validate, publish, and record the preview-first cancellation re-enablement without sending any live cancellation communication during testing
+
+## Operations Manager Cancellation Access (Sep 13, 2026)
+- [x] Verify Operations Managers can review and confirm class cancellations through the mandatory preview-first workflow
+- [x] Confirm no authorization change is needed: Operations Managers already have the approved operational-management access boundary; revenue and invoice access remain owner-only
+
+## Cancellation Preview-Key Repair (Sep 13, 2026)
+- [x] Reproduce why the cancellation dashboard exposes Proceed to Send while the required preview key is undefined
+- [x] Require a fresh server-issued preview key before enabling cancellation delivery and show a recoverable preview-loading state
+- [x] Validate the preview-key repair without sending a live cancellation communication
+- [x] Publish and synchronize the preview-key repair after final checklist verification
+- [x] Record the published preview-key repair in the APY Context Hub and final project task record
+
+## Cancellation Refund-Policy Communication (Sep 13, 2026)
+- [x] Verify the public APY refund-policy wording and canonical link before reusing it in cancellation messages
+- [x] State clearly in cancellation email/SMS that tickets are final sale, refunds are not issued, and the date-based class credit is the rebooking alternative
+- [x] Add the refund-policy link to the exact cancellation email preview without silently changing any other cancellation terms
+- [x] Add focused regression coverage, validate, publish, and record the policy-consistent communication update
+
+## Monday/Thursday Luma Reminder Review (Sep 13, 2026)
+- [x] Review public, visible, open, non-cancelled, non-sold-out APY regular classes starting within the next 10 days through the official Luma management account only
+- [x] Verify Invited-only audience, same-day blast history, and an explicitly approved compact event-specific message before any Luma blast
+- [x] Send only compliant reminders or safely stop each candidate event with a permitted non-sensitive reason
+- [x] Attempt exactly one privacy-preserving scheduled result after the review and record the endpoint operational failure without retrying communications
+
+## Job-Application Video Submission Repair (Sep 14, 2026)
+- [x] Reproduce the applicant-facing video upload and pasted-link submission paths without storing real applicant files or data
+- [x] Identify and repair the exact upload or validation failure while retaining file-size, file-type, privacy, and submission safeguards
+- [x] Provide a clear applicant-facing recovery path if a file cannot be accepted
+- [x] Add regression coverage, validate, publish, and record the job-application video submission repair
+
+## Job-Application Uploaded Video Preview (Sep 14, 2026)
+- [x] Review the existing Careers video upload state and identify a privacy-safe preview source for the applicant's selected or completed video
+- [x] Add accessible playback preview and replacement controls before final application submission without exposing video data in logs or storage beyond the existing upload flow
+- [x] Add focused regression coverage and validate the preview alongside upload-recovery, build, and public Careers-form checks
+- [x] Publish, synchronize, and record the applicant video preview release
+
+- [x] Replace the incorrect random cancellation-code generation with the owner-required Ontario class-date format, such as AUG5
+- [x] Block cancellation communications until the date-based code and the recipient workflow are verified
+- [x] Add focused regression coverage for date-code format, duplicate-code handling, and no-send safety
+- [x] Verify every historic and future correction creates or reuses a 100% off Luma calendar-level date code usable for any upcoming APY class
+- [x] Remove automatic promotion of one specific next class from cancellation notices because the calendar-level date code is valid for any upcoming APY class
+
+## Hamilton Pomskies 11 AM Rebooking Email (Sep 9, 2026)
+- [x] Verify the upcoming Hamilton Pomskies 11:00 AM class, valid SEP12 rebooking code, and eligible attendee scope without exposing attendee data
+- [x] Prepare a privacy-safe rebooking email that directs affected guests to the other available time slots
+- [x] Keep cancellation communications paused until explicit re-enablement and final send authorization are confirmed
+- [x] Record the outcome without retaining or exposing attendee email addresses
+- [x] Distinguish the exact affected 11:00 AM session from other 11:00 AM registrations before selecting any recipient segment
+- [x] Use all verified 11:00 AM Hamilton Pomskies ticket categories as the owner-selected rebooking-email scope
+- [x] Create and verify SEP12 as a 100%-off calendar-level rebooking code before delivery
+- [x] Send the approved rebooking message by email, call, and SMS only to the six owner-selected 11:00 AM Hamilton Pomskies registrations
+
+## Owner Mobile SMS Replies (Sep 10, 2026)
+- [x] Trace why inbound APY guest-text notifications cannot be replied to directly from the owner’s phone
+- [x] Evaluate a privacy-safe mobile two-way messaging option that preserves the APY business number and SMS-consent safeguards
+- [x] Present the owner with implementation options before enabling any new message-routing or external mobile service
+- [x] Prepare a staged transition plan for the owner-selected mobile business-texting app, including APY-number porting and automation continuity safeguards
+
+## Monday/Thursday Luma Reminder Review (Sep 10, 2026)
+- [x] Review eligible public AfroPuppyYoga regular classes within 10 days through the official Luma management account and visible controls only
+- [x] Confirm Invited-only audience, same-day blast history, and approved compact-message availability per eligible event before any blast
+- [x] Send only compliant reminders or safely stop each event with an approved non-sensitive reason
+- [ ] Post exactly one privacy-preserving result to the deployed APY scheduled-outcome endpoint after the review — one safe attempt failed before connecting because its configured base URL was unavailable; do not retry this review
+
+## Upcoming-Only Puppy Class Schedule (Sep 10, 2026)
+- [x] Trace the Puppy Class Schedule data query and identify why completed classes remain visible
+- [x] Filter the active Puppy Class Schedule to future and upcoming classes only without deleting historical records
+- [x] Add regression coverage, validate the view, publish, and record the schedule-display correction
+
+## APY HQ Class Staff Assignment Controls (Sep 10, 2026)
+- [x] Trace why the class-staff UI permits Puppy Monitor changes but does not expose equivalent Operations Manager and Yoga Instructor assignment controls
+- [x] Allow authorized APY HQ users to assign or replace an Operations Manager and Yoga Instructor from the eligible active team roster while retaining role, location, and class-staffing safeguards
+- [x] Keep the existing individual email/SMS Message or Resend controls available to notify only the newly selected Operations Manager or Yoga Instructor
+- [x] Add regression coverage, validate the class-staff workflow, publish, and record the role-assignment correction
+
+## Cross-Location Class Leadership Assignment (Sep 10, 2026)
+- [x] Trace the same-location filter currently restricting Operations Manager and Yoga Instructor assignment choices
+- [x] Allow any active and available Operations Manager or Yoga Instructor on the APY roster to be assigned to an upcoming class regardless of home location
+- [x] Preserve role validation, availability checks, individual Message or Resend actions, and Puppy Monitor staffing/location rules
+- [x] Add regression coverage, validate, publish, and record the cross-location leadership assignment update
+
+## Previewed Breeder Class-Cancellation Notice (Sep 10, 2026)
+- [x] Trace the breeder-backed class deletion action and existing breeder email/SMS confirmation logic
+- [x] Add a privacy-safe preview of the exact breeder cancellation notice and delivery channels before deletion confirmation
+- [x] After the owner confirms deletion, notify only the linked breeder by the available original email/SMS channels and report actual delivery status
+- [x] Preserve the separately paused customer cancellation workflow and do not delete, modify, or message the September 20 class during implementation validation
+- [x] Add regression coverage, validate, publish, and record the previewed breeder cancellation workflow
+- [x] Confirm the owner-selected flow: preview the linked breeder’s cancellation notice, then notify automatically only after the owner confirms class deletion
+
+## Active-Luma Breeder Replacement (Sep 11, 2026)
+- [x] Trace the existing class-edit path to determine how an active Luma event can retain its class details while the linked breeder is replaced
+- [x] Add a previewed, owner-confirmed replacement workflow that notifies only the outgoing breeder while preserving the active Luma event, class staffing, and customer communications guard
+- [x] Validate the breeder replacement workflow without changing a live class or sending any breeder message during testing
+- [x] Publish and synchronize the breeder replacement workflow after final checklist verification
+- [x] Record the published breeder replacement workflow in the APY Context Hub and final project task record

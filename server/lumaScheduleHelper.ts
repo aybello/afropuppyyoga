@@ -11,11 +11,328 @@
 import {
   APY_MAT_RENTAL_TICKET,
   APY_REGULAR_CLASS_LUMA_PREVIEW,
-  APY_REGULAR_CLASS_TICKET_OPTIONS,
   APY_REGULAR_CLASS_TIME_SLOTS,
+  getRegularClassTicketOptions,
 } from "@shared/lumaClassConfig";
+import { notifyOwner } from "./_core/notification";
 
 const LUMA_BASE = "https://public-api.luma.com/v1";
+const LUMA_INVITE_MESSAGE_MAX_LENGTH = 200;
+
+type LumaPagedResponse<T> = {
+  entries?: T[];
+  has_more?: boolean;
+  next_cursor?: string | null;
+};
+
+type LumaInviteRecipient = {
+  email: string;
+  name?: string;
+};
+
+type LumaEventLookup = {
+  url?: string;
+  visibility?: string;
+  registration_open?: boolean;
+  cancelled_at?: string | null;
+  is_cancelled?: boolean;
+  is_sold_out?: boolean;
+  sold_out?: boolean;
+  status?: string;
+  event?: Record<string, unknown>;
+};
+
+export type LumaExistingEventInvitationReadiness = {
+  status: "ready" | "already_invited" | "ineligible" | "no_recipients";
+  recipientCount: number;
+  registeredGuestCount: number;
+  existingInvitationCount: number;
+  reason?: string;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value) && typeof value === "object" && !Array.isArray(value);
+
+const firstNonEmptyString = (...values: unknown[]): string | undefined => {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return undefined;
+};
+
+/** Normalizes an address before recipient comparison without logging it. */
+export function normalizeLumaEmail(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const email = value.trim().toLocaleLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
+}
+
+function eventRecord(response: LumaEventLookup): Record<string, unknown> {
+  return isRecord(response.event) ? response.event : response;
+}
+
+/**
+ * The class creator explicitly sets public visibility and open registration.
+ * When the lookup exposes state fields, any contrary state blocks outreach.
+ */
+export function isEligibleCreatedLumaEventForInvites(response: LumaEventLookup): boolean {
+  const event = eventRecord(response);
+  const visibility = firstNonEmptyString(event.visibility)?.toLocaleLowerCase();
+  const status = firstNonEmptyString(event.status)?.toLocaleLowerCase();
+  if (visibility && visibility !== "public") return false;
+  if (event.registration_open === false) return false;
+  if (event.is_cancelled === true || event.cancelled_at || event.is_sold_out === true || event.sold_out === true) return false;
+  return !["cancelled", "hidden", "private", "sold_out"].includes(status ?? "");
+}
+
+function lumaContactRecord(entry: unknown): Record<string, unknown> | null {
+  if (!isRecord(entry)) return null;
+  return [entry.calendar_contact, entry.contact, entry].find(isRecord) ?? null;
+}
+
+function lumaGuestEmail(entry: unknown): string | null {
+  if (!isRecord(entry)) return null;
+  const guest = isRecord(entry.guest) ? entry.guest : null;
+  const user = isRecord(entry.user) ? entry.user : null;
+  const guestUser = guest && isRecord(guest.user) ? guest.user : null;
+  return normalizeLumaEmail(
+    firstNonEmptyString(entry.user_email, entry.email, guest?.email, user?.email, guestUser?.email)
+  );
+}
+
+function hasLumaInvitation(entry: unknown): boolean {
+  return isRecord(entry) && typeof entry.invited_at === "string" && entry.invited_at.trim().length > 0;
+}
+
+function lumaContactRecipient(entry: unknown): LumaInviteRecipient | null {
+  const contact = lumaContactRecord(entry);
+  if (!contact) return null;
+  const email = normalizeLumaEmail(contact.email);
+  if (!email) return null;
+  const name = firstNonEmptyString(
+    contact.name,
+    [firstNonEmptyString(contact.first_name), firstNonEmptyString(contact.last_name)].filter(Boolean).join(" ")
+  );
+  return name ? { email, name } : { email };
+}
+
+export function buildLumaClassInviteRecipients(
+  contactEntries: unknown[],
+  registeredGuestEmails: Set<string>
+): LumaInviteRecipient[] {
+  const recipients = new Map<string, LumaInviteRecipient>();
+  for (const entry of contactEntries) {
+    const recipient = lumaContactRecipient(entry);
+    if (!recipient || registeredGuestEmails.has(recipient.email) || recipients.has(recipient.email)) continue;
+    recipients.set(recipient.email, recipient);
+  }
+  return Array.from(recipients.values());
+}
+
+async function fetchAllLumaEntries<T>(apiKey: string, path: string, purpose: string): Promise<T[]> {
+  const firstPageUrl = new URL(`${LUMA_BASE}${path}`);
+  firstPageUrl.searchParams.set("pagination_limit", "100");
+  const entries: T[] = [];
+  let cursor: string | undefined;
+
+  for (let page = 0; page < 100; page += 1) {
+    const pageUrl = new URL(firstPageUrl.toString());
+    if (cursor) pageUrl.searchParams.set("pagination_cursor", cursor);
+    const response = await fetch(pageUrl.toString(), {
+      headers: { "x-luma-api-key": apiKey },
+    });
+    if (!response.ok) throw new Error(`Luma ${purpose} lookup failed (${response.status})`);
+
+    const data = await response.json() as LumaPagedResponse<T>;
+    if (Array.isArray(data.entries)) entries.push(...data.entries);
+    if (!data.has_more) return entries;
+
+    const nextCursor = typeof data.next_cursor === "string" ? data.next_cursor : "";
+    if (!nextCursor || nextCursor === cursor) {
+      throw new Error(`Luma ${purpose} lookup returned an invalid pagination cursor`);
+    }
+    cursor = nextCursor;
+  }
+
+  throw new Error(`Luma ${purpose} lookup exceeded the safe page limit`);
+}
+
+type LumaClassInviteMessageParams = Pick<LumaScheduleParams, "classDate" | "location" | "breed"> & {
+  eventUrl: string;
+};
+
+/** Returns null rather than truncate a Luma URL when its message would exceed Luma's 200-character limit. */
+export function buildLumaClassInviteMessage(params: LumaClassInviteMessageParams): string | null {
+  const eventUrl = params.eventUrl.trim();
+  const eventDate = new Date(`${params.classDate}T12:00:00Z`);
+  if (!eventUrl || Number.isNaN(eventDate.getTime())) return null;
+
+  const date = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Toronto",
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  }).format(eventDate);
+  const location = params.location.trim() || "your area";
+  const breed = params.breed.trim() && params.breed !== "TBD" ? params.breed.trim() : "our puppies";
+  const suffix = ` Reserve your spot: ${eventUrl}`;
+  const maxIntroLength = LUMA_INVITE_MESSAGE_MAX_LENGTH - suffix.length;
+  if (maxIntroLength < 2) return null;
+
+  const fullIntro = `Puppy yoga is coming up in ${location}! Join us ${date} with ${breed}.`;
+  const intro = fullIntro.length <= maxIntroLength
+    ? fullIntro
+    : `${fullIntro.slice(0, maxIntroLength - 1).trimEnd()}…`;
+  return `${intro}${suffix}`;
+}
+
+async function reportLumaInvitationIssue(reason: string): Promise<void> {
+  console.error(`[LumaSchedule] ${reason}`);
+  try {
+    await notifyOwner({
+      title: "Luma class invitations need review",
+      content: `${reason} The class event remains available and no automatic invitation set was sent. Review the event in Luma before any manual follow-up.`,
+    });
+  } catch (notificationError) {
+    console.warn("[LumaSchedule] Could not send the invitation-review notification:", notificationError);
+  }
+}
+
+/**
+ * Invites the owner-approved calendar audience only after all contacts and the
+ * event's existing guests have been read successfully. One Luma request is
+ * used so a failed recipient audit cannot leave a partial automatic campaign.
+ */
+async function inviteCalendarContactsToCreatedClass(
+  apiKey: string,
+  eventId: string,
+  eventUrl: string,
+  params: LumaScheduleParams
+): Promise<void> {
+  const message = buildLumaClassInviteMessage({ ...params, eventUrl });
+  if (!message) {
+    await reportLumaInvitationIssue("Automatic invitations were skipped because the verified Luma event link could not fit safely in Luma's invite-message limit.");
+    return;
+  }
+
+  try {
+    const [contactEntries, guestEntries] = await Promise.all([
+      fetchAllLumaEntries<unknown>(apiKey, "/calendars/contacts/list", "calendar-contact"),
+      fetchAllLumaEntries<unknown>(apiKey, `/events/guests/list?event_id=${encodeURIComponent(eventId)}`, "event-guest"),
+    ]);
+    const registeredGuestEmails = new Set(
+      guestEntries.map(lumaGuestEmail).filter((email): email is string => Boolean(email))
+    );
+    const recipients = buildLumaClassInviteRecipients(contactEntries, registeredGuestEmails);
+    if (recipients.length === 0) {
+      console.log("[LumaSchedule] No eligible calendar contacts to invite to the newly created class.");
+      return;
+    }
+
+    const sendResponse = await fetch(`${LUMA_BASE}/events/guests/send-invites`, {
+      method: "POST",
+      headers: { "x-luma-api-key": apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify({ event_id: eventId, guests: recipients, message }),
+    });
+    if (!sendResponse.ok) throw new Error(`Luma invite delivery failed (${sendResponse.status})`);
+    console.log(`[LumaSchedule] Submitted ${recipients.length} automatic class invitations.`);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : "unknown invite error";
+    await reportLumaInvitationIssue(`Automatic invitations were not sent after the new class was created: ${detail}`);
+  }
+}
+
+function isWithinNextTenTorontoDays(classDate: string): boolean {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Toronto",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find(item => item.type === type)?.value;
+  const today = `${part("year")}-${part("month")}-${part("day")}`;
+  const first = new Date(`${today}T12:00:00Z`);
+  const candidate = new Date(`${classDate}T12:00:00Z`);
+  const last = new Date(first.getTime() + 10 * 24 * 60 * 60 * 1000);
+  return !Number.isNaN(candidate.getTime()) && candidate >= first && candidate <= last;
+}
+
+function isMatchingEligibleExistingApyEvent(eventData: LumaEventLookup, params: LumaScheduleParams): boolean {
+  const event = eventRecord(eventData);
+  const name = firstNonEmptyString(event.name)?.toLocaleLowerCase().replace(/\s+/g, "") ?? "";
+  const expectedPrefix = `afropuppyyoga|📍${params.location.trim().toLocaleLowerCase()}|🐶`;
+  const startAt = firstNonEmptyString(event.start_at);
+  return (
+    params.classType === "regular" &&
+    isWithinNextTenTorontoDays(params.classDate) &&
+    name.startsWith(expectedPrefix) &&
+    Boolean(startAt && torontoCalendarDate(startAt) === params.classDate) &&
+    firstNonEmptyString(event.visibility)?.toLocaleLowerCase() === "public" &&
+    event.registration_open === true &&
+    isEligibleCreatedLumaEventForInvites(eventData)
+  );
+}
+
+type PreparedExistingLumaEventInvitation = LumaExistingEventInvitationReadiness & {
+  recipients?: LumaInviteRecipient[];
+  message?: string;
+};
+
+async function prepareExistingLumaEventInvitation(eventId: string, params: LumaScheduleParams): Promise<PreparedExistingLumaEventInvitation> {
+  const apiKey = process.env.LUMA_API_KEY;
+  if (!apiKey) throw new Error("LUMA_API_KEY is not set");
+  if (params.classType !== "regular") {
+    return { status: "ineligible", recipientCount: 0, registeredGuestCount: 0, existingInvitationCount: 0, reason: "Only public regular classes can receive Luma invitations." };
+  }
+  const eventResponse = await fetch(`${LUMA_BASE}/events/get?event_id=${encodeURIComponent(eventId)}`, { headers: { "x-luma-api-key": apiKey } });
+  if (!eventResponse.ok) throw new Error(`Luma event verification failed (${eventResponse.status})`);
+  const eventData = await eventResponse.json() as LumaEventLookup;
+  if (!isMatchingEligibleExistingApyEvent(eventData, params)) {
+    return { status: "ineligible", recipientCount: 0, registeredGuestCount: 0, existingInvitationCount: 0, reason: "The Luma event is not a verified, eligible public APY class within the next 10 days." };
+  }
+  const event = eventRecord(eventData);
+  const eventUrl = firstNonEmptyString(event.url, eventData.url);
+  const message = eventUrl ? buildLumaClassInviteMessage({ ...params, eventUrl }) : null;
+  if (!message) {
+    return { status: "ineligible", recipientCount: 0, registeredGuestCount: 0, existingInvitationCount: 0, reason: "The Luma event link could not be verified within the invite-message limit." };
+  }
+  const [contactEntries, guestEntries] = await Promise.all([
+    fetchAllLumaEntries<unknown>(apiKey, "/calendars/contacts/list", "calendar-contact"),
+    fetchAllLumaEntries<unknown>(apiKey, `/events/guests/list?event_id=${encodeURIComponent(eventId)}`, "event-guest"),
+  ]);
+  const existingInvitationCount = guestEntries.filter(hasLumaInvitation).length;
+  const registeredGuestEmails = new Set(guestEntries.map(lumaGuestEmail).filter((email): email is string => Boolean(email)));
+  const registeredGuestCount = guestEntries.filter(entry => isRecord(entry) && typeof entry.registered_at === "string" && entry.registered_at.trim().length > 0).length;
+  if (existingInvitationCount > 0) {
+    return { status: "already_invited", recipientCount: 0, registeredGuestCount, existingInvitationCount, reason: "Luma already has invitation records for this event." };
+  }
+  const recipients = buildLumaClassInviteRecipients(contactEntries, registeredGuestEmails);
+  if (!recipients.length) return { status: "no_recipients", recipientCount: 0, registeredGuestCount, existingInvitationCount };
+  return { status: "ready", recipientCount: recipients.length, registeredGuestCount, existingInvitationCount, recipients, message };
+}
+
+/** Aggregate-only readiness check for an existing Luma event; recipient details never leave the server. */
+export async function getExistingLumaEventInvitationReadiness(eventId: string, params: LumaScheduleParams): Promise<LumaExistingEventInvitationReadiness> {
+  const prepared = await prepareExistingLumaEventInvitation(eventId, params);
+  const { recipients: _recipients, message: _message, ...readiness } = prepared;
+  return readiness;
+}
+
+/** Rechecks all safeguards immediately before one owner-confirmed all-or-nothing Luma invitation request. */
+export async function sendExistingLumaEventInvitations(eventId: string, params: LumaScheduleParams): Promise<LumaExistingEventInvitationReadiness> {
+  const prepared = await prepareExistingLumaEventInvitation(eventId, params);
+  if (prepared.status !== "ready" || !prepared.recipients || !prepared.message) return prepared;
+  const apiKey = process.env.LUMA_API_KEY;
+  if (!apiKey) throw new Error("LUMA_API_KEY is not set");
+  const response = await fetch(`${LUMA_BASE}/events/guests/send-invites`, {
+    method: "POST",
+    headers: { "x-luma-api-key": apiKey, "Content-Type": "application/json" },
+    body: JSON.stringify({ event_id: eventId, guests: prepared.recipients, message: prepared.message }),
+  });
+  if (!response.ok) throw new Error(`Luma invitation delivery failed (${response.status})`);
+  const { recipients: _recipients, message: _message, ...readiness } = prepared;
+  return readiness;
+}
 
 // APY cover image (placeholder — swap in puppy photo after creation)
 const APY_COVER = "https://images.lumacdn.com/event-covers/oi/e96e9bff-d920-423c-9d67-55dd8b8041a9.jpg";
@@ -33,6 +350,13 @@ export type LumaScheduleParams = {
   startTime: string;
   endTime: string;
   classType: "regular" | "private";
+};
+
+export type LumaCalendarEvent = {
+  api_id: string;
+  name: string;
+  start_at: string;
+  url?: string;
 };
 
 /**
@@ -68,6 +392,63 @@ function regularEventFields(params: LumaScheduleParams) {
     timezone: "America/Toronto",
     geo_address_json: { type: "google", place_id: loc.googlePlaceId },
   };
+}
+
+function torontoCalendarDate(isoDateTime: string) {
+  const timestamp = new Date(isoDateTime);
+  if (Number.isNaN(timestamp.getTime())) return null;
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Toronto",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(timestamp);
+  const value = (type: Intl.DateTimeFormatPartTypes) => parts.find(part => part.type === type)?.value;
+  const year = value("year");
+  const month = value("month");
+  const day = value("day");
+  return year && month && day ? `${year}-${month}-${day}` : null;
+}
+
+/**
+ * A public APY class is one calendar event per studio per date, containing all
+ * of that date's APY ticket slots. Breed and individual class slot can change
+ * without creating another event, so they are intentionally not part of the
+ * duplicate key.
+ */
+export function findExistingLumaScheduleEvent(
+  events: LumaCalendarEvent[],
+  params: Pick<LumaScheduleParams, "classDate" | "location" | "classType">
+): { lumaEventId: string; lumaEventUrl: string } | null {
+  if (params.classType !== "regular") return null;
+  const normalizedLocation = params.location.trim().toLocaleLowerCase();
+  const canonicalPrefix = `afropuppyyoga |📍${normalizedLocation} |🐶`;
+  const match = events.find(event => (
+    torontoCalendarDate(event.start_at) === params.classDate &&
+    event.name.trim().toLocaleLowerCase().replace(/\s+/g, " ").startsWith(canonicalPrefix)
+  ));
+  if (!match) return null;
+  return {
+    lumaEventId: match.api_id,
+    lumaEventUrl: match.url?.trim() || `https://lu.ma/${match.api_id}`,
+  };
+}
+
+async function findExistingLumaEventForSchedule(
+  apiKey: string,
+  params: LumaScheduleParams
+) {
+  const after = torontoDateTimeIso(params.classDate, "00:00");
+  const response = await fetch(
+    `${LUMA_BASE}/calendar/list-events?pagination_limit=100&after=${encodeURIComponent(after)}`,
+    { headers: { "x-luma-api-key": apiKey } }
+  );
+  if (!response.ok) {
+    throw new Error(`Luma calendar duplicate check failed (${response.status})`);
+  }
+  const data = await response.json() as { entries?: Array<{ event?: LumaCalendarEvent }> };
+  const events = (data.entries ?? []).flatMap(entry => entry.event ? [entry.event] : []);
+  return findExistingLumaScheduleEvent(events, params);
 }
 
 export async function setLumaRegistrationOpen(eventId: string, registrationOpen: boolean) {
@@ -139,13 +520,13 @@ type LumaTicketType = {
  * free Standard ticket, so newly scheduled breeder classes only show APY's
  * actual purchasable options.
  */
-export function buildRegularClassTicketTypes(): LumaTicketType[] {
+export function buildRegularClassTicketTypes(location?: string): LumaTicketType[] {
   const tickets: LumaTicketType[] = [
     { name: APY_MAT_RENTAL_TICKET.name, type: "paid", cents: APY_MAT_RENTAL_TICKET.cents, currency: "cad" },
   ];
 
   for (const slot of APY_REGULAR_CLASS_TIME_SLOTS) {
-    for (const option of APY_REGULAR_CLASS_TICKET_OPTIONS) {
+    for (const option of getRegularClassTicketOptions(location)) {
       tickets.push({
         name: `${slot.label} ${option.suffix}`,
         type: "paid",
@@ -189,7 +570,7 @@ We do our best to ensure that the puppies advertised for each class are the ones
 
 Thanks for your understanding and continued support 🐶🧘🏽‍♀️💛`;
 
-export async function createLumaEventForSchedule(params: LumaScheduleParams): Promise<{ lumaEventId: string; lumaEventUrl: string } | null> {
+export async function createLumaEventForSchedule(params: LumaScheduleParams): Promise<{ lumaEventId: string; lumaEventUrl: string; created: boolean } | null> {
   // Private bookings have their own approval/booking workflow. Never expose
   // them as a public regular-class event with public ticket types.
   if (params.classType !== "regular") return null;
@@ -206,9 +587,18 @@ export async function createLumaEventForSchedule(params: LumaScheduleParams): Pr
     console.warn(`[LumaSchedule] ${error instanceof Error ? error.message : "Invalid event settings"} — skipping`);
     return null;
   }
-  const ticketTypes = buildRegularClassTicketTypes();
+  const ticketTypes = buildRegularClassTicketTypes(params.location);
 
   try {
+    // Always query Luma before creating a public page. The database collision
+    // check only covers APY HQ rows and cannot see a class added directly in
+    // Luma, so it cannot safely prevent calendar duplicates on its own.
+    const existing = await findExistingLumaEventForSchedule(apiKey, params);
+    if (existing) {
+      console.log(`[LumaSchedule] Reusing existing Luma event: ${existing.lumaEventUrl} (${eventFields.name})`);
+      return { ...existing, created: false };
+    }
+
     // 1. Create the event
     const createRes = await fetch(`${LUMA_BASE}/events/create`, {
       method: "POST",
@@ -268,20 +658,34 @@ export async function createLumaEventForSchedule(params: LumaScheduleParams): Pr
     const createData = (await createRes.json()) as { id: string };
     const lumaEventId = createData.id;
 
-    // 2. Fetch the slug-based URL
+    // 2. Fetch the slug-based URL and independently verify that the created
+    // event has not become private, cancelled, hidden, closed, or sold out
+    // before any automatic invitations are considered.
     let lumaEventUrl = `https://lu.ma/${lumaEventId}`;
+    let invitationEligibilityVerified = false;
     try {
       const getRes = await fetch(`${LUMA_BASE}/events/get?event_id=${lumaEventId}`, {
         headers: { "x-luma-api-key": apiKey },
       });
-      if (getRes.ok) {
-        const eventData = (await getRes.json()) as { url?: string };
-        if (eventData.url) lumaEventUrl = eventData.url;
+      if (!getRes.ok) throw new Error(`Luma event verification failed (${getRes.status})`);
+      const eventData = (await getRes.json()) as LumaEventLookup;
+      const event = eventRecord(eventData);
+      const verifiedUrl = firstNonEmptyString(event.url, eventData.url);
+      if (verifiedUrl) lumaEventUrl = verifiedUrl;
+      invitationEligibilityVerified = isEligibleCreatedLumaEventForInvites(eventData);
+      if (!invitationEligibilityVerified) {
+        console.warn("[LumaSchedule] New Luma event is not publicly eligible for automatic invitations; no invitations submitted.");
       }
-    } catch { /* fallback URL is fine */ }
+    } catch (verificationError) {
+      const detail = verificationError instanceof Error ? verificationError.message : "unknown event-verification error";
+      await reportLumaInvitationIssue(`Automatic invitations were skipped because the new Luma event could not be verified: ${detail}`);
+    }
 
     console.log(`[LumaSchedule] Created Luma event: ${lumaEventUrl} (${eventFields.name})`);
-    return { lumaEventId, lumaEventUrl };
+    if (invitationEligibilityVerified) {
+      await inviteCalendarContactsToCreatedClass(apiKey, lumaEventId, lumaEventUrl, params);
+    }
+    return { lumaEventId, lumaEventUrl, created: true };
   } catch (err) {
     console.error("[LumaSchedule] Unexpected error:", err);
     return null;

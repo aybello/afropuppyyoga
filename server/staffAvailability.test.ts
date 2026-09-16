@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { directTeamMemberSchema, employeeRecordUpdateSchema, getTeamRemovalUpdate, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateTeamAssignmentChange } from "./routers/staffAvailability";
+import { directEmployeeSchema, directTeamMemberSchema, employeeRecordUpdateSchema, getAutomaticEmployeeAccessPlan, getDirectEmployeeContactEligibility, getEmployeeDepartureUpdate, getExistingEmployeeAccessProvisioningEligibility, getFormerEmployeeDeletionEligibility, getLegacyEmployeeProfileLinkEligibility, getOnboardedApplicantDirectoryEligibility, getTeamRemovalUpdate, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateEmployeeDirectoryAssignmentChange, validateTeamAssignmentChange } from "./routers/staffAvailability";
 
 describe("direct team-member validation", () => {
   it("accepts an Operations Manager assigned to Oakville", () => {
@@ -45,6 +45,138 @@ describe("direct team-member validation", () => {
     expect(phoneOnly.email).toBe("");
     expect(phoneOnly.phone).toBe("289-788-1885");
     expect(() => directTeamMemberSchema.parse({ name: "Jordan Miles", email: "", phone: "", role: "Puppy Monitor", location: "KW" })).toThrow();
+  });
+
+  it("plans APY HQ access automatically when the owner adds a direct employee", () => {
+    const employee = directEmployeeSchema.parse({
+      name: "Jordan Miles",
+      email: "",
+      phone: "289-788-1885",
+      role: "Yoga Instructor",
+      location: "KW",
+      startedAt: "2026-09-03",
+    });
+
+    expect(getAutomaticEmployeeAccessPlan(employee)).toEqual({
+      employmentStatus: "active",
+      applicationStatus: "onboarded",
+      isTeamMember: true,
+      grantsApyHqAccess: true,
+    });
+  });
+
+  it("allows an existing active directory-only employee to be provisioned into APY HQ once", () => {
+    expect(getExistingEmployeeAccessProvisioningEligibility({
+      employmentStatus: "active",
+      sourceApplicationId: null,
+    })).toEqual({ eligible: true });
+    expect(getExistingEmployeeAccessProvisioningEligibility({
+      employmentStatus: "inactive",
+      sourceApplicationId: null,
+    })).toEqual({
+      eligible: false,
+      reason: "Only active employees can be given APY HQ access.",
+    });
+    expect(getExistingEmployeeAccessProvisioningEligibility({
+      employmentStatus: "active",
+      sourceApplicationId: 42,
+    })).toEqual({
+      eligible: false,
+      reason: "This employee already has an APY HQ profile.",
+    });
+  });
+
+  it("links one matching onboarding-complete legacy profile when the role and location agree", () => {
+    expect(getLegacyEmployeeProfileLinkEligibility({
+      matchingProfileCount: 1,
+      matchingProfileIsActiveTeamMember: false,
+      matchingProfileIsArchived: false,
+      matchingProfileStatus: "onboarded",
+      roleMatches: true,
+      locationMatches: true,
+      alreadyLinkedToAnotherEmployee: false,
+    })).toEqual({ eligible: true, action: "link_existing_profile" });
+
+    expect(getLegacyEmployeeProfileLinkEligibility({
+      matchingProfileCount: 1,
+      matchingProfileIsActiveTeamMember: false,
+      matchingProfileIsArchived: false,
+      matchingProfileStatus: "onboarded",
+      roleMatches: false,
+      locationMatches: true,
+      alreadyLinkedToAnotherEmployee: false,
+    })).toMatchObject({ eligible: false });
+
+    expect(getLegacyEmployeeProfileLinkEligibility({
+      matchingProfileCount: 2,
+      matchingProfileIsActiveTeamMember: false,
+      matchingProfileIsArchived: false,
+      matchingProfileStatus: "onboarded",
+      roleMatches: true,
+      locationMatches: true,
+      alreadyLinkedToAnotherEmployee: false,
+    })).toMatchObject({ eligible: false });
+
+    expect(getLegacyEmployeeProfileLinkEligibility({
+      matchingProfileCount: 1,
+      matchingProfileIsActiveTeamMember: false,
+      matchingProfileIsArchived: false,
+      matchingProfileStatus: "accepted",
+      roleMatches: true,
+      locationMatches: true,
+      alreadyLinkedToAnotherEmployee: false,
+    })).toMatchObject({ eligible: false });
+
+    expect(getLegacyEmployeeProfileLinkEligibility({
+      matchingProfileCount: 1,
+      matchingProfileIsActiveTeamMember: false,
+      matchingProfileIsArchived: false,
+      matchingProfileStatus: "onboarded",
+      roleMatches: true,
+      locationMatches: true,
+      alreadyLinkedToAnotherEmployee: true,
+    })).toMatchObject({ eligible: false });
+  });
+
+  it("does not create a duplicate APY HQ profile when a contact already belongs to an applicant or staff profile", () => {
+    expect(getDirectEmployeeContactEligibility({ hasEmployeeRecord: false, hasApplicantOrApyProfile: true })).toEqual({
+      eligible: false,
+      reason: "An existing applicant or APY HQ profile already uses this email address or phone number. Use that record instead of creating a duplicate.",
+    });
+    expect(getDirectEmployeeContactEligibility({ hasEmployeeRecord: true, hasApplicantOrApyProfile: false })).toEqual({
+      eligible: false,
+      reason: "An Employee Directory record already uses this email address or phone number. Update or restore that record instead of creating a duplicate.",
+    });
+    expect(getDirectEmployeeContactEligibility({ hasEmployeeRecord: false, hasApplicantOrApyProfile: false })).toEqual({ eligible: true });
+  });
+
+  it("permits only an onboarding-complete applicant without an existing directory record to be added", () => {
+    expect(getOnboardedApplicantDirectoryEligibility({ status: "onboarded", existingEmployee: false })).toEqual({ eligible: true });
+    expect(getOnboardedApplicantDirectoryEligibility({ status: "accepted", existingEmployee: false })).toEqual({
+      eligible: false,
+      reason: "Only onboarding-complete applicants can be added to the Employee Directory.",
+    });
+    expect(getOnboardedApplicantDirectoryEligibility({ status: "onboarded", existingEmployee: true })).toEqual({
+      eligible: false,
+      reason: "This applicant already has an Employee Directory record.",
+    });
+  });
+
+  it("marks a departed employee inactive while retaining their source application and employment history", () => {
+    const endedAt = new Date("2026-09-03T12:00:00.000Z");
+    expect(getEmployeeDepartureUpdate(endedAt)).toEqual({ employmentStatus: "inactive", endedAt });
+  });
+
+  it("allows permanent deletion only for former directory records that have no active APY HQ profile", () => {
+    expect(getFormerEmployeeDeletionEligibility({ employmentStatus: "inactive", linkedActiveTeamProfile: false })).toEqual({ eligible: true });
+    expect(getFormerEmployeeDeletionEligibility({ employmentStatus: "active", linkedActiveTeamProfile: false })).toEqual({
+      eligible: false,
+      reason: "Only former or removed Employee Directory records can be deleted permanently.",
+    });
+    expect(getFormerEmployeeDeletionEligibility({ employmentStatus: "inactive", linkedActiveTeamProfile: true })).toEqual({
+      eligible: false,
+      reason: "Remove this person from APY HQ Team first so staffing coverage and portal access are handled safely.",
+    });
   });
 
   it("rejects an unsupported role or location", () => {
@@ -135,5 +267,67 @@ describe("direct team-member validation", () => {
       role: "Operations Manager",
       location: "OAK",
     })).toThrow("Add either an email address or phone number");
+
+    expect(() => employeeRecordUpdateSchema.parse({
+      id: 7,
+      name: "Taylor James",
+      email: "taylor@example.com",
+      role: "CEO",
+      location: "OAK",
+    })).toThrow();
+
+    expect(() => employeeRecordUpdateSchema.parse({
+      id: 7,
+      name: "Taylor James",
+      email: "taylor@example.com",
+      role: "BDR",
+      location: "OAK",
+    })).toThrow("APY-wide");
+  });
+
+  it("does not let a linked active profile move the sole Operations Manager away from active Puppy Monitors", () => {
+    expect(() => validateEmployeeDirectoryAssignmentChange({
+      linkedActiveTeamProfile: true,
+      currentRole: "Operations Manager",
+      currentLocation: "KW",
+      nextRole: "Operations Manager",
+      nextLocation: "OAK",
+      hasOperationsManagerAtNextLocation: true,
+      hasOtherOperationsManagerAtCurrentLocation: false,
+      hasActivePuppyMonitorsAtCurrentLocation: true,
+    })).toThrow("Assign another Operations Manager");
+
+    expect(() => validateEmployeeDirectoryAssignmentChange({
+      linkedActiveTeamProfile: true,
+      currentRole: "Operations Manager",
+      currentLocation: "KW",
+      nextRole: "Yoga Instructor",
+      nextLocation: "KW",
+      hasOperationsManagerAtNextLocation: false,
+      hasOtherOperationsManagerAtCurrentLocation: false,
+      hasActivePuppyMonitorsAtCurrentLocation: true,
+    })).toThrow("Assign another Operations Manager");
+
+    expect(() => validateEmployeeDirectoryAssignmentChange({
+      linkedActiveTeamProfile: true,
+      currentRole: "Operations Manager",
+      currentLocation: "KW",
+      nextRole: "Operations Manager",
+      nextLocation: "KW",
+      hasOperationsManagerAtNextLocation: true,
+      hasOtherOperationsManagerAtCurrentLocation: false,
+      hasActivePuppyMonitorsAtCurrentLocation: true,
+    })).not.toThrow();
+
+    expect(() => validateEmployeeDirectoryAssignmentChange({
+      linkedActiveTeamProfile: false,
+      currentRole: "Operations Manager",
+      currentLocation: "KW",
+      nextRole: "Operations Manager",
+      nextLocation: "OAK",
+      hasOperationsManagerAtNextLocation: true,
+      hasOtherOperationsManagerAtCurrentLocation: false,
+      hasActivePuppyMonitorsAtCurrentLocation: true,
+    })).not.toThrow();
   });
 });

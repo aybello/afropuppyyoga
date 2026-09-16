@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Link } from "wouter";
 import { ArrowLeft, Calendar, CalendarCheck, ChevronLeft, ChevronRight, Mail, MessageSquare, Pencil, Plus, Power, Send, Trash2, Users, X } from "lucide-react";
 import { individualScheduleDeliveryFeedback } from "@shared/individualNotification";
+import { getPuppyMonitorLocationCoverage } from "@shared/puppyMonitorLocationCoverage";
 
 const LOCATIONS = ["KW", "OAK", "HAM"] as const;
 const LOCATION_LABELS: Record<string, string> = { KW: "Kitchener", OAK: "Oakville", HAM: "Hamilton", CENTRAL: "APY-wide" };
@@ -22,7 +23,7 @@ type TeamRole = "Yoga Instructor" | "Operations Manager" | "Puppy Monitor" | "Pu
 type TeamLocation = "KW" | "OAK" | "HAM" | "CENTRAL";
 type StaffMember = { id: number; name: string; email: string; phone: string | null; role: string; location: string; appStatus: string; archivedAt: Date | null };
 type WeekendShift = { date: string; dayLabel: string; shortLabel: string; location: "KW" | "OAK" | "HAM"; role: "Operations Manager" | "Yoga Instructor"; primary: Pick<StaffMember, "id" | "name" | "role" | "location"> | null; primaryLeave: { leaveType: string } | null; coverage: { coverageStaffId: number | null; coverageStaffName: string | null; notes: string | null } | null; candidates: Pick<StaffMember, "id" | "name" | "role" | "location">[]; status: "available" | "away" | "covered" | "unassigned" };
-type ScheduledClassStaffing = { id: number; classDate: string; location: "Kitchener" | "Hamilton" | "Oakville"; breed: string; breederName: string; startTime: string; endTime: string; staffing: { operationsManager: { id: number; name: string } | null; yogaInstructor: { id: number; name: string } | null; assignedPuppyMonitors: { id: number; staffId: number; name: string }[]; eligiblePuppyMonitors: { id: number; name: string }[]; gaps: { operationsManager: boolean; yogaInstructor: boolean; puppyMonitors: number }; fullyStaffed: boolean } };
+type ScheduledClassStaffing = { id: number; classDate: string; location: "Kitchener" | "Hamilton" | "Oakville"; breed: string; breederName: string; startTime: string; endTime: string; staffing: { operationsManager: { id: number; name: string } | null; yogaInstructor: { id: number; name: string } | null; eligibleOperationsManagers: { id: number; name: string }[]; eligibleYogaInstructors: { id: number; name: string }[]; assignedPuppyMonitors: { id: number; staffId: number; name: string }[]; eligiblePuppyMonitors: { id: number; name: string }[]; gaps: { operationsManager: boolean; yogaInstructor: boolean; puppyMonitors: number }; fullyStaffed: boolean } };
 
 function isOnLeave(staffId: number, leaves: any[], today: string) {
   return leaves.find((l) => l.staffId === staffId && l.startDate <= today && l.endDate >= today);
@@ -125,6 +126,8 @@ export default function StaffAvailabilityPage() {
   const [coverageDraft, setCoverageDraft] = useState({ coverageStaffId: "", notes: "" });
   const [selectedClassStaffing, setSelectedClassStaffing] = useState<ScheduledClassStaffing | null>(null);
   const [selectedPuppyMonitor, setSelectedPuppyMonitor] = useState("");
+  const [selectedOperationsManager, setSelectedOperationsManager] = useState("");
+  const [selectedYogaInstructor, setSelectedYogaInstructor] = useState("");
   const notificationPreview = trpc.puppySchedule.eventNotificationPreview.useQuery({ scheduleId: selectedClassStaffing?.id ?? 0 }, { enabled: Boolean(selectedClassStaffing) });
   const [leaveForm, setLeaveForm] = useState({ leaveType: "vacation" as "vacation" | "sick" | "personal" | "leave" | "unavailable", startDate: today, endDate: today, notes: "" });
   const [newMember, setNewMember] = useState<{ name: string; email: string; phone: string; role: TeamRole; location: TeamLocation }>({ name: "", email: "", phone: "", role: "Operations Manager", location: "KW" });
@@ -141,6 +144,7 @@ export default function StaffAvailabilityPage() {
   const assignWeekendCoverage = trpc.staffAvailability.assignWeekendCoverage.useMutation({ onSuccess: () => { refreshAvailability(); toast.success("Coverage updated"); setSelectedWeekendShift(null); }, onError: (e) => toast.error(e.message) });
   const assignPuppyMonitor = trpc.puppySchedule.assignPuppyMonitor.useMutation({ onSuccess: () => { refreshAvailability(); toast.success("PM assigned"); setSelectedClassStaffing(null); setSelectedPuppyMonitor(""); }, onError: (e) => toast.error(e.message) });
   const removePuppyMonitor = trpc.puppySchedule.removePuppyMonitorAssignment.useMutation({ onSuccess: () => { refreshAvailability(); toast.success("PM removed"); setSelectedClassStaffing(null); }, onError: (e) => toast.error(e.message) });
+  const assignLeadership = trpc.puppySchedule.assignLeadership.useMutation({ onSuccess: () => { refreshAvailability(); notificationPreview.refetch(); toast.success("Class leadership updated"); setSelectedClassStaffing(null); setSelectedOperationsManager(""); setSelectedYogaInstructor(""); }, onError: (e) => toast.error(e.message) });
   const notifyEventTeam = trpc.puppySchedule.notifyEventTeam.useMutation({ onSuccess: (result) => { notificationPreview.refetch(); const delivered = result.results.filter((item) => item.emailStatus === "sent" || item.smsStatus === "sent").length; toast.success(`Schedule sent to ${delivered} team members`); }, onError: (e) => toast.error(e.message) });
   const notifyIndividualEventStaff = trpc.puppySchedule.notifyIndividualEventStaff.useMutation({ onSuccess: (result) => { notificationPreview.refetch(); const feedback = individualScheduleDeliveryFeedback({ deliveryStatus: result.deliveryStatus, name: result.result.name, errors: result.result.errors }); if (feedback.kind === "success") toast.success(feedback.message); else if (feedback.kind === "warning") toast.warning(feedback.message); else toast.error(feedback.message); }, onError: (e) => toast.error(e.message) });
 
@@ -160,7 +164,7 @@ export default function StaffAvailabilityPage() {
   };
   const setEditRole = (role: TeamRole) => setEditMember((m) => ({ ...m, role, location: CENTRAL_ROLES.includes(role as any) ? "CENTRAL" : m.location === "CENTRAL" ? "KW" : m.location }));
   const openWeekendShift = (s: WeekendShift) => { setSelectedWeekendShift(s); setCoverageDraft({ coverageStaffId: s.coverage?.coverageStaffId ? String(s.coverage.coverageStaffId) : "", notes: s.coverage?.notes ?? "" }); };
-  const openClassStaffing = (c: ScheduledClassStaffing) => { setSelectedClassStaffing(c); setSelectedPuppyMonitor(""); };
+  const openClassStaffing = (c: ScheduledClassStaffing) => { setSelectedClassStaffing(c); setSelectedPuppyMonitor(""); setSelectedOperationsManager(""); setSelectedYogaInstructor(""); };
 
   const weekendDates = weekendCoverage.data?.weekends ?? [];
   const weekendShifts = (weekendCoverage.data?.shifts ?? []) as WeekendShift[];
@@ -296,16 +300,18 @@ export default function StaffAvailabilityPage() {
                     const ops = byLocationAndRole(loc, "Operations Manager");
                     const yoga = byLocationAndRole(loc, "Yoga Instructor");
                     const pms = byLocationAndRole(loc, "Puppy Monitor");
-                    const openPMs = Math.max(0, 6 - pms.length);
+                    const puppyMonitorCoverage = getPuppyMonitorLocationCoverage(pms.length);
                     return (
                       <section key={loc} className="rounded-2xl border border-[#EADBE2] bg-white p-4">
                         <div className="mb-3 rounded-lg bg-[#8B2252] px-3 py-2 text-center text-sm font-bold text-white">{LOCATION_LABELS[loc]}</div>
                         <div className="space-y-2">
                           {ops.length ? ops.map((s) => <PersonChip key={s.id} staff={s} role="Operations Manager" status={getStatus(s.id)} onClick={() => openStaff(s)} />) : <div className="rounded-lg border-2 border-dashed border-[#DCCAD3] px-3 py-3 text-center text-xs text-[#B39AA5]">Ops Manager · Open</div>}
                           {yoga.length ? yoga.map((s) => <PersonChip key={s.id} staff={s} role="Yoga Instructor" status={getStatus(s.id)} onClick={() => openStaff(s)} />) : <div className="rounded-lg border-2 border-dashed border-[#DCCAD3] px-3 py-3 text-center text-xs text-[#B39AA5]">Yoga Instructor · Open</div>}
-                          <p className="pt-1 text-[10px] font-bold uppercase tracking-wider text-[#7C3AED]">Puppy Monitors · {pms.length}/6</p>
+                          <p className="pt-1 text-[10px] font-bold uppercase tracking-wider text-[#7C3AED]">Puppy Monitors · {puppyMonitorCoverage.activeCount} active · minimum {puppyMonitorCoverage.minimum}</p>
                           {pms.map((s) => <PersonChip key={s.id} staff={s} role="Puppy Monitor" status={getStatus(s.id)} onClick={() => openStaff(s)} />)}
-                          {openPMs > 0 && <div className="rounded-lg border-2 border-dashed border-[#DCCAD3] px-3 py-2 text-center text-xs text-[#B39AA5]">+{openPMs} open</div>}
+                          {puppyMonitorCoverage.meetsMinimum
+                            ? <p className="pt-1 text-[11px] font-medium text-emerald-700">Minimum coverage met · no maximum</p>
+                            : <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-center text-xs font-semibold text-amber-800">Need {puppyMonitorCoverage.shortfall} more active PM{puppyMonitorCoverage.shortfall === 1 ? "" : "s"} to reach the minimum of {puppyMonitorCoverage.minimum}</div>}
                         </div>
                       </section>
                     );
@@ -357,12 +363,13 @@ export default function StaffAvailabilityPage() {
       {/* Class PM editor */}
       {selectedClassStaffing && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"><div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
         <div className="mb-4 flex items-start justify-between"><div><h3 className="text-base font-bold text-[#1A0A12]">{selectedClassStaffing.breed} · {selectedClassStaffing.location}</h3><p className="text-xs text-[#7A5A6A]">{selectedClassStaffing.classDate} · Breeder: {selectedClassStaffing.breederName}</p></div><button onClick={() => setSelectedClassStaffing(null)} className="text-[#C4A0B0] hover:text-[#8B2252]"><X size={18} /></button></div>
-        <p className="mb-3 rounded-lg border border-[#E6D6F8] bg-[#FAF5FF] px-3 py-2 text-xs font-bold text-[#4C1D95]">Two Puppy Monitors required</p>
+        <div className="mb-3 grid gap-2 sm:grid-cols-2"><div className="rounded-lg border border-[#EDE0D8] bg-[#FFFDFC] p-2.5"><p className="text-xs font-bold text-[#1A0A12]">Operations Manager · {selectedClassStaffing.staffing.operationsManager?.name ?? "Coverage gap"}</p><div className="mt-2 flex gap-2"><select value={selectedOperationsManager} onChange={(e) => setSelectedOperationsManager(e.target.value)} className="min-w-0 flex-1 rounded-md border border-[#EDE0D8] px-2 py-1.5 text-xs"><option value="">Select Operations Manager</option>{selectedClassStaffing.staffing.eligibleOperationsManagers.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select><button onClick={() => selectedOperationsManager && assignLeadership.mutate({ scheduleId: selectedClassStaffing.id, role: "Operations Manager", staffId: Number(selectedOperationsManager) })} disabled={!selectedOperationsManager || assignLeadership.isPending} className="rounded-md bg-[#8B2252] px-2 py-1 text-xs font-bold text-white disabled:opacity-50">Save</button></div></div><div className="rounded-lg border border-[#EDE0D8] bg-[#FFFDFC] p-2.5"><p className="text-xs font-bold text-[#1A0A12]">Yoga Instructor · {selectedClassStaffing.staffing.yogaInstructor?.name ?? "Coverage gap"}</p><div className="mt-2 flex gap-2"><select value={selectedYogaInstructor} onChange={(e) => setSelectedYogaInstructor(e.target.value)} className="min-w-0 flex-1 rounded-md border border-[#EDE0D8] px-2 py-1.5 text-xs"><option value="">Select Yoga Instructor</option>{selectedClassStaffing.staffing.eligibleYogaInstructors.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select><button onClick={() => selectedYogaInstructor && assignLeadership.mutate({ scheduleId: selectedClassStaffing.id, role: "Yoga Instructor", staffId: Number(selectedYogaInstructor) })} disabled={!selectedYogaInstructor || assignLeadership.isPending} className="rounded-md bg-[#8B2252] px-2 py-1 text-xs font-bold text-white disabled:opacity-50">Save</button></div></div></div>
+        <p className="mb-3 rounded-lg border border-[#E6D6F8] bg-[#FAF5FF] px-3 py-2 text-xs font-bold text-[#4C1D95]">Two Puppy Monitors required; a third can be added when needed.</p>
         <div className="space-y-2">
           {selectedClassStaffing.staffing.assignedPuppyMonitors.map((m) => <div key={m.id} className="flex items-center justify-between rounded-lg border border-[#EDE0D8] px-3 py-2"><span className="text-sm font-bold">{m.name}</span><button onClick={() => removePuppyMonitor.mutate({ id: m.id })} className="text-[#C4A0B0] hover:text-red-500"><X size={14} /></button></div>)}
           {Array.from({ length: Math.max(0, 2 - selectedClassStaffing.staffing.assignedPuppyMonitors.length) }, (_, i) => <div key={i} className="rounded-lg border border-dashed border-amber-300 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800">PM {selectedClassStaffing.staffing.assignedPuppyMonitors.length + i + 1} needed</div>)}
         </div>
-        {selectedClassStaffing.staffing.assignedPuppyMonitors.length < 2 && <div className="mt-3 flex gap-2"><select value={selectedPuppyMonitor} onChange={(e) => setSelectedPuppyMonitor(e.target.value)} className="min-w-0 flex-1 rounded-lg border border-[#E6D6F8] px-3 py-2 text-sm"><option value="">Select PM</option>{selectedClassStaffing.staffing.eligiblePuppyMonitors.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select><button onClick={() => selectedPuppyMonitor && assignPuppyMonitor.mutate({ scheduleId: selectedClassStaffing.id, staffId: Number(selectedPuppyMonitor) })} disabled={!selectedPuppyMonitor || assignPuppyMonitor.isPending} className="rounded-lg bg-[#7C3AED] px-3 py-2 text-xs font-bold text-white hover:bg-[#6D28D9] disabled:opacity-50">Assign</button></div>}
+        {selectedClassStaffing.staffing.assignedPuppyMonitors.length < 3 && <div className="mt-3 flex gap-2"><select value={selectedPuppyMonitor} onChange={(e) => setSelectedPuppyMonitor(e.target.value)} className="min-w-0 flex-1 rounded-lg border border-[#E6D6F8] px-3 py-2 text-sm"><option value="">Select PM</option>{selectedClassStaffing.staffing.eligiblePuppyMonitors.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select><button onClick={() => selectedPuppyMonitor && assignPuppyMonitor.mutate({ scheduleId: selectedClassStaffing.id, staffId: Number(selectedPuppyMonitor) })} disabled={!selectedPuppyMonitor || assignPuppyMonitor.isPending} className="rounded-lg bg-[#7C3AED] px-3 py-2 text-xs font-bold text-white hover:bg-[#6D28D9] disabled:opacity-50">{selectedClassStaffing.staffing.assignedPuppyMonitors.length >= 2 ? "Add 3rd PM" : "Assign"}</button></div>}
         <div className="mt-5 border-t border-[#EDE0D8] pt-4">
           <div className="mb-3 flex items-center justify-between"><div><p className="text-sm font-bold text-[#1A0A12]">Notify event team</p><p className="text-[11px] text-[#7A5A6A]">Preview recipients before sending email + text.</p></div><Send size={18} className="text-[#8B2252]"/></div>
           {notificationPreview.isLoading ? <p className="text-xs text-[#7A5A6A]">Preparing preview…</p> : <>
