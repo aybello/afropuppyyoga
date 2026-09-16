@@ -933,3 +933,6 @@
 ## Employee Directory Management (Aug 29, 2026)
 - [x] Add direct editing for employee name, email, phone, role, location, and employment status
 - [x] Make Employee Directory summary cards work as filters for all, active, and former employees
+
+## GitHub Synchronization (Sep 16, 2026)
+- [ ] Pull and validate the 84 newer commits from GitHub main without losing the current Employee Directory work
