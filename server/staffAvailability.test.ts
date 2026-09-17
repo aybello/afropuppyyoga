@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { directEmployeeSchema, directTeamMemberSchema, employeeRecordUpdateSchema, getAutomaticEmployeeAccessPlan, getDirectEmployeeContactEligibility, getEmployeeDepartureUpdate, getExistingEmployeeAccessProvisioningEligibility, getFormerEmployeeDeletionEligibility, getLegacyEmployeeProfileLinkEligibility, getOnboardedApplicantDirectoryEligibility, getTeamRemovalUpdate, hasActiveApyHqAccess, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateEmployeeDirectoryAssignmentChange, validateTeamAssignmentChange } from "./routers/staffAvailability";
+import { directEmployeeSchema, directTeamMemberSchema, employeeRecordUpdateSchema, getAutomaticEmployeeAccessPlan, getDirectEmployeeContactEligibility, getEmployeeDepartureUpdate, getEmployeeEmploymentReactivationEligibility, getEmployeeReactivationUpdate, getExistingEmployeeAccessProvisioningEligibility, getFormerEmployeeDeletionEligibility, getLegacyEmployeeProfileLinkEligibility, getOnboardedApplicantDirectoryEligibility, getTeamRemovalUpdate, hasActiveApyHqAccess, hasMatchingActiveTeamContact, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateEmployeeDirectoryAssignmentChange, validateTeamAssignmentChange } from "./routers/staffAvailability";
 
 describe("direct team-member validation", () => {
   it("identifies whether a linked employee is eligible for APY HQ phone access", () => {
@@ -172,6 +172,31 @@ describe("direct team-member validation", () => {
   it("marks a departed employee inactive while retaining their source application and employment history", () => {
     const endedAt = new Date("2026-09-03T12:00:00.000Z");
     expect(getEmployeeDepartureUpdate(endedAt)).toEqual({ employmentStatus: "inactive", endedAt });
+  });
+
+  it("reactivates employment without granting APY HQ access", () => {
+    expect(getEmployeeReactivationUpdate()).toEqual({ employmentStatus: "active", endedAt: null });
+    expect(hasMatchingActiveTeamContact(
+      { email: "former@example.com", phone: "+1 289-555-0100" },
+      [{ email: "former@example.com", phone: "289-555-9999" }],
+    )).toBe(true);
+    expect(hasMatchingActiveTeamContact(
+      { email: "former@example.com", phone: "+1 289-555-0100" },
+      [{ email: "another@example.com", phone: "289-555-0100" }],
+    )).toBe(true);
+    expect(hasMatchingActiveTeamContact(
+      { email: "former@example.com", phone: "+1 289-555-0100" },
+      [{ email: "another@example.com", phone: "289-555-9999" }],
+    )).toBe(false);
+    expect(getEmployeeEmploymentReactivationEligibility({ employmentStatus: "inactive", hasApyHqAccess: false })).toEqual({ eligible: true });
+    expect(getEmployeeEmploymentReactivationEligibility({ employmentStatus: "active", hasApyHqAccess: false })).toEqual({
+      eligible: false,
+      reason: "Only inactive employee records can be reactivated.",
+    });
+    expect(getEmployeeEmploymentReactivationEligibility({ employmentStatus: "inactive", hasApyHqAccess: true })).toEqual({
+      eligible: false,
+      reason: "Remove this person from APY HQ Team first so employment can be restored without leaving staff access active.",
+    });
   });
 
   it("allows permanent deletion only for former directory records that have no active APY HQ profile", () => {

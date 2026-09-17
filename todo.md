@@ -1368,6 +1368,11 @@
 - [x] Determine why previously visible APY employees are absent from the current directory without modifying staff records
 - [x] Restore the complete employee directory from verified APY staff, invoice, onboarding, and Gmail evidence without granting portal access
 
+## Employee Directory Recovery Follow-up (Sep 17, 2026)
+- [x] Confirm the live directory regressed to 13 records after transfer recovery despite the expected 22-record historical roster
+- [x] Add five missing verified historical employee records without modifying the two direct owner deletions or granting APY HQ access
+- [x] Add a deliberate employment-only reactivation control, then validate the recovery and GitHub synchronization
+
 ## Post-Transfer Reliability and Database Audit (Sep 16, 2026)
 - [x] Establish the current GitHub, deployment, environment, and database migration baseline after the account transfer
 - [x] Audit core public pages, staff access, invoices, Employee Directory, application uploads, Luma, and email/SMS delivery paths

@@ -101,8 +101,37 @@ export function getEmployeeDepartureUpdate(endedAt: Date) {
   return { employmentStatus: "inactive" as const, endedAt };
 }
 
+/** Re-establishes directory-only employment without granting APY HQ or portal access. */
+export function getEmployeeReactivationUpdate() {
+  return { employmentStatus: "active" as const, endedAt: null };
+}
+
 export function hasActiveApyHqAccess(profile: { isTeamMember: boolean | number | null; deletedAt: Date | null } | undefined) {
   return Boolean(profile?.isTeamMember) && profile?.deletedAt == null;
+}
+
+/** Confirms that a directory-only employee has no separate active APY HQ profile by contact. */
+export function hasMatchingActiveTeamContact(
+  employee: { email: string | null; phone: string | null },
+  activeTeamContacts: Array<{ email: string | null; phone: string | null }>,
+) {
+  const employeeEmail = employee.email?.trim().toLowerCase() ?? "";
+  const employeePhone = normalizeCanadianPhoneNumber(employee.phone ?? "");
+  return activeTeamContacts.some((profile) => {
+    const profileEmail = profile.email?.trim().toLowerCase() ?? "";
+    const profilePhone = normalizeCanadianPhoneNumber(profile.phone ?? "");
+    return Boolean((employeeEmail && employeeEmail === profileEmail) || (employeePhone && employeePhone === profilePhone));
+  });
+}
+
+export function getEmployeeEmploymentReactivationEligibility(input: { employmentStatus: "active" | "inactive"; hasApyHqAccess: boolean }) {
+  if (input.employmentStatus !== "inactive") {
+    return { eligible: false as const, reason: "Only inactive employee records can be reactivated." };
+  }
+  if (input.hasApyHqAccess) {
+    return { eligible: false as const, reason: "Remove this person from APY HQ Team first so employment can be restored without leaving staff access active." };
+  }
+  return { eligible: true as const };
 }
 
 export function getFormerEmployeeDeletionEligibility(input: { employmentStatus: string; linkedActiveTeamProfile: boolean }) {
@@ -658,6 +687,51 @@ export const staffAvailabilityRouter = router({
         }
       });
       return { success: true, alreadyInactive: false };
+    }),
+
+  // Re-establish the employment record only. APY HQ and staff-login access need a separate, deliberate action.
+  reactivateEmployeeEmployment: adminProcedure
+    .input(z.object({ employeeId: z.number().int().positive() }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      return db.transaction(async (tx) => {
+        const [employee] = await tx.select().from(employees).where(eq(employees.id, input.employeeId)).limit(1);
+        if (!employee) throw new Error("Employee record not found.");
+        if (employee.employmentStatus === "active") return { success: true, alreadyActive: true };
+
+        const linkedProfile = employee.sourceApplicationId === null ? null : (await tx.select({
+          isTeamMember: jobApplications.isTeamMember,
+          deletedAt: jobApplications.deletedAt,
+        }).from(jobApplications).where(eq(jobApplications.id, employee.sourceApplicationId)).limit(1))[0] ?? null;
+        const activeTeamContacts = employee.sourceApplicationId === null
+          ? await tx.select({ email: jobApplications.email, phone: jobApplications.phone }).from(jobApplications).where(and(
+            eq(jobApplications.isTeamMember, true),
+            isNull(jobApplications.deletedAt),
+          ))
+          : [];
+        const eligibility = getEmployeeEmploymentReactivationEligibility({
+          employmentStatus: employee.employmentStatus,
+          hasApyHqAccess: hasActiveApyHqAccess(linkedProfile ?? undefined)
+            || hasMatchingActiveTeamContact(employee, activeTeamContacts),
+        });
+        if (!eligibility.eligible) throw new Error(eligibility.reason);
+
+        const [result] = await tx.update(employees).set(getEmployeeReactivationUpdate())
+          .where(and(eq(employees.id, employee.id), eq(employees.employmentStatus, "inactive")));
+        if (result.affectedRows !== 1) throw new Error("This employee record changed while it was being restored. Reload and review the current status.");
+        if (employee.sourceApplicationId !== null) {
+          await tx.insert(jobApplicationActions).values({
+            applicationId: employee.sourceApplicationId,
+            action: "employee_directory_reactivated",
+            actorUserId: ctx.user.id,
+            actorName: ctx.user.name,
+            actorEmail: ctx.user.email,
+            details: JSON.stringify({ employmentReactivated: true, hasApyHqAccess: false }),
+          });
+        }
+        return { success: true, alreadyActive: false };
+      });
     }),
 
   // Permanently delete a former directory record only. Hiring/application history is intentionally retained.
