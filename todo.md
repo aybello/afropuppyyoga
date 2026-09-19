@@ -1378,3 +1378,10 @@
 - [x] Audit core public pages, staff access, invoices, Employee Directory, application uploads, Luma, and email/SMS delivery paths
 - [x] Repair verified transfer regressions and reconcile missing non-destructive database schema or data state
 - [x] Run build, focused regression, and live-safe workflow validation before recording the verified audit outcome
+
+## Run APY Legacy Follow-Up Queue Reconciliation (Sep 19, 2026)
+- [x] Diagnose the Run APY failure as a transferred database schema mismatch between legacy follow-up fields and the deployed query
+- [x] Reconcile the active TiDB queue schema without deleting or rewriting legacy follow-up records
+- [x] Make the saved migration safe for legacy records, current writes, UTC epoch conversion, and supported TiDB retry handling
+- [x] Verify the migrated query, migration ledger, full test suite, TypeScript, production build, and rendered Run APY dashboard
+- [x] Save checkpoint, synchronize GitHub, and record the incident in the APY AI Context Hub
