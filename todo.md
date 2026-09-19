@@ -1385,3 +1385,15 @@
 - [x] Make the saved migration safe for legacy records, current writes, UTC epoch conversion, and supported TiDB retry handling
 - [x] Verify the migrated query, migration ledger, full test suite, TypeScript, production build, and rendered Run APY dashboard
 - [x] Save checkpoint, synchronize GitHub, and record the incident in the APY AI Context Hub
+
+## Historical Database Recovery — 2026-09-19
+
+- [x] Validate the uploaded prior-account APY database archive: gzip integrity passed, its uncompressed SHA-256 matched the manifest, and the archive contained 42 tables.
+- [x] Create and validate a fresh protected pre-import backup of the current live database before changing any live records.
+- [x] Stage the archive in an isolated temporary table namespace and run a primary-key and unique-key conflict audit.
+- [x] Add missing historical records only. The recovery inserted 420 records across invoices, applications, employees, breeders, schedules, private events, staffing, communications, and operational history. No existing live record was replaced or deleted.
+- [x] Restore the `interview_requested` applicant-status enum value already supported by APY code, without changing any existing applicant status.
+- [x] Keep restored historical applications out of APY HQ and restore historical employees as inactive, so no access is granted automatically.
+- [x] Exclude account-bound or security-sensitive identities, invite tokens, SMS access codes, signing tokens, QuickBooks credentials/state, and the migration ledger.
+- [x] Validate final record totals and links, run the full test suite, TypeScript check, production build, and public route checks. Remove all 42 temporary staging tables after validation.
+- [x] Record detailed non-sensitive recovery evidence in `docs/database-recovery-2026-09-19.md`.
