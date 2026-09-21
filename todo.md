@@ -1397,3 +1397,10 @@
 - [x] Exclude account-bound or security-sensitive identities, invite tokens, SMS access codes, signing tokens, QuickBooks credentials/state, and the migration ledger.
 - [x] Validate final record totals and links, run the full test suite, TypeScript check, production build, and public route checks. Remove all 42 temporary staging tables after validation.
 - [x] Record detailed non-sensitive recovery evidence in `docs/database-recovery-2026-09-19.md`.
+
+## Luma Ticket Quantity Restoration — September 21, 2026
+
+- Restored all **nine future scheduled public APY Luma classes** to the 5 / 4 / 1 / 4 purchase ladder for each of their 10AM, 11:30AM, and 1:30PM sessions: **5 Early Bird**, **4 Bring a Friend**, **1 Group of 3**, and **4 Regular**.
+- Updated 81 live ticket capacities. Mat Rental ticket types, ticket names, prices, existing registrations, past events, and non-scheduled classes were left unchanged.
+- Restored the same 5 / 4 / 1 / 4 default in `shared/lumaClassConfig.ts`, so newly created APY public classes will match the live events.
+- Validated all nine events with zero mismatches, then passed the full test suite, TypeScript check, and production build. Commit `21742b7` was independently reviewed by Claude Fable 5 and GPT-5.6-sol with no blockers.
