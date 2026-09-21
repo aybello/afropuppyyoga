@@ -46,24 +46,24 @@ describe("regular class Luma event defaults", () => {
     expect(tickets.some((ticket) => ticket.name.includes("Mat Rental"))).toBe(true);
   });
 
-  it("uses the approved conservative 4/3/1/7 Fall ladder by location", () => {
+  it("uses the approved 5/4/1/4 Fall ladder by location", () => {
     const paidTicketDetails = (location: "Kitchener" | "Hamilton" | "Oakville") =>
       buildRegularClassTicketTypes(location)
         .filter((ticket) => !ticket.name.includes("Mat Rental"))
         .map((ticket) => ({ name: ticket.name.replace(/^(10AM|11:30AM|1:30PM) /, ""), cents: ticket.cents, maxCapacity: ticket.max_capacity }));
 
     expect(paidTicketDetails("Kitchener").slice(0, 4)).toEqual([
-      { name: "Early Bird 🐣❤️", cents: 5600, maxCapacity: 4 },
-      { name: "Bring a Friend 👯‍♀️", cents: 10800, maxCapacity: 3 },
+      { name: "Early Bird 🐣❤️", cents: 5600, maxCapacity: 5 },
+      { name: "Bring a Friend 👯‍♀️", cents: 10800, maxCapacity: 4 },
       { name: "Group of 3 👯‍♀️", cents: 15600, maxCapacity: 1 },
-      { name: "Regular", cents: 5800, maxCapacity: 7 },
+      { name: "Regular", cents: 5800, maxCapacity: 4 },
     ]);
     expect(paidTicketDetails("Hamilton").slice(0, 4)).toEqual(paidTicketDetails("Kitchener").slice(0, 4));
     expect(paidTicketDetails("Oakville").slice(0, 4)).toEqual([
-      { name: "Early Bird 🐣❤️", cents: 6100, maxCapacity: 4 },
-      { name: "Bring a Friend 👯‍♀️", cents: 11800, maxCapacity: 3 },
+      { name: "Early Bird 🐣❤️", cents: 6100, maxCapacity: 5 },
+      { name: "Bring a Friend 👯‍♀️", cents: 11800, maxCapacity: 4 },
       { name: "Group of 3 👯‍♀️", cents: 17100, maxCapacity: 1 },
-      { name: "Regular", cents: 6300, maxCapacity: 7 },
+      { name: "Regular", cents: 6300, maxCapacity: 4 },
     ]);
   });
 
