@@ -1404,3 +1404,10 @@
 - Updated 81 live ticket capacities. Mat Rental ticket types, ticket names, prices, existing registrations, past events, and non-scheduled classes were left unchanged.
 - Restored the same 5 / 4 / 1 / 4 default in `shared/lumaClassConfig.ts`, so newly created APY public classes will match the live events.
 - Validated all nine events with zero mismatches, then passed the full test suite, TypeScript check, and production build. Commit `21742b7` was independently reviewed by Claude Fable 5 and GPT-5.6-sol with no blockers.
+
+## September 27 Kitchener Frenchies Price Test — September 24, 2026
+
+- Updated only the existing **Sunday, September 27 Kitchener Frenchies** Luma event (`evt-yY1jDUAwcUHrCjr`) to the approved lower ticket ladder across all three time slots: Early Bird **$49**, Bring a Friend **$95 for 2**, Group of 3 **$135 for 3**, and Regular **$55**. All 12 paid ticket types were read back from Luma and verified at the new prices.
+- Preserved the event date, three time slots, ticket names, ticket capacities, mat-rental ticket, public status, and existing bookings. The premium default ladder remains in code for new Kitchener and Hamilton public classes. No existing booking was edited, refunded, or cancelled.
+- Luma reported 13 approved registrations and 28 tickets before the price test. The ticket data shows Frenchies are more popular at 1:30PM than the earlier sessions, so the immediate issue is concentrated in the 10AM and 11:30AM slots, not a total absence of demand.
+- The identified September 27 Kitchener Frenchies promotional Reel, posted September 12, reached 2,609 Accounts Center accounts, received 39 shares, and had 165 interactions. It directed viewers to the main site rather than a trackable event-specific link, so the actual Instagram-to-Luma purchase step is not currently measurable.
