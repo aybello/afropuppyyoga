@@ -1,5 +1,6 @@
 import { and, desc, eq, gte, isNull, isNotNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
+import { randomUUID } from "node:crypto";
 import { InsertInvoice, InsertJobApplication, InsertUser, InsertBirthdayInquiry, InsertPartnershipInquiry, InsertStaffInvite, InsertSigningToken, invoices, jobApplications, users, birthdayInquiries, partnershipInquiries, staffInvites, signingTokens } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -197,6 +198,98 @@ export async function updateJobApplication(id: number, data: Partial<InsertJobAp
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(jobApplications).set(data).where(eq(jobApplications.id, id));
+}
+
+/** Update applicant status only when no onboarding send is currently claimed. */
+export async function updateJobApplicationStatusIfUnclaimed(id: number, status: NonNullable<InsertJobApplication["status"]>): Promise<boolean> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db
+    .update(jobApplications)
+    .set({ status })
+    .where(and(
+      eq(jobApplications.id, id),
+      isNull(jobApplications.onboardingDeliveryToken),
+      isNull(jobApplications.deletedAt),
+    ));
+  return Number((result as any)[0]?.affectedRows ?? 0) === 1;
+}
+
+/** Archive an applicant only when no onboarding send is currently claimed. */
+export async function archiveJobApplicationIfUnclaimed(id: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db
+    .update(jobApplications)
+    .set({ deletedAt: new Date() })
+    .where(and(
+      eq(jobApplications.id, id),
+      isNull(jobApplications.onboardingDeliveryToken),
+      isNull(jobApplications.deletedAt),
+    ));
+  return Number((result as any)[0]?.affectedRows ?? 0) === 1;
+}
+
+/**
+ * Claims the one-time initial onboarding delivery before email is sent.
+ * The conditional update lets exactly one staff request claim an Accepted
+ * application, preventing duplicate onboarding emails across browser sessions.
+ */
+export async function claimInitialOnboardingDelivery(id: number): Promise<string | null> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const token = randomUUID();
+  const result = await db
+    .update(jobApplications)
+    .set({ onboardingDeliveryToken: token })
+    .where(
+      and(
+        eq(jobApplications.id, id),
+        eq(jobApplications.status, "accepted"),
+        isNull(jobApplications.onboardingDeliveryToken),
+        isNull(jobApplications.deletedAt),
+      ),
+    );
+  return Number((result as any)[0]?.affectedRows ?? 0) === 1 ? token : null;
+}
+
+/** Release a claim only after the initial email was not delivered. */
+export async function releaseInitialOnboardingDeliveryClaim(id: number, token: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db
+    .update(jobApplications)
+    .set({ onboardingDeliveryToken: null })
+    .where(
+      and(
+        eq(jobApplications.id, id),
+        eq(jobApplications.status, "accepted"),
+        eq(jobApplications.onboardingDeliveryToken, token),
+        isNull(jobApplications.deletedAt),
+      ),
+    );
+  return Number((result as any)[0]?.affectedRows ?? 0) === 1;
+}
+
+/**
+ * Completes onboarding only when the claimed application is still Accepted.
+ * This cannot overwrite a concurrent rejection, archive, or other staff decision.
+ */
+export async function completeClaimedOnboardingDelivery(id: number, token: string): Promise<boolean> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db
+    .update(jobApplications)
+    .set({ status: "onboarded", onboardingSentAt: new Date(), onboardingDeliveryToken: null })
+    .where(
+      and(
+        eq(jobApplications.id, id),
+        eq(jobApplications.status, "accepted"),
+        eq(jobApplications.onboardingDeliveryToken, token),
+        isNull(jobApplications.deletedAt),
+      ),
+    );
+  return Number((result as any)[0]?.affectedRows ?? 0) === 1;
 }
 
 export async function deleteJobApplication(id: number) {

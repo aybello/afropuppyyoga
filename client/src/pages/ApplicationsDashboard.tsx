@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Users, Loader2, Video, Mail, Phone, Star, Eye, XCircle, Inbox,
-  Calendar, CheckCircle, Send, Trash2, FileText, Play, PartyPopper, UserPlus, VideoIcon,
+  Calendar, CheckCircle, Send, Trash2, FileText, Play, PartyPopper, UserPlus, VideoIcon, X,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -43,6 +43,7 @@ import {
 import { getLoginUrl, LOGO_URL } from "@/const";
 import { toast } from "sonner";
 import AdminNav from "@/components/AdminNav";
+import { APY_ORIENTATION_TIME_OPTIONS, APY_PLANNING_DOCUMENT_URL } from "@shared/onboarding";
 
 
 /**
@@ -118,6 +119,8 @@ type Application = {
   resumeUrl: string | null;
   resumeKey: string | null;
   status: string;
+  onboardingSentAt: Date | null;
+  onboardingDeliveryToken: string | null;
   createdAt: Date;
   signingStatus: string | null;
   signedName: string | null;
@@ -398,42 +401,75 @@ function OnboardingEmailModal({
   app,
   open,
   onClose,
+  isResend = false,
 }: {
   app: Application;
   open: boolean;
   onClose: () => void;
+  isResend?: boolean;
 }) {
   const utils = trpc.useUtils();
   const [orientationDate, setOrientationDate] = useState("");
-  const [orientationTime, setOrientationTime] = useState("");
+  const [orientationTime, setOrientationTime] = useState<(typeof APY_ORIENTATION_TIME_OPTIONS)[number]["value"] | "">("");
+  const [planningDocUrl, setPlanningDocUrl] = useState(APY_PLANNING_DOCUMENT_URL);
+  const [documents, setDocuments] = useState<Array<{ title: string; url: string }>>([]);
   const [additionalNotes, setAdditionalNotes] = useState("");
 
   const sendOnboarding = trpc.careers.sendOnboardingEmail.useMutation({
     onSuccess: () => {
       toast.success(`Onboarding email sent to ${app.email}! 🎉`);
       utils.careers.list.invalidate();
+      utils.careers.getTimeline.invalidate({ id: app.id });
       onClose();
     },
-    onError: (err) => {
+    onError: async (err) => {
       toast.error(`Failed to send onboarding email: ${err.message}`);
+      await Promise.all([
+        utils.careers.list.invalidate(),
+        utils.careers.getTimeline.invalidate({ id: app.id }),
+      ]);
+      onClose();
     },
+  });
+  const resendOnboarding = trpc.careers.resendOnboardingEmail.useMutation({
+    onSuccess: () => {
+      toast.success(`Onboarding email resent to ${app.email}! 📬`);
+      utils.careers.list.invalidate();
+      utils.careers.getTimeline.invalidate({ id: app.id });
+      onClose();
+    },
+    onError: (err) => toast.error(`Failed to resend onboarding email: ${err.message}`),
   });
 
   const handleSend = () => {
-    sendOnboarding.mutate({
+    const normalizedDocuments = documents.map((document) => ({
+      title: document.title.trim(),
+      url: document.url.trim(),
+    }));
+    if (normalizedDocuments.some((document) => !document.title || !document.url)) {
+      toast.error("Each onboarding document needs both a title and a secure link.");
+      return;
+    }
+    const payload = {
       id: app.id,
       orientationDate: orientationDate.trim() || undefined,
-      orientationTime: orientationTime.trim() || undefined,
+      orientationTime: orientationTime || undefined,
+      planningDocUrl: planningDocUrl.trim() || undefined,
+      documents: normalizedDocuments.length ? normalizedDocuments : undefined,
       additionalNotes: additionalNotes.trim() || undefined,
-    });
+    };
+    if (isResend) resendOnboarding.mutate(payload);
+    else sendOnboarding.mutate(payload);
   };
 
+  const isSending = sendOnboarding.isPending || resendOnboarding.isPending;
+
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-lg bg-[#FEFAF4] border-[#F0D0DC]">
+    <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
+      <DialogContent className="max-w-lg bg-[#FEFAF4] border-[#F0D0DC] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display text-xl text-[#1A0A12]">
-            🐾 Send Onboarding Email
+            🐾 {isResend ? "Resend Onboarding Email" : "Send Onboarding Email"}
           </DialogTitle>
           <DialogDescription className="font-body text-sm text-[#1A0A12]">
             Sending to <strong>{app.name}</strong> ({app.email}) for <strong>{app.role}</strong> — {app.location}
@@ -447,82 +483,85 @@ function OnboardingEmailModal({
               <li>Welcome message and orientation class invitation (date, time, location)</li>
               <li>What to wear: black yoga attire + grippy socks</li>
               <li>Link to the APY Planning Document (training resources inside)</li>
-              <li>iMessage group chat onboarding note</li>
-              <li>Reply CTA + direct contact number</li>
+              <li>Any additional onboarding documents you add below</li>
+              <li>iMessage group chat onboarding note and reply contact</li>
             </ul>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Orientation Date (optional)</Label>
               <Select value={orientationDate} onValueChange={setOrientationDate}>
-                <SelectTrigger className="border-[#F0D0DC] font-body">
-                  <SelectValue placeholder="Select a date" />
-                </SelectTrigger>
+                <SelectTrigger className="border-[#F0D0DC] font-body"><SelectValue placeholder="Select a date" /></SelectTrigger>
                 <SelectContent>
-                  {(() => {
-                    const dates: string[] = [];
-                    const now = new Date();
-                    for (let i = 1; i <= 28; i++) {
-                      const d = new Date(now);
-                      d.setDate(now.getDate() + i);
-                      const day = d.toLocaleDateString('en-US', { weekday: 'long' });
-                      const month = d.toLocaleDateString('en-US', { month: 'long' });
-                      const date = d.getDate();
-                      const suffix = date === 1 || date === 21 || date === 31 ? 'st' : date === 2 || date === 22 ? 'nd' : date === 3 || date === 23 ? 'rd' : 'th';
-                      dates.push(`${day}, ${month} ${date}${suffix}`);
-                    }
-                    return dates.map((d) => (
-                      <SelectItem key={d} value={d}>{d}</SelectItem>
-                    ));
-                  })()}
+                  {Array.from({ length: 28 }, (_, index) => {
+                    const date = new Date();
+                    date.setDate(date.getDate() + index + 1);
+                    const day = date.toLocaleDateString("en-US", { weekday: "long" });
+                    const month = date.toLocaleDateString("en-US", { month: "long" });
+                    const dayOfMonth = date.getDate();
+                    const suffix = dayOfMonth === 1 || dayOfMonth === 21 || dayOfMonth === 31 ? "st" : dayOfMonth === 2 || dayOfMonth === 22 ? "nd" : dayOfMonth === 3 || dayOfMonth === 23 ? "rd" : "th";
+                    const label = `${day}, ${month} ${dayOfMonth}${suffix}`;
+                    return <SelectItem key={label} value={label}>{label}</SelectItem>;
+                  })}
                 </SelectContent>
               </Select>
               <p className="font-body text-xs text-[#C4A0B0] mt-1">Leave unselected to omit</p>
             </div>
             <div>
               <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Orientation Time (optional)</Label>
-              <Select value={orientationTime} onValueChange={setOrientationTime}>
-                <SelectTrigger className="border-[#F0D0DC] font-body">
-                  <SelectValue placeholder="Select a time" />
-                </SelectTrigger>
+              <Select value={orientationTime} onValueChange={(value) => setOrientationTime(value as (typeof APY_ORIENTATION_TIME_OPTIONS)[number]["value"])}>
+                <SelectTrigger className="border-[#F0D0DC] font-body"><SelectValue placeholder="Select a time" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="9:00 AM">9:00 AM (Kitchener)</SelectItem>
-                  <SelectItem value="10:00 AM">10:00 AM (Hamilton)</SelectItem>
-                  <SelectItem value="10:00 AM (Oakville)">10:00 AM (Oakville)</SelectItem>
+                  {APY_ORIENTATION_TIME_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-              <p className="font-body text-xs text-[#C4A0B0] mt-1">Auto-suggests based on location</p>
+              <p className="font-body text-xs text-[#C4A0B0] mt-1">Choose the correct location time</p>
             </div>
           </div>
 
           <div>
+            <Label className="font-body text-sm text-[#1A0A12] mb-1 block">APY Planning Document</Label>
+            <Input type="url" value={planningDocUrl} onChange={(event) => setPlanningDocUrl(event.target.value)} className="border-[#F0D0DC] font-body" placeholder="https://docs.google.com/..." />
+            <p className="font-body text-xs text-[#C4A0B0] mt-1">The current APY planning document is pre-filled. Replace it only when the resource has changed.</p>
+          </div>
+
+          <div className="space-y-3 rounded-xl border border-[#F0D0DC] bg-white p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <Label className="font-body text-sm text-[#1A0A12] block">Additional Onboarding Documents</Label>
+                <p className="font-body text-xs text-[#8B6070] mt-1">Add up to four shareable links, such as training guides, a handbook, or a group-chat guide.</p>
+              </div>
+              <Button type="button" size="sm" variant="outline" disabled={documents.length >= 4} onClick={() => setDocuments((current) => [...current, { title: "", url: "" }])} className="shrink-0 border-[#F0D0DC] text-[#8B2252] hover:bg-[#FFF5F8]">
+                + Add document
+              </Button>
+            </div>
+            {documents.map((document, index) => (
+              <div key={index} className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)_auto]">
+                <Input value={document.title} onChange={(event) => setDocuments((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, title: event.target.value } : item))} placeholder="Document name" className="border-[#F0D0DC] font-body" />
+                <Input type="url" value={document.url} onChange={(event) => setDocuments((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, url: event.target.value } : item))} placeholder="https://drive.google.com/..." className="border-[#F0D0DC] font-body" />
+                <Button type="button" variant="outline" size="icon" onClick={() => setDocuments((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="border-[#F0D0DC] text-[#8B6070] hover:bg-red-50 hover:text-red-600" aria-label={`Remove document ${index + 1}`}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+            {!documents.length && <p className="font-body text-xs text-[#8B6070]">No extra documents will be included unless you add them here.</p>}
+          </div>
+
+          <p className="font-body text-xs text-[#8B6070]">Offer Letter and NDA signing remain in the separate <strong>Send Offer Letter</strong> step. This email delivers the post-acceptance onboarding information and resources.</p>
+
+          <div>
             <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Additional Notes (optional)</Label>
-            <Textarea
-              placeholder="Any extra info to include for this specific hire..."
-              value={additionalNotes}
-              onChange={(e) => setAdditionalNotes(e.target.value)}
-              className="border-[#F0D0DC] font-body resize-none"
-              rows={3}
-            />
+            <Textarea placeholder="Any extra info to include for this specific hire..." value={additionalNotes} onChange={(event) => setAdditionalNotes(event.target.value)} className="border-[#F0D0DC] font-body resize-none" rows={3} />
           </div>
         </div>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose} className="font-body border-[#F0D0DC]">
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSend}
-            disabled={sendOnboarding.isPending}
-            className="font-body text-white"
-            style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}
-          >
-            {sendOnboarding.isPending ? (
-              <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Sending...</>
-            ) : (
-              <><PartyPopper className="w-4 h-4 mr-2" /> Send Onboarding Email</>
-            )}
+          <Button variant="outline" onClick={onClose} className="font-body border-[#F0D0DC]">Cancel</Button>
+          <Button onClick={handleSend} disabled={isSending} className="font-body text-white" style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}>
+            {isSending ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Sending...</> : <><PartyPopper className="w-4 h-4 mr-2" /> {isResend ? "Resend Onboarding Email" : "Send Onboarding Email"}</>}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -543,7 +582,7 @@ function RejectionLetterModal({
   const utils = trpc.useUtils();
   const [additionalNotes, setAdditionalNotes] = useState("");
 
-  const sendRejection = trpc.careers.sendRejectionLetter.useMutation({
+  const sendRejection = trpc.careers.sendRejectionEmail.useMutation({
     onSuccess: () => {
       toast.success(`Rejection letter sent to ${app.email}`);
       utils.careers.list.invalidate();
@@ -627,26 +666,29 @@ function ApplicationDetailModal({
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const [showOnboardingReconciliation, setShowOnboardingReconciliation] = useState(false);
   const { data: timeline, isLoading: timelineLoading } = trpc.careers.getTimeline.useQuery(
     { id: app.id },
     { enabled: open },
   );
 
-  const resendOnboarding = trpc.careers.resendOnboardingEmail.useMutation({
-    onSuccess: () => {
-      toast.success(`Onboarding email resent to ${app.email}! 📬`);
-      utils.careers.getTimeline.invalidate({ id: app.id });
-    },
-    onError: (err) => {
-      toast.error(`Failed to resend onboarding email: ${err.message}`);
-    },
-  });
   const addToEmployeeDirectory = trpc.staffAvailability.addOnboardedApplicantToEmployeeDirectory.useMutation({
     onSuccess: () => {
       toast.success(`${app.name} was added to the Employee Directory`);
       utils.careers.getTimeline.invalidate({ id: app.id });
     },
     onError: (err) => toast.error(err.message),
+  });
+
+  const reconcileOnboarding = trpc.careers.reconcileOnboardingDelivery.useMutation({
+    onSuccess: (result) => {
+      toast.success(result.status === "onboarded" ? `${app.name} is marked onboarded. No additional email was sent.` : "The pending onboarding send was reopened. No email was sent.");
+      utils.careers.list.invalidate();
+      utils.careers.getTimeline.invalidate({ id: app.id });
+      setShowOnboardingReconciliation(false);
+      onClose();
+    },
+    onError: (err) => toast.error(`Could not reconcile onboarding: ${err.message}`),
   });
 
 
@@ -659,13 +701,6 @@ function ApplicationDetailModal({
       toast.error(`Failed to send video request: ${err.message}`);
     },
   });
-
-  const handleResend = () => {
-    resendOnboarding.mutate({
-      id: app.id,
-    });
-  };
-
   return (
     <>
       <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -820,7 +855,7 @@ function ApplicationDetailModal({
                 >
                   <XCircle className="w-4 h-4 mr-2" /> Send Rejection
                 </Button>
-                {app.signingStatus === "signed" && app.status !== "onboarded" && (
+                {app.status === "accepted" && !app.onboardingDeliveryToken && (
                   <Button
                     onClick={() => { onClose(); setShowOnboardingModal(true); }}
                     className="font-body text-sm text-white"
@@ -829,18 +864,22 @@ function ApplicationDetailModal({
                     <PartyPopper className="w-4 h-4 mr-2" /> Send Onboarding Email
                   </Button>
                 )}
+                {app.status === "accepted" && app.onboardingDeliveryToken && (
+                  <Button
+                    onClick={() => setShowOnboardingReconciliation(true)}
+                    variant="outline"
+                    className="font-body text-sm border-amber-300 text-amber-800 hover:bg-amber-50"
+                  >
+                    <Mail className="w-4 h-4 mr-2" /> Resolve Pending Onboarding
+                  </Button>
+                )}
                 {app.status === "onboarded" && (
                   <Button
-                    onClick={handleResend}
-                    disabled={resendOnboarding.isPending}
+                    onClick={() => { onClose(); setShowOnboardingModal(true); }}
                     variant="outline"
                     className="font-body text-sm border-teal-300 text-teal-700 hover:bg-teal-50"
                   >
-                    {resendOnboarding.isPending ? (
-                      <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Resending...</>
-                    ) : (
-                      <><Send className="w-4 h-4 mr-2" /> Resend Onboarding Email</>
-                    )}
+                    <><Send className="w-4 h-4 mr-2" /> Resend Onboarding Email</>
                   </Button>
                 )}
                 {app.status === "onboarded" && (
@@ -873,8 +912,37 @@ function ApplicationDetailModal({
         <RejectionLetterModal app={app} open={showRejectionModal} onClose={() => setShowRejectionModal(false)} />
       )}
       {showOnboardingModal && (
-        <OnboardingEmailModal app={app} open={showOnboardingModal} onClose={() => setShowOnboardingModal(false)} />
+        <OnboardingEmailModal app={app} open={showOnboardingModal} isResend={app.status === "onboarded"} onClose={() => setShowOnboardingModal(false)} />
       )}
+      <AlertDialog open={showOnboardingReconciliation} onOpenChange={setShowOnboardingReconciliation}>
+        <AlertDialogContent className="bg-[#FEFAF4] border-[#F0D0DC]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-display text-xl text-[#1A0A12]">Resolve pending onboarding</AlertDialogTitle>
+            <AlertDialogDescription className="font-body text-sm text-[#3D1A2A] leading-relaxed">
+              An initial onboarding email was claimed but not fully completed. Confirm whether the email provider accepted the send request. This action never sends another email.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-2">
+            <AlertDialogCancel className="font-body border-[#F0D0DC]">Cancel</AlertDialogCancel>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={reconcileOnboarding.isPending}
+              onClick={() => reconcileOnboarding.mutate({ id: app.id, outcome: "not_delivered" })}
+              className="font-body border-amber-300 text-amber-800 hover:bg-amber-50"
+            >
+              Provider did not accept send
+            </Button>
+            <AlertDialogAction
+              disabled={reconcileOnboarding.isPending}
+              onClick={() => reconcileOnboarding.mutate({ id: app.id, outcome: "delivered" })}
+              className="font-body bg-[#8B2252] hover:bg-[#701b42]"
+            >
+              {reconcileOnboarding.isPending ? "Saving..." : "Provider accepted send"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
@@ -1277,7 +1345,7 @@ export default function ApplicationsDashboard() {
                               <CheckCircle className="w-3 h-3" /> Offer
                             </button>
                           )}
-                          {app.signingStatus === "signed" && (
+                          {app.status === "accepted" && !app.onboardingDeliveryToken && (
                             <button
                               onClick={() => { setSelectedApp(app as Application); setShowOnboardingModal(true); }}
                               className="inline-flex items-center gap-1 px-3 py-1.5 bg-pink-50 border border-pink-200 rounded-lg font-body text-xs font-semibold text-pink-700 hover:bg-pink-100 transition-colors"
@@ -1372,6 +1440,7 @@ export default function ApplicationsDashboard() {
         <OnboardingEmailModal
           app={selectedApp}
           open={showOnboardingModal}
+          isResend={selectedApp.status === "onboarded"}
           onClose={() => { setShowOnboardingModal(false); setSelectedApp(null); }}
         />
       )}

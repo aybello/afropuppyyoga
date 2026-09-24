@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { createHash } from "node:crypto";
 import { TRPCError } from "@trpc/server";
 import { adminProcedure, staffProcedure, publicProcedure, router } from "../_core/trpc";
 
@@ -26,7 +27,35 @@ const safeResumeUrl = z
   .string()
   .url()
   .refine((url) => url.startsWith("https://"), "Must be an https:// URL");
-import { createJobApplication, getAllJobApplications, updateJobApplication, deleteJobApplication, getArchivedJobApplications, restoreJobApplication, permanentlyDeleteJobApplication, getRecentDuplicateJobApplication, getJobApplicationById, getDb } from "../db";
+
+/** A staff-supplied onboarding resource must be a secure public link. */
+const safeOnboardingUrl = z
+  .string()
+  .max(2048)
+  .url()
+  .refine((url) => url.startsWith("https://"), "Document links must use https://");
+
+export const onboardingDocumentSchema = z.object({
+  title: z.string().trim().min(1).max(100),
+  url: safeOnboardingUrl,
+});
+export const onboardingInputSchema = z.object({
+  id: z.number().int().positive(),
+  orientationDate: z.string().trim().min(1).max(80).optional(),
+  orientationTime: z.enum(["9:00 AM", "10:00 AM", "10:00 AM (Oakville)"]).optional(),
+  planningDocUrl: safeOnboardingUrl.optional(),
+  documents: z.array(onboardingDocumentSchema).max(4).optional(),
+  additionalNotes: z.string().max(2000).optional(),
+}).superRefine((input, ctx) => {
+  if (input.orientationTime && !input.orientationDate) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["orientationDate"],
+      message: "Choose an orientation date when an orientation time is provided.",
+    });
+  }
+});
+import { archiveJobApplicationIfUnclaimed, claimInitialOnboardingDelivery, completeClaimedOnboardingDelivery, createJobApplication, deleteJobApplication, getAllJobApplications, releaseInitialOnboardingDeliveryClaim, updateJobApplication, updateJobApplicationStatusIfUnclaimed, getArchivedJobApplications, restoreJobApplication, permanentlyDeleteJobApplication, getRecentDuplicateJobApplication, getJobApplicationById, getDb } from "../db";
 import { notifyOwner } from "../_core/notification";
 import {
   sendEmail,
@@ -45,6 +74,60 @@ type AppStatus = (typeof APP_STATUS)[number];
 type HiringActor = {
   user: { id: number; name: string | null; email: string | null };
 };
+
+export function assertInitialOnboardingStatus(status: string) {
+  if (status !== "accepted") {
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: "Onboarding can be sent only after the applicant is marked Accepted.",
+    });
+  }
+}
+
+export function assertOnboardingResendStatus(status: string) {
+  if (status !== "onboarded") {
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: "Resend onboarding is available only after the initial onboarding email is sent.",
+    });
+  }
+}
+
+export function assertNoPendingOnboardingClaim(applicant: { status: string; onboardingDeliveryToken: string | null }) {
+  if (applicant.status === "accepted" && applicant.onboardingDeliveryToken) {
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: "Onboarding delivery is in progress. Wait for it to finish or resolve the pending onboarding outcome before changing this application.",
+    });
+  }
+}
+
+function onboardingAuditPreview(input: z.infer<typeof onboardingInputSchema>): string {
+  const resourceCount = 1 + (input.documents?.length ?? 0);
+  const orientation = input.orientationDate
+    ? `Orientation: ${input.orientationDate}${input.orientationTime ? ` at ${input.orientationTime}` : ""}. `
+    : "";
+  return `${orientation}Onboarding resources included: ${resourceCount}.`;
+}
+
+function redactedOnboardingUrl(url: string): string {
+  const parsed = new URL(url);
+  return parsed.origin;
+}
+
+function onboardingAuditResources(input: z.infer<typeof onboardingInputSchema>) {
+  return {
+    usesDefaultPlanningDocument: !input.planningDocUrl,
+    planningDocument: input.planningDocUrl ? redactedOnboardingUrl(input.planningDocUrl) : null,
+    documents: input.documents?.map((document) => ({
+      title: document.title,
+      url: redactedOnboardingUrl(document.url),
+    })) ?? [],
+    notesSha256: input.additionalNotes
+      ? createHash("sha256").update(input.additionalNotes).digest("hex")
+      : null,
+  };
+}
 
 async function recordHiringAction(params: {
   ctx: HiringActor;
@@ -266,9 +349,11 @@ export const careersRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const applicant = await requireApplicant(input.id);
-      await updateJobApplication(input.id, {
-        status: input.status as AppStatus,
-      });
+      assertNoPendingOnboardingClaim(applicant);
+      const transitioned = await updateJobApplicationStatusIfUnclaimed(input.id, input.status as AppStatus);
+      if (!transitioned) {
+        throw new TRPCError({ code: "CONFLICT", message: "Onboarding delivery started before this status change completed. Refresh and resolve it first." });
+      }
       await recordHiringAction({
         ctx,
         applicationId: input.id,
@@ -292,6 +377,7 @@ export const careersRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const applicant = await requireApplicant(input.id);
+      assertNoPendingOnboardingClaim(applicant);
       const { subject, html, text } = buildInterviewInviteEmail({
         applicantName: applicant.name,
         role: applicant.role,
@@ -303,7 +389,10 @@ export const careersRouter = router({
       await sendEmail({ to: applicant.email, subject, html, text });
 
       // A booking link has been sent, but no date or time is confirmed yet.
-      await updateJobApplication(input.id, { status: "interview_requested" });
+      const transitioned = await updateJobApplicationStatusIfUnclaimed(input.id, "interview_requested");
+      if (!transitioned) {
+        throw new TRPCError({ code: "CONFLICT", message: "Onboarding delivery started before the interview status could be updated. Refresh and resolve it first." });
+      }
 
       await recordHiringAction({
         ctx,
@@ -334,7 +423,11 @@ export const careersRouter = router({
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input, ctx }) => {
       const applicant = await requireApplicant(input.id);
-      await deleteJobApplication(input.id);
+      assertNoPendingOnboardingClaim(applicant);
+      const archived = await archiveJobApplicationIfUnclaimed(input.id);
+      if (!archived) {
+        throw new TRPCError({ code: "CONFLICT", message: "Onboarding delivery started before this archive completed. Refresh and resolve it first." });
+      }
       await recordHiringAction({
         ctx,
         applicationId: input.id,
@@ -374,20 +467,20 @@ export const careersRouter = router({
     }),
 
   /**
-   * Admin-only: send onboarding email to a hired + signed applicant
+   * Staff: send onboarding email to an Accepted applicant.
    */
   sendOnboardingEmail: staffProcedure
-    .input(
-      z.object({
-        id: z.number(),
-        orientationDate: z.string().optional(),
-        orientationTime: z.string().optional(),
-        planningDocUrl: z.string().optional(),
-        additionalNotes: z.string().optional(),
-      })
-    )
+    .input(onboardingInputSchema)
     .mutation(async ({ input, ctx }) => {
       const applicant = await requireApplicant(input.id);
+      assertInitialOnboardingStatus(applicant.status);
+      const claimed = await claimInitialOnboardingDelivery(input.id);
+      if (!claimed) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "Onboarding is already being sent or was already delivered. Refresh the application before trying again.",
+        });
+      }
       console.log(`[Onboarding] Sending onboarding email to ${applicant.email} for ${applicant.name} (${applicant.role}, ${applicant.location})`);
       // Use role-specific email template
       const isYogaInstructor = applicant.role.toLowerCase().includes("yoga instructor") || applicant.role.toLowerCase().includes("instructor");
@@ -398,6 +491,7 @@ export const careersRouter = router({
             orientationDate: input.orientationDate,
             orientationTime: input.orientationTime,
             planningDocUrl: input.planningDocUrl,
+            documents: input.documents,
             additionalNotes: input.additionalNotes,
           })
         : buildOnboardingEmail({
@@ -407,6 +501,7 @@ export const careersRouter = router({
             orientationDate: input.orientationDate,
             orientationTime: input.orientationTime,
             planningDocUrl: input.planningDocUrl,
+            documents: input.documents,
             additionalNotes: input.additionalNotes,
           });
 
@@ -414,13 +509,23 @@ export const careersRouter = router({
         await sendEmail({ to: applicant.email, subject, html, text });
         console.log(`[Onboarding] ✅ Email sent successfully to ${applicant.email}`);
       } catch (err: any) {
-        console.error(`[Onboarding] ❌ Failed to send email:`, err.message || err);
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `Email send failed: ${err.message}` });
+        console.error(`[Onboarding] ❌ Provider acceptance is unknown; preserving claim for staff reconciliation:`, err.message || err);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "The email provider did not confirm the send. No retry was sent. Use Resolve Pending Onboarding to record the real outcome before trying again.",
+        });
       }
 
-      // Onboarding advances the hiring state only. APY HQ membership is a separate,
-      // explicit action in Team Management, including for Puppy Monitors.
-      await updateJobApplication(input.id, { status: "onboarded" });
+      // Onboarding advances the hiring state only if the application is still
+      // Accepted. APY HQ membership remains a separate explicit action.
+      const completed = await completeClaimedOnboardingDelivery(input.id, claimed);
+      if (!completed) {
+        console.error(`[Onboarding] Email provider accepted the send, but application ${input.id} changed before onboarding completion.`);
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "The email provider accepted the send, but this application changed before completion. Review its history before taking another action.",
+        });
+      }
       console.log(`[Onboarding] Status updated to onboarded for application ${input.id}; APY HQ membership remains manual.`);
 
       await recordHiringAction({
@@ -429,32 +534,91 @@ export const careersRouter = router({
         action: "onboarding_sent",
         fromStatus: applicant.status,
         toStatus: "onboarded",
-        communication: { recipient: applicant.email, subject, bodyPreview: text },
+        details: {
+          orientationDate: input.orientationDate,
+          orientationTime: input.orientationTime,
+          resources: onboardingAuditResources(input),
+        },
+        communication: { recipient: applicant.email, subject, bodyPreview: onboardingAuditPreview(input) },
       });
 
-      await notifyOwner({
-        title: `Onboarding Email Sent — ${applicant.name}`,
-        content: `Onboarding email sent to ${applicant.name} (${applicant.email}) for ${applicant.role} (${applicant.location}). Add them to APY HQ separately if operational access is required.`,
-      });
+      try {
+        await notifyOwner({
+          title: `Onboarding Email Sent — ${applicant.name}`,
+          content: `Onboarding email sent to ${applicant.name} (${applicant.email}) for ${applicant.role} (${applicant.location}). Add them to APY HQ separately if operational access is required.`,
+        });
+      } catch (error) {
+        console.error(`[Onboarding] Email delivered but owner notification failed for application ${input.id}:`, error);
+      }
 
       return { success: true };
     }),
 
   /**
-   * Admin-only: resend onboarding email to an already-onboarded applicant (no status change)
+   * Staff: reconcile a stranded initial-onboarding claim after explicitly
+   * confirming whether the email provider accepted the send. This never
+   * sends another email and cannot overwrite a non-Accepted workflow state.
    */
-  resendOnboardingEmail: staffProcedure
-    .input(
-      z.object({
-        id: z.number(),
-        orientationDate: z.string().optional(),
-        orientationTime: z.string().optional(),
-        planningDocUrl: z.string().optional(),
-        additionalNotes: z.string().optional(),
-      })
-    )
+  reconcileOnboardingDelivery: staffProcedure
+    .input(z.object({
+      id: z.number().int().positive(),
+      outcome: z.enum(["delivered", "not_delivered"]),
+    }))
     .mutation(async ({ input, ctx }) => {
       const applicant = await requireApplicant(input.id);
+      assertInitialOnboardingStatus(applicant.status);
+      if (!applicant.onboardingDeliveryToken) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "There is no pending onboarding delivery to reconcile.",
+        });
+      }
+
+      if (input.outcome === "delivered") {
+        const completed = await completeClaimedOnboardingDelivery(input.id, applicant.onboardingDeliveryToken);
+        if (!completed) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "This application changed before onboarding could be reconciled. Refresh and review its history.",
+          });
+        }
+        await recordHiringAction({
+          ctx,
+          applicationId: input.id,
+          action: "onboarding_reconciled_delivered",
+          fromStatus: "accepted",
+          toStatus: "onboarded",
+          details: { reconciliation: "staff_confirmed_provider_accepted" },
+        });
+        return { success: true, status: "onboarded" as const };
+      }
+
+      const released = await releaseInitialOnboardingDeliveryClaim(input.id, applicant.onboardingDeliveryToken);
+      if (!released) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "This application changed before the pending send could be reopened. Refresh and review its history.",
+        });
+      }
+      await recordHiringAction({
+        ctx,
+        applicationId: input.id,
+        action: "onboarding_delivery_reopened",
+        fromStatus: "accepted",
+        toStatus: "accepted",
+        details: { reconciliation: "staff_confirmed_not_sent" },
+      });
+      return { success: true, status: "accepted" as const };
+    }),
+
+  /**
+   * Staff: resend onboarding email to an already-onboarded applicant (no status change)
+   */
+  resendOnboardingEmail: staffProcedure
+    .input(onboardingInputSchema)
+    .mutation(async ({ input, ctx }) => {
+      const applicant = await requireApplicant(input.id);
+      assertOnboardingResendStatus(applicant.status);
       const isYogaInstructor = applicant.role.toLowerCase().includes("yoga instructor") || applicant.role.toLowerCase().includes("instructor");
       const { subject, html, text } = isYogaInstructor
         ? buildYogaInstructorOnboardingEmail({
@@ -463,6 +627,7 @@ export const careersRouter = router({
             orientationDate: input.orientationDate,
             orientationTime: input.orientationTime,
             planningDocUrl: input.planningDocUrl,
+            documents: input.documents,
             additionalNotes: input.additionalNotes,
           })
         : buildOnboardingEmail({
@@ -472,6 +637,7 @@ export const careersRouter = router({
             orientationDate: input.orientationDate,
             orientationTime: input.orientationTime,
             planningDocUrl: input.planningDocUrl,
+            documents: input.documents,
             additionalNotes: input.additionalNotes,
           });
 
@@ -483,13 +649,22 @@ export const careersRouter = router({
         action: "onboarding_resent",
         fromStatus: applicant.status,
         toStatus: applicant.status,
-        communication: { recipient: applicant.email, subject, bodyPreview: text },
+        details: {
+          orientationDate: input.orientationDate,
+          orientationTime: input.orientationTime,
+          resources: onboardingAuditResources(input),
+        },
+        communication: { recipient: applicant.email, subject, bodyPreview: onboardingAuditPreview(input) },
       });
 
-      await notifyOwner({
-        title: `Onboarding Email Resent -- ${applicant.name}`,
-        content: `Onboarding email resent to ${applicant.name} (${applicant.email}) for ${applicant.role} (${applicant.location}).`,
-      });
+      try {
+        await notifyOwner({
+          title: `Onboarding Email Resent -- ${applicant.name}`,
+          content: `Onboarding email resent to ${applicant.name} (${applicant.email}) for ${applicant.role} (${applicant.location}).`,
+        });
+      } catch (error) {
+        console.error(`[Onboarding] Resend delivered but owner notification failed for application ${input.id}:`, error);
+      }
 
       return { success: true };
     }),
@@ -497,7 +672,7 @@ export const careersRouter = router({
   /**
    * Admin-only: send rejection letter email to applicant
    */
-  sendRejectionLetter: staffProcedure
+  sendRejectionEmail: staffProcedure
     .input(
       z.object({
         id: z.number(),
@@ -506,6 +681,7 @@ export const careersRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const applicant = await requireApplicant(input.id);
+      assertNoPendingOnboardingClaim(applicant);
       const { subject, html, text } = buildRejectionLetterEmail({
         applicantName: applicant.name,
         role: applicant.role,
@@ -516,7 +692,10 @@ export const careersRouter = router({
       await sendEmail({ to: applicant.email, subject, html, text });
 
       // Update status to rejected
-      await updateJobApplication(input.id, { status: "rejected" });
+      const transitioned = await updateJobApplicationStatusIfUnclaimed(input.id, "rejected");
+      if (!transitioned) {
+        throw new TRPCError({ code: "CONFLICT", message: "Onboarding delivery started before the rejection status could be updated. Refresh and resolve it first." });
+      }
 
       await recordHiringAction({
         ctx,

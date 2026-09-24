@@ -1,0 +1,1 @@
+ALTER TABLE `jobApplications` ADD `onboardingDeliveryToken` varchar(64);

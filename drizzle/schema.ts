@@ -104,8 +104,12 @@ export const jobApplications = mysqlTable("jobApplications", {
   resumeKey: varchar("resumeKey", { length: 500 }),
   /** Application status */
   status: mysqlEnum("appStatus", ["new", "reviewed", "shortlisted", "interview_requested", "interview_scheduled", "accepted", "rejected", "onboarded"]).default("new").notNull(),
-  /** Explicit APY HQ membership. Activated when onboarding is sent; the same row retains the hiring history. */
+  /** Explicit APY HQ membership. Granted separately from applicant onboarding; the same row retains hiring history. */
   isTeamMember: boolean("isTeamMember").default(false).notNull(),
+  /** Set when the initial onboarding email is accepted for delivery. */
+  onboardingSentAt: timestamp("onboardingSentAt"),
+  /** Immutable token binding a claimed onboarding delivery to its completion or recovery action. */
+  onboardingDeliveryToken: varchar("onboardingDeliveryToken", { length: 64 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   /** Soft-delete timestamp — null means active, non-null means archived */
   deletedAt: timestamp("deletedAt"),

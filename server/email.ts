@@ -9,6 +9,7 @@ import {
   FINAL_SALE_REFUND_NOTICE,
   REFUND_POLICY_URL,
 } from "@shared/refundPolicy";
+import { APY_PLANNING_DOCUMENT_URL } from "@shared/onboarding";
 
 const GMAIL_USER = "afropuppyyoga@gmail.com";
 const REPLY_TO = "afropuppyyoga@gmail.com";
@@ -121,19 +122,21 @@ function wrapInBrandedLayout(heroContent: string, bodyContent: string): string {
 }
 
 function pillButton(href: string, label: string): string {
+  const safeHref = escapeHtml(href);
   return `<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
     <tr>
       <td align="center">
-        <a href="${href}" style="display:inline-block;background:#C2185B;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;padding:14px 40px;border-radius:50px;text-decoration:none;letter-spacing:0.3px;">${label}</a>
+        <a href="${safeHref}" style="display:inline-block;background:#C2185B;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;padding:14px 40px;border-radius:50px;text-decoration:none;letter-spacing:0.3px;">${label}</a>
       </td>
     </tr>
   </table>`;
 }
 
 function fallbackLink(href: string): string {
+  const safeHref = escapeHtml(href);
   return `<p style="margin:0 0 16px;font-size:11px;color:#9E7B8A;text-align:center;line-height:1.6;">
     Button not working? Copy and paste this link:<br/>
-    <a href="${href}" style="color:#C2185B;word-break:break-all;">${href}</a>
+    <a href="${safeHref}" style="color:#C2185B;word-break:break-all;">${safeHref}</a>
   </p>`;
 }
 
@@ -143,6 +146,39 @@ function bodyText(text: string): string {
 
 function signoff(name: string): string {
   return `<p style="margin:24px 0 0;font-family:Georgia,serif;font-size:15px;color:#1A0A12;">With warmth,<br/><strong>${name}</strong></p>`;
+}
+
+export type OnboardingDocument = {
+  title: string;
+  url: string;
+};
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function renderEmailText(value: string): string {
+  return escapeHtml(value).replace(/\r?\n/g, "<br/>");
+}
+
+function onboardingDocumentsHtml(documents: OnboardingDocument[] | undefined): string {
+  if (!documents?.length) return "";
+
+  const entries = documents
+    .map((document) => `<p style="margin:0 0 10px;font-size:14px;color:#3D1A2A;line-height:1.6;"><a href="${escapeHtml(document.url)}" style="color:#C2185B;font-weight:bold;text-decoration:none;">📄 ${escapeHtml(document.title)}</a></p>`)
+    .join("");
+
+  return `<table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;"><tr><td style="padding:16px 20px;"><p style="margin:0 0 12px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Your Onboarding Documents</p>${entries}</td></tr></table>`;
+}
+
+function onboardingDocumentsText(documents: OnboardingDocument[] | undefined): string {
+  if (!documents?.length) return "";
+  return `\nAdditional onboarding documents:\n${documents.map((document) => `- ${document.title}: ${document.url}`).join("\n")}\n`;
 }
 
 // ─── Email Templates ─────────────────────────────────────────────────────────
@@ -328,10 +364,13 @@ export function buildOnboardingEmail(opts: {
   orientationDate?: string;   // e.g. "Saturday, May 10th"
   orientationTime?: string;   // e.g. "9:00 AM"
   planningDocUrl?: string;    // link to the planning doc
+  documents?: OnboardingDocument[];
   additionalNotes?: string;
 }): { subject: string; html: string; text: string } {
   const firstName = opts.applicantName.split(" ")[0];
-  const planningUrl = opts.planningDocUrl ?? "https://docs.google.com/spreadsheets/d/1pEEx_HXTw3JV82q7FTLaM6qmc8aHoqk0KdVGicyWupo/edit?usp=sharing";
+  const planningUrl = opts.planningDocUrl ?? APY_PLANNING_DOCUMENT_URL;
+  const safeOrientationDate = opts.orientationDate ? escapeHtml(opts.orientationDate) : undefined;
+  const safeOrientationTime = opts.orientationTime ? escapeHtml(opts.orientationTime) : undefined;
 
   // Derive location address from location string
   const locationAddress = opts.location.toLowerCase().includes("kitchener")
@@ -357,7 +396,7 @@ export function buildOnboardingEmail(opts: {
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;">
       <tr><td style="padding:16px 20px;">
         <p style="margin:0 0 4px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Orientation Class Invitation</p>
-        <p style="margin:0 0 10px;font-size:14px;color:#3D1A2A;line-height:1.6;">We would like to invite you to your <strong>orientation class on ${opts.orientationDate}${opts.orientationTime ? ` at ${opts.orientationTime}` : ""}</strong>. This is a great opportunity to experience a live session, get comfortable with the flow, and meet the team before your first official class.</p>
+        <p style="margin:0 0 10px;font-size:14px;color:#3D1A2A;line-height:1.6;">We would like to invite you to your <strong>orientation class on ${safeOrientationDate}${safeOrientationTime ? ` at ${safeOrientationTime}` : ""}</strong>. This is a great opportunity to experience a live session, get comfortable with the flow, and meet the team before your first official class.</p>
         ${locationAddress ? `<p style="margin:0 0 10px;font-size:14px;color:#3D1A2A;line-height:1.6;">📍 <strong>${locationAddress}</strong></p>` : ""}
         <p style="margin:0;font-size:14px;color:#3D1A2A;line-height:1.6;">🧘 Please wear <strong>black yoga attire</strong> and bring <strong>grippy socks</strong>. Most importantly, bring a positive attitude — we can't wait to meet you!</p>
       </td></tr>
@@ -376,7 +415,8 @@ export function buildOnboardingEmail(opts: {
     </table>
     ${pillButton(planningUrl, "📋 Open Planning Document")}
     ${fallbackLink(planningUrl)}
-    ${opts.additionalNotes ? `<table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;"><tr><td style="padding:16px 20px;"><p style="margin:0 0 6px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Additional Notes</p><p style="margin:0;font-size:14px;color:#3D1A2A;line-height:1.6;">${opts.additionalNotes}</p></td></tr></table>` : ""}
+    ${onboardingDocumentsHtml(opts.documents)}
+    ${opts.additionalNotes ? `<table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;"><tr><td style="padding:16px 20px;"><p style="margin:0 0 6px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Additional Notes</p><p style="margin:0;font-size:14px;color:#3D1A2A;line-height:1.6;">${renderEmailText(opts.additionalNotes)}</p></td></tr></table>` : ""}
     ${bodyText(`Please <strong>reply to this email</strong> to confirm you've received your onboarding details and let us know if you have any questions before your orientation.`)}
     ${bodyText(`If you need to reach me directly, call or text <a href="tel:2897881885" style="color:#C2185B;">289-788-1885</a>.`)}
     ${bodyText(`Thanks again, and welcome to the team!`)}
@@ -405,6 +445,7 @@ You'll be added to the official iMessage group chat shortly. Keep an eye on your
 
 Planning Document:
 ${planningUrl}
+${onboardingDocumentsText(opts.documents)}
 ${opts.additionalNotes ? `\n${opts.additionalNotes}\n` : ""}
 Please reply to this email to confirm you've received your onboarding details.
 
@@ -427,9 +468,12 @@ export function buildYogaInstructorOnboardingEmail(opts: {
   orientationTime?: string;
   additionalNotes?: string;
   planningDocUrl?: string;
+  documents?: OnboardingDocument[];
 }): { subject: string; html: string; text: string } {
   const firstName = opts.applicantName.split(" ")[0];
-  const planningUrl = opts.planningDocUrl ?? "https://docs.google.com/spreadsheets/d/1pEEx_HXTw3JV82q7FTLaM6qmc8aHoqk0KdVGicyWupo/edit?usp=sharing";
+  const planningUrl = opts.planningDocUrl ?? APY_PLANNING_DOCUMENT_URL;
+  const safeOrientationDate = opts.orientationDate ? escapeHtml(opts.orientationDate) : undefined;
+  const safeOrientationTime = opts.orientationTime ? escapeHtml(opts.orientationTime) : undefined;
 
   const locationAddress = opts.location.toLowerCase().includes("kitchener")
     ? "329 King Street East, Kitchener, Ontario"
@@ -454,7 +498,7 @@ export function buildYogaInstructorOnboardingEmail(opts: {
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;">
       <tr><td style="padding:16px 20px;">
         <p style="margin:0 0 4px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Orientation Invitation</p>
-        <p style="margin:0 0 10px;font-size:14px;color:#3D1A2A;line-height:1.6;">We would like to invite you to your <strong>orientation on ${opts.orientationDate}${opts.orientationTime ? ` at ${opts.orientationTime}` : ""}</strong>. This is a chance to walk through the class format, meet the team, and get familiar with the space before your first session.</p>
+        <p style="margin:0 0 10px;font-size:14px;color:#3D1A2A;line-height:1.6;">We would like to invite you to your <strong>orientation on ${safeOrientationDate}${safeOrientationTime ? ` at ${safeOrientationTime}` : ""}</strong>. This is a chance to walk through the class format, meet the team, and get familiar with the space before your first session.</p>
         ${locationAddress ? `<p style="margin:0 0 10px;font-size:14px;color:#3D1A2A;line-height:1.6;">📍 <strong>${locationAddress}</strong></p>` : ""}
         <p style="margin:0;font-size:14px;color:#3D1A2A;line-height:1.6;">🧘 Please wear comfortable yoga attire. We'll walk you through everything you need to know on the day!</p>
       </td></tr>
@@ -473,7 +517,8 @@ export function buildYogaInstructorOnboardingEmail(opts: {
     </table>
     ${pillButton(planningUrl, "📋 Open Planning Document")}
     ${fallbackLink(planningUrl)}
-    ${opts.additionalNotes ? `<table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;"><tr><td style="padding:16px 20px;"><p style="margin:0 0 6px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Additional Notes</p><p style="margin:0;font-size:14px;color:#3D1A2A;line-height:1.6;">${opts.additionalNotes}</p></td></tr></table>` : ""}
+    ${onboardingDocumentsHtml(opts.documents)}
+    ${opts.additionalNotes ? `<table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;"><tr><td style="padding:16px 20px;"><p style="margin:0 0 6px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Additional Notes</p><p style="margin:0;font-size:14px;color:#3D1A2A;line-height:1.6;">${renderEmailText(opts.additionalNotes)}</p></td></tr></table>` : ""}
     ${bodyText(`Please <strong>reply to this email</strong> to confirm you've received your onboarding details and let us know if you have any questions before your orientation.`)}
     ${bodyText(`If you need to reach me directly, call or text <a href="tel:2897881885" style="color:#C2185B;">289-788-1885</a>.`)}
     ${bodyText(`Thanks again, and welcome to the team!`)}
@@ -502,6 +547,7 @@ You'll be added to the official iMessage group chat shortly. Keep an eye on your
 
 Planning Document:
 ${planningUrl}
+${onboardingDocumentsText(opts.documents)}
 ${opts.additionalNotes ? `\n${opts.additionalNotes}\n` : ""}
 Please reply to this email to confirm you've received your onboarding details.
 
