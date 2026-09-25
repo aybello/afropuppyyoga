@@ -135,9 +135,28 @@ describe("regular class Luma event defaults", () => {
       startTime: "09:00",
       endTime: "15:00",
       classType: "regular",
-    })).rejects.toThrow("could not verify its public URL; it was cancelled");
+    })).rejects.toThrow("could not verify a public open booking page. The unverified event was cancelled.");
     expect(String(fetchMock.mock.calls[3]?.[0])).toContain("/events/cancel/request");
     expect(String(fetchMock.mock.calls[4]?.[0])).toContain("/events/cancel");
+  });
+
+  it("identifies an unverified event for manual cleanup when cancellation cannot be completed", async () => {
+    process.env.LUMA_API_KEY = "test-key";
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [] }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "evt_cleanup_required" }) })
+      .mockResolvedValueOnce({ ok: false, status: 503 })
+      .mockResolvedValueOnce({ ok: false, status: 500 });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(createLumaEventForSchedule({
+      classDate: "2026-10-03",
+      location: "Kitchener",
+      breed: "German Shepherds",
+      startTime: "09:00",
+      endTime: "15:00",
+      classType: "regular",
+    })).rejects.toThrow("event evt_cleanup_required");
   });
 
   it("reports a missing Luma connection before any class is confirmed", async () => {
@@ -228,12 +247,12 @@ describe("automatic Luma class invitations", () => {
     expect(isEligibleCreatedLumaEventForInvites({ is_sold_out: true })).toBe(false);
   });
 
-  it("does not request recipients after creation regardless of event presentation", async () => {
+  it("does not request recipients after creation", async () => {
     process.env.LUMA_API_KEY = "test-key";
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [] }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "evt_private" }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ url: "https://lu.ma/private", visibility: "private" }) });
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "evt_public" }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ url: "https://lu.ma/public", visibility: "public", registration_open: true }) });
     vi.stubGlobal("fetch", fetchMock);
 
     await createLumaEventForSchedule(params);

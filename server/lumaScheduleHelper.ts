@@ -608,12 +608,23 @@ export async function createLumaEventForSchedule(params: LumaScheduleParams): Pr
       const event = eventRecord(eventData);
       lumaEventUrl = firstNonEmptyString(event.url, eventData.url) ?? null;
       if (!lumaEventUrl) throw new Error("Luma event verification did not return a public event URL.");
+      if (!/^https:\/\/(?:lu\.ma|luma\.com)\//i.test(lumaEventUrl)) {
+        throw new Error("Luma event verification returned an invalid public URL.");
+      }
+      if (event.visibility !== "public" || event.registration_open !== true) {
+        throw new Error("Luma event verification did not confirm a public event with registration open.");
+      }
     } catch (verificationError) {
       const detail = verificationError instanceof Error ? verificationError.message : "unknown event-verification error";
-      await cancelUnpublishedLumaEvent(lumaEventId).catch((cleanupError) => {
+      let cleanupDetail = "The unverified event was cancelled.";
+      try {
+        await cancelUnpublishedLumaEvent(lumaEventId);
+      } catch (cleanupError) {
+        const cleanupMessage = cleanupError instanceof Error ? cleanupError.message : "unknown cleanup error";
         console.error(`[LumaSchedule] Could not cancel unverified event ${lumaEventId}:`, cleanupError);
-      });
-      throw new Error(`Luma created the class but could not verify its public URL; it was cancelled. ${detail}`);
+        cleanupDetail = `The unverified event may still exist in Luma (event ${lumaEventId}); cancel it manually before retrying. Cleanup error: ${cleanupMessage}`;
+      }
+      throw new Error(`Luma created the class but could not verify a public open booking page. ${cleanupDetail} Verification error: ${detail}`);
     }
 
     console.log(`[LumaSchedule] Created Luma event: ${lumaEventUrl} (${eventFields.name})`);
