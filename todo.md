@@ -1468,3 +1468,7 @@
 - [x] Fail closed on unknown Twilio outcomes; definitive Twilio rejections can be revised and retried. Preserve successful send status even if a later local audit update fails.
 - [x] Add direct “Call or text 289-788-1885” access to the shared branded-email footer and an explicit quick-contact line in breeder confirmations, while keeping Email Reply-To as afropuppyyoga@gmail.com.
 - [x] Add migration 0063 for the reply guard and validate migrations, 80 test files / 291 passed / 1 skipped, TypeScript, production build, and whitespace checks.
+
+## Owner SMS Sender Number Visibility — September 25, 2026
+- Corrected the forwarded inbound-text notification sent to the owner’s mobile. Previously, a matched breeder’s name replaced the number in the forwarded text. It now always includes both, for example: `Reply from Indigo Bay Kennels (+14165551234): …`; unmatched senders continue to show their number. APY HQ’s SMS Inbox already displayed the number and retains its direct Call action.
+- Added regression tests for matched and unmatched inbound senders. No database change or message send was required. Validation: 80 test files with 293 passed and 1 skipped, TypeScript, production build, and diff check.

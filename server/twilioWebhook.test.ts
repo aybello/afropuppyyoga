@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { getTwilioWebhookBaseUrl, getTwilioWebhookUrl } from "./twilioWebhook";
+import { buildInboundSmsOwnerForward, getTwilioWebhookBaseUrl, getTwilioWebhookUrl } from "./twilioWebhook";
 
 const originalWebhookBaseUrl = process.env.TWILIO_WEBHOOK_BASE_URL;
 
@@ -21,5 +21,19 @@ describe("Twilio cancellation webhook URLs", () => {
   it("normalizes an explicitly configured callback base URL", () => {
     process.env.TWILIO_WEBHOOK_BASE_URL = "https://callbacks.example.test///";
     expect(getTwilioWebhookUrl("api/twilio/sms-status")).toBe("https://callbacks.example.test/api/twilio/sms-status");
+  });
+});
+
+describe("inbound SMS owner forwarding", () => {
+  it("always includes a matched breeder's number in the forwarded text", () => {
+    expect(buildInboundSmsOwnerForward("+14165551234", "What time is drop-off?", "Indigo Bay Kennels")).toBe(
+      "📩 Reply from Indigo Bay Kennels (+14165551234):\n\"What time is drop-off?\""
+    );
+  });
+
+  it("uses the sender number when no breeder record matches", () => {
+    expect(buildInboundSmsOwnerForward("+14165551234", "Please call me.", null)).toBe(
+      "📩 Reply from +14165551234:\n\"Please call me.\""
+    );
   });
 });

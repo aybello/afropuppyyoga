@@ -28,6 +28,19 @@ export function getTwilioWebhookUrl(path: string): string {
   return `${getTwilioWebhookBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
+/**
+ * Keeps the direct-reply phone number in every owner notification, even when
+ * APY has matched the sender to a known breeder name.
+ */
+export function buildInboundSmsOwnerForward(
+  fromPhone: string,
+  messageBody: string,
+  breederName: string | null
+): string {
+  const sender = breederName ? `${breederName} (${fromPhone})` : fromPhone;
+  return `📩 Reply from ${sender}:\n"${messageBody}"`;
+}
+
 function validateTwilioSignature(req: import("express").Request): boolean {
   const authToken = process.env.TWILIO_AUTH_TOKEN;
   if (!authToken) return false;
@@ -190,8 +203,7 @@ webhookRouter.post("/api/twilio/sms-inbound", async (req, res) => {
       const twilioFromNumber = process.env.TWILIO_PHONE_NUMBER;
 
       if (wasNewInboundMessage && !consentAction && ownerPhone && twilioAccountSid && twilioAuthToken && twilioFromNumber) {
-        const senderLabel = breederName ?? fromPhone;
-        const forwardBody = `📩 Reply from ${senderLabel}:\n"${messageBody}"`;
+        const forwardBody = buildInboundSmsOwnerForward(fromPhone, messageBody, breederName);
         const params = new URLSearchParams();
         params.append("To", ownerPhone);
         params.append("From", twilioFromNumber);
@@ -207,7 +219,7 @@ webhookRouter.post("/api/twilio/sms-inbound", async (req, res) => {
             body: params.toString(),
           }
         );
-        console.log(`[SMS Inbound] Forwarded reply from ${senderLabel} to owner`);
+        console.log(`[SMS Inbound] Forwarded reply from ${breederName ?? fromPhone} to owner`);
       }
     }
   } catch (err) {
