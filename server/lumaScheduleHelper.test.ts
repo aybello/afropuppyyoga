@@ -99,7 +99,8 @@ describe("regular class Luma event defaults", () => {
         id: "jry47jna",
         label: "How did you hear about us?",
         required: true,
-        question_type: "multi-select",
+        question_type: "select",
+        multiple: true,
       }),
       expect.objectContaining({
         id: "1oy5wt8g",

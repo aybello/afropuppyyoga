@@ -555,8 +555,12 @@ export async function createLumaEventForSchedule(params: LumaScheduleParams): Pr
             id: "jry47jna",
             label: "How did you hear about us?",
             required: true,
-            question_type: "multi-select",
+            // Luma's event-create API models a multi-answer list as a select
+            // question with `multiple: true`; `multi-select` is returned in
+            // some documentation schemas but is rejected by the live API.
+            question_type: "select",
             options: ["Instagram", "Facebook", "Poster", "Word of Mouth"],
+            multiple: true,
           },
           {
             id: "1oy5wt8g",
