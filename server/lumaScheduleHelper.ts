@@ -591,26 +591,14 @@ export async function createLumaEventForSchedule(params: LumaScheduleParams): Pr
       throw new Error(`Luma event creation failed (${createRes.status})${detail ? `: ${detail}` : ""}`);
     }
 
-    const createData = (await createRes.json()) as { id: string };
+    const createData = (await createRes.json()) as { id: string; url?: string; event?: { url?: string } };
     const lumaEventId = createData.id;
     if (!lumaEventId) throw new Error("Luma event creation did not return an event ID.");
 
-    // Fetch the canonical event URL after creation. Class creation must not
-    // send any calendar invitation; invitations remain an explicit owner action.
-    let lumaEventUrl = `https://lu.ma/${lumaEventId}`;
-    try {
-      const getRes = await fetch(`${LUMA_BASE}/events/get?event_id=${lumaEventId}`, {
-        headers: { "x-luma-api-key": apiKey },
-      });
-      if (!getRes.ok) throw new Error(`Luma event verification failed (${getRes.status})`);
-      const eventData = (await getRes.json()) as LumaEventLookup;
-      const event = eventRecord(eventData);
-      const verifiedUrl = firstNonEmptyString(event.url, eventData.url);
-      if (verifiedUrl) lumaEventUrl = verifiedUrl;
-    } catch (verificationError) {
-      const detail = verificationError instanceof Error ? verificationError.message : "unknown event-verification error";
-      console.warn(`[LumaSchedule] Created event ${lumaEventId}, but could not verify its canonical URL: ${detail}`);
-    }
+    // The successful create response is the source of truth. Do not make an
+    // unrelated post-create lookup a condition of breeder confirmation.
+    // Class creation must not send any calendar invitation.
+    const lumaEventUrl = firstNonEmptyString(createData.url, createData.event?.url) ?? `https://lu.ma/${lumaEventId}`;
 
     console.log(`[LumaSchedule] Created Luma event: ${lumaEventUrl} (${eventFields.name})`);
     return { lumaEventId, lumaEventUrl, created: true };

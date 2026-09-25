@@ -362,7 +362,7 @@ export const careersRouter = router({
           message: "An onboarded applicant cannot be moved through the general status selector. Review their Employee Directory record instead.",
         });
       }
-      const transitioned = await updateJobApplicationStatusIfUnclaimed(input.id, input.status as AppStatus);
+      const transitioned = await updateJobApplicationStatusIfUnclaimed(input.id, applicant.status as AppStatus, input.status as AppStatus);
       if (!transitioned) {
         throw new TRPCError({ code: "CONFLICT", message: "Onboarding delivery started before this status change completed. Refresh and resolve it first." });
       }
@@ -401,7 +401,7 @@ export const careersRouter = router({
       await sendEmail({ to: applicant.email, subject, html, text });
 
       // A booking link has been sent, but no date or time is confirmed yet.
-      const transitioned = await updateJobApplicationStatusIfUnclaimed(input.id, "interview_requested");
+      const transitioned = await updateJobApplicationStatusIfUnclaimed(input.id, applicant.status as AppStatus, "interview_requested");
       if (!transitioned) {
         throw new TRPCError({ code: "CONFLICT", message: "Onboarding delivery started before the interview status could be updated. Refresh and resolve it first." });
       }
@@ -704,7 +704,7 @@ export const careersRouter = router({
       await sendEmail({ to: applicant.email, subject, html, text });
 
       // Update status to rejected
-      const transitioned = await updateJobApplicationStatusIfUnclaimed(input.id, "rejected");
+      const transitioned = await updateJobApplicationStatusIfUnclaimed(input.id, applicant.status as AppStatus, "rejected");
       if (!transitioned) {
         throw new TRPCError({ code: "CONFLICT", message: "Onboarding delivery started before the rejection status could be updated. Refresh and resolve it first." });
       }

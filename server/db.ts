@@ -200,8 +200,16 @@ export async function updateJobApplication(id: number, data: Partial<InsertJobAp
   await db.update(jobApplications).set(data).where(eq(jobApplications.id, id));
 }
 
-/** Update applicant status only when no onboarding send is currently claimed. */
-export async function updateJobApplicationStatusIfUnclaimed(id: number, status: NonNullable<InsertJobApplication["status"]>): Promise<boolean> {
+/**
+ * Update an applicant only when the status seen by staff is still current and
+ * no onboarding send is claimed. This prevents a stale status picker from
+ * overwriting a completed employee-onboarding transfer.
+ */
+export async function updateJobApplicationStatusIfUnclaimed(
+  id: number,
+  expectedStatus: NonNullable<InsertJobApplication["status"]>,
+  status: NonNullable<InsertJobApplication["status"]>,
+): Promise<boolean> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const result = await db
@@ -209,6 +217,7 @@ export async function updateJobApplicationStatusIfUnclaimed(id: number, status: 
     .set({ status })
     .where(and(
       eq(jobApplications.id, id),
+      eq(jobApplications.status, expectedStatus),
       isNull(jobApplications.onboardingDeliveryToken),
       isNull(jobApplications.deletedAt),
     ));

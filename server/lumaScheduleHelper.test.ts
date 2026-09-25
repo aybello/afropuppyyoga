@@ -71,8 +71,7 @@ describe("regular class Luma event defaults", () => {
     process.env.LUMA_API_KEY = "test-key";
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [] }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "evt_test" }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ url: "https://luma.com/test-event", visibility: "public", registration_open: true }) });
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "evt_test", url: "https://luma.com/test-event" }) });
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(createLumaEventForSchedule({
@@ -88,7 +87,7 @@ describe("regular class Luma event defaults", () => {
       created: true,
     });
 
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(String(fetchMock.mock.calls[0][0])).toContain("/calendar/list-events");
     const createPayload = JSON.parse(fetchMock.mock.calls[1][1].body as string);
     expect(createPayload).toMatchObject(REGULAR_CLASS_LUMA_EVENT_DEFAULTS);
@@ -206,27 +205,25 @@ describe("automatic Luma class invitations", () => {
     expect(isEligibleCreatedLumaEventForInvites({ is_sold_out: true })).toBe(false);
   });
 
-  it("does not request recipients for an event that is not publicly eligible", async () => {
+  it("does not request recipients after creation regardless of event presentation", async () => {
     process.env.LUMA_API_KEY = "test-key";
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [] }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "evt_private" }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ url: "https://lu.ma/private", visibility: "private" }) });
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "evt_private", url: "https://lu.ma/private" }) });
     vi.stubGlobal("fetch", fetchMock);
 
     await createLumaEventForSchedule(params);
 
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/calendars/contacts/list"))).toBe(false);
   });
 
-  it("does not send or read recipients when the verified URL cannot fit in Luma's invite-message limit", async () => {
+  it("does not send or read recipients even when Luma returns a long event URL", async () => {
     process.env.LUMA_API_KEY = "test-key";
     const tooLongUrl = `https://lu.ma/${"x".repeat(240)}`;
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [] }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "evt_long_url" }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ url: tooLongUrl, visibility: "public", registration_open: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "evt_long_url", url: tooLongUrl }) })
       .mockResolvedValue({ ok: true, json: async () => ({}) });
     vi.stubGlobal("fetch", fetchMock);
 
