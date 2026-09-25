@@ -71,7 +71,8 @@ describe("regular class Luma event defaults", () => {
     process.env.LUMA_API_KEY = "test-key";
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [] }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "evt_test", url: "https://luma.com/test-event" }) });
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "evt_test" }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ url: "https://luma.com/test-event", visibility: "public", registration_open: true }) });
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(createLumaEventForSchedule({
@@ -87,7 +88,7 @@ describe("regular class Luma event defaults", () => {
       created: true,
     });
 
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(String(fetchMock.mock.calls[0][0])).toContain("/calendar/list-events");
     const createPayload = JSON.parse(fetchMock.mock.calls[1][1].body as string);
     expect(createPayload).toMatchObject(REGULAR_CLASS_LUMA_EVENT_DEFAULTS);
@@ -115,6 +116,28 @@ describe("regular class Luma event defaults", () => {
       endTime: "15:00",
       classType: "regular",
     })).rejects.toThrow("Luma event creation failed (422): start_at is invalid");
+  });
+
+  it("cancels a just-created class and blocks confirmation when Luma cannot verify the public URL", async () => {
+    process.env.LUMA_API_KEY = "test-key";
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [] }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "evt_unverified" }) })
+      .mockResolvedValueOnce({ ok: false, status: 503 })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ cancellation_token: "cancel-token" }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({}) });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(createLumaEventForSchedule({
+      classDate: "2026-10-03",
+      location: "Kitchener",
+      breed: "German Shepherds",
+      startTime: "09:00",
+      endTime: "15:00",
+      classType: "regular",
+    })).rejects.toThrow("could not verify its public URL; it was cancelled");
+    expect(String(fetchMock.mock.calls[3]?.[0])).toContain("/events/cancel/request");
+    expect(String(fetchMock.mock.calls[4]?.[0])).toContain("/events/cancel");
   });
 
   it("reports a missing Luma connection before any class is confirmed", async () => {
@@ -209,12 +232,13 @@ describe("automatic Luma class invitations", () => {
     process.env.LUMA_API_KEY = "test-key";
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [] }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "evt_private", url: "https://lu.ma/private" }) });
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "evt_private" }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ url: "https://lu.ma/private", visibility: "private" }) });
     vi.stubGlobal("fetch", fetchMock);
 
     await createLumaEventForSchedule(params);
 
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/calendars/contacts/list"))).toBe(false);
   });
 
@@ -223,7 +247,8 @@ describe("automatic Luma class invitations", () => {
     const tooLongUrl = `https://lu.ma/${"x".repeat(240)}`;
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [] }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "evt_long_url", url: tooLongUrl }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "evt_long_url" }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ url: tooLongUrl, visibility: "public", registration_open: true }) })
       .mockResolvedValue({ ok: true, json: async () => ({}) });
     vi.stubGlobal("fetch", fetchMock);
 

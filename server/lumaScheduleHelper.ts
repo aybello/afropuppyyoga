@@ -591,14 +591,30 @@ export async function createLumaEventForSchedule(params: LumaScheduleParams): Pr
       throw new Error(`Luma event creation failed (${createRes.status})${detail ? `: ${detail}` : ""}`);
     }
 
-    const createData = (await createRes.json()) as { id: string; url?: string; event?: { url?: string } };
+    const createData = (await createRes.json()) as { id: string };
     const lumaEventId = createData.id;
     if (!lumaEventId) throw new Error("Luma event creation did not return an event ID.");
 
-    // The successful create response is the source of truth. Do not make an
-    // unrelated post-create lookup a condition of breeder confirmation.
-    // Class creation must not send any calendar invitation.
-    const lumaEventUrl = firstNonEmptyString(createData.url, createData.event?.url) ?? `https://lu.ma/${lumaEventId}`;
+    // A public URL is required before a breeder can be confirmed. If Luma
+    // cannot return it, compensate by cancelling this just-created, unshared
+    // event and fail the confirmation instead of recording a broken link.
+    let lumaEventUrl: string | null = null;
+    try {
+      const getRes = await fetch(`${LUMA_BASE}/events/get?event_id=${lumaEventId}`, {
+        headers: { "x-luma-api-key": apiKey },
+      });
+      if (!getRes.ok) throw new Error(`Luma event verification failed (${getRes.status})`);
+      const eventData = (await getRes.json()) as LumaEventLookup;
+      const event = eventRecord(eventData);
+      lumaEventUrl = firstNonEmptyString(event.url, eventData.url) ?? null;
+      if (!lumaEventUrl) throw new Error("Luma event verification did not return a public event URL.");
+    } catch (verificationError) {
+      const detail = verificationError instanceof Error ? verificationError.message : "unknown event-verification error";
+      await cancelUnpublishedLumaEvent(lumaEventId).catch((cleanupError) => {
+        console.error(`[LumaSchedule] Could not cancel unverified event ${lumaEventId}:`, cleanupError);
+      });
+      throw new Error(`Luma created the class but could not verify its public URL; it was cancelled. ${detail}`);
+    }
 
     console.log(`[LumaSchedule] Created Luma event: ${lumaEventUrl} (${eventFields.name})`);
     return { lumaEventId, lumaEventUrl, created: true };

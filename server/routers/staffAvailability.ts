@@ -508,12 +508,6 @@ export const staffAvailabilityRouter = router({
 
       const email = applicant.email?.toLowerCase() ?? null;
       const phone = applicant.phone ? normalizeCanadianPhoneNumber(applicant.phone) : null;
-      const activeTeamContacts = await db.select({ email: jobApplications.email, phone: jobApplications.phone })
-        .from(jobApplications)
-        .where(and(eq(jobApplications.isTeamMember, true), isNull(jobApplications.deletedAt)));
-      if (Boolean(applicant.isTeamMember) || hasMatchingActiveTeamContact({ email, phone }, activeTeamContacts)) {
-        throw new Error("Remove the matching active APY HQ profile first. Employment onboarding never grants or preserves portal access implicitly.");
-      }
       const [emailMatches, phoneMatches] = await Promise.all([
         email ? db.select().from(employees).where(eq(employees.email, email)) : Promise.resolve([]),
         phone ? db.select().from(employees).where(eq(employees.phone, phone)) : Promise.resolve([]),
@@ -538,12 +532,21 @@ export const staffAvailabilityRouter = router({
         endedAt: null,
       };
       const employeeId = await db.transaction(async (tx) => {
+        // This must be evaluated at the point of transition, not only on the
+        // earlier dashboard read. Employee onboarding never preserves APY HQ
+        // access for the same email or phone.
+        const activeTeamContacts = await tx.select({ email: jobApplications.email, phone: jobApplications.phone })
+          .from(jobApplications)
+          .where(and(eq(jobApplications.isTeamMember, true), isNull(jobApplications.deletedAt)));
+        if (Boolean(applicant.isTeamMember) || hasMatchingActiveTeamContact({ email, phone }, activeTeamContacts)) {
+          throw new Error("Remove the matching active APY HQ profile first. Employment onboarding never grants or preserves portal access implicitly.");
+        }
         // Re-read the newest signing request inside the transfer transaction.
         // A historical signed agreement must not qualify a later unsigned offer.
         const [currentSigning] = await tx.select({ signed: signingTokens.signed })
           .from(signingTokens)
           .where(eq(signingTokens.applicationId, applicant.id))
-          .orderBy(desc(signingTokens.createdAt))
+          .orderBy(desc(signingTokens.createdAt), desc(signingTokens.id))
           .limit(1);
         if (currentSigning?.signed !== 1) {
           throw new Error("The latest Offer Letter and NDA must be signed before employment onboarding can be completed.");
@@ -552,6 +555,7 @@ export const staffAvailabilityRouter = router({
           .where(and(
             eq(jobApplications.id, applicant.id),
             eq(jobApplications.status, "accepted"),
+            eq(jobApplications.isTeamMember, false),
             isNotNull(jobApplications.onboardingSentAt),
             isNull(jobApplications.onboardingDeliveryToken),
             isNull(jobApplications.deletedAt),
