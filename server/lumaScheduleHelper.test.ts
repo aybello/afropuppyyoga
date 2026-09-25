@@ -307,6 +307,17 @@ describe("automatic Luma class invitations", () => {
           },
         }],
       }),
+    }).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        event: {
+          url: "https://lu.ma/existing",
+          visibility: "public",
+          registration_open: true,
+          is_cancelled: false,
+          is_sold_out: false,
+        },
+      }),
     });
     vi.stubGlobal("fetch", fetchMock);
 
@@ -316,7 +327,7 @@ describe("automatic Luma class invitations", () => {
       created: false,
     });
 
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it("deduplicates recipient email case-insensitively before any Luma request", () => {

@@ -84,6 +84,30 @@ export function isEligibleCreatedLumaEventForInvites(response: LumaEventLookup):
   return !["cancelled", "hidden", "private", "sold_out"].includes(status ?? "");
 }
 
+/**
+ * Return a public guest URL only when Luma's authoritative event lookup proves
+ * the event is public, open for registration, and still commercially usable.
+ * Calendar list results cannot supply these guarantees.
+ */
+export function getVerifiedPublicOpenLumaEventUrl(response: LumaEventLookup): string {
+  const event = eventRecord(response);
+  const eventUrl = firstNonEmptyString(event.url, response.url);
+  if (!eventUrl || !/^https:\/\/(?:lu\.ma|luma\.com)\//i.test(eventUrl)) {
+    throw new Error("Luma event verification did not return a valid public event URL.");
+  }
+  if (firstNonEmptyString(event.visibility)?.toLocaleLowerCase() !== "public") {
+    throw new Error("Luma event verification did not confirm public visibility.");
+  }
+  if (event.registration_open !== true) {
+    throw new Error("Luma event verification did not confirm registration is open.");
+  }
+  const status = firstNonEmptyString(event.status)?.toLocaleLowerCase();
+  if (event.is_cancelled === true || event.cancelled_at || event.is_sold_out === true || event.sold_out === true || ["cancelled", "hidden", "private", "sold_out"].includes(status ?? "")) {
+    throw new Error("Luma event verification found a cancelled, hidden, or sold-out event.");
+  }
+  return eventUrl;
+}
+
 function lumaContactRecord(entry: unknown): Record<string, unknown> | null {
   if (!isRecord(entry)) return null;
   return [entry.calendar_contact, entry.contact, entry].find(isRecord) ?? null;
@@ -391,7 +415,22 @@ async function findExistingLumaEventForSchedule(
   }
   const data = await response.json() as { entries?: Array<{ event?: LumaCalendarEvent }> };
   const events = (data.entries ?? []).flatMap(entry => entry.event ? [entry.event] : []);
-  return findExistingLumaScheduleEvent(events, params);
+  const match = findExistingLumaScheduleEvent(events, params);
+  if (!match) return null;
+
+  // Calendar list results are not authoritative for visibility, registration
+  // status, cancellation, sold-out state, or the public guest URL. A same-day
+  // APY-looking event must be checked before it can be reused for a schedule
+  // or breeder confirmation.
+  const eventResponse = await fetch(`${LUMA_BASE}/events/get?event_id=${encodeURIComponent(match.lumaEventId)}`, {
+    headers: { "x-luma-api-key": apiKey },
+  });
+  if (!eventResponse.ok) throw new Error(`Luma reused-event verification failed (${eventResponse.status})`);
+  const eventData = await eventResponse.json() as LumaEventLookup;
+  return {
+    lumaEventId: match.lumaEventId,
+    lumaEventUrl: getVerifiedPublicOpenLumaEventUrl(eventData),
+  };
 }
 
 export async function setLumaRegistrationOpen(eventId: string, registrationOpen: boolean) {
@@ -597,15 +636,7 @@ export async function createLumaEventForSchedule(params: LumaScheduleParams): Pr
       });
       if (!getRes.ok) throw new Error(`Luma event verification failed (${getRes.status})`);
       const eventData = (await getRes.json()) as LumaEventLookup;
-      const event = eventRecord(eventData);
-      lumaEventUrl = firstNonEmptyString(event.url, eventData.url) ?? null;
-      if (!lumaEventUrl) throw new Error("Luma event verification did not return a public event URL.");
-      if (!/^https:\/\/(?:lu\.ma|luma\.com)\//i.test(lumaEventUrl)) {
-        throw new Error("Luma event verification returned an invalid public URL.");
-      }
-      if (event.visibility !== "public" || event.registration_open !== true) {
-        throw new Error("Luma event verification did not confirm a public event with registration open.");
-      }
+      lumaEventUrl = getVerifiedPublicOpenLumaEventUrl(eventData);
     } catch (verificationError) {
       const detail = verificationError instanceof Error ? verificationError.message : "unknown event-verification error";
       let cleanupDetail = "The unverified event was cancelled.";

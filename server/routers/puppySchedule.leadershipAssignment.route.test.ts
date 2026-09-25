@@ -28,13 +28,19 @@ function createDb(responses: unknown[]) {
       const query: any = {
         from: () => query,
         where: () => query,
+        for: () => Promise.resolve(result),
         limit: () => Promise.resolve(result),
         then: (resolve: (value: unknown) => unknown, reject: (reason: unknown) => unknown) => Promise.resolve(result).then(resolve, reject),
       };
       return query;
     }),
-    insert: vi.fn(() => ({ values: vi.fn((value) => { inserts.push(value); return Promise.resolve(); }) })),
+    insert: vi.fn(() => ({ values: vi.fn((value) => {
+      if (value.lockName) return { onDuplicateKeyUpdate: vi.fn().mockResolvedValue(undefined) };
+      inserts.push(value);
+      return Promise.resolve();
+    }) })),
     update: vi.fn(() => ({ set: vi.fn((value) => { updates.push(value); return { where: vi.fn(() => Promise.resolve()) }; }) })),
+    transaction: vi.fn(async (callback) => callback(db)),
   };
   return { db, inserts, updates };
 }
@@ -45,7 +51,7 @@ describe("assignLeadership mutation", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("assigns an eligible Operations Manager as coverage for the selected class date and studio", async () => {
-    const prepared = createDb([[schedule], [leadershipCandidate], [], []]);
+    const prepared = createDb([[], [schedule], [leadershipCandidate], [], []]);
     getDb.mockResolvedValue(prepared.db);
 
     await expect(caller().assignLeadership({ scheduleId: 77, role: "Operations Manager", staffId: 15 })).resolves.toEqual({ success: true });
@@ -60,7 +66,7 @@ describe("assignLeadership mutation", () => {
   });
 
   it("assigns an eligible Operations Manager from another APY location as coverage for the selected class", async () => {
-    const prepared = createDb([[schedule], [{ ...leadershipCandidate, location: "HAM" }], [], []]);
+    const prepared = createDb([[], [schedule], [{ ...leadershipCandidate, location: "HAM" }], [], []]);
     getDb.mockResolvedValue(prepared.db);
 
     await expect(caller().assignLeadership({ scheduleId: 77, role: "Operations Manager", staffId: 15 })).resolves.toEqual({ success: true });
@@ -73,7 +79,7 @@ describe("assignLeadership mutation", () => {
   });
 
   it("rejects a leader whose role does not match the coverage role", async () => {
-    const prepared = createDb([[schedule], [{ ...leadershipCandidate, role: "Yoga Instructor" }], []]);
+    const prepared = createDb([[], [schedule], [{ ...leadershipCandidate, role: "Yoga Instructor" }], []]);
     getDb.mockResolvedValue(prepared.db);
 
     await expect(caller().assignLeadership({ scheduleId: 77, role: "Operations Manager", staffId: 15 })).rejects.toThrow("Choose an active Operations Manager for this class.");

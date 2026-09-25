@@ -219,6 +219,8 @@ export type InsertPartnershipInquiry = typeof partnershipInquiries.$inferInsert;
 
 export const staffInvites = mysqlTable("staffInvites", {
   id: int("id").autoincrement().primaryKey(),
+  /** Immutable APY HQ profile binding for safe access revocation. */
+  applicationId: int("applicationId"),
   /** Staff member's name */
   name: varchar("name", { length: 255 }).notNull(),
   /** Staff member's email address */
@@ -411,10 +413,14 @@ export const communicationsLog = mysqlTable("communicationsLog", {
   bodyPreview: text("bodyPreview"),
   deliveryStatus: varchar("deliveryStatus", { length: 32 }).notNull().default("sent"),
   providerMessageId: varchar("providerMessageId", { length: 128 }),
+  idempotencyKey: varchar("idempotencyKey", { length: 160 }),
   actorUserId: int("actorUserId"),
   actorName: varchar("actorName", { length: 255 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-}, (t) => [index("idx_communications_entity").on(t.entityType, t.entityId, t.createdAt)]);
+}, (t) => [
+  index("idx_communications_entity").on(t.entityType, t.entityId, t.createdAt),
+  uniqueIndex("uq_communications_idempotency").on(t.idempotencyKey),
+]);
 
 export type CommunicationLog = typeof communicationsLog.$inferSelect;
 
@@ -891,6 +897,16 @@ export const reviewTextLogs = mysqlTable("reviewTextLogs", {
 export type ReviewTextLog = typeof reviewTextLogs.$inferSelect;
 export type InsertReviewTextLog = typeof reviewTextLogs.$inferInsert;
 
+/** New sends reserve a recipient here; historic review logs remain untouched. */
+export const reviewTextDeliveryClaims = mysqlTable("reviewTextDeliveryClaims", {
+  id: int("id").autoincrement().primaryKey(),
+  lumaEventId: varchar("lumaEventId", { length: 128 }).notNull(),
+  lumaGuestId: varchar("lumaGuestId", { length: 128 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("uq_reviewTextDeliveryClaims_event_guest").on(t.lumaEventId, t.lumaGuestId),
+]);
+
 // ── Breeder Acquisition Engine ────────────────────────────────────────────────
 export const breederLeads = mysqlTable("breederLeads", {
   id: int("id").autoincrement().primaryKey(),
@@ -1033,6 +1049,22 @@ export const staffTrainingProgress = mysqlTable("staffTrainingProgress", {
   index("idx_staffTraining_module").on(t.moduleKey),
 ]);
 export type StaffTrainingProgress = typeof staffTrainingProgress.$inferSelect;
+
+/** New completions reserve their staff/module pair without rewriting historic progress. */
+export const staffTrainingCompletionClaims = mysqlTable("staffTrainingCompletionClaims", {
+  id: int("id").autoincrement().primaryKey(),
+  staffId: int("staffId").notNull(),
+  moduleKey: varchar("moduleKey", { length: 128 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("uq_staffTrainingCompletionClaims_staff_module").on(t.staffId, t.moduleKey),
+]);
+
+/** Single-row mutex used to serialize APY staffing mutations across instances. */
+export const staffingMutationLocks = mysqlTable("staffingMutationLocks", {
+  lockName: varchar("lockName", { length: 128 }).primaryKey(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
 
 // ─── Event Team Notifications ───────────────────────────────────────────────
 export const staffScheduleNotifications = mysqlTable("staffScheduleNotifications", {

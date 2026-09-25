@@ -7,11 +7,14 @@
  * All procedures are staff-only.
  */
 import { TRPCError } from "@trpc/server";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import twilio from "twilio";
 import { staffProcedure, router } from "../_core/trpc";
 import { normalizeCanadianPhoneNumber } from "../../shared/phone";
 import { isSmsSuppressed } from "../smsConsent";
+import { getDb } from "../db";
+import { communicationsLog } from "../../drizzle/schema";
 
 /** Normalize a phone number to E.164 format (+1XXXXXXXXXX for CA/US) */
 function normalizePhone(raw: string): string | null {
@@ -34,6 +37,42 @@ function getTwilioClient() {
   return { client: twilio(accountSid, authToken), fromNumber };
 }
 
+async function claimBroadcastDelivery(input: { idempotencyKey: string; phone: string; message: string; actorUserId: number; actorName: string | null }) {
+  const db = await getDb();
+  if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+  try {
+    await db.insert(communicationsLog).values({
+      entityType: "general",
+      entityId: null,
+      channel: "sms",
+      direction: "outbound",
+      action: "manual_broadcast",
+      recipient: input.phone,
+      subject: null,
+      bodyPreview: input.message.slice(0, 1000),
+      deliveryStatus: "processing",
+      idempotencyKey: input.idempotencyKey,
+      actorUserId: input.actorUserId,
+      actorName: input.actorName,
+    });
+  } catch {
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: "This SMS request is already being processed or was already delivered. Refresh the broadcast results instead of sending it again.",
+    });
+  }
+  return db;
+}
+
+async function completeBroadcastDelivery(input: { idempotencyKey: string; status: string; providerMessageId?: string | null }) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(communicationsLog).set({
+    deliveryStatus: input.status,
+    providerMessageId: input.providerMessageId ?? null,
+  }).where(eq(communicationsLog.idempotencyKey, input.idempotencyKey));
+}
+
 export const smsBroadcastRouter = router({
   /**
    * Send a single SMS to one recipient.
@@ -44,9 +83,10 @@ export const smsBroadcastRouter = router({
         phone: z.string().min(10),
         name: z.string().optional(),
         message: z.string().min(1, "Message cannot be empty").max(1600),
+        requestKey: z.string().uuid(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { client, fromNumber } = getTwilioClient();
 
       const to = normalizePhone(input.phone);
@@ -57,6 +97,8 @@ export const smsBroadcastRouter = router({
         });
       }
       if (await isSmsSuppressed(to)) throw new TRPCError({ code: "FORBIDDEN", message: "This number has opted out of APY text messages." });
+      const idempotencyKey = `${input.requestKey}:${to}`;
+      await claimBroadcastDelivery({ idempotencyKey, phone: to, message: input.message, actorUserId: ctx.user.id, actorName: ctx.user.name });
 
       try {
         const msg = await client.messages.create({
@@ -64,8 +106,10 @@ export const smsBroadcastRouter = router({
           from: fromNumber,
           body: input.message,
         });
+        await completeBroadcastDelivery({ idempotencyKey, status: msg.status, providerMessageId: msg.sid });
         return { success: true, to, sid: msg.sid, status: msg.status };
       } catch (err) {
+        await completeBroadcastDelivery({ idempotencyKey, status: "failed" });
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: err instanceof Error ? err.message : String(err),
@@ -93,9 +137,10 @@ export const smsBroadcastRouter = router({
         message: z.string().min(1, "Message cannot be empty").max(1600),
         /** If true, replace {name} in the message with the recipient's name */
         personalise: z.boolean().default(false),
+        requestKey: z.string().uuid(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { client, fromNumber } = getTwilioClient();
 
       const results: Array<{
@@ -129,6 +174,13 @@ export const smsBroadcastRouter = router({
         const body = input.personalise && name
           ? input.message.replace(/\{name\}/gi, name)
           : input.message;
+        const idempotencyKey = `${input.requestKey}:${to}`;
+        try {
+          await claimBroadcastDelivery({ idempotencyKey, phone: to, message: body, actorUserId: ctx.user.id, actorName: ctx.user.name });
+        } catch (error) {
+          results.push({ phone: recipient.phone, name, to, status: "duplicate", error: error instanceof Error ? error.message : "Already processed" });
+          continue;
+        }
 
         try {
           const msg = await client.messages.create({
@@ -136,8 +188,10 @@ export const smsBroadcastRouter = router({
             from: fromNumber,
             body,
           });
+          await completeBroadcastDelivery({ idempotencyKey, status: msg.status, providerMessageId: msg.sid });
           results.push({ phone: recipient.phone, name, to, status: msg.status, sid: msg.sid });
         } catch (err) {
+          await completeBroadcastDelivery({ idempotencyKey, status: "failed" });
           results.push({
             phone: recipient.phone,
             name,
@@ -148,7 +202,7 @@ export const smsBroadcastRouter = router({
         }
       }
 
-      const sent = results.filter((r) => !["failed", "invalid", "suppressed"].includes(r.status)).length;
+      const sent = results.filter((r) => !["failed", "invalid", "suppressed", "duplicate"].includes(r.status)).length;
       const failed = results.filter((r) => r.status === "failed" || r.status === "invalid").length;
       const suppressed = results.filter((r) => r.status === "suppressed").length;
 

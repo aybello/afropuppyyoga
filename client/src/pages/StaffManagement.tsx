@@ -16,6 +16,7 @@ import {
   Mail,
   Clock,
   CheckCircle2,
+  AlertTriangle,
   UserCog,
   Users,
   RefreshCw,
@@ -238,7 +239,11 @@ export default function StaffManagement() {
                           </span>
                         </td>
                         <td className="px-5 py-4">
-                          {isExpired ? (
+                          {staff.applicationId === null ? (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-body font-semibold bg-amber-100 text-amber-800">
+                              <AlertTriangle className="w-3 h-3" /> Reissue Needed
+                            </span>
+                          ) : isExpired ? (
                             <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-body font-semibold bg-orange-100 text-orange-700">
                               <Clock className="w-3 h-3" /> Link Expired
                             </span>
@@ -278,9 +283,9 @@ export default function StaffManagement() {
                                   { onSettled: () => setResendingId(null) }
                                 );
                               }}
-                              disabled={resendInvite.isPending && resendingId === staff.id}
+                              disabled={staff.applicationId === null || (resendInvite.isPending && resendingId === staff.id)}
                               className="p-2 rounded-lg text-[#8B2252] hover:text-[#8B2252] hover:bg-[#FFF5F8] transition-colors disabled:opacity-50"
-                              title="Resend invite link"
+                              title={staff.applicationId === null ? "Use Invite Staff to issue a new profile-bound link" : "Resend invite link"}
                             >
                               {resendInvite.isPending && resendingId === staff.id ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -291,7 +296,7 @@ export default function StaffManagement() {
                             <button
                               onClick={() => setConfirmRevokeId(staff.id)}
                               className="p-2 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                              title="Revoke access"
+                              title={staff.applicationId === null ? "Revoke this legacy access link without changing employee history" : "Revoke access"}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -387,8 +392,8 @@ export default function StaffManagement() {
             </DialogTitle>
           </DialogHeader>
           <p className="font-body text-sm text-[#1A0A12] py-2">
-            This will immediately revoke <strong>{confirmRevokeStaff?.name}</strong>'s access to the staff portal.
-            Their login link will stop working. You can always invite them again later.
+            This will remove <strong>{confirmRevokeStaff?.name}</strong> from APY HQ, revoke their Staff Portal access, disable their email and phone sign-in, and preserve their employment history as inactive.
+            Staffing coverage safeguards still apply.
           </p>
           <DialogFooter className="gap-2">
             <Button

@@ -17,7 +17,7 @@ import twilio from "twilio";
 import { z } from "zod";
 
 import { getDb } from "../db";
-import { callLogs, cancellationCredits, puppySchedule } from "../../drizzle/schema";
+import { callLogs, cancellationCredits, privateEventClasses, privateEventInquiries, puppySchedule } from "../../drizzle/schema";
 import { staffProcedure, router } from "../_core/trpc";
 import { sendClassCancellationEmail } from "../email";
 import { getTwilioWebhookUrl } from "../twilioWebhook";
@@ -135,11 +135,40 @@ async function fetchLumaEvents(): Promise<
   return data.entries.map((e) => e.event);
 }
 
+/** Public-class cancellation must never mutate a paid private-event lifecycle. */
+async function getPrivateEventLumaIds() {
+  const db = await getDb();
+  if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+  const [inquiries, eventClasses] = await Promise.all([
+    db.select({ lumaEventId: privateEventInquiries.lumaEventId }).from(privateEventInquiries),
+    db.select({ lumaEventId: privateEventClasses.lumaEventId }).from(privateEventClasses),
+  ]);
+  return new Set([
+    ...inquiries.map((inquiry) => inquiry.lumaEventId).filter((eventId): eventId is string => Boolean(eventId)),
+    ...eventClasses.map((eventClass) => eventClass.lumaEventId),
+  ]);
+}
+
+function isPrivateEventBookingPage(eventName: string) {
+  return /\bprivate\s+puppyyoga\b/i.test(eventName);
+}
+
+async function assertPublicClassCancellationEvent(eventApiId: string, eventName: string) {
+  const privateEventIds = await getPrivateEventLumaIds();
+  if (privateEventIds.has(eventApiId) || isPrivateEventBookingPage(eventName)) {
+    throw new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message: "This is a private-event booking. Use the dedicated private-event cancellation workflow so the customer outcome and payment record remain synchronized.",
+    });
+  }
+}
+
 export const cancellationRouter = router({
   /** List upcoming Luma events for the cancel-class selector */
   listEvents: staffProcedure.query(async () => {
     const events = await fetchLumaEvents();
-    return events.map((e) => ({
+    const privateEventIds = await getPrivateEventLumaIds();
+    return events.filter((event) => !privateEventIds.has(event.api_id) && !isPrivateEventBookingPage(event.name)).map((e) => ({
       apiId: e.api_id,
       name: e.name,
       startAt: e.start_at,
@@ -163,6 +192,7 @@ export const cancellationRouter = router({
       const events = await fetchLumaEvents();
       const event = events.find((candidate) => candidate.api_id === input.eventApiId);
       if (!event) throw new TRPCError({ code: "NOT_FOUND", message: "That upcoming Luma event could not be found." });
+      await assertPublicClassCancellationEvent(input.eventApiId, event.name);
       const guests = await fetchLumaGuests(input.eventApiId);
       const previewInput = {
         eventApiId: input.eventApiId,
@@ -221,6 +251,7 @@ export const cancellationRouter = router({
       const allEvents = await fetchLumaEvents();
       const cancelledEvent = allEvents.find((e) => e.api_id === input.eventApiId);
       if (!cancelledEvent) throw new TRPCError({ code: "NOT_FOUND", message: "That upcoming Luma event could not be found." });
+      await assertPublicClassCancellationEvent(input.eventApiId, cancelledEvent.name);
       const canonicalEventName = cancelledEvent.name;
       const guests = await fetchLumaGuests(input.eventApiId);
       if (guests.length === 0) throw new TRPCError({ code: "BAD_REQUEST", message: "This event has no approved guests to notify." });

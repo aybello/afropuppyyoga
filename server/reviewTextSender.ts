@@ -8,7 +8,7 @@
  */
 
 import { getDb } from "./db";
-import { communicationsLog, reviewTextLogs } from "../drizzle/schema";
+import { communicationsLog, reviewTextDeliveryClaims, reviewTextLogs } from "../drizzle/schema";
 import { and, eq } from "drizzle-orm";
 import { isSmsSuppressed } from "./smsConsent";
 
@@ -115,6 +115,14 @@ function normalisePhone(phone: string | null | undefined): string | null {
   return null;
 }
 
+export function isDuplicateClaimError(error: unknown) {
+  const code = typeof error === "object" && error !== null && "code" in error
+    ? String((error as { code?: unknown }).code ?? "")
+    : "";
+  const message = error instanceof Error ? error.message : String(error);
+  return code === "ER_DUP_ENTRY" || /duplicate|unique constraint/i.test(message);
+}
+
 export function lumaGuestAttended(guest: LumaGuest) {
   if (guest.checked_in_at) return true;
   return (guest.event_tickets ?? []).some((ticket) => ticket.is_captured !== false && Boolean(ticket.checked_in_at));
@@ -206,7 +214,8 @@ export async function reviewTextSender(): Promise<{ sent: number; skipped: numbe
         continue;
       }
 
-      // Check if already sent to this guest for this event
+      // Fast-path existing claims. The unique key below remains authoritative
+      // when the scheduler and a manual run overlap.
       const existing = await db
         .select({ id: reviewTextLogs.id })
         .from(reviewTextLogs)
@@ -226,6 +235,23 @@ export async function reviewTextSender(): Promise<{ sent: number; skipped: numbe
       const firstName = guest.user_first_name ?? "there";
       const message = `Hi ${firstName}! 🐾 Thank you for joining us at AfroPuppyYoga today — we hope the puppies made your day a little brighter! If you had a great time, we'd love it if you shared your experience on Google. It only takes a minute and helps us so much: ${GOOGLE_REVIEW_URL} 💛`;
 
+      // Reserve the recipient before Twilio accepts the message. A duplicate
+      // key means another run owns the claim, so do not send a second text.
+      try {
+        await db.insert(reviewTextDeliveryClaims).values({
+          lumaEventId: eventId,
+          lumaGuestId: guestId,
+        });
+      } catch (claimError) {
+        if (isDuplicateClaimError(claimError)) {
+          skipped++;
+          continue;
+        }
+        errors++;
+        console.error(`[ReviewText] Failed to reserve review request for ${eventId}/${guestId}:`, claimError);
+        continue;
+      }
+
       let smsSid: string | undefined;
       let status = "sent";
       let errorMessage: string | undefined;
@@ -242,7 +268,9 @@ export async function reviewTextSender(): Promise<{ sent: number; skipped: numbe
         console.error(`[ReviewText] Failed to send to ${phone}:`, errorMessage);
       }
 
-      // Log the attempt regardless of success/failure
+      // Log the outcome regardless of success/failure. The separate durable
+      // claim remains visible for controlled human follow-up instead of being
+      // silently retried as a possible duplicate.
       try {
         await db.insert(reviewTextLogs).values({
           lumaEventId: eventId,
@@ -271,7 +299,7 @@ export async function reviewTextSender(): Promise<{ sent: number; skipped: numbe
           actorName: "APY HQ",
         });
       } catch (dbErr) {
-        console.error("[ReviewText] Failed to log send:", dbErr);
+        console.error("[ReviewText] Failed to complete send claim:", dbErr);
       }
 
       // Small delay to avoid Twilio rate limits

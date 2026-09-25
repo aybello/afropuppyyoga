@@ -343,18 +343,6 @@ export default function PrivateEventsDashboard() {
     },
   });
 
-  const generateQuickLink = trpc.privateEvents.generateQuickBookingLink.useMutation({
-    onSuccess: (data) => {
-      setQuickGeneratedLink(data.eventUrl);
-      setIsQuickGenerating(false);
-      toast.success("Booking link generated!");
-    },
-    onError: (err) => {
-      toast.error(`Failed: ${err.message}`);
-      setIsQuickGenerating(false);
-    },
-  });
-
   const deleteLumaEvent = trpc.privateEvents.deleteLumaEvent.useMutation({
     onSuccess: () => {
       utils.privateEvents.listInquiries.invalidate();
@@ -427,9 +415,12 @@ export default function PrivateEventsDashboard() {
   function handleSave() {
     if (!selectedInquiry) return;
     setIsSaving(true);
+    const editableStatuses = ["new", "contacted", "confirmed"] as const;
     updateStatus.mutate({
       id: selectedInquiry.id,
-      status: newStatus,
+      status: editableStatuses.includes(newStatus as typeof editableStatuses[number])
+        ? newStatus as typeof editableStatuses[number]
+        : undefined,
       adminNotes,
     });
   }
@@ -485,29 +476,8 @@ export default function PrivateEventsDashboard() {
 
   // Quick link handler
   function handleQuickGenerate() {
-    if (!quickForm.clientName.trim()) { toast.error("Please enter the client name"); return; }
-    if (!quickForm.eventDate) { toast.error("Please enter the event date"); return; }
-    const price = parseFloat(quickForm.finalPrice);
-    if (!price || price <= 0) { toast.error("Please enter a valid price"); return; }
-    setIsQuickGenerating(true);
-    const sessionCount = quickForm.sessionSchedule.length;
-    generateQuickLink.mutate({
-      clientName: quickForm.clientName,
-      organization: quickForm.organization || undefined,
-      eventType: quickForm.eventType,
-      eventDate: quickForm.eventDate,
-      sessions: sessionCount,
-      sessionSchedule: quickForm.sessionSchedule,
-      location: quickForm.location,
-      customLocation: quickForm.customLocation.startsWith("__custom__")
-        ? quickForm.customLocation.replace("__custom__", "") || undefined
-        : quickForm.customLocation || undefined,
-      maxCapacity: parseInt(quickForm.maxCapacity) || 20,
-      finalPrice: price,
-      pricingType: quickForm.pricingType,
-      puppyBreed: quickForm.puppyBreed || undefined,
-      notes: quickForm.notes || undefined,
-    });
+    setActiveTab("inquiries");
+    toast.info("Quick booking links now use the tracked inquiry workflow. Open or create the client inquiry, then prepare the approved booking link from there.");
   }
 
   function addSession() {
@@ -737,8 +707,8 @@ export default function PrivateEventsDashboard() {
                     <Zap size={16} className="text-white" />
                   </div>
                   <div>
-                    <h2 className="font-display text-lg font-bold text-[#1A0A12]">Quick Booking Link</h2>
-                    <p className="font-body text-xs text-[#3D1A2E]/50">Generate a private Luma event for deals via email, DMs, or phone</p>
+                    <h2 className="font-display text-lg font-bold text-[#1A0A12]">Tracked Booking Workflow</h2>
+                    <p className="font-body text-xs text-[#3D1A2E]/50">Private payment pages must be created from a client inquiry so approval, payment, communication, and cancellation records stay together.</p>
                   </div>
                 </div>
               </div>
@@ -1012,14 +982,9 @@ export default function PrivateEventsDashboard() {
                     </div>
                     <Button
                       onClick={handleQuickGenerate}
-                      disabled={isQuickGenerating}
                       className="w-full bg-gradient-to-r from-[#8B2252] to-[#D4708A] hover:from-[#6B1A40] hover:to-[#B85A74] text-white font-body font-bold rounded-full py-5 text-sm shadow-lg shadow-[#8B2252]/20 transition-all hover:shadow-xl hover:shadow-[#8B2252]/25 active:scale-[0.98]"
                     >
-                      {isQuickGenerating ? (
-                        <><Loader2 size={16} className="animate-spin mr-2" /> Creating Luma Event...</>
-                      ) : (
-                        <><Link2 size={16} className="mr-2" /> Generate Private Luma Link</>
-                      )}
+                      <><Link2 size={16} className="mr-2" /> Go to Tracked Inquiries</>
                     </Button>
                   </div>
                 </div>
@@ -1273,8 +1238,6 @@ export default function PrivateEventsDashboard() {
                 const body = `Hi ${firstName},\n\nThank you for reaching out! ${intro} on ${formattedDate}.${locationBlock}\n\nThe Classic Experience for your group of ${guests} guests includes:\n\n\uD83D\uDC36 ${sessionDesc}\n\uD83E\uDDD8 Beginner-friendly guided yoga instruction\n\uD83D\uDC3E ${breed} and dedicated puppy handlers\n\uD83D\uDC9B Supervised puppy interaction and playtime\n\uD83E\uDDD8 Yoga mats for participants\n\uD83C\uDFB6 Curated music\n\uD83E\uDDF4 Venue, setup and cleanup\n\nYou can secure the event using the private booking link below:\n\n${generatedLink}\n\nThe booking will be confirmed once payment has been completed. The puppy breed and final venue details will be confirmed closer to the event based on availability.\n\nWarmly,`;
                 const effectiveSubject = quoteEmailSubject || subject;
                 const effectiveBody = quoteEmailBody || body;
-                const fullEmail = `Subject: ${effectiveSubject}\n\n${effectiveBody}`;
-                const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(selectedInquiry.email)}&su=${encodeURIComponent(effectiveSubject)}&body=${encodeURIComponent(effectiveBody)}`;
 
                 return (
                   <div className="bg-white border border-[#F2A0B8]/30 rounded-xl p-5 space-y-3">
@@ -1283,18 +1246,10 @@ export default function PrivateEventsDashboard() {
                         <Mail size={14} className="text-[#8B2252]" />
                         <p className="font-body text-xs font-semibold text-[#8B2252] uppercase tracking-wider">Client offer preview</p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline" className="border-[#F2A0B8]/40 hover:bg-[#FFF5F8] font-body text-xs rounded-full" onClick={() => { navigator.clipboard.writeText(fullEmail); toast.success("Email copied to clipboard!"); }}>
-                          <Copy size={12} className="mr-1" /> Copy
-                        </Button>
-                        <Button size="sm" className="bg-[#8B2252] hover:bg-[#6B1A3F] text-white font-body text-xs rounded-full" onClick={() => { window.open(gmailUrl, "_blank"); }}>
-                          <Send size={12} className="mr-1" /> Send via Gmail
-                        </Button>
-                      </div>
                     </div>
                     <div className="border-t border-[#F2A0B8]/20 pt-3 space-y-2">
                       <div className="rounded-lg bg-[#FFF5F8] border border-[#F2A0B8]/20 px-3 py-2 font-body text-xs text-[#8B2252]">
-                        This will send to <span className="font-semibold">{selectedInquiry.email}</span> and includes the private Luma payment link.
+                        APY HQ will record delivery to <span className="font-semibold">{selectedInquiry.email}</span> before sending the private Luma payment link.
                       </div>
                       <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 block">Subject</label>
                       <Input
@@ -1533,23 +1488,26 @@ export default function PrivateEventsDashboard() {
                 </div>
               )}
 
-              {/* Status update */}
-              <div>
-                <p className="font-body text-xs font-semibold text-[#3D1A2E]/50 uppercase tracking-wider mb-2">Update Status</p>
-                <Select value={newStatus} onValueChange={(v) => setNewStatus(v as InquiryStatus)}>
-                  <SelectTrigger className="border-[#F2A0B8]/40 font-body text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="new">New</SelectItem>
-                    <SelectItem value="contacted">Contacted</SelectItem>
-                    <SelectItem value="confirmed">Confirmed</SelectItem>
-                    <SelectItem value="quote_sent">Quote Sent</SelectItem>
-                    <SelectItem value="booked">Booked</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Commercial states are assigned by the signed payment or dedicated cancellation workflow. */}
+              {(["new", "contacted", "confirmed"] as InquiryStatus[]).includes(selectedInquiry.status as InquiryStatus) ? (
+                <div>
+                  <p className="font-body text-xs font-semibold text-[#3D1A2E]/50 uppercase tracking-wider mb-2">Update Status</p>
+                  <Select value={newStatus} onValueChange={(v) => setNewStatus(v as InquiryStatus)}>
+                    <SelectTrigger className="border-[#F2A0B8]/40 font-body text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="new">New</SelectItem>
+                      <SelectItem value="contacted">Contacted</SelectItem>
+                      <SelectItem value="confirmed">Confirmed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <p className="rounded-lg bg-[#FFF5F8] px-3 py-2 font-body text-xs text-[#6B4658]">
+                  Payment and cancellation status is managed through the linked booking workflow. You can still save internal notes below.
+                </p>
+              )}
 
               {/* Admin notes */}
               <div>

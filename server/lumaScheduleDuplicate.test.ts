@@ -43,21 +43,31 @@ describe("Luma schedule duplicate prevention", () => {
     expect(existing).toBeNull();
   });
 
-  it("checks the live calendar and returns the matching event without creating another one", async () => {
+  it("reuses only an existing event that Luma confirms is public and registration-open", async () => {
     const originalApiKey = process.env.LUMA_API_KEY;
     process.env.LUMA_API_KEY = "test-key";
-    const fetchMock = vi.fn().mockResolvedValue({
+    const fetchMock = vi.fn(async (url: string) => ({
       ok: true,
-      json: async () => ({
-        entries: [{
-          event: {
-            api_id: "evt_existing_kitchener",
-            name: "AfroPuppyYoga |📍Kitchener |🐶Golden Retrievers",
-            start_at: "2026-09-20T10:00:00-04:00",
+      json: async () => String(url).includes("/calendar/list-events")
+        ? {
+            entries: [{
+              event: {
+                api_id: "evt_existing_kitchener",
+                name: "AfroPuppyYoga |📍Kitchener |🐶Golden Retrievers",
+                start_at: "2026-09-20T10:00:00-04:00",
+              },
+            }],
+          }
+        : {
+            event: {
+              url: "https://lu.ma/evt_existing_kitchener",
+              visibility: "public",
+              registration_open: true,
+              is_cancelled: false,
+              is_sold_out: false,
+            },
           },
-        }],
-      }),
-    });
+    }));
     vi.stubGlobal("fetch", fetchMock);
 
     try {
@@ -67,6 +77,36 @@ describe("Luma schedule duplicate prevention", () => {
         created: false,
       });
       expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/calendar/list-events"))).toBe(true);
+      expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/events/get?event_id=evt_existing_kitchener"))).toBe(true);
+      expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/events/create"))).toBe(false);
+    } finally {
+      vi.unstubAllGlobals();
+      if (originalApiKey === undefined) delete process.env.LUMA_API_KEY;
+      else process.env.LUMA_API_KEY = originalApiKey;
+    }
+  });
+
+  it("refuses a reused event that is not a public, open booking page", async () => {
+    const originalApiKey = process.env.LUMA_API_KEY;
+    process.env.LUMA_API_KEY = "test-key";
+    const fetchMock = vi.fn(async (url: string) => ({
+      ok: true,
+      json: async () => String(url).includes("/calendar/list-events")
+        ? {
+            entries: [{
+              event: {
+                api_id: "evt_private_kitchener",
+                name: "AfroPuppyYoga |📍Kitchener |🐶Golden Retrievers",
+                start_at: "2026-09-20T10:00:00-04:00",
+              },
+            }],
+          }
+        : { event: { url: "https://lu.ma/evt_private_kitchener", visibility: "private", registration_open: false } },
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    try {
+      await expect(createLumaEventForSchedule(schedule)).rejects.toThrow("public visibility");
       expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/events/create"))).toBe(false);
     } finally {
       vi.unstubAllGlobals();

@@ -17,6 +17,7 @@ import { getScheduleVisibilityStartDate, getTorontoCalendarDate } from "../../sh
 import { buildBreederClassCancellationPreview } from "../breederClassCancellation";
 import { normalizeBreederPhone } from "../breederConfirmationWorkflow";
 import { buildBreederReplacementPreview } from "../breederReplacement";
+import { withStaffingMutationLock } from "../staffingMutationLock";
 
 const LOCATIONS = ["Kitchener", "Hamilton", "Oakville"] as const;
 const ALL_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
@@ -190,6 +191,9 @@ async function updateScheduleRecord(db: ScheduleDb, id: number, fields: Partial<
     classType: fields.classType ?? existing.classType,
     notes: "notes" in fields ? fields.notes ?? undefined : existing.notes ?? undefined,
   };
+  if (candidate.breederId !== existing.breederId || candidate.breederName.trim() !== existing.breederName.trim()) {
+    throw new Error("Use the protected breeder replacement workflow so the outgoing breeder is notified and the class record remains auditable.");
+  }
   validateScheduleCandidate(candidate);
   await assertNoScheduleConflict(db, candidate, id);
 
@@ -231,13 +235,9 @@ async function updateScheduleRecord(db: ScheduleDb, id: number, fields: Partial<
 }
 
 async function archiveScheduleRecord(db: ScheduleDb, id: number) {
-  const [existing] = await db.select().from(puppySchedule).where(eq(puppySchedule.id, id)).limit(1);
-  if (!existing || existing.scheduleStatus === "archived") throw new Error("Scheduled class not found.");
-  if (existing.lumaEventId && existing.scheduleStatus !== "cancelled") {
-    throw new Error("This class is still linked to Luma. Cancel it through Cancel Class before archiving the APY HQ record.");
-  }
-  await db.update(puppySchedule).set({ scheduleStatus: "archived", archivedAt: new Date() }).where(eq(puppySchedule.id, id));
-  return { success: true };
+  void db;
+  void id;
+  throw new Error("Generic archive is retired. Review the breeder cancellation preview and use the protected archive workflow so the breeder is notified and the delivery is recorded.");
 }
 
 async function getBreederCancellationPreviewForSchedule(db: ScheduleDb, id: number) {
@@ -554,23 +554,26 @@ export const puppyScheduleRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
-      const [schedule] = await db.select().from(puppySchedule).where(eq(puppySchedule.id, input.scheduleId)).limit(1);
-      if (!schedule) throw new Error("Scheduled class not found");
-      const [staffMember] = await db.select({ id: jobApplications.id, name: jobApplications.name, role: jobApplications.role, location: jobApplications.location, status: jobApplications.status, isTeamMember: jobApplications.isTeamMember, deletedAt: jobApplications.deletedAt })
-        .from(jobApplications).where(eq(jobApplications.id, input.staffId)).limit(1);
-      if (!staffMember || !isActiveTeamMember(staffMember)) throw new Error("Choose an active APY HQ team member.");
-      if (staffMember.role !== "Puppy Monitor" && staffMember.role !== "puppy_monitor") throw new Error("Only Puppy Monitors can be assigned to this requirement.");
-      if (staffMember.location !== scheduleLocationToTeamLocation(schedule.location)) throw new Error("Choose a Puppy Monitor assigned to this studio.");
-      const [away] = await db.select().from(staffAvailability).where(and(eq(staffAvailability.staffId, staffMember.id), lte(staffAvailability.startDate, schedule.classDate), gte(staffAvailability.endDate, schedule.classDate))).limit(1);
-      if (away) throw new Error(`${staffMember.name} is unavailable on this class date.`);
-      const existing = await db.select().from(classStaffAssignments).where(eq(classStaffAssignments.scheduleId, input.scheduleId));
-      const eligibility = getPuppyMonitorAssignmentEligibility({
-        assignedCount: existing.length,
-        alreadyAssigned: existing.some((assignment) => assignment.staffId === staffMember.id),
+      return withStaffingMutationLock(db, async (tx: typeof db) => {
+        const [schedule] = await tx.select().from(puppySchedule).where(eq(puppySchedule.id, input.scheduleId)).limit(1);
+        if (!schedule || schedule.scheduleStatus !== "scheduled") throw new Error("Choose an active scheduled class.");
+        if (schedule.classDate < getTorontoCalendarDate()) throw new Error("Puppy Monitors can only be assigned to an upcoming class.");
+        const [staffMember] = await tx.select({ id: jobApplications.id, name: jobApplications.name, role: jobApplications.role, location: jobApplications.location, status: jobApplications.status, isTeamMember: jobApplications.isTeamMember, deletedAt: jobApplications.deletedAt })
+          .from(jobApplications).where(eq(jobApplications.id, input.staffId)).limit(1);
+        if (!staffMember || !isActiveTeamMember(staffMember)) throw new Error("Choose an active APY HQ team member.");
+        if (staffMember.role !== "Puppy Monitor" && staffMember.role !== "puppy_monitor") throw new Error("Only Puppy Monitors can be assigned to this requirement.");
+        if (staffMember.location !== scheduleLocationToTeamLocation(schedule.location)) throw new Error("Choose a Puppy Monitor assigned to this studio.");
+        const [away] = await tx.select().from(staffAvailability).where(and(eq(staffAvailability.staffId, staffMember.id), lte(staffAvailability.startDate, schedule.classDate), gte(staffAvailability.endDate, schedule.classDate))).limit(1);
+        if (away) throw new Error(`${staffMember.name} is unavailable on this class date.`);
+        const existing = await tx.select().from(classStaffAssignments).where(eq(classStaffAssignments.scheduleId, input.scheduleId));
+        const eligibility = getPuppyMonitorAssignmentEligibility({
+          assignedCount: existing.length,
+          alreadyAssigned: existing.some((assignment) => assignment.staffId === staffMember.id),
+        });
+        if (!eligibility.eligible) throw new Error(eligibility.reason);
+        await tx.insert(classStaffAssignments).values({ scheduleId: input.scheduleId, staffId: staffMember.id, staffName: staffMember.name, role: "Puppy Monitor" });
+        return { success: true };
       });
-      if (!eligibility.eligible) throw new Error(eligibility.reason);
-      await db.insert(classStaffAssignments).values({ scheduleId: input.scheduleId, staffId: staffMember.id, staffName: staffMember.name, role: "Puppy Monitor" });
-      return { success: true };
     }),
 
   assignLeadership: staffProcedure
@@ -582,11 +585,12 @@ export const puppyScheduleRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
-      const [schedule] = await db.select().from(puppySchedule).where(eq(puppySchedule.id, input.scheduleId)).limit(1);
+      return withStaffingMutationLock(db, async (tx: typeof db) => {
+      const [schedule] = await tx.select().from(puppySchedule).where(eq(puppySchedule.id, input.scheduleId)).limit(1);
       if (!schedule || schedule.scheduleStatus !== "scheduled") throw new Error("Choose an active scheduled class.");
       if (schedule.classDate < getTorontoCalendarDate()) throw new Error("Leadership can only be assigned to an upcoming class.");
 
-      const [staffMember] = await db.select({
+      const [staffMember] = await tx.select({
         id: jobApplications.id,
         name: jobApplications.name,
         role: jobApplications.role,
@@ -596,7 +600,7 @@ export const puppyScheduleRouter = router({
         deletedAt: jobApplications.deletedAt,
       }).from(jobApplications).where(eq(jobApplications.id, input.staffId)).limit(1);
       if (!staffMember) throw new Error("Choose an active APY HQ team member for this class.");
-      const [away] = await db.select().from(staffAvailability).where(and(
+      const [away] = await tx.select().from(staffAvailability).where(and(
         eq(staffAvailability.staffId, staffMember.id),
         lte(staffAvailability.startDate, schedule.classDate),
         gte(staffAvailability.endDate, schedule.classDate),
@@ -612,18 +616,19 @@ export const puppyScheduleRouter = router({
       if (!eligibility.eligible) throw new Error(eligibility.reason);
 
       const location = scheduleLocationToTeamLocation(schedule.location);
-      const existing = await db.select().from(weekendLeadershipCoverage).where(and(
+      const existing = await tx.select().from(weekendLeadershipCoverage).where(and(
         eq(weekendLeadershipCoverage.coverageDate, schedule.classDate),
         eq(weekendLeadershipCoverage.location, location),
         eq(weekendLeadershipCoverage.role, input.role),
       )).limit(1);
       const values = { coverageStaffId: staffMember.id, coverageStaffName: staffMember.name, notes: "Assigned from class staffing" };
       if (existing[0]) {
-        await db.update(weekendLeadershipCoverage).set(values).where(eq(weekendLeadershipCoverage.id, existing[0].id));
+        await tx.update(weekendLeadershipCoverage).set(values).where(eq(weekendLeadershipCoverage.id, existing[0].id));
       } else {
-        await db.insert(weekendLeadershipCoverage).values({ coverageDate: schedule.classDate, location, role: input.role, ...values });
+        await tx.insert(weekendLeadershipCoverage).values({ coverageDate: schedule.classDate, location, role: input.role, ...values });
       }
       return { success: true };
+      });
     }),
 
   removePuppyMonitorAssignment: staffProcedure

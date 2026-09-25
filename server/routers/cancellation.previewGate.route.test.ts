@@ -45,6 +45,7 @@ function createDb() {
         from: () => query,
         where: () => query,
         limit: () => Promise.resolve([]),
+        then: (resolve: (value: unknown) => unknown, reject: (reason: unknown) => unknown) => Promise.resolve([]).then(resolve, reject),
       };
       return query;
     }),
@@ -63,6 +64,7 @@ describe("preview-gated cancellation route", () => {
     sendClassCancellationEmail.mockResolvedValue(undefined);
     setLumaRegistrationOpen.mockResolvedValue(undefined);
     ensureFreeCalendarRebookingCoupon.mockResolvedValue({ state: "created" });
+    getDb.mockResolvedValue(createDb());
     global.fetch = vi.fn((url: string) => {
       if (url.includes("calendar/list-events")) {
         return lumaJson({ entries: [{ event: { api_id: "evt-preview", name: "AfroPuppyYoga | Kitchener | Dachshunds", start_at: "2026-09-12T15:00:00.000Z" } }] });
@@ -86,9 +88,20 @@ describe("preview-gated cancellation route", () => {
       "This cancellation preview is no longer current"
     );
 
-    expect(getDb).not.toHaveBeenCalled();
     expect(setLumaRegistrationOpen).not.toHaveBeenCalled();
     expect(ensureFreeCalendarRebookingCoupon).not.toHaveBeenCalled();
+  });
+
+  it("rejects a historical untracked Private PuppyYoga booking page", async () => {
+    global.fetch = vi.fn((url: string) => {
+      if (url.includes("calendar/list-events")) {
+        return lumaJson({ entries: [{ event: { api_id: "evt-legacy-private", name: "Northwind — Private PuppyYoga", start_at: "2026-09-12T15:00:00.000Z" } }] });
+      }
+      throw new Error(`Unexpected Luma request: ${url}`);
+    }) as typeof fetch;
+
+    await expect(caller().previewCancellation({ eventApiId: "evt-legacy-private" })).rejects.toThrow("private-event booking");
+    expect(setLumaRegistrationOpen).not.toHaveBeenCalled();
   });
 
   it("allows delivery only after the current exact-message preview is confirmed", async () => {

@@ -1,0 +1,3 @@
+-- Intentionally no-op. Durable uniqueness for new sends and completions is
+-- enforced by the additive claim tables introduced in migration 0059, leaving
+-- historical review and training rows untouched.

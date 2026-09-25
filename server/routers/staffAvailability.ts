@@ -2,12 +2,13 @@ import { z } from "zod";
 import { adminProcedure, staffProcedure, router } from "../_core/trpc";
 import { getDb, getUserByOpenId, upsertUser } from "../db";
 import { classStaffAssignments, employees, jobApplicationActions, jobApplications, signingTokens, staffAvailability, staffInvites, weekendLeadershipCoverage } from "../../drizzle/schema";
-import { and, asc, desc, eq, gte, inArray, isNull, isNotNull } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNull, isNotNull, lte } from "drizzle-orm";
 import { getUpcomingWeekendDates, isAwayOnDate, isWeekendDate } from "../weekendCoverage";
 import { isActiveTeamMember } from "../teamMembership";
 import { normalizeCanadianPhoneNumber } from "../../shared/phone";
 import { APY_TEAM_LOCATIONS, APY_TEAM_ROLES, isApprovedApyTeamRole, isCentralApyTeamRole, isOperationsManagerRole, normalizeApyRole } from "../../shared/apyPermissions";
 import { getPuppyMonitorLocationCoverage } from "../../shared/puppyMonitorLocationCoverage";
+import { withStaffingMutationLock } from "../staffingMutationLock";
 
 export const directTeamMemberSchema = z.object({
   name: z.string().trim().min(2, "Enter the team member's full name."),
@@ -182,6 +183,31 @@ export function getOnboardedApplicantDirectoryEligibility(input: { status: strin
   }
   if (input.existingEmployee) {
     return { eligible: false as const, reason: "This applicant already has an Employee Directory record." };
+  }
+  return { eligible: true as const };
+}
+
+/**
+ * Historic/recovered profiles and removed direct hires never regain APY HQ
+ * access merely because their directory record exists. New direct hires may
+ * receive access at creation; every later reactivation needs durable
+ * onboarding evidence rather than a free-text provenance field.
+ */
+export function getApyHqReactivationEligibility(input: {
+  status: string;
+  onboardingSentAt: Date | null;
+  signingComplete: boolean;
+  directOwnerProvisioned: boolean;
+}) {
+  void input.directOwnerProvisioned;
+  if (input.status !== "onboarded") {
+    return { eligible: false as const, reason: "Only fully onboarded employees can regain APY HQ access." };
+  }
+  if (!input.onboardingSentAt) {
+    return { eligible: false as const, reason: "This profile has no recorded onboarding delivery. Use an owner-audited migration decision before granting staff access." };
+  }
+  if (!input.signingComplete) {
+    return { eligible: false as const, reason: "This profile has no current signed Offer Letter and NDA. Complete signing before restoring staff access." };
   }
   return { eligible: true as const };
 }
@@ -1045,19 +1071,20 @@ export const staffAvailabilityRouter = router({
       if (!isWeekendDate(input.coverageDate)) throw new Error("Coverage can only be assigned to a Saturday or Sunday.");
       const db = await getDb();
       if (!db) throw new Error("Database not available");
+      return withStaffingMutationLock(db, async (tx: typeof db) => {
 
-      const existing = await db.select().from(weekendLeadershipCoverage).where(and(
+      const existing = await tx.select().from(weekendLeadershipCoverage).where(and(
         eq(weekendLeadershipCoverage.coverageDate, input.coverageDate),
         eq(weekendLeadershipCoverage.location, input.location),
         eq(weekendLeadershipCoverage.role, input.role),
       )).limit(1);
 
       if (input.coverageStaffId === null) {
-        if (existing[0]) await db.delete(weekendLeadershipCoverage).where(eq(weekendLeadershipCoverage.id, existing[0].id));
+        if (existing[0]) await tx.delete(weekendLeadershipCoverage).where(eq(weekendLeadershipCoverage.id, existing[0].id));
         return { success: true };
       }
 
-      const candidate = await db.select({
+      const candidate = await tx.select({
         id: jobApplications.id,
         name: jobApplications.name,
         role: jobApplications.role,
@@ -1069,6 +1096,12 @@ export const staffAvailabilityRouter = router({
       const normalRole = input.role.toLowerCase().replaceAll(" ", "_");
       if (!person || !isActiveTeamMember(person)) throw new Error("Choose an active APY HQ team member for coverage.");
       if (person.role !== input.role && person.role !== normalRole) throw new Error("Coverage must be assigned to a team member with the same role.");
+      const [away] = await tx.select({ id: staffAvailability.id }).from(staffAvailability).where(and(
+        eq(staffAvailability.staffId, person.id),
+        lte(staffAvailability.startDate, input.coverageDate),
+        gte(staffAvailability.endDate, input.coverageDate),
+      )).limit(1);
+      if (away) throw new Error(`${person.name} is unavailable on this coverage date.`);
 
       const values = {
         coverageStaffId: person.id,
@@ -1076,9 +1109,9 @@ export const staffAvailabilityRouter = router({
         notes: input.notes?.trim() || null,
       };
       if (existing[0]) {
-        await db.update(weekendLeadershipCoverage).set(values).where(eq(weekendLeadershipCoverage.id, existing[0].id));
+        await tx.update(weekendLeadershipCoverage).set(values).where(eq(weekendLeadershipCoverage.id, existing[0].id));
       } else {
-        await db.insert(weekendLeadershipCoverage).values({
+        await tx.insert(weekendLeadershipCoverage).values({
           coverageDate: input.coverageDate,
           location: input.location,
           role: input.role,
@@ -1086,6 +1119,7 @@ export const staffAvailabilityRouter = router({
         });
       }
       return { success: true };
+      });
     }),
 
   // Add a staff member directly, without requiring a careers-portal application.
@@ -1230,29 +1264,50 @@ export const staffAvailabilityRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const [existing] = await db.select({
+      return withStaffingMutationLock(db, async (tx: typeof db) => {
+      const [existing] = await tx.select({
         id: jobApplications.id,
         role: jobApplications.role,
         location: jobApplications.location,
+        status: jobApplications.status,
+        onboardingSentAt: jobApplications.onboardingSentAt,
+        whyAPY: jobApplications.whyAPY,
         isTeamMember: jobApplications.isTeamMember,
         archivedAt: jobApplications.deletedAt,
       }).from(jobApplications).where(and(
         eq(jobApplications.id, input.id),
       )).limit(1);
       if (!existing) throw new Error("This team profile is no longer available.");
+      if (!input.isActive) {
+        throw new Error("Use Staff Management to revoke APY HQ access. It safely removes every linked portal credential while preserving employment history.");
+      }
       const isCurrentlyActive = Boolean(existing.isTeamMember) && !existing.archivedAt;
       if (isCurrentlyActive === input.isActive) return { success: true };
       if (!input.isActive && !isCurrentlyActive) throw new Error("This person is already inactive.");
       if (input.isActive && (!existing.isTeamMember || !existing.archivedAt)) throw new Error("Only an archived APY HQ team profile can be reactivated.");
+      if (input.isActive) {
+        const [latestSigning] = await tx.select({ signed: signingTokens.signed })
+          .from(signingTokens)
+          .where(eq(signingTokens.applicationId, existing.id))
+          .orderBy(desc(signingTokens.id))
+          .limit(1);
+        const eligibility = getApyHqReactivationEligibility({
+          status: existing.status,
+          onboardingSentAt: existing.onboardingSentAt,
+          signingComplete: latestSigning?.signed === 1,
+          directOwnerProvisioned: existing.whyAPY?.startsWith("Added directly through") === true,
+        });
+        if (!eligibility.eligible) throw new Error(eligibility.reason);
+      }
 
       const [operationsManagersAtLocation, activePuppyMonitorsAtLocation] = await Promise.all([
-        db.select({ id: jobApplications.id }).from(jobApplications).where(and(
+        tx.select({ id: jobApplications.id }).from(jobApplications).where(and(
           isNull(jobApplications.deletedAt),
           eq(jobApplications.isTeamMember, true),
           eq(jobApplications.role, "Operations Manager"),
           eq(jobApplications.location, existing.location),
         )),
-        db.select({ id: jobApplications.id }).from(jobApplications).where(and(
+        tx.select({ id: jobApplications.id }).from(jobApplications).where(and(
           isNull(jobApplications.deletedAt),
           eq(jobApplications.isTeamMember, true),
           eq(jobApplications.role, "Puppy Monitor"),
@@ -1272,95 +1327,23 @@ export const staffAvailabilityRouter = router({
       });
 
       const statusChangedAt = new Date();
-      await db.transaction(async (tx) => {
-        await tx.update(jobApplications).set({
-          isTeamMember: true,
-          deletedAt: input.isActive ? null : statusChangedAt,
-        }).where(eq(jobApplications.id, input.id));
-        await tx.update(employees).set({
-          employmentStatus: input.isActive ? "active" : "inactive",
-          endedAt: input.isActive ? null : statusChangedAt,
-        }).where(eq(employees.sourceApplicationId, input.id));
-      });
+      await tx.update(jobApplications).set({
+        isTeamMember: true,
+        deletedAt: input.isActive ? null : statusChangedAt,
+      }).where(eq(jobApplications.id, input.id));
+      await tx.update(employees).set({
+        employmentStatus: input.isActive ? "active" : "inactive",
+        endedAt: input.isActive ? null : statusChangedAt,
+      }).where(eq(employees.sourceApplicationId, input.id));
       return { success: true };
+      });
     }),
 
   // Remove from APY HQ, staffing, and portal access while retaining employee history.
   removeTeamMember: adminProcedure
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
-      const [member] = await db.select({
-        email: jobApplications.email,
-        phone: jobApplications.phone,
-        role: jobApplications.role,
-        location: jobApplications.location,
-        isTeamMember: jobApplications.isTeamMember,
-        deletedAt: jobApplications.deletedAt,
-      })
-        .from(jobApplications)
-        .where(eq(jobApplications.id, input.id))
-        .limit(1);
-      if (!member) throw new Error("Team member not found");
-
-      const [operationsManagersAtLocation, activePuppyMonitorsAtLocation] = await Promise.all([
-        db.select({ id: jobApplications.id }).from(jobApplications).where(and(
-          isNull(jobApplications.deletedAt),
-          eq(jobApplications.isTeamMember, true),
-          eq(jobApplications.role, "Operations Manager"),
-          eq(jobApplications.location, member.location),
-        )),
-        db.select({ id: jobApplications.id }).from(jobApplications).where(and(
-          isNull(jobApplications.deletedAt),
-          eq(jobApplications.isTeamMember, true),
-          eq(jobApplications.role, "Puppy Monitor"),
-          eq(jobApplications.location, member.location),
-        )),
-      ]);
-      validateTeamAssignmentChange({
-        currentRole: member.role,
-        currentLocation: member.location,
-        nextRole: "Inactive",
-        nextLocation: member.location,
-        hasOperationsManagerAtNextLocation: operationsManagersAtLocation.some((manager) => manager.id !== input.id),
-        hasOtherOperationsManagerAtCurrentLocation: operationsManagersAtLocation.some((manager) => manager.id !== input.id),
-        hasActivePuppyMonitorsAtCurrentLocation: activePuppyMonitorsAtLocation.length > 0,
-        activePuppyMonitorCountAtCurrentLocation: activePuppyMonitorsAtLocation.length,
-      });
-
-      const removedAt = new Date();
-      await db.transaction(async (tx) => {
-        await tx.update(jobApplications)
-          .set(getTeamRemovalUpdate(removedAt))
-          .where(eq(jobApplications.id, input.id));
-        await tx.update(employees)
-          .set({ employmentStatus: "inactive", endedAt: removedAt })
-          .where(eq(employees.sourceApplicationId, input.id));
-        await tx.delete(classStaffAssignments).where(eq(classStaffAssignments.staffId, input.id));
-        await tx.delete(staffAvailability).where(eq(staffAvailability.staffId, input.id));
-        await tx.update(weekendLeadershipCoverage)
-          .set({ coverageStaffId: null, coverageStaffName: null, notes: null })
-          .where(eq(weekendLeadershipCoverage.coverageStaffId, input.id));
-        if (member.email) {
-          await tx.update(staffInvites).set({ isActive: 0 })
-            .where(eq(staffInvites.email, member.email));
-        }
-      });
-      if (member.email) {
-        const staffUser = await getUserByOpenId(`staff:${member.email}`);
-        if (staffUser?.role === "staff") {
-          await upsertUser({ openId: `staff:${member.email}`, role: "user" });
-        }
-      }
-      const normalizedPhone = member.phone ? normalizeCanadianPhoneNumber(member.phone) : null;
-      if (normalizedPhone) {
-        const phoneUser = await getUserByOpenId(`staff-phone:${normalizedPhone}`);
-        if (phoneUser?.role === "staff") {
-          await upsertUser({ openId: `staff-phone:${normalizedPhone}`, role: "user" });
-        }
-      }
-      return { success: true };
+    .mutation(async () => {
+      throw new Error("Use Staff Management to revoke APY HQ access. It safely removes every linked portal credential while preserving employment history.");
     }),
 
   // Restore a removed employee who has a linked APY HQ team profile.
@@ -1369,7 +1352,8 @@ export const staffAvailabilityRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const [employee] = await db.select().from(employees)
+      return withStaffingMutationLock(db, async (tx: typeof db) => {
+      const [employee] = await tx.select().from(employees)
         .where(eq(employees.id, input.employeeId))
         .limit(1);
       if (!employee || employee.sourceApplicationId === null) {
@@ -1379,20 +1363,32 @@ export const staffAvailabilityRouter = router({
       if (employee.employmentStatus !== "active") {
         throw new Error("Restore this person to active employment before granting APY HQ access.");
       }
-      const [profile] = await db.select({
+      const [profile] = await tx.select({
+        id: jobApplications.id,
         role: jobApplications.role,
         location: jobApplications.location,
         status: jobApplications.status,
+        onboardingSentAt: jobApplications.onboardingSentAt,
+        whyAPY: jobApplications.whyAPY,
         isTeamMember: jobApplications.isTeamMember,
         deletedAt: jobApplications.deletedAt,
       }).from(jobApplications).where(eq(jobApplications.id, sourceApplicationId)).limit(1);
       if (!profile) throw new Error("The linked APY HQ team profile could not be found.");
-      if (profile.status !== "onboarded" && profile.status !== "accepted") {
-        throw new Error("Complete this employee's onboarding before granting APY HQ access.");
-      }
       if (hasActiveApyHqAccess(profile)) return { success: true, sourceApplicationId, alreadyActive: true };
+      const [latestSigning] = await tx.select({ signed: signingTokens.signed })
+        .from(signingTokens)
+        .where(eq(signingTokens.applicationId, profile.id))
+        .orderBy(desc(signingTokens.id))
+        .limit(1);
+      const eligibility = getApyHqReactivationEligibility({
+        status: profile.status,
+        onboardingSentAt: profile.onboardingSentAt,
+        signingComplete: latestSigning?.signed === 1,
+        directOwnerProvisioned: profile.whyAPY?.startsWith("Added directly through") === true,
+      });
+      if (!eligibility.eligible) throw new Error(eligibility.reason);
       if (profile.role === "Puppy Monitor") {
-        const [operationsManager] = await db.select({ id: jobApplications.id })
+        const [operationsManager] = await tx.select({ id: jobApplications.id })
           .from(jobApplications)
           .where(and(
             isNull(jobApplications.deletedAt),
@@ -1405,12 +1401,11 @@ export const staffAvailabilityRouter = router({
           throw new Error("Add this location's Operations Manager to APY HQ before restoring Puppy Monitor access.");
         }
       }
-      await db.transaction(async (tx) => {
-        await tx.update(employees).set({ employmentStatus: "active", endedAt: null })
-          .where(eq(employees.id, input.employeeId));
-        await tx.update(jobApplications).set({ isTeamMember: true, deletedAt: null, status: "onboarded" })
-          .where(eq(jobApplications.id, sourceApplicationId));
-      });
+      await tx.update(employees).set({ employmentStatus: "active", endedAt: null })
+        .where(and(eq(employees.id, input.employeeId), eq(employees.employmentStatus, "active")));
+      await tx.update(jobApplications).set({ isTeamMember: true, deletedAt: null, status: "onboarded" })
+        .where(eq(jobApplications.id, sourceApplicationId));
       return { success: true, sourceApplicationId };
+      });
     }),
 });

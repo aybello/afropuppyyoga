@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { directEmployeeSchema, directTeamMemberSchema, employeeRecordUpdateSchema, getApprovedNewHirePortalAccessPlan, getDirectEmployeeContactEligibility, getEmployeeDepartureUpdate, getEmployeeEmploymentReactivationEligibility, getEmployeeReactivationUpdate, getExistingEmployeeAccessProvisioningEligibility, getFormerEmployeeDeletionEligibility, getLegacyEmployeeProfileLinkEligibility, getOnboardedApplicantContactMatchEligibility, getOnboardedApplicantDirectoryEligibility, getOperationsManagerDepartureEligibility, getTeamRemovalUpdate, hasActiveApyHqAccess, hasActiveOperationsManagerAtLocation, hasMatchingActiveTeamContact, hasSameOnboardingAssignment, isPuppyMonitorRole, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateEmployeeDirectoryAssignmentChange, validateTeamAssignmentChange } from "./routers/staffAvailability";
+import { directEmployeeSchema, directTeamMemberSchema, employeeRecordUpdateSchema, getApprovedNewHirePortalAccessPlan, getApyHqReactivationEligibility, getDirectEmployeeContactEligibility, getEmployeeDepartureUpdate, getEmployeeEmploymentReactivationEligibility, getEmployeeReactivationUpdate, getExistingEmployeeAccessProvisioningEligibility, getFormerEmployeeDeletionEligibility, getLegacyEmployeeProfileLinkEligibility, getOnboardedApplicantContactMatchEligibility, getOnboardedApplicantDirectoryEligibility, getOperationsManagerDepartureEligibility, getTeamRemovalUpdate, hasActiveApyHqAccess, hasActiveOperationsManagerAtLocation, hasMatchingActiveTeamContact, hasSameOnboardingAssignment, isPuppyMonitorRole, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateEmployeeDirectoryAssignmentChange, validateTeamAssignmentChange } from "./routers/staffAvailability";
 
 describe("direct team-member validation", () => {
   it("identifies whether a linked employee is eligible for APY HQ phone access", () => {
@@ -263,6 +263,33 @@ describe("direct team-member validation", () => {
       eligible: false,
       reason: "This applicant already has an Employee Directory record.",
     });
+  });
+
+  it("does not restore historic APY HQ access without current onboarding evidence", () => {
+    expect(getApyHqReactivationEligibility({
+      status: "accepted",
+      onboardingSentAt: null,
+      signingComplete: false,
+      directOwnerProvisioned: false,
+    })).toMatchObject({ eligible: false });
+    expect(getApyHqReactivationEligibility({
+      status: "onboarded",
+      onboardingSentAt: new Date(),
+      signingComplete: false,
+      directOwnerProvisioned: false,
+    })).toMatchObject({ eligible: false });
+    expect(getApyHqReactivationEligibility({
+      status: "onboarded",
+      onboardingSentAt: new Date(),
+      signingComplete: true,
+      directOwnerProvisioned: false,
+    })).toEqual({ eligible: true });
+    expect(getApyHqReactivationEligibility({
+      status: "onboarded",
+      onboardingSentAt: null,
+      signingComplete: false,
+      directOwnerProvisioned: true,
+    })).toMatchObject({ eligible: false });
   });
 
   it("marks a departed employee inactive while retaining their source application and employment history", () => {

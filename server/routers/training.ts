@@ -1,6 +1,6 @@
 import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
-import { jobApplications, staffTrainingProgress } from "../../drizzle/schema";
+import { jobApplications, staffTrainingCompletionClaims, staffTrainingProgress } from "../../drizzle/schema";
 import { modulesForRole, TRAINING_MODULES } from "../../shared/trainingCatalog";
 import { getDb } from "../db";
 import { adminProcedure, router, teamMemberProcedure } from "../_core/trpc";
@@ -31,8 +31,21 @@ export const trainingRouter = router({
     const staff = (await resolveApyAccess(ctx.user)).teamMember;
     if (!staff) throw new Error("Your login is not linked to an active APY team profile.");
     if (!modulesForRole(staff.role).some((module) => module.key === input.moduleKey)) throw new Error("This module is not assigned to your role.");
-    const [existing] = await db.select().from(staffTrainingProgress).where(and(eq(staffTrainingProgress.staffId, staff.id), eq(staffTrainingProgress.moduleKey, input.moduleKey))).limit(1);
-    if (!existing) await db.insert(staffTrainingProgress).values({ staffId: staff.id, moduleKey: input.moduleKey, acknowledgedBy: ctx.user.email ?? null });
+    const [historicCompletion] = await db.select({ id: staffTrainingProgress.id }).from(staffTrainingProgress).where(and(
+      eq(staffTrainingProgress.staffId, staff.id),
+      eq(staffTrainingProgress.moduleKey, input.moduleKey),
+    )).limit(1);
+    if (historicCompletion) return { success: true };
+    try {
+      await db.transaction(async (tx) => {
+        await tx.insert(staffTrainingCompletionClaims).values({ staffId: staff.id, moduleKey: input.moduleKey });
+        await tx.insert(staffTrainingProgress).values({ staffId: staff.id, moduleKey: input.moduleKey, acknowledgedBy: ctx.user.email ?? null });
+      });
+    } catch (error) {
+      // A claim already exists, so a concurrent/stale retry must not write a
+      // second historic training row. The existing completion remains valid.
+      if (!/duplicate|ER_DUP_ENTRY/i.test(error instanceof Error ? error.message : String(error))) throw error;
+    }
     return { success: true };
   }),
   /** Owner and Operations Managers can oversee completion without completing lessons for staff. */
@@ -43,7 +56,11 @@ export const trainingRouter = router({
     const progress = await db.select().from(staffTrainingProgress);
     return people.map((person) => {
       const assigned = modulesForRole(person.role);
-      const completed = progress.filter((item) => item.staffId === person.id && assigned.some((module) => module.key === item.moduleKey)).length;
+      const completed = new Set(
+        progress
+          .filter((item) => item.staffId === person.id && assigned.some((module) => module.key === item.moduleKey))
+          .map((item) => item.moduleKey)
+      ).size;
       return { id: person.id, name: person.name, role: person.role, location: person.location, completed, total: assigned.length };
     });
   }),

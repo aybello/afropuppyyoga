@@ -1,7 +1,6 @@
 import { z } from "zod";
-import { adminProcedure, staffProcedure, publicProcedure, router } from "../_core/trpc";
-import { createBirthdayInquiry, getAllBirthdayInquiries, updateBirthdayInquiry } from "../db";
-import { notifyOwner } from "../_core/notification";
+import { staffProcedure, publicProcedure, router } from "../_core/trpc";
+import { getAllBirthdayInquiries, updateBirthdayInquiry } from "../db";
 
 export const birthdayRouter = router({
   /**
@@ -20,36 +19,12 @@ export const birthdayRouter = router({
         message: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
-      // Save to DB
-      await createBirthdayInquiry({
-        name: input.name,
-        email: input.email,
-        phone: input.phone,
-        preferredDate: input.preferredDate,
-        location: input.location,
-        tier: input.tier,
-        groupSize: input.groupSize,
-        message: input.message,
-      });
-
-      // Notify owner
-      const tierPrices = { Basic: "$600", Premium: "$900", Deluxe: "$1,200" };
-      await notifyOwner({
-        title: `🎂 New Birthday Package Inquiry — ${input.tier} (${tierPrices[input.tier]})`,
-        content: `**Name:** ${input.name}
-**Email:** ${input.email}
-**Phone:** ${input.phone ?? "Not provided"}
-**Package:** ${input.tier} — ${tierPrices[input.tier]}
-**Location:** ${input.location}
-**Preferred Date:** ${input.preferredDate}
-**Group Size:** ${input.groupSize} people
-**Message:** ${input.message ?? "None"}
-
-Please confirm availability and follow up within 24 hours.`,
-      });
-
-      return { success: true };
+    .mutation(() => {
+      // The public birthday page now uses privateEvents.submitInquiry. Keep the
+      // old procedure only as an explicit tombstone so stale tabs and scripts
+      // cannot create a record outside the current quote, approval, and
+      // booking lifecycle.
+      throw new Error("Birthday intake has moved to the private event quote workflow. Refresh the page and submit your request there.");
     }),
 
   /**

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lumaGuestAttended } from "./reviewTextSender";
+import { isDuplicateClaimError, lumaGuestAttended } from "./reviewTextSender";
 
 describe("review-text attendance eligibility", () => {
   it("accepts a guest with a top-level Luma check-in", () => {
@@ -24,5 +24,13 @@ describe("review-text attendance eligibility", () => {
     expect(lumaGuestAttended({
       event_tickets: [{ is_captured: false, checked_in_at: "2026-08-28T15:01:00Z" }],
     })).toBe(false);
+  });
+});
+
+describe("review-text claim errors", () => {
+  it("recognizes only genuine unique-claim conflicts as duplicate sends", () => {
+    expect(isDuplicateClaimError(Object.assign(new Error("Duplicate entry"), { code: "ER_DUP_ENTRY" }))).toBe(true);
+    expect(isDuplicateClaimError(new Error("connection lost"))).toBe(false);
+    expect(isDuplicateClaimError(new Error("deadlock found"))).toBe(false);
   });
 });

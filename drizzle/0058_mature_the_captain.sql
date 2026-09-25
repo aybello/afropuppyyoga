@@ -1,0 +1,3 @@
+-- Intentionally no-op. Fresh databases retain idx_reviewTextLogs_guest from
+-- the base schema, and existing production was restored before this migration
+-- was converted to a portable no-op.

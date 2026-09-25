@@ -404,6 +404,7 @@ export async function getAllActiveStaff() {
   if (!db) throw new Error("Database not available");
   return db.select({
     id: staffInvites.id,
+    applicationId: staffInvites.applicationId,
     name: staffInvites.name,
     email: staffInvites.email,
     isActive: staffInvites.isActive,

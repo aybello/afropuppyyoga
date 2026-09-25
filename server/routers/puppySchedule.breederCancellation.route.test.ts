@@ -101,6 +101,16 @@ describe("previewed breeder cancellation archive", () => {
     expect(smsCreate).not.toHaveBeenCalled();
   });
 
+  it("rejects the generic delete route before it can silently archive a breeder-backed class", async () => {
+    const prepared = createDb([]);
+    getDb.mockResolvedValue(prepared.db);
+
+    await expect(caller().delete({ id: 88 })).rejects.toThrow("Generic archive is retired");
+    expect(prepared.updates).toHaveLength(0);
+    expect(sendEmail).not.toHaveBeenCalled();
+    expect(smsCreate).not.toHaveBeenCalled();
+  });
+
   it("does not archive or notify when the owner has not confirmed the current preview", async () => {
     const prepared = createDb([[cancelledSchedule], [breeder]]);
     getDb.mockResolvedValue(prepared.db);

@@ -933,29 +933,52 @@ export const privateEventsRouter = router({
     .input(
       z.object({
         id: z.number(),
-        status: z.enum(["new", "contacted", "confirmed", "cancelled", "quote_sent", "booked"]),
+        // Payment and cancellation states have dedicated workflows. Never let
+        // a generic form claim a payment arrived or a commercial cancellation
+        // was resolved without the required linked records.
+        status: z.enum(["new", "contacted", "confirmed", "quote_sent", "booked", "cancelled"]).optional(),
         adminNotes: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (input.status === "quote_sent" || input.status === "booked" || input.status === "cancelled") {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "This commercial status is now managed by the recorded quote, payment, or cancellation workflow. Refresh APY HQ and use that workflow instead.",
+        });
+      }
       const [inquiry] = await db.select().from(privateEventInquiries).where(eq(privateEventInquiries.id, input.id));
       if (!inquiry) throw new TRPCError({ code: "NOT_FOUND", message: "Inquiry not found" });
-      await db
-        .update(privateEventInquiries)
-        .set({
-          status: input.status,
-          ...(input.adminNotes !== undefined ? { adminNotes: input.adminNotes } : {}),
-        })
-        .where(eq(privateEventInquiries.id, input.id));
+      if (input.status !== undefined && !["new", "contacted", "confirmed"].includes(inquiry.status)) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Commercial booking and cancellation states are managed only by their dedicated payment or cancellation workflow. You may still update internal notes.",
+        });
+      }
+      if (input.status !== undefined || input.adminNotes !== undefined) {
+        const [updated] = await db
+          .update(privateEventInquiries)
+          .set({
+            ...(input.status !== undefined ? { status: input.status } : {}),
+            ...(input.adminNotes !== undefined ? { adminNotes: input.adminNotes } : {}),
+          })
+          .where(and(eq(privateEventInquiries.id, input.id), eq(privateEventInquiries.status, inquiry.status)));
+        if (updated.affectedRows !== 1) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "This private event changed while it was being updated. Reload it before changing its status or notes.",
+          });
+        }
+      }
       await db.insert(privateEventActions).values({
         inquiryId: input.id,
         action: "inquiry_updated",
         actorUserId: ctx.user.id,
         actorName: ctx.user.name,
         actorEmail: ctx.user.email,
-        details: actionDetails({ fromStatus: inquiry.status, toStatus: input.status, notesChanged: input.adminNotes !== undefined }),
+        details: actionDetails({ fromStatus: inquiry.status, toStatus: input.status ?? inquiry.status, notesChanged: input.adminNotes !== undefined }),
       });
       return { success: true };
     }),
@@ -1429,7 +1452,12 @@ export const privateEventsRouter = router({
       return { success: true };
     }),
 
-  /** Operations may generate a standalone private Luma booking link without an existing inquiry. */
+  /**
+   * Retired: standalone links bypassed the tracked inquiry, approval, payment
+   * webhook, communications, and private-event class records. Keep a
+   * fail-closed tombstone for stale APY HQ tabs rather than creating another
+   * untracked paid booking.
+   */
   generateQuickBookingLink: staffProcedure
     .input(
       z.object({
@@ -1451,72 +1479,10 @@ export const privateEventsRouter = router({
         notes: z.string().optional(),
       })
     )
-    .mutation(async ({ ctx, input }) => {
-      if (input.sessionSchedule.length !== input.sessions) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Provide one time slot for each private-event session." });
-      }
-      const { basePriceCents, totalCents, hstCents } = calculatePrivateEventPrice(input.finalPrice, input.pricingType, input.sessions);
-      const sessionPlan = buildPrivateEventSessionPlan({
-        startTime: input.sessionSchedule[0].startTime,
-        endTime: input.sessionSchedule[0].endTime,
-        sessions: input.sessions,
+    .mutation(() => {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "Quick Booking Link is retired. Create or open the client inquiry, then use the tracked quote and booking workflow so approval, payment, communication, and cancellation records stay synchronized.",
       });
-
-      // Build personalized description
-      const orgName = input.organization || input.clientName;
-      const breed = input.puppyBreed || "adorable puppies";
-      const descLines = buildEventDescription({
-        eventType: input.eventType,
-        orgName,
-        guests: input.maxCapacity,
-        sessions: input.sessions,
-        breed,
-      });
-
-      // Add session schedule to description if multi-session
-      let fullDescription = descLines;
-      if (sessionPlan.length > 1) {
-        const scheduleLines = sessionPlan.map((s, i) =>
-          `\n🐶 **Session ${i + 1}:** ${s.startTime} to ${s.endTime}`
-        ).join("");
-        fullDescription = `${descLines}\n\n---\n\n## 📅 Your Included Time Slots\n${scheduleLines}\n\nOne combined payment covers both sessions. There is a 30-minute break between them.`;
-      }
-
-      const createdClasses: Array<{ eventId: string; eventUrl: string; sessionNumber: number }> = [];
-      try {
-        for (const slot of sessionPlan) {
-          const created = await createLumaEvent({
-            name: sessionPlan.length > 1 ? `${orgName} — Private PuppyYoga (Session ${slot.sessionNumber} of ${sessionPlan.length})` : `${orgName} — Private PuppyYoga`,
-            startAt: torontoDateTimeIso(input.eventDate, slot.startTime),
-            endAt: torontoDateTimeIso(input.eventDate, slot.endTime),
-            location: input.customLocation || input.location,
-            maxCapacity: input.maxCapacity,
-            description: fullDescription,
-            ...(slot.paymentMode === "combined_checkout" ? { priceCents: basePriceCents } : {}),
-            sessions: input.sessions,
-          });
-          createdClasses.push({ ...created, sessionNumber: slot.sessionNumber });
-        }
-      } catch (error) {
-        await cancelPartialPrivateEventClasses(createdClasses);
-        throw error;
-      }
-      const primary = createdClasses[0];
-
-      // Notify owner
-      await notifyOwner({
-        title: "\u{1F517} Quick Booking Link Generated",
-        content: `Event for ${orgName} on ${input.eventDate}\nCombined ${input.sessions}-session checkout: $${(basePriceCents / 100).toFixed(2)} + HST = $${(totalCents / 100).toFixed(2)} CAD\n${primary.eventUrl}`,
-      });
-
-      return {
-        success: true,
-        eventUrl: primary.eventUrl,
-        eventId: primary.eventId,
-        totalCents,
-        hstCents,
-        clientName: input.clientName,
-        organization: input.organization,
-      };
     }),
 });

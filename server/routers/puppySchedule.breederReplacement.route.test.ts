@@ -82,6 +82,17 @@ describe("previewed active-Luma breeder replacement", () => {
     expect(sendEmail).not.toHaveBeenCalled();
   });
 
+  it("rejects a generic schedule update that tries to replace the breeder", async () => {
+    const prepared = createDb([[activeLumaSchedule]]);
+    getDb.mockResolvedValue(prepared.db);
+
+    await expect(caller().update({ id: 88, breederId: 27, breederName: "Incoming Bernese Breeder" })).rejects.toThrow(
+      "Use the protected breeder replacement workflow",
+    );
+    expect(updateLumaEventForSchedule).not.toHaveBeenCalled();
+    expect(prepared.updates).toHaveLength(0);
+  });
+
   it("keeps the active Luma event, updates the linked breeder, and notifies only the outgoing breeder after the current preview is confirmed", async () => {
     const prepared = createDb([
       [activeLumaSchedule], [outgoingBreeder], [incomingBreeder],

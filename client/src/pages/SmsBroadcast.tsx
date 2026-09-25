@@ -28,6 +28,28 @@ type SendResult = {
   error?: string;
 };
 
+function smsRequestStorageKey(scope: string, payload: string) {
+  let hash = 2166136261;
+  for (let index = 0; index < payload.length; index += 1) {
+    hash ^= payload.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `apy-sms-request:${scope}:${(hash >>> 0).toString(36)}`;
+}
+
+function getSmsRequestKey(scope: string, payload: string) {
+  const storageKey = smsRequestStorageKey(scope, payload);
+  const existing = window.localStorage.getItem(storageKey);
+  if (existing) return existing;
+  const key = crypto.randomUUID();
+  window.localStorage.setItem(storageKey, key);
+  return key;
+}
+
+function clearSmsRequestKey(scope: string, payload: string) {
+  window.localStorage.removeItem(smsRequestStorageKey(scope, payload));
+}
+
 function statusIcon(status: string) {
   if (status === "failed" || status === "invalid")
     return <XCircle className="w-4 h-4 text-red-500" />;
@@ -75,8 +97,9 @@ export default function SmsBroadcast() {
   const [singleResult, setSingleResult] = useState<{ success: boolean; to?: string; sid?: string; status?: string; error?: string } | null>(null);
 
   const singleMutation = trpc.smsBroadcast.sendSingle.useMutation({
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       setSingleResult({ success: true, to: data.to, sid: data.sid, status: data.status });
+      clearSmsRequestKey("single", JSON.stringify({ phone: variables.phone, name: variables.name ?? "", message: variables.message }));
       toast.success(`SMS sent to ${data.to}`);
     },
     onError: (err) => {
@@ -93,9 +116,13 @@ export default function SmsBroadcast() {
   const [bulkSummary, setBulkSummary] = useState<{ total: number; sent: number; failed: number } | null>(null);
 
   const bulkMutation = trpc.smsBroadcast.sendBulk.useMutation({
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       setBulkResults(data.results);
       setBulkSummary({ total: data.total, sent: data.sent, failed: data.failed });
+      const { requestKey: _requestKey, ...payload } = variables;
+      if (data.results.every((result) => !["failed", "invalid", "suppressed", "duplicate"].includes(result.status))) {
+        clearSmsRequestKey("bulk", JSON.stringify(payload));
+      }
       toast.success(`Sent ${data.sent}/${data.total} messages`);
     },
     onError: (err) => {
@@ -127,9 +154,13 @@ export default function SmsBroadcast() {
   const [csvFileName, setCsvFileName] = useState("");
 
   const csvMutation = trpc.smsBroadcast.sendBulk.useMutation({
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       setCsvResults(data.results);
       setCsvSummary({ total: data.total, sent: data.sent, failed: data.failed });
+      const { requestKey: _requestKey, ...payload } = variables;
+      if (data.results.every((result) => !["failed", "invalid", "suppressed", "duplicate"].includes(result.status))) {
+        clearSmsRequestKey("csv", JSON.stringify(payload));
+      }
       toast.success(`Sent ${data.sent}/${data.total} messages`);
     },
     onError: (err) => {
@@ -221,7 +252,7 @@ export default function SmsBroadcast() {
                     <input
                       type="text"
                       value={singleName}
-                      onChange={(e) => setSingleName(e.target.value)}
+                      onChange={(e) => { setSingleName(e.target.value); }}
                       placeholder="e.g. Ay Bello"
                       className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
                     />
@@ -231,7 +262,7 @@ export default function SmsBroadcast() {
                   <Label className="text-xs text-gray-500 mb-1 block">Message *</Label>
                   <textarea
                     value={singleMessage}
-                    onChange={(e) => setSingleMessage(e.target.value)}
+                    onChange={(e) => { setSingleMessage(e.target.value); }}
                     rows={4}
                     maxLength={1600}
                     placeholder="Type your message here..."
@@ -240,7 +271,10 @@ export default function SmsBroadcast() {
                   <p className="text-xs text-gray-400 mt-1 text-right">{singleMessage.length}/1600</p>
                 </div>
                 <Button
-                  onClick={() => singleMutation.mutate({ phone: singlePhone, name: singleName || undefined, message: singleMessage })}
+                  onClick={() => {
+                    const payload = { phone: singlePhone, name: singleName || undefined, message: singleMessage };
+                    singleMutation.mutate({ ...payload, requestKey: getSmsRequestKey("single", JSON.stringify({ ...payload, name: payload.name ?? "" })) });
+                  }}
                   disabled={singleMutation.isPending || singlePhone.replace(/\D/g, "").length < 10 || !singleMessage.trim()}
                   className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white"
                 >
@@ -289,7 +323,7 @@ export default function SmsBroadcast() {
                   <Label className="text-xs text-gray-500 mb-1 block">Message *</Label>
                   <textarea
                     value={bulkMessage}
-                    onChange={(e) => setBulkMessage(e.target.value)}
+                    onChange={(e) => { setBulkMessage(e.target.value); }}
                     rows={4}
                     maxLength={1600}
                     placeholder={"Hi {name}, just a reminder about your upcoming AfroPuppyYoga class! 🐶"}
@@ -298,11 +332,14 @@ export default function SmsBroadcast() {
                   <p className="text-xs text-gray-400 mt-1 text-right">{bulkMessage.length}/1600</p>
                 </div>
                 <label className="flex items-center gap-2 cursor-pointer select-none">
-                  <input type="checkbox" checked={personalise} onChange={(e) => setPersonalise(e.target.checked)} className="rounded" />
+                  <input type="checkbox" checked={personalise} onChange={(e) => { setPersonalise(e.target.checked); }} className="rounded" />
                   <span className="text-sm text-gray-600">Personalise — replace <code className="bg-gray-100 px-1 rounded text-xs">{"{name}"}</code> with each recipient's name</span>
                 </label>
                 <Button
-                  onClick={() => bulkMutation.mutate({ recipients: parseBulkNumbers(), message: bulkMessage, personalise })}
+                  onClick={() => {
+                    const payload = { recipients: parseBulkNumbers(), message: bulkMessage, personalise };
+                    bulkMutation.mutate({ ...payload, requestKey: getSmsRequestKey("bulk", JSON.stringify(payload)) });
+                  }}
                   disabled={bulkMutation.isPending || parseBulkNumbers().length === 0 || !bulkMessage.trim()}
                   className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white"
                 >
@@ -380,7 +417,7 @@ export default function SmsBroadcast() {
                   <Label className="text-xs text-gray-500 mb-1 block">Message *</Label>
                   <textarea
                     value={csvMessage}
-                    onChange={(e) => setCsvMessage(e.target.value)}
+                    onChange={(e) => { setCsvMessage(e.target.value); }}
                     rows={4}
                     maxLength={1600}
                     placeholder={"Hi {name}, just a reminder about your upcoming AfroPuppyYoga class! 🐶"}
@@ -389,11 +426,14 @@ export default function SmsBroadcast() {
                   <p className="text-xs text-gray-400 mt-1 text-right">{csvMessage.length}/1600</p>
                 </div>
                 <label className="flex items-center gap-2 cursor-pointer select-none">
-                  <input type="checkbox" checked={csvPersonalise} onChange={(e) => setCsvPersonalise(e.target.checked)} className="rounded" />
+                  <input type="checkbox" checked={csvPersonalise} onChange={(e) => { setCsvPersonalise(e.target.checked); }} className="rounded" />
                   <span className="text-sm text-gray-600">Personalise — replace <code className="bg-gray-100 px-1 rounded text-xs">{"{name}"}</code> with each recipient's name</span>
                 </label>
                 <Button
-                  onClick={() => csvMutation.mutate({ recipients: csvRecipients, message: csvMessage, personalise: csvPersonalise })}
+                  onClick={() => {
+                    const payload = { recipients: csvRecipients, message: csvMessage, personalise: csvPersonalise };
+                    csvMutation.mutate({ ...payload, requestKey: getSmsRequestKey("csv", JSON.stringify(payload)) });
+                  }}
                   disabled={csvMutation.isPending || csvRecipients.length === 0 || !csvMessage.trim()}
                   className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white"
                 >

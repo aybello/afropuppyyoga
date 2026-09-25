@@ -172,7 +172,7 @@ webhookRouter.post("/api/twilio/sms-inbound", async (req, res) => {
       }
 
       // Store in DB (ignore duplicate twilioSid)
-      await db.insert(inboundSms).ignore().values({
+      const inboundInsertResult = await db.insert(inboundSms).ignore().values({
         fromPhone,
         toPhone,
         body: messageBody,
@@ -181,6 +181,7 @@ webhookRouter.post("/api/twilio/sms-inbound", async (req, res) => {
         breederName: breederName ?? undefined,
         isRead: 0,
       });
+      const wasNewInboundMessage = (inboundInsertResult as unknown as Array<{ affectedRows?: number }>)[0]?.affectedRows === 1;
 
       // Forward to owner's personal cell
       const ownerPhone = process.env.OWNER_PHONE_NUMBER;
@@ -188,7 +189,7 @@ webhookRouter.post("/api/twilio/sms-inbound", async (req, res) => {
       const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
       const twilioFromNumber = process.env.TWILIO_PHONE_NUMBER;
 
-      if (!consentAction && ownerPhone && twilioAccountSid && twilioAuthToken && twilioFromNumber) {
+      if (wasNewInboundMessage && !consentAction && ownerPhone && twilioAccountSid && twilioAuthToken && twilioFromNumber) {
         const senderLabel = breederName ?? fromPhone;
         const forwardBody = `📩 Reply from ${senderLabel}:\n"${messageBody}"`;
         const params = new URLSearchParams();
