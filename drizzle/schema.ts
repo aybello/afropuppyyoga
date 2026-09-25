@@ -769,6 +769,18 @@ export const inboundSms = mysqlTable("inboundSms", {
 export type InboundSms = typeof inboundSms.$inferSelect;
 export type InsertInboundSms = typeof inboundSms.$inferInsert;
 
+/**
+ * A short-lived per-inbound-message mutex. It is retained only while Twilio has
+ * not confirmed a reply outcome, preventing two operators or devices from
+ * sending competing replies to the same customer message.
+ */
+export const inboundSmsReplyLocks = mysqlTable("inboundSmsReplyLocks", {
+  inboundSmsId: int("inboundSmsId").primaryKey(),
+  idempotencyKey: varchar("idempotencyKey", { length: 160 }).notNull(),
+  bodyHash: varchar("bodyHash", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 /** Central STOP/START suppression state checked by every outbound SMS path. */
 export const smsSuppressions = mysqlTable("smsSuppressions", {
   id: int("id").autoincrement().primaryKey(),

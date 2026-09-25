@@ -13,6 +13,7 @@ import { APY_PLANNING_DOCUMENT_URL } from "@shared/onboarding";
 
 const GMAIL_USER = "afropuppyyoga@gmail.com";
 const REPLY_TO = "afropuppyyoga@gmail.com";
+const APY_CONTACT_PHONE = "289-788-1885";
 const APY_LOGO = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
 
 function getTransporter() {
@@ -110,6 +111,7 @@ function wrapInBrandedLayout(heroContent: string, bodyContent: string): string {
                 &nbsp;&middot;&nbsp;
                 <a href="https://instagram.com/afropuppyyoga" style="color:#C2185B;text-decoration:none;">@afropuppyyoga</a>
               </p>
+              <p style="margin:6px 0 0;font-size:11px;color:#6B4C3B;">Questions or quick changes? <a href="tel:${APY_CONTACT_PHONE.replace(/\D/g, "")}" style="color:#C2185B;text-decoration:none;font-weight:bold;">Call or text ${APY_CONTACT_PHONE}</a></p>
             </td>
           </tr>
 
@@ -733,12 +735,12 @@ export function buildBreederConfirmationEmail(opts: {
       </td></tr>
     </table>
     ${opts.notes ? `<table width="100%" cellpadding="0" cellspacing="0" style="background:#FFF8FB;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;"><tr><td style="padding:16px 20px;"><p style="margin:0 0 4px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Notes from APY</p><p style="margin:0;font-size:14px;color:#3D1A2A;line-height:1.6;">${opts.notes}</p></td></tr></table>` : ""}
-    ${bodyText(`Please reply to this email if you have any questions or need to make changes. We look forward to seeing you and the puppies! 🐾`)}
+    ${bodyText(`Please reply to this email if you have any questions or need to make changes. For the quickest response, call or text <a href="tel:2897881885" style="color:#C2185B;font-weight:bold;">${APY_CONTACT_PHONE}</a>. We look forward to seeing you and the puppies! 🐾`)}
     ${signoff("The AfroPuppyYoga Team")}
   `;
 
   const html = wrapInBrandedLayout(hero, body);
-  const text = `Hi ${firstName},\n\nYour class with AfroPuppyYoga is confirmed!\n\nDate: ${displayDate}\nLocation: ${opts.location}\nTime: ${fmt12(opts.startTime)} – ${fmt12(opts.endTime)}\nBreed: ${opts.breed}\nClass Type: ${typeLabel}\n${opts.notes ? `\nNotes: ${opts.notes}\n` : ""}\nQuestions? Reply to this email.\n\nWith warmth,\nThe AfroPuppyYoga Team\nafropuppyyoga@gmail.com`;
+  const text = `Hi ${firstName},\n\nYour class with AfroPuppyYoga is confirmed!\n\nDate: ${displayDate}\nLocation: ${opts.location}\nTime: ${fmt12(opts.startTime)} – ${fmt12(opts.endTime)}\nBreed: ${opts.breed}\nClass Type: ${typeLabel}\n${opts.notes ? `\nNotes: ${opts.notes}\n` : ""}\nQuestions? Reply to this email, or call or text ${APY_CONTACT_PHONE}.\n\nWith warmth,\nThe AfroPuppyYoga Team\nafropuppyyoga@gmail.com`;
 
   return { subject, html, text };
 }
