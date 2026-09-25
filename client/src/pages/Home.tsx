@@ -7,16 +7,17 @@
 import { lazy, Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/sections/Hero";
-import Experience from "@/components/sections/Experience";
 import RewardsStrip from "@/components/RewardsStrip";
 import ScrollToTop from "@/components/ScrollToTop";
-import ChatbotWidget from "@/components/ChatbotWidget";
 import DeferredSection from "@/components/DeferredSection";
 import { useScrollDepthTracking, useTimeOnPageTracking } from "@/hooks/useAnalytics";
 import { useSeoMeta } from "@/hooks/useSeoMeta";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
-// Lazy-load below-the-fold sections — they load as the user scrolls, not on initial paint
+// Lazy-load below-the-fold sections — they load as the user scrolls, not on initial paint.
+const Experience = lazy(() => import("@/components/sections/Experience"));
+const ChatbotWidget = lazy(() => import("@/components/ChatbotWidget"));
+const DeferredMetaPixel = lazy(() => import("@/components/DeferredMetaPixel"));
 const LumaCalendar = lazy(() => import("@/components/sections/LumaCalendar"));
 const Memberships = lazy(() => import("@/components/sections/Memberships"));
 const About = lazy(() => import("@/components/sections/About"));
@@ -39,6 +40,7 @@ function SectionFallback() {
 }
 
 export default function Home() {
+  const [shouldLoadChat, setShouldLoadChat] = useState(false);
   useScrollDepthTracking();
   useTimeOnPageTracking();
   useSeoMeta({
@@ -46,6 +48,18 @@ export default function Home() {
     description: "Guided 60-min puppy yoga in Kitchener-Waterloo, Hamilton & Oakville. Afro-beat music, ethical puppies, 494+ five-star reviews. Book your class today.",
     canonical: "https://afropuppyyoga.ca/",
   });
+
+  useEffect(() => {
+    const loadChat = () => setShouldLoadChat(true);
+    const requestIdle = window.requestIdleCallback;
+    if (requestIdle) {
+      const idleId = requestIdle(loadChat, { timeout: 6000 });
+      return () => window.cancelIdleCallback?.(idleId);
+    }
+    const timeoutId = window.setTimeout(loadChat, 3000);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#FEFAF4]">
       <Navbar />
@@ -53,7 +67,7 @@ export default function Home() {
         {/* Above the fold — loaded immediately */}
         <Hero />
         <RewardsStrip />
-        <Experience />
+        <DeferredSection minHeight="36rem"><Suspense fallback={<SectionFallback />}><Experience /></Suspense></DeferredSection>
 
         {/* Below the fold — lazy loaded */}
         <DeferredSection minHeight="34rem"><Suspense fallback={<SectionFallback />}><LumaCalendar /></Suspense></DeferredSection>
@@ -75,7 +89,7 @@ export default function Home() {
         <Footer />
       </Suspense>
       <ScrollToTop />
-      <ChatbotWidget />
+      {shouldLoadChat && <Suspense fallback={null}><DeferredMetaPixel /><ChatbotWidget /></Suspense>}
     </div>
   );
 }

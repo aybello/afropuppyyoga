@@ -3,7 +3,7 @@
    Pure CSS transitions — no framer-motion dependency
    ============================================================ */
 import { useState, useEffect } from "react";
-import { ArrowUp } from "lucide-react";
+import { ArrowUpIcon } from "@/components/PublicIcons";
 
 export default function ScrollToTop() {
   const [visible, setVisible] = useState(false);
@@ -30,7 +30,7 @@ export default function ScrollToTop() {
         transition: "opacity 0.2s ease, transform 0.2s ease",
       }}
     >
-      <ArrowUp size={20} />
+      <ArrowUpIcon size={20} aria-hidden />
     </button>
   );
 }

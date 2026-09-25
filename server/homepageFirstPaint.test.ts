@@ -15,11 +15,10 @@ describe("homepage first paint", () => {
     expect(indexSource).toContain("html.home-pending #root");
     expect(indexSource).toContain("apy_hero_bg-aDMPriKGFaJ3ZgQKWVBv5n.webp");
     expect(indexSource).toContain('style id="homepage-light-first-paint"');
+    expect(indexSource).toContain('id="home-first-paint"');
+    expect(indexSource).toContain("Where Wellness");
     expect(indexSource.lastIndexOf("background-color: #FFF7FA")).toBeGreaterThan(
       indexSource.lastIndexOf("background-color: #1a0a12")
-    );
-    expect(indexSource.lastIndexOf("background-image: url")).toBeGreaterThan(
-      indexSource.lastIndexOf("linear-gradient(to top")
     );
     expect(indexSource).not.toContain("background-color: #1a0a12");
     expect(indexSource).not.toContain("rgba(0, 0, 0, 0.8)");

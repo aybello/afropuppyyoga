@@ -1,4 +1,4 @@
-import { HeartHandshake } from "lucide-react";
+import { HeartIcon } from "@/components/PublicIcons";
 
 export default function LocalDogsImpact() {
   return (
@@ -7,7 +7,7 @@ export default function LocalDogsImpact() {
       className="mt-6 flex max-w-xl items-center gap-3 rounded-2xl border border-white/70 bg-[#FFF6F7]/90 px-4 py-3 text-left text-[#3D1728] shadow-[0_16px_42px_rgba(38,10,25,0.24)] backdrop-blur-md sm:mt-7 sm:gap-4 sm:px-5"
     >
       <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[#ECA9BD]/60 bg-[#FCE3EA] sm:size-10">
-        <HeartHandshake className="size-4 text-[#A62B57] sm:size-[18px]" aria-hidden="true" />
+        <HeartIcon className="size-4 text-[#A62B57] sm:size-[18px]" aria-hidden />
       </span>
       <div className="min-w-0">
         <p className="font-body text-[10px] font-bold uppercase tracking-[0.16em] text-[#A62B57]">

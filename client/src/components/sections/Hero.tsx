@@ -4,9 +4,8 @@ import { BOOK_URL } from "@/const";
    Background: AI-generated warm yoga studio with puppies
    Design: Afro-editorial, warm tones, asymmetric layout
    ============================================================ */
-import { motion } from "framer-motion";
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDownIcon } from "@/components/PublicIcons";
 import { trackCTAClick } from "@/hooks/useAnalytics";
 import LocalDogsImpact from "@/components/sections/LocalDogsImpact";
 import {
@@ -44,6 +43,10 @@ const trustedBy = [
   { name: "Soul Seat", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/soul_seat_logo_cca03879.png", height: 52 },
   { name: "Brock Solutions", src: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/dwXWkrdWFpxsxxJF.png", height: 72 },
 ];
+
+const heroRevealStyle = (delay: number) => ({
+  animation: `heroReveal 0.65s ease-out ${delay}s both`,
+});
 
 export default function Hero() {
   const [heroImage, setHeroImage] = useState(PRIMARY_HERO_IMAGE);
@@ -97,47 +100,38 @@ export default function Hero() {
       <div className="relative flex-1 flex flex-col justify-end container pb-20 pt-28 md:pb-28 md:pt-36">
         <div className="max-w-2xl">
           {/* Eyebrow */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
+          <div
+            style={heroRevealStyle(0.1)}
             className="flex items-center gap-3 mb-6"
           >
             <div className="w-8 h-0.5 bg-[#F2A0B8]" />
             <span className="text-[#F2A0B8] font-body text-sm font-semibold tracking-widest uppercase">
               Ontario's #1 Puppy Yoga Studio
             </span>
-          </motion.div>
+          </div>
 
           {/* Headline */}
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
+          <h1
+            style={heroRevealStyle(0.22)}
             className="font-display text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-bold text-white leading-[1.05] mb-6"
           >
             Where Wellness
             <br />
             Meets{" "}
             <span className="italic text-[#F2A0B8]">Puppy Love</span>
-          </motion.h1>
+          </h1>
 
           {/* Subheadline */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
+          <p
+            style={{ ...heroRevealStyle(0.34), textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}
             className="font-body text-white/85 text-base md:text-xl leading-relaxed mb-10 max-w-lg"
-            style={{ textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}
           >
             Guided yoga, Afro-beat rhythms, and adorable puppies — all in one unforgettable session. Serving Hamilton, Kitchener & Oakville.
-          </motion.p>
+          </p>
 
           {/* CTAs */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.65 }}
+          <div
+            style={heroRevealStyle(0.46)}
             className="flex flex-row gap-2"
           >
             <a
@@ -164,44 +158,35 @@ export default function Hero() {
             >
               Private Events
             </a>
-          </motion.div>
+          </div>
 
           {/* Trust line */}
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.85 }}
+          <p
+            style={{ ...heroRevealStyle(0.58), textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}
             className="font-body text-white/60 text-xs sm:text-sm mt-5"
-            style={{ textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}
           >
             Trusted by universities, brands, and wellness communities across Ontario.
-          </motion.p>
+          </p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.95 }}
+          <div
+            style={heroRevealStyle(0.66)}
             className="lg:hidden"
           >
             <LocalDogsImpact />
-          </motion.div>
+          </div>
         </div>
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, x: 18 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.6, delay: 0.8 }}
+      <div
+        style={heroRevealStyle(0.54)}
         className="absolute right-10 top-28 z-10 hidden w-[340px] lg:block xl:right-14"
       >
         <LocalDogsImpact />
-      </motion.div>
+      </div>
 
       {/* Trusted By — infinite scrolling marquee on a frosted white strip */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8, delay: 1 }}
+      <div
+        style={heroRevealStyle(0.72)}
         className="relative bg-white border-t border-gray-100 py-3 flex items-center"
       >
         {/* Pinned label — sits outside the scrolling track */}
@@ -231,7 +216,7 @@ export default function Hero() {
             ))}
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Scroll indicator */}
       <button
@@ -239,13 +224,17 @@ export default function Hero() {
         className="absolute bottom-28 right-8 md:right-12 text-white/60 hover:text-white transition-colors animate-bounce"
         aria-label="Scroll down"
       >
-        <ChevronDown size={28} />
+        <ChevronDownIcon size={28} aria-hidden />
       </button>
 
       <style>{`
         @keyframes kenBurns {
           from { transform: scale(1.05) translate(0, 0); }
           to { transform: scale(1.12) translate(-1%, -1%); }
+        }
+        @keyframes heroReveal {
+          from { opacity: 0; transform: translateY(14px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         @keyframes marquee {
           0% { transform: translateX(0); }

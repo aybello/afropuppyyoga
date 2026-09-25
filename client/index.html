@@ -49,6 +49,56 @@
         background-repeat: no-repeat;
         background-size: cover;
       }
+      #home-first-paint {
+        min-height: 100svh;
+        display: none;
+        flex-direction: column;
+        color: #fff;
+        background:
+          linear-gradient(to top, rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0.18) 58%, rgba(0, 0, 0, 0.4)),
+          url("https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/apy_hero_bg-aDMPriKGFaJ3ZgQKWVBv5n.webp") center / cover no-repeat;
+      }
+      html.home-pending #home-first-paint { display: flex; }
+      #home-first-paint .home-shell-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem clamp(1.25rem, 4vw, 4rem);
+        font-family: Arial, sans-serif;
+        font-weight: 700;
+      }
+      #home-first-paint .home-shell-brand { letter-spacing: -0.02em; font-size: clamp(1rem, 2.3vw, 1.35rem); }
+      #home-first-paint .home-shell-book {
+        color: #1A0A12;
+        text-decoration: none;
+        background: #F2A0B8;
+        border-radius: 999px;
+        padding: .72rem 1.15rem;
+        font-size: .82rem;
+      }
+      #home-first-paint .home-shell-copy {
+        margin: auto 0 0;
+        padding: 5rem clamp(1.25rem, 8vw, 9rem) 6.5rem;
+        max-width: 48rem;
+        font-family: Arial, sans-serif;
+      }
+      #home-first-paint .home-shell-eyebrow { color: #F2A0B8; font-size: .76rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+      #home-first-paint h1 { margin: 1rem 0; font-family: Georgia, serif; font-size: clamp(2.55rem, 7vw, 5.8rem); line-height: .98; letter-spacing: -.045em; }
+      #home-first-paint h1 em { color: #F2A0B8; }
+      #home-first-paint p { max-width: 36rem; margin: 0 0 1.75rem; font-size: clamp(1rem, 2vw, 1.2rem); line-height: 1.55; }
+      #home-first-paint .home-shell-cta {
+        display: inline-block;
+        color: #1A0A12;
+        text-decoration: none;
+        background: #F2A0B8;
+        border-radius: 999px;
+        padding: 1rem 1.35rem;
+        font-weight: 700;
+      }
+      @media (max-width: 640px) {
+        #home-first-paint .home-shell-copy { padding-bottom: 5rem; }
+        #home-first-paint p { font-size: 1rem; }
+      }
     </style>
     <title>AfroPuppyYoga | Ontario's #1 Puppy Yoga Experience</title>
     <!-- Meta Pixel loader script is injected by React via useMetaPixel hook -->
@@ -434,20 +484,6 @@
     }
     </script>
 
-    <!-- Meta Pixel Code -->
-    <script>
-    !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s)}(window, document,'script',
-    'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '1453485382529828');
-    fbq('track', 'PageView');
-    </script>
-    <!-- End Meta Pixel Code -->
   </head>
 
   <body>
@@ -455,7 +491,7 @@
     <noscript><img height="1" width="1" style="display:none"
     src="https://www.facebook.com/tr?id=1453485382529828&ev=PageView&noscript=1"
     /></noscript>
-    <div id="root"></div>
+    <div id="root"><div id="home-first-paint" aria-label="AfroPuppyYoga"><header class="home-shell-nav"><span class="home-shell-brand">AfroPuppyYoga</span><a class="home-shell-book" href="https://lu.ma/afropuppyyoga" target="_blank" rel="noopener noreferrer">Book a Class</a></header><main class="home-shell-copy"><div class="home-shell-eyebrow">Ontario's #1 Puppy Yoga Studio</div><h1>Where Wellness<br />Meets <em>Puppy Love</em></h1><p>Guided yoga, Afro-beat rhythms, and adorable puppies in one unforgettable session.</p><a class="home-shell-cta" href="https://lu.ma/afropuppyyoga" target="_blank" rel="noopener noreferrer">Book a Class</a></main></div></div>
     <script type="module" src="/src/main.tsx"></script>
     <script
       defer

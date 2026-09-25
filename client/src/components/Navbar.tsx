@@ -6,7 +6,7 @@ import { BOOK_URL, LOGO_URL  } from "@/const";
    Secondary links (More ▾): Partnerships
    ============================================================ */
 import { useState, useEffect, useRef } from "react";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { ChevronDownIcon, CloseIcon, MenuIcon } from "@/components/PublicIcons";
 import { trackCTAClick } from "@/hooks/useAnalytics";
 
 
@@ -171,7 +171,7 @@ export default function Navbar() {
                   className={`flex items-center gap-1 px-3 py-2 text-sm font-body font-medium rounded-md transition-all duration-200 ${navTextClass} ${navHoverClass}`}
                 >
                   More
-                  <ChevronDown size={14} className={`transition-transform duration-200 ${moreOpen ? "rotate-180" : ""}`} />
+                  <ChevronDownIcon size={14} className={`transition-transform duration-200 ${moreOpen ? "rotate-180" : ""}`} aria-hidden />
                 </button>
                 {moreOpen && (
                   <div className="absolute top-full right-0 mt-2 w-52 bg-[#FFF5F8] border border-[#F0D0DC] rounded-2xl shadow-xl overflow-hidden z-50">
@@ -216,7 +216,7 @@ export default function Navbar() {
                 className={`lg:hidden p-2 rounded-md transition-colors ${scrolled || isSubPage ? "text-[#1A0A12]" : "text-white"}`}
                 aria-label="Toggle menu"
               >
-                {menuOpen ? <X size={22} /> : <Menu size={22} />}
+                {menuOpen ? <CloseIcon size={22} aria-hidden /> : <MenuIcon size={22} aria-hidden />}
               </button>
             </div>
           </nav>
@@ -234,7 +234,7 @@ export default function Navbar() {
           <div className="flex items-center justify-between p-5 border-b border-[#F0D0DC]">
             <span className="font-display font-bold text-lg text-[#1A0A12]">Menu</span>
             <button onClick={() => setMenuOpen(false)} className="p-1 text-[#1A0A12]">
-              <X size={20} />
+              <CloseIcon size={20} aria-hidden />
             </button>
           </div>
           <ul className="p-4 space-y-1 overflow-y-auto max-h-[calc(100vh-80px)]">
