@@ -272,15 +272,15 @@ export async function releaseInitialOnboardingDeliveryClaim(id: number, token: s
 }
 
 /**
- * Completes onboarding only when the claimed application is still Accepted.
- * This cannot overwrite a concurrent rejection, archive, or other staff decision.
+ * Records that onboarding documents were delivered while retaining Accepted
+ * status. A separate, explicit staff action completes employment onboarding.
  */
-export async function completeClaimedOnboardingDelivery(id: number, token: string): Promise<boolean> {
+export async function completeClaimedOnboardingDocumentDelivery(id: number, token: string): Promise<boolean> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const result = await db
     .update(jobApplications)
-    .set({ status: "onboarded", onboardingSentAt: new Date(), onboardingDeliveryToken: null })
+    .set({ onboardingSentAt: new Date(), onboardingDeliveryToken: null })
     .where(
       and(
         eq(jobApplications.id, id),

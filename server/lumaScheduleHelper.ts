@@ -14,7 +14,6 @@ import {
   APY_REGULAR_CLASS_TIME_SLOTS,
   getRegularClassTicketOptions,
 } from "@shared/lumaClassConfig";
-import { notifyOwner } from "./_core/notification";
 
 const LUMA_BASE = "https://public-api.luma.com/v1";
 const LUMA_INVITE_MESSAGE_MAX_LENGTH = 200;
@@ -184,62 +183,6 @@ export function buildLumaClassInviteMessage(params: LumaClassInviteMessageParams
     ? fullIntro
     : `${fullIntro.slice(0, maxIntroLength - 1).trimEnd()}…`;
   return `${intro}${suffix}`;
-}
-
-async function reportLumaInvitationIssue(reason: string): Promise<void> {
-  console.error(`[LumaSchedule] ${reason}`);
-  try {
-    await notifyOwner({
-      title: "Luma class invitations need review",
-      content: `${reason} The class event remains available and no automatic invitation set was sent. Review the event in Luma before any manual follow-up.`,
-    });
-  } catch (notificationError) {
-    console.warn("[LumaSchedule] Could not send the invitation-review notification:", notificationError);
-  }
-}
-
-/**
- * Invites the owner-approved calendar audience only after all contacts and the
- * event's existing guests have been read successfully. One Luma request is
- * used so a failed recipient audit cannot leave a partial automatic campaign.
- */
-async function inviteCalendarContactsToCreatedClass(
-  apiKey: string,
-  eventId: string,
-  eventUrl: string,
-  params: LumaScheduleParams
-): Promise<void> {
-  const message = buildLumaClassInviteMessage({ ...params, eventUrl });
-  if (!message) {
-    await reportLumaInvitationIssue("Automatic invitations were skipped because the verified Luma event link could not fit safely in Luma's invite-message limit.");
-    return;
-  }
-
-  try {
-    const [contactEntries, guestEntries] = await Promise.all([
-      fetchAllLumaEntries<unknown>(apiKey, "/calendars/contacts/list", "calendar-contact"),
-      fetchAllLumaEntries<unknown>(apiKey, `/events/guests/list?event_id=${encodeURIComponent(eventId)}`, "event-guest"),
-    ]);
-    const registeredGuestEmails = new Set(
-      guestEntries.map(lumaGuestEmail).filter((email): email is string => Boolean(email))
-    );
-    const recipients = buildLumaClassInviteRecipients(contactEntries, registeredGuestEmails);
-    if (recipients.length === 0) {
-      console.log("[LumaSchedule] No eligible calendar contacts to invite to the newly created class.");
-      return;
-    }
-
-    const sendResponse = await fetch(`${LUMA_BASE}/events/guests/send-invites`, {
-      method: "POST",
-      headers: { "x-luma-api-key": apiKey, "Content-Type": "application/json" },
-      body: JSON.stringify({ event_id: eventId, guests: recipients, message }),
-    });
-    if (!sendResponse.ok) throw new Error(`Luma invite delivery failed (${sendResponse.status})`);
-    console.log(`[LumaSchedule] Submitted ${recipients.length} automatic class invitations.`);
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : "unknown invite error";
-    await reportLumaInvitationIssue(`Automatic invitations were not sent after the new class was created: ${detail}`);
-  }
 }
 
 function isWithinNextTenTorontoDays(classDate: string): boolean {
@@ -576,17 +519,10 @@ export async function createLumaEventForSchedule(params: LumaScheduleParams): Pr
   if (params.classType !== "regular") return null;
   const apiKey = process.env.LUMA_API_KEY;
   if (!apiKey) {
-    console.warn("[LumaSchedule] LUMA_API_KEY not set — skipping");
-    return null;
+    throw new Error("The Luma connection is not configured, so APY could not create this public class.");
   }
 
-  let eventFields: ReturnType<typeof regularEventFields>;
-  try {
-    eventFields = regularEventFields(params);
-  } catch (error) {
-    console.warn(`[LumaSchedule] ${error instanceof Error ? error.message : "Invalid event settings"} — skipping`);
-    return null;
-  }
+  const eventFields = regularEventFields(params);
   const ticketTypes = buildRegularClassTicketTypes(params.location);
 
   try {
@@ -651,18 +587,17 @@ export async function createLumaEventForSchedule(params: LumaScheduleParams): Pr
 
     if (!createRes.ok) {
       const err = await createRes.text();
-      console.error(`[LumaSchedule] Create event failed: ${createRes.status} ${err}`);
-      return null;
+      const detail = err.replace(/\s+/g, " ").trim().slice(0, 300);
+      throw new Error(`Luma event creation failed (${createRes.status})${detail ? `: ${detail}` : ""}`);
     }
 
     const createData = (await createRes.json()) as { id: string };
     const lumaEventId = createData.id;
+    if (!lumaEventId) throw new Error("Luma event creation did not return an event ID.");
 
-    // 2. Fetch the slug-based URL and independently verify that the created
-    // event has not become private, cancelled, hidden, closed, or sold out
-    // before any automatic invitations are considered.
+    // Fetch the canonical event URL after creation. Class creation must not
+    // send any calendar invitation; invitations remain an explicit owner action.
     let lumaEventUrl = `https://lu.ma/${lumaEventId}`;
-    let invitationEligibilityVerified = false;
     try {
       const getRes = await fetch(`${LUMA_BASE}/events/get?event_id=${lumaEventId}`, {
         headers: { "x-luma-api-key": apiKey },
@@ -672,22 +607,16 @@ export async function createLumaEventForSchedule(params: LumaScheduleParams): Pr
       const event = eventRecord(eventData);
       const verifiedUrl = firstNonEmptyString(event.url, eventData.url);
       if (verifiedUrl) lumaEventUrl = verifiedUrl;
-      invitationEligibilityVerified = isEligibleCreatedLumaEventForInvites(eventData);
-      if (!invitationEligibilityVerified) {
-        console.warn("[LumaSchedule] New Luma event is not publicly eligible for automatic invitations; no invitations submitted.");
-      }
     } catch (verificationError) {
       const detail = verificationError instanceof Error ? verificationError.message : "unknown event-verification error";
-      await reportLumaInvitationIssue(`Automatic invitations were skipped because the new Luma event could not be verified: ${detail}`);
+      console.warn(`[LumaSchedule] Created event ${lumaEventId}, but could not verify its canonical URL: ${detail}`);
     }
 
     console.log(`[LumaSchedule] Created Luma event: ${lumaEventUrl} (${eventFields.name})`);
-    if (invitationEligibilityVerified) {
-      await inviteCalendarContactsToCreatedClass(apiKey, lumaEventId, lumaEventUrl, params);
-    }
     return { lumaEventId, lumaEventUrl, created: true };
   } catch (err) {
-    console.error("[LumaSchedule] Unexpected error:", err);
-    return null;
+    const message = err instanceof Error ? err.message : "Unknown Luma event creation error";
+    console.error("[LumaSchedule] Public event creation failed:", message);
+    throw new Error(message);
   }
 }

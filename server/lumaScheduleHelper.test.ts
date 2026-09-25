@@ -67,14 +67,12 @@ describe("regular class Luma event defaults", () => {
     ]);
   });
 
-  it("sends the required registration, appearance, paid-ticket, and empty-audience settings to Luma on creation", async () => {
+  it("sends the required registration, appearance, and paid-ticket settings to Luma on creation without outreach", async () => {
     process.env.LUMA_API_KEY = "test-key";
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [] }) })
       .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "evt_test" }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ url: "https://luma.com/test-event", visibility: "public", registration_open: true }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [] }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [] }) });
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ url: "https://luma.com/test-event", visibility: "public", registration_open: true }) });
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(createLumaEventForSchedule({
@@ -90,7 +88,7 @@ describe("regular class Luma event defaults", () => {
       created: true,
     });
 
-    expect(fetchMock).toHaveBeenCalledTimes(5);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(String(fetchMock.mock.calls[0][0])).toContain("/calendar/list-events");
     const createPayload = JSON.parse(fetchMock.mock.calls[1][1].body as string);
     expect(createPayload).toMatchObject(REGULAR_CLASS_LUMA_EVENT_DEFAULTS);
@@ -98,7 +96,42 @@ describe("regular class Luma event defaults", () => {
     expect(createPayload.ticket_types.some((ticket: { name: string }) => ticket.name === "Standard")).toBe(false);
     expect(createPayload.start_at).toBe("2026-11-14T10:00:00-05:00");
     expect(createPayload.end_at).toBe("2026-11-14T14:30:00-05:00");
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/calendars/contacts/list"))).toBe(false);
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/events/guests/list"))).toBe(false);
     expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/events/guests/send-invites"))).toBe(false);
+  });
+
+  it("returns the Luma API rejection detail instead of masking a breeder-confirmation failure", async () => {
+    process.env.LUMA_API_KEY = "test-key";
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [] }) })
+      .mockResolvedValueOnce({ ok: false, status: 422, text: async () => "start_at is invalid" });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(createLumaEventForSchedule({
+      classDate: "2026-10-03",
+      location: "Kitchener",
+      breed: "German Shepherds",
+      startTime: "09:00",
+      endTime: "15:00",
+      classType: "regular",
+    })).rejects.toThrow("Luma event creation failed (422): start_at is invalid");
+  });
+
+  it("reports a missing Luma connection before any class is confirmed", async () => {
+    delete process.env.LUMA_API_KEY;
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(createLumaEventForSchedule({
+      classDate: "2026-10-03",
+      location: "Kitchener",
+      breed: "German Shepherds",
+      startTime: "09:00",
+      endTime: "15:00",
+      classType: "regular",
+    })).rejects.toThrow("Luma connection is not configured");
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("never creates a public regular-class page for a private event", async () => {
@@ -150,77 +183,22 @@ describe("automatic Luma class invitations", () => {
     expect(buildLumaClassInviteMessage({ ...params, eventUrl: tooLongUrl })).toBeNull();
   });
 
-  it("uses the owner-approved full calendar audience while excluding registered guests and duplicate addresses", async () => {
+  it("never automatically invites the calendar audience after a new event is created", async () => {
     process.env.LUMA_API_KEY = "test-key";
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [] }) })
       .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "evt_invite" }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ url: "https://lu.ma/apy-class", visibility: "public", registration_open: true }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({
-        entries: [
-          { email: "  MEMBER@example.com  ", name: "Member One" },
-          { contact: { email: "member@example.com", name: "Duplicate Member" } },
-          { email: "registered@example.com", name: "Already Going" },
-          { email: "new@example.com", first_name: "New", last_name: "Guest" },
-        ],
-      }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [{ guest: { email: "REGISTERED@example.com" } }] }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({}) });
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ url: "https://lu.ma/apy-class", visibility: "public", registration_open: true }) });
     vi.stubGlobal("fetch", fetchMock);
 
     await createLumaEventForSchedule(params);
 
-    const inviteCall = fetchMock.mock.calls.find(([url]) => String(url).includes("/events/guests/send-invites"));
-    expect(inviteCall).toBeDefined();
-    const invitePayload = JSON.parse(inviteCall?.[1].body as string);
-    expect(invitePayload).toMatchObject({ event_id: "evt_invite" });
-    expect(invitePayload.guests).toEqual([
-      { email: "member@example.com", name: "Member One" },
-      { email: "new@example.com", name: "New Guest" },
-    ]);
-    expect(invitePayload.message).toContain("https://lu.ma/apy-class");
-    expect(invitePayload.message.length).toBeLessThanOrEqual(200);
-  });
-
-  it("reads all paginated audiences before the single invitation submission", async () => {
-    process.env.LUMA_API_KEY = "test-key";
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [] }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "evt_paged" }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ url: "https://lu.ma/paged", visibility: "public", registration_open: true }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [{ email: "first@example.com" }], has_more: true, next_cursor: "contacts-next" }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [], has_more: true, next_cursor: "guests-next" }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [{ email: "second@example.com" }] }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [] }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({}) });
-    vi.stubGlobal("fetch", fetchMock);
-
-    await createLumaEventForSchedule(params);
-
-    expect(String(fetchMock.mock.calls[5][0])).toContain("pagination_cursor=contacts-next");
-    expect(String(fetchMock.mock.calls[6][0])).toContain("pagination_cursor=guests-next");
-    const inviteCall = fetchMock.mock.calls.find(([url]) => String(url).includes("/events/guests/send-invites"));
-    const invitePayload = JSON.parse(inviteCall?.[1].body as string);
-    expect(invitePayload.guests.map((guest: { email: string }) => guest.email)).toEqual(["first@example.com", "second@example.com"]);
-  });
-
-  it("does not send when a calendar-contact or guest audit fails", async () => {
-    process.env.LUMA_API_KEY = "test-key";
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [] }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: "evt_audit_failure" }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ url: "https://lu.ma/audit-failure", visibility: "public", registration_open: true }) })
-      .mockResolvedValueOnce({ ok: false, status: 503 })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ entries: [] }) })
-      .mockResolvedValue({ ok: true, json: async () => ({}) });
-    vi.stubGlobal("fetch", fetchMock);
-
-    await createLumaEventForSchedule(params);
-
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/calendars/contacts/list"))).toBe(false);
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/events/guests/list"))).toBe(false);
     expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/events/guests/send-invites"))).toBe(false);
   });
 
-  it("does not invite from a new event that verification marks as private, hidden, cancelled, closed, or sold out", () => {
+  it("keeps the manual invitation eligibility guard for separately-confirmed sends", () => {
     expect(isEligibleCreatedLumaEventForInvites({ visibility: "private" })).toBe(false);
     expect(isEligibleCreatedLumaEventForInvites({ visibility: "hidden" })).toBe(false);
     expect(isEligibleCreatedLumaEventForInvites({ cancelled_at: "2026-11-01T12:00:00Z" })).toBe(false);

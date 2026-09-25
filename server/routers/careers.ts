@@ -55,7 +55,7 @@ export const onboardingInputSchema = z.object({
     });
   }
 });
-import { archiveJobApplicationIfUnclaimed, claimInitialOnboardingDelivery, completeClaimedOnboardingDelivery, createJobApplication, deleteJobApplication, getAllJobApplications, releaseInitialOnboardingDeliveryClaim, updateJobApplication, updateJobApplicationStatusIfUnclaimed, getArchivedJobApplications, restoreJobApplication, permanentlyDeleteJobApplication, getRecentDuplicateJobApplication, getJobApplicationById, getDb } from "../db";
+import { archiveJobApplicationIfUnclaimed, claimInitialOnboardingDelivery, completeClaimedOnboardingDocumentDelivery, createJobApplication, deleteJobApplication, getAllJobApplications, releaseInitialOnboardingDeliveryClaim, updateJobApplication, updateJobApplicationStatusIfUnclaimed, getArchivedJobApplications, restoreJobApplication, permanentlyDeleteJobApplication, getRecentDuplicateJobApplication, getJobApplicationById, getDb } from "../db";
 import { notifyOwner } from "../_core/notification";
 import {
   sendEmail,
@@ -84,11 +84,11 @@ export function assertInitialOnboardingStatus(status: string) {
   }
 }
 
-export function assertOnboardingResendStatus(status: string) {
-  if (status !== "onboarded") {
+export function assertOnboardingResendStatus(input: { status: string; onboardingSentAt: Date | null }) {
+  if ((input.status !== "accepted" && input.status !== "onboarded") || !input.onboardingSentAt) {
     throw new TRPCError({
       code: "CONFLICT",
-      message: "Resend onboarding is available only after the initial onboarding email is sent.",
+      message: "Resend onboarding is available only after onboarding documents have been sent.",
     });
   }
 }
@@ -350,6 +350,18 @@ export const careersRouter = router({
     .mutation(async ({ input, ctx }) => {
       const applicant = await requireApplicant(input.id);
       assertNoPendingOnboardingClaim(applicant);
+      if (input.status === "onboarded") {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "Use “Mark Onboarded and Add to Employee Directory” after the signed offer/NDA and onboarding-document delivery are confirmed.",
+        });
+      }
+      if (applicant.status === "onboarded") {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "An onboarded applicant cannot be moved through the general status selector. Review their Employee Directory record instead.",
+        });
+      }
       const transitioned = await updateJobApplicationStatusIfUnclaimed(input.id, input.status as AppStatus);
       if (!transitioned) {
         throw new TRPCError({ code: "CONFLICT", message: "Onboarding delivery started before this status change completed. Refresh and resolve it first." });
@@ -516,9 +528,9 @@ export const careersRouter = router({
         });
       }
 
-      // Onboarding advances the hiring state only if the application is still
-      // Accepted. APY HQ membership remains a separate explicit action.
-      const completed = await completeClaimedOnboardingDelivery(input.id, claimed);
+      // Document delivery leaves the applicant Accepted. Employment onboarding
+      // and Employee Directory transfer are one separate, deliberate action.
+      const completed = await completeClaimedOnboardingDocumentDelivery(input.id, claimed);
       if (!completed) {
         console.error(`[Onboarding] Email provider accepted the send, but application ${input.id} changed before onboarding completion.`);
         throw new TRPCError({
@@ -526,14 +538,14 @@ export const careersRouter = router({
           message: "The email provider accepted the send, but this application changed before completion. Review its history before taking another action.",
         });
       }
-      console.log(`[Onboarding] Status updated to onboarded for application ${input.id}; APY HQ membership remains manual.`);
+      console.log(`[Onboarding] Documents marked sent for application ${input.id}; applicant remains Accepted.`);
 
       await recordHiringAction({
         ctx,
         applicationId: input.id,
-        action: "onboarding_sent",
+        action: "onboarding_documents_sent",
         fromStatus: applicant.status,
-        toStatus: "onboarded",
+        toStatus: "accepted",
         details: {
           orientationDate: input.orientationDate,
           orientationTime: input.orientationTime,
@@ -544,8 +556,8 @@ export const careersRouter = router({
 
       try {
         await notifyOwner({
-          title: `Onboarding Email Sent — ${applicant.name}`,
-          content: `Onboarding email sent to ${applicant.name} (${applicant.email}) for ${applicant.role} (${applicant.location}). Add them to APY HQ separately if operational access is required.`,
+          title: `Onboarding Documents Sent — ${applicant.name}`,
+          content: `Onboarding documents were sent to ${applicant.name} (${applicant.email}) for ${applicant.role} (${applicant.location}). Keep the application Accepted until the offer/NDA signature is confirmed, then use Mark Onboarded and Add to Employee Directory. APY HQ access remains separate.`,
         });
       } catch (error) {
         console.error(`[Onboarding] Email delivered but owner notification failed for application ${input.id}:`, error);
@@ -575,7 +587,7 @@ export const careersRouter = router({
       }
 
       if (input.outcome === "delivered") {
-        const completed = await completeClaimedOnboardingDelivery(input.id, applicant.onboardingDeliveryToken);
+        const completed = await completeClaimedOnboardingDocumentDelivery(input.id, applicant.onboardingDeliveryToken);
         if (!completed) {
           throw new TRPCError({
             code: "CONFLICT",
@@ -585,12 +597,12 @@ export const careersRouter = router({
         await recordHiringAction({
           ctx,
           applicationId: input.id,
-          action: "onboarding_reconciled_delivered",
+          action: "onboarding_documents_reconciled_delivered",
           fromStatus: "accepted",
-          toStatus: "onboarded",
+          toStatus: "accepted",
           details: { reconciliation: "staff_confirmed_provider_accepted" },
         });
-        return { success: true, status: "onboarded" as const };
+        return { success: true, status: "accepted" as const };
       }
 
       const released = await releaseInitialOnboardingDeliveryClaim(input.id, applicant.onboardingDeliveryToken);
@@ -612,13 +624,13 @@ export const careersRouter = router({
     }),
 
   /**
-   * Staff: resend onboarding email to an already-onboarded applicant (no status change)
+   * Staff: resend onboarding documents after an initial documented delivery.
    */
   resendOnboardingEmail: staffProcedure
     .input(onboardingInputSchema)
     .mutation(async ({ input, ctx }) => {
       const applicant = await requireApplicant(input.id);
-      assertOnboardingResendStatus(applicant.status);
+      assertOnboardingResendStatus({ status: applicant.status, onboardingSentAt: applicant.onboardingSentAt });
       const isYogaInstructor = applicant.role.toLowerCase().includes("yoga instructor") || applicant.role.toLowerCase().includes("instructor");
       const { subject, html, text } = isYogaInstructor
         ? buildYogaInstructorOnboardingEmail({

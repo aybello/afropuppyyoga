@@ -417,7 +417,7 @@ function OnboardingEmailModal({
 
   const sendOnboarding = trpc.careers.sendOnboardingEmail.useMutation({
     onSuccess: () => {
-      toast.success(`Onboarding email sent to ${app.email}! 🎉`);
+      toast.success(`Onboarding documents sent to ${app.email}. The applicant remains Accepted.`);
       utils.careers.list.invalidate();
       utils.careers.getTimeline.invalidate({ id: app.id });
       onClose();
@@ -433,7 +433,7 @@ function OnboardingEmailModal({
   });
   const resendOnboarding = trpc.careers.resendOnboardingEmail.useMutation({
     onSuccess: () => {
-      toast.success(`Onboarding email resent to ${app.email}! 📬`);
+      toast.success(`Onboarding documents resent to ${app.email}.`);
       utils.careers.list.invalidate();
       utils.careers.getTimeline.invalidate({ id: app.id });
       onClose();
@@ -469,7 +469,7 @@ function OnboardingEmailModal({
       <DialogContent className="max-w-lg bg-[#FEFAF4] border-[#F0D0DC] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display text-xl text-[#1A0A12]">
-            🐾 {isResend ? "Resend Onboarding Email" : "Send Onboarding Email"}
+            🐾 {isResend ? "Resend Onboarding Documents" : "Send Onboarding Documents"}
           </DialogTitle>
           <DialogDescription className="font-body text-sm text-[#1A0A12]">
             Sending to <strong>{app.name}</strong> ({app.email}) for <strong>{app.role}</strong> — {app.location}
@@ -550,7 +550,7 @@ function OnboardingEmailModal({
             {!documents.length && <p className="font-body text-xs text-[#8B6070]">No extra documents will be included unless you add them here.</p>}
           </div>
 
-          <p className="font-body text-xs text-[#8B6070]">Offer Letter and NDA signing remain in the separate <strong>Send Offer Letter</strong> step. This email delivers the post-acceptance onboarding information and resources.</p>
+          <p className="font-body text-xs text-[#8B6070]">Offer Letter and NDA signing remain in the separate <strong>Send Offer Letter</strong> step. This email delivers the post-acceptance onboarding information and resources. The applicant remains Accepted until both steps are complete and staff select <strong>Mark Onboarded & Add to Directory</strong>.</p>
 
           <div>
             <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Additional Notes (optional)</Label>
@@ -561,7 +561,7 @@ function OnboardingEmailModal({
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onClose} className="font-body border-[#F0D0DC]">Cancel</Button>
           <Button onClick={handleSend} disabled={isSending} className="font-body text-white" style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}>
-            {isSending ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Sending...</> : <><PartyPopper className="w-4 h-4 mr-2" /> {isResend ? "Resend Onboarding Email" : "Send Onboarding Email"}</>}
+            {isSending ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Sending...</> : <><PartyPopper className="w-4 h-4 mr-2" /> {isResend ? "Resend Onboarding Documents" : "Send Onboarding Documents"}</>}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -672,17 +672,19 @@ function ApplicationDetailModal({
     { enabled: open },
   );
 
-  const addToEmployeeDirectory = trpc.staffAvailability.addOnboardedApplicantToEmployeeDirectory.useMutation({
+  const addToEmployeeDirectory = trpc.staffAvailability.markOnboardedAndAddToEmployeeDirectory.useMutation({
     onSuccess: () => {
-      toast.success(`${app.name} was added to the Employee Directory`);
+      toast.success(`${app.name} is now onboarded and was added to the Employee Directory. APY HQ access remains off.`);
+      utils.careers.list.invalidate();
       utils.careers.getTimeline.invalidate({ id: app.id });
+      onClose();
     },
     onError: (err) => toast.error(err.message),
   });
 
   const reconcileOnboarding = trpc.careers.reconcileOnboardingDelivery.useMutation({
     onSuccess: (result) => {
-      toast.success(result.status === "onboarded" ? `${app.name} is marked onboarded. No additional email was sent.` : "The pending onboarding send was reopened. No email was sent.");
+      toast.success(result.status === "accepted" ? "Onboarding documents were recorded as delivered. The applicant remains Accepted." : "The pending onboarding send was reopened. No email was sent.");
       utils.careers.list.invalidate();
       utils.careers.getTimeline.invalidate({ id: app.id });
       setShowOnboardingReconciliation(false);
@@ -855,13 +857,13 @@ function ApplicationDetailModal({
                 >
                   <XCircle className="w-4 h-4 mr-2" /> Send Rejection
                 </Button>
-                {app.status === "accepted" && !app.onboardingDeliveryToken && (
+                {app.status === "accepted" && !app.onboardingSentAt && !app.onboardingDeliveryToken && (
                   <Button
                     onClick={() => { onClose(); setShowOnboardingModal(true); }}
                     className="font-body text-sm text-white"
                     style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}
                   >
-                    <PartyPopper className="w-4 h-4 mr-2" /> Send Onboarding Email
+                    <PartyPopper className="w-4 h-4 mr-2" /> Send Onboarding Documents
                   </Button>
                 )}
                 {app.status === "accepted" && app.onboardingDeliveryToken && (
@@ -873,16 +875,16 @@ function ApplicationDetailModal({
                     <Mail className="w-4 h-4 mr-2" /> Resolve Pending Onboarding
                   </Button>
                 )}
-                {app.status === "onboarded" && (
+                {app.status === "accepted" && Boolean(app.onboardingSentAt) && !app.onboardingDeliveryToken && (
                   <Button
                     onClick={() => { onClose(); setShowOnboardingModal(true); }}
                     variant="outline"
                     className="font-body text-sm border-teal-300 text-teal-700 hover:bg-teal-50"
                   >
-                    <><Send className="w-4 h-4 mr-2" /> Resend Onboarding Email</>
+                    <><Send className="w-4 h-4 mr-2" /> Resend Onboarding Documents</>
                   </Button>
                 )}
-                {app.status === "onboarded" && (
+                {app.status === "accepted" && Boolean(app.onboardingSentAt) && app.signingStatus === "signed" && !app.onboardingDeliveryToken && (
                   <Button
                     onClick={() => addToEmployeeDirectory.mutate({ applicationId: app.id })}
                     disabled={addToEmployeeDirectory.isPending}
@@ -892,7 +894,7 @@ function ApplicationDetailModal({
                     {addToEmployeeDirectory.isPending ? (
                       <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Adding…</>
                     ) : (
-                      <><UserPlus className="w-4 h-4 mr-2" /> Add to Employee Directory</>
+                      <><UserPlus className="w-4 h-4 mr-2" /> Mark Onboarded & Add to Directory</>
                     )}
                   </Button>
                 )}
@@ -912,7 +914,7 @@ function ApplicationDetailModal({
         <RejectionLetterModal app={app} open={showRejectionModal} onClose={() => setShowRejectionModal(false)} />
       )}
       {showOnboardingModal && (
-        <OnboardingEmailModal app={app} open={showOnboardingModal} isResend={app.status === "onboarded"} onClose={() => setShowOnboardingModal(false)} />
+        <OnboardingEmailModal app={app} open={showOnboardingModal} isResend={Boolean(app.onboardingSentAt)} onClose={() => setShowOnboardingModal(false)} />
       )}
       <AlertDialog open={showOnboardingReconciliation} onOpenChange={setShowOnboardingReconciliation}>
         <AlertDialogContent className="bg-[#FEFAF4] border-[#F0D0DC]">
@@ -1019,10 +1021,10 @@ export default function ApplicationsDashboard() {
     onSuccess: () => utils.careers.list.invalidate(),
     onError: (err) => toast.error(`Error updating status: ${err.message}`),
   });
-  const addToEmployeeDirectory = trpc.staffAvailability.addOnboardedApplicantToEmployeeDirectory.useMutation({
+  const addToEmployeeDirectory = trpc.staffAvailability.markOnboardedAndAddToEmployeeDirectory.useMutation({
     onSuccess: (_result, variables) => {
       const applicant = applications?.find((item) => item.id === variables.applicationId);
-      toast.success(`${applicant?.name ?? "Applicant"} was added to the Employee Directory`);
+      toast.success(`${applicant?.name ?? "Applicant"} is now onboarded and was added to the Employee Directory. APY HQ access remains off.`);
       utils.careers.list.invalidate();
     },
     onError: (err) => toast.error(err.message),
@@ -1315,7 +1317,6 @@ export default function ApplicationsDashboard() {
                             <SelectItem value="interview_scheduled">Interview Scheduled</SelectItem>
                             <SelectItem value="accepted">Accepted</SelectItem>
                             <SelectItem value="rejected">Rejected</SelectItem>
-                            <SelectItem value="onboarded">Onboarded</SelectItem>
                           </SelectContent>
                         </Select>
                         {app.signingStatus && (
@@ -1345,23 +1346,23 @@ export default function ApplicationsDashboard() {
                               <CheckCircle className="w-3 h-3" /> Offer
                             </button>
                           )}
-                          {app.status === "accepted" && !app.onboardingDeliveryToken && (
+                          {app.status === "accepted" && !app.onboardingSentAt && !app.onboardingDeliveryToken && (
                             <button
                               onClick={() => { setSelectedApp(app as Application); setShowOnboardingModal(true); }}
                               className="inline-flex items-center gap-1 px-3 py-1.5 bg-pink-50 border border-pink-200 rounded-lg font-body text-xs font-semibold text-pink-700 hover:bg-pink-100 transition-colors"
                               title="Send onboarding email"
                             >
-                              <PartyPopper className="w-3 h-3" /> Onboard
+                              <PartyPopper className="w-3 h-3" /> Documents
                             </button>
                           )}
-                          {app.status === "onboarded" && (
+                          {app.status === "accepted" && Boolean(app.onboardingSentAt) && app.signingStatus === "signed" && !app.onboardingDeliveryToken && (
                             <button
                               onClick={() => addToEmployeeDirectory.mutate({ applicationId: app.id })}
                               disabled={addToEmployeeDirectory.isPending}
                               className="inline-flex items-center gap-1 px-3 py-1.5 bg-teal-50 border border-teal-200 rounded-lg font-body text-xs font-semibold text-teal-700 hover:bg-teal-100 transition-colors disabled:opacity-50"
-                              title="Add this onboarded applicant to the Employee Directory"
+                              title="Mark this signed applicant onboarded and add them to the Employee Directory without granting APY HQ access"
                             >
-                              {addToEmployeeDirectory.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserPlus className="w-3 h-3" />} Directory
+                              {addToEmployeeDirectory.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserPlus className="w-3 h-3" />} Onboard
                             </button>
                           )}
                           <button

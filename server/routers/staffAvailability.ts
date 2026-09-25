@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { adminProcedure, staffProcedure, router } from "../_core/trpc";
 import { getDb, getUserByOpenId, upsertUser } from "../db";
-import { classStaffAssignments, employees, jobApplicationActions, jobApplications, staffAvailability, staffInvites, weekendLeadershipCoverage } from "../../drizzle/schema";
+import { classStaffAssignments, employees, jobApplicationActions, jobApplications, signingTokens, staffAvailability, staffInvites, weekendLeadershipCoverage } from "../../drizzle/schema";
 import { and, asc, desc, eq, gte, inArray, isNull, isNotNull } from "drizzle-orm";
 import { getUpcomingWeekendDates, isAwayOnDate, isWeekendDate } from "../weekendCoverage";
 import { isActiveTeamMember } from "../teamMembership";
@@ -144,9 +144,15 @@ export function getFormerEmployeeDeletionEligibility(input: { employmentStatus: 
   return { eligible: true as const };
 }
 
-export function getOnboardedApplicantDirectoryEligibility(input: { status: string; existingEmployee: boolean }) {
-  if (input.status !== "onboarded") {
-    return { eligible: false as const, reason: "Only onboarding-complete applicants can be added to the Employee Directory." };
+export function getOnboardedApplicantDirectoryEligibility(input: { status: string; onboardingSentAt: Date | null; signingComplete: boolean; existingEmployee: boolean }) {
+  if (input.status !== "accepted") {
+    return { eligible: false as const, reason: "Only Accepted applicants can complete onboarding into the Employee Directory." };
+  }
+  if (!input.onboardingSentAt) {
+    return { eligible: false as const, reason: "Send the onboarding documents before marking this applicant onboarded." };
+  }
+  if (!input.signingComplete) {
+    return { eligible: false as const, reason: "Wait for the applicant to sign their Offer Letter and NDA before marking them onboarded." };
   }
   if (input.existingEmployee) {
     return { eligible: false as const, reason: "This applicant already has an Employee Directory record." };
@@ -465,8 +471,9 @@ export const staffAvailabilityRouter = router({
       return { success: true, id: employeeId, grantsApyHqAccess: true };
     }),
 
-  // Add an onboarding-complete applicant to the directory and deliberately activate their APY HQ profile.
-  addOnboardedApplicantToEmployeeDirectory: adminProcedure
+  // Complete employment onboarding by adding the verified applicant to the
+  // Employee Directory. APY HQ and staff-login access remain a separate action.
+  markOnboardedAndAddToEmployeeDirectory: adminProcedure
     .input(z.object({ applicationId: z.number().int().positive() }))
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
@@ -479,14 +486,21 @@ export const staffAvailabilityRouter = router({
         role: jobApplications.role,
         location: jobApplications.location,
         status: jobApplications.status,
+        onboardingSentAt: jobApplications.onboardingSentAt,
         deletedAt: jobApplications.deletedAt,
       }).from(jobApplications).where(eq(jobApplications.id, input.applicationId)).limit(1);
       if (!applicant || applicant.deletedAt) throw new Error("This application is no longer available.");
 
       const [existingForApplication] = await db.select({ id: employees.id }).from(employees)
         .where(eq(employees.sourceApplicationId, applicant.id)).limit(1);
+      const [signedAgreement] = await db.select({ id: signingTokens.id }).from(signingTokens)
+        .where(and(eq(signingTokens.applicationId, applicant.id), eq(signingTokens.signed, 1)))
+        .orderBy(desc(signingTokens.signedAt))
+        .limit(1);
       const eligibility = getOnboardedApplicantDirectoryEligibility({
         status: applicant.status,
+        onboardingSentAt: applicant.onboardingSentAt,
+        signingComplete: Boolean(signedAgreement),
         existingEmployee: Boolean(existingForApplication),
       });
       if (!eligibility.eligible) throw new Error(eligibility.reason);
@@ -516,21 +530,18 @@ export const staffAvailabilityRouter = router({
         employmentStatus: "active" as const,
         endedAt: null,
       };
-      if (applicant.role === "Puppy Monitor") {
-        const [operationsManager] = await db.select({ id: jobApplications.id })
-          .from(jobApplications)
-          .where(and(
-            isNull(jobApplications.deletedAt),
-            eq(jobApplications.isTeamMember, true),
-            eq(jobApplications.role, "Operations Manager"),
-            eq(jobApplications.location, applicant.location),
-          ))
-          .limit(1);
-        if (!operationsManager) {
-          throw new Error("Add this location's Operations Manager to APY HQ before giving Puppy Monitors access.");
-        }
-      }
       const employeeId = await db.transaction(async (tx) => {
+        const [onboardingTransition] = await tx.update(jobApplications).set({ status: "onboarded", isTeamMember: false })
+          .where(and(
+            eq(jobApplications.id, applicant.id),
+            eq(jobApplications.status, "accepted"),
+            isNotNull(jobApplications.onboardingSentAt),
+            isNull(jobApplications.onboardingDeliveryToken),
+            isNull(jobApplications.deletedAt),
+          ));
+        if (onboardingTransition.affectedRows !== 1) {
+          throw new Error("This applicant changed before employment onboarding could be completed. Reload and confirm the current status.");
+        }
         if (matchingEmployee) {
           await tx.update(employees).set(directoryValues).where(eq(employees.id, matchingEmployee.id));
         } else {
@@ -542,18 +553,16 @@ export const staffAvailabilityRouter = router({
         await tx.insert(jobApplicationActions).values({
           applicationId: applicant.id,
           action: matchingEmployee ? "employee_directory_linked" : "employee_directory_added",
-          fromStatus: applicant.status,
-          toStatus: applicant.status,
+          fromStatus: "accepted",
+          toStatus: "onboarded",
           actorUserId: ctx.user.id,
           actorName: ctx.user.name,
           actorEmail: ctx.user.email,
-          details: JSON.stringify({ createsApyHqMembership: true, grantsPortalAccess: true }),
+          details: JSON.stringify({ employmentOnboarded: true, grantsApyHqAccess: false, grantsPortalAccess: false }),
         });
-        await tx.update(jobApplications).set({ isTeamMember: true, deletedAt: null })
-          .where(eq(jobApplications.id, applicant.id));
         return directoryEmployee.id;
       });
-      return { success: true, id: employeeId, linkedExistingRecord: Boolean(matchingEmployee), grantsApyHqAccess: true };
+      return { success: true, id: employeeId, linkedExistingRecord: Boolean(matchingEmployee), grantsApyHqAccess: false };
     }),
 
   // Give an existing active directory employee a matching APY HQ profile when the owner explicitly provisions access.

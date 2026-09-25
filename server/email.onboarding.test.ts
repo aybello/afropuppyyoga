@@ -74,9 +74,11 @@ describe("onboarding workflow guards", () => {
     expect(() => assertInitialOnboardingStatus("interview_scheduled")).toThrow("only after the applicant is marked Accepted");
   });
 
-  it("permits resend only after onboarding", () => {
-    expect(() => assertOnboardingResendStatus("onboarded")).not.toThrow();
-    expect(() => assertOnboardingResendStatus("accepted")).toThrow("only after the initial onboarding email is sent");
+  it("permits resend after documents are delivered while the applicant remains Accepted", () => {
+    expect(() => assertOnboardingResendStatus({ status: "onboarded", onboardingSentAt: new Date() })).not.toThrow();
+    expect(() => assertOnboardingResendStatus({ status: "accepted", onboardingSentAt: new Date() })).not.toThrow();
+    expect(() => assertOnboardingResendStatus({ status: "accepted", onboardingSentAt: null })).toThrow("only after onboarding documents have been sent");
+    expect(() => assertOnboardingResendStatus({ status: "interview_scheduled", onboardingSentAt: new Date() })).toThrow("only after onboarding documents have been sent");
   });
 
   it("blocks conflicting status changes while an Accepted application has an active send claim", () => {

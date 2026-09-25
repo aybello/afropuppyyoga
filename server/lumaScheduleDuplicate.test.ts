@@ -75,14 +75,14 @@ describe("Luma schedule duplicate prevention", () => {
     }
   });
 
-  it("does not create a class when the live calendar duplicate check cannot be completed", async () => {
+  it("does not create a class and returns an actionable error when the live duplicate check cannot be completed", async () => {
     const originalApiKey = process.env.LUMA_API_KEY;
     process.env.LUMA_API_KEY = "test-key";
     const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 503 });
     vi.stubGlobal("fetch", fetchMock);
 
     try {
-      await expect(createLumaEventForSchedule(schedule)).resolves.toBeNull();
+      await expect(createLumaEventForSchedule(schedule)).rejects.toThrow("Luma calendar duplicate check failed (503)");
       expect(fetchMock).toHaveBeenCalledTimes(1);
       expect(String(fetchMock.mock.calls[0]?.[0])).toContain("/calendar/list-events");
     } finally {

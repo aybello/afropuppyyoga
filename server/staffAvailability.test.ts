@@ -157,13 +157,21 @@ describe("direct team-member validation", () => {
     expect(getDirectEmployeeContactEligibility({ hasEmployeeRecord: false, hasApplicantOrApyProfile: false })).toEqual({ eligible: true });
   });
 
-  it("permits only an onboarding-complete applicant without an existing directory record to be added", () => {
-    expect(getOnboardedApplicantDirectoryEligibility({ status: "onboarded", existingEmployee: false })).toEqual({ eligible: true });
-    expect(getOnboardedApplicantDirectoryEligibility({ status: "accepted", existingEmployee: false })).toEqual({
+  it("permits only a signed Accepted applicant with delivered onboarding documents to be added", () => {
+    expect(getOnboardedApplicantDirectoryEligibility({ status: "accepted", onboardingSentAt: new Date(), signingComplete: true, existingEmployee: false })).toEqual({ eligible: true });
+    expect(getOnboardedApplicantDirectoryEligibility({ status: "onboarded", onboardingSentAt: new Date(), signingComplete: true, existingEmployee: false })).toEqual({
       eligible: false,
-      reason: "Only onboarding-complete applicants can be added to the Employee Directory.",
+      reason: "Only Accepted applicants can complete onboarding into the Employee Directory.",
     });
-    expect(getOnboardedApplicantDirectoryEligibility({ status: "onboarded", existingEmployee: true })).toEqual({
+    expect(getOnboardedApplicantDirectoryEligibility({ status: "accepted", onboardingSentAt: null, signingComplete: true, existingEmployee: false })).toEqual({
+      eligible: false,
+      reason: "Send the onboarding documents before marking this applicant onboarded.",
+    });
+    expect(getOnboardedApplicantDirectoryEligibility({ status: "accepted", onboardingSentAt: new Date(), signingComplete: false, existingEmployee: false })).toEqual({
+      eligible: false,
+      reason: "Wait for the applicant to sign their Offer Letter and NDA before marking them onboarded.",
+    });
+    expect(getOnboardedApplicantDirectoryEligibility({ status: "accepted", onboardingSentAt: new Date(), signingComplete: true, existingEmployee: true })).toEqual({
       eligible: false,
       reason: "This applicant already has an Employee Directory record.",
     });
