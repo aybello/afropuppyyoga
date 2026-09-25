@@ -94,6 +94,21 @@ describe("regular class Luma event defaults", () => {
     expect(createPayload).toMatchObject(REGULAR_CLASS_LUMA_EVENT_DEFAULTS);
     expect(createPayload.ticket_types).toEqual(buildRegularClassTicketTypes("Kitchener"));
     expect(createPayload.ticket_types.some((ticket: { name: string }) => ticket.name === "Standard")).toBe(false);
+    expect(createPayload.registration_questions).toEqual([
+      expect.objectContaining({
+        id: "jry47jna",
+        label: "How did you hear about us?",
+        required: true,
+        question_type: "multi-select",
+      }),
+      expect.objectContaining({
+        id: "1oy5wt8g",
+        label: "Terms and Conditions",
+        required: true,
+        question_type: "terms",
+        terms: expect.objectContaining({ collect_signature: true }),
+      }),
+    ]);
     expect(createPayload.start_at).toBe("2026-11-14T10:00:00-05:00");
     expect(createPayload.end_at).toBe("2026-11-14T14:30:00-05:00");
     expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/calendars/contacts/list"))).toBe(false);

@@ -550,7 +550,7 @@ function OnboardingEmailModal({
             {!documents.length && <p className="font-body text-xs text-[#8B6070]">No extra documents will be included unless you add them here.</p>}
           </div>
 
-          <p className="font-body text-xs text-[#8B6070]">Offer Letter and NDA signing remain in the separate <strong>Send Offer Letter</strong> step. This email delivers the post-acceptance onboarding information and resources. The applicant remains Accepted until both steps are complete and staff select <strong>Mark Onboarded & Add to Directory</strong>.</p>
+          <p className="font-body text-xs text-[#8B6070]">Offer Letter and NDA signing remain in the separate <strong>Send Offer Letter</strong> step. This email delivers the post-acceptance onboarding information and resources. The applicant remains Accepted until both steps are complete and staff select <strong>Mark Onboarded & Add to Directory</strong>. The result will confirm any role-appropriate Staff Portal access.</p>
 
           <div>
             <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Additional Notes (optional)</Label>
@@ -673,8 +673,13 @@ function ApplicationDetailModal({
   );
 
   const addToEmployeeDirectory = trpc.staffAvailability.markOnboardedAndAddToEmployeeDirectory.useMutation({
-    onSuccess: () => {
-      toast.success(`${app.name} is now onboarded and was added to the Employee Directory. APY HQ access remains off.`);
+    onSuccess: (result) => {
+      const accessMessage = result.portalAccessLevel === "operations_manager"
+        ? "Staff Portal — Operations access granted."
+        : result.portalAccessLevel === "team_member"
+          ? "Staff Portal — Team access granted."
+          : "No Staff Portal access was granted for this role.";
+      toast.success(`${app.name} is now onboarded and was added to the Employee Directory. ${accessMessage}`);
       utils.careers.list.invalidate();
       utils.careers.getTimeline.invalidate({ id: app.id });
       onClose();
@@ -1022,9 +1027,14 @@ export default function ApplicationsDashboard() {
     onError: (err) => toast.error(`Error updating status: ${err.message}`),
   });
   const addToEmployeeDirectory = trpc.staffAvailability.markOnboardedAndAddToEmployeeDirectory.useMutation({
-    onSuccess: (_result, variables) => {
+    onSuccess: (result, variables) => {
       const applicant = applications?.find((item) => item.id === variables.applicationId);
-      toast.success(`${applicant?.name ?? "Applicant"} is now onboarded and was added to the Employee Directory. APY HQ access remains off.`);
+      const accessMessage = result.portalAccessLevel === "operations_manager"
+        ? "Staff Portal — Operations access granted."
+        : result.portalAccessLevel === "team_member"
+          ? "Staff Portal — Team access granted."
+          : "No Staff Portal access was granted for this role.";
+      toast.success(`${applicant?.name ?? "Applicant"} is now onboarded and was added to the Employee Directory. ${accessMessage}`);
       utils.careers.list.invalidate();
     },
     onError: (err) => toast.error(err.message),

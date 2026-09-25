@@ -559,18 +559,6 @@ export async function createLumaEventForSchedule(params: LumaScheduleParams): Pr
             options: ["Instagram", "Facebook", "Poster", "Word of Mouth"],
           },
           {
-            id: "kbrpflwx",
-            label: "We\u2019re thinking of creating a cute APY keepsake. Which one would you love more?",
-            required: true,
-            question_type: "dropdown",
-            options: [
-              "A puppy yoga coloring book",
-              "A jigsaw puzzle with our cutest puppies",
-              "I\u2019d actually love both \ud83d\ude2d",
-              "Not for me, but sounds cute!",
-            ],
-          },
-          {
             id: "1oy5wt8g",
             label: "Terms and Conditions",
             required: true,

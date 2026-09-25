@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { directEmployeeSchema, directTeamMemberSchema, employeeRecordUpdateSchema, getAutomaticEmployeeAccessPlan, getDirectEmployeeContactEligibility, getEmployeeDepartureUpdate, getEmployeeEmploymentReactivationEligibility, getEmployeeReactivationUpdate, getExistingEmployeeAccessProvisioningEligibility, getFormerEmployeeDeletionEligibility, getLegacyEmployeeProfileLinkEligibility, getOnboardedApplicantDirectoryEligibility, getTeamRemovalUpdate, hasActiveApyHqAccess, hasMatchingActiveTeamContact, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateEmployeeDirectoryAssignmentChange, validateTeamAssignmentChange } from "./routers/staffAvailability";
+import { directEmployeeSchema, directTeamMemberSchema, employeeRecordUpdateSchema, getApprovedNewHirePortalAccessPlan, getDirectEmployeeContactEligibility, getEmployeeDepartureUpdate, getEmployeeEmploymentReactivationEligibility, getEmployeeReactivationUpdate, getExistingEmployeeAccessProvisioningEligibility, getFormerEmployeeDeletionEligibility, getLegacyEmployeeProfileLinkEligibility, getOnboardedApplicantContactMatchEligibility, getOnboardedApplicantDirectoryEligibility, getOperationsManagerDepartureEligibility, getTeamRemovalUpdate, hasActiveApyHqAccess, hasActiveOperationsManagerAtLocation, hasMatchingActiveTeamContact, hasSameOnboardingAssignment, isPuppyMonitorRole, teamMemberActivitySchema, teamMemberProfileUpdateSchema, validateEmployeeDirectoryAssignmentChange, validateTeamAssignmentChange } from "./routers/staffAvailability";
 
 describe("direct team-member validation", () => {
   it("identifies whether a linked employee is eligible for APY HQ phone access", () => {
@@ -64,12 +64,81 @@ describe("direct team-member validation", () => {
       startedAt: "2026-09-03",
     });
 
-    expect(getAutomaticEmployeeAccessPlan(employee)).toEqual({
+    expect(getApprovedNewHirePortalAccessPlan(employee)).toEqual({
       employmentStatus: "active",
       applicationStatus: "onboarded",
       isTeamMember: true,
       grantsApyHqAccess: true,
+      grantsPortalAccess: true,
+      portalAccessLevel: "team_member",
     });
+  });
+
+  it("grants role-based portal access only to approved APY employee roles", () => {
+    expect(getApprovedNewHirePortalAccessPlan({ role: "Operations Manager" })).toMatchObject({
+      isTeamMember: true,
+      grantsApyHqAccess: true,
+      grantsPortalAccess: true,
+      portalAccessLevel: "operations_manager",
+    });
+    for (const role of ["Yoga Instructor", "Puppy Monitor", "Puppy Specialist", "BDR", "Social Media Specialist"]) {
+      expect(getApprovedNewHirePortalAccessPlan({ role })).toMatchObject({
+        isTeamMember: true,
+        grantsApyHqAccess: true,
+        grantsPortalAccess: true,
+        portalAccessLevel: "team_member",
+      });
+    }
+    expect(getApprovedNewHirePortalAccessPlan({ role: "Volunteer" })).toMatchObject({
+      isTeamMember: false,
+      grantsApyHqAccess: false,
+      grantsPortalAccess: false,
+      portalAccessLevel: "none",
+    });
+  });
+
+  it("uses active Employee Directory coverage for Puppy Monitor onboarding", () => {
+    const activeSameLocationManager = [{ role: "operations_manager", location: "KW", employmentStatus: "active", endedAt: null }];
+    expect(hasActiveOperationsManagerAtLocation(activeSameLocationManager, "KW")).toBe(true);
+    expect(hasActiveOperationsManagerAtLocation(activeSameLocationManager, "OAK")).toBe(false);
+    expect(hasActiveOperationsManagerAtLocation([{ role: "Operations Manager", location: "KW", employmentStatus: "inactive", endedAt: null }], "KW")).toBe(false);
+    expect(hasActiveOperationsManagerAtLocation([{ role: "Operations Manager", location: "KW", employmentStatus: "active", endedAt: new Date() }], "KW")).toBe(false);
+    expect(isPuppyMonitorRole("puppy_monitor")).toBe(true);
+  });
+
+  it("does not allow the sole active Operations Manager to depart while Puppy Monitors remain", () => {
+    expect(getOperationsManagerDepartureEligibility({
+      employeeId: 1,
+      employeeRole: "Operations Manager",
+      activeLocationEmployees: [
+        { id: 1, role: "Operations Manager" },
+        { id: 2, role: "Puppy Monitor" },
+      ],
+    })).toMatchObject({ eligible: false });
+    expect(getOperationsManagerDepartureEligibility({
+      employeeId: 1,
+      employeeRole: "Operations Manager",
+      activeLocationEmployees: [
+        { id: 1, role: "Operations Manager" },
+        { id: 2, role: "operations_manager" },
+        { id: 3, role: "Puppy Monitor" },
+      ],
+    })).toEqual({ eligible: true });
+  });
+
+  it("rejects a transfer when the applicant assignment changed after the dashboard read", () => {
+    expect(hasSameOnboardingAssignment(
+      { role: "Puppy Monitor", location: "KW" },
+      { role: "Puppy Monitor", location: "KW" },
+    )).toBe(true);
+    expect(hasSameOnboardingAssignment(
+      { role: "Puppy Monitor", location: "KW" },
+      { role: "Yoga Instructor", location: "KW" },
+    )).toBe(false);
+    expect(hasSameOnboardingAssignment(
+      { role: "Puppy Monitor", location: "KW" },
+      { role: "Puppy Monitor", location: "OAK" },
+    )).toBe(false);
   });
 
   it("allows an existing active directory-only employee to be provisioned into APY HQ once", () => {
@@ -155,6 +224,25 @@ describe("direct team-member validation", () => {
       reason: "An Employee Directory record already uses this email address or phone number. Update or restore that record instead of creating a duplicate.",
     });
     expect(getDirectEmployeeContactEligibility({ hasEmployeeRecord: false, hasApplicantOrApyProfile: false })).toEqual({ eligible: true });
+  });
+
+  it("allows a signed accepted new hire with no existing directory record and rejects only conflicting matches", () => {
+    expect(getOnboardedApplicantContactMatchEligibility({
+      matchingEmployeeCount: 0,
+      matchingEmployeeSourceApplicationId: null,
+    })).toEqual({ eligible: true });
+    expect(getOnboardedApplicantContactMatchEligibility({
+      matchingEmployeeCount: 1,
+      matchingEmployeeSourceApplicationId: null,
+    })).toEqual({ eligible: true });
+    expect(getOnboardedApplicantContactMatchEligibility({
+      matchingEmployeeCount: 1,
+      matchingEmployeeSourceApplicationId: 99,
+    })).toMatchObject({ eligible: false });
+    expect(getOnboardedApplicantContactMatchEligibility({
+      matchingEmployeeCount: 2,
+      matchingEmployeeSourceApplicationId: null,
+    })).toMatchObject({ eligible: false });
   });
 
   it("permits only a signed Accepted applicant with delivered onboarding documents to be added", () => {

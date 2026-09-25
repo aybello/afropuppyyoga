@@ -26,12 +26,21 @@ export function normalizeApyRole(role: string | null | undefined): string {
   return (role ?? "").trim().toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ");
 }
 
+/** Only the approved APY job roles can receive team or operations portal access. */
+export function isApprovedApyTeamRole(role: string | null | undefined): role is ApyTeamRole {
+  const normalized = normalizeApyRole(role);
+  return APY_TEAM_ROLES.some((teamRole) => normalizeApyRole(teamRole) === normalized);
+}
+
 export function isOperationsManagerRole(role: string | null | undefined): boolean {
   return normalizeApyRole(role) === "operations manager";
 }
 
 export function getApyAccessLevel(role: string | null | undefined, isOwner = false): ApyAccessLevel {
   if (isOwner) return "owner";
+  // This resolver is evaluated for existing APY HQ profiles. Keep its historic
+  // behavior so a legacy role label is not silently stripped of access. New-hire
+  // provisioning uses a separate approved-role plan in staffAvailability.ts.
   if (!role) return "none";
   return isOperationsManagerRole(role) ? "operations_manager" : "team_member";
 }

@@ -22,4 +22,9 @@ describe("APY HQ role permissions", () => {
     expect(canAccessHubTool("team_member", "team")).toBe(true);
     expect(canAccessHubTool("team_member", "operations")).toBe(false);
   });
+
+  it("preserves historic APY HQ access for legacy non-empty role labels", () => {
+    expect(getApyAccessLevel("Event Host")).toBe("team_member");
+    expect(getApyAccessLevel("")).toBe("none");
+  });
 });
