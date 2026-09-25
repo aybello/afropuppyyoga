@@ -1,10 +1,11 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { ownerProcedure, staffProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { puppySchedule, breeders, classStaffAssignments, communicationsLog, jobApplications, staffAvailability, weekendLeadershipCoverage } from "../../drizzle/schema";
 import { staffScheduleNotifications } from "../../drizzle/schema";
 import { eq, and, gte, lte, desc, isNull, ne } from "drizzle-orm";
-import { sendEmail, buildBreederConfirmationEmail } from "../email";
+import { sendEmail } from "../email";
 import twilio from "twilio";
 import { isSmsSuppressed } from "../smsConsent";
 import { createLumaEventForSchedule, getExistingLumaEventInvitationReadiness, sendExistingLumaEventInvitations, setLumaRegistrationOpen, updateLumaEventForSchedule } from "../lumaScheduleHelper";
@@ -954,39 +955,17 @@ export const puppyScheduleRouter = router({
     }),
 
   /**
-   * Send a class confirmation email to the breeder assigned to a slot.
-   * Looks up the breeder's email from the breeders table.
+   * Retired after breeder confirmations moved to the protected workflow in
+   * breeders.sendConfirmation. Keep the procedure name only long enough to
+   * stop an old browser tab from silently sending an untracked email.
    */
   notifyBreeder: staffProcedure
     .input(z.object({ slotId: z.number().int().positive() }))
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database unavailable");
-
-      // Fetch the slot
-      const [slot] = await db.select().from(puppySchedule).where(eq(puppySchedule.id, input.slotId)).limit(1);
-      if (!slot) throw new Error("Slot not found");
-
-      // Fetch the breeder's email
-      const [breeder] = await db.select().from(breeders).where(eq(breeders.id, slot.breederId)).limit(1);
-      if (!breeder) throw new Error("Breeder not found");
-      if (!breeder.email) throw new Error(`Breeder "${breeder.name}" has no email address on file. Please add one in the Breeder Database first.`);
-
-      const { subject, html, text } = buildBreederConfirmationEmail({
-        breederName: breeder.name,
-        contactName: breeder.contactName,
-        breed: slot.breed,
-        classDate: slot.classDate,
-        dayOfWeek: slot.dayOfWeek,
-        location: slot.location,
-        startTime: slot.startTime,
-        endTime: slot.endTime,
-        classType: slot.classType as "regular" | "private",
-        notes: slot.notes,
+    .mutation(() => {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "This legacy confirmation action is retired. Refresh APY HQ and use the Breeder Confirmation workflow so Luma, the schedule, and delivery records stay synchronized.",
       });
-
-      await sendEmail({ to: breeder.email, subject, html, text });
-      return { success: true, sentTo: breeder.email };
     }),
 
   /**

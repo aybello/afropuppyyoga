@@ -74,6 +74,14 @@ describe("previewed active-Luma breeder replacement", () => {
     updateLumaEventForSchedule.mockResolvedValue(undefined);
   });
 
+  it("blocks the retired bare-email confirmation endpoint before it can read or send anything", async () => {
+    await expect(caller().notifyBreeder({ slotId: 88 })).rejects.toThrow(
+      "This legacy confirmation action is retired. Refresh APY HQ and use the Breeder Confirmation workflow so Luma, the schedule, and delivery records stay synchronized.",
+    );
+    expect(getDb).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
   it("keeps the active Luma event, updates the linked breeder, and notifies only the outgoing breeder after the current preview is confirmed", async () => {
     const prepared = createDb([
       [activeLumaSchedule], [outgoingBreeder], [incomingBreeder],
