@@ -102,6 +102,8 @@ export const jobApplications = mysqlTable("jobApplications", {
   resumeUrl: text("resumeUrl"),
   /** S3 key of the uploaded resume */
   resumeKey: varchar("resumeKey", { length: 500 }),
+  /** Stable browser-generated key that makes a retry of the same public form submission idempotent. */
+  submissionKey: varchar("submissionKey", { length: 64 }).unique(),
   /** Application status */
   status: mysqlEnum("appStatus", ["new", "reviewed", "shortlisted", "interview_requested", "interview_scheduled", "accepted", "rejected", "onboarded"]).default("new").notNull(),
   /** Explicit APY HQ membership. Granted separately from applicant onboarding; the same row retains hiring history. */

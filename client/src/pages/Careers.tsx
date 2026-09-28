@@ -10,6 +10,7 @@ import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
 import { recoverCompletedVideoUpload } from "@/lib/videoUploadRecovery";
 import { createLocalVideoPreview, releaseLocalVideoPreview } from "@/lib/localVideoPreview";
+import { createSubmissionKey } from "@/lib/submissionKey";
 import { MapPin, Clock, Heart, Upload, CheckCircle, X, ChevronDown, Link as LinkIcon, Video, Share2, Copy, Check } from "lucide-react";
 
 /// ── Job listings ────────────────────────────────────────────
@@ -390,6 +391,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
   const resumeInputRef = useRef<HTMLInputElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const submissionKeyRef = useRef(createSubmissionKey());
 
   // Auto-scroll to error message whenever it changes
   useEffect(() => {
@@ -708,6 +710,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       videoKey,
       resumeUrl,
       resumeKey,
+      submissionKey: submissionKeyRef.current,
     });
   };
 
@@ -738,7 +741,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
             </div>
             <h3 className="font-display font-bold text-2xl text-[#1A0A12] mb-3">Application Received!</h3>
             <p className="font-body text-[#3D1A2E] text-base leading-relaxed mb-6">
-              Thank you for applying to join the AfroPuppyYoga family. We'll review your application and reach out if you're a great fit.
+              Your application has been received. We'll review it and reach out if you're a great fit.
             </p>
             <button
               onClick={onClose}

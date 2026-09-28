@@ -136,6 +136,17 @@ export async function createJobApplication(data: InsertJobApplication) {
   return Number(result[0].insertId);
 }
 
+export async function getJobApplicationBySubmissionKey(submissionKey: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const rows = await db
+    .select({ id: jobApplications.id })
+    .from(jobApplications)
+    .where(eq(jobApplications.submissionKey, submissionKey))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
 export async function getRecentDuplicateJobApplication(input: { email: string; role: string; location: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");

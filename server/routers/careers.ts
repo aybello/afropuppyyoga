@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { TRPCError } from "@trpc/server";
 import { adminProcedure, staffProcedure, publicProcedure, router } from "../_core/trpc";
 
@@ -55,7 +55,7 @@ export const onboardingInputSchema = z.object({
     });
   }
 });
-import { archiveJobApplicationIfUnclaimed, claimInitialOnboardingDelivery, completeClaimedOnboardingDocumentDelivery, createJobApplication, deleteJobApplication, getAllJobApplications, releaseInitialOnboardingDeliveryClaim, updateJobApplication, updateJobApplicationStatusIfUnclaimed, getArchivedJobApplications, restoreJobApplication, permanentlyDeleteJobApplication, getRecentDuplicateJobApplication, getJobApplicationById, getDb } from "../db";
+import { archiveJobApplicationIfUnclaimed, claimInitialOnboardingDelivery, completeClaimedOnboardingDocumentDelivery, createJobApplication, deleteJobApplication, getAllJobApplications, releaseInitialOnboardingDeliveryClaim, updateJobApplication, updateJobApplicationStatusIfUnclaimed, getArchivedJobApplications, restoreJobApplication, permanentlyDeleteJobApplication, getRecentDuplicateJobApplication, getJobApplicationById, getJobApplicationBySubmissionKey, getDb } from "../db";
 import { notifyOwner } from "../_core/notification";
 import {
   sendEmail,
@@ -74,6 +74,39 @@ type AppStatus = (typeof APP_STATUS)[number];
 type HiringActor = {
   user: { id: number; name: string | null; email: string | null };
 };
+
+export const POST_COMMIT_EFFECT_TIMEOUT_MS = 8_000;
+
+function isDuplicateSubmissionKeyError(error: unknown): boolean {
+  const candidate = error as { code?: string; message?: string } | null;
+  return candidate?.code === "ER_DUP_ENTRY" || /duplicate entry/i.test(candidate?.message ?? "");
+}
+
+/**
+ * A saved public application must not be held hostage by a provider that
+ * accepts a connection but never settles. This cannot cancel the provider's
+ * underlying request, but it bounds the browser-facing request and turns a
+ * late confirmation into a visible delivery warning instead of a retry trap.
+ */
+export async function runPostCommitEffect<T>(
+  label: string,
+  operation: () => Promise<T> | T,
+  timeoutMs = POST_COMMIT_EFFECT_TIMEOUT_MS,
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} timed out after ${timeoutMs}ms`)), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([
+      Promise.resolve().then(operation),
+      deadline,
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 
 export function assertInitialOnboardingStatus(status: string) {
   if (status !== "accepted") {
@@ -173,6 +206,99 @@ async function recordHiringAction(params: {
   }
 }
 
+/**
+ * The public application record is committed before this runs. Keep every
+ * audit and recovery step best-effort so a temporary ledger outage never
+ * tells an applicant to submit the same application again.
+ */
+async function recordPublicApplicationAudit(params: {
+  applicationId: number;
+  name: string;
+  email: string;
+  role: string;
+  location: string;
+  confirmation?: { subject: string; text: string };
+  confirmationDelivered?: boolean;
+  notificationFailures?: number;
+  recordSubmission?: boolean;
+}) {
+  try {
+    const db = await runPostCommitEffect("Application audit database connection", () => getDb());
+    if (!db) throw new Error("Application audit database is unavailable");
+
+    const auditWrites: Array<Promise<unknown>> = [];
+    if (params.recordSubmission !== false) {
+      auditWrites.push(runPostCommitEffect("Application submission audit", () => db.insert(jobApplicationActions).values({
+        applicationId: params.applicationId,
+        action: "application_submitted",
+        fromStatus: null,
+        toStatus: "new",
+        actorName: params.name,
+        actorEmail: params.email,
+        details: JSON.stringify({
+          role: params.role,
+          location: params.location,
+          ...(params.notificationFailures === undefined ? {} : { notificationFailures: params.notificationFailures }),
+        }),
+      })));
+    }
+    if (params.recordSubmission === false && params.notificationFailures !== undefined) {
+      auditWrites.push(runPostCommitEffect("Application notification outcome audit", () => db.insert(jobApplicationActions).values({
+        applicationId: params.applicationId,
+        action: "application_notification_outcome",
+        fromStatus: null,
+        toStatus: null,
+        actorName: "APY HQ",
+        details: JSON.stringify({
+          notificationFailures: params.notificationFailures,
+          confirmationDelivered: params.confirmationDelivered ?? false,
+        }),
+      })));
+    }
+    const confirmation = params.confirmation;
+    if (confirmation) {
+      auditWrites.push(runPostCommitEffect("Application confirmation audit", () => db.insert(communicationsLog).values({
+        entityType: "job_application",
+        entityId: params.applicationId,
+        channel: "email",
+        direction: "outbound",
+        action: "application_confirmation_sent",
+        recipient: params.email,
+        subject: confirmation.subject,
+        bodyPreview: confirmation.text.slice(0, 1000),
+        deliveryStatus: params.confirmationDelivered ? "sent" : "failed",
+        actorName: "APY HQ",
+      })));
+    }
+
+    const auditResults = await Promise.allSettled(auditWrites);
+
+    const failures = auditResults
+      .filter((result): result is PromiseRejectedResult => result.status === "rejected")
+      .map((result) => result.reason);
+    if (failures.length === 0) return;
+
+    console.error(
+      `[Careers] Application ${params.applicationId} saved, but ${failures.length} audit write(s) failed.`,
+      failures,
+    );
+    await runPostCommitEffect("Application audit recovery owner notification", () => notifyOwner({
+      title: "Application saved with incomplete audit trail",
+      content: `Application #${params.applicationId} for ${params.role} at ${params.location} was saved for ${params.email}, but ${failures.length} audit record(s) need review.`,
+    })).catch((error) => {
+      console.error(`[Careers] Failed to notify owner about application audit recovery for ${params.applicationId}:`, error);
+    });
+  } catch (error) {
+    console.error(`[Careers] Application ${params.applicationId} saved, but application audit setup failed:`, error);
+    await runPostCommitEffect("Missing application audit owner notification", () => notifyOwner({
+      title: "Application saved with missing audit trail",
+      content: `Application #${params.applicationId} for ${params.role} at ${params.location} was saved for ${params.email}, but its audit trail could not be written.`,
+    })).catch((notifyError) => {
+      console.error(`[Careers] Failed to notify owner about missing application audit trail for ${params.applicationId}:`, notifyError);
+    });
+  }
+}
+
 async function requireApplicant(id: number) {
   const applicant = await getJobApplicationById(id);
   if (!applicant) {
@@ -203,9 +329,18 @@ export const careersRouter = router({
         videoKey: z.string().optional(), // Only present when file was uploaded (not for links)
         resumeUrl: safeResumeUrl, // Required: S3 URL from /api/upload-resume
         resumeKey: z.string().optional(),
+        submissionKey: z.string().uuid().optional(),
       })
     )
     .mutation(async ({ input }) => {
+      // Older open tabs may submit the pre-upgrade form without a browser key.
+      // Keep that form compatible while new forms receive atomic retry safety.
+      const submissionKey = input.submissionKey ?? randomUUID();
+      const existingSubmission = await getJobApplicationBySubmissionKey(submissionKey);
+      if (existingSubmission) {
+        return { success: true, duplicate: true, notificationWarning: false };
+      }
+
       const duplicate = await getRecentDuplicateJobApplication({
         email: input.email,
         role: input.role,
@@ -214,22 +349,6 @@ export const careersRouter = router({
       if (duplicate) {
         return { success: true, duplicate: true, notificationWarning: false };
       }
-
-      // Save to DB
-      const applicationId = await createJobApplication({
-        role: input.role,
-        location: input.location,
-        name: input.name,
-        email: input.email,
-        phone: input.phone ?? null,
-        whyAPY: input.whyAPY ?? null,
-        experience: input.experience ?? null,
-        videoUrl: input.videoUrl,
-        videoKey: input.videoKey ?? null,
-        resumeUrl: input.resumeUrl,
-        resumeKey: input.resumeKey ?? null,
-        status: "new",
-      });
 
       // Send email notification to afropuppyyoga@gmail.com
       const emailHtml = `
@@ -254,64 +373,112 @@ export const careersRouter = router({
         </div>
       `;
 
-      // The application has already been saved. Notification failures should be
-      // logged for recovery, not make the applicant retry and create duplicates.
-      const confirmation = buildApplicationConfirmationEmail({
-        applicantName: input.name,
-        role: input.role,
-        location: input.location,
-      });
-      const notificationResults = await Promise.allSettled([
-        sendEmail({
-          to: "afropuppyyoga@gmail.com",
-          subject: `New Application: ${input.name} — ${input.role} (${input.location})`,
-          html: emailHtml,
-          text: `New job application received!\n\nRole: ${input.role} — ${input.location}\nName: ${input.name}\nEmail: ${input.email}\nPhone: ${input.phone ?? "Not provided"}\n\nWhy APY:\n${input.whyAPY ?? "Not provided"}\n\nExperience:\n${input.experience ?? "Not provided"}\n\nVideo: ${input.videoUrl ?? "Not provided"}\nResume: ${input.resumeUrl}`,
-        }),
-        sendEmail({
-          to: input.email,
-          subject: confirmation.subject,
-          html: confirmation.html,
-          text: confirmation.text,
-        }),
-        notifyOwner({
-          title: `New Application: ${input.role} (${input.location})`,
-          content: `${input.name} (${input.email}) applied for ${input.role} — ${input.location}.\n\nVideo: ${input.videoUrl ?? "Not provided"}\nResume: ${input.resumeUrl}`,
-        }),
-      ]);
-      const failedNotifications = notificationResults.filter((result) => result.status === "rejected").length;
-      if (failedNotifications > 0) {
-        console.error(`[Careers] Application ${input.email} saved, but ${failedNotifications} notification(s) failed.`);
+      // Save to DB
+      let applicationId: number;
+      try {
+        applicationId = await createJobApplication({
+          role: input.role,
+          location: input.location,
+          name: input.name,
+          email: input.email,
+          phone: input.phone ?? null,
+          whyAPY: input.whyAPY ?? null,
+          experience: input.experience ?? null,
+          videoUrl: input.videoUrl,
+          videoKey: input.videoKey ?? null,
+          resumeUrl: input.resumeUrl,
+          resumeKey: input.resumeKey ?? null,
+          submissionKey,
+          status: "new",
+        });
+      } catch (error) {
+        if (!isDuplicateSubmissionKeyError(error)) throw error;
+        const concurrentSubmission = await getJobApplicationBySubmissionKey(submissionKey);
+        if (!concurrentSubmission) throw error;
+        return { success: true, duplicate: true, notificationWarning: false };
       }
 
-      const db = await getDb();
-      if (db && applicationId) {
-        await Promise.all([
-          db.insert(jobApplicationActions).values({
+      // The application is now durable. Keep all normal notification and
+      // audit work in this request under one shared deadline. This preserves
+      // normal staff delivery without allowing cumulative provider delays to
+      // turn a saved application into a retry trap.
+      try {
+        await runPostCommitEffect("Application post-save work", async () => {
+          const submissionAudit = recordPublicApplicationAudit({
             applicationId,
-            action: "application_submitted",
-            fromStatus: null,
-            toStatus: "new",
-            actorName: input.name,
-            actorEmail: input.email,
-            details: JSON.stringify({ role: input.role, location: input.location, notificationFailures: failedNotifications }),
-          }),
-          db.insert(communicationsLog).values({
-            entityType: "job_application",
-            entityId: applicationId,
-            channel: "email",
-            direction: "outbound",
-            action: "application_confirmation_sent",
-            recipient: input.email,
-            subject: confirmation.subject,
-            bodyPreview: confirmation.text.slice(0, 1000),
-            deliveryStatus: notificationResults[1]?.status === "fulfilled" ? "sent" : "failed",
-            actorName: "APY HQ",
-          }),
-        ]);
+            name: input.name,
+            email: input.email,
+            role: input.role,
+            location: input.location,
+          });
+
+          let confirmation: { subject: string; html: string; text: string };
+          try {
+            confirmation = buildApplicationConfirmationEmail({
+              applicantName: input.name,
+              role: input.role,
+              location: input.location,
+            });
+          } catch (error) {
+            await Promise.all([
+              submissionAudit,
+              recordPublicApplicationAudit({
+                applicationId,
+                name: input.name,
+                email: input.email,
+                role: input.role,
+                location: input.location,
+                confirmationDelivered: false,
+                notificationFailures: 1,
+                recordSubmission: false,
+              }),
+            ]);
+            throw error;
+          }
+          const notificationResults = await Promise.allSettled([
+            sendEmail({
+              to: "afropuppyyoga@gmail.com",
+              subject: `New Application: ${input.name} — ${input.role} (${input.location})`,
+              html: emailHtml,
+              text: `New job application received!\n\nRole: ${input.role} — ${input.location}\nName: ${input.name}\nEmail: ${input.email}\nPhone: ${input.phone ?? "Not provided"}\n\nWhy APY:\n${input.whyAPY ?? "Not provided"}\n\nExperience:\n${input.experience ?? "Not provided"}\n\nVideo: ${input.videoUrl ?? "Not provided"}\nResume: ${input.resumeUrl}`,
+            }),
+            sendEmail({
+              to: input.email,
+              subject: confirmation.subject,
+              html: confirmation.html,
+              text: confirmation.text,
+            }),
+            notifyOwner({
+              title: `New Application: ${input.role} (${input.location})`,
+              content: `${input.name} (${input.email}) applied for ${input.role} — ${input.location}.\n\nVideo: ${input.videoUrl ?? "Not provided"}\nResume: ${input.resumeUrl}`,
+            }),
+          ]);
+          const failedNotifications = notificationResults.filter((result) => result.status === "rejected").length;
+          const confirmationFailed = notificationResults[1]?.status === "rejected";
+          if (failedNotifications > 0) {
+            console.error(`[Careers] Application ${input.email} saved, but ${failedNotifications} notification(s) failed.`);
+          }
+
+          await Promise.all([
+            submissionAudit,
+            recordPublicApplicationAudit({
+              applicationId,
+              name: input.name,
+              email: input.email,
+              role: input.role,
+              location: input.location,
+              confirmation,
+              confirmationDelivered: !confirmationFailed,
+              notificationFailures: failedNotifications,
+              recordSubmission: false,
+            }),
+          ]);
+        });
+      } catch (error) {
+        console.error(`[Careers] Application ${applicationId} saved, but post-save work did not finish before its deadline:`, error);
       }
 
-      return { success: true, notificationWarning: failedNotifications > 0 };
+      return { success: true, duplicate: false, notificationWarning: false };
     }),
 
   /**
