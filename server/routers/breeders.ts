@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { router, staffProcedure, publicProcedure } from "../_core/trpc";
 import { getDb } from "../db";
 import { breeders, breederConfirmations, communicationsLog, inboundSms, locationPresets, breederAvailabilityBlasts, breederAvailabilityResponses } from "../../drizzle/schema";
@@ -381,6 +382,7 @@ export const breedersRouter = router({
         }
 
         const provisioned: Array<{ plan: typeof studioPlans[number]; lumaEventId: string | null; lumaEventUrl: string | null; lumaCreated: boolean }> = [];
+        let localSaveStarted = false;
         try {
           for (const plan of studioPlans) {
             const luma = await createLumaEventForSchedule({
@@ -398,6 +400,7 @@ export const breedersRouter = router({
             });
           }
 
+          localSaveStarted = true;
           confirmationId = await db.transaction(async (tx) => {
             const [inserted] = await tx.insert(breederConfirmations).values({
               breederId: input.breederId,
@@ -431,13 +434,30 @@ export const breedersRouter = router({
             }
             return inserted.id;
           });
+          localSaveStarted = false;
           scheduleCreated = provisioned.length;
         } catch (error) {
-          await Promise.all(provisioned
+          const cleanupResults = await Promise.all(provisioned
             .filter(item => item.lumaCreated && item.lumaEventId !== null)
-            .map(item => cancelUnpublishedLumaEvent(item.lumaEventId!).catch(cleanupError => {
-              console.error(`[Breeder Confirmation] Could not clean up Luma event ${item.lumaEventId}:`, cleanupError);
-            })));
+            .map(async item => {
+              try {
+                await cancelUnpublishedLumaEvent(item.lumaEventId!);
+                return { eventId: item.lumaEventId, cleanedUp: true };
+              } catch (cleanupError) {
+                console.error(`[Breeder Confirmation] Could not clean up Luma event ${item.lumaEventId}:`, cleanupError);
+                return { eventId: item.lumaEventId, cleanedUp: false };
+              }
+            }));
+          if (localSaveStarted) {
+            // Database drivers can include a breeder's name, email, phone and
+            // confirmation text in a failed SQL message. Keep that diagnostic
+            // on the server only, then give staff a safe recovery instruction.
+            console.error("[Breeder Confirmation] Could not save confirmation locally:", error);
+            const cleanupFailed = cleanupResults.some(result => !result.cleanedUp);
+            throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: cleanupFailed
+              ? "Could not save the breeder confirmation. No message was sent, but a newly created Luma class may still exist. Do not retry yet. Check the Puppy Schedule before continuing."
+              : "Could not save the breeder confirmation. No message was sent and newly created Luma classes were cancelled. Please try again." });
+          }
           throw error;
         }
       }

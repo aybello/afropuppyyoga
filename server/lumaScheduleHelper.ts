@@ -594,12 +594,11 @@ export async function createLumaEventForSchedule(params: LumaScheduleParams): Pr
             id: "jry47jna",
             label: "How did you hear about us?",
             required: true,
-            // Luma's event-create API models a multi-answer list as a select
-            // question with `multiple: true`; `multi-select` is returned in
-            // some documentation schemas but is rejected by the live API.
-            question_type: "select",
+            // Luma's live create schema accepts `multi-select`; using the
+            // serialized `select` + `multiple` response shape is rejected on
+            // new event creation even though older events may return it.
+            question_type: "multi-select",
             options: ["Instagram", "Facebook", "Poster", "Word of Mouth"],
-            multiple: true,
           },
           {
             id: "1oy5wt8g",

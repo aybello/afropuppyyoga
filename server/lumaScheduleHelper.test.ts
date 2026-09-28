@@ -95,13 +95,13 @@ describe("regular class Luma event defaults", () => {
     expect(createPayload.ticket_types).toEqual(buildRegularClassTicketTypes("Kitchener"));
     expect(createPayload.ticket_types.some((ticket: { name: string }) => ticket.name === "Standard")).toBe(false);
     expect(createPayload.registration_questions).toEqual([
-      expect.objectContaining({
+      {
         id: "jry47jna",
         label: "How did you hear about us?",
         required: true,
-        question_type: "select",
-        multiple: true,
-      }),
+        question_type: "multi-select",
+        options: ["Instagram", "Facebook", "Poster", "Word of Mouth"],
+      },
       expect.objectContaining({
         id: "1oy5wt8g",
         label: "Terms and Conditions",
