@@ -65,8 +65,8 @@ import {
   buildOnboardingEmail,
   buildYogaInstructorOnboardingEmail,
 } from "../email";
-import { communicationsLog, jobApplicationActions } from "../../drizzle/schema";
-import { and, desc, eq } from "drizzle-orm";
+import { communicationsLog, jobApplicationActions, jobApplications } from "../../drizzle/schema";
+import { and, desc, eq, isNull } from "drizzle-orm";
 
 export const APP_STATUS = ["new", "reviewed", "shortlisted", "interview_requested", "interview_scheduled", "accepted", "rejected", "onboarded"] as const;
 type AppStatus = (typeof APP_STATUS)[number];
@@ -133,6 +133,23 @@ export function assertNoPendingOnboardingClaim(applicant: { status: string; onbo
       message: "Onboarding delivery is in progress. Wait for it to finish or resolve the pending onboarding outcome before changing this application.",
     });
   }
+}
+
+/** An employee's lifecycle is managed from Employee Directory, never Careers. */
+export function assertApplicantCanBeRejected(applicant: { status: string; onboardingDeliveryToken: string | null }) {
+  if (applicant.status === "onboarded") {
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: "An onboarded employee cannot be rejected from the application pipeline. Review their Employee Directory record instead.",
+    });
+  }
+  if (applicant.status === "rejected") {
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: "This applicant has already been rejected.",
+    });
+  }
+  assertNoPendingOnboardingClaim(applicant);
 }
 
 function onboardingAuditPreview(input: z.infer<typeof onboardingInputSchema>): string {
@@ -859,35 +876,55 @@ export const careersRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const applicant = await requireApplicant(input.id);
-      assertNoPendingOnboardingClaim(applicant);
-      const { subject, html, text } = buildRejectionLetterEmail({
-        applicantName: applicant.name,
-        role: applicant.role,
-        location: applicant.location,
-        additionalNotes: input.additionalNotes,
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // The row lock prevents an onboarding transition from completing after a
+      // staff member opens the rejection modal but before the email is sent.
+      const rejection = await db.transaction(async (tx) => {
+        const [applicant] = await tx.select().from(jobApplications)
+          .where(and(eq(jobApplications.id, input.id), isNull(jobApplications.deletedAt)))
+          .limit(1)
+          .for("update");
+        const recipient = applicant?.email;
+        if (!applicant || !recipient) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Application not found or archived." });
+        }
+        assertApplicantCanBeRejected(applicant);
+
+        const { subject, html, text } = buildRejectionLetterEmail({
+          applicantName: applicant.name,
+          role: applicant.role,
+          location: applicant.location,
+          additionalNotes: input.additionalNotes,
+        });
+        await sendEmail({ to: recipient, subject, html, text });
+
+        const transition = await tx.update(jobApplications).set({ status: "rejected" })
+          .where(and(
+            eq(jobApplications.id, applicant.id),
+            eq(jobApplications.status, applicant.status),
+            isNull(jobApplications.onboardingDeliveryToken),
+            isNull(jobApplications.deletedAt),
+          ));
+        if (Number((transition as any)[0]?.affectedRows ?? 0) !== 1) {
+          throw new TRPCError({ code: "CONFLICT", message: "This application changed before rejection could be completed. Refresh and review it before sending another email." });
+        }
+        return { applicant, recipient, subject, text };
       });
-
-      await sendEmail({ to: applicant.email, subject, html, text });
-
-      // Update status to rejected
-      const transitioned = await updateJobApplicationStatusIfUnclaimed(input.id, applicant.status as AppStatus, "rejected");
-      if (!transitioned) {
-        throw new TRPCError({ code: "CONFLICT", message: "Onboarding delivery started before the rejection status could be updated. Refresh and resolve it first." });
-      }
 
       await recordHiringAction({
         ctx,
         applicationId: input.id,
         action: "rejection_sent",
-        fromStatus: applicant.status,
+        fromStatus: rejection.applicant.status,
         toStatus: "rejected",
-        communication: { recipient: applicant.email, subject, bodyPreview: text },
+        communication: { recipient: rejection.recipient, subject: rejection.subject, bodyPreview: rejection.text },
       });
 
       await notifyOwner({
-        title: `Rejection Letter Sent — ${applicant.name}`,
-        content: `Rejection letter sent to ${applicant.name} (${applicant.email}) for ${applicant.role} (${applicant.location}).`,
+        title: `Rejection Letter Sent — ${rejection.applicant.name}`,
+        content: `Rejection letter sent to ${rejection.applicant.name} (${rejection.applicant.email}) for ${rejection.applicant.role} (${rejection.applicant.location}).`,
       });
 
       return { success: true };

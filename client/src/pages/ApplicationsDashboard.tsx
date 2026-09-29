@@ -1026,6 +1026,18 @@ export default function ApplicationsDashboard() {
     onSuccess: () => utils.careers.list.invalidate(),
     onError: (err) => toast.error(`Error updating status: ${err.message}`),
   });
+  const beginRejection = (app: Application) => {
+    if (app.status === "onboarded") {
+      toast.error("Onboarded employees cannot be rejected from the application pipeline. Review their Employee Directory record instead.");
+      return;
+    }
+    if (app.status === "rejected") {
+      toast.info("This applicant has already been rejected.");
+      return;
+    }
+    setSelectedApp(app);
+    setShowRejectionModal(true);
+  };
   const addToEmployeeDirectory = trpc.staffAvailability.markOnboardedAndAddToEmployeeDirectory.useMutation({
     onSuccess: (result, variables) => {
       const applicant = applications?.find((item) => item.id === variables.applicationId);
@@ -1310,9 +1322,13 @@ export default function ApplicationsDashboard() {
                       <td className="px-5 py-4">
                         <Select
                           value={app.status}
-                          onValueChange={(val) =>
-                            updateStatus.mutate({ id: app.id, status: val as AppStatus })
-                          }
+                          onValueChange={(val) => {
+                            if (val === "rejected") {
+                              beginRejection(app as Application);
+                              return;
+                            }
+                            updateStatus.mutate({ id: app.id, status: val as AppStatus });
+                          }}
                         >
                           <SelectTrigger className="w-44 h-8 text-xs font-body border-[#F0D0DC] bg-white">
                             <SelectValue>
@@ -1373,6 +1389,16 @@ export default function ApplicationsDashboard() {
                               title="Mark this signed applicant onboarded and add them to the Employee Directory without granting APY HQ access"
                             >
                               {addToEmployeeDirectory.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserPlus className="w-3 h-3" />} Onboard
+                            </button>
+                          )}
+                          {app.status !== "rejected" && app.status !== "onboarded" && (
+                            <button
+                              type="button"
+                              onClick={() => beginRejection(app as Application)}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg font-body text-xs font-semibold text-red-700 hover:bg-red-100 transition-colors"
+                              title="Send a rejection email and move this applicant to Rejected"
+                            >
+                              <XCircle className="w-3 h-3" /> Reject
                             </button>
                           )}
                           <button
