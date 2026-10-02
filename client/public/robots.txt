@@ -3,6 +3,7 @@ Allow: /
 
 # Admin and internal tools — not for indexing
 Disallow: /admin/
+Disallow: /dashboard
 Disallow: /staff
 Disallow: /staff-login
 Disallow: /submit-invoice

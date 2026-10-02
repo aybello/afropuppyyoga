@@ -144,6 +144,14 @@ async function startServer() {
     next();
   });
 
+  // The owner dashboard is a private SPA route. Send an indexing prohibition
+  // before client routing or crawler rendering so this protection applies even
+  // if JavaScript never runs.
+  app.use("/dashboard", (_req, res, next) => {
+    res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+    next();
+  });
+
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({
     limit: "50mb",

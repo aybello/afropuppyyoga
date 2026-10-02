@@ -10,7 +10,7 @@ export function isApyUnauthorizedError(error: ApyQueryError) {
 }
 
 export function getApyHqSessionRedirect(pathname: string, search = "") {
-  if (pathname === "/staff" || pathname.startsWith("/admin/")) {
+  if (pathname === "/staff" || pathname === "/dashboard" || pathname.startsWith("/admin/")) {
     return `/staff-access?returnTo=${encodeURIComponent(`${pathname}${search}`)}`;
   }
   return null;
@@ -19,7 +19,7 @@ export function getApyHqSessionRedirect(pathname: string, search = "") {
 export function getSafeApyHqReturnPath(search: string) {
   const requested = new URLSearchParams(search).get("returnTo");
   if (!requested) return "/staff";
-  if (requested === "/staff" || requested.startsWith("/admin/")) return requested;
+  if (requested === "/staff" || requested === "/dashboard" || requested.startsWith("/admin/")) return requested;
   return "/staff";
 }
 

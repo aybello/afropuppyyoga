@@ -23,12 +23,14 @@ describe("APY HQ query loading safeguards", () => {
     expect(getApyHqSessionRedirect("/admin/employees", "?tab=active"))
       .toBe("/staff-access?returnTo=%2Fadmin%2Femployees%3Ftab%3Dactive");
     expect(getApyHqSessionRedirect("/staff")).toBe("/staff-access?returnTo=%2Fstaff");
+    expect(getApyHqSessionRedirect("/dashboard")).toBe("/staff-access?returnTo=%2Fdashboard");
     expect(getApyHqSessionRedirect("/")).toBeNull();
   });
 
   it("only accepts APY HQ paths from the return-to query", () => {
     expect(getSafeApyHqReturnPath("?returnTo=%2Fadmin%2Femployees%3Ftab%3Dactive"))
       .toBe("/admin/employees?tab=active");
+    expect(getSafeApyHqReturnPath("?returnTo=%2Fdashboard")).toBe("/dashboard");
     expect(getSafeApyHqReturnPath("?returnTo=https%3A%2F%2Fevil.example")).toBe("/staff");
     expect(getSafeApyHqReturnPath("")).toBe("/staff");
   });

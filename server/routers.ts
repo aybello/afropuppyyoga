@@ -25,6 +25,7 @@ import { trainingRouter } from "./routers/training";
 import { operationsDashboardRouter } from "./routers/operationsDashboard";
 import { quickbooksRouter } from "./routers/quickbooks";
 import { publicCalendarRouter } from "./routers/publicCalendar";
+import { dashboardRouter } from "./routers/dashboard";
 import { z } from "zod";
 
 const messageSchema = z.object({
@@ -55,6 +56,7 @@ export const appRouter = router({
   operationsDashboard: operationsDashboardRouter,
   quickbooks: quickbooksRouter,
   publicCalendar: publicCalendarRouter,
+  dashboard: dashboardRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
