@@ -144,10 +144,10 @@ async function startServer() {
     next();
   });
 
-  // The owner dashboard is a private SPA route. Send an indexing prohibition
+  // The owner dashboard is a private Staff Portal route. Send an indexing prohibition
   // before client routing or crawler rendering so this protection applies even
   // if JavaScript never runs.
-  app.use("/dashboard", (_req, res, next) => {
+  app.use("/staff/revenue-dashboard", (_req, res, next) => {
     res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
     next();
   });

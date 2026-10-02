@@ -95,6 +95,16 @@ const TOOLS = [
     category: "Finance",
   },
   {
+    id: "private-revenue-dashboard",
+    title: "Revenue Analytics",
+    description: "Private estimated Luma performance, location trends, and upcoming demand.",
+    href: "/staff/revenue-dashboard",
+    icon: DollarSign,
+    accent: "#A95543",
+    adminOnly: true,
+    category: "Finance",
+  },
+  {
     id: "quickbooks",
     title: "QuickBooks Finance",
     description: "Read-only expenses, bank activity, daily sync, and AI-ready summaries.",
@@ -229,7 +239,7 @@ const TOOLS = [
 const CATEGORY_ORDER = ["Operations", "People", "Finance", "Events", "Breeders", "Growth"];
 
 function requiredAccessForTool(id: string): ApyHubToolAccess {
-  if (id === "invoices" || id === "revenue" || id === "quickbooks" || id === "employee-directory") return "owner";
+  if (id === "invoices" || id === "revenue" || id === "private-revenue-dashboard" || id === "quickbooks" || id === "employee-directory") return "owner";
   if (id === "staff-training" || id === "submit-invoice") return "team";
   return "operations";
 }

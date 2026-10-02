@@ -87,7 +87,7 @@ export default function PrivateRevenueDashboard() {
   const [selectedLocation, setSelectedLocation] = useState("All locations");
 
   useEffect(() => {
-    document.title = "Private Revenue Dashboard | AfroPuppyYoga";
+    document.title = "Revenue Analytics | APY HQ";
     let robots = document.querySelector('meta[name="robots"]');
     if (!robots) {
       robots = document.createElement("meta");

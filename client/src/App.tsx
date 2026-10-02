@@ -112,7 +112,7 @@ function Router() {
         <Route path="/admin/revenue" component={RevenueDashboard} />
         <Route path="/admin/quickbooks" component={QuickBooksDashboard} />
         <Route path="/admin/employees" component={EmployeeDirectory} />
-        <Route path="/dashboard" component={PrivateRevenueDashboard} />
+        <Route path="/staff/revenue-dashboard" component={PrivateRevenueDashboard} />
         <Route path="/admin/employee-directory" component={EmployeeDirectory} />
         <Route path="/admin/breeder-leads/:id" component={BreederLeadDetail} />
           <Route path="/admin/staff-availability" component={StaffAvailability} />
