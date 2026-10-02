@@ -1,4 +1,6 @@
 import { getTorontoCalendarDate } from "../shared/scheduleVisibility";
+import { dashboardInstagramSnapshot, type DashboardInstagramSnapshot } from "./dashboardInstagramSnapshot";
+import { getStripeDashboardRevenue, type StripeDashboardRevenue } from "./stripeDashboardRevenue";
 
 const LUMA_PUBLIC_CALENDAR_URL = "https://api.lu.ma/calendar/get-items";
 const CALENDAR_ID = "cal-Z474jeIbvUXskHE";
@@ -46,6 +48,9 @@ export type DashboardEvent = {
   breed: string;
   tickets: number | null;
   estimatedRevenueCents: number | null;
+  stripeGrossCollectedCents: number | null;
+  stripeRefundedCents: number | null;
+  stripeNetCollectedCents: number | null;
 };
 
 type AggregateBreakdown = {
@@ -81,15 +86,16 @@ export type DashboardOverview = {
     eventsWithTicketCount: number;
     estimatedRevenueCents: number | null;
     estimatedRevenueEvents: number;
+    stripeGrossCollectedCents: number | null;
+    stripeNetCollectedCents: number | null;
+    stripeTransactions: number | null;
   }>;
   byLocation: AggregateBreakdown[];
   byBreed: AggregateBreakdown[];
   recentEvents: DashboardEvent[];
   upcomingEvents: Array<Pick<DashboardEvent, "id" | "name" | "date" | "location" | "breed">>;
-  instagram: {
-    status: "not_connected";
-    message: string;
-  };
+  stripe: StripeDashboardRevenue;
+  instagram: DashboardInstagramSnapshot;
 };
 
 let cachedOverview: DashboardOverview | null = null;
@@ -237,7 +243,7 @@ function assertValidCalendarPage(payload: unknown, period: "past" | "future"): a
   page.entries.forEach((entry, index) => assertValidCalendarEntry(entry, `${period} event ${index + 1}`));
 }
 
-function asDashboardEvent(entry: LumaPublicCalendarEntry): DashboardEvent | null {
+function asDashboardEvent(entry: LumaPublicCalendarEntry, stripeByEventId: StripeDashboardRevenue["byEventId"] = {}): DashboardEvent | null {
   const event = entry.event ?? {};
   const id = event.api_id ?? entry.api_id ?? "";
   const name = event.name?.trim() ?? "";
@@ -251,6 +257,7 @@ function asDashboardEvent(entry: LumaPublicCalendarEntry): DashboardEvent | null
   const priceCents = unambiguousTicketPrice(entry.ticket_info);
   const isConfirmedFree = entry.ticket_info?.is_free === true && !hasListedPrice;
   const hasContradictoryFreePricing = entry.ticket_info?.is_free === true && hasListedPrice;
+  const stripeRevenue = stripeByEventId[id];
 
   return {
     id,
@@ -265,6 +272,9 @@ function asDashboardEvent(entry: LumaPublicCalendarEntry): DashboardEvent | null
     // aggregate count. A confirmed free event is a zero-value estimate; a paid
     // event without a usable price stays unknown rather than being guessed.
     estimatedRevenueCents: tickets === null || hasContradictoryFreePricing ? null : isConfirmedFree ? 0 : priceCents === null ? null : safeMultiply(priceCents, tickets),
+    stripeGrossCollectedCents: stripeRevenue?.grossCollectedCents ?? null,
+    stripeRefundedCents: stripeRevenue?.refundedCents ?? null,
+    stripeNetCollectedCents: stripeRevenue?.netCollectedCents ?? null,
   };
 }
 
@@ -323,12 +333,51 @@ function finalizeBreakdown(item: ReturnType<typeof buildBreakdownItem>): Aggrega
   };
 }
 
-export function buildDashboardOverview(entries: LumaPublicCalendarEntry[], refreshedAt = new Date().toISOString()): DashboardOverview {
+function defaultStripeRevenue(): StripeDashboardRevenue {
+  return {
+    status: "not_configured",
+    source: null,
+    refreshedAt: null,
+    grossCollectedCents: null,
+    refundedCents: null,
+    netCollectedCents: null,
+    transactions: null,
+    eventLinkedTransactions: null,
+    unlinkedTransactions: null,
+    complete: false,
+    monthly: [],
+    byEventId: {},
+    message: "Stripe revenue reporting is not configured for this server.",
+  };
+}
+
+export function buildDashboardOverview(
+  entries: LumaPublicCalendarEntry[],
+  refreshedAt = new Date().toISOString(),
+  stripeRevenue: StripeDashboardRevenue = defaultStripeRevenue(),
+): DashboardOverview {
   const today = getTorontoCalendarDate();
   const seen = new Set<string>();
   entries.forEach((entry, index) => assertValidCalendarEntry(entry, `event ${index + 1}`));
+  // Incomplete Stripe history must not be turned into zero-value months or
+  // presented as a complete financial total. Financial display fields are
+  // withheld from this API payload until the source history is complete.
+  const completeStripeRevenue = stripeRevenue.status === "connected" && stripeRevenue.complete;
+  const dashboardStripe: StripeDashboardRevenue = completeStripeRevenue
+    ? stripeRevenue
+    : {
+      ...stripeRevenue,
+      grossCollectedCents: null,
+      refundedCents: null,
+      netCollectedCents: null,
+      transactions: null,
+      eventLinkedTransactions: null,
+      unlinkedTransactions: null,
+      monthly: [],
+      byEventId: {},
+    };
   const events = entries
-    .map(asDashboardEvent)
+    .map(entry => asDashboardEvent(entry, completeStripeRevenue ? stripeRevenue.byEventId : {}))
     .filter((event): event is DashboardEvent => event !== null)
     .filter(event => {
       if (seen.has(event.id)) return false;
@@ -385,6 +434,7 @@ export function buildDashboardOverview(entries: LumaPublicCalendarEntry[], refre
     },
     monthly: rollingMonthKeys(today).map(month => {
       const row = monthly.get(month);
+      const stripeMonth = stripeRevenue.monthly.find(candidate => candidate.month === month);
       if (!row) {
         return {
           month,
@@ -394,6 +444,9 @@ export function buildDashboardOverview(entries: LumaPublicCalendarEntry[], refre
           eventsWithTicketCount: 0,
           estimatedRevenueCents: 0,
           estimatedRevenueEvents: 0,
+          stripeGrossCollectedCents: completeStripeRevenue ? stripeMonth?.grossCollectedCents ?? 0 : null,
+          stripeNetCollectedCents: completeStripeRevenue ? stripeMonth?.netCollectedCents ?? 0 : null,
+          stripeTransactions: completeStripeRevenue ? stripeMonth?.transactions ?? 0 : null,
         };
       }
       return {
@@ -404,26 +457,31 @@ export function buildDashboardOverview(entries: LumaPublicCalendarEntry[], refre
         eventsWithTicketCount: row.ticketValues.filter((value): value is number => value !== null).length,
         estimatedRevenueCents: sumWhenComplete(row.revenueValues),
         estimatedRevenueEvents: row.revenueValues.filter((value): value is number => value !== null).length,
+        stripeGrossCollectedCents: completeStripeRevenue ? stripeMonth?.grossCollectedCents ?? 0 : null,
+        stripeNetCollectedCents: completeStripeRevenue ? stripeMonth?.netCollectedCents ?? 0 : null,
+        stripeTransactions: completeStripeRevenue ? stripeMonth?.transactions ?? 0 : null,
       };
     }),
     byLocation: Array.from(locations.values()).map(finalizeBreakdown).sort((a, b) => (b.tickets ?? -1) - (a.tickets ?? -1) || b.events - a.events),
     byBreed: Array.from(breeds.values()).map(finalizeBreakdown).sort((a, b) => (b.tickets ?? -1) - (a.tickets ?? -1) || b.events - a.events),
     recentEvents: pastEvents.slice(0, 30),
     upcomingEvents: upcomingEvents.slice(0, 8).map(({ id, name, date, location, breed }) => ({ id, name, date, location, breed })),
-    instagram: {
-      status: "not_connected",
-      message: "No verified Instagram performance refresh is connected. This dashboard intentionally does not show stale social metrics.",
-    },
+    stripe: dashboardStripe,
+    instagram: dashboardInstagramSnapshot,
   };
 }
 
-export async function getDashboardOverview(fetchImpl: typeof fetch = fetch, now = Date.now()): Promise<DashboardOverview> {
+export async function getDashboardOverview(
+  fetchImpl: typeof fetch = fetch,
+  now = Date.now(),
+  stripeFetcher: () => Promise<StripeDashboardRevenue> = getStripeDashboardRevenue,
+): Promise<DashboardOverview> {
   if (cachedOverview && now < cacheExpiresAt) return cachedOverview;
   if (refreshInFlight) return refreshInFlight;
 
-  refreshInFlight = Promise.all([fetchPeriod("past", fetchImpl), fetchPeriod("future", fetchImpl)])
-    .then(([past, future]) => {
-      const overview = buildDashboardOverview([...past, ...future]);
+  refreshInFlight = Promise.all([fetchPeriod("past", fetchImpl), fetchPeriod("future", fetchImpl), stripeFetcher()])
+    .then(([past, future, stripe]) => {
+      const overview = buildDashboardOverview([...past, ...future], new Date().toISOString(), stripe);
       cachedOverview = overview;
       cacheExpiresAt = now + CACHE_TTL_MS;
       return overview;

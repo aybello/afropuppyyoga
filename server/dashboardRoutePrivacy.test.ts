@@ -26,9 +26,12 @@ describe("private dashboard route", () => {
     expect(pageSource).toContain('setAttribute("content", "noindex, nofollow, noarchive")');
   });
 
-  it("keeps the privacy-first dashboard copy explicit about estimated revenue", () => {
+  it("keeps the privacy-first dashboard copy explicit about Stripe actuals and Luma estimates", () => {
     expect(pageSource).toContain("Estimated revenue");
-    expect(pageSource).toContain("Stripe-confirmed");
+    expect(pageSource).toContain("Complete Stripe pulls show actual captured payments");
+    expect(pageSource).toContain("Luma values remain clearly labelled");
+    expect(pageSource).toContain("Incomplete history withheld");
+    expect(pageSource).toContain("Snapshot as of");
     expect(pageSource).toContain("row.tickets === null || row.events === 0 ? undefined");
     expect(pageSource).not.toContain("customerEmail");
     expect(pageSource).not.toContain("customerName");

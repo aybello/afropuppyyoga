@@ -1,5 +1,24 @@
 import { describe, expect, it, vi } from "vitest";
 import { buildDashboardOverview, dashboardAnalyticsTestUtils, getDashboardOverview } from "./dashboardAnalytics";
+import type { StripeDashboardRevenue } from "./stripeDashboardRevenue";
+
+const stripeUnavailable: StripeDashboardRevenue = {
+  status: "not_configured",
+  source: null,
+  refreshedAt: null,
+  grossCollectedCents: null,
+  refundedCents: null,
+  netCollectedCents: null,
+  transactions: null,
+  eventLinkedTransactions: null,
+  unlinkedTransactions: null,
+  complete: false,
+  monthly: [],
+  byEventId: {},
+  message: "Stripe revenue reporting is not configured for this server.",
+};
+
+const stripeFetcher = async () => stripeUnavailable;
 
 const entries = [
   {
@@ -101,7 +120,7 @@ describe("private dashboard aggregation", () => {
   it("fails closed when Luma returns malformed data or an unfamiliar status", async () => {
     dashboardAnalyticsTestUtils.resetCache();
     const malformedFetch = vi.fn().mockImplementation(() => new Response(JSON.stringify({ has_more: false }), { status: 200 }));
-    await expect(getDashboardOverview(malformedFetch as typeof fetch, 1_000)).rejects.toThrow("incomplete");
+    await expect(getDashboardOverview(malformedFetch as typeof fetch, 1_000, stripeFetcher)).rejects.toThrow("incomplete");
 
     const unknownStatus = { ...entries[0], status: "mystery_state" };
     expect(() => buildDashboardOverview([unknownStatus])).toThrow("unrecognized status");
@@ -145,8 +164,8 @@ describe("private dashboard aggregation", () => {
       return emptyLumaResponse();
     });
 
-    const first = getDashboardOverview(fetchImpl as typeof fetch, 10_000);
-    const second = getDashboardOverview(fetchImpl as typeof fetch, 10_001);
+    const first = getDashboardOverview(fetchImpl as typeof fetch, 10_000, stripeFetcher);
+    const second = getDashboardOverview(fetchImpl as typeof fetch, 10_001, stripeFetcher);
     expect(fetchImpl).toHaveBeenCalledTimes(2);
 
     release?.();
@@ -157,8 +176,8 @@ describe("private dashboard aggregation", () => {
     dashboardAnalyticsTestUtils.resetCache();
     const fetchImpl = vi.fn().mockImplementation(emptyLumaResponse);
 
-    await getDashboardOverview(fetchImpl as typeof fetch, 1_000);
-    await getDashboardOverview(fetchImpl as typeof fetch, 2_000);
+    await getDashboardOverview(fetchImpl as typeof fetch, 1_000, stripeFetcher);
+    await getDashboardOverview(fetchImpl as typeof fetch, 2_000, stripeFetcher);
 
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
@@ -170,6 +189,58 @@ describe("private dashboard aggregation", () => {
     expect(serialized).not.toContain("guest_count");
     expect(serialized).not.toContain("customerEmail");
     expect(serialized).not.toContain("customerName");
-    expect(overview.instagram.status).toBe("not_connected");
+    expect(serialized).not.toContain("payment_intent");
+    expect(serialized).not.toContain("sk_live");
+    expect(overview.instagram.status).toBe("verified_snapshot");
+    expect(overview.instagram.followers).toBeGreaterThan(0);
+  });
+
+  it("keeps Stripe actual collections separate from Luma estimates", () => {
+    const stripe: StripeDashboardRevenue = {
+      ...stripeUnavailable,
+      status: "connected",
+      source: "Stripe live charges",
+      refreshedAt: "2026-10-02T00:00:00.000Z",
+      grossCollectedCents: 5600,
+      refundedCents: 0,
+      netCollectedCents: 5600,
+      transactions: 1,
+      eventLinkedTransactions: 1,
+      unlinkedTransactions: 0,
+      complete: true,
+      monthly: [{ month: "2025-09", grossCollectedCents: 5600, refundedCents: 0, netCollectedCents: 5600, transactions: 1 }],
+      byEventId: { "evt-paid": { grossCollectedCents: 5600, refundedCents: 0, netCollectedCents: 5600, transactions: 1 } },
+      message: "Successful captured CAD Stripe charges.",
+    };
+    const overview = buildDashboardOverview([...entries], "2026-10-01T12:00:00.000Z", stripe);
+
+    expect(overview.stripe.netCollectedCents).toBe(5600);
+    expect(overview.summary.estimatedRevenueCents).toBeNull();
+    expect(overview.recentEvents.find(event => event.id === "evt-paid")?.stripeNetCollectedCents).toBe(5600);
+  });
+
+  it("withholds Stripe totals, months, and class matches when history is incomplete", () => {
+    const incompleteStripe: StripeDashboardRevenue = {
+      ...stripeUnavailable,
+      status: "connected",
+      source: "Stripe live charges",
+      refreshedAt: "2026-10-02T00:00:00.000Z",
+      grossCollectedCents: 5600,
+      refundedCents: 0,
+      netCollectedCents: 5600,
+      transactions: 1,
+      eventLinkedTransactions: 1,
+      unlinkedTransactions: 0,
+      complete: false,
+      monthly: [{ month: "2025-09", grossCollectedCents: 5600, refundedCents: 0, netCollectedCents: 5600, transactions: 1 }],
+      byEventId: { "evt-paid": { grossCollectedCents: 5600, refundedCents: 0, netCollectedCents: 5600, transactions: 1 } },
+      message: "Stripe history is incomplete.",
+    };
+    const overview = buildDashboardOverview([...entries], "2026-10-01T12:00:00.000Z", incompleteStripe);
+
+    expect(overview.stripe.complete).toBe(false);
+    expect(overview.stripe.netCollectedCents).toBeNull();
+    expect(overview.monthly.every(row => row.stripeNetCollectedCents === null)).toBe(true);
+    expect(overview.recentEvents.find(event => event.id === "evt-paid")?.stripeNetCollectedCents).toBeNull();
   });
 });
