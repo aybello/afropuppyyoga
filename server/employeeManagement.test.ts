@@ -173,6 +173,13 @@ describe("simple employee management", () => {
     expect(harness.updates).toEqual([]);
   });
 
+  it("rejects an already-linked profile owned by another directory record with different contacts", async () => {
+    const harness = mockDb([[employee], [person], [{ ...employee, id: 8, email: "different@example.com", phone: null, sourceApplicationId: 42 }]]);
+    await expect(activateEmployeeWithAccess(harness.db, 7, actor, true)).rejects.toThrow("already linked");
+    expect(harness.updates).toEqual([]);
+    expect(harness.inserts).toEqual([]);
+  });
+
   it("retains contact validation and avoids duplicate login identities", async () => {
     const missing = mockDb([[{ ...employee, email: null, phone: null }]]);
     await expect(activateEmployeeWithAccess(missing.db, 7, actor, true)).rejects.toThrow("valid email");

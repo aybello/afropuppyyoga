@@ -42,6 +42,9 @@ export async function activateEmployeeWithAccess(tx: any, employeeId: number, ac
   if (contactMatches.some((person) => person.id !== profile?.id)) {
     throw new Error("Another applicant or staff profile uses this contact. Link or correct that record before activating login.");
   }
+  if (profile && directory.some((person) => person.id !== employee.id && person.sourceApplicationId === profile.id)) {
+    throw new Error("The matching APY HQ profile is already linked to another employee.");
+  }
   const values = { name: employee.name, email, phone, role, location,
     status: "onboarded" as const, isTeamMember: true, deletedAt: null };
   let sourceApplicationId = profile?.id ?? null;
