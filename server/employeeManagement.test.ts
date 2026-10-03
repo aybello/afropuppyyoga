@@ -57,7 +57,7 @@ beforeEach(() => {
 });
 
 describe("simple employee management", () => {
-  it("deactivates all linked capabilities immediately without reading class duties", async () => {
+  it("deactivates linked capabilities immediately without requiring duty reassignment", async () => {
     const { db, updates, deletes } = mockDb([[person], [{ email: "previous@example.com" }]]);
     await expect(revokeTeamProfileAccess(db, 42, { isOwner: true, retainTeamMembership: true })).resolves.toMatchObject({ success: true });
     expect(db.select).toHaveBeenCalledTimes(4);
@@ -128,7 +128,7 @@ describe("simple employee management", () => {
       { table: employees, values: { employmentStatus: "active", endedAt: null, sourceApplicationId: 42 } },
       { table: jobApplications, values: expect.objectContaining({ isTeamMember: true, deletedAt: null, status: "onboarded" }) },
     ]));
-    expect(db.select).toHaveBeenCalledTimes(2);
+    expect(db.select).toHaveBeenCalledTimes(3);
     expect(inserts).toEqual(expect.arrayContaining([{ table: expect.anything(), values: expect.objectContaining({ action: "employee_and_login_activated" }) }]));
     expect(updates.some((update) => update.table === staffInvites)).toBe(false);
   });
@@ -149,6 +149,28 @@ describe("simple employee management", () => {
     const harness = mockDb([[{ ...employee, email: "not-an-email" }], [person]]);
     await expect(activateEmployeeWithAccess(harness.db, 7, actor, true)).resolves.toMatchObject({ grantsApyHqAccess: true });
     expect(harness.updates[0].values).toMatchObject({ email: null, phone: "+12895550100" });
+  });
+
+  it("links an unlinked directory employee to their existing onboarded profile", async () => {
+    const harness = mockDb([[{ ...employee, sourceApplicationId: null }], [{ ...person, isTeamMember: false, deletedAt: new Date() }], [employee]]);
+    await expect(activateEmployeeWithAccess(harness.db, 7, actor, true)).resolves.toMatchObject({ sourceApplicationId: 42, grantsApyHqAccess: true });
+    expect(harness.inserts.some((entry) => entry.table === jobApplications)).toBe(false);
+    expect(harness.updates).toContainEqual({ table: employees, values: { employmentStatus: "active", endedAt: null, sourceApplicationId: 42 } });
+  });
+
+  it("does not bypass new-applicant onboarding when linking employee access", async () => {
+    const harness = mockDb([[{ ...employee, sourceApplicationId: null }], [{ ...person, status: "accepted" }], []]);
+    await expect(activateEmployeeWithAccess(harness.db, 7, actor, true)).rejects.toThrow("applicant");
+    expect(harness.updates).toEqual([]);
+  });
+
+  it("rejects contacts or profiles already owned by another employee", async () => {
+    let harness = mockDb([[employee], [person], [{ ...employee, id: 8, phone: "+12895550100" }]]);
+    await expect(activateEmployeeWithAccess(harness.db, 7, actor, true)).rejects.toThrow("Employee Directory");
+    expect(harness.updates).toEqual([]);
+    harness = mockDb([[{ ...employee, sourceApplicationId: null }], [person], [{ ...employee, id: 8, email: "other@example.com", phone: null }]]);
+    await expect(activateEmployeeWithAccess(harness.db, 7, actor, true)).rejects.toThrow("already linked");
+    expect(harness.updates).toEqual([]);
   });
 
   it("retains contact validation and avoids duplicate login identities", async () => {
