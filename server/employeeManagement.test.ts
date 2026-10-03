@@ -108,7 +108,7 @@ describe("simple employee management", () => {
     for (const index of [1, 2]) {
       const harness = mockDb([[], []]); getDb.mockResolvedValue(harness.db);
       await expect(staffAvailabilityRouter.createCaller(context()).createEmployeeRecord({ name: `Employee ${index}`, email: `person${index}@example.com`, phone: "", role: role as "Operations Manager" | "Yoga Instructor", location: "KW", startedAt: "2026-10-03" })).resolves.toMatchObject({ grantsApyHqAccess: true });
-      expect(harness.inserts[0]).toMatchObject({ table: jobApplications, values: { role, location: "KW", isTeamMember: true } });
+      expect(harness.inserts.find((entry) => entry.table === jobApplications)).toMatchObject({ table: jobApplications, values: { role, location: "KW", isTeamMember: true } });
     }
     const tree = readFileSync(new URL("../client/src/pages/StaffAvailability.tsx", import.meta.url), "utf8");
     expect(tree).toContain('ops.map((s)');
@@ -136,8 +136,19 @@ describe("simple employee management", () => {
   it("creates a login profile for an unlinked employee during activation", async () => {
     const { db, updates, inserts } = mockDb([[{ ...employee, sourceApplicationId: null }], []]);
     await expect(activateEmployeeWithAccess(db, 7, actor, true)).resolves.toMatchObject({ sourceApplicationId: 100, grantsApyHqAccess: true });
-    expect(inserts[0]).toMatchObject({ table: jobApplications, values: { isTeamMember: true, status: "onboarded" } });
+    expect(inserts.find((entry) => entry.table === jobApplications)).toMatchObject({ table: jobApplications, values: { isTeamMember: true, status: "onboarded" } });
     expect(updates[0]).toMatchObject({ table: employees, values: { employmentStatus: "active", sourceApplicationId: 100 } });
+  });
+
+  it("requires a usable saved contact and fixed location, but accepts phone-only activation", async () => {
+    for (const values of [{ email: "not-an-email", phone: null }, { location: "OTHER" }, { role: "BDR", location: "KW" }]) {
+      const harness = mockDb([[{ ...employee, ...values }]]);
+      await expect(activateEmployeeWithAccess(harness.db, 7, actor, true)).rejects.toThrow();
+      expect(harness.updates).toEqual([]);
+    }
+    const harness = mockDb([[{ ...employee, email: "not-an-email" }], [person]]);
+    await expect(activateEmployeeWithAccess(harness.db, 7, actor, true)).resolves.toMatchObject({ grantsApyHqAccess: true });
+    expect(harness.updates[0].values).toMatchObject({ email: null, phone: "+12895550100" });
   });
 
   it("retains contact validation and avoids duplicate login identities", async () => {
@@ -151,8 +162,8 @@ describe("simple employee management", () => {
   it("lets an owner add a monitor without manager coverage or signed documents", async () => {
     const { db, inserts } = mockDb([[], [], [], []]); getDb.mockResolvedValue(db);
     await expect(staffAvailabilityRouter.createCaller(context()).createEmployeeRecord({ name: person.name, email: person.email, phone: "", role: "Puppy Monitor", location: "KW", startedAt: "2026-10-03" })).resolves.toMatchObject({ grantsApyHqAccess: true });
-    expect(db.select).toHaveBeenCalledTimes(2);
-    expect(inserts[0]).toMatchObject({ table: jobApplications, values: { isTeamMember: true, status: "onboarded" } });
+    expect(db.select).toHaveBeenCalledTimes(3);
+    expect(inserts.find((entry) => entry.table === jobApplications)).toMatchObject({ table: jobApplications, values: { isTeamMember: true, status: "onboarded" } });
   });
 
   it("makes the visible inactive, remove and activation routes work", async () => {
@@ -180,6 +191,12 @@ describe("simple employee management", () => {
     await expect(staffAvailabilityRouter.createCaller(context()).markEmployeeDeparted({ employeeId: 7 })).resolves.toMatchObject({ success: true });
     expect(harness.updates).toEqual(expect.arrayContaining([{ table: employees, values: expect.objectContaining({ employmentStatus: "inactive" }) }]));
     expect(harness.deletes).toEqual([staffPhoneAccessCodes]);
+  });
+
+  it("uses the same no-paperwork activation for the existing employee access button", async () => {
+    const harness = mockDb([[employee], [{ ...person, isTeamMember: false, deletedAt: new Date(), onboardingSentAt: null }]]);
+    getDb.mockResolvedValue(harness.db);
+    await expect(staffAvailabilityRouter.createCaller(context()).provisionEmployeeApyHqAccess({ employeeId: 7 })).resolves.toMatchObject({ id: 42, grantsApyHqAccess: true });
   });
 
   it("does not allow anonymous or ordinary staff to mutate employees", async () => {

@@ -117,7 +117,7 @@ export function getEmployeeDepartureUpdate(endedAt: Date) {
   return { employmentStatus: "inactive" as const, endedAt };
 }
 
-/** Re-establishes directory-only employment without granting APY HQ or portal access. */
+/** Shared employment fields used by the combined employment/login activation. */
 export function getEmployeeReactivationUpdate() {
   return { employmentStatus: "active" as const, endedAt: null };
 }
@@ -369,8 +369,6 @@ export const staffAvailabilityRouter = router({
         .limit(1);
       if (!employee) throw new Error("Employee record not found.");
 
-
-
       const email = input.email ? input.email.toLowerCase() : null;
       const phone = input.phone ? normalizeCanadianPhoneNumber(input.phone) : null;
       const updates = {
@@ -398,19 +396,20 @@ export const staffAvailabilityRouter = router({
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
+      return withStaffingMutationLock(db, async (tx: typeof db) => {
       const email = input.email ? input.email.toLowerCase() : null;
       const phone = input.phone ? normalizeCanadianPhoneNumber(input.phone) : null;
       const [emailMatch, phoneMatch] = await Promise.all([
         email
-          ? db.select({ id: employees.id }).from(employees).where(eq(employees.email, email)).limit(1)
+          ? tx.select({ id: employees.id }).from(employees).where(eq(employees.email, email)).limit(1)
           : Promise.resolve([]),
         phone
-          ? db.select({ id: employees.id }).from(employees).where(eq(employees.phone, phone)).limit(1)
+          ? tx.select({ id: employees.id }).from(employees).where(eq(employees.phone, phone)).limit(1)
           : Promise.resolve([]),
       ]);
       const [emailProfileMatch, phoneProfileMatch] = await Promise.all([
-        email ? db.select({ id: jobApplications.id }).from(jobApplications).where(eq(jobApplications.email, email)).limit(1) : Promise.resolve([]),
-        phone ? db.select({ id: jobApplications.id }).from(jobApplications).where(eq(jobApplications.phone, phone)).limit(1) : Promise.resolve([]),
+        email ? tx.select({ id: jobApplications.id }).from(jobApplications).where(eq(jobApplications.email, email)).limit(1) : Promise.resolve([]),
+        phone ? tx.select({ id: jobApplications.id }).from(jobApplications).where(eq(jobApplications.phone, phone)).limit(1) : Promise.resolve([]),
       ]);
       const contactEligibility = getDirectEmployeeContactEligibility({
         hasEmployeeRecord: Boolean(emailMatch[0] || phoneMatch[0]),
@@ -418,10 +417,8 @@ export const staffAvailabilityRouter = router({
       });
       if (!contactEligibility.eligible) throw new Error(contactEligibility.reason);
 
-
-
       const plan = getApprovedNewHirePortalAccessPlan(input);
-      const employeeId = await db.transaction(async (tx) => {
+      const employeeId = await (async () => {
         const profileResult = await tx.insert(jobApplications).values({
           name: input.name,
           email,
@@ -454,8 +451,9 @@ export const staffAvailabilityRouter = router({
           details: JSON.stringify({ grantsApyHqAccess: true, source: "employee_directory" }),
         });
         return Number(employeeResult[0].insertId);
-      });
+      })();
       return { success: true, id: employeeId, grantsApyHqAccess: true };
+      });
     }),
 
   // Complete employment onboarding by adding the verified applicant to the
@@ -558,7 +556,6 @@ export const staffAvailabilityRouter = router({
           throw new Error("Remove the matching active APY HQ profile first. New-hire portal access cannot duplicate an existing staff profile.");
         }
 
-
         const directoryValues = {
           sourceApplicationId: currentApplicant.id,
           name: currentApplicant.name,
@@ -621,90 +618,16 @@ export const staffAvailabilityRouter = router({
       };
     }),
 
-  // Give an existing active directory employee a matching APY HQ profile when the owner explicitly provisions access.
+  // Existing employee access uses the same one-step activation, without signing prerequisites.
   provisionEmployeeApyHqAccess: adminProcedure
     .input(z.object({ employeeId: z.number().int().positive() }))
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const [employee] = await db.select().from(employees).where(eq(employees.id, input.employeeId)).limit(1);
-      if (!employee) throw new Error("Employee record not found.");
-      const eligibility = getExistingEmployeeAccessProvisioningEligibility(employee);
-      if (!eligibility.eligible) throw new Error(eligibility.reason);
-
-
-
-      const matchingProfileFields = {
-        id: jobApplications.id,
-        role: jobApplications.role,
-        location: jobApplications.location,
-        status: jobApplications.status,
-        isTeamMember: jobApplications.isTeamMember,
-        deletedAt: jobApplications.deletedAt,
-      };
-      const [emailProfileMatches, phoneProfileMatches] = await Promise.all([
-        employee.email ? db.select(matchingProfileFields).from(jobApplications).where(eq(jobApplications.email, employee.email)) : Promise.resolve([]),
-        employee.phone ? db.select(matchingProfileFields).from(jobApplications).where(eq(jobApplications.phone, employee.phone)) : Promise.resolve([]),
-      ]);
-      const matchingProfiles = Array.from(new Map([...emailProfileMatches, ...phoneProfileMatches]
-        .map((profile) => [profile.id, profile])).values());
-      const matchingProfile = matchingProfiles[0] ?? null;
-      const [linkedEmployee] = matchingProfile
-        ? await db.select({ id: employees.id }).from(employees).where(eq(employees.sourceApplicationId, matchingProfile.id)).limit(1)
-        : [];
-      const linkEligibility = getLegacyEmployeeProfileLinkEligibility({
-        matchingProfileCount: matchingProfiles.length,
-        matchingProfileIsActiveTeamMember: Boolean(matchingProfile?.isTeamMember) && !matchingProfile?.deletedAt,
-        matchingProfileIsArchived: Boolean(matchingProfile?.deletedAt),
-        matchingProfileStatus: matchingProfile?.status ?? "",
-        roleMatches: matchingProfile?.role === employee.role,
-        locationMatches: matchingProfile?.location === employee.location,
-        alreadyLinkedToAnotherEmployee: Boolean(linkedEmployee),
+      return withStaffingMutationLock(db, async (tx) => {
+        const result = await activateEmployeeWithAccess(tx, input.employeeId, ctx.user, ctx.apyAccess.level === "owner");
+        return { ...result, id: result.sourceApplicationId };
       });
-      if (!linkEligibility.eligible) throw new Error(linkEligibility.reason);
-
-      const profileId = await db.transaction(async (tx) => {
-        if (linkEligibility.action === "link_existing_profile" && matchingProfile) {
-          await tx.update(jobApplications).set({ isTeamMember: true, deletedAt: null })
-            .where(eq(jobApplications.id, matchingProfile.id));
-          await tx.update(employees).set({ sourceApplicationId: matchingProfile.id })
-            .where(eq(employees.id, employee.id));
-          await tx.insert(jobApplicationActions).values({
-            applicationId: matchingProfile.id,
-            action: "employee_directory_apy_hq_access_linked",
-            toStatus: "onboarded",
-            actorUserId: ctx.user.id,
-            actorName: ctx.user.name,
-            actorEmail: ctx.user.email,
-            details: JSON.stringify({ grantsApyHqAccess: true, linkedExistingProfile: true, employeeId: employee.id }),
-          });
-          return matchingProfile.id;
-        }
-        const profileResult = await tx.insert(jobApplications).values({
-          name: employee.name,
-          email: employee.email,
-          phone: employee.phone,
-          role: employee.role,
-          location: employee.location,
-          whyAPY: "APY HQ access provisioned from Employee Directory.",
-          experience: "",
-          status: "onboarded",
-          isTeamMember: true,
-        });
-        const sourceApplicationId = Number(profileResult[0].insertId);
-        await tx.update(employees).set({ sourceApplicationId }).where(eq(employees.id, employee.id));
-        await tx.insert(jobApplicationActions).values({
-          applicationId: sourceApplicationId,
-          action: "employee_directory_apy_hq_access_granted",
-          toStatus: "onboarded",
-          actorUserId: ctx.user.id,
-          actorName: ctx.user.name,
-          actorEmail: ctx.user.email,
-          details: JSON.stringify({ grantsApyHqAccess: true, employeeId: employee.id }),
-        });
-        return sourceApplicationId;
-      });
-      return { success: true, id: profileId, grantsApyHqAccess: true };
     }),
 
   // Deactivate employment and all linked login credentials in one transaction.
@@ -950,23 +873,27 @@ export const staffAvailabilityRouter = router({
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
+      return withStaffingMutationLock(db, async (tx: typeof db) => {
       const normalizedPhone = input.phone ? normalizeCanadianPhoneNumber(input.phone) : null;
       const normalizedEmail = input.email ? input.email.toLowerCase() : null;
       const [emailMatch, phoneMatch] = await Promise.all([
         normalizedEmail
-          ? db.select({ id: employees.id }).from(employees).where(eq(employees.email, normalizedEmail)).limit(1)
+          ? tx.select({ id: employees.id }).from(employees).where(eq(employees.email, normalizedEmail)).limit(1)
           : Promise.resolve([]),
         normalizedPhone
-          ? db.select({ id: employees.id }).from(employees).where(eq(employees.phone, normalizedPhone)).limit(1)
+          ? tx.select({ id: employees.id }).from(employees).where(eq(employees.phone, normalizedPhone)).limit(1)
           : Promise.resolve([]),
       ]);
+      const [emailProfileMatch, phoneProfileMatch] = await Promise.all([
+        normalizedEmail ? tx.select({ id: jobApplications.id }).from(jobApplications).where(eq(jobApplications.email, normalizedEmail)).limit(1) : Promise.resolve([]),
+        normalizedPhone ? tx.select({ id: jobApplications.id }).from(jobApplications).where(eq(jobApplications.phone, normalizedPhone)).limit(1) : Promise.resolve([]),
+      ]);
+      if (emailProfileMatch[0] || phoneProfileMatch[0]) throw new Error("An applicant or staff profile already uses this contact. Update that record instead of adding a duplicate.");
       if (emailMatch[0] || phoneMatch[0]) {
         throw new Error("An Employee Directory record already uses this email address or phone number. Update or restore the existing record instead of adding a duplicate.");
       }
 
-
-
-      const memberId = await db.transaction(async (tx) => {
+      const memberId = await (async () => {
         const result = await tx.insert(jobApplications).values({
           name: input.name,
           email: normalizedEmail,
@@ -989,9 +916,10 @@ export const staffAvailabilityRouter = router({
           employmentStatus: "active",
         });
         return sourceApplicationId;
-      });
+      })();
 
       return { success: true, id: memberId };
+      });
     }),
 
   // Edit an active APY HQ team profile without disturbing its hiring history or access audit trail.
@@ -1012,45 +940,6 @@ export const staffAvailabilityRouter = router({
         isNull(jobApplications.deletedAt),
       )).limit(1);
       if (!existing) throw new Error("This person is not an active APY HQ team member.");
-
-      const [operationsManagersAtTarget, operationsManagersAtCurrentLocation, activePuppyMonitorsAtCurrentLocation] = await Promise.all([
-        tx.select({ id: jobApplications.id })
-          .from(jobApplications)
-          .where(and(
-            isNull(jobApplications.deletedAt),
-            eq(jobApplications.isTeamMember, true),
-            eq(jobApplications.role, "Operations Manager"),
-            eq(jobApplications.location, input.location),
-          )),
-        tx.select({ id: jobApplications.id })
-          .from(jobApplications)
-          .where(and(
-            isNull(jobApplications.deletedAt),
-            eq(jobApplications.isTeamMember, true),
-            eq(jobApplications.role, "Operations Manager"),
-            eq(jobApplications.location, existing.location),
-          )),
-        tx.select({ id: jobApplications.id })
-          .from(jobApplications)
-          .where(and(
-            isNull(jobApplications.deletedAt),
-            eq(jobApplications.isTeamMember, true),
-            eq(jobApplications.role, "Puppy Monitor"),
-            eq(jobApplications.location, existing.location),
-          )),
-      ]);
-
-      validateTeamAssignmentChange({
-        isOwner: ctx.apyAccess.level === "owner",
-        currentRole: existing.role,
-        currentLocation: existing.location,
-        nextRole: input.role,
-        nextLocation: input.location,
-        hasOperationsManagerAtNextLocation: operationsManagersAtTarget.some((manager) => manager.id !== existing.id || input.role === "Operations Manager"),
-        hasOtherOperationsManagerAtCurrentLocation: operationsManagersAtCurrentLocation.some((manager) => manager.id !== existing.id),
-        hasActivePuppyMonitorsAtCurrentLocation: activePuppyMonitorsAtCurrentLocation.length > 0,
-        activePuppyMonitorCountAtCurrentLocation: activePuppyMonitorsAtCurrentLocation.length,
-      });
 
       await tx.update(jobApplications).set({
         name: input.name,
