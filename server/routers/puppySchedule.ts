@@ -1,3 +1,4 @@
+import { canNotifyAssignedEventTeam } from "../staffRosterPolicy";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { ownerProcedure, staffProcedure, router } from "../_core/trpc";
@@ -79,13 +80,13 @@ export async function getEventNotificationPreview(db: NonNullable<Awaited<Return
   const leader = (role: "Operations Manager" | "Yoga Instructor") => {
     const covered = coverage.find((item) => item.role === role && item.coverageStaffId);
     return covered?.coverageStaffId
-      ? active.find((person) => person.id === covered.coverageStaffId) ?? null
+      ? active.find((person) => person.id === covered.coverageStaffId && sameRole(person.role, role) && !awayIds.has(person.id)) ?? null
       : active.find((person) => person.location === teamLocation && sameRole(person.role, role) && !awayIds.has(person.id)) ?? null;
   };
   const recipients = [
     { person: leader("Operations Manager"), role: "Operations Manager" },
     { person: leader("Yoga Instructor"), role: "Yoga Instructor" },
-    ...pmAssignments.map((assignment) => ({ person: active.find((person) => person.id === assignment.staffId) ?? null, role: "Puppy Monitor" })),
+    ...pmAssignments.map((assignment) => ({ person: active.find((person) => person.id === assignment.staffId && sameRole(person.role, "Puppy Monitor") && person.location === teamLocation && !awayIds.has(person.id)) ?? null, role: "Puppy Monitor" })),
   ].filter((item): item is { person: NonNullable<typeof item.person>; role: string } => Boolean(item.person))
     .map(({ person, role }) => ({ id: person.id, name: person.name, email: person.email, phone: person.phone, role, lastSentAt: lastSentByStaffId.get(person.id) ?? null }));
   const gaps = staffingGaps({ operationsManager: recipients.some((r) => r.role === "Operations Manager"), yogaInstructor: recipients.some((r) => r.role === "Yoga Instructor"), puppyMonitorCount: recipients.filter((r) => r.role === "Puppy Monitor").length });
@@ -383,13 +384,18 @@ export const puppyScheduleRouter = router({
       const isAway = (staffId: number) => leaves.some((leave) => leave.staffId === staffId && isAwayOnDate(leave, schedule.classDate));
       const resolveLeader = (role: "Operations Manager" | "Yoga Instructor") => {
         const coverage = leadershipCoverage.find((item) => item.coverageDate === schedule.classDate && item.location === location && item.role === role && item.coverageStaffId);
-        if (coverage?.coverageStaffId) return { id: coverage.coverageStaffId, name: coverage.coverageStaffName ?? "Assigned cover", isCover: true };
+        if (coverage?.coverageStaffId) {
+          const person = activeStaff.find((person) => person.id === coverage.coverageStaffId && sameRole(person.role, role) && !isAway(person.id));
+          return person ? { id: person.id, name: person.name, isCover: true } : null;
+        }
         const primary = activeStaff.find((person) => person.location === location && sameRole(person.role, role));
         return primary && !isAway(primary.id) ? { id: primary.id, name: primary.name, isCover: false } : null;
       };
       const operationsManager = resolveLeader("Operations Manager");
       const yogaInstructor = resolveLeader("Yoga Instructor");
-      const assignedPuppyMonitors = assignmentRows.map((assignment) => ({ id: assignment.id, staffId: assignment.staffId, name: assignment.staffName }));
+      const assignedPuppyMonitors = assignmentRows.filter((assignment) => activeStaff.some((person) => person.id === assignment.staffId
+        && sameRole(person.role, "Puppy Monitor") && person.location === location && !isAway(person.id)))
+        .map((assignment) => ({ id: assignment.id, staffId: assignment.staffId, name: activeStaff.find((person) => person.id === assignment.staffId)!.name }));
       const eligiblePuppyMonitors = activeStaff
         .filter((person) => person.location === location && sameRole(person.role, "Puppy Monitor"))
         .filter((person) => !isAway(person.id) && !assignedIds.has(person.id))
@@ -418,10 +424,11 @@ export const puppyScheduleRouter = router({
 
   eventNotificationPreview: staffProcedure
     .input(z.object({ scheduleId: z.number().int().positive() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
-      return getEventNotificationPreview(db, input.scheduleId);
+      const preview = await getEventNotificationPreview(db, input.scheduleId);
+      return { ...preview, canSend: canNotifyAssignedEventTeam({ isOwner: ctx.apyAccess.level === "owner", fullyStaffed: preview.fullyStaffed, recipientCount: preview.recipients.length }) };
     }),
 
   /** Owner-only: inspect an existing event's aggregate Luma invitation readiness. */
@@ -468,7 +475,9 @@ export const puppyScheduleRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
       const preview = await getEventNotificationPreview(db, input.scheduleId);
-      if (!preview.fullyStaffed) throw new Error(`Finish staffing this event first: ${preview.gapLabels.join(", ")}.`);
+      if (!canNotifyAssignedEventTeam({ isOwner: ctx.apyAccess.level === "owner", fullyStaffed: preview.fullyStaffed, recipientCount: preview.recipients.length })) {
+        throw new Error(preview.recipients.length ? `Finish staffing this event first: ${preview.gapLabels.join(", ")}.` : "Assign at least one active team member before sending a schedule.");
+      }
       if (preview.lastSentAt && !input.resend) throw new Error("This team was already notified. Choose Resend if you want to send the schedule again.");
       const accountSid = process.env.TWILIO_ACCOUNT_SID;
       const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -566,12 +575,24 @@ export const puppyScheduleRouter = router({
         const [away] = await tx.select().from(staffAvailability).where(and(eq(staffAvailability.staffId, staffMember.id), lte(staffAvailability.startDate, schedule.classDate), gte(staffAvailability.endDate, schedule.classDate))).limit(1);
         if (away) throw new Error(`${staffMember.name} is unavailable on this class date.`);
         const existing = await tx.select().from(classStaffAssignments).where(eq(classStaffAssignments.scheduleId, input.scheduleId));
+        const candidates = await tx.select({ id: jobApplications.id, role: jobApplications.role, location: jobApplications.location,
+          status: jobApplications.status, isTeamMember: jobApplications.isTeamMember, deletedAt: jobApplications.deletedAt })
+          .from(jobApplications);
+        const leaves = await tx.select().from(staffAvailability).where(and(lte(staffAvailability.startDate, schedule.classDate), gte(staffAvailability.endDate, schedule.classDate)));
+        const activeAssignments = existing.filter((assignment) => candidates.some((person) => person.id === assignment.staffId && isActiveTeamMember(person)
+          && (person.role === "Puppy Monitor" || person.role === "puppy_monitor") && person.location === scheduleLocationToTeamLocation(schedule.location)
+          && !leaves.some((leave) => leave.staffId === person.id)));
         const eligibility = getPuppyMonitorAssignmentEligibility({
-          assignedCount: existing.length,
-          alreadyAssigned: existing.some((assignment) => assignment.staffId === staffMember.id),
+          assignedCount: activeAssignments.length,
+          alreadyAssigned: activeAssignments.some((assignment) => assignment.staffId === staffMember.id),
         });
         if (!eligibility.eligible) throw new Error(eligibility.reason);
-        await tx.insert(classStaffAssignments).values({ scheduleId: input.scheduleId, staffId: staffMember.id, staffName: staffMember.name, role: "Puppy Monitor" });
+        const prior = existing.find((assignment) => assignment.staffId === staffMember.id);
+        if (prior) {
+          await tx.update(classStaffAssignments).set({ staffName: staffMember.name }).where(eq(classStaffAssignments.id, prior.id));
+        } else {
+          await tx.insert(classStaffAssignments).values({ scheduleId: input.scheduleId, staffId: staffMember.id, staffName: staffMember.name, role: "Puppy Monitor" });
+        }
         return { success: true };
       });
     }),

@@ -265,31 +265,10 @@ describe("direct team-member validation", () => {
     });
   });
 
-  it("does not restore historic APY HQ access without current onboarding evidence", () => {
-    expect(getApyHqReactivationEligibility({
-      status: "accepted",
-      onboardingSentAt: null,
-      signingComplete: false,
-      directOwnerProvisioned: false,
-    })).toMatchObject({ eligible: false });
-    expect(getApyHqReactivationEligibility({
-      status: "onboarded",
-      onboardingSentAt: new Date(),
-      signingComplete: false,
-      directOwnerProvisioned: false,
-    })).toMatchObject({ eligible: false });
-    expect(getApyHqReactivationEligibility({
-      status: "onboarded",
-      onboardingSentAt: new Date(),
-      signingComplete: true,
-      directOwnerProvisioned: false,
-    })).toEqual({ eligible: true });
-    expect(getApyHqReactivationEligibility({
-      status: "onboarded",
-      onboardingSentAt: null,
-      signingComplete: false,
-      directOwnerProvisioned: true,
-    })).toMatchObject({ eligible: false });
+  it("allows an existing employee to regain access without onboarding documents", () => {
+    expect(getApyHqReactivationEligibility({ status: "accepted", onboardingSentAt: null, signingComplete: false, directOwnerProvisioned: false })).toMatchObject({ eligible: false });
+    expect(getApyHqReactivationEligibility({ status: "onboarded", onboardingSentAt: null, signingComplete: false, directOwnerProvisioned: true })).toEqual({ eligible: true });
+    expect(getApyHqReactivationEligibility({ status: "onboarded", onboardingSentAt: null, signingComplete: false, directOwnerProvisioned: false })).toEqual({ eligible: true });
   });
 
   it("marks a departed employee inactive while retaining their source application and employment history", () => {

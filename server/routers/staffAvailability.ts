@@ -7,7 +7,10 @@ import { getUpcomingWeekendDates, isAwayOnDate, isWeekendDate } from "../weekend
 import { isActiveTeamMember } from "../teamMembership";
 import { normalizeCanadianPhoneNumber } from "../../shared/phone";
 import { APY_TEAM_LOCATIONS, APY_TEAM_ROLES, isApprovedApyTeamRole, isCentralApyTeamRole, isOperationsManagerRole, normalizeApyRole } from "../../shared/apyPermissions";
-import { getPuppyMonitorLocationCoverage } from "../../shared/puppyMonitorLocationCoverage";
+import { getOperationsManagerDepartureEligibility, validateTeamAssignmentChange } from "../staffRosterPolicy";
+export { getOperationsManagerDepartureEligibility, validateTeamAssignmentChange } from "../staffRosterPolicy";
+import { revokeTeamProfileAccess } from "../staffAccessRevocation";
+import { activateEmployeeWithAccess } from "../employeeActivation";
 import { withStaffingMutationLock } from "../staffingMutationLock";
 
 export const directTeamMemberSchema = z.object({
@@ -106,20 +109,6 @@ export function hasActiveOperationsManagerAtLocation(
   ));
 }
 
-export function getOperationsManagerDepartureEligibility(input: {
-  employeeId: number;
-  employeeRole: string;
-  activeLocationEmployees: Array<{ id: number; role: string }>;
-}) {
-  if (!isOperationsManagerRole(input.employeeRole)) return { eligible: true as const };
-  const hasOtherOperationsManager = input.activeLocationEmployees.some((person) => person.id !== input.employeeId && isOperationsManagerRole(person.role));
-  const hasActivePuppyMonitor = input.activeLocationEmployees.some((person) => isPuppyMonitorRole(person.role));
-  if (hasActivePuppyMonitor && !hasOtherOperationsManager) {
-    return { eligible: false as const, reason: "Assign another active Operations Manager before ending employment for this location's sole Operations Manager." };
-  }
-  return { eligible: true as const };
-}
-
 export function getTeamRemovalUpdate(removedAt: Date) {
   return { isTeamMember: false, deletedAt: removedAt };
 }
@@ -187,27 +176,15 @@ export function getOnboardedApplicantDirectoryEligibility(input: { status: strin
   return { eligible: true as const };
 }
 
-/**
- * Historic/recovered profiles and removed direct hires never regain APY HQ
- * access merely because their directory record exists. New direct hires may
- * receive access at creation; every later reactivation needs durable
- * onboarding evidence rather than a free-text provenance field.
- */
+/** Existing employees can be activated deliberately without applicant signing. */
 export function getApyHqReactivationEligibility(input: {
   status: string;
   onboardingSentAt: Date | null;
   signingComplete: boolean;
   directOwnerProvisioned: boolean;
 }) {
-  void input.directOwnerProvisioned;
   if (input.status !== "onboarded") {
-    return { eligible: false as const, reason: "Only fully onboarded employees can regain APY HQ access." };
-  }
-  if (!input.onboardingSentAt) {
-    return { eligible: false as const, reason: "This profile has no recorded onboarding delivery. Use an owner-audited migration decision before granting staff access." };
-  }
-  if (!input.signingComplete) {
-    return { eligible: false as const, reason: "This profile has no current signed Offer Letter and NDA. Complete signing before restoring staff access." };
+    return { eligible: false as const, reason: "Only existing employee profiles can regain APY HQ access. Add an employee record first." };
   }
   return { eligible: true as const };
 }
@@ -310,34 +287,8 @@ export function getOnboardedApplicantContactMatchEligibility(input: {
   return { eligible: true as const };
 }
 
-export function validateTeamAssignmentChange(input: {
-  currentRole: string;
-  currentLocation: string;
-  nextRole: string;
-  nextLocation: string;
-  hasOperationsManagerAtNextLocation: boolean;
-  hasOtherOperationsManagerAtCurrentLocation: boolean;
-  hasActivePuppyMonitorsAtCurrentLocation: boolean;
-  activePuppyMonitorCountAtCurrentLocation?: number;
-}) {
-  if (input.nextRole === "Puppy Monitor" && !input.hasOperationsManagerAtNextLocation) {
-    throw new Error("Add or retain an Operations Manager at this location before assigning Puppy Monitors.");
-  }
-  const movesOperationsManager = isOperationsManagerRole(input.currentRole)
-    && (input.nextRole !== "Operations Manager" || input.nextLocation !== input.currentLocation);
-  if (movesOperationsManager && input.hasActivePuppyMonitorsAtCurrentLocation && !input.hasOtherOperationsManagerAtCurrentLocation) {
-    throw new Error("Assign another Operations Manager to this Puppy Monitor location before changing this team member.");
-  }
-  const movesOrChangesPuppyMonitor = isPuppyMonitorRole(input.currentRole)
-    && (!isPuppyMonitorRole(input.nextRole) || input.nextLocation !== input.currentLocation);
-  const remainingPuppyMonitorCount = Math.max(0, (input.activePuppyMonitorCountAtCurrentLocation ?? 0) - (movesOrChangesPuppyMonitor ? 1 : 0));
-  const puppyMonitorCoverage = getPuppyMonitorLocationCoverage(remainingPuppyMonitorCount);
-  if (movesOrChangesPuppyMonitor && !puppyMonitorCoverage.meetsMinimum) {
-    throw new Error(`Keep at least ${puppyMonitorCoverage.minimum} active Puppy Monitors at ${input.currentLocation} before moving, changing role, or removing this person.`);
-  }
-}
-
 export function validateEmployeeDirectoryAssignmentChange(input: {
+  isOwner?: boolean;
   linkedActiveTeamProfile: boolean;
   currentRole: string;
   currentLocation: string;
@@ -409,7 +360,7 @@ export const staffAvailabilityRouter = router({
   // Update directory contact and assignment details. Linked APY HQ profiles stay synchronized.
   updateEmployeeRecord: adminProcedure
     .input(employeeRecordUpdateSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
@@ -418,7 +369,7 @@ export const staffAvailabilityRouter = router({
         .limit(1);
       if (!employee) throw new Error("Employee record not found.");
 
-      if (employee.employmentStatus === "active" && employee.endedAt === null) {
+      if (ctx.apyAccess.level !== "owner" && employee.employmentStatus === "active" && employee.endedAt === null) {
         const [employeesAtTarget, employeesAtCurrentLocation] = await Promise.all([
           db.select({ id: employees.id, role: employees.role, location: employees.location, employmentStatus: employees.employmentStatus, endedAt: employees.endedAt })
             .from(employees)
@@ -488,7 +439,7 @@ export const staffAvailabilityRouter = router({
       });
       if (!contactEligibility.eligible) throw new Error(contactEligibility.reason);
 
-      if (isPuppyMonitorRole(input.role)) {
+      if (ctx.apyAccess.level !== "owner" && isPuppyMonitorRole(input.role)) {
         const operationsManagers = await db.select({
           role: employees.role,
           location: employees.location,
@@ -641,7 +592,7 @@ export const staffAvailabilityRouter = router({
         if (hasMatchingActiveTeamContact({ email, phone }, activeTeamContacts)) {
           throw new Error("Remove the matching active APY HQ profile first. New-hire portal access cannot duplicate an existing staff profile.");
         }
-        if (accessPlan.grantsPortalAccess && isPuppyMonitorRole(currentApplicant.role)) {
+        if (ctx.apyAccess.level !== "owner" && accessPlan.grantsPortalAccess && isPuppyMonitorRole(currentApplicant.role)) {
           const operationsManagers = await tx.select({
             role: employees.role,
             location: employees.location,
@@ -730,7 +681,7 @@ export const staffAvailabilityRouter = router({
       const eligibility = getExistingEmployeeAccessProvisioningEligibility(employee);
       if (!eligibility.eligible) throw new Error(eligibility.reason);
 
-      if (isPuppyMonitorRole(employee.role)) {
+      if (ctx.apyAccess.level !== "owner" && isPuppyMonitorRole(employee.role)) {
         const operationsManagers = await db.select({
           role: employees.role,
           location: employees.location,
@@ -819,104 +770,35 @@ export const staffAvailabilityRouter = router({
       return { success: true, id: profileId, grantsApyHqAccess: true };
     }),
 
-  // Mark a directory employee inactive while retaining the directory history and original application. APY HQ removals remain in the existing protected team workflow.
+  // Deactivate employment and all linked login credentials in one transaction.
   markEmployeeDeparted: adminProcedure
     .input(z.object({ employeeId: z.number().int().positive() }))
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const [employee] = await db.select().from(employees).where(eq(employees.id, input.employeeId)).limit(1);
-      if (!employee) throw new Error("Employee record not found.");
-      if (employee.employmentStatus === "inactive") return { success: true, alreadyInactive: true };
-
-      if (employee.sourceApplicationId !== null) {
-        const [linkedProfile] = await db.select({ isTeamMember: jobApplications.isTeamMember, deletedAt: jobApplications.deletedAt })
-          .from(jobApplications).where(eq(jobApplications.id, employee.sourceApplicationId)).limit(1);
-        if (linkedProfile?.isTeamMember && !linkedProfile.deletedAt) {
-          throw new Error("Remove this person from APY HQ Team first so staffing coverage and portal access are handled safely.");
-        }
-      }
-
-      const endedAt = new Date();
-      await db.transaction(async (tx) => {
-        if (isOperationsManagerRole(employee.role)) {
-          const activeLocationEmployees = await tx.select({
-            id: employees.id,
-            role: employees.role,
-            location: employees.location,
-            employmentStatus: employees.employmentStatus,
-            endedAt: employees.endedAt,
-          }).from(employees).where(and(
-            eq(employees.location, employee.location),
-            eq(employees.employmentStatus, "active"),
-            isNull(employees.endedAt),
-          ));
-          const coverageEligibility = getOperationsManagerDepartureEligibility({
-            employeeId: employee.id,
-            employeeRole: employee.role,
-            activeLocationEmployees,
-          });
-          if (!coverageEligibility.eligible) {
-            throw new Error(`${coverageEligibility.reason.replace("this location", employee.location)}`);
-          }
-        }
-        await tx.update(employees).set(getEmployeeDepartureUpdate(endedAt)).where(eq(employees.id, employee.id));
+      return withStaffingMutationLock(db, async (tx: typeof db) => {
+        const [employee] = await tx.select().from(employees).where(eq(employees.id, input.employeeId)).limit(1);
+        if (!employee) throw new Error("Employee record not found.");
         if (employee.sourceApplicationId !== null) {
+          await revokeTeamProfileAccess(tx, employee.sourceApplicationId, { isOwner: ctx.apyAccess.level === "owner", retainTeamMembership: true });
           await tx.insert(jobApplicationActions).values({
-            applicationId: employee.sourceApplicationId,
-            action: "employee_directory_departed",
-            actorUserId: ctx.user.id,
-            actorName: ctx.user.name,
-            actorEmail: ctx.user.email,
+            applicationId: employee.sourceApplicationId, action: "employee_directory_departed",
+            actorUserId: ctx.user.id, actorName: ctx.user.name, actorEmail: ctx.user.email,
           });
+        } else {
+          await tx.update(employees).set(getEmployeeDepartureUpdate(new Date())).where(eq(employees.id, employee.id));
         }
+        return { success: true, alreadyInactive: employee.employmentStatus === "inactive" };
       });
-      return { success: true, alreadyInactive: false };
     }),
 
-  // Re-establish the employment record only. APY HQ and staff-login access need a separate, deliberate action.
+  // Activation restores both employment and role-based login in one action.
   reactivateEmployeeEmployment: adminProcedure
     .input(z.object({ employeeId: z.number().int().positive() }))
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      return db.transaction(async (tx) => {
-        const [employee] = await tx.select().from(employees).where(eq(employees.id, input.employeeId)).limit(1);
-        if (!employee) throw new Error("Employee record not found.");
-        if (employee.employmentStatus === "active") return { success: true, alreadyActive: true };
-
-        const linkedProfile = employee.sourceApplicationId === null ? null : (await tx.select({
-          isTeamMember: jobApplications.isTeamMember,
-          deletedAt: jobApplications.deletedAt,
-        }).from(jobApplications).where(eq(jobApplications.id, employee.sourceApplicationId)).limit(1))[0] ?? null;
-        const activeTeamContacts = employee.sourceApplicationId === null
-          ? await tx.select({ email: jobApplications.email, phone: jobApplications.phone }).from(jobApplications).where(and(
-            eq(jobApplications.isTeamMember, true),
-            isNull(jobApplications.deletedAt),
-          ))
-          : [];
-        const eligibility = getEmployeeEmploymentReactivationEligibility({
-          employmentStatus: employee.employmentStatus,
-          hasApyHqAccess: hasActiveApyHqAccess(linkedProfile ?? undefined)
-            || hasMatchingActiveTeamContact(employee, activeTeamContacts),
-        });
-        if (!eligibility.eligible) throw new Error(eligibility.reason);
-
-        const [result] = await tx.update(employees).set(getEmployeeReactivationUpdate())
-          .where(and(eq(employees.id, employee.id), eq(employees.employmentStatus, "inactive")));
-        if (result.affectedRows !== 1) throw new Error("This employee record changed while it was being restored. Reload and review the current status.");
-        if (employee.sourceApplicationId !== null) {
-          await tx.insert(jobApplicationActions).values({
-            applicationId: employee.sourceApplicationId,
-            action: "employee_directory_reactivated",
-            actorUserId: ctx.user.id,
-            actorName: ctx.user.name,
-            actorEmail: ctx.user.email,
-            details: JSON.stringify({ employmentReactivated: true, hasApyHqAccess: false }),
-          });
-        }
-        return { success: true, alreadyActive: false };
-      });
+      return withStaffingMutationLock(db, (tx) => activateEmployeeWithAccess(tx, input.employeeId, ctx.user, ctx.apyAccess.level === "owner"));
     }),
 
   // Permanently delete a former directory record only. Hiring/application history is intentionally retained.
@@ -1001,7 +883,10 @@ export const staffAvailabilityRouter = router({
         const roleStaff = activeStaff.filter((person) => person.location === location && sameRole(person.role, role));
         const primary = roleStaff[0] ?? null;
         const primaryLeave = primary ? leaves.find((leave) => leave.staffId === primary.id && isAwayOnDate(leave, weekend.date)) : undefined;
-        const coverage = savedCoverage.find((item) => item.coverageDate === weekend.date && item.location === location && item.role === role) ?? null;
+        const saved = savedCoverage.find((item) => item.coverageDate === weekend.date && item.location === location && item.role === role) ?? null;
+        const assignedCover = saved?.coverageStaffId ? activeStaff.find((person) => person.id === saved.coverageStaffId && sameRole(person.role, role)
+          && !leaves.some((leave) => leave.staffId === person.id && isAwayOnDate(leave, weekend.date))) : null;
+        const coverage = assignedCover && saved ? { ...saved, coverageStaffName: assignedCover.name } : null;
         const candidates = activeStaff
           .filter((person) => sameRole(person.role, role))
           .filter((person) => !leaves.some((leave) => leave.staffId === person.id && isAwayOnDate(leave, weekend.date)));
@@ -1125,7 +1010,7 @@ export const staffAvailabilityRouter = router({
   // Add a staff member directly, without requiring a careers-portal application.
   createTeamMember: adminProcedure
     .input(directTeamMemberSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       const normalizedPhone = input.phone ? normalizeCanadianPhoneNumber(input.phone) : null;
@@ -1142,7 +1027,7 @@ export const staffAvailabilityRouter = router({
         throw new Error("An Employee Directory record already uses this email address or phone number. Update or restore the existing record instead of adding a duplicate.");
       }
 
-      if (input.role === "Puppy Monitor") {
+      if (ctx.apyAccess.level !== "owner" && input.role === "Puppy Monitor") {
         const [operationsManager] = await db.select({ id: jobApplications.id })
           .from(jobApplications)
           .where(and(
@@ -1188,11 +1073,12 @@ export const staffAvailabilityRouter = router({
   // Edit an active APY HQ team profile without disturbing its hiring history or access audit trail.
   updateTeamMember: adminProcedure
     .input(teamMemberProfileUpdateSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      const [existing] = await db.select({
+      return withStaffingMutationLock(db, async (tx: typeof db) => {
+      const [existing] = await tx.select({
         id: jobApplications.id,
         role: jobApplications.role,
         location: jobApplications.location,
@@ -1204,7 +1090,7 @@ export const staffAvailabilityRouter = router({
       if (!existing) throw new Error("This person is not an active APY HQ team member.");
 
       const [operationsManagersAtTarget, operationsManagersAtCurrentLocation, activePuppyMonitorsAtCurrentLocation] = await Promise.all([
-        db.select({ id: jobApplications.id })
+        tx.select({ id: jobApplications.id })
           .from(jobApplications)
           .where(and(
             isNull(jobApplications.deletedAt),
@@ -1212,7 +1098,7 @@ export const staffAvailabilityRouter = router({
             eq(jobApplications.role, "Operations Manager"),
             eq(jobApplications.location, input.location),
           )),
-        db.select({ id: jobApplications.id })
+        tx.select({ id: jobApplications.id })
           .from(jobApplications)
           .where(and(
             isNull(jobApplications.deletedAt),
@@ -1220,7 +1106,7 @@ export const staffAvailabilityRouter = router({
             eq(jobApplications.role, "Operations Manager"),
             eq(jobApplications.location, existing.location),
           )),
-        db.select({ id: jobApplications.id })
+        tx.select({ id: jobApplications.id })
           .from(jobApplications)
           .where(and(
             isNull(jobApplications.deletedAt),
@@ -1231,6 +1117,7 @@ export const staffAvailabilityRouter = router({
       ]);
 
       validateTeamAssignmentChange({
+        isOwner: ctx.apyAccess.level === "owner",
         currentRole: existing.role,
         currentLocation: existing.location,
         nextRole: input.role,
@@ -1241,14 +1128,14 @@ export const staffAvailabilityRouter = router({
         activePuppyMonitorCountAtCurrentLocation: activePuppyMonitorsAtCurrentLocation.length,
       });
 
-      await db.update(jobApplications).set({
+      await tx.update(jobApplications).set({
         name: input.name,
         email: input.email ? input.email.toLowerCase() : null,
         phone: input.phone ? normalizeCanadianPhoneNumber(input.phone) : null,
         role: input.role,
         location: input.location,
       }).where(eq(jobApplications.id, input.id));
-      await db.update(employees).set({
+      await tx.update(employees).set({
         name: input.name,
         email: input.email ? input.email.toLowerCase() : null,
         phone: input.phone ? normalizeCanadianPhoneNumber(input.phone) : null,
@@ -1257,155 +1144,40 @@ export const staffAvailabilityRouter = router({
       }).where(eq(employees.sourceApplicationId, input.id));
 
       return { success: true };
+      });
     }),
 
   setTeamMemberActive: adminProcedure
     .input(teamMemberActivitySchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       return withStaffingMutationLock(db, async (tx: typeof db) => {
-      const [existing] = await tx.select({
-        id: jobApplications.id,
-        role: jobApplications.role,
-        location: jobApplications.location,
-        status: jobApplications.status,
-        onboardingSentAt: jobApplications.onboardingSentAt,
-        whyAPY: jobApplications.whyAPY,
-        isTeamMember: jobApplications.isTeamMember,
-        archivedAt: jobApplications.deletedAt,
-      }).from(jobApplications).where(and(
-        eq(jobApplications.id, input.id),
-      )).limit(1);
-      if (!existing) throw new Error("This team profile is no longer available.");
-      if (!input.isActive) {
-        throw new Error("Use Staff Management to revoke APY HQ access. It safely removes every linked portal credential while preserving employment history.");
-      }
-      const isCurrentlyActive = Boolean(existing.isTeamMember) && !existing.archivedAt;
-      if (isCurrentlyActive === input.isActive) return { success: true };
-      if (!input.isActive && !isCurrentlyActive) throw new Error("This person is already inactive.");
-      if (input.isActive && (!existing.isTeamMember || !existing.archivedAt)) throw new Error("Only an archived APY HQ team profile can be reactivated.");
-      if (input.isActive) {
-        const [latestSigning] = await tx.select({ signed: signingTokens.signed })
-          .from(signingTokens)
-          .where(eq(signingTokens.applicationId, existing.id))
-          .orderBy(desc(signingTokens.id))
-          .limit(1);
-        const eligibility = getApyHqReactivationEligibility({
-          status: existing.status,
-          onboardingSentAt: existing.onboardingSentAt,
-          signingComplete: latestSigning?.signed === 1,
-          directOwnerProvisioned: existing.whyAPY?.startsWith("Added directly through") === true,
-        });
-        if (!eligibility.eligible) throw new Error(eligibility.reason);
-      }
-
-      const [operationsManagersAtLocation, activePuppyMonitorsAtLocation] = await Promise.all([
-        tx.select({ id: jobApplications.id }).from(jobApplications).where(and(
-          isNull(jobApplications.deletedAt),
-          eq(jobApplications.isTeamMember, true),
-          eq(jobApplications.role, "Operations Manager"),
-          eq(jobApplications.location, existing.location),
-        )),
-        tx.select({ id: jobApplications.id }).from(jobApplications).where(and(
-          isNull(jobApplications.deletedAt),
-          eq(jobApplications.isTeamMember, true),
-          eq(jobApplications.role, "Puppy Monitor"),
-          eq(jobApplications.location, existing.location),
-        )),
-      ]);
-
-      validateTeamAssignmentChange({
-        currentRole: existing.role,
-        currentLocation: existing.location,
-        nextRole: input.isActive ? existing.role : "Inactive",
-        nextLocation: existing.location,
-        hasOperationsManagerAtNextLocation: operationsManagersAtLocation.some((manager) => manager.id !== existing.id || existing.role === "Operations Manager"),
-        hasOtherOperationsManagerAtCurrentLocation: operationsManagersAtLocation.some((manager) => manager.id !== existing.id),
-        hasActivePuppyMonitorsAtCurrentLocation: activePuppyMonitorsAtLocation.length > 0,
-        activePuppyMonitorCountAtCurrentLocation: activePuppyMonitorsAtLocation.length,
-      });
-
-      const statusChangedAt = new Date();
-      await tx.update(jobApplications).set({
-        isTeamMember: true,
-        deletedAt: input.isActive ? null : statusChangedAt,
-      }).where(eq(jobApplications.id, input.id));
-      await tx.update(employees).set({
-        employmentStatus: input.isActive ? "active" : "inactive",
-        endedAt: input.isActive ? null : statusChangedAt,
-      }).where(eq(employees.sourceApplicationId, input.id));
-      return { success: true };
+        if (!input.isActive) {
+          return revokeTeamProfileAccess(tx, input.id, { isOwner: ctx.apyAccess.level === "owner", retainTeamMembership: true });
+        }
+        const [employee] = await tx.select({ id: employees.id }).from(employees)
+          .where(eq(employees.sourceApplicationId, input.id)).limit(1);
+        if (!employee) throw new Error("Add this person to Employee Directory before activating login.");
+        return activateEmployeeWithAccess(tx, employee.id, ctx.user, ctx.apyAccess.level === "owner");
       });
     }),
 
-  // Remove from APY HQ, staffing, and portal access while retaining employee history.
+  // Remove access by profile ID, even for staff who never had an email invite.
   removeTeamMember: adminProcedure
-    .input(z.object({ id: z.number() }))
-    .mutation(async () => {
-      throw new Error("Use Staff Management to revoke APY HQ access. It safely removes every linked portal credential while preserving employment history.");
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      return withStaffingMutationLock(db, (tx) => revokeTeamProfileAccess(tx, input.id, { isOwner: ctx.apyAccess.level === "owner" }));
     }),
 
-  // Restore a removed employee who has a linked APY HQ team profile.
+  // Explicitly restore login for an existing active employee, without new-hire paperwork.
   reactivateTeamMember: adminProcedure
     .input(z.object({ employeeId: z.number().int().positive() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      return withStaffingMutationLock(db, async (tx: typeof db) => {
-      const [employee] = await tx.select().from(employees)
-        .where(eq(employees.id, input.employeeId))
-        .limit(1);
-      if (!employee || employee.sourceApplicationId === null) {
-        throw new Error("This employee needs a linked APY HQ team profile before they can be restored.");
-      }
-      const sourceApplicationId = employee.sourceApplicationId;
-      if (employee.employmentStatus !== "active") {
-        throw new Error("Restore this person to active employment before granting APY HQ access.");
-      }
-      const [profile] = await tx.select({
-        id: jobApplications.id,
-        role: jobApplications.role,
-        location: jobApplications.location,
-        status: jobApplications.status,
-        onboardingSentAt: jobApplications.onboardingSentAt,
-        whyAPY: jobApplications.whyAPY,
-        isTeamMember: jobApplications.isTeamMember,
-        deletedAt: jobApplications.deletedAt,
-      }).from(jobApplications).where(eq(jobApplications.id, sourceApplicationId)).limit(1);
-      if (!profile) throw new Error("The linked APY HQ team profile could not be found.");
-      if (hasActiveApyHqAccess(profile)) return { success: true, sourceApplicationId, alreadyActive: true };
-      const [latestSigning] = await tx.select({ signed: signingTokens.signed })
-        .from(signingTokens)
-        .where(eq(signingTokens.applicationId, profile.id))
-        .orderBy(desc(signingTokens.id))
-        .limit(1);
-      const eligibility = getApyHqReactivationEligibility({
-        status: profile.status,
-        onboardingSentAt: profile.onboardingSentAt,
-        signingComplete: latestSigning?.signed === 1,
-        directOwnerProvisioned: profile.whyAPY?.startsWith("Added directly through") === true,
-      });
-      if (!eligibility.eligible) throw new Error(eligibility.reason);
-      if (profile.role === "Puppy Monitor") {
-        const [operationsManager] = await tx.select({ id: jobApplications.id })
-          .from(jobApplications)
-          .where(and(
-            isNull(jobApplications.deletedAt),
-            eq(jobApplications.isTeamMember, true),
-            eq(jobApplications.role, "Operations Manager"),
-            eq(jobApplications.location, profile.location),
-          ))
-          .limit(1);
-        if (!operationsManager) {
-          throw new Error("Add this location's Operations Manager to APY HQ before restoring Puppy Monitor access.");
-        }
-      }
-      await tx.update(employees).set({ employmentStatus: "active", endedAt: null })
-        .where(and(eq(employees.id, input.employeeId), eq(employees.employmentStatus, "active")));
-      await tx.update(jobApplications).set({ isTeamMember: true, deletedAt: null, status: "onboarded" })
-        .where(eq(jobApplications.id, sourceApplicationId));
-      return { success: true, sourceApplicationId };
-      });
+      return withStaffingMutationLock(db, (tx) => activateEmployeeWithAccess(tx, input.employeeId, ctx.user, ctx.apyAccess.level === "owner"));
     }),
 });

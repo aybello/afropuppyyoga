@@ -108,10 +108,10 @@ export default function EmployeeDirectory() {
     },
     onError: (error) => toast.error(error.message),
   });
-  // Restores the directory employment status only. It does not grant APY HQ access.
-  const reactivateEmploymentOnly = trpc.staffAvailability.reactivateEmployeeEmployment.useMutation({
+  // Explicit activation restores employment and role-based login access together.
+  const activateEmployee = trpc.staffAvailability.reactivateEmployeeEmployment.useMutation({
     onSuccess: () => {
-      toast.success("Employment reactivated. APY HQ access remains off until you grant it.");
+      toast.success("Employee activated with login access.");
       setReactivatingEmployee(null);
       refetch();
     },
@@ -168,14 +168,14 @@ export default function EmployeeDirectory() {
             </div>
             <h1 className="font-display text-4xl font-bold text-[#1A0A12]">Employee Directory</h1>
             <p className="mt-2 max-w-2xl font-body text-sm leading-6 text-[#6E5360]">
-              APY's record of active and former team members. Removing someone from APY HQ clears their staffing access and keeps their history here.
+              Add, edit or deactivate employees here. Active employees have role-based login access. Deactivation removes access and preserves their history.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Button type="button" onClick={() => setShowAddEmployee(true)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#8B2252] px-5 py-3 font-body text-sm font-bold text-white hover:bg-[#6B1A3E]">
               <UserPlus className="h-4 w-4" /> Add Employee
             </Button>
-            <Link href="/admin/staff-availability" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#8B2252]/25 bg-white px-5 py-3 font-body text-sm font-bold text-[#8B2252] hover:bg-[#FFF5F8]">
+            <Link href="/admin/staff-availability?tab=team" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#8B2252]/25 bg-white px-5 py-3 font-body text-sm font-bold text-[#8B2252] hover:bg-[#FFF5F8]">
               Manage Active Team
             </Link>
           </div>
@@ -238,7 +238,7 @@ export default function EmployeeDirectory() {
                 <tbody>
                   {visibleEmployees.map((employee) => {
                     const isActive = employee.employmentStatus === "active";
-                    const isReactivatingThisEmployee = reactivateEmploymentOnly.isPending
+                    const isReactivatingThisEmployee = activateEmployee.isPending
                       && reactivatingEmployee?.id === employee.id;
                     return (
                       <tr key={employee.id} className="border-t border-[#F4EAED] font-body text-sm text-[#3D1A2E]">
@@ -268,7 +268,7 @@ export default function EmployeeDirectory() {
                               <Pencil className="h-3.5 w-3.5" /> Edit
                             </button>
                             {isActive && employee.sourceApplicationId && employee.hasApyHqAccess ? (
-                              <Link href="/admin/staff-availability" className="inline-flex items-center gap-1.5 font-body text-xs font-bold text-[#8B2252] hover:text-[#6B1A3E]"><KeyRound className="h-3.5 w-3.5" /> APY HQ access</Link>
+                              <Link href="/admin/staff-availability?tab=team" className="inline-flex items-center gap-1.5 font-body text-xs font-bold text-[#8B2252] hover:text-[#6B1A3E]"><KeyRound className="h-3.5 w-3.5" /> APY HQ access</Link>
                             ) : employee.sourceApplicationId && isActive ? (
                               <button
                                 type="button"
@@ -279,7 +279,7 @@ export default function EmployeeDirectory() {
                                 <RefreshCw className={`h-3.5 w-3.5 ${restoreApyHqTeamMember.isPending ? "animate-spin" : ""}`} /> {restoreApyHqTeamMember.isPending ? "Restoring…" : "Restore APY HQ access"}
                               </button>
                             ) : !isActive && employee.sourceApplicationId ? (
-                              <span className="font-body text-xs text-[#956A7C]">Reactivate employment first</span>
+                              <span className="font-body text-xs text-[#956A7C]">Activate employee first</span>
                             ) : isActive ? (
                               <button
                                 type="button"
@@ -293,29 +293,14 @@ export default function EmployeeDirectory() {
                               <span className="font-body text-xs text-[#956A7C]">No APY HQ access</span>
                             )}
                             {!isActive && (
-                              employee.hasApyHqAccess ? (
-                                <div className="flex items-center gap-2">
-                                  <button type="button" disabled title="Blocked: this person still has active APY HQ access." className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-400">
-                                    <RefreshCw className="h-3.5 w-3.5" /> Activate employment
-                                  </button>
-                                  <Link href="/admin/staff-availability" className="inline-flex items-center gap-1.5 font-body text-xs font-bold text-[#9A3B51] hover:text-[#7B263B]">
-                                    <UserMinus className="h-3.5 w-3.5" /> Manage APY HQ access
-                                  </Link>
-                                </div>
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={() => setReactivatingEmployee(employee)}
-                                  disabled={reactivateEmploymentOnly.isPending}
-                                  className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
-                                >
-                                  <RefreshCw className={`h-3.5 w-3.5 ${isReactivatingThisEmployee ? "animate-spin" : ""}`} /> {isReactivatingThisEmployee ? "Reactivating…" : "Activate employment"}
-                                </button>
-                              )
+                              <button type="button" onClick={() => setReactivatingEmployee(employee)} disabled={activateEmployee.isPending}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-100 disabled:opacity-50">
+                                <RefreshCw className={`h-3.5 w-3.5 ${isReactivatingThisEmployee ? "animate-spin" : ""}`} /> {isReactivatingThisEmployee ? "Activating…" : "Activate employee & login"}
+                              </button>
                             )}
                             {isActive && (
                               <button type="button" onClick={() => setDepartingEmployee(employee)} className="inline-flex items-center gap-1.5 font-body text-xs font-bold text-[#9A3B51] hover:text-[#7B263B]">
-                                <UserMinus className="h-3.5 w-3.5" /> Mark departed
+                                <UserMinus className="h-3.5 w-3.5" /> Deactivate
                               </button>
                             )}
                             {!isActive && (
@@ -381,13 +366,13 @@ export default function EmployeeDirectory() {
       <Dialog open={Boolean(departingEmployee)} onOpenChange={(open) => !open && setDepartingEmployee(null)}>
         <DialogContent className="max-w-lg border-[#EADBE2] bg-[#FEFAF4]">
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl text-[#1A0A12]">Mark employee as departed?</DialogTitle>
-            <DialogDescription className="font-body leading-6 text-[#6E5360]">{departingEmployee?.name} will move to former employees. Their employment history and any source application will be retained.</DialogDescription>
+            <DialogTitle className="font-display text-2xl text-[#1A0A12]">Deactivate employee?</DialogTitle>
+            <DialogDescription className="font-body leading-6 text-[#6E5360]">{departingEmployee?.name} will become inactive and lose login access immediately. Their employee record and application history will remain. Any staffing gaps can be handled afterwards.</DialogDescription>
           </DialogHeader>
-          {departingEmployee?.sourceApplicationId && <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 font-body text-sm leading-5 text-amber-800">If this person is still active in APY HQ, remove them from the active team first so staffing coverage and portal access are handled safely.</p>}
+
           <DialogFooter className="pt-2">
             <Button type="button" variant="outline" onClick={() => setDepartingEmployee(null)}>Keep active</Button>
-            <Button type="button" disabled={markEmployeeDeparted.isPending} onClick={() => departingEmployee && markEmployeeDeparted.mutate({ employeeId: departingEmployee.id })} className="bg-[#9A3B51] text-white hover:bg-[#7B263B]">{markEmployeeDeparted.isPending ? "Updating…" : "Mark departed"}</Button>
+            <Button type="button" disabled={markEmployeeDeparted.isPending} onClick={() => departingEmployee && markEmployeeDeparted.mutate({ employeeId: departingEmployee.id })} className="bg-[#9A3B51] text-white hover:bg-[#7B263B]">{markEmployeeDeparted.isPending ? "Updating…" : "Deactivate employee"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -395,13 +380,13 @@ export default function EmployeeDirectory() {
       <Dialog open={Boolean(reactivatingEmployee)} onOpenChange={(open) => !open && setReactivatingEmployee(null)}>
         <DialogContent className="max-w-lg border-[#CFE7DC] bg-[#FEFAF4]">
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl text-[#1A0A12]">Reactivate employment?</DialogTitle>
-            <DialogDescription className="font-body leading-6 text-[#6E5360]">{reactivatingEmployee?.name} will return to the active Employee Directory. This does not create or restore APY HQ access, staffing assignments, or staff SMS login.</DialogDescription>
+            <DialogTitle className="font-display text-2xl text-[#1A0A12]">Activate employee and login?</DialogTitle>
+            <DialogDescription className="font-body leading-6 text-[#6E5360]">{reactivatingEmployee?.name} will become active and receive role-based login access using their saved email or phone. Signed onboarding is not required for this employee action.</DialogDescription>
           </DialogHeader>
-          <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 font-body text-sm leading-5 text-emerald-800">APY HQ access remains off. Grant it later only after the person is confirmed for the active team.</p>
+          <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 font-body text-sm leading-5 text-emerald-800">Existing class assignments and hiring history are retained. Old revoked access links remain revoked; use a fresh email link or phone code to sign in.</p>
           <DialogFooter className="pt-2">
             <Button type="button" variant="outline" onClick={() => setReactivatingEmployee(null)}>Keep inactive</Button>
-            <Button type="button" disabled={reactivateEmploymentOnly.isPending} onClick={() => reactivatingEmployee && reactivateEmploymentOnly.mutate({ employeeId: reactivatingEmployee.id })} className="bg-emerald-700 text-white hover:bg-emerald-800">{reactivateEmploymentOnly.isPending ? "Reactivating…" : "Reactivate employment"}</Button>
+            <Button type="button" disabled={activateEmployee.isPending} onClick={() => reactivatingEmployee && activateEmployee.mutate({ employeeId: reactivatingEmployee.id })} className="bg-emerald-700 text-white hover:bg-emerald-800">{activateEmployee.isPending ? "Reactivating…" : "Activate employee & login"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
