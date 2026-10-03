@@ -122,8 +122,9 @@ export function getEmployeeReactivationUpdate() {
   return { employmentStatus: "active" as const, endedAt: null };
 }
 
-export function hasActiveApyHqAccess(profile: { isTeamMember: boolean | number | null; deletedAt: Date | null } | undefined) {
-  return Boolean(profile?.isTeamMember) && profile?.deletedAt == null;
+export function hasActiveApyHqAccess(profile: { isTeamMember: boolean | number | null; deletedAt: Date | null; status: string; email: string | null; phone: string | null } | undefined) {
+  return Boolean(profile && isActiveTeamMember(profile)
+    && (profile.email?.trim() || normalizeCanadianPhoneNumber(profile.phone ?? "")));
 }
 
 /** Confirms that a directory-only employee has no separate active APY HQ profile by contact. */
@@ -347,11 +348,14 @@ export const staffAvailabilityRouter = router({
         id: jobApplications.id,
         isTeamMember: jobApplications.isTeamMember,
         deletedAt: jobApplications.deletedAt,
+        status: jobApplications.status,
+        email: jobApplications.email,
+        phone: jobApplications.phone,
       }).from(jobApplications).where(inArray(jobApplications.id, linkedProfileIds));
     const profilesById = new Map(profiles.map((profile) => [profile.id, profile]));
     return directory.map((employee) => ({
       ...employee,
-      hasApyHqAccess: employee.sourceApplicationId === null
+      hasApyHqAccess: employee.employmentStatus !== "active" || employee.sourceApplicationId === null
         ? false
         : hasActiveApyHqAccess(profilesById.get(employee.sourceApplicationId)),
     }));
@@ -386,6 +390,11 @@ export const staffAvailabilityRouter = router({
           .where(eq(jobApplications.id, employee.sourceApplicationId));
       }
 
+      if (employee.employmentStatus === "active") {
+        // Saving an active employee keeps login enabled. The transaction rolls
+        // back the edit if contacts belong to a genuinely different person.
+        await activateEmployeeWithAccess(tx, employee.id, ctx.user, ctx.apyAccess.level === "owner");
+      }
       return { success: true };
       });
     }),

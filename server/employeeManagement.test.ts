@@ -196,9 +196,32 @@ describe("simple employee management", () => {
   it("retains contact validation and avoids duplicate login identities", async () => {
     const missing = mockDb([[{ ...employee, email: null, phone: null }]]);
     await expect(activateEmployeeWithAccess(missing.db, 7, actor, true)).rejects.toThrow("valid email");
-    const duplicate = mockDb([[employee], [person, { ...person, id: 43 }]]);
+    const duplicate = mockDb([[employee], [person, { ...person, id: 43, name: "Different Person" }]]);
     await expect(activateEmployeeWithAccess(duplicate.db, 7, actor, true)).rejects.toThrow("Another applicant");
     expect(duplicate.updates).toEqual([]);
+  });
+
+  it("restores a linked employee despite same-person duplicate history and revokes the duplicate invite", async () => {
+    const duplicate = { ...person, id: 41, isTeamMember: false, deletedAt: null };
+    const harness = mockDb([[employee], [{ ...person, isTeamMember: false }, duplicate], [employee]]);
+    await expect(activateEmployeeWithAccess(harness.db, 7, actor, true)).resolves.toMatchObject({ sourceApplicationId: 42 });
+    expect(harness.updates).toContainEqual({ table: jobApplications, values: { isTeamMember: false } });
+    expect(harness.updates).toContainEqual({ table: staffInvites, values: { isActive: 0 } });
+    expect(harness.inserts.some((entry) => entry.table === jobApplications)).toBe(false);
+    const audit = harness.inserts.find((entry) => entry.values.action === "employee_and_login_activated");
+    expect(JSON.parse(String(audit?.values.details))).toMatchObject({ employeeId: 7, retiredDuplicateProfileIds: [41] });
+    // Removing the canonical profile stops access; the duplicate stays disabled.
+    const removal = mockDb([[person, duplicate], []]);
+    await revokeTeamProfileAccess(removal.db, 42, { isOwner: true, actor });
+    expect(removal.updates).toContainEqual({ table: staffInvites, values: { isActive: 0 } });
+    expect(removal.deletes).toEqual([staffPhoneAccessCodes]);
+  });
+
+  it("links an unlinked employee to one existing duplicate without creating a third profile", async () => {
+    const harness = mockDb([[{ ...employee, sourceApplicationId: null }], [{ ...person, id: 41, isTeamMember: false }, { ...person, isTeamMember: false }], [employee]]);
+    await expect(activateEmployeeWithAccess(harness.db, 7, actor, true)).resolves.toMatchObject({ sourceApplicationId: 42, grantsApyHqAccess: true });
+    expect(harness.inserts.some((entry) => entry.table === jobApplications)).toBe(false);
+    expect(harness.updates).toContainEqual({ table: employees, values: { employmentStatus: "active", endedAt: null, sourceApplicationId: 42 } });
   });
 
   it("lets an owner add a monitor without manager coverage or signed documents", async () => {

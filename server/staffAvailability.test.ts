@@ -3,10 +3,12 @@ import { directEmployeeSchema, directTeamMemberSchema, employeeRecordUpdateSchem
 
 describe("direct team-member validation", () => {
   it("identifies whether a linked employee is eligible for APY HQ phone access", () => {
-    expect(hasActiveApyHqAccess({ isTeamMember: true, deletedAt: null })).toBe(true);
-    expect(hasActiveApyHqAccess({ isTeamMember: false, deletedAt: null })).toBe(false);
-    expect(hasActiveApyHqAccess({ isTeamMember: true, deletedAt: new Date() })).toBe(false);
+    expect(hasActiveApyHqAccess({ isTeamMember: true, deletedAt: null, status: "onboarded", email: "staff@example.com", phone: null })).toBe(true);
+    expect(hasActiveApyHqAccess({ isTeamMember: false, deletedAt: null, status: "onboarded", email: "staff@example.com", phone: null })).toBe(false);
+    expect(hasActiveApyHqAccess({ isTeamMember: true, deletedAt: new Date(), status: "onboarded", email: "staff@example.com", phone: null })).toBe(false);
     expect(hasActiveApyHqAccess(undefined)).toBe(false);
+    expect(hasActiveApyHqAccess({ isTeamMember: true, deletedAt: null, status: "new", email: "staff@example.com", phone: null })).toBe(false);
+    expect(hasActiveApyHqAccess({ isTeamMember: true, deletedAt: null, status: "onboarded", email: null, phone: null })).toBe(false);
   });
 
   it("accepts an Operations Manager assigned to Oakville", () => {

@@ -184,7 +184,7 @@ export default function EmployeeDirectory() {
             </div>
             <h1 className="font-display text-4xl font-bold text-[#1A0A12]">Employee Directory</h1>
             <p className="mt-2 max-w-2xl font-body text-sm leading-6 text-[#6E5360]">
-              Add, edit or deactivate employees here. Active employees have role-based login access. Deactivation removes access and preserves their history.
+              Active employees can sign in with their saved email or phone. Remove someone from the active team when they leave to stop login immediately and keep their history.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -277,6 +277,9 @@ export default function EmployeeDirectory() {
                             {isActive ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Clock3 className="h-3.5 w-3.5" />}
                             {isActive ? "Active" : "Inactive"}
                           </span>
+                          <p className={`mt-1 text-[10px] ${isActive && employee.hasApyHqAccess ? "text-emerald-700" : "text-[#956A7C]"}`}>
+                            {isActive ? employee.hasApyHqAccess ? "Login enabled" : "Login needs setup" : "Login removed"}
+                          </p>
                         </td>
                         <td className="px-5 py-4 text-right">
                           <div className="flex items-center justify-end gap-3">
@@ -292,7 +295,7 @@ export default function EmployeeDirectory() {
                                 disabled={restoreApyHqTeamMember.isPending}
                                 className="inline-flex items-center gap-1.5 rounded-lg border border-[#8B2252]/25 bg-[#FFF8FA] px-3 py-2 text-xs font-bold text-[#8B2252] hover:bg-[#FFF0F5] disabled:opacity-50"
                               >
-                                <RefreshCw className={`h-3.5 w-3.5 ${restoreApyHqTeamMember.isPending ? "animate-spin" : ""}`} /> {restoreApyHqTeamMember.isPending ? "Restoring…" : "Restore APY HQ access"}
+                                <RefreshCw className={`h-3.5 w-3.5 ${restoreApyHqTeamMember.isPending ? "animate-spin" : ""}`} /> {restoreApyHqTeamMember.isPending ? "Enabling…" : "Enable login"}
                               </button>
                             ) : !isActive && employee.sourceApplicationId ? (
                               <span className="font-body text-xs text-[#956A7C]">Activate employee first</span>
@@ -303,7 +306,7 @@ export default function EmployeeDirectory() {
                                 disabled={provisionApyHqAccess.isPending}
                                 className="inline-flex items-center gap-1.5 rounded-lg border border-[#8B2252]/25 bg-[#FFF8FA] px-3 py-2 text-xs font-bold text-[#8B2252] hover:bg-[#FFF0F5] disabled:opacity-50"
                               >
-                                <KeyRound className="h-3.5 w-3.5" /> {provisionApyHqAccess.isPending ? "Granting access…" : "Grant APY HQ access"}
+                                <KeyRound className="h-3.5 w-3.5" /> {provisionApyHqAccess.isPending ? "Enabling…" : "Enable login"}
                               </button>
                             ) : (
                               <span className="font-body text-xs text-[#956A7C]">No APY HQ access</span>
@@ -316,7 +319,7 @@ export default function EmployeeDirectory() {
                             )}
                             {isActive && (
                               <button type="button" onClick={() => setDepartingEmployee(employee)} className="inline-flex items-center gap-1.5 font-body text-xs font-bold text-[#9A3B51] hover:text-[#7B263B]">
-                                <UserMinus className="h-3.5 w-3.5" /> Deactivate
+                                <UserMinus className="h-3.5 w-3.5" /> Remove from active team
                               </button>
                             )}
                             {!isActive && (
@@ -382,13 +385,13 @@ export default function EmployeeDirectory() {
       <Dialog open={Boolean(departingEmployee)} onOpenChange={(open) => !open && setDepartingEmployee(null)}>
         <DialogContent className="max-w-lg border-[#EADBE2] bg-[#FEFAF4]">
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl text-[#1A0A12]">Deactivate employee?</DialogTitle>
-            <DialogDescription className="font-body leading-6 text-[#6E5360]">{departingEmployee?.name} will become inactive and lose login access immediately. Their employee record and application history will remain. Any staffing gaps can be handled afterwards.</DialogDescription>
+            <DialogTitle className="font-display text-2xl text-[#1A0A12]">Remove employee from active team?</DialogTitle>
+            <DialogDescription className="font-body leading-6 text-[#6E5360]">{departingEmployee?.name} will become inactive and lose login access immediately. Email links and phone codes will stop working. Their employee record and application history will remain. Any staffing gaps can be handled afterwards.</DialogDescription>
           </DialogHeader>
 
           <DialogFooter className="pt-2">
             <Button type="button" variant="outline" onClick={() => setDepartingEmployee(null)}>Keep active</Button>
-            <Button type="button" disabled={markEmployeeDeparted.isPending} onClick={() => departingEmployee && markEmployeeDeparted.mutate({ employeeId: departingEmployee.id })} className="bg-[#9A3B51] text-white hover:bg-[#7B263B]">{markEmployeeDeparted.isPending ? "Updating…" : "Deactivate employee"}</Button>
+            <Button type="button" disabled={markEmployeeDeparted.isPending} onClick={() => departingEmployee && markEmployeeDeparted.mutate({ employeeId: departingEmployee.id })} className="bg-[#9A3B51] text-white hover:bg-[#7B263B]">{markEmployeeDeparted.isPending ? "Removing…" : "Remove & stop login"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
