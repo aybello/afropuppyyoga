@@ -469,19 +469,17 @@ export const staffAvailabilityRouter = router({
 
   // The explicit hire step grants login after signature, before onboarding delivery.
   addSignedApplicantToDirectory: adminProcedure
-    .input(z.object({ applicationId: z.number().int().positive() }))
+    .input(z.object({ applicationId: z.number().int().positive(), confirmed: z.object({ name: z.string(), email: z.string(), phone: z.string().nullable(), role: z.string(), location: z.string() }) }))
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      return hireSignedApplicant(db, input.applicationId, ctx.user);
+      return hireSignedApplicant(db, input.applicationId, ctx.user, input.confirmed);
     }),
-  // Keep older open tabs compatible with the same safe, signed-offer hire.
+  // Older tabs must reload to review all login identifiers before granting access.
   markOnboardedAndAddToEmployeeDirectory: adminProcedure
     .input(z.object({ applicationId: z.number().int().positive() }))
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
-      return hireSignedApplicant(db, input.applicationId, ctx.user);
+    .mutation(async () => {
+      throw new Error("The hiring workflow has changed. Refresh Applications, then use Add to Employee Directory to confirm this person's login details.");
     }),
 
   // Existing employee access uses the same one-step activation, without signing prerequisites.

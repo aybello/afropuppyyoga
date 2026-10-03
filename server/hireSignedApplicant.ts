@@ -6,12 +6,17 @@ import { employeeContactsMatch } from "./employeeProfileResolution";
 import { withStaffingMutationLock } from "./staffingMutationLock";
 
 type Actor = { id: number; name: string | null; email: string | null };
+export type HiringConfirmation = { name: string; email: string; phone: string | null; role: string; location: string };
 /** Adding an employee enables login, but never claims their onboarding or training is complete. */
-export async function hireSignedApplicant(db: any, applicationId: number, actor: Actor) {
+export async function hireSignedApplicant(db: any, applicationId: number, actor: Actor, confirmed?: HiringConfirmation) {
   return withStaffingMutationLock(db, async (tx) => {
     const [app]: Array<typeof jobApplications.$inferSelect> = await tx.select().from(jobApplications)
       .where(eq(jobApplications.id, applicationId)).limit(1);
     if (!app || app.deletedAt) throw new Error("This application is no longer available.");
+    if (confirmed && (confirmed.name !== app.name || confirmed.email !== (app.email ?? "")
+      || (confirmed.phone ?? "") !== (app.phone ?? "") || confirmed.role !== app.role || confirmed.location !== app.location)) {
+      throw new Error("This applicant's contact or assignment changed after you opened confirmation. Refresh and review the current details before enabling login.");
+    }
     const directory: Array<typeof employees.$inferSelect> = await tx.select().from(employees);
     const linked = directory.filter((employee) => employee.sourceApplicationId === app.id);
     const portalAccessLevel = isOperationsManagerRole(app.role) ? "operations_manager" as const : "team_member" as const;

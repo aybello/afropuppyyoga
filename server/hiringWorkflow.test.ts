@@ -38,6 +38,11 @@ describe("signed offer to employee", () => {
     expect(h.inserts.find((entry) => entry.values.action)?.values.details).toContain('"trainingCompleted":false');
     expect(h.db.transaction).toHaveBeenCalledTimes(1);
   });
+  it.each([{ phone: "+14165550101" }, { email: "changed@example.com" }, { role: "Operations Manager" }, { name: "Another Name" }, { location: "HAM" }])("rejects a stale identity or assignment confirmation %j", async (change) => {
+    const h = harness([[{ ...app, ...change }]]);
+    await expect(hireSignedApplicant(h.db, 42, actor, app)).rejects.toThrow("changed after you opened confirmation");
+    expect(h.updates).toEqual([]); expect(h.inserts).toEqual([]);
+  });
   it("keeps Operations Manager access explicit and role-specific", async () => {
     const manager = { ...app, role: "Operations Manager" };
     await expect(hireSignedApplicant(harness([[manager], [], [{ ...offer, role: manager.role }], [manager]]).db, 42, actor)).resolves.toMatchObject({ portalAccessLevel: "operations_manager" });
@@ -82,10 +87,14 @@ describe("signed offer to employee", () => {
     const h = harness([[app], [], [offer], [app]], 0);
     await expect(hireSignedApplicant(h.db, 42, actor)).rejects.toThrow("applicant changed"); expect(h.inserts).toEqual([]);
   });
+  it("requires old open tabs to reload without granting access", async () => {
+    await expect(staffAvailabilityRouter.createCaller({ user: actor } as any).markOnboardedAndAddToEmployeeDirectory({ applicationId: 42 })).rejects.toThrow("Refresh Applications");
+    expect(getDb).not.toHaveBeenCalled();
+  });
   it("denies anonymous and non-management callers before reading employee records", async () => {
-    await expect(staffAvailabilityRouter.createCaller({ user: null } as any).addSignedApplicantToDirectory({ applicationId: 42 })).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    await expect(staffAvailabilityRouter.createCaller({ user: null } as any).addSignedApplicantToDirectory({ applicationId: 42, confirmed: app })).rejects.toMatchObject({ code: "UNAUTHORIZED" });
     resolveApyAccess.mockResolvedValue({ level: "team_member", canManageOperations: false });
-    await expect(staffAvailabilityRouter.createCaller({ user: actor } as any).addSignedApplicantToDirectory({ applicationId: 42 })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(staffAvailabilityRouter.createCaller({ user: actor } as any).addSignedApplicantToDirectory({ applicationId: 42, confirmed: app })).rejects.toMatchObject({ code: "FORBIDDEN" });
     expect(getDb).not.toHaveBeenCalled();
   });
 });

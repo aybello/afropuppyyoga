@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { isOperationsManagerRole } from "@shared/apyPermissions";
 
-type Applicant = { id: number; name: string; email: string; role: string; location: string };
+type Applicant = { id: number; name: string; email: string; phone: string | null; role: string; location: string };
 export default function AddApplicantEmployeeDialog({ applicant, onClose, onAdded }: { applicant: Applicant | null; onClose: () => void; onAdded?: () => void }) {
   const utils = trpc.useUtils();
   const hire = trpc.staffAvailability.addSignedApplicantToDirectory.useMutation({
@@ -22,12 +22,13 @@ export default function AddApplicantEmployeeDialog({ applicant, onClose, onAdded
         <DialogDescription>This creates an active employee from the existing application. It does not send an email or mark training complete.</DialogDescription></DialogHeader>
       {applicant && <div className="space-y-2 text-sm text-[#3D1A2E]">
         <p><strong>{applicant.name}</strong> · {applicant.email}</p>
+        <p>Login phone: <strong>{applicant.phone || "Not recorded. Email sign-in only."}</strong></p>
         <p>{applicant.role} · {applicant.location}</p>
         <p>Access: <strong>{isOperationsManagerRole(applicant.role) ? "Operations Manager tools and training" : "Staff Portal and role-based training"}</strong>.</p>
         <p>They can sign in with their saved email or phone. Send onboarding documents afterward from this page.</p>
       </div>}
       <DialogFooter><Button variant="outline" disabled={hire.isPending} onClick={onClose}>Cancel</Button>
-        <Button className="bg-[#8B2252] text-white" disabled={!applicant || hire.isPending} onClick={() => applicant && hire.mutate({ applicationId: applicant.id })}>
+        <Button className="bg-[#8B2252] text-white" disabled={!applicant || hire.isPending} onClick={() => applicant && hire.mutate({ applicationId: applicant.id, confirmed: { name: applicant.name, email: applicant.email, phone: applicant.phone, role: applicant.role, location: applicant.location } })}>
           {hire.isPending ? "Adding employee..." : "Add employee and enable login"}
         </Button></DialogFooter>
     </DialogContent>
