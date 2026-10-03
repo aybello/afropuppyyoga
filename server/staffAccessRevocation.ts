@@ -40,7 +40,7 @@ export async function revokeTeamProfileAccess(tx: any, profileId: number, option
     tx.select({ id: classStaffAssignments.id, scheduleId: classStaffAssignments.scheduleId, staffId: classStaffAssignments.staffId,
       staffName: classStaffAssignments.staffName, classDate: puppySchedule.classDate }).from(classStaffAssignments)
       .innerJoin(puppySchedule, eq(classStaffAssignments.scheduleId, puppySchedule.id))
-      .where(and(eq(classStaffAssignments.staffId, profile.id), eq(puppySchedule.scheduleStatus, "scheduled"), gte(puppySchedule.classDate, today))),
+      .where(and(eq(classStaffAssignments.staffId, profile.id), gte(puppySchedule.classDate, today))),
     tx.select().from(weekendLeadershipCoverage).where(and(eq(weekendLeadershipCoverage.coverageStaffId, profile.id), gte(weekendLeadershipCoverage.coverageDate, today))),
   ]);
   // Retire future duties immediately without asking the owner to reassign them.

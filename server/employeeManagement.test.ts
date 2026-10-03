@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
-import { employees, jobApplications, classStaffAssignments, staffInvites, staffPhoneAccessCodes, users, weekendLeadershipCoverage } from "../drizzle/schema";
+import { employees, jobApplications, classStaffAssignments, staffInvites, staffPhoneAccessCodes, staffingMutationLocks, users, weekendLeadershipCoverage } from "../drizzle/schema";
 
 const { getDb, resolveApyAccess } = vi.hoisted(() => ({ getDb: vi.fn(), resolveApyAccess: vi.fn() }));
 vi.mock("./db", () => ({ getDb, getUserByOpenId: vi.fn(), upsertUser: vi.fn() }));
@@ -8,6 +8,7 @@ vi.mock("./apyAccess", () => ({ resolveApyAccess }));
 import { getRetiredClassAssignmentIds } from "./staffDutyHistory";
 import { activateEmployeeWithAccess } from "./employeeActivation";
 import { revokeTeamProfileAccess } from "./staffAccessRevocation";
+import { getEventNotificationPreview, puppyScheduleRouter } from "./routers/puppySchedule";
 import { staffAvailabilityRouter } from "./routers/staffAvailability";
 
 const actor = { id: 1, name: "Owner", email: "owner@example.com" };
@@ -23,11 +24,13 @@ function mockDb(reads: unknown[][]) {
   let nextId = 100;
   const db: any = {
     select: vi.fn(() => {
+      let result: unknown[] = [];
       const chain: any = {
-        from: () => chain, where: () => chain, orderBy: () => chain, innerJoin: () => chain,
-        limit: async () => reads.shift() ?? [],
+        from: (table: unknown) => { result = table === staffingMutationLocks ? [] : reads.shift() ?? []; return chain; },
+        where: () => chain, orderBy: () => chain, innerJoin: () => chain,
+        limit: async () => result,
         for: async () => [],
-        then: (resolve: (value: unknown[]) => void) => resolve(reads.shift() ?? []),
+        then: (resolve: (value: unknown[]) => void) => resolve(result),
       };
       return chain;
     }),
@@ -83,6 +86,22 @@ describe("simple employee management", () => {
     // employee becomes active and a replacement has filled the class.
     const source = readFileSync(new URL("./routers/puppySchedule.ts", import.meta.url), "utf8");
     expect(source).toContain('!retiredIds.has(assignment.id)');
+  });
+
+  it("keeps a replaced monitor retired even after they return to the original location", async () => {
+    const schedule = { id: 10, scheduleStatus: "scheduled", classDate: "2099-10-04", location: "Kitchener", breed: "Example", startTime: "09:00", endTime: "10:00" };
+    const original = { ...person, location: "OAK" };
+    const replacement = { ...person, id: 43, name: "Replacement", email: "replacement@example.com" };
+    const saved = { id: 55, staffId: 42, staffName: person.name, scheduleId: 10, role: "Puppy Monitor" };
+    const assign = mockDb([[schedule], [replacement], [], [saved], [original, replacement], [], []]);
+    getDb.mockResolvedValue(assign.db);
+    await expect(puppyScheduleRouter.createCaller(context()).assignPuppyMonitor({ scheduleId: 10, staffId: 43 })).resolves.toMatchObject({ success: true });
+    const retiredAudit = assign.inserts.find((entry) => entry.values.action === "staff_duties_retired");
+    expect(JSON.parse(String(retiredAudit?.values.details))).toMatchObject({ classAssignments: [{ id: 55 }], reason: "replacement_assigned" });
+    const returned = { ...person, location: "KW" };
+    const previewDb = mockDb([[schedule], [returned, replacement], [], [], [saved, { id: 56, staffId: 43, staffName: replacement.name, scheduleId: 10 }], [], [{ details: String(retiredAudit?.values.details) }]]);
+    const preview = await getEventNotificationPreview(previewDb.db, 10);
+    expect(preview.recipients.map((recipient) => recipient.id)).toEqual([43]);
   });
 
   it.each(["Operations Manager", "Yoga Instructor"])("allows multiple %s employees at the same location", async (role) => {

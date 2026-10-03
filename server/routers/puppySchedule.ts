@@ -4,7 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { ownerProcedure, staffProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { puppySchedule, breeders, classStaffAssignments, communicationsLog, jobApplications, staffAvailability, weekendLeadershipCoverage } from "../../drizzle/schema";
+import { puppySchedule, breeders, classStaffAssignments, communicationsLog, jobApplicationActions, jobApplications, staffAvailability, weekendLeadershipCoverage } from "../../drizzle/schema";
 import { staffScheduleNotifications } from "../../drizzle/schema";
 import { eq, and, gte, lte, desc, isNull, ne } from "drizzle-orm";
 import { sendEmail } from "../email";
@@ -563,7 +563,7 @@ export const puppyScheduleRouter = router({
 
   assignPuppyMonitor: staffProcedure
     .input(z.object({ scheduleId: z.number().int().positive(), staffId: z.number().int().positive() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
       return withStaffingMutationLock(db, async (tx: typeof db) => {
@@ -591,6 +591,16 @@ export const puppyScheduleRouter = router({
           alreadyAssigned: activeAssignments.some((assignment) => assignment.staffId === staffMember.id),
         });
         if (!eligibility.eligible) throw new Error(eligibility.reason);
+        // A replacement supersedes hidden duties. Changing location back or
+        // cancelling leave must not silently bring replaced assignments back.
+        const currentIds = new Set(activeAssignments.map((assignment) => assignment.id));
+        for (const assignment of existing.filter((row) => row.staffId !== staffMember.id && !retiredIds.has(row.id) && !currentIds.has(row.id))) {
+          await tx.insert(jobApplicationActions).values({
+            applicationId: assignment.staffId, action: "staff_duties_retired",
+            actorUserId: ctx.user.id, actorName: ctx.user.name, actorEmail: ctx.user.email,
+            details: JSON.stringify({ classAssignments: [assignment], reason: "replacement_assigned" }),
+          });
+        }
         const prior = existing.find((assignment) => assignment.staffId === staffMember.id && !retiredIds.has(assignment.id));
         if (prior) {
           await tx.update(classStaffAssignments).set({ staffName: staffMember.name }).where(eq(classStaffAssignments.id, prior.id));
