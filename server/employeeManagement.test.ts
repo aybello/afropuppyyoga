@@ -215,6 +215,54 @@ describe("simple employee management", () => {
     expect(harness.deletes).toEqual([staffPhoneAccessCodes]);
   });
 
+  it("serializes a directory edit with activation so login uses the current role and contact", async () => {
+    let savedEmployee = { ...employee, role: "Operations Manager" };
+    let savedProfile = { ...person, role: "Operations Manager" };
+    let unlockEdit!: () => void;
+    let markEditReading!: () => void;
+    const editIsReading = new Promise<void>((resolve) => { markEditReading = resolve; });
+    const releaseEdit = new Promise<void>((resolve) => { unlockEdit = resolve; });
+    let queue: Promise<unknown> = Promise.resolve();
+    let employeeReads = 0;
+    const db: any = {
+      select: () => {
+        let table: unknown;
+        const read = async () => {
+          if (table === staffingMutationLocks) return [];
+          if (table === employees) {
+            employeeReads++;
+            if (employeeReads === 1) { markEditReading(); await releaseEdit; }
+            return [{ ...savedEmployee }];
+          }
+          return [{ ...savedProfile }];
+        };
+        const chain: any = { from: (value: unknown) => { table = value; return chain; }, where: () => chain,
+          limit: read, for: async () => [], then: (resolve: (value: unknown) => void) => read().then(resolve) };
+        return chain;
+      },
+      update: (table: unknown) => ({ set: (values: Record<string, unknown>) => ({ where: async () => {
+        if (table === employees) savedEmployee = { ...savedEmployee, ...values };
+        if (table === jobApplications) savedProfile = { ...savedProfile, ...values };
+        return [{ affectedRows: 1 }];
+      } }) }),
+      insert: () => ({ values: () => ({ onDuplicateKeyUpdate: async () => undefined }) }),
+      transaction: (callback: (tx: unknown) => Promise<unknown>) => {
+        const result = queue.then(() => callback(db)); queue = result.catch(() => undefined); return result;
+      },
+    };
+    getDb.mockResolvedValue(db);
+    const caller = staffAvailabilityRouter.createCaller(context());
+    const edit = caller.updateEmployeeRecord({ id: 7, name: person.name, email: "changed@example.com", phone: "", role: "Puppy Monitor", location: "OAK" });
+    await editIsReading;
+    const activation = caller.reactivateEmployeeEmployment({ employeeId: 7 });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(employeeReads).toBe(1);
+    unlockEdit();
+    await Promise.all([edit, activation]);
+    expect(savedEmployee).toMatchObject({ role: "Puppy Monitor", location: "OAK", email: "changed@example.com", employmentStatus: "active" });
+    expect(savedProfile).toMatchObject({ role: "Puppy Monitor", location: "OAK", email: "changed@example.com", isTeamMember: true });
+  });
+
   it("uses the same no-paperwork activation for the existing employee access button", async () => {
     const harness = mockDb([[employee], [{ ...person, isTeamMember: false, deletedAt: new Date(), onboardingSentAt: null }]]);
     getDb.mockResolvedValue(harness.db);

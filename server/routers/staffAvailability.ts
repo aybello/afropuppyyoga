@@ -364,7 +364,8 @@ export const staffAvailabilityRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      const [employee] = await db.select().from(employees)
+      return withStaffingMutationLock(db, async (tx: typeof db) => {
+      const [employee] = await tx.select().from(employees)
         .where(eq(employees.id, input.id))
         .limit(1);
       if (!employee) throw new Error("Employee record not found.");
@@ -379,15 +380,14 @@ export const staffAvailabilityRouter = router({
         location: input.location,
       };
 
-      await db.transaction(async (tx) => {
-        await tx.update(employees).set(updates).where(eq(employees.id, employee.id));
-        if (employee.sourceApplicationId !== null) {
-          await tx.update(jobApplications).set(updates)
-            .where(eq(jobApplications.id, employee.sourceApplicationId));
-        }
-      });
+      await tx.update(employees).set(updates).where(eq(employees.id, employee.id));
+      if (employee.sourceApplicationId !== null) {
+        await tx.update(jobApplications).set(updates)
+          .where(eq(jobApplications.id, employee.sourceApplicationId));
+      }
 
       return { success: true };
+      });
     }),
 
   // Owner-created employees receive a matching active APY HQ profile and role-based access.
