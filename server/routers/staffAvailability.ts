@@ -10,7 +10,7 @@ import { APY_TEAM_LOCATIONS, APY_TEAM_ROLES, isApprovedApyTeamRole, isCentralApy
 import { getOperationsManagerDepartureEligibility, validateTeamAssignmentChange } from "../staffRosterPolicy";
 export { getOperationsManagerDepartureEligibility, validateTeamAssignmentChange } from "../staffRosterPolicy";
 import { revokeTeamProfileAccess } from "../staffAccessRevocation";
-import { activateEmployeeWithAccess } from "../employeeActivation";
+import { activateEmployeeWithAccess, prepareActiveEmployeeEdit } from "../employeeActivation";
 import { withStaffingMutationLock } from "../staffingMutationLock";
 
 export const directTeamMemberSchema = z.object({
@@ -384,16 +384,20 @@ export const staffAvailabilityRouter = router({
         location: input.location,
       };
 
+      const prepared = employee.employmentStatus === "active"
+        ? await prepareActiveEmployeeEdit(tx, employee, updates)
+        : undefined;
       await tx.update(employees).set(updates).where(eq(employees.id, employee.id));
-      if (employee.sourceApplicationId !== null) {
+      const profileId = prepared?.canonicalId ?? employee.sourceApplicationId;
+      if (profileId !== null) {
         await tx.update(jobApplications).set(updates)
-          .where(eq(jobApplications.id, employee.sourceApplicationId));
+          .where(eq(jobApplications.id, profileId));
       }
 
       if (employee.employmentStatus === "active") {
         // Saving an active employee keeps login enabled. The transaction rolls
         // back the edit if contacts belong to a genuinely different person.
-        await activateEmployeeWithAccess(tx, employee.id, ctx.user, ctx.apyAccess.level === "owner");
+        await activateEmployeeWithAccess(tx, employee.id, ctx.user, ctx.apyAccess.level === "owner", prepared);
       }
       return { success: true };
       });

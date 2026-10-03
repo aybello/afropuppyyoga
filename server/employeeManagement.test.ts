@@ -6,7 +6,7 @@ const { getDb, resolveApyAccess } = vi.hoisted(() => ({ getDb: vi.fn(), resolveA
 vi.mock("./db", () => ({ getDb, getUserByOpenId: vi.fn(), upsertUser: vi.fn() }));
 vi.mock("./apyAccess", () => ({ resolveApyAccess }));
 import { getRetiredClassAssignmentIds } from "./staffDutyHistory";
-import { activateEmployeeWithAccess } from "./employeeActivation";
+import { activateEmployeeWithAccess, prepareActiveEmployeeEdit } from "./employeeActivation";
 import { revokeTeamProfileAccess } from "./staffAccessRevocation";
 import { getEventNotificationPreview, puppyScheduleRouter } from "./routers/puppySchedule";
 import { staffAvailabilityRouter } from "./routers/staffAvailability";
@@ -205,7 +205,7 @@ describe("simple employee management", () => {
     const duplicate = { ...person, id: 41, isTeamMember: false, deletedAt: null };
     const harness = mockDb([[employee], [{ ...person, isTeamMember: false }, duplicate], [employee]]);
     await expect(activateEmployeeWithAccess(harness.db, 7, actor, true)).resolves.toMatchObject({ sourceApplicationId: 42 });
-    expect(harness.updates).toContainEqual({ table: jobApplications, values: { isTeamMember: false } });
+    expect(harness.updates).toContainEqual({ table: jobApplications, values: { isTeamMember: false, deletedAt: expect.any(Date) } });
     expect(harness.updates).toContainEqual({ table: staffInvites, values: { isActive: 0 } });
     expect(harness.inserts.some((entry) => entry.table === jobApplications)).toBe(false);
     const audit = harness.inserts.find((entry) => entry.values.action === "employee_and_login_activated");
@@ -222,6 +222,29 @@ describe("simple employee management", () => {
     await expect(activateEmployeeWithAccess(harness.db, 7, actor, true)).resolves.toMatchObject({ sourceApplicationId: 42, grantsApyHqAccess: true });
     expect(harness.inserts.some((entry) => entry.table === jobApplications)).toBe(false);
     expect(harness.updates).toContainEqual({ table: employees, values: { employmentStatus: "active", endedAt: null, sourceApplicationId: 42 } });
+  });
+
+  it.each([
+    { name: "Corrected Employee" },
+    { email: "updated@example.com" },
+    { phone: "+14165550100" },
+  ])("allows active contact/name edits while preserving verified duplicate history: %j", async (change) => {
+    const activeEmployee = { ...employee, employmentStatus: "active" };
+    const duplicate = { ...person, id: 41, isTeamMember: false };
+    const next = { ...activeEmployee, ...change };
+    const preparation = mockDb([[person, duplicate], [activeEmployee]]);
+    const prepared = await prepareActiveEmployeeEdit(preparation.db, activeEmployee as any, next);
+    expect(prepared).toEqual({ canonicalId: 42, duplicateIds: [41] });
+    const activation = mockDb([[next], [{ ...person, ...change }, duplicate], [next]]);
+    await expect(activateEmployeeWithAccess(activation.db, 7, actor, true, prepared)).resolves.toMatchObject({ sourceApplicationId: 42, grantsApyHqAccess: true });
+    expect(activation.updates).toContainEqual({ table: jobApplications, values: { isTeamMember: false, deletedAt: expect.any(Date) } });
+    expect(activation.updates.some((entry) => entry.table === jobApplications && entry.values.isTeamMember === false && "phone" in entry.values)).toBe(false);
+  });
+  it("rejects proposed edited contacts already used by a different live profile before writing", async () => {
+    const conflicting = { ...person, id: 80, name: "Different Person", email: "other@example.com", phone: null };
+    const harness = mockDb([[person, conflicting], [employee]]);
+    await expect(prepareActiveEmployeeEdit(harness.db, employee as any, { ...employee, email: "other@example.com" })).rejects.toThrow("Another applicant");
+    expect(harness.updates).toEqual([]);
   });
 
   it("lets an owner add a monitor without manager coverage or signed documents", async () => {

@@ -29,6 +29,11 @@ describe("employee canonical login profile", () => {
     const duplicate = { ...profile, id: 41 };
     expect(() => resolveEmployeeLoginProfile(employee, [profile, duplicate], [employee, { ...employee, id: 8, sourceApplicationId: 41, email: "other@example.com", phone: null }])).toThrow("already linked");
   });
+  it.each(["email-only", "phone-only"])("rejects mutually contradictory candidates when Directory is %s", (kind) => {
+    const incomplete = kind === "email-only" ? { ...employee, sourceApplicationId: null, phone: null } : { ...employee, sourceApplicationId: null, email: null };
+    const contradictory = kind === "email-only" ? { ...profile, id: 41, phone: "+14165550100" } : { ...profile, id: 41, email: "different@example.com" };
+    expect(() => resolveEmployeeLoginProfile(incomplete, [profile, contradictory], [incomplete])).toThrow("conflicting contact");
+  });
   it("rejects a missing linked profile", () => {
     expect(() => resolveEmployeeLoginProfile(employee, [], [employee])).toThrow("could not be found");
   });

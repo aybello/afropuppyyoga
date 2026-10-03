@@ -42,6 +42,14 @@ export function resolveEmployeeLoginProfile<T extends Profile>(employee: Employe
     throw new Error("Another applicant or staff profile uses this contact. Review the conflicting record before activating login.");
   }
   const canonical = linked ?? [...duplicates].sort((a, b) => b.id - a.id)[0];
+  const candidateIdentities = canonical ? [employee, canonical, ...duplicates] : [employee, ...duplicates];
+  const emails = new Set(candidateIdentities.map(emailOf).filter(Boolean));
+  const phones = new Set(candidateIdentities.map(phoneOf).filter(Boolean));
+  // Incomplete Directory contacts must not hide conflicting populated contacts
+  // between two proposed same-person profiles.
+  if (duplicates.length && (emails.size > 1 || phones.size > 1)) {
+    throw new Error("Matching employee profiles have conflicting contact details. Review them before activating login.");
+  }
   if (!canonical && matches.length) {
     throw new Error("This contact belongs to an applicant. Complete their onboarding through the applicant record before linking employee access.");
   }
