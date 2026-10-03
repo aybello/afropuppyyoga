@@ -1,12 +1,17 @@
 import AdminNav from "@/components/AdminNav";
 import { trpc } from "@/lib/trpc";
-import { Link } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, CheckCircle2, Clock3, KeyRound, Mail, Pencil, Phone, RefreshCw, Trash2, UserMinus, UserPlus, UsersRound } from "lucide-react";
+import { ArrowLeft, CalendarCheck, CheckCircle2, Clock3, KeyRound, List, Mail, Network, Pencil, Phone, RefreshCw, Trash2, UserMinus, UserPlus, UsersRound } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import EmployeeTeamTree from "@/components/EmployeeTeamTree";
+import EmployeeAvailabilityDialog from "@/components/EmployeeAvailabilityDialog";
+import { employeeDirectoryTabUrl, getEmployeeDirectoryTab, type EmployeeDirectoryTab } from "@shared/employeeDirectoryNavigation";
+import { getTorontoCalendarDate } from "@shared/scheduleVisibility";
 import { APY_TEAM_LOCATIONS, APY_TEAM_ROLES, isCentralApyTeamRole, type ApyTeamRole } from "@shared/apyPermissions";
 
 type Employee = {
@@ -62,6 +67,12 @@ function createEmptyEmployeeForm(): NewEmployeeForm {
 export default function EmployeeDirectory() {
   const utils = trpc.useUtils();
   const { data, error, isLoading, refetch } = trpc.staffAvailability.listEmployees.useQuery();
+  const search = useSearch();
+  const [, navigate] = useLocation();
+  const tab = getEmployeeDirectoryTab(search);
+  const changeTab = (next: EmployeeDirectoryTab) => navigate(employeeDirectoryTabUrl(next, search));
+  const availability = trpc.staffAvailability.getOrgChart.useQuery(undefined, { enabled: tab === "tree" });
+  const today = getTorontoCalendarDate(new Date());
   const refreshPeople = () => {
     void utils.staffAvailability.listEmployees.invalidate();
     void utils.staffAvailability.getOrgChart.invalidate();
@@ -76,11 +87,13 @@ export default function EmployeeDirectory() {
   const [departingEmployee, setDepartingEmployee] = useState<Employee | null>(null);
   const [reactivatingEmployee, setReactivatingEmployee] = useState<Employee | null>(null);
   const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(null);
-  const [requestedEmployeeId] = useState(() => new URLSearchParams(window.location.search).get("employee"));
-  const openedRequestedEmployee = useRef(false);
+  const [availabilityEmployeeId, setAvailabilityEmployeeId] = useState<number | null>(null);
+  const requestedEmployeeId = new URLSearchParams(search).get("employee");
+  const openedRequestedEmployee = useRef<string | null>(null);
   useEffect(() => {
-    if (!data || !requestedEmployeeId || openedRequestedEmployee.current) return;
-    openedRequestedEmployee.current = true;
+    if (!requestedEmployeeId) { openedRequestedEmployee.current = null; return; }
+    if (!data || openedRequestedEmployee.current === requestedEmployeeId) return;
+    openedRequestedEmployee.current = requestedEmployeeId;
     const requested = data.find((employee) => String(employee.id) === requestedEmployeeId);
     if (requested) setEditingEmployee(requested as Employee);
   }, [data, requestedEmployeeId]);
@@ -145,6 +158,8 @@ export default function EmployeeDirectory() {
   const employees = (data ?? []) as Employee[];
   const activeEmployees = employees.filter((employee) => employee.employmentStatus === "active");
   const inactiveEmployees = employees.filter((employee) => employee.employmentStatus === "inactive");
+  const availabilityEmployee = employees.find((employee) => employee.id === availabilityEmployeeId);
+  const selectFilter = (next: typeof filter) => { setFilter(next); changeTab("list"); };
   const visibleEmployees = filter === "all"
     ? employees
     : employees.filter((employee) => employee.employmentStatus === filter);
@@ -191,27 +206,33 @@ export default function EmployeeDirectory() {
             <Button type="button" onClick={() => setShowAddEmployee(true)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#8B2252] px-5 py-3 font-body text-sm font-bold text-white hover:bg-[#6B1A3E]">
               <UserPlus className="h-4 w-4" /> Add Employee
             </Button>
-            <Link href="/admin/staff-availability?tab=team" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#8B2252]/25 bg-white px-5 py-3 font-body text-sm font-bold text-[#8B2252] hover:bg-[#FFF5F8]">
-              Manage Active Team
+            <Link href="/admin/staff-availability" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#8B2252]/25 bg-white px-5 py-3 font-body text-sm font-bold text-[#8B2252] hover:bg-[#FFF5F8]">
+              <CalendarCheck className="h-4 w-4" /> Weekend Ops
             </Link>
           </div>
         </section>
 
         <section className="mb-6 grid gap-4 sm:grid-cols-3">
-          <button type="button" onClick={() => setFilter("all")} className={`rounded-2xl border bg-white p-5 text-left transition-colors ${filter === "all" ? "border-[#8B2252] ring-2 ring-[#8B2252]/15" : "border-[#EADBE2] hover:border-[#CFA5B7]"}`}>
+          <button type="button" onClick={() => selectFilter("all")} className={`rounded-2xl border bg-white p-5 text-left transition-colors ${filter === "all" ? "border-[#8B2252] ring-2 ring-[#8B2252]/15" : "border-[#EADBE2] hover:border-[#CFA5B7]"}`}>
             <p className="font-body text-xs font-bold uppercase tracking-wider text-[#956A7C]">All employees</p>
             <p className="mt-2 font-display text-3xl font-bold text-[#1A0A12]">{employees.length}</p>
           </button>
-          <button type="button" onClick={() => setFilter("active")} className={`rounded-2xl border bg-emerald-50 p-5 text-left transition-colors ${filter === "active" ? "border-emerald-500 ring-2 ring-emerald-500/15" : "border-emerald-100 hover:border-emerald-300"}`}>
+          <button type="button" onClick={() => selectFilter("active")} className={`rounded-2xl border bg-emerald-50 p-5 text-left transition-colors ${filter === "active" ? "border-emerald-500 ring-2 ring-emerald-500/15" : "border-emerald-100 hover:border-emerald-300"}`}>
             <p className="font-body text-xs font-bold uppercase tracking-wider text-emerald-700">Active employees</p>
             <p className="mt-2 font-display text-3xl font-bold text-emerald-800">{activeEmployees.length}</p>
           </button>
-          <button type="button" onClick={() => setFilter("inactive")} className={`rounded-2xl border bg-[#FFF8FA] p-5 text-left transition-colors ${filter === "inactive" ? "border-[#956A7C] ring-2 ring-[#956A7C]/15" : "border-[#EADBE2] hover:border-[#CFA5B7]"}`}>
+          <button type="button" onClick={() => selectFilter("inactive")} className={`rounded-2xl border bg-[#FFF8FA] p-5 text-left transition-colors ${filter === "inactive" ? "border-[#956A7C] ring-2 ring-[#956A7C]/15" : "border-[#EADBE2] hover:border-[#CFA5B7]"}`}>
             <p className="font-body text-xs font-bold uppercase tracking-wider text-[#956A7C]">Former or removed</p>
             <p className="mt-2 font-display text-3xl font-bold text-[#6E5360]">{inactiveEmployees.length}</p>
           </button>
         </section>
 
+        <Tabs value={tab} onValueChange={(value) => changeTab(value as EmployeeDirectoryTab)}>
+          <TabsList aria-label="Employee Directory views" className="mb-4 h-11 w-full justify-start border border-[#EADBE2] bg-white p-1 sm:w-fit">
+            <TabsTrigger value="list" className="px-5 text-[#6E5360] data-[state=active]:bg-[#8B2252] data-[state=active]:text-white"><List className="h-4 w-4" /> List</TabsTrigger>
+            <TabsTrigger value="tree" className="px-5 text-[#6E5360] data-[state=active]:bg-[#8B2252] data-[state=active]:text-white"><Network className="h-4 w-4" /> Team Tree</TabsTrigger>
+          </TabsList>
+          <TabsContent value="list">
         <section className="overflow-hidden rounded-2xl border border-[#EADBE2] bg-white">
           <div className="border-b border-[#F1E7E2] px-5 py-4">
             <h2 className="font-display text-xl font-bold text-[#1A0A12]">{filter === "all" ? "All employee records" : filter === "active" ? "Active employee records" : "Former or removed employee records"}</h2>
@@ -287,7 +308,7 @@ export default function EmployeeDirectory() {
                               <Pencil className="h-3.5 w-3.5" /> Edit
                             </button>
                             {isActive && employee.sourceApplicationId && employee.hasApyHqAccess ? (
-                              <Link href="/admin/staff-availability?tab=team" className="inline-flex items-center gap-1.5 font-body text-xs font-bold text-[#8B2252] hover:text-[#6B1A3E]"><KeyRound className="h-3.5 w-3.5" /> APY HQ access</Link>
+                              <span className="inline-flex items-center gap-1.5 font-body text-xs font-bold text-emerald-700"><KeyRound className="h-3.5 w-3.5" /> Login enabled</span>
                             ) : employee.sourceApplicationId && isActive ? (
                               <button
                                 type="button"
@@ -337,7 +358,26 @@ export default function EmployeeDirectory() {
             </div>
           )}
         </section>
+          </TabsContent>
+          <TabsContent value="tree">
+            <div className="mb-5">
+              <h2 className="font-display text-xl font-bold text-[#1A0A12]">APY Team Tree</h2>
+              <p className="mt-1 font-body text-sm text-[#6E5360]">Every Directory employee is shown under their saved role and location, including inactive employees. Select a person to edit their record here.</p>
+            </div>
+            {isLoading ? <p role="status" className="py-12 text-center text-sm text-[#8B2252]">Loading employee tree…</p> : error ? (
+              <div role="alert" className="rounded-xl border border-[#EADBE2] bg-white p-6 text-sm text-[#6E5360]"><p>The employee tree could not be loaded.</p><Button type="button" variant="outline" onClick={() => refetch()} className="mt-3">Try again</Button></div>
+            ) : <>
+              {availability.isLoading && <p role="status" className="mb-4 text-sm text-[#6E5360]">Loading availability controls…</p>}
+              {availability.error && <p role="alert" className="mb-4 text-sm text-[#956A7C]">Leave information could not be loaded. <button type="button" onClick={() => availability.refetch()} className="font-semibold underline">Retry availability</button></p>}
+              <EmployeeTeamTree employees={employees} leaves={availability.data?.leaves ?? []} today={today}
+                onEditEmployee={(employee) => { const record = employees.find((person) => person.id === employee.id); if (record) setEditingEmployee(record); }}
+                onManageAvailability={availability.data && !availability.error ? (employee) => setAvailabilityEmployeeId(employee.id) : undefined} />
+            </>}
+          </TabsContent>
+        </Tabs>
       </main>
+
+      {availabilityEmployee && <EmployeeAvailabilityDialog key={availabilityEmployee.id} employee={availabilityEmployee} leaves={availability.data?.leaves ?? []} today={today} onClose={() => setAvailabilityEmployeeId(null)} onSaved={refreshPeople} />}
 
       <Dialog open={showAddEmployee} onOpenChange={(open) => {
         setShowAddEmployee(open);

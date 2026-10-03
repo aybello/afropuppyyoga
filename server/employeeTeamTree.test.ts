@@ -1,7 +1,7 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Router } from "wouter";
 import { APY_TEAM_ROLES } from "../shared/apyPermissions";
 import { buildEmployeeTeamTree, type EmployeeTreeMember } from "../shared/employeeTeamTree";
@@ -83,16 +83,23 @@ describe("complete Employee Directory team tree", () => {
     expect(buildEmployeeTeamTree([]).map((branch) => branch.key)).toEqual(["CENTRAL", "KW", "OAK", "HAM"]);
   });
 
-  it("uses the same Directory query and invalidates both views after changes", () => {
-    const page = readFileSync(new URL("../client/src/pages/StaffAvailability.tsx", import.meta.url), "utf8");
+  it("uses the Directory query for both tabs and updates both views after changes", () => {
     const directory = readFileSync(new URL("../client/src/pages/EmployeeDirectory.tsx", import.meta.url), "utf8");
-    expect(page).toContain("const employeeDirectory = trpc.staffAvailability.listEmployees.useQuery()");
-    expect(page).toContain("const employees = employeeDirectory.data ?? []");
-    expect(page).toContain("<EmployeeTeamTree employees={employees}");
-    expect(page).toContain("employeeDirectory.error");
-    expect(page).toContain("utils.staffAvailability.listEmployees.invalidate()");
+    expect(directory).toContain("trpc.staffAvailability.listEmployees.useQuery()");
+    expect(directory).toContain("<EmployeeTeamTree employees={employees}");
     expect(directory).toContain("utils.staffAvailability.listEmployees.invalidate()");
     expect(directory).toContain("utils.staffAvailability.getOrgChart.invalidate()");
     expect(directory).toContain('get("employee")');
+    expect(directory).toContain('onEditEmployee=');
+    expect(directory).not.toContain('/admin/staff-availability?tab=team');
+  });
+
+  it("renders same-page edit buttons, not navigation links, when embedded in Directory", () => {
+    const onEditEmployee = vi.fn();
+    const html = renderTree({ employees: [employee({ name: "Same Page Person" })], today: "2026-10-03", onEditEmployee });
+    expect(html).toContain('aria-label="Edit Same Page Person"');
+    expect(html).toMatch(/<button[^>]*data-employee-id="1"/);
+    expect(html).not.toContain('href="/admin/employees');
+    expect(onEditEmployee).not.toHaveBeenCalled();
   });
 });

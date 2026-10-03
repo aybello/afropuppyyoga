@@ -123,7 +123,7 @@ describe("simple employee management", () => {
       await expect(staffAvailabilityRouter.createCaller(context()).createEmployeeRecord({ name: `Employee ${index}`, email: `person${index}@example.com`, phone: "", role: role as "Operations Manager" | "Yoga Instructor", location: "KW", startedAt: "2026-10-03" })).resolves.toMatchObject({ grantsApyHqAccess: true });
       expect(harness.inserts.find((entry) => entry.table === jobApplications)).toMatchObject({ table: jobApplications, values: { role, location: "KW", isTeamMember: true } });
     }
-    const tree = readFileSync(new URL("../client/src/pages/StaffAvailability.tsx", import.meta.url), "utf8");
+    const tree = readFileSync(new URL("../client/src/pages/EmployeeDirectory.tsx", import.meta.url), "utf8");
     expect(tree).toContain('trpc.staffAvailability.listEmployees.useQuery()');
     expect(tree).toContain('<EmployeeTeamTree employees={employees}');
   });
@@ -342,13 +342,15 @@ describe("simple employee management", () => {
     expect(getDb).not.toHaveBeenCalled();
   });
 
-  it("opens Manage Active Team directly on the team tree", () => {
+  it("keeps the tree inside Directory with unchanged refresh and employee access", () => {
     const ui = readFileSync(new URL("../client/src/pages/EmployeeDirectory.tsx", import.meta.url), "utf8");
-    const tree = readFileSync(new URL("../client/src/pages/StaffAvailability.tsx", import.meta.url), "utf8");
-    expect(ui).toContain('href="/admin/staff-availability?tab=team"');
-    expect(tree).toContain('get("tab") === "team" ? "team" : "ops"');
+    const availability = readFileSync(new URL("../client/src/pages/StaffAvailability.tsx", import.meta.url), "utf8");
+    expect(ui).toContain('<TabsTrigger value="tree"');
+    expect(ui).toContain('<TabsContent value="tree"');
+    expect(availability).toContain('legacyEmployeeTreeUrl(useSearch())');
+    expect(availability).toContain('href="/admin/employees"');
     expect(ui).toContain('utils.staffAvailability.getOrgChart.invalidate()');
-    expect(tree).toContain('utils.staffAvailability.listEmployees.invalidate()');
+    expect(availability).toContain('utils.staffAvailability.listEmployees.invalidate()');
     expect(ui).not.toContain('Blocked: this person still has active APY HQ access');
   });
 });

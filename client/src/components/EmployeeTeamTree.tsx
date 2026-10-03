@@ -2,17 +2,18 @@ import { Link } from "wouter";
 import { buildEmployeeTeamTree, type EmployeeTreeMember } from "@shared/employeeTeamTree";
 import { getPuppyMonitorLocationCoverage } from "@shared/puppyMonitorLocationCoverage";
 
-type Leave = { staffId: number; startDate: string; endDate: string };
+export type EmployeeTreeLeave = { id?: number; staffId: number; startDate: string; endDate: string; leaveType?: string; notes?: string | null };
 const ROLE_COLORS: Record<string, string> = {
   "Operations Manager": "#D97706", "Yoga Instructor": "#8B2252", "Puppy Monitor": "#7C3AED",
   "Puppy Specialist": "#0891B2", BDR: "#0F766E", "Social Media Specialist": "#DB2777",
 };
 
-export default function EmployeeTeamTree({ employees, leaves = [], today, onManageAvailability }: {
+export default function EmployeeTeamTree({ employees, leaves = [], today, onManageAvailability, onEditEmployee }: {
   employees: EmployeeTreeMember[];
-  leaves?: Leave[];
+  leaves?: EmployeeTreeLeave[];
   today: string;
   onManageAvailability?: (employee: EmployeeTreeMember) => void;
+  onEditEmployee?: (employee: EmployeeTreeMember) => void;
 }) {
   const locations = buildEmployeeTeamTree(employees);
   const renderLocation = (location: typeof locations[number]) => {
@@ -22,7 +23,7 @@ export default function EmployeeTeamTree({ employees, leaves = [], today, onMana
     return (
       <section key={location.key} aria-label={`${location.label} employee team`} className="rounded-2xl border border-[#EADBE2] bg-white p-4">
         <div className="mb-4 flex items-center justify-between gap-2 rounded-lg bg-[#8B2252] px-3 py-2 text-sm font-bold text-white">
-          <h3>{location.label}</h3><span className="text-xs font-medium">{total} employees</span>
+          <h3>{location.label}</h3><span className="text-xs font-medium">{total} {total === 1 ? "employee" : "employees"}</span>
         </div>
         <div className="space-y-4">
           {location.roles.map(({ role, members }) => {
@@ -35,19 +36,24 @@ export default function EmployeeTeamTree({ employees, leaves = [], today, onMana
                     const active = employee.employmentStatus === "active";
                     const onLeave = active && employee.sourceApplicationId !== null && leaves.some((leave) =>
                       leave.staffId === employee.sourceApplicationId && leave.startDate <= today && leave.endDate >= today);
+                    const cardClassName = "flex w-full min-w-0 items-start gap-2 rounded-lg border px-3 py-2.5 text-left transition-shadow hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8B2252]";
+                    const cardStyle = { borderColor: `${color}40`, background: active ? `${color}08` : "#FAF5F7" };
+                    const content = <>
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: color }} aria-hidden="true">{employee.name.charAt(0)}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="break-words text-sm font-semibold text-[#1A0A12]">{employee.name}</p>
+                        <p className="mt-0.5 text-[10px] text-[#7A5A6A]">{employee.hasApyHqAccess ? "Login enabled" : "No portal access"}{onLeave ? " · On leave" : ""}</p>
+                      </div>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${active ? "bg-emerald-100 text-emerald-800" : "bg-[#EFE5E9] text-[#725665]"}`}>{active ? "Active" : "Inactive"}</span>
+                    </>;
                     return (
                       <div key={employee.id}>
-                      <Link href={`/admin/employees?employee=${employee.id}`} data-employee-id={employee.id}
-                        className="flex min-w-0 items-start gap-2 rounded-lg border px-3 py-2.5 text-left transition-shadow hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8B2252]"
-                        style={{ borderColor: `${color}40`, background: active ? `${color}08` : "#FAF5F7" }}>
-                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: color }} aria-hidden="true">{employee.name.charAt(0)}</span>
-                        <div className="min-w-0 flex-1">
-                          <p className="break-words text-sm font-semibold text-[#1A0A12]">{employee.name}</p>
-                          <p className="mt-0.5 text-[10px] text-[#7A5A6A]">{employee.hasApyHqAccess ? "Login enabled" : "No portal access"}{onLeave ? " · On leave" : ""}</p>
-                        </div>
-                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${active ? "bg-emerald-100 text-emerald-800" : "bg-[#EFE5E9] text-[#725665]"}`}>{active ? "Active" : "Inactive"}</span>
-                      </Link>
-                      {onManageAvailability && active && employee.hasApyHqAccess && employee.sourceApplicationId !== null && <button type="button" onClick={() => onManageAvailability(employee)} className="mt-1 text-[11px] font-semibold text-[#8B2252] hover:underline">Manage availability</button>}
+                        {onEditEmployee ? (
+                          <button type="button" onClick={() => onEditEmployee(employee)} data-employee-id={employee.id} aria-label={`Edit ${employee.name}`} className={cardClassName} style={cardStyle}>{content}</button>
+                        ) : (
+                          <Link href={`/admin/employees?employee=${employee.id}`} data-employee-id={employee.id} className={cardClassName} style={cardStyle}>{content}</Link>
+                        )}
+                        {onManageAvailability && active && employee.hasApyHqAccess && employee.sourceApplicationId !== null && <button type="button" onClick={() => onManageAvailability(employee)} className="mt-1 text-[11px] font-semibold text-[#8B2252] hover:underline">Manage availability</button>}
                       </div>
                     );
                   })}

@@ -217,7 +217,7 @@ const TOOLS = [
   {
     id: "staff-availability",
     title: "Staff Availability",
-    description: "Org chart, vacation tracking, and leave management.",
+    description: "Weekend staffing, coverage, and leave management.",
     href: "/admin/staff-availability",
     icon: CalendarCheck,
     accent: "#0891B2",
@@ -227,7 +227,7 @@ const TOOLS = [
   {
     id: "employee-directory",
     title: "Employee Directory",
-    description: "Active and former team members, contact records, and status.",
+    description: "Employee records, team tree, login access, and availability.",
     href: "/admin/employees",
     icon: UsersRound,
     accent: "#8B2252",
