@@ -42,6 +42,8 @@ describe("Employee Directory consolidated navigation", () => {
     expect(availability).toContain('<Redirect to={redirect} replace />');
     expect(availability).toContain('href="/admin/employees"');
     expect(availability).toContain('href="/admin/employees?tab=tree"');
+    const staffAccess = readFileSync(new URL("../client/src/pages/StaffManagement.tsx", import.meta.url), "utf8");
+    expect(staffAccess).toContain('href="/admin/employees?tab=tree"');
     expect(availability).not.toContain('<EmployeeTeamTree');
     expect(availability).toContain('trpc.staffAvailability.getWeekendCoverage.useQuery');
     expect(availability).toContain('trpc.puppySchedule.assignLeadership.useMutation');

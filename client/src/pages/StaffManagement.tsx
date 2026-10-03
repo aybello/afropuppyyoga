@@ -149,7 +149,7 @@ export default function StaffManagement() {
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <Link
-              href="/admin/staff-availability"
+              href="/admin/employees?tab=tree"
               className="inline-flex items-center gap-2 rounded-full border border-[#E5C7D4] bg-white px-4 py-2.5 font-body text-sm font-semibold text-[#8B2252] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#FFF5F8]"
             >
               <Users className="h-4 w-4" />
