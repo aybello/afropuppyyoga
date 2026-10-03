@@ -5,6 +5,9 @@
              offer letter, and rejection letter via automated email.
    ============================================================ */
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import { Link } from "wouter";
+import { getHiringWorkflow, HIRING_STAGES, type HiringStage } from "@shared/hiringWorkflow";
+import AddApplicantEmployeeDialog from "@/components/AddApplicantEmployeeDialog";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import {
@@ -103,7 +106,7 @@ function isExternalVideoLink(url: string): boolean {
 }
 
 type AppStatus = "new" | "reviewed" | "shortlisted" | "interview_requested" | "interview_scheduled" | "accepted" | "rejected" | "onboarded";
-type PipelineView = "new" | "active" | "hired" | "rejected" | "all";
+type PipelineView = HiringStage;
 
 type Application = {
   id: number;
@@ -122,6 +125,10 @@ type Application = {
   onboardingSentAt: Date | null;
   onboardingDeliveryToken: string | null;
   createdAt: Date;
+  employeeId?: number | null;
+  employeeStatus?: string | null;
+  offerSentAt?: Date | null;
+  offerExpiresAt?: Date | null;
   signingStatus: string | null;
   signedName: string | null;
   signedAt: Date | null;
@@ -192,9 +199,9 @@ function StatusBadge({ status }: { status: AppStatus }) {
     shortlisted: "Shortlisted",
     interview_requested: "Interview Request Sent",
     interview_scheduled: "Interview Scheduled",
-    accepted: "Accepted",
+    accepted: "Selected for offer",
     rejected: "Rejected",
-    onboarded: "Onboarded",
+    onboarded: "Employee",
   };
   return (
     <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-body font-semibold ${styles[status]}`}>
@@ -417,7 +424,7 @@ function OnboardingEmailModal({
 
   const sendOnboarding = trpc.careers.sendOnboardingEmail.useMutation({
     onSuccess: () => {
-      toast.success(`Onboarding documents sent to ${app.email}. The applicant remains Accepted.`);
+      toast.success(`Onboarding documents sent to ${app.email}. Employee status is unchanged.`);
       utils.careers.list.invalidate();
       utils.careers.getTimeline.invalidate({ id: app.id });
       onClose();
@@ -438,7 +445,11 @@ function OnboardingEmailModal({
       utils.careers.getTimeline.invalidate({ id: app.id });
       onClose();
     },
-    onError: (err) => toast.error(`Failed to resend onboarding email: ${err.message}`),
+    onError: async (err) => {
+      toast.error(`Could not confirm onboarding resend: ${err.message}`);
+      await Promise.all([utils.careers.list.invalidate(), utils.careers.getTimeline.invalidate({ id: app.id })]);
+      onClose();
+    },
   });
 
   const handleSend = () => {
@@ -482,7 +493,8 @@ function OnboardingEmailModal({
             <ul className="font-body text-sm text-emerald-700 space-y-1 list-disc list-inside">
               <li>Welcome message and orientation class invitation (date, time, location)</li>
               <li>What to wear: black yoga attire + grippy socks</li>
-              <li>Link to the APY Planning Document (training resources inside)</li>
+              <li>APY HQ sign-in and role-based training links</li>
+              <li>Link to the APY Planning Document</li>
               <li>Any additional onboarding documents you add below</li>
               <li>iMessage group chat onboarding note and reply contact</li>
             </ul>
@@ -550,7 +562,7 @@ function OnboardingEmailModal({
             {!documents.length && <p className="font-body text-xs text-[#8B6070]">No extra documents will be included unless you add them here.</p>}
           </div>
 
-          <p className="font-body text-xs text-[#8B6070]">Offer Letter and NDA signing remain in the separate <strong>Send Offer Letter</strong> step. This email delivers the post-acceptance onboarding information and resources. The applicant remains Accepted until both steps are complete and staff select <strong>Mark Onboarded & Add to Directory</strong>. The result will confirm any role-appropriate Staff Portal access.</p>
+          <p className="font-body text-xs text-[#8B6070]">Offer Letter and NDA signing remain in the separate <strong>Send Offer Letter</strong> step. This email delivers the post-acceptance onboarding information and resources. Add the signed applicant to Employee Directory first. Their role-based login and training access are enabled immediately. Sending these documents does not mark training complete.</p>
 
           <div>
             <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Additional Notes (optional)</Label>
@@ -667,29 +679,18 @@ function ApplicationDetailModal({
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   const [showOnboardingReconciliation, setShowOnboardingReconciliation] = useState(false);
+  const [hireApplicant, setHireApplicant] = useState<Application | null>(null);
+  const workflow = getHiringWorkflow(app);
   const { data: timeline, isLoading: timelineLoading } = trpc.careers.getTimeline.useQuery(
     { id: app.id },
     { enabled: open },
   );
 
-  const addToEmployeeDirectory = trpc.staffAvailability.markOnboardedAndAddToEmployeeDirectory.useMutation({
-    onSuccess: (result) => {
-      const accessMessage = result.portalAccessLevel === "operations_manager"
-        ? "Staff Portal — Operations access granted."
-        : result.portalAccessLevel === "team_member"
-          ? "Staff Portal — Team access granted."
-          : "No Staff Portal access was granted for this role.";
-      toast.success(`${app.name} is now onboarded and was added to the Employee Directory. ${accessMessage}`);
-      utils.careers.list.invalidate();
-      utils.careers.getTimeline.invalidate({ id: app.id });
-      onClose();
-    },
-    onError: (err) => toast.error(err.message),
-  });
+
 
   const reconcileOnboarding = trpc.careers.reconcileOnboardingDelivery.useMutation({
-    onSuccess: (result) => {
-      toast.success(result.status === "accepted" ? "Onboarding documents were recorded as delivered. The applicant remains Accepted." : "The pending onboarding send was reopened. No email was sent.");
+    onSuccess: (_result, variables) => {
+      toast.success(variables.outcome === "delivered" ? "Onboarding documents were recorded as delivered. Employee status is unchanged." : "The pending onboarding send was reopened. No email was sent.");
       utils.careers.list.invalidate();
       utils.careers.getTimeline.invalidate({ id: app.id });
       setShowOnboardingReconciliation(false);
@@ -710,7 +711,7 @@ function ApplicationDetailModal({
   });
   return (
     <>
-      <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <Dialog open={open && !showInterviewModal && !showOfferModal && !showRejectionModal && !showOnboardingModal && !hireApplicant && !showOnboardingReconciliation} onOpenChange={(v) => !v && onClose()}>
         <DialogContent className="max-w-2xl bg-[#FEFAF4] border-[#F0D0DC] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl text-[#1A0A12]">{app.name}</DialogTitle>
@@ -791,7 +792,7 @@ function ApplicationDetailModal({
             {/* Current Status */}
             <div>
               <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-2">Current Status</p>
-              <StatusBadge status={app.status as AppStatus} />
+              <p className="font-semibold text-sm">{workflow.label}</p><p className="text-sm mt-1">{workflow.next}</p>
             </div>
 
             <div>
@@ -827,14 +828,16 @@ function ApplicationDetailModal({
               <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-3">Pipeline Actions</p>
               <div className="flex flex-wrap gap-3">
                 <Button
-                  onClick={() => { onClose(); setShowInterviewModal(true); }}
+                  onClick={() => { setShowInterviewModal(true); }}
+                  disabled={!workflow.canInterview}
                   className="font-body text-sm text-white"
                   style={{ background: "linear-gradient(135deg, #7C3AED, #5B21B6)" }}
                 >
                   <Calendar className="w-4 h-4 mr-2" /> Invite to Interview
                 </Button>
                 <Button
-                  onClick={() => { onClose(); setShowOfferModal(true); }}
+                  onClick={() => { setShowOfferModal(true); }}
+                  disabled={!workflow.canSendOffer}
                   className="font-body text-sm text-white bg-green-600 hover:bg-green-700"
                 >
                   <CheckCircle className="w-4 h-4 mr-2" /> Send Offer Letter
@@ -856,22 +859,23 @@ function ApplicationDetailModal({
                   )}
                 </Button>
                 <Button
-                  onClick={() => { onClose(); setShowRejectionModal(true); }}
+                  onClick={() => { setShowRejectionModal(true); }}
+                  disabled={!workflow.canReject}
                   variant="outline"
                   className="font-body text-sm border-red-200 text-red-600 hover:bg-red-50"
                 >
                   <XCircle className="w-4 h-4 mr-2" /> Send Rejection
                 </Button>
-                {app.status === "accepted" && !app.onboardingSentAt && !app.onboardingDeliveryToken && (
+                {getHiringWorkflow(app).canSendDocuments && !app.onboardingSentAt && (
                   <Button
-                    onClick={() => { onClose(); setShowOnboardingModal(true); }}
+                    onClick={() => { setShowOnboardingModal(true); }}
                     className="font-body text-sm text-white"
                     style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}
                   >
                     <PartyPopper className="w-4 h-4 mr-2" /> Send Onboarding Documents
                   </Button>
                 )}
-                {app.status === "accepted" && app.onboardingDeliveryToken && (
+                {app.onboardingDeliveryToken && (
                   <Button
                     onClick={() => setShowOnboardingReconciliation(true)}
                     variant="outline"
@@ -880,35 +884,32 @@ function ApplicationDetailModal({
                     <Mail className="w-4 h-4 mr-2" /> Resolve Pending Onboarding
                   </Button>
                 )}
-                {app.status === "accepted" && Boolean(app.onboardingSentAt) && !app.onboardingDeliveryToken && (
+                {getHiringWorkflow(app).canSendDocuments && Boolean(app.onboardingSentAt) && (
                   <Button
-                    onClick={() => { onClose(); setShowOnboardingModal(true); }}
+                    onClick={() => { setShowOnboardingModal(true); }}
                     variant="outline"
                     className="font-body text-sm border-teal-300 text-teal-700 hover:bg-teal-50"
                   >
                     <><Send className="w-4 h-4 mr-2" /> Resend Onboarding Documents</>
                   </Button>
                 )}
-                {app.status === "accepted" && Boolean(app.onboardingSentAt) && app.signingStatus === "signed" && !app.onboardingDeliveryToken && (
+                {getHiringWorkflow(app).canAddEmployee && (
                   <Button
-                    onClick={() => addToEmployeeDirectory.mutate({ applicationId: app.id })}
-                    disabled={addToEmployeeDirectory.isPending}
+                    onClick={() => setHireApplicant(app as Application)}
                     variant="outline"
                     className="font-body text-sm border-[#8B2252]/30 text-[#8B2252] hover:bg-[#FFF5F8]"
                   >
-                    {addToEmployeeDirectory.isPending ? (
-                      <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Adding…</>
-                    ) : (
-                      <><UserPlus className="w-4 h-4 mr-2" /> Mark Onboarded & Add to Directory</>
-                    )}
+                    <UserPlus className="w-4 h-4 mr-2" /> Add to Employee Directory
                   </Button>
                 )}
+                {app.employeeId && <Link className="text-sm underline text-[#8B2252]" href={`/admin/employees?employee=${app.employeeId}`}>Open employee record</Link>}
               </div>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
+      <AddApplicantEmployeeDialog applicant={hireApplicant} onClose={() => setHireApplicant(null)} onAdded={onClose} />
       {showInterviewModal && (
         <InterviewInviteModal app={app} open={showInterviewModal} onClose={() => setShowInterviewModal(false)} />
       )}
@@ -962,7 +963,7 @@ function useDragScroll() {
   const scrollLeft = useRef(0);
 
   const onMouseDown = useCallback((e: React.MouseEvent) => {
-    if (!ref.current) return;
+    if (!ref.current || (e.target as HTMLElement).closest("button, a, input, select, [role=combobox]")) return;
     isDragging.current = true;
     startX.current = e.pageX - ref.current.offsetLeft;
     scrollLeft.current = ref.current.scrollLeft;
@@ -1008,17 +1009,25 @@ export default function ApplicationsDashboard() {
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   const [applicationQuery, setApplicationQuery] = useState("");
-  const [pipelineView, setPipelineView] = useState<PipelineView>("new");
+  const [hireApplicant, setHireApplicant] = useState<Application | null>(null);
+  const [pipelineView, setPipelineView] = useState<PipelineView>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | AppStatus>("all");
   const [roleFilter, setRoleFilter] = useState("all");
   const [locationFilter, setLocationFilter] = useState("all");
   const [applicationPage, setApplicationPage] = useState(1);
 
-  const { data: applications, isLoading } = trpc.careers.list.useQuery(undefined, {
+  const { data: applications, isLoading, error: applicationsError } = trpc.careers.list.useQuery(undefined, {
     refetchInterval: 60000,
     staleTime: 30000,
     refetchOnWindowFocus: true,
   });
+
+  useEffect(() => {
+    if (selectedApp && applications) {
+      const refreshed = applications.find((item) => item.id === selectedApp.id);
+      if (refreshed && refreshed !== selectedApp) setSelectedApp(refreshed as Application);
+    }
+  }, [applications, selectedApp]);
 
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
@@ -1038,19 +1047,7 @@ export default function ApplicationsDashboard() {
     setSelectedApp(app);
     setShowRejectionModal(true);
   };
-  const addToEmployeeDirectory = trpc.staffAvailability.markOnboardedAndAddToEmployeeDirectory.useMutation({
-    onSuccess: (result, variables) => {
-      const applicant = applications?.find((item) => item.id === variables.applicationId);
-      const accessMessage = result.portalAccessLevel === "operations_manager"
-        ? "Staff Portal — Operations access granted."
-        : result.portalAccessLevel === "team_member"
-          ? "Staff Portal — Team access granted."
-          : "No Staff Portal access was granted for this role.";
-      toast.success(`${applicant?.name ?? "Applicant"} is now onboarded and was added to the Employee Directory. ${accessMessage}`);
-      utils.careers.list.invalidate();
-    },
-    onError: (err) => toast.error(err.message),
-  });
+
 
   const deleteApplication = trpc.careers.deleteApplication.useMutation({
     onSuccess: () => {
@@ -1109,11 +1106,7 @@ export default function ApplicationsDashboard() {
     );
   }
 
-  const newCount = applications?.filter((a) => a.status === "new").length ?? 0;
-  const activeCount = applications?.filter((a) => ["reviewed", "shortlisted", "interview_requested", "interview_scheduled", "accepted"].includes(a.status)).length ?? 0;
-  const hiredCount = applications?.filter((a) => a.status === "onboarded").length ?? 0;
-  const rejectedCount = applications?.filter((a) => a.status === "rejected").length ?? 0;
-  const totalCount = applications?.length ?? 0;
+  const pipelineCounts = new Map(HIRING_STAGES.map(([stage]) => [stage, stage === "all" ? applications?.length ?? 0 : (applications ?? []).filter((app) => getHiringWorkflow(app).stage === stage).length]));
   const applicationRoles = Array.from(new Set((applications ?? []).map((app) => app.role))).sort();
   const applicationLocations = Array.from(new Set((applications ?? []).map((app) => app.location))).sort();
   const normalizedQuery = applicationQuery.trim().toLowerCase();
@@ -1124,11 +1117,7 @@ export default function ApplicationsDashboard() {
     const matchesStatus = statusFilter === "all" || app.status === statusFilter;
     const matchesRole = roleFilter === "all" || app.role === roleFilter;
     const matchesLocation = locationFilter === "all" || app.location === locationFilter;
-    const matchesPipeline = pipelineView === "all"
-      || (pipelineView === "new" && app.status === "new")
-      || (pipelineView === "active" && ["reviewed", "shortlisted", "interview_requested", "interview_scheduled", "accepted"].includes(app.status))
-      || (pipelineView === "hired" && app.status === "onboarded")
-      || (pipelineView === "rejected" && app.status === "rejected");
+    const matchesPipeline = pipelineView === "all" || getHiringWorkflow(app).stage === pipelineView;
     return matchesQuery && matchesStatus && matchesRole && matchesLocation && matchesPipeline;
   });
   const applicationsPerPage = 20;
@@ -1152,8 +1141,9 @@ export default function ApplicationsDashboard() {
               <span className="font-body text-xs font-semibold tracking-widest uppercase text-[#8B2252]">Admin</span>
             </div>
             <h1 className="font-display font-bold text-3xl text-[#1A0A12]">Job Applications</h1>
-            <p className="font-body text-sm text-[#1A0A12] mt-1">Review and manage applicants for all open positions</p>
+            <p className="font-body text-sm text-[#1A0A12] mt-1">Interview → Offer → Signature → Add employee → Send onboarding documents</p>
           </div>
+          <div className="flex flex-wrap items-center gap-2"><Link href="/admin/employees" className="text-sm text-[#8B2252] underline">Employee Directory</Link><Link href="/admin/staff-training" className="text-sm text-[#8B2252] underline">Training progress</Link>
           <Button
             variant="outline"
             size="sm"
@@ -1161,28 +1151,21 @@ export default function ApplicationsDashboard() {
             onClick={() => setShowArchived(true)}
           >
             <Inbox className="w-4 h-4 mr-1.5" /> Archived
-          </Button>
+          </Button></div>
         </div>
 
         {/* Hiring queue */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3" role="tablist" aria-label="Application pipeline">
-          {([
-            ["new", "New", newCount],
-            ["active", "In progress", activeCount],
-            ["hired", "Hired", hiredCount],
-            ["rejected", "Rejected", rejectedCount],
-            ["all", "All", totalCount],
-          ] as const).map(([value, label, count]) => (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3" role="group" aria-label="Application pipeline">
+          {HIRING_STAGES.map(([value, label]) => (
             <button
               key={value}
               type="button"
-              role="tab"
-              aria-selected={pipelineView === value}
+              aria-pressed={pipelineView === value}
               onClick={() => { setPipelineView(value); setStatusFilter("all"); setApplicationPage(1); }}
               className={`rounded-2xl p-4 border text-left transition-all ${pipelineView === value ? "bg-[#8B2252] border-[#8B2252] text-white shadow-sm" : "bg-white border-[#F0D0DC] text-[#1A0A12] hover:border-[#C86B8D]"}`}
             >
               <p className={`font-body text-xs ${pipelineView === value ? "text-pink-100" : "text-[#6B4658]"}`}>{label}</p>
-              <p className="font-display font-bold text-2xl mt-1">{count}</p>
+              <p className="font-display font-bold text-2xl mt-1">{pipelineCounts.get(value)}</p>
             </button>
           ))}
         </div>
@@ -1197,7 +1180,7 @@ export default function ApplicationsDashboard() {
             />
             <select
               value={statusFilter}
-              onChange={(event) => { setStatusFilter(event.target.value as "all" | AppStatus); setApplicationPage(1); }}
+              onChange={(event) => { setStatusFilter(event.target.value as "all" | AppStatus); setPipelineView("all"); setApplicationPage(1); }}
               className="h-10 rounded-md border border-[#F0D0DC] bg-white px-3 font-body text-sm text-[#3D1A2E]"
             >
               <option value="all">All statuses</option>
@@ -1206,9 +1189,9 @@ export default function ApplicationsDashboard() {
               <option value="shortlisted">Shortlisted</option>
               <option value="interview_requested">Interview request sent</option>
               <option value="interview_scheduled">Interview scheduled</option>
-              <option value="accepted">Accepted</option>
+              <option value="accepted">Selected / offer</option>
               <option value="rejected">Rejected</option>
-              <option value="onboarded">Onboarded</option>
+              <option value="onboarded">Employee</option>
             </select>
             <select
               value={locationFilter}
@@ -1240,7 +1223,7 @@ export default function ApplicationsDashboard() {
             <div className="flex items-center justify-center py-20">
               <Loader2 className="w-8 h-8 animate-spin text-[#8B2252]" />
             </div>
-          ) : !applications || applications.length === 0 ? (
+          ) : applicationsError ? <p role="alert" className="p-6 text-red-700">Applications could not be loaded. Refresh to try again.</p> : !applications || applications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <div className="w-16 h-16 rounded-full bg-[#FFF5F8] flex items-center justify-center mb-4">
                 <Users className="w-8 h-8 text-[#8B2252]" />
@@ -1320,7 +1303,10 @@ export default function ApplicationsDashboard() {
 
                       {/* Stage */}
                       <td className="px-5 py-4">
+                        <p className="font-semibold text-sm text-[#8B2252] mb-1">{getHiringWorkflow(app).label}</p>
+                        <p className="text-xs text-[#6B4658] max-w-64 mb-2">{getHiringWorkflow(app).next}</p>
                         <Select
+                          disabled={Boolean(app.employeeId) || app.status === "onboarded" || Boolean(app.onboardingDeliveryToken)}
                           value={app.status}
                           onValueChange={(val) => {
                             if (val === "rejected") {
@@ -1341,7 +1327,7 @@ export default function ApplicationsDashboard() {
                             <SelectItem value="shortlisted">Shortlisted</SelectItem>
                             <SelectItem value="interview_requested">Interview Request Sent</SelectItem>
                             <SelectItem value="interview_scheduled">Interview Scheduled</SelectItem>
-                            <SelectItem value="accepted">Accepted</SelectItem>
+                            <SelectItem value="accepted">Selected for offer</SelectItem>
                             <SelectItem value="rejected">Rejected</SelectItem>
                           </SelectContent>
                         </Select>
@@ -1354,7 +1340,7 @@ export default function ApplicationsDashboard() {
 
                       {/* Contextual next step */}
                       <td className="px-5 py-4">
-                        <div className="flex items-center gap-2 whitespace-nowrap">
+                        <div className="flex flex-wrap items-center gap-2 min-w-48">
                           <button
                             onClick={() => setSelectedApp(app as Application)}
                             className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#FFF5F8] border border-[#F0D0DC] rounded-lg font-body text-xs font-semibold text-[#8B2252] hover:bg-[#F9E4EE] transition-colors"
@@ -1362,36 +1348,38 @@ export default function ApplicationsDashboard() {
                           >
                             <Eye className="w-3 h-3" /> View
                           </button>
-                          {["new", "reviewed", "shortlisted"].includes(app.status) && (
+                          {getHiringWorkflow(app).canInterview && ["new", "reviewed", "shortlisted"].includes(app.status) && (
                             <button onClick={() => { setSelectedApp(app as Application); setShowInterviewModal(true); }} className="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-lg font-body text-xs font-semibold text-purple-700 hover:bg-purple-100">
                               <Calendar className="w-3 h-3" /> Interview
                             </button>
                           )}
-                          {["interview_requested", "interview_scheduled"].includes(app.status) && (
+                          {getHiringWorkflow(app).canSendOffer && (
                             <button onClick={() => { setSelectedApp(app as Application); setShowOfferModal(true); }} className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg font-body text-xs font-semibold text-green-700 hover:bg-green-100">
-                              <CheckCircle className="w-3 h-3" /> Offer
+                              <CheckCircle className="w-3 h-3" /> {app.signingStatus ? "Resend offer" : "Send offer"}
                             </button>
                           )}
-                          {app.status === "accepted" && !app.onboardingSentAt && !app.onboardingDeliveryToken && (
+                          {getHiringWorkflow(app).canSendDocuments && !app.onboardingSentAt && (
                             <button
                               onClick={() => { setSelectedApp(app as Application); setShowOnboardingModal(true); }}
                               className="inline-flex items-center gap-1 px-3 py-1.5 bg-pink-50 border border-pink-200 rounded-lg font-body text-xs font-semibold text-pink-700 hover:bg-pink-100 transition-colors"
                               title="Send onboarding email"
                             >
-                              <PartyPopper className="w-3 h-3" /> Documents
+                              <PartyPopper className="w-3 h-3" /> Send onboarding documents
                             </button>
                           )}
-                          {app.status === "accepted" && Boolean(app.onboardingSentAt) && app.signingStatus === "signed" && !app.onboardingDeliveryToken && (
+                          {getHiringWorkflow(app).canAddEmployee && (
                             <button
-                              onClick={() => addToEmployeeDirectory.mutate({ applicationId: app.id })}
-                              disabled={addToEmployeeDirectory.isPending}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-teal-50 border border-teal-200 rounded-lg font-body text-xs font-semibold text-teal-700 hover:bg-teal-100 transition-colors disabled:opacity-50"
-                              title="Mark this signed applicant onboarded and add them to the Employee Directory without granting APY HQ access"
+                              onClick={() => setHireApplicant(app as Application)}
+                                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-teal-50 border border-teal-200 rounded-lg font-body text-xs font-semibold text-teal-700 hover:bg-teal-100 transition-colors disabled:opacity-50"
+                              title="Add this signed applicant as an active employee with role-based login and training"
                             >
-                              {addToEmployeeDirectory.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserPlus className="w-3 h-3" />} Onboard
+                              <UserPlus className="w-3 h-3" /> Add employee
                             </button>
                           )}
-                          {app.status !== "rejected" && app.status !== "onboarded" && (
+                          {getHiringWorkflow(app).canSendDocuments && Boolean(app.onboardingSentAt) && <button className="text-xs text-[#8B2252] underline" onClick={() => { setSelectedApp(app as Application); setShowOnboardingModal(true); }}>Resend onboarding documents</button>}
+                          {app.onboardingDeliveryToken && <button className="text-xs text-amber-800 underline" onClick={() => setSelectedApp(app as Application)}>Resolve pending onboarding</button>}
+                          {app.employeeId && <Link className="text-xs text-[#8B2252] underline" href={`/admin/employees?employee=${app.employeeId}`}>Open employee record</Link>}
+                          {app.status !== "rejected" && app.status !== "onboarded" && !app.employeeId && (
                             <button
                               type="button"
                               onClick={() => beginRejection(app as Application)}
@@ -1402,6 +1390,7 @@ export default function ApplicationsDashboard() {
                             </button>
                           )}
                           <button
+                            disabled={Boolean(app.employeeId) || app.status === "onboarded" || Boolean(app.onboardingDeliveryToken)}
                             onClick={() => setDeleteConfirmId(app.id)}
                             className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg font-body text-xs font-semibold text-gray-500 hover:bg-gray-100 hover:text-red-600 hover:border-red-200 transition-colors"
                             title="Delete application"
@@ -1444,6 +1433,7 @@ export default function ApplicationsDashboard() {
         </div>
       </div>
 
+      <AddApplicantEmployeeDialog applicant={hireApplicant} onClose={() => setHireApplicant(null)} />
       {/* Modals */}
       {selectedApp && !showInterviewModal && !showOfferModal && !showRejectionModal && !showOnboardingModal && (
         <ApplicationDetailModal
@@ -1477,7 +1467,7 @@ export default function ApplicationsDashboard() {
         <OnboardingEmailModal
           app={selectedApp}
           open={showOnboardingModal}
-          isResend={selectedApp.status === "onboarded"}
+          isResend={Boolean(selectedApp.onboardingSentAt)}
           onClose={() => { setShowOnboardingModal(false); setSelectedApp(null); }}
         />
       )}

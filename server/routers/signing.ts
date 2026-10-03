@@ -1,6 +1,7 @@
+import { prepareHiringOffer, recordCurrentOfferSignature } from "../hiringOfferLifecycle";
 import { z } from "zod";
 import { adminProcedure, staffProcedure, publicProcedure, router } from "../_core/trpc";
-import { createSigningToken, getSigningTokenByToken, updateSigningToken, getSigningTokenByApplicationId, getJobApplicationById, updateJobApplication, getDb } from "../db";
+import { createSigningToken, getSigningTokenByToken, updateSigningToken, getSigningTokenByApplicationId, getJobApplicationById, updateJobApplication, updateJobApplicationStatusIfUnclaimed, getDb } from "../db";
 import { TRPCError } from "@trpc/server";
 import { notifyOwner } from "../_core/notification";
 import { sendEmail } from "../email";
@@ -21,31 +22,9 @@ export const signingRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const applicant = await getJobApplicationById(input.applicationId);
-      if (!applicant) throw new TRPCError({ code: "NOT_FOUND", message: "Application not found or archived." });
-      if (!applicant.email) throw new TRPCError({ code: "BAD_REQUEST", message: "This applicant does not have an email address." });
-      const latestSigning = await getSigningTokenByApplicationId(applicant.id);
-      if (latestSigning?.signed === 1) {
-        throw new TRPCError({ code: "CONFLICT", message: "This applicant has already signed their offer." });
-      }
-      const reuse = canReuseSigningToken(latestSigning, { ...applicant, email: applicant.email });
-      const token = reuse ? latestSigning!.token : crypto.randomBytes(48).toString("hex");
-      const expiresAt = reuse ? latestSigning!.expiresAt : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-      const offerLetterType = detectOfferLetterType(applicant.role, applicant.location);
-
-      if (!reuse) {
-        await createSigningToken({
-          applicationId: input.applicationId,
-          applicantName: applicant.name,
-          applicantEmail: applicant.email,
-          role: applicant.role,
-          location: applicant.location,
-          offerLetterType,
-          token,
-          signed: 0,
-          expiresAt,
-        });
-      }
+      const sourceDb = await getDb();
+      if (!sourceDb) throw new Error("Database not available");
+      const { applicant, reuse, token, expiresAt, offerLetterType } = await prepareHiringOffer(sourceDb, input.applicationId);
 
       const signingLink = `https://afropuppyyoga.ca/sign?token=${token}`;
       const subject = "Action Required: Review & Sign Your Offer — AfroPuppyYoga";
@@ -58,7 +37,7 @@ export const signingRouter = router({
         html: buildSigningEmail({ applicantName: applicant.name, role: applicant.role, location: applicant.location, signingLink }),
         text,
       });
-      await updateJobApplication(applicant.id, { status: "accepted" });
+      await updateJobApplicationStatusIfUnclaimed(applicant.id, applicant.status, "accepted");
 
       const db = await getDb();
       if (db) {
@@ -137,21 +116,10 @@ export const signingRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const record = await getSigningTokenByToken(input.token);
-      if (!record) throw new Error("Invalid or expired signing link.");
-      if (new Date() > record.expiresAt) throw new Error("This signing link has expired. Please contact AfroPuppyYoga.");
-      if (record.signed === 1) throw new Error("These documents have already been signed.");
-
-      // Get IP from request headers
-      const ip = (ctx as { req?: { headers?: Record<string, string | string[] | undefined> } }).req?.headers?.["x-forwarded-for"]?.toString().split(",")[0]?.trim() ?? "unknown";
-
-      await updateSigningToken(record.id, {
-        signed: 1,
-        signedName: input.signedName,
-        signedIp: ip,
-        signedAt: new Date(),
-      });
-      await updateJobApplication(record.applicationId, { status: "accepted" });
+      const sourceDb = await getDb();
+      if (!sourceDb) throw new Error("Database not available");
+      const ip = ctx.req?.headers?.["x-forwarded-for"]?.toString().split(",")[0]?.trim() ?? "unknown";
+      const record = await recordCurrentOfferSignature(sourceDb, input.token, input.signedName, ip);
 
       // Notify owner
       try {

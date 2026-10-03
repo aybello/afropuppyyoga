@@ -1,7 +1,7 @@
-import { and, desc, eq, gte, isNull, isNotNull } from "drizzle-orm";
+import { and, desc, eq, gte, isNull, isNotNull, inArray, ne } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { randomUUID } from "node:crypto";
-import { InsertInvoice, InsertJobApplication, InsertUser, InsertBirthdayInquiry, InsertPartnershipInquiry, InsertStaffInvite, InsertSigningToken, invoices, jobApplications, users, birthdayInquiries, partnershipInquiries, staffInvites, signingTokens } from "../drizzle/schema";
+import { InsertInvoice, InsertJobApplication, InsertUser, InsertBirthdayInquiry, InsertPartnershipInquiry, InsertStaffInvite, InsertSigningToken, invoices, employees, jobApplicationActions, jobApplications, users, birthdayInquiries, partnershipInquiries, staffInvites, signingTokens } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -177,16 +177,27 @@ export async function getAllJobApplications() {
   const latestSigningByApplication = new Map<number, (typeof allSigningTokens)[number]>();
   for (const signing of allSigningTokens) {
     const existing = latestSigningByApplication.get(signing.applicationId);
-    if (!existing || signing.createdAt > existing.createdAt) {
+    if (!existing || signing.createdAt > existing.createdAt || (+signing.createdAt === +existing.createdAt && signing.id > existing.id)) {
       latestSigningByApplication.set(signing.applicationId, signing);
     }
   }
 
+  const directory = await db.select({ id: employees.id, sourceApplicationId: employees.sourceApplicationId, employmentStatus: employees.employmentStatus }).from(employees);
+  const offerActions = await db.select({ applicationId: jobApplicationActions.applicationId, createdAt: jobApplicationActions.createdAt })
+    .from(jobApplicationActions).where(inArray(jobApplicationActions.action, ["offer_sent", "offer_resent"])).orderBy(desc(jobApplicationActions.createdAt));
+  const directoryByApplication = new Map(directory.filter((row) => row.sourceApplicationId !== null).map((row) => [row.sourceApplicationId, row]));
+  const latestOfferSend = new Map<number, Date>();
+  for (const action of offerActions) if (!latestOfferSend.has(action.applicationId)) latestOfferSend.set(action.applicationId, action.createdAt);
   return apps.map((app) => {
     const signing = latestSigningByApplication.get(app.id);
+    const employee = directoryByApplication.get(app.id);
     return {
       ...app,
-      signingStatus: signing ? (signing.signed === 1 ? "signed" : "pending_signature") : null,
+      employeeId: employee?.id ?? null,
+      employeeStatus: employee?.employmentStatus ?? null,
+      offerSentAt: signing && latestOfferSend.get(app.id) && latestOfferSend.get(app.id)! >= signing.createdAt ? latestOfferSend.get(app.id)! : null,
+      offerExpiresAt: signing?.expiresAt ?? null,
+      signingStatus: signing ? (signing.signed === 1 ? "signed" : signing.expiresAt < new Date() ? "expired" : "pending_signature") : null,
       signedName: signing?.signedName ?? null,
       signedAt: signing?.signedAt ?? null,
     };
@@ -231,6 +242,8 @@ export async function updateJobApplicationStatusIfUnclaimed(
       eq(jobApplications.status, expectedStatus),
       isNull(jobApplications.onboardingDeliveryToken),
       isNull(jobApplications.deletedAt),
+      ne(jobApplications.status, "onboarded"),
+      eq(jobApplications.isTeamMember, false),
     ));
   return Number((result as any)[0]?.affectedRows ?? 0) === 1;
 }
@@ -246,16 +259,18 @@ export async function archiveJobApplicationIfUnclaimed(id: number): Promise<bool
       eq(jobApplications.id, id),
       isNull(jobApplications.onboardingDeliveryToken),
       isNull(jobApplications.deletedAt),
+      ne(jobApplications.status, "onboarded"),
+      eq(jobApplications.isTeamMember, false),
     ));
   return Number((result as any)[0]?.affectedRows ?? 0) === 1;
 }
 
 /**
  * Claims the one-time initial onboarding delivery before email is sent.
- * The conditional update lets exactly one staff request claim an Accepted
- * application, preventing duplicate onboarding emails across browser sessions.
+ * The conditional update lets exactly one staff request claim an active
+ * employee, preventing duplicate onboarding emails across browser sessions.
  */
-export async function claimInitialOnboardingDelivery(id: number): Promise<string | null> {
+export async function claimInitialOnboardingDelivery(id: number, resend = false): Promise<string | null> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const token = randomUUID();
@@ -265,7 +280,9 @@ export async function claimInitialOnboardingDelivery(id: number): Promise<string
     .where(
       and(
         eq(jobApplications.id, id),
-        eq(jobApplications.status, "accepted"),
+        eq(jobApplications.status, "onboarded"),
+        eq(jobApplications.isTeamMember, true),
+        resend ? isNotNull(jobApplications.onboardingSentAt) : isNull(jobApplications.onboardingSentAt),
         isNull(jobApplications.onboardingDeliveryToken),
         isNull(jobApplications.deletedAt),
       ),
@@ -283,7 +300,7 @@ export async function releaseInitialOnboardingDeliveryClaim(id: number, token: s
     .where(
       and(
         eq(jobApplications.id, id),
-        eq(jobApplications.status, "accepted"),
+        inArray(jobApplications.status, ["accepted", "onboarded"]),
         eq(jobApplications.onboardingDeliveryToken, token),
         isNull(jobApplications.deletedAt),
       ),
@@ -292,8 +309,8 @@ export async function releaseInitialOnboardingDeliveryClaim(id: number, token: s
 }
 
 /**
- * Records that onboarding documents were delivered while retaining Accepted
- * status. A separate, explicit staff action completes employment onboarding.
+ * Records document delivery without changing employment or training status.
+ * Legacy Accepted claims remain reconcilable.
  */
 export async function completeClaimedOnboardingDocumentDelivery(id: number, token: string): Promise<boolean> {
   const db = await getDb();
@@ -304,7 +321,7 @@ export async function completeClaimedOnboardingDocumentDelivery(id: number, toke
     .where(
       and(
         eq(jobApplications.id, id),
-        eq(jobApplications.status, "accepted"),
+        inArray(jobApplications.status, ["accepted", "onboarded"]),
         eq(jobApplications.onboardingDeliveryToken, token),
         isNull(jobApplications.deletedAt),
       ),
@@ -329,7 +346,7 @@ export async function getArchivedJobApplications() {
   const latestSigningByApplication = new Map<number, (typeof allSigningTokens)[number]>();
   for (const signing of allSigningTokens) {
     const existing = latestSigningByApplication.get(signing.applicationId);
-    if (!existing || signing.createdAt > existing.createdAt) {
+    if (!existing || signing.createdAt > existing.createdAt || (+signing.createdAt === +existing.createdAt && signing.id > existing.id)) {
       latestSigningByApplication.set(signing.applicationId, signing);
     }
   }

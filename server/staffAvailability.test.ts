@@ -247,19 +247,16 @@ describe("direct team-member validation", () => {
     })).toMatchObject({ eligible: false });
   });
 
-  it("permits only a signed Accepted applicant with delivered onboarding documents to be added", () => {
+  it("permits a signed Accepted applicant to be added before onboarding documents", () => {
     expect(getOnboardedApplicantDirectoryEligibility({ status: "accepted", onboardingSentAt: new Date(), signingComplete: true, existingEmployee: false })).toEqual({ eligible: true });
     expect(getOnboardedApplicantDirectoryEligibility({ status: "onboarded", onboardingSentAt: new Date(), signingComplete: true, existingEmployee: false })).toEqual({
       eligible: false,
-      reason: "Only Accepted applicants can complete onboarding into the Employee Directory.",
+      reason: "Only Accepted applicants with a signed offer can be added to the Employee Directory.",
     });
-    expect(getOnboardedApplicantDirectoryEligibility({ status: "accepted", onboardingSentAt: null, signingComplete: true, existingEmployee: false })).toEqual({
-      eligible: false,
-      reason: "Send the onboarding documents before marking this applicant onboarded.",
-    });
+    expect(getOnboardedApplicantDirectoryEligibility({ status: "accepted", onboardingSentAt: null, signingComplete: true, existingEmployee: false })).toEqual({ eligible: true });
     expect(getOnboardedApplicantDirectoryEligibility({ status: "accepted", onboardingSentAt: new Date(), signingComplete: false, existingEmployee: false })).toEqual({
       eligible: false,
-      reason: "Wait for the applicant to sign their Offer Letter and NDA before marking them onboarded.",
+      reason: "Wait for the applicant to sign their Offer Letter and NDA before adding them.",
     });
     expect(getOnboardedApplicantDirectoryEligibility({ status: "accepted", onboardingSentAt: new Date(), signingComplete: true, existingEmployee: true })).toEqual({
       eligible: false,

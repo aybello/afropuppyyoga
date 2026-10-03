@@ -68,10 +68,10 @@ describe("onboarding document delivery", () => {
 });
 
 describe("onboarding workflow guards", () => {
-  it("permits initial delivery only for accepted applicants", () => {
-    expect(() => assertInitialOnboardingStatus("accepted")).not.toThrow();
-    expect(() => assertInitialOnboardingStatus("onboarded")).toThrow("only after the applicant is marked Accepted");
-    expect(() => assertInitialOnboardingStatus("interview_scheduled")).toThrow("only after the applicant is marked Accepted");
+  it("permits initial delivery after the signed applicant becomes an employee", () => {
+    expect(() => assertInitialOnboardingStatus("onboarded")).not.toThrow();
+    expect(() => assertInitialOnboardingStatus("accepted")).toThrow("Add the signed applicant");
+    expect(() => assertInitialOnboardingStatus("interview_scheduled")).toThrow("Add the signed applicant");
   });
 
   it("permits resend after documents are delivered while the applicant remains Accepted", () => {

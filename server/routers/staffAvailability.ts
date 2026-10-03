@@ -1,3 +1,4 @@
+import { hireSignedApplicant } from "../hireSignedApplicant";
 import { z } from "zod";
 import { adminProcedure, staffProcedure, router } from "../_core/trpc";
 import { getDb, getUserByOpenId, upsertUser } from "../db";
@@ -163,13 +164,10 @@ export function getFormerEmployeeDeletionEligibility(input: { employmentStatus: 
 
 export function getOnboardedApplicantDirectoryEligibility(input: { status: string; onboardingSentAt: Date | null; signingComplete: boolean; existingEmployee: boolean }) {
   if (input.status !== "accepted") {
-    return { eligible: false as const, reason: "Only Accepted applicants can complete onboarding into the Employee Directory." };
-  }
-  if (!input.onboardingSentAt) {
-    return { eligible: false as const, reason: "Send the onboarding documents before marking this applicant onboarded." };
+    return { eligible: false as const, reason: "Only Accepted applicants with a signed offer can be added to the Employee Directory." };
   }
   if (!input.signingComplete) {
-    return { eligible: false as const, reason: "Wait for the applicant to sign their Offer Letter and NDA before marking them onboarded." };
+    return { eligible: false as const, reason: "Wait for the applicant to sign their Offer Letter and NDA before adding them." };
   }
   if (input.existingEmployee) {
     return { eligible: false as const, reason: "This applicant already has an Employee Directory record." };
@@ -469,166 +467,21 @@ export const staffAvailabilityRouter = router({
       });
     }),
 
-  // Complete employment onboarding by adding the verified applicant to the
-  // Employee Directory and granting the portal access approved for their role.
+  // The explicit hire step grants login after signature, before onboarding delivery.
+  addSignedApplicantToDirectory: adminProcedure
+    .input(z.object({ applicationId: z.number().int().positive() }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      return hireSignedApplicant(db, input.applicationId, ctx.user);
+    }),
+  // Keep older open tabs compatible with the same safe, signed-offer hire.
   markOnboardedAndAddToEmployeeDirectory: adminProcedure
     .input(z.object({ applicationId: z.number().int().positive() }))
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const [applicant] = await db.select({
-        id: jobApplications.id,
-        name: jobApplications.name,
-        email: jobApplications.email,
-        phone: jobApplications.phone,
-        role: jobApplications.role,
-        location: jobApplications.location,
-        status: jobApplications.status,
-        onboardingSentAt: jobApplications.onboardingSentAt,
-        isTeamMember: jobApplications.isTeamMember,
-        deletedAt: jobApplications.deletedAt,
-      }).from(jobApplications).where(eq(jobApplications.id, input.applicationId)).limit(1);
-      if (!applicant || applicant.deletedAt) throw new Error("This application is no longer available.");
-
-      const [existingForApplication] = await db.select({ id: employees.id }).from(employees)
-        .where(eq(employees.sourceApplicationId, applicant.id)).limit(1);
-      const [signedAgreement] = await db.select({ id: signingTokens.id }).from(signingTokens)
-        .where(and(eq(signingTokens.applicationId, applicant.id), eq(signingTokens.signed, 1)))
-        .orderBy(desc(signingTokens.signedAt))
-        .limit(1);
-      const eligibility = getOnboardedApplicantDirectoryEligibility({
-        status: applicant.status,
-        onboardingSentAt: applicant.onboardingSentAt,
-        signingComplete: Boolean(signedAgreement),
-        existingEmployee: Boolean(existingForApplication),
-      });
-      if (!eligibility.eligible) throw new Error(eligibility.reason);
-
-      const transfer = await db.transaction(async (tx) => {
-        // Re-read the entire record in the same transaction that changes it.
-        // The initial read only informs the dashboard; it must never determine
-        // portal access, location coverage, or directory contents.
-        const [currentApplicant] = await tx.select({
-          id: jobApplications.id,
-          name: jobApplications.name,
-          email: jobApplications.email,
-          phone: jobApplications.phone,
-          role: jobApplications.role,
-          location: jobApplications.location,
-          status: jobApplications.status,
-          onboardingSentAt: jobApplications.onboardingSentAt,
-          onboardingDeliveryToken: jobApplications.onboardingDeliveryToken,
-          isTeamMember: jobApplications.isTeamMember,
-          deletedAt: jobApplications.deletedAt,
-        }).from(jobApplications).where(eq(jobApplications.id, applicant.id)).limit(1);
-        if (!currentApplicant || currentApplicant.deletedAt) {
-          throw new Error("This application is no longer available.");
-        }
-        if (!hasSameOnboardingAssignment(applicant, currentApplicant)) {
-          throw new Error("This applicant's role or location changed before employment onboarding could be completed. Reload and confirm the current assignment.");
-        }
-
-        // A historical signature cannot qualify a newly reissued unsigned offer.
-        const [currentSigning] = await tx.select({ signed: signingTokens.signed })
-          .from(signingTokens)
-          .where(eq(signingTokens.applicationId, currentApplicant.id))
-          .orderBy(desc(signingTokens.createdAt), desc(signingTokens.id))
-          .limit(1);
-        const [existingForApplication] = await tx.select({ id: employees.id }).from(employees)
-          .where(eq(employees.sourceApplicationId, currentApplicant.id)).limit(1);
-        const currentEligibility = getOnboardedApplicantDirectoryEligibility({
-          status: currentApplicant.status,
-          onboardingSentAt: currentApplicant.onboardingSentAt,
-          signingComplete: currentSigning?.signed === 1,
-          existingEmployee: Boolean(existingForApplication),
-        });
-        if (!currentEligibility.eligible) throw new Error(currentEligibility.reason);
-        if (currentApplicant.isTeamMember || currentApplicant.onboardingDeliveryToken) {
-          throw new Error("This applicant changed before employment onboarding could be completed. Reload and confirm the current status.");
-        }
-
-        const email = currentApplicant.email?.toLowerCase() ?? null;
-        const phone = currentApplicant.phone ? normalizeCanadianPhoneNumber(currentApplicant.phone) : null;
-        const [emailMatches, phoneMatches] = await Promise.all([
-          email ? tx.select().from(employees).where(eq(employees.email, email)) : Promise.resolve([]),
-          phone ? tx.select().from(employees).where(eq(employees.phone, phone)) : Promise.resolve([]),
-        ]);
-        const matchingEmployees = Array.from(new Map([...emailMatches, ...phoneMatches].map((employee) => [employee.id, employee])).values());
-        const matchingEmployee = matchingEmployees[0];
-        const contactEligibility = getOnboardedApplicantContactMatchEligibility({
-          matchingEmployeeCount: matchingEmployees.length,
-          matchingEmployeeSourceApplicationId: matchingEmployee?.sourceApplicationId ?? null,
-        });
-        if (!contactEligibility.eligible) throw new Error(contactEligibility.reason);
-
-        const accessPlan = getApprovedNewHirePortalAccessPlan({ role: currentApplicant.role });
-        const activeTeamContacts = await tx.select({ email: jobApplications.email, phone: jobApplications.phone })
-          .from(jobApplications)
-          .where(and(eq(jobApplications.isTeamMember, true), isNull(jobApplications.deletedAt)));
-        if (hasMatchingActiveTeamContact({ email, phone }, activeTeamContacts)) {
-          throw new Error("Remove the matching active APY HQ profile first. New-hire portal access cannot duplicate an existing staff profile.");
-        }
-
-        const directoryValues = {
-          sourceApplicationId: currentApplicant.id,
-          name: currentApplicant.name,
-          email,
-          phone,
-          role: currentApplicant.role,
-          location: currentApplicant.location,
-          employmentStatus: "active" as const,
-          endedAt: null,
-        };
-        const [onboardingTransition] = await tx.update(jobApplications).set({
-          status: "onboarded",
-          isTeamMember: accessPlan.isTeamMember,
-        })
-          .where(and(
-            eq(jobApplications.id, currentApplicant.id),
-            eq(jobApplications.status, "accepted"),
-            eq(jobApplications.role, currentApplicant.role),
-            eq(jobApplications.location, currentApplicant.location),
-            eq(jobApplications.isTeamMember, false),
-            isNotNull(jobApplications.onboardingSentAt),
-            isNull(jobApplications.onboardingDeliveryToken),
-            isNull(jobApplications.deletedAt),
-          ));
-        if (onboardingTransition.affectedRows !== 1) {
-          throw new Error("This applicant changed before employment onboarding could be completed. Reload and confirm the current status.");
-        }
-        if (matchingEmployee) {
-          await tx.update(employees).set(directoryValues).where(eq(employees.id, matchingEmployee.id));
-        } else {
-          await tx.insert(employees).values(directoryValues);
-        }
-        const [directoryEmployee] = await tx.select({ id: employees.id }).from(employees)
-          .where(eq(employees.sourceApplicationId, currentApplicant.id)).limit(1);
-        if (!directoryEmployee) throw new Error("Employee Directory record could not be created.");
-        await tx.insert(jobApplicationActions).values({
-          applicationId: currentApplicant.id,
-          action: matchingEmployee ? "employee_directory_linked" : "employee_directory_added",
-          fromStatus: "accepted",
-          toStatus: "onboarded",
-          actorUserId: ctx.user.id,
-          actorName: ctx.user.name,
-          actorEmail: ctx.user.email,
-          details: JSON.stringify({
-            employmentOnboarded: true,
-            grantsApyHqAccess: accessPlan.grantsApyHqAccess,
-            grantsPortalAccess: accessPlan.grantsPortalAccess,
-            portalAccessLevel: accessPlan.portalAccessLevel,
-          }),
-        });
-        return { id: directoryEmployee.id, linkedExistingRecord: Boolean(matchingEmployee), accessPlan };
-      });
-      return {
-        success: true,
-        id: transfer.id,
-        linkedExistingRecord: transfer.linkedExistingRecord,
-        grantsApyHqAccess: transfer.accessPlan.grantsApyHqAccess,
-        grantsPortalAccess: transfer.accessPlan.grantsPortalAccess,
-        portalAccessLevel: transfer.accessPlan.portalAccessLevel,
-      };
+      return hireSignedApplicant(db, input.applicationId, ctx.user);
     }),
 
   // Existing employee access uses the same one-step activation, without signing prerequisites.

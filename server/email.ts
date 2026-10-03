@@ -417,6 +417,9 @@ export function buildOnboardingEmail(opts: {
     </table>
     ${pillButton(planningUrl, "📋 Open Planning Document")}
     ${fallbackLink(planningUrl)}
+    ${bodyText(`Your active employee account gives you access to APY HQ. Sign in with your saved email address or phone number, then open Training. No separate training account is needed.`)}
+    ${pillButton("https://afropuppyyoga.ca/staff-access", "Sign in to APY HQ")}
+    ${fallbackLink("https://afropuppyyoga.ca/staff/training")}
     ${onboardingDocumentsHtml(opts.documents)}
     ${opts.additionalNotes ? `<table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;"><tr><td style="padding:16px 20px;"><p style="margin:0 0 6px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Additional Notes</p><p style="margin:0;font-size:14px;color:#3D1A2A;line-height:1.6;">${renderEmailText(opts.additionalNotes)}</p></td></tr></table>` : ""}
     ${bodyText(`Please <strong>reply to this email</strong> to confirm you've received your onboarding details and let us know if you have any questions before your orientation.`)}
@@ -447,6 +450,9 @@ You'll be added to the official iMessage group chat shortly. Keep an eye on your
 
 Planning Document:
 ${planningUrl}
+APY HQ sign-in: https://afropuppyyoga.ca/staff-access
+Use your saved email address or phone number. After signing in, open Training:
+https://afropuppyyoga.ca/staff/training
 ${onboardingDocumentsText(opts.documents)}
 ${opts.additionalNotes ? `\n${opts.additionalNotes}\n` : ""}
 Please reply to this email to confirm you've received your onboarding details.
@@ -519,6 +525,9 @@ export function buildYogaInstructorOnboardingEmail(opts: {
     </table>
     ${pillButton(planningUrl, "📋 Open Planning Document")}
     ${fallbackLink(planningUrl)}
+    ${bodyText(`Your active employee account gives you access to APY HQ. Sign in with your saved email address or phone number, then open Training. No separate training account is needed.`)}
+    ${pillButton("https://afropuppyyoga.ca/staff-access", "Sign in to APY HQ")}
+    ${fallbackLink("https://afropuppyyoga.ca/staff/training")}
     ${onboardingDocumentsHtml(opts.documents)}
     ${opts.additionalNotes ? `<table width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6F0;border-radius:12px;border:1px solid #F5D0DF;margin:0 0 20px;"><tr><td style="padding:16px 20px;"><p style="margin:0 0 6px;font-size:12px;font-weight:bold;color:#8B1A4A;text-transform:uppercase;letter-spacing:1px;">Additional Notes</p><p style="margin:0;font-size:14px;color:#3D1A2A;line-height:1.6;">${renderEmailText(opts.additionalNotes)}</p></td></tr></table>` : ""}
     ${bodyText(`Please <strong>reply to this email</strong> to confirm you've received your onboarding details and let us know if you have any questions before your orientation.`)}
@@ -549,6 +558,9 @@ You'll be added to the official iMessage group chat shortly. Keep an eye on your
 
 Planning Document:
 ${planningUrl}
+APY HQ sign-in: https://afropuppyyoga.ca/staff-access
+Use your saved email address or phone number. After signing in, open Training:
+https://afropuppyyoga.ca/staff/training
 ${onboardingDocumentsText(opts.documents)}
 ${opts.additionalNotes ? `\n${opts.additionalNotes}\n` : ""}
 Please reply to this email to confirm you've received your onboarding details.
