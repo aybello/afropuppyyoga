@@ -124,8 +124,8 @@ describe("simple employee management", () => {
       expect(harness.inserts.find((entry) => entry.table === jobApplications)).toMatchObject({ table: jobApplications, values: { role, location: "KW", isTeamMember: true } });
     }
     const tree = readFileSync(new URL("../client/src/pages/StaffAvailability.tsx", import.meta.url), "utf8");
-    expect(tree).toContain('ops.map((s)');
-    expect(tree).toContain('yoga.map((s)');
+    expect(tree).toContain('trpc.staffAvailability.listEmployees.useQuery()');
+    expect(tree).toContain('<EmployeeTeamTree employees={employees}');
   });
 
   it("does not remove another active employee's shared phone credentials", async () => {

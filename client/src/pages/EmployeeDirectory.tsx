@@ -1,7 +1,7 @@
 import AdminNav from "@/components/AdminNav";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, CheckCircle2, Clock3, KeyRound, Mail, Pencil, Phone, RefreshCw, Trash2, UserMinus, UserPlus, UsersRound } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -76,6 +76,14 @@ export default function EmployeeDirectory() {
   const [departingEmployee, setDepartingEmployee] = useState<Employee | null>(null);
   const [reactivatingEmployee, setReactivatingEmployee] = useState<Employee | null>(null);
   const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(null);
+  const [requestedEmployeeId] = useState(() => new URLSearchParams(window.location.search).get("employee"));
+  const openedRequestedEmployee = useRef(false);
+  useEffect(() => {
+    if (!data || !requestedEmployeeId || openedRequestedEmployee.current) return;
+    openedRequestedEmployee.current = true;
+    const requested = data.find((employee) => String(employee.id) === requestedEmployeeId);
+    if (requested) setEditingEmployee(requested as Employee);
+  }, [data, requestedEmployeeId]);
   // Restores a linked APY HQ profile and therefore grants operational access.
   const restoreApyHqTeamMember = trpc.staffAvailability.reactivateTeamMember.useMutation({
     onSuccess: () => {

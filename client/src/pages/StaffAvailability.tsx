@@ -4,18 +4,11 @@ import { toast } from "sonner";
 import { Link } from "wouter";
 import { ArrowLeft, Calendar, CalendarCheck, ChevronLeft, ChevronRight, Mail, MessageSquare, Pencil, Plus, Power, Send, Trash2, Users, X } from "lucide-react";
 import { individualScheduleDeliveryFeedback } from "@shared/individualNotification";
-import { getPuppyMonitorLocationCoverage } from "@shared/puppyMonitorLocationCoverage";
+import EmployeeTeamTree from "@/components/EmployeeTeamTree";
 
 const LOCATIONS = ["KW", "OAK", "HAM"] as const;
 const LOCATION_LABELS: Record<string, string> = { KW: "Kitchener", OAK: "Oakville", HAM: "Hamilton", CENTRAL: "APY-wide" };
 const CENTRAL_ROLES = ["BDR", "Social Media Specialist"] as const;
-const ROLE_COLORS: Record<string, string> = {
-  yoga_instructor: "#8B2252", "Yoga Instructor": "#8B2252",
-  puppy_monitor: "#7C3AED", "Puppy Monitor": "#7C3AED",
-  puppy_specialist: "#0891B2", "Puppy Specialist": "#0891B2",
-  operations_manager: "#D97706", "Operations Manager": "#D97706",
-  BDR: "#0F766E", "Social Media Specialist": "#DB2777",
-};
 const LEAVE_COLORS: Record<string, string> = { vacation: "#F59E0B", sick: "#EF4444", personal: "#8B5CF6", leave: "#6B7280", unavailable: "#374151" };
 const LEAVE_LABELS: Record<string, string> = { vacation: "🌴 Vacation", sick: "🤒 Sick", personal: "🏠 Personal", leave: "📋 Leave", unavailable: "⛔ Unavailable" };
 
@@ -41,21 +34,6 @@ function normalizeTeamLocation(location: string): TeamLocation {
   if (location === "Oakville") return "OAK";
   if (location === "Hamilton") return "HAM";
   return (["KW", "OAK", "HAM", "CENTRAL"] as TeamLocation[]).includes(location as TeamLocation) ? location as TeamLocation : "CENTRAL";
-}
-
-// ─── Compact person chip ──────────────────────────────────────────────
-function PersonChip({ staff, role, status, onClick }: { staff: StaffMember; role: string; status?: { label: string; color: string } | null; onClick?: () => void }) {
-  const color = ROLE_COLORS[role] ?? "#8B2252";
-  return (
-    <button type="button" onClick={onClick} className="flex items-center gap-2 rounded-lg border px-3 py-2 text-left transition-all hover:shadow-sm" style={{ borderColor: `${color}40`, background: `${color}08` }}>
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: color }}>{staff.name.charAt(0)}</div>
-      <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-[#1A0A12]">{staff.name}</p>
-        <p className="text-[10px]" style={{ color }}>{role}</p>
-      </div>
-      {status && <span className="ml-auto shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold text-white" style={{ background: status.color }}>{status.label}</span>}
-    </button>
-  );
 }
 
 // ─── Weekend day card ─────────────────────────────────────────────────
@@ -113,7 +91,8 @@ export default function StaffAvailabilityPage() {
   const [tab, setTab] = useState<"team" | "ops">(() => new URLSearchParams(window.location.search).get("tab") === "team" ? "team" : "ops");
   const [weekendIndex, setWeekendIndex] = useState(0);
 
-  const { data, isLoading, refetch } = trpc.staffAvailability.getOrgChart.useQuery();
+  const { data } = trpc.staffAvailability.getOrgChart.useQuery();
+  const employeeDirectory = trpc.staffAvailability.listEmployees.useQuery();
   const [weekendCoverageInput] = useState(() => ({ weekends: 6 }));
   const weekendCoverage = trpc.staffAvailability.getWeekendCoverage.useQuery(weekendCoverageInput);
   const classStaffing = trpc.puppySchedule.listWithStaffing.useQuery();
@@ -156,12 +135,8 @@ export default function StaffAvailabilityPage() {
   const notifyIndividualEventStaff = trpc.puppySchedule.notifyIndividualEventStaff.useMutation({ onSuccess: (result) => { notificationPreview.refetch(); const feedback = individualScheduleDeliveryFeedback({ deliveryStatus: result.deliveryStatus, name: result.result.name, errors: result.result.errors }); if (feedback.kind === "success") toast.success(feedback.message); else if (feedback.kind === "warning") toast.warning(feedback.message); else toast.error(feedback.message); }, onError: (e) => toast.error(e.message) });
 
   const staff = (data?.staff ?? []) as StaffMember[];
-  const inactiveStaff = (data?.inactiveStaff ?? []) as StaffMember[];
+  const employees = employeeDirectory.data ?? [];
   const leaves = data?.leaves ?? [];
-  const matchesRole = (s: StaffMember, role: string) => s.role === role || s.role === role.toLowerCase().replaceAll(" ", "_");
-  const byLocationAndRole = (loc: string, role: string) => staff.filter((s) => s.location === loc && matchesRole(s, role));
-  const centralStaff = staff.filter((s) => CENTRAL_ROLES.some((r) => matchesRole(s, r)) || s.location === "CENTRAL");
-  const getStatus = (id: number) => { const l = isOnLeave(id, leaves, today); return l ? { label: LEAVE_LABELS[l.leaveType] ?? l.leaveType, color: LEAVE_COLORS[l.leaveType] ?? "#6B7280" } : null; };
   const openStaff = (s: StaffMember) => { setSelectedStaff(s); setShowLeaveModal(true); };
   const setRole = (role: TeamRole) => setNewMember((m) => ({ ...m, role, location: CENTRAL_ROLES.includes(role as any) ? "CENTRAL" : m.location === "CENTRAL" ? "KW" : m.location }));
   const openEditStaff = (s: StaffMember) => {
@@ -188,8 +163,9 @@ export default function StaffAvailabilityPage() {
   const classesForDate = (date: string) => scheduledClasses.filter((c) => c.classDate === date);
 
   // Team tab stats
-  const totalStaff = staff.length;
-  const onLeaveNow = staff.filter((s) => isOnLeave(s.id, leaves, today)).length;
+  const totalStaff = employees.length;
+  const activeEmployees = employees.filter((employee) => employee.employmentStatus === "active");
+  const onLeaveNow = activeEmployees.filter((employee) => employee.sourceApplicationId !== null && isOnLeave(employee.sourceApplicationId, leaves, today)).length;
 
   return (
     <div className="min-h-screen bg-[#F7F2EE]">
@@ -284,49 +260,21 @@ export default function StaffAvailabilityPage() {
             <div className="mb-5 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold text-[#1A0A12]">APY Team</h2>
-                <p className="mt-0.5 text-xs text-[#7A5A6A]">{totalStaff} members · {onLeaveNow > 0 ? `${onLeaveNow} on leave today` : "All available today"}</p>
+                <p className="mt-0.5 text-xs text-[#7A5A6A]">{totalStaff} directory employees · {activeEmployees.length} active · {totalStaff - activeEmployees.length} inactive{onLeaveNow > 0 ? ` · ${onLeaveNow} on leave today` : ""}</p>
+                <p className="mt-2 max-w-2xl text-xs leading-5 text-[#7A5A6A]">Everyone in the Employee Directory appears under their saved role and location. Inactive employees remain mapped. Being shown here does not grant login access or assign a class.</p>
               </div>
             </div>
 
-            {isLoading ? <div className="py-16 text-center text-sm text-[#8B2252]">Loading…</div> : (
-              <div className="space-y-6">
-                {/* Central roles */}
-                <section className="rounded-2xl border border-[#EADBE2] bg-white p-4">
-                  <p className="mb-3 text-[10px] font-bold uppercase tracking-wider text-[#8B2252]">Central · APY-wide</p>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {CENTRAL_ROLES.map((role) => {
-                      const members = centralStaff.filter((s) => matchesRole(s, role));
-                      return members.length ? members.map((s) => <PersonChip key={s.id} staff={s} role={role} status={getStatus(s.id)} onClick={() => openStaff(s)} />) : <div key={role} className="flex items-center justify-center rounded-lg border-2 border-dashed border-[#DCCAD3] px-3 py-4 text-xs text-[#B39AA5]">{role} · Open</div>;
-                    })}
-                  </div>
-                </section>
-
-                {/* Studio teams */}
-                <div className="grid gap-5 lg:grid-cols-3">
-                  {LOCATIONS.map((loc) => {
-                    const ops = byLocationAndRole(loc, "Operations Manager");
-                    const yoga = byLocationAndRole(loc, "Yoga Instructor");
-                    const pms = byLocationAndRole(loc, "Puppy Monitor");
-                    const puppyMonitorCoverage = getPuppyMonitorLocationCoverage(pms.length);
-                    return (
-                      <section key={loc} className="rounded-2xl border border-[#EADBE2] bg-white p-4">
-                        <div className="mb-3 rounded-lg bg-[#8B2252] px-3 py-2 text-center text-sm font-bold text-white">{LOCATION_LABELS[loc]}</div>
-                        <div className="space-y-2">
-                          {ops.length ? ops.map((s) => <PersonChip key={s.id} staff={s} role="Operations Manager" status={getStatus(s.id)} onClick={() => openStaff(s)} />) : <div className="rounded-lg border-2 border-dashed border-[#DCCAD3] px-3 py-3 text-center text-xs text-[#B39AA5]">Ops Manager · Open</div>}
-                          {yoga.length ? yoga.map((s) => <PersonChip key={s.id} staff={s} role="Yoga Instructor" status={getStatus(s.id)} onClick={() => openStaff(s)} />) : <div className="rounded-lg border-2 border-dashed border-[#DCCAD3] px-3 py-3 text-center text-xs text-[#B39AA5]">Yoga Instructor · Open</div>}
-                          <p className="pt-1 text-[10px] font-bold uppercase tracking-wider text-[#7C3AED]">Puppy Monitors · {puppyMonitorCoverage.activeCount} active · target {puppyMonitorCoverage.target}</p>
-                          {pms.map((s) => <PersonChip key={s.id} staff={s} role="Puppy Monitor" status={getStatus(s.id)} onClick={() => openStaff(s)} />)}
-                          {puppyMonitorCoverage.meetsTarget
-                            ? <p className="pt-1 text-[11px] font-medium text-emerald-700">Staffing target met · no maximum</p>
-                            : <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-center text-xs font-semibold text-amber-800">{puppyMonitorCoverage.shortfall} below the target of {puppyMonitorCoverage.target}. This is a planning reminder, not a restriction.</div>}
-                        </div>
-                      </section>
-                    );
-                  })}
-                </div>
-
-                {inactiveStaff.length > 0 && <section className="rounded-2xl border border-dashed border-[#DCCAD3] bg-[#FFF9FB] p-4"><div className="mb-3 flex items-center justify-between"><div><p className="text-[10px] font-bold uppercase tracking-wider text-[#8B2252]">Inactive APY HQ profiles</p><p className="mt-0.5 text-xs text-[#7A5A6A]">Inactive people cannot access APY HQ or appear in staffing coverage. Reactivate only when they return.</p></div><span className="rounded-full bg-[#8B2252]/10 px-2.5 py-1 text-xs font-bold text-[#8B2252]">{inactiveStaff.length}</span></div><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{inactiveStaff.map((s) => <PersonChip key={s.id} staff={s} role={normalizeTeamRole(s.role)} status={{ label: "Inactive", color: "#7A5A6A" }} onClick={() => openStaff(s)} />)}</div></section>}
+            {employeeDirectory.isLoading ? <div className="py-16 text-center text-sm text-[#8B2252]">Loading employee tree…</div> : employeeDirectory.error ? (
+              <div role="alert" className="rounded-xl border border-[#EADBE2] bg-white p-6 text-sm text-[#7A5A6A]">
+                <p>The employee tree could not be loaded.</p><button type="button" onClick={() => employeeDirectory.refetch()} className="mt-3 font-semibold text-[#8B2252]">Try again</button>
               </div>
+            ) : (
+              <EmployeeTeamTree employees={employees} leaves={leaves} today={today} onManageAvailability={(employee) => {
+                const profile = staff.find((person) => person.id === employee.sourceApplicationId);
+                if (profile) openStaff(profile);
+                else toast.error("Availability profile could not be loaded. Open the employee record to check access.");
+              }} />
             )}
           </div>
         )}
