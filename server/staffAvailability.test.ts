@@ -106,7 +106,7 @@ describe("direct team-member validation", () => {
     expect(isPuppyMonitorRole("puppy_monitor")).toBe(true);
   });
 
-  it("does not allow the sole active Operations Manager to depart while Puppy Monitors remain", () => {
+  it("allows authorised departure of the sole manager without an organisational prerequisite", () => {
     expect(getOperationsManagerDepartureEligibility({
       employeeId: 1,
       employeeRole: "Operations Manager",
@@ -114,7 +114,7 @@ describe("direct team-member validation", () => {
         { id: 1, role: "Operations Manager" },
         { id: 2, role: "Puppy Monitor" },
       ],
-    })).toMatchObject({ eligible: false });
+    })).toMatchObject({ eligible: true });
     expect(getOperationsManagerDepartureEligibility({
       employeeId: 1,
       employeeRole: "Operations Manager",
@@ -339,7 +339,7 @@ describe("direct team-member validation", () => {
     })).toThrow("Add either an email address or phone number");
   });
 
-  it("does not leave Puppy Monitors without an Operations Manager after an edit", () => {
+  it("does not require an Operations Manager before an authorised role or location edit", () => {
     expect(() => validateTeamAssignmentChange({
       currentRole: "Operations Manager",
       currentLocation: "KW",
@@ -348,7 +348,7 @@ describe("direct team-member validation", () => {
       hasOperationsManagerAtNextLocation: true,
       hasOtherOperationsManagerAtCurrentLocation: false,
       hasActivePuppyMonitorsAtCurrentLocation: true,
-    })).toThrow("Assign another Operations Manager");
+    })).not.toThrow();
 
     expect(() => validateTeamAssignmentChange({
       currentRole: "Operations Manager",
@@ -361,7 +361,7 @@ describe("direct team-member validation", () => {
     })).not.toThrow();
   });
 
-  it("does not permit removing the sole Operations Manager from a location with active Puppy Monitors", () => {
+  it("allows removing the sole manager with a staffing-gap reminder only", () => {
     expect(() => validateTeamAssignmentChange({
       currentRole: "Operations Manager",
       currentLocation: "KW",
@@ -370,7 +370,7 @@ describe("direct team-member validation", () => {
       hasOperationsManagerAtNextLocation: false,
       hasOtherOperationsManagerAtCurrentLocation: false,
       hasActivePuppyMonitorsAtCurrentLocation: true,
-    })).toThrow("Assign another Operations Manager");
+    })).not.toThrow();
   });
 
   it("accepts only an explicit staff-profile activity state", () => {
@@ -419,7 +419,7 @@ describe("direct team-member validation", () => {
     })).toThrow("APY-wide");
   });
 
-  it("does not let a linked active profile move the sole Operations Manager away from active Puppy Monitors", () => {
+  it("allows a linked manager to move without organisational prerequisites", () => {
     expect(() => validateEmployeeDirectoryAssignmentChange({
       linkedActiveTeamProfile: true,
       currentRole: "Operations Manager",
@@ -429,7 +429,7 @@ describe("direct team-member validation", () => {
       hasOperationsManagerAtNextLocation: true,
       hasOtherOperationsManagerAtCurrentLocation: false,
       hasActivePuppyMonitorsAtCurrentLocation: true,
-    })).toThrow("Assign another Operations Manager");
+    })).not.toThrow();
 
     expect(() => validateEmployeeDirectoryAssignmentChange({
       linkedActiveTeamProfile: true,
@@ -440,7 +440,7 @@ describe("direct team-member validation", () => {
       hasOperationsManagerAtNextLocation: false,
       hasOtherOperationsManagerAtCurrentLocation: false,
       hasActivePuppyMonitorsAtCurrentLocation: true,
-    })).toThrow("Assign another Operations Manager");
+    })).not.toThrow();
 
     expect(() => validateEmployeeDirectoryAssignmentChange({
       linkedActiveTeamProfile: true,

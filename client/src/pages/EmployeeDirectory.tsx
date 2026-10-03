@@ -60,7 +60,15 @@ function createEmptyEmployeeForm(): NewEmployeeForm {
 }
 
 export default function EmployeeDirectory() {
+  const utils = trpc.useUtils();
   const { data, error, isLoading, refetch } = trpc.staffAvailability.listEmployees.useQuery();
+  const refreshPeople = () => {
+    void utils.staffAvailability.listEmployees.invalidate();
+    void utils.staffAvailability.getOrgChart.invalidate();
+    void utils.staffAvailability.getWeekendCoverage.invalidate();
+    void utils.puppySchedule.listWithStaffing.invalidate();
+    void utils.staff.listStaff.invalidate();
+  };
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [showAddEmployee, setShowAddEmployee] = useState(false);
@@ -72,7 +80,7 @@ export default function EmployeeDirectory() {
   const restoreApyHqTeamMember = trpc.staffAvailability.reactivateTeamMember.useMutation({
     onSuccess: () => {
       toast.success("Employee restored to APY HQ");
-      refetch();
+      refreshPeople();
     },
     onError: (error) => toast.error(error.message),
   });
@@ -80,7 +88,7 @@ export default function EmployeeDirectory() {
     onSuccess: () => {
       toast.success("Employee record updated");
       setEditingEmployee(null);
-      refetch();
+      refreshPeople();
     },
     onError: (error) => toast.error(error.message),
   });
@@ -89,14 +97,14 @@ export default function EmployeeDirectory() {
       toast.success("Employee added with APY HQ access");
       setShowAddEmployee(false);
       setNewEmployee(createEmptyEmployeeForm());
-      refetch();
+      refreshPeople();
     },
     onError: (error) => toast.error(error.message),
   });
   const provisionApyHqAccess = trpc.staffAvailability.provisionEmployeeApyHqAccess.useMutation({
     onSuccess: () => {
       toast.success("APY HQ access added for this employee");
-      refetch();
+      refreshPeople();
     },
     onError: (error) => toast.error(error.message),
   });
@@ -104,7 +112,7 @@ export default function EmployeeDirectory() {
     onSuccess: () => {
       toast.success("Employee marked as no longer active");
       setDepartingEmployee(null);
-      refetch();
+      refreshPeople();
     },
     onError: (error) => toast.error(error.message),
   });
@@ -113,7 +121,7 @@ export default function EmployeeDirectory() {
     onSuccess: () => {
       toast.success("Employee activated with login access.");
       setReactivatingEmployee(null);
-      refetch();
+      refreshPeople();
     },
     onError: (error) => toast.error(error.message),
   });
@@ -121,7 +129,7 @@ export default function EmployeeDirectory() {
     onSuccess: () => {
       toast.success("Former employee record deleted permanently");
       setDeletingEmployee(null);
-      refetch();
+      refreshPeople();
     },
     onError: (error) => toast.error(error.message),
   });
@@ -383,7 +391,7 @@ export default function EmployeeDirectory() {
             <DialogTitle className="font-display text-2xl text-[#1A0A12]">Activate employee and login?</DialogTitle>
             <DialogDescription className="font-body leading-6 text-[#6E5360]">{reactivatingEmployee?.name} will become active and receive role-based login access using their saved email or phone. Signed onboarding is not required for this employee action.</DialogDescription>
           </DialogHeader>
-          <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 font-body text-sm leading-5 text-emerald-800">Existing class assignments and hiring history are retained. Old revoked access links remain revoked; use a fresh email link or phone code to sign in.</p>
+          <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 font-body text-sm leading-5 text-emerald-800">Past duty history is retained. Future duties are not automatically reassigned by activating login. Use a fresh email link or phone code to sign in.</p>
           <DialogFooter className="pt-2">
             <Button type="button" variant="outline" onClick={() => setReactivatingEmployee(null)}>Keep inactive</Button>
             <Button type="button" disabled={activateEmployee.isPending} onClick={() => reactivatingEmployee && activateEmployee.mutate({ employeeId: reactivatingEmployee.id })} className="bg-emerald-700 text-white hover:bg-emerald-800">{activateEmployee.isPending ? "Reactivating…" : "Activate employee & login"}</Button>

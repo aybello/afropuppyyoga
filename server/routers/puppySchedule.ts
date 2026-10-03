@@ -1,3 +1,4 @@
+import { getRetiredClassAssignmentIds } from "../staffDutyHistory";
 import { canNotifyAssignedEventTeam } from "../staffRosterPolicy";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -60,13 +61,14 @@ export async function getEventNotificationPreview(db: NonNullable<Awaited<Return
   if (!schedule) throw new Error("Scheduled class not found");
   if (schedule.scheduleStatus !== "scheduled") throw new Error(`This class is ${schedule.scheduleStatus} and cannot receive schedule notifications.`);
   const teamLocation = scheduleLocationToTeamLocation(schedule.location);
-  const [team, leaves, coverage, pmAssignments, priorNotifications] = await Promise.all([
+  const [team, leaves, coverage, pmAssignments, priorNotifications, retiredIds] = await Promise.all([
     db.select({ id: jobApplications.id, name: jobApplications.name, email: jobApplications.email, phone: jobApplications.phone, role: jobApplications.role, location: jobApplications.location, status: jobApplications.status, isTeamMember: jobApplications.isTeamMember, deletedAt: jobApplications.deletedAt })
       .from(jobApplications).where(and(isNull(jobApplications.deletedAt), eq(jobApplications.isTeamMember, true))),
     db.select().from(staffAvailability).where(and(lte(staffAvailability.startDate, schedule.classDate), gte(staffAvailability.endDate, schedule.classDate))),
     db.select().from(weekendLeadershipCoverage).where(and(eq(weekendLeadershipCoverage.coverageDate, schedule.classDate), eq(weekendLeadershipCoverage.location, teamLocation))),
     db.select().from(classStaffAssignments).where(eq(classStaffAssignments.scheduleId, scheduleId)),
     db.select().from(staffScheduleNotifications).where(eq(staffScheduleNotifications.scheduleId, scheduleId)).orderBy(desc(staffScheduleNotifications.sentAt)),
+    getRetiredClassAssignmentIds(db),
   ]);
   const active = team.filter(isActiveTeamMember);
   const awayIds = new Set(leaves.map((leave) => leave.staffId));
@@ -86,7 +88,7 @@ export async function getEventNotificationPreview(db: NonNullable<Awaited<Return
   const recipients = [
     { person: leader("Operations Manager"), role: "Operations Manager" },
     { person: leader("Yoga Instructor"), role: "Yoga Instructor" },
-    ...pmAssignments.map((assignment) => ({ person: active.find((person) => person.id === assignment.staffId && sameRole(person.role, "Puppy Monitor") && person.location === teamLocation && !awayIds.has(person.id)) ?? null, role: "Puppy Monitor" })),
+    ...pmAssignments.filter((assignment) => !retiredIds.has(assignment.id)).map((assignment) => ({ person: active.find((person) => person.id === assignment.staffId && sameRole(person.role, "Puppy Monitor") && person.location === teamLocation && !awayIds.has(person.id)) ?? null, role: "Puppy Monitor" })),
   ].filter((item): item is { person: NonNullable<typeof item.person>; role: string } => Boolean(item.person))
     .map(({ person, role }) => ({ id: person.id, name: person.name, email: person.email, phone: person.phone, role, lastSentAt: lastSentByStaffId.get(person.id) ?? null }));
   const gaps = staffingGaps({ operationsManager: recipients.some((r) => r.role === "Operations Manager"), yogaInstructor: recipients.some((r) => r.role === "Yoga Instructor"), puppyMonitorCount: recipients.filter((r) => r.role === "Puppy Monitor").length });
@@ -366,20 +368,21 @@ export const puppyScheduleRouter = router({
     const schedules = await db.select().from(puppySchedule).where(and(eq(puppySchedule.scheduleStatus, "scheduled"), gte(puppySchedule.classDate, today))).orderBy(desc(puppySchedule.classDate));
     if (!schedules.length) return [];
     const earliestDate = schedules.reduce((earliest, schedule) => schedule.classDate < earliest ? schedule.classDate : earliest, schedules[0].classDate);
-    const [assignments, staff, leaves, leadershipCoverage] = await Promise.all([
+    const [assignments, staff, leaves, leadershipCoverage, retiredIds] = await Promise.all([
       db.select().from(classStaffAssignments),
       db.select({ id: jobApplications.id, name: jobApplications.name, role: jobApplications.role, location: jobApplications.location, status: jobApplications.status, isTeamMember: jobApplications.isTeamMember, deletedAt: jobApplications.deletedAt })
         .from(jobApplications)
         .where(and(isNull(jobApplications.deletedAt), eq(jobApplications.isTeamMember, true))),
       db.select().from(staffAvailability).where(gte(staffAvailability.endDate, earliestDate)),
       db.select().from(weekendLeadershipCoverage).where(gte(weekendLeadershipCoverage.coverageDate, earliestDate)),
+      getRetiredClassAssignmentIds(db),
     ]);
     const activeStaff = staff.filter(isActiveTeamMember);
     const sameRole = (role: string, expected: string) => role === expected || role === expected.toLowerCase().replaceAll(" ", "_");
 
     return schedules.map((schedule) => {
       const location = scheduleLocationToTeamLocation(schedule.location);
-      const assignmentRows = assignments.filter((assignment) => assignment.scheduleId === schedule.id);
+      const assignmentRows = assignments.filter((assignment) => assignment.scheduleId === schedule.id && !retiredIds.has(assignment.id));
       const assignedIds = new Set(assignmentRows.map((assignment) => assignment.staffId));
       const isAway = (staffId: number) => leaves.some((leave) => leave.staffId === staffId && isAwayOnDate(leave, schedule.classDate));
       const resolveLeader = (role: "Operations Manager" | "Yoga Instructor") => {
@@ -579,7 +582,8 @@ export const puppyScheduleRouter = router({
           status: jobApplications.status, isTeamMember: jobApplications.isTeamMember, deletedAt: jobApplications.deletedAt })
           .from(jobApplications);
         const leaves = await tx.select().from(staffAvailability).where(and(lte(staffAvailability.startDate, schedule.classDate), gte(staffAvailability.endDate, schedule.classDate)));
-        const activeAssignments = existing.filter((assignment) => candidates.some((person) => person.id === assignment.staffId && isActiveTeamMember(person)
+        const retiredIds = await getRetiredClassAssignmentIds(tx);
+        const activeAssignments = existing.filter((assignment) => !retiredIds.has(assignment.id) && candidates.some((person) => person.id === assignment.staffId && isActiveTeamMember(person)
           && (person.role === "Puppy Monitor" || person.role === "puppy_monitor") && person.location === scheduleLocationToTeamLocation(schedule.location)
           && !leaves.some((leave) => leave.staffId === person.id)));
         const eligibility = getPuppyMonitorAssignmentEligibility({
@@ -587,7 +591,7 @@ export const puppyScheduleRouter = router({
           alreadyAssigned: activeAssignments.some((assignment) => assignment.staffId === staffMember.id),
         });
         if (!eligibility.eligible) throw new Error(eligibility.reason);
-        const prior = existing.find((assignment) => assignment.staffId === staffMember.id);
+        const prior = existing.find((assignment) => assignment.staffId === staffMember.id && !retiredIds.has(assignment.id));
         if (prior) {
           await tx.update(classStaffAssignments).set({ staffName: staffMember.name }).where(eq(classStaffAssignments.id, prior.id));
         } else {

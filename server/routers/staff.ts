@@ -286,7 +286,7 @@ export const staffRouter = router({
         await tx.update(users).set({ role: "user" }).where(and(eq(users.email, normalizedEmail), eq(users.role, "staff")));
         return { success: true, portalAccessRevoked: true, legacyInviteOnly: true };
       }
-      return revokeTeamProfileAccess(tx, invite.applicationId, { isOwner: ctx.apyAccess.level === "owner" });
+      return revokeTeamProfileAccess(tx, invite.applicationId, { isOwner: ctx.apyAccess.level === "owner", actor: ctx.user });
       });
     }),
 

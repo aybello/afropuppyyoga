@@ -1,6 +1,7 @@
-import { and, eq } from "drizzle-orm";
-import { employees, jobApplications, staffInvites, staffPhoneAccessCodes, users } from "../drizzle/schema";
+import { and, eq, gte } from "drizzle-orm";
+import { classStaffAssignments, employees, jobApplicationActions, jobApplications, puppySchedule, staffInvites, staffPhoneAccessCodes, users, weekendLeadershipCoverage } from "../drizzle/schema";
 import { normalizeCanadianPhoneNumber } from "../shared/phone";
+import { getTorontoCalendarDate } from "../shared/scheduleVisibility";
 import { isActiveTeamMember } from "./teamMembership";
 import { validateTeamAssignmentChange } from "./staffRosterPolicy";
 
@@ -9,6 +10,7 @@ export async function revokeTeamProfileAccess(tx: any, profileId: number, option
   isOwner: boolean;
   /** Deactivation retains an archived team profile; removal clears team membership. */
   retainTeamMembership?: boolean;
+  actor?: { id: number; name: string | null; email: string | null };
 }) {
   const profiles: Array<typeof jobApplications.$inferSelect> = await tx.select().from(jobApplications);
   const profile = profiles.find((person) => person.id === profileId);
@@ -33,6 +35,28 @@ export async function revokeTeamProfileAccess(tx: any, profileId: number, option
     .where(eq(staffInvites.applicationId, profile.id));
   const identityEmails = new Set([...invites.map((invite) => invite.email), profile.email ?? ""]
     .map((email) => email.trim().toLowerCase()).filter(Boolean));
+  const today = getTorontoCalendarDate();
+  const [upcomingAssignments, upcomingCoverage] = await Promise.all([
+    tx.select({ id: classStaffAssignments.id, scheduleId: classStaffAssignments.scheduleId, staffId: classStaffAssignments.staffId,
+      staffName: classStaffAssignments.staffName, classDate: puppySchedule.classDate }).from(classStaffAssignments)
+      .innerJoin(puppySchedule, eq(classStaffAssignments.scheduleId, puppySchedule.id))
+      .where(and(eq(classStaffAssignments.staffId, profile.id), eq(puppySchedule.scheduleStatus, "scheduled"), gte(puppySchedule.classDate, today))),
+    tx.select().from(weekendLeadershipCoverage).where(and(eq(weekendLeadershipCoverage.coverageStaffId, profile.id), gte(weekendLeadershipCoverage.coverageDate, today))),
+  ]);
+  // Retire future duties immediately without asking the owner to reassign them.
+  // Class rows remain intact; the audit marks them historic. Leadership rows
+  // become open coverage, with the previous values fully retained in the audit.
+  if (upcomingAssignments.length || upcomingCoverage.length) {
+    await tx.insert(jobApplicationActions).values({
+      applicationId: profile.id, action: "staff_duties_retired",
+      actorUserId: options.actor?.id ?? null, actorName: options.actor?.name ?? null, actorEmail: options.actor?.email ?? null,
+      details: JSON.stringify({ classAssignments: upcomingAssignments, leadershipCoverage: upcomingCoverage }),
+    });
+    for (const coverage of upcomingCoverage) {
+      await tx.update(weekendLeadershipCoverage).set({ coverageStaffId: null, coverageStaffName: null })
+        .where(eq(weekendLeadershipCoverage.id, coverage.id));
+    }
+  }
   const removedAt = new Date();
   await tx.update(jobApplications).set({ isTeamMember: options.retainTeamMembership ?? false, deletedAt: removedAt })
     .where(eq(jobApplications.id, profile.id));

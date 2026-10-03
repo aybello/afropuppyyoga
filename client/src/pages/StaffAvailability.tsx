@@ -133,7 +133,14 @@ export default function StaffAvailabilityPage() {
   const [newMember, setNewMember] = useState<{ name: string; email: string; phone: string; role: TeamRole; location: TeamLocation }>({ name: "", email: "", phone: "", role: "Operations Manager", location: "KW" });
   const [editMember, setEditMember] = useState<{ id: number; name: string; email: string; phone: string; role: TeamRole; location: TeamLocation }>({ id: 0, name: "", email: "", phone: "", role: "Operations Manager", location: "KW" });
 
-  const refreshAvailability = () => { refetch(); weekendCoverage.refetch(); classStaffing.refetch(); };
+  const utils = trpc.useUtils();
+  const refreshAvailability = () => {
+    void utils.staffAvailability.listEmployees.invalidate();
+    void utils.staffAvailability.getOrgChart.invalidate();
+    void utils.staffAvailability.getWeekendCoverage.invalidate();
+    void utils.puppySchedule.listWithStaffing.invalidate();
+    void utils.staff.listStaff.invalidate();
+  };
   const addLeave = trpc.staffAvailability.addLeave.useMutation({ onSuccess: () => { refreshAvailability(); toast.success("Leave added"); setShowLeaveModal(false); } });
   const deleteLeave = trpc.staffAvailability.deleteLeave.useMutation({ onSuccess: () => { refreshAvailability(); toast.success("Leave removed"); } });
   const createTeamMember = trpc.staffAvailability.createTeamMember.useMutation({ onSuccess: () => { refreshAvailability(); toast.success("Team member added"); setShowAddMember(false); setNewMember({ name: "", email: "", phone: "", role: "Operations Manager", location: "KW" }); }, onError: (e) => toast.error(e.message) });

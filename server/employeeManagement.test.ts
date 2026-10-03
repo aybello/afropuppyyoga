@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
-import { employees, jobApplications, staffInvites, staffPhoneAccessCodes, users } from "../drizzle/schema";
+import { employees, jobApplications, classStaffAssignments, staffInvites, staffPhoneAccessCodes, users, weekendLeadershipCoverage } from "../drizzle/schema";
 
 const { getDb, resolveApyAccess } = vi.hoisted(() => ({ getDb: vi.fn(), resolveApyAccess: vi.fn() }));
 vi.mock("./db", () => ({ getDb, getUserByOpenId: vi.fn(), upsertUser: vi.fn() }));
 vi.mock("./apyAccess", () => ({ resolveApyAccess }));
+import { getRetiredClassAssignmentIds } from "./staffDutyHistory";
 import { activateEmployeeWithAccess } from "./employeeActivation";
 import { revokeTeamProfileAccess } from "./staffAccessRevocation";
 import { staffAvailabilityRouter } from "./routers/staffAvailability";
@@ -23,7 +24,7 @@ function mockDb(reads: unknown[][]) {
   const db: any = {
     select: vi.fn(() => {
       const chain: any = {
-        from: () => chain, where: () => chain, orderBy: () => chain,
+        from: () => chain, where: () => chain, orderBy: () => chain, innerJoin: () => chain,
         limit: async () => reads.shift() ?? [],
         for: async () => [],
         then: (resolve: (value: unknown[]) => void) => resolve(reads.shift() ?? []),
@@ -56,7 +57,7 @@ describe("simple employee management", () => {
   it("deactivates all linked capabilities immediately without reading class duties", async () => {
     const { db, updates, deletes } = mockDb([[person], [{ email: "previous@example.com" }]]);
     await expect(revokeTeamProfileAccess(db, 42, { isOwner: true, retainTeamMembership: true })).resolves.toMatchObject({ success: true });
-    expect(db.select).toHaveBeenCalledTimes(2);
+    expect(db.select).toHaveBeenCalledTimes(4);
     expect(updates).toEqual(expect.arrayContaining([
       { table: jobApplications, values: { isTeamMember: true, deletedAt: expect.any(Date) } },
       { table: employees, values: { employmentStatus: "inactive", endedAt: expect.any(Date) } },
@@ -65,6 +66,34 @@ describe("simple employee management", () => {
     ]));
     expect(deletes).toEqual([staffPhoneAccessCodes]);
     expect(deletes).not.toContain(employees);
+  });
+
+  it("retires future duties without blocking removal and preserves the original rows in history", async () => {
+    const assignments = [{ id: 55, scheduleId: 10, staffId: 42, staffName: person.name, classDate: "2026-10-04" }];
+    const coverage = [{ id: 8, coverageStaffId: 42, coverageStaffName: person.name, coverageDate: "2026-10-04", location: "KW", role: "Operations Manager" }];
+    const harness = mockDb([[person], [], assignments, coverage]);
+    await revokeTeamProfileAccess(harness.db, 42, { isOwner: true, actor });
+    const audit = harness.inserts.find((item) => item.values.action === "staff_duties_retired");
+    expect(JSON.parse(String(audit?.values.details))).toEqual({ classAssignments: assignments, leadershipCoverage: coverage });
+    expect(harness.deletes).not.toContain(classStaffAssignments);
+    expect(harness.updates).toContainEqual({ table: weekendLeadershipCoverage, values: { coverageStaffId: null, coverageStaffName: null } });
+    const retired = await getRetiredClassAssignmentIds(mockDb([[{ details: String(audit?.values.details) }]]).db);
+    expect(retired.has(55)).toBe(true);
+    // Staffing views consult this permanent retirement marker, even after the
+    // employee becomes active and a replacement has filled the class.
+    const source = readFileSync(new URL("./routers/puppySchedule.ts", import.meta.url), "utf8");
+    expect(source).toContain('!retiredIds.has(assignment.id)');
+  });
+
+  it.each(["Operations Manager", "Yoga Instructor"])("allows multiple %s employees at the same location", async (role) => {
+    for (const index of [1, 2]) {
+      const harness = mockDb([[], []]); getDb.mockResolvedValue(harness.db);
+      await expect(staffAvailabilityRouter.createCaller(context()).createEmployeeRecord({ name: `Employee ${index}`, email: `person${index}@example.com`, phone: "", role: role as "Operations Manager" | "Yoga Instructor", location: "KW", startedAt: "2026-10-03" })).resolves.toMatchObject({ grantsApyHqAccess: true });
+      expect(harness.inserts[0]).toMatchObject({ table: jobApplications, values: { role, location: "KW", isTeamMember: true } });
+    }
+    const tree = readFileSync(new URL("../client/src/pages/StaffAvailability.tsx", import.meta.url), "utf8");
+    expect(tree).toContain('ops.map((s)');
+    expect(tree).toContain('yoga.map((s)');
   });
 
   it("does not remove another active employee's shared phone credentials", async () => {
@@ -146,6 +175,8 @@ describe("simple employee management", () => {
     const tree = readFileSync(new URL("../client/src/pages/StaffAvailability.tsx", import.meta.url), "utf8");
     expect(ui).toContain('href="/admin/staff-availability?tab=team"');
     expect(tree).toContain('get("tab") === "team" ? "team" : "ops"');
+    expect(ui).toContain('utils.staffAvailability.getOrgChart.invalidate()');
+    expect(tree).toContain('utils.staffAvailability.listEmployees.invalidate()');
     expect(ui).not.toContain('Blocked: this person still has active APY HQ access');
   });
 });

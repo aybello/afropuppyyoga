@@ -369,28 +369,7 @@ export const staffAvailabilityRouter = router({
         .limit(1);
       if (!employee) throw new Error("Employee record not found.");
 
-      if (ctx.apyAccess.level !== "owner" && employee.employmentStatus === "active" && employee.endedAt === null) {
-        const [employeesAtTarget, employeesAtCurrentLocation] = await Promise.all([
-          db.select({ id: employees.id, role: employees.role, location: employees.location, employmentStatus: employees.employmentStatus, endedAt: employees.endedAt })
-            .from(employees)
-            .where(and(eq(employees.location, input.location), eq(employees.employmentStatus, "active"), isNull(employees.endedAt))),
-          db.select({ id: employees.id, role: employees.role, location: employees.location, employmentStatus: employees.employmentStatus, endedAt: employees.endedAt })
-            .from(employees)
-            .where(and(eq(employees.location, employee.location), eq(employees.employmentStatus, "active"), isNull(employees.endedAt))),
-        ]);
-        const activePuppyMonitorsAtCurrentLocation = employeesAtCurrentLocation.filter((person) => isPuppyMonitorRole(person.role));
-        validateTeamAssignmentChange({
-          currentRole: employee.role,
-          currentLocation: employee.location,
-          nextRole: input.role,
-          nextLocation: input.location,
-          hasOperationsManagerAtNextLocation: hasActiveOperationsManagerAtLocation(employeesAtTarget, input.location)
-            || isOperationsManagerRole(input.role),
-          hasOtherOperationsManagerAtCurrentLocation: employeesAtCurrentLocation.some((person) => person.id !== employee.id && isOperationsManagerRole(person.role)),
-          hasActivePuppyMonitorsAtCurrentLocation: activePuppyMonitorsAtCurrentLocation.length > 0,
-          activePuppyMonitorCountAtCurrentLocation: activePuppyMonitorsAtCurrentLocation.length,
-        });
-      }
+
 
       const email = input.email ? input.email.toLowerCase() : null;
       const phone = input.phone ? normalizeCanadianPhoneNumber(input.phone) : null;
@@ -439,21 +418,7 @@ export const staffAvailabilityRouter = router({
       });
       if (!contactEligibility.eligible) throw new Error(contactEligibility.reason);
 
-      if (ctx.apyAccess.level !== "owner" && isPuppyMonitorRole(input.role)) {
-        const operationsManagers = await db.select({
-          role: employees.role,
-          location: employees.location,
-          employmentStatus: employees.employmentStatus,
-          endedAt: employees.endedAt,
-        }).from(employees).where(and(
-          eq(employees.location, input.location),
-          eq(employees.employmentStatus, "active"),
-          isNull(employees.endedAt),
-        ));
-        if (!hasActiveOperationsManagerAtLocation(operationsManagers, input.location)) {
-          throw new Error("Add an active Operations Manager to this location before adding Puppy Monitors.");
-        }
-      }
+
 
       const plan = getApprovedNewHirePortalAccessPlan(input);
       const employeeId = await db.transaction(async (tx) => {
@@ -592,21 +557,7 @@ export const staffAvailabilityRouter = router({
         if (hasMatchingActiveTeamContact({ email, phone }, activeTeamContacts)) {
           throw new Error("Remove the matching active APY HQ profile first. New-hire portal access cannot duplicate an existing staff profile.");
         }
-        if (ctx.apyAccess.level !== "owner" && accessPlan.grantsPortalAccess && isPuppyMonitorRole(currentApplicant.role)) {
-          const operationsManagers = await tx.select({
-            role: employees.role,
-            location: employees.location,
-            employmentStatus: employees.employmentStatus,
-            endedAt: employees.endedAt,
-          }).from(employees).where(and(
-            eq(employees.location, currentApplicant.location),
-            eq(employees.employmentStatus, "active"),
-            isNull(employees.endedAt),
-          ));
-          if (!hasActiveOperationsManagerAtLocation(operationsManagers, currentApplicant.location)) {
-            throw new Error(`Add an active Operations Manager at ${currentApplicant.location} before onboarding a Puppy Monitor into the Staff Portal.`);
-          }
-        }
+
 
         const directoryValues = {
           sourceApplicationId: currentApplicant.id,
@@ -681,21 +632,7 @@ export const staffAvailabilityRouter = router({
       const eligibility = getExistingEmployeeAccessProvisioningEligibility(employee);
       if (!eligibility.eligible) throw new Error(eligibility.reason);
 
-      if (ctx.apyAccess.level !== "owner" && isPuppyMonitorRole(employee.role)) {
-        const operationsManagers = await db.select({
-          role: employees.role,
-          location: employees.location,
-          employmentStatus: employees.employmentStatus,
-          endedAt: employees.endedAt,
-        }).from(employees).where(and(
-          eq(employees.location, employee.location),
-          eq(employees.employmentStatus, "active"),
-          isNull(employees.endedAt),
-        ));
-        if (!hasActiveOperationsManagerAtLocation(operationsManagers, employee.location)) {
-          throw new Error("Add an active Operations Manager to this location before giving Puppy Monitors access.");
-        }
-      }
+
 
       const matchingProfileFields = {
         id: jobApplications.id,
@@ -780,7 +717,7 @@ export const staffAvailabilityRouter = router({
         const [employee] = await tx.select().from(employees).where(eq(employees.id, input.employeeId)).limit(1);
         if (!employee) throw new Error("Employee record not found.");
         if (employee.sourceApplicationId !== null) {
-          await revokeTeamProfileAccess(tx, employee.sourceApplicationId, { isOwner: ctx.apyAccess.level === "owner", retainTeamMembership: true });
+          await revokeTeamProfileAccess(tx, employee.sourceApplicationId, { isOwner: ctx.apyAccess.level === "owner", retainTeamMembership: true, actor: ctx.user });
           await tx.insert(jobApplicationActions).values({
             applicationId: employee.sourceApplicationId, action: "employee_directory_departed",
             actorUserId: ctx.user.id, actorName: ctx.user.name, actorEmail: ctx.user.email,
@@ -1027,20 +964,7 @@ export const staffAvailabilityRouter = router({
         throw new Error("An Employee Directory record already uses this email address or phone number. Update or restore the existing record instead of adding a duplicate.");
       }
 
-      if (ctx.apyAccess.level !== "owner" && input.role === "Puppy Monitor") {
-        const [operationsManager] = await db.select({ id: jobApplications.id })
-          .from(jobApplications)
-          .where(and(
-            isNull(jobApplications.deletedAt),
-            eq(jobApplications.isTeamMember, true),
-            eq(jobApplications.role, "Operations Manager"),
-            eq(jobApplications.location, input.location),
-          ))
-          .limit(1);
-        if (!operationsManager) {
-          throw new Error("Add this location's Operations Manager to APY HQ before adding Puppy Monitors.");
-        }
-      }
+
 
       const memberId = await db.transaction(async (tx) => {
         const result = await tx.insert(jobApplications).values({
@@ -1154,7 +1078,7 @@ export const staffAvailabilityRouter = router({
       if (!db) throw new Error("Database not available");
       return withStaffingMutationLock(db, async (tx: typeof db) => {
         if (!input.isActive) {
-          return revokeTeamProfileAccess(tx, input.id, { isOwner: ctx.apyAccess.level === "owner", retainTeamMembership: true });
+          return revokeTeamProfileAccess(tx, input.id, { isOwner: ctx.apyAccess.level === "owner", retainTeamMembership: true, actor: ctx.user });
         }
         const [employee] = await tx.select({ id: employees.id }).from(employees)
           .where(eq(employees.sourceApplicationId, input.id)).limit(1);
@@ -1169,7 +1093,7 @@ export const staffAvailabilityRouter = router({
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      return withStaffingMutationLock(db, (tx) => revokeTeamProfileAccess(tx, input.id, { isOwner: ctx.apyAccess.level === "owner" }));
+      return withStaffingMutationLock(db, (tx) => revokeTeamProfileAccess(tx, input.id, { isOwner: ctx.apyAccess.level === "owner", actor: ctx.user }));
     }),
 
   // Explicitly restore login for an existing active employee, without new-hire paperwork.

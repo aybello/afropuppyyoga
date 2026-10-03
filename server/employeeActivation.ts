@@ -1,8 +1,7 @@
 import { eq } from "drizzle-orm";
 import { employees, jobApplicationActions, jobApplications } from "../drizzle/schema";
-import { isApprovedApyTeamRole, normalizeApyRole } from "../shared/apyPermissions";
+import { isApprovedApyTeamRole } from "../shared/apyPermissions";
 import { normalizeCanadianPhoneNumber } from "../shared/phone";
-import { isActiveTeamMember } from "./teamMembership";
 
 /** Explicit employee activation, inside the shared staffing transaction lock. */
 export async function activateEmployeeWithAccess(tx: any, employeeId: number, actor: {
@@ -26,11 +25,6 @@ export async function activateEmployeeWithAccess(tx: any, employeeId: number, ac
   ));
   if (contactMatches.some((person) => person.id !== profile?.id)) {
     throw new Error("Another applicant or staff profile uses this contact. Link or correct that record before activating login.");
-  }
-  if (!isOwner && normalizeApyRole(employee.role) === "puppy monitor" && !profiles.some((person) => (
-    isActiveTeamMember(person) && normalizeApyRole(person.role) === "operations manager" && person.location === employee.location
-  ))) {
-    throw new Error("Add an Operations Manager at this location before restoring Puppy Monitor access.");
   }
   const values = { name: employee.name, email, phone, role: employee.role, location: employee.location,
     status: "onboarded" as const, isTeamMember: true, deletedAt: null };

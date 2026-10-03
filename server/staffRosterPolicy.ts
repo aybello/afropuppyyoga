@@ -1,5 +1,3 @@
-import { isOperationsManagerRole, normalizeApyRole } from "../shared/apyPermissions";
-
 export type TeamAssignmentChange = {
   currentRole: string;
   currentLocation: string;
@@ -14,30 +12,14 @@ export type TeamAssignmentChange = {
 };
 
 /** Six monitors is a planning target, never a mutation prerequisite. */
-export function validateTeamAssignmentChange(input: TeamAssignmentChange) {
-  if (input.isOwner) return;
-  if (normalizeApyRole(input.nextRole) === "puppy monitor" && !input.hasOperationsManagerAtNextLocation) {
-    throw new Error("Add or retain an Operations Manager at this location before assigning Puppy Monitors.");
-  }
-  const movesOperationsManager = isOperationsManagerRole(input.currentRole)
-    && (!isOperationsManagerRole(input.nextRole) || input.nextLocation !== input.currentLocation);
-  if (movesOperationsManager && input.hasActivePuppyMonitorsAtCurrentLocation && !input.hasOtherOperationsManagerAtCurrentLocation) {
-    throw new Error("Assign another Operations Manager to this Puppy Monitor location before changing this team member.");
-  }
+export function validateTeamAssignmentChange(_input: TeamAssignmentChange) {
+  // Roles and locations are validated by the mutation schema. Coverage is an
+  // advisory planning view, never a prerequisite for authorised roster edits.
 }
 
-export function getOperationsManagerDepartureEligibility(input: {
-  employeeId: number;
-  employeeRole: string;
-  activeLocationEmployees: Array<{ id: number; role: string }>;
-  isOwner?: boolean;
+export function getOperationsManagerDepartureEligibility(_input: {
+  employeeId: number; employeeRole: string; activeLocationEmployees: Array<{ id: number; role: string }>; isOwner?: boolean;
 }) {
-  if (input.isOwner || !isOperationsManagerRole(input.employeeRole)) return { eligible: true as const };
-  const hasOtherOperationsManager = input.activeLocationEmployees.some((person) => person.id !== input.employeeId && isOperationsManagerRole(person.role));
-  const hasActivePuppyMonitor = input.activeLocationEmployees.some((person) => normalizeApyRole(person.role) === "puppy monitor");
-  if (hasActivePuppyMonitor && !hasOtherOperationsManager) {
-    return { eligible: false as const, reason: "Assign another active Operations Manager before ending employment for this location's sole Operations Manager." };
-  }
   return { eligible: true as const };
 }
 
