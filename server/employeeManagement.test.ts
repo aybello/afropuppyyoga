@@ -88,6 +88,19 @@ describe("simple employee management", () => {
     expect(source).toContain('!retiredIds.has(assignment.id)');
   });
 
+  it("revokes access with retirement history larger than MySQL TEXT and preserves every retired ID", async () => {
+    const assignments = Array.from({ length: 1500 }, (_, index) => ({ id: index + 1, scheduleId: 10, staffId: 42, staffName: "Example Employee", classDate: "2099-10-04" }));
+    expect(Buffer.byteLength(JSON.stringify({ classAssignments: assignments }))).toBeGreaterThan(65_535);
+    const harness = mockDb([[person], [], assignments, []]);
+    await expect(revokeTeamProfileAccess(harness.db, 42, { isOwner: true, actor })).resolves.toMatchObject({ portalAccessRevoked: true });
+    const logs = harness.inserts.filter((item) => item.values.action === "staff_duties_retired");
+    expect(logs.length).toBeGreaterThan(1);
+    for (const entry of logs) expect(Buffer.byteLength(String(entry.values.details), "utf8")).toBeLessThan(65_535);
+    const retired = await getRetiredClassAssignmentIds(mockDb([logs.map((item) => ({ details: String(item.values.details) }))]).db);
+    expect([...retired]).toEqual(assignments.map((item) => item.id));
+    expect(harness.updates).toContainEqual({ table: employees, values: { employmentStatus: "inactive", endedAt: expect.any(Date) } });
+  });
+
   it("keeps a replaced monitor retired even after they return to the original location", async () => {
     const schedule = { id: 10, scheduleStatus: "scheduled", classDate: "2099-10-04", location: "Kitchener", breed: "Example", startTime: "09:00", endTime: "10:00" };
     const original = { ...person, location: "OAK" };

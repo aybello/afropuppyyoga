@@ -4,6 +4,7 @@ import { normalizeCanadianPhoneNumber } from "../shared/phone";
 import { getTorontoCalendarDate } from "../shared/scheduleVisibility";
 import { isActiveTeamMember } from "./teamMembership";
 import { validateTeamAssignmentChange } from "./staffRosterPolicy";
+import { buildRetirementHistoryEntries } from "./staffRetirementHistory";
 
 /** Call only within withStaffingMutationLock, after the caller's authorization. */
 export async function revokeTeamProfileAccess(tx: any, profileId: number, options: {
@@ -41,17 +42,23 @@ export async function revokeTeamProfileAccess(tx: any, profileId: number, option
       staffName: classStaffAssignments.staffName, classDate: puppySchedule.classDate }).from(classStaffAssignments)
       .innerJoin(puppySchedule, eq(classStaffAssignments.scheduleId, puppySchedule.id))
       .where(and(eq(classStaffAssignments.staffId, profile.id), gte(puppySchedule.classDate, today))),
-    tx.select().from(weekendLeadershipCoverage).where(and(eq(weekendLeadershipCoverage.coverageStaffId, profile.id), gte(weekendLeadershipCoverage.coverageDate, today))),
+    tx.select({ id: weekendLeadershipCoverage.id, coverageDate: weekendLeadershipCoverage.coverageDate,
+      location: weekendLeadershipCoverage.location, role: weekendLeadershipCoverage.role,
+      coverageStaffId: weekendLeadershipCoverage.coverageStaffId, coverageStaffName: weekendLeadershipCoverage.coverageStaffName,
+    }).from(weekendLeadershipCoverage).where(and(eq(weekendLeadershipCoverage.coverageStaffId, profile.id), gte(weekendLeadershipCoverage.coverageDate, today))),
   ]);
   // Retire future duties immediately without asking the owner to reassign them.
   // Class rows remain intact; the audit marks them historic. Leadership rows
-  // become open coverage, with the previous values fully retained in the audit.
+  // become open coverage. The audit retains changed fields, and original notes
+  // stay in the coverage row rather than being copied into another TEXT field.
   if (upcomingAssignments.length || upcomingCoverage.length) {
-    await tx.insert(jobApplicationActions).values({
-      applicationId: profile.id, action: "staff_duties_retired",
-      actorUserId: options.actor?.id ?? null, actorName: options.actor?.name ?? null, actorEmail: options.actor?.email ?? null,
-      details: JSON.stringify({ classAssignments: upcomingAssignments, leadershipCoverage: upcomingCoverage }),
-    });
+    for (const details of buildRetirementHistoryEntries(upcomingAssignments, upcomingCoverage)) {
+      await tx.insert(jobApplicationActions).values({
+        applicationId: profile.id, action: "staff_duties_retired",
+        actorUserId: options.actor?.id ?? null, actorName: options.actor?.name ?? null, actorEmail: options.actor?.email ?? null,
+        details,
+      });
+    }
     for (const coverage of upcomingCoverage) {
       await tx.update(weekendLeadershipCoverage).set({ coverageStaffId: null, coverageStaffName: null })
         .where(eq(weekendLeadershipCoverage.id, coverage.id));
