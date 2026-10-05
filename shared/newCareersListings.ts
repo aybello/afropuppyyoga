@@ -1,3 +1,5 @@
+import { PUPPY_MONITOR_PAY_DESCRIPTION, PUPPY_MONITOR_PAY_LABEL, PUPPY_MONITOR_POSITION_TYPE } from "./puppyMonitorTerms";
+
 export const PUPPY_MONITOR_SHIFT_DESCRIPTION =
   "Shifts run from 9:00 a.m. to 2:30 p.m. and cover three classes, with breaks between classes.";
 
@@ -34,7 +36,7 @@ export const NEW_CAREERS_LISTINGS = [
   })),
   {
     id: "puppy-monitor-guelph", title: "Puppy Monitor", location: "Guelph", locationCode: "GUE",
-    type: "Part-Time", badge: "Now Hiring", icon: "puppy", pay: "CA$50/shift",
+    type: PUPPY_MONITOR_POSITION_TYPE, badge: "Now Hiring", icon: "puppy", pay: PUPPY_MONITOR_PAY_LABEL,
     description: `Help keep puppies safe, comfortable and cared for at AfroPuppyYoga events in Guelph. You will supervise puppies before, during and after sessions, support gentle guest interaction, and work alongside the instructor with puppy wellbeing as your main focus. ${PUPPY_MONITOR_SHIFT_DESCRIPTION}`,
     responsibilities: [
       "Supervise puppies and follow APY's handling and welfare guidance",
@@ -50,7 +52,7 @@ export const NEW_CAREERS_LISTINGS = [
       "Availability for agreed event-based shifts in Guelph",
       "Dog-care experience and canine first aid are assets, not required certifications",
     ],
-    perks: ["CA$50 per shift", "Part-time, event-based scheduling", "Hands-on puppy care and guest experience"],
+    perks: [PUPPY_MONITOR_PAY_DESCRIPTION, "Part-time, event-based scheduling", "Hands-on puppy care and guest experience"],
   },
   {
     id: "operations-specialist-guelph", title: "Operations Specialist", location: "Guelph", locationCode: "GUE",

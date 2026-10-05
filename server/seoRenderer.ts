@@ -11,6 +11,7 @@
 
 import { type Request, type Response, type NextFunction } from "express";
 import { PUPPY_MONITOR_SHIFT_DESCRIPTION } from "../shared/newCareersListings";
+import { PUPPY_MONITOR_PAY_LABEL, PUPPY_MONITOR_POSITION_TYPE } from "../shared/puppyMonitorTerms";
 
 // ─── Crawler Detection ────────────────────────────────────────────────────────
 
@@ -444,10 +445,11 @@ const PAGES: Record<string, () => string> = {
     <li>Yoga Instructor — Oakville</li>
     <li>Movement Instructor - Kitchener - CA$20/hour</li>
     <li>Movement Instructor - Guelph - CA$20/hour</li>
-    <li>Puppy Monitor - Guelph - CA$50/shift</li>
+    <li>Puppy Monitor - Guelph - ${PUPPY_MONITOR_POSITION_TYPE} - ${PUPPY_MONITOR_PAY_LABEL}</li>
     <li>Operations Specialist - Guelph - CA$20/hour</li>
-    <li>Puppy Monitor — Kitchener-Waterloo</li>
-    <li>Puppy Monitor — Hamilton</li>
+    <li>Puppy Monitor - Kitchener-Waterloo - ${PUPPY_MONITOR_POSITION_TYPE} - ${PUPPY_MONITOR_PAY_LABEL}</li>
+    <li>Puppy Monitor - Hamilton - ${PUPPY_MONITOR_POSITION_TYPE} - ${PUPPY_MONITOR_PAY_LABEL}</li>
+    <li>Puppy Monitor - Oakville - ${PUPPY_MONITOR_POSITION_TYPE} - ${PUPPY_MONITOR_PAY_LABEL}</li>
   </ul>
   <p><strong>Puppy Monitor shift:</strong> ${PUPPY_MONITOR_SHIFT_DESCRIPTION}</p>
   <p>To apply, visit our <a href="/careers">Careers page</a> and submit your application.</p>

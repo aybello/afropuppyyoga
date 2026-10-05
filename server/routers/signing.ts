@@ -99,6 +99,7 @@ export const signingRouter = router({
         role: record.role,
         location: record.location,
         offerLetterType: record.offerLetterType as OfferLetterType,
+        puppyMonitorShiftPayCad: record.puppyMonitorShiftPayCad,
         signed: record.signed === 1,
         signedName: record.signedName,
         signedAt: record.signedAt,
@@ -113,13 +114,14 @@ export const signingRouter = router({
       z.object({
         token: z.string(),
         signedName: z.string().min(2, "Please enter your full name"),
+        confirmedPuppyMonitorShiftPayCad: z.union([z.literal(50), z.literal(60)]).optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
       const sourceDb = await getDb();
       if (!sourceDb) throw new Error("Database not available");
       const ip = ctx.req?.headers?.["x-forwarded-for"]?.toString().split(",")[0]?.trim() ?? "unknown";
-      const record = await recordCurrentOfferSignature(sourceDb, input.token, input.signedName, ip);
+      const record = await recordCurrentOfferSignature(sourceDb, input.token, input.signedName, ip, input.confirmedPuppyMonitorShiftPayCad);
 
       // Notify owner
       try {

@@ -19,7 +19,7 @@ describe("confirmed Kitchener and Guelph careers additions", () => {
     expect(NEW_CAREERS_LISTINGS.map((job) => [job.title, job.location, job.pay])).toEqual([
       ["Movement Instructor", "Kitchener", "CA$20/hr"],
       ["Movement Instructor", "Guelph", "CA$20/hr"],
-      ["Puppy Monitor", "Guelph", "CA$50/shift"],
+      ["Puppy Monitor", "Guelph", "CA$60/shift"],
       ["Operations Specialist", "Guelph", "CA$20/hr"],
     ]);
     expect(new Set(JOB_LISTINGS.map((job) => job.id)).size).toBe(JOB_LISTINGS.length);

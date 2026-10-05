@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { CheckCircle2, Loader2, PenLine } from "lucide-react";
+import { getPuppyMonitorOfferShiftPay } from "@shared/puppyMonitorTerms";
+import { PUPPY_MONITOR_SHIFT_DESCRIPTION } from "@shared/newCareersListings";
 
 // ─── Inline Document Content ──────────────────────────────────────────────────
 
@@ -12,7 +14,8 @@ export function getOfferLetterContent(
   applicantName: string,
   role: string,
   location: string,
-  offerLetterType: string
+  offerLetterType: string,
+  puppyMonitorShiftPayCad?: number | null
 ) {
   const today = new Date().toLocaleDateString("en-CA", {
     year: "numeric",
@@ -260,13 +263,15 @@ export function getOfferLetterContent(
     );
   }
 
-  // Puppy Monitor (KW or Hamilton)
+  // Saved compensation protects already-issued offers from future template changes.
+  const puppyMonitorShiftPay = getPuppyMonitorOfferShiftPay(puppyMonitorShiftPayCad);
+  const isCurrentPuppyMonitorOffer = puppyMonitorShiftPay === 60;
   return (
     <div className="space-y-4 text-sm text-[#1A0A12] leading-relaxed">
       <p className="text-xs text-[#C4A0B0]">{today}</p>
       <p>Dear <strong>{applicantName}</strong>,</p>
       <p>
-        On behalf of the entire AfroPuppyYoga team, we are thrilled to offer you the volunteer position of{" "}
+        On behalf of the entire AfroPuppyYoga team, we are thrilled to offer you the {isCurrentPuppyMonitorOffer ? "paid volunteer" : "volunteer"} position of{" "}
         <strong>Puppy Monitor</strong> at our <strong>{location}</strong> location!
       </p>
       <p>
@@ -278,7 +283,8 @@ export function getOfferLetterContent(
         <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Position Details</p>
         <p><strong>Position:</strong> Puppy Monitor</p>
         <p><strong>Location:</strong> {location}</p>
-        <p><strong>Compensation:</strong> $50.00 per shift</p>
+        <p><strong>Compensation:</strong> {isCurrentPuppyMonitorOffer ? "CA$60.00 per shift" : "$50.00 per shift"}</p>
+        {isCurrentPuppyMonitorOffer && <p><strong>Shift:</strong> {PUPPY_MONITOR_SHIFT_DESCRIPTION}</p>}
       </div>
 
       <div className="border-t border-[#F0D0DC] pt-4">
@@ -534,7 +540,14 @@ export default function SignDocuments() {
       toast.error("Please confirm you have read both documents before signing.");
       return;
     }
-    submitMutation.mutate({ token, signedName: signedName.trim() });
+    if (!data) return;
+    submitMutation.mutate({
+      token,
+      signedName: signedName.trim(),
+      ...(data.offerLetterType.startsWith("puppy_monitor_") ? {
+        confirmedPuppyMonitorShiftPayCad: getPuppyMonitorOfferShiftPay(data.puppyMonitorShiftPayCad),
+      } : {}),
+    });
   };
 
   if (!token) {
@@ -636,7 +649,8 @@ export default function SignDocuments() {
             data.applicantName,
             data.role,
             data.location,
-            data.offerLetterType
+            data.offerLetterType,
+            data.puppyMonitorShiftPayCad
           )}
         </DocumentCard>
 

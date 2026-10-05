@@ -3,6 +3,7 @@ import { and, desc, eq, isNull, ne } from "drizzle-orm";
 import { jobApplications, signingTokens } from "../drizzle/schema";
 import { canReuseSigningToken, detectOfferLetterType } from "./signingPolicy";
 import { withStaffingMutationLock } from "./staffingMutationLock";
+import { getPuppyMonitorOfferShiftPay, PUPPY_MONITOR_SHIFT_PAY_CAD } from "../shared/puppyMonitorTerms";
 
 function assertOpenApplicant(app: typeof jobApplications.$inferSelect | undefined) {
   if (!app || app.deletedAt) throw new Error("Application not found or archived.");
@@ -24,15 +25,24 @@ export async function prepareHiringOffer(db: any, applicationId: number) {
     const expiresAt = reuse ? latest.expiresAt : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     const offerLetterType = detectOfferLetterType(applicant.role, applicant.location);
     if (!reuse) await tx.insert(signingTokens).values({ applicationId, applicantName: applicant.name, applicantEmail: applicant.email,
-      role: applicant.role, location: applicant.location, offerLetterType, token, signed: 0, expiresAt });
+      role: applicant.role, location: applicant.location, offerLetterType,
+      puppyMonitorShiftPayCad: offerLetterType.startsWith("puppy_monitor_") ? PUPPY_MONITOR_SHIFT_PAY_CAD : null,
+      token, signed: 0, expiresAt });
     return { applicant, reuse, token, expiresAt, offerLetterType };
   });
 }
-export async function recordCurrentOfferSignature(db: any, token: string, signedName: string, signedIp: string) {
+export async function recordCurrentOfferSignature(db: any, token: string, signedName: string, signedIp: string, confirmedPuppyMonitorShiftPayCad?: number) {
   return withStaffingMutationLock(db, async (tx) => {
     const [record]: Array<typeof signingTokens.$inferSelect> = await tx.select().from(signingTokens).where(eq(signingTokens.token, token)).limit(1);
     if (!record || record.expiresAt < new Date()) throw new Error("Invalid or expired signing link. Please contact AfroPuppyYoga.");
     if (record.signed === 1) throw new Error("These documents have already been signed.");
+    if (record.offerLetterType?.startsWith("puppy_monitor_")) {
+      const savedPayment = getPuppyMonitorOfferShiftPay(record.puppyMonitorShiftPayCad);
+      if ((savedPayment === 60 && confirmedPuppyMonitorShiftPayCad !== savedPayment) ||
+          (confirmedPuppyMonitorShiftPayCad !== undefined && confirmedPuppyMonitorShiftPayCad !== savedPayment)) {
+        throw new Error("Please refresh this signing page and review the current Puppy Monitor payment before signing.");
+      }
+    }
     const [appRecord] = await tx.select().from(jobApplications).where(eq(jobApplications.id, record.applicationId)).limit(1);
     const app = assertOpenApplicant(appRecord);
     const [latest] = await tx.select().from(signingTokens).where(eq(signingTokens.applicationId, record.applicationId))

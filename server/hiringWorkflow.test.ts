@@ -109,6 +109,36 @@ describe("signed offer to employee", () => {
 });
 
 describe("current offer lifecycle", () => {
+  it("stores the approved CA$60 only when creating a new Puppy Monitor offer", async () => {
+    const h = harness([[app], []]);
+    await expect(prepareHiringOffer(h.db, 42)).resolves.toMatchObject({ reuse: false });
+    expect(h.inserts.find((entry) => entry.table === signingTokens)?.values).toMatchObject({
+      puppyMonitorShiftPayCad: 60, offerLetterType: "puppy_monitor_kw",
+    });
+    const movement = harness([[{ ...app, role: "Movement Instructor" }], []]);
+    await prepareHiringOffer(movement.db, 42);
+    expect(movement.inserts.find((entry) => entry.table === signingTokens)?.values.puppyMonitorShiftPayCad).toBeNull();
+  });
+  it.each([null, 60])("does not rewrite payment on a reused unsigned offer with saved amount %s", async (savedAmount) => {
+    const h = harness([[app], [{ ...offer, signed: 0, puppyMonitorShiftPayCad: savedAmount }]]);
+    await expect(prepareHiringOffer(h.db, 42)).resolves.toMatchObject({ reuse: true });
+    expect(h.inserts).toEqual([]);
+    expect(h.updates).toEqual([]);
+  });
+  it.each([undefined, 50])("refuses an old signing tab that did not review the stored CA$60 amount: %s", async (displayedAmount) => {
+    const h = harness([[{ ...offer, signed: 0, offerLetterType: "puppy_monitor_kw", puppyMonitorShiftPayCad: 60 }]]);
+    await expect(recordCurrentOfferSignature(h.db, "fictional", "Fictional", "test", displayedAmount)).rejects.toThrow("refresh this signing page");
+    expect(h.updates).toEqual([]);
+  });
+  it("signs the exact current amount and still accepts pre-update CA$50 tabs for legacy offers", async () => {
+    for (const savedAmount of [null, 60]) {
+      const record = { ...offer, signed: 0, offerLetterType: "puppy_monitor_kw", puppyMonitorShiftPayCad: savedAmount };
+      const h = harness([[record], [app], [record]]);
+      await recordCurrentOfferSignature(h.db, "fictional", "Fictional", "test", savedAmount ?? undefined);
+      expect(h.updates).toContainEqual({ table: signingTokens, values: expect.objectContaining({ signed: 1 }) });
+      expect(h.updates.some((entry) => "puppyMonitorShiftPayCad" in entry.values)).toBe(false);
+    }
+  });
   it("reuses an unsigned current offer and rejects an already-hired applicant", async () => {
     const h = harness([[app], [{ ...offer, signed: 0 }]]);
     await expect(prepareHiringOffer(h.db, 42)).resolves.toMatchObject({ reuse: true, token: "fictional" }); expect(h.inserts).toEqual([]);
