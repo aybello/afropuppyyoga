@@ -2,6 +2,7 @@ export type OfferLetterType =
   | "puppy_monitor_kw"
   | "puppy_monitor_hamilton"
   | "yoga_instructor"
+  | "movement_instructor"
   | "puppy_specialist"
   | "operations_specialist"
   | "bdr";
@@ -9,6 +10,7 @@ export type OfferLetterType =
 export function detectOfferLetterType(role: string, location: string): OfferLetterType {
   const normalizedRole = role.toLowerCase();
   const normalizedLocation = location.toLowerCase();
+  if (normalizedRole.replaceAll("_", " ").trim() === "movement instructor") return "movement_instructor";
   if (normalizedRole.includes("yoga") || normalizedRole.includes("instructor")) return "yoga_instructor";
   if (normalizedRole.includes("operations specialist") || normalizedRole.includes("operation specialist")) {
     return "operations_specialist";

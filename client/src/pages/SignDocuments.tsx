@@ -8,7 +8,7 @@ import { CheckCircle2, Loader2, PenLine } from "lucide-react";
 
 // ─── Inline Document Content ──────────────────────────────────────────────────
 
-function getOfferLetterContent(
+export function getOfferLetterContent(
   applicantName: string,
   role: string,
   location: string,
@@ -21,33 +21,35 @@ function getOfferLetterContent(
     timeZone: "America/Toronto",
   });
 
+  const isMovementInstructor = offerLetterType === "movement_instructor";
+  const instructorTitle = isMovementInstructor ? "Movement Instructor" : "Yoga Instructor";
   const isYogaInstructor = offerLetterType === "yoga_instructor";
   const isPuppySpecialist = offerLetterType === "puppy_specialist";
   const isOperationsSpecialist = offerLetterType === "operations_specialist";
   const isBDR = offerLetterType === "bdr";
 
-  if (isYogaInstructor) {
+  if (isYogaInstructor || isMovementInstructor) {
     return (
       <div className="space-y-4 text-sm text-[#1A0A12] leading-relaxed">
         <p className="text-xs text-[#C4A0B0]">{today}</p>
         <p>Dear <strong>{applicantName}</strong>,</p>
         <p>
-          We are excited to formally offer you the position of <strong>Yoga Instructor</strong> with{" "}
+          We are excited to formally offer you the position of <strong>{instructorTitle}</strong> with{" "}
           <strong>AfroPuppyYoga (APY)</strong>. Your passion for wellness and dedication to community
           health makes you an excellent fit for our team.
         </p>
 
         <div className="border-t border-[#F0D0DC] pt-4">
           <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Position Details</p>
-          <p><strong>Position:</strong> Yoga Instructor</p>
+          <p><strong>Position:</strong> {instructorTitle}</p>
           <p><strong>Location:</strong> {location}</p>
-          <p><strong>Compensation:</strong> $22.00 per hour for teaching yoga classes</p>
+          <p><strong>Compensation:</strong> {isMovementInstructor ? "CA$20.00 per hour for guided movement sessions" : "$22.00 per hour for teaching yoga classes"}</p>
         </div>
 
         <div className="border-t border-[#F0D0DC] pt-4">
           <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Key Responsibilities</p>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Lead engaging and safe yoga sessions tailored to participants' needs</li>
+            <li>{isMovementInstructor ? "Lead gentle, beginner-friendly warm-ups, stretches and simple movements, not dance choreography or yoga instruction" : "Lead engaging and safe yoga sessions tailored to participants' needs"}</li>
             <li>Incorporate AfroPuppyYoga's mission into class delivery, ensuring a joyful experience for all attendees</li>
             <li>Assist with class setup, breakdown, and interaction with puppies and participants during sessions</li>
           </ul>

@@ -4,6 +4,8 @@ export type ApyHubToolAccess = "owner" | "operations" | "team";
 
 export const APY_TEAM_ROLES = [
   "Yoga Instructor",
+  "Movement Instructor",
+  "Operations Specialist",
   "Operations Manager",
   "Puppy Monitor",
   "Puppy Specialist",
@@ -11,7 +13,7 @@ export const APY_TEAM_ROLES = [
   "Social Media Specialist",
 ] as const;
 
-export const APY_TEAM_LOCATIONS = ["KW", "OAK", "HAM", "CENTRAL"] as const;
+export const APY_TEAM_LOCATIONS = ["KW", "OAK", "HAM", "GUE", "CENTRAL"] as const;
 
 export type ApyTeamRole = (typeof APY_TEAM_ROLES)[number];
 export type ApyTeamLocation = (typeof APY_TEAM_LOCATIONS)[number];

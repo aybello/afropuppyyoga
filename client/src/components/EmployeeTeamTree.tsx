@@ -4,6 +4,7 @@ import { getPuppyMonitorLocationCoverage } from "@shared/puppyMonitorLocationCov
 
 export type EmployeeTreeLeave = { id?: number; staffId: number; startDate: string; endDate: string; leaveType?: string; notes?: string | null };
 const ROLE_COLORS: Record<string, string> = {
+  "Operations Specialist": "#D97706", "Movement Instructor": "#8B2252",
   "Operations Manager": "#D97706", "Yoga Instructor": "#8B2252", "Puppy Monitor": "#7C3AED",
   "Puppy Specialist": "#0891B2", BDR: "#0F766E", "Social Media Specialist": "#DB2777",
 };

@@ -423,7 +423,7 @@ const PAGES: Record<string, () => string> = {
     buildHtml({
       title: "Careers at AfroPuppyYoga | Join Our Team",
       description:
-        "Join the AfroPuppyYoga team! We're looking for passionate yoga instructors, event coordinators, and puppy handlers in Hamilton, Kitchener, and Oakville, Ontario.",
+        "Join AfroPuppyYoga. Movement Instructor jobs in Kitchener and Guelph, plus Puppy Monitor and Operations Specialist jobs in Guelph. Part-time wellness event roles.",
       canonical: `${BASE}/careers`,
       schema: [
         breadcrumb({ name: "Careers", url: `${BASE}/careers` }),
@@ -437,10 +437,14 @@ const PAGES: Record<string, () => string> = {
   <h2>Join Our Team</h2>
   <p>AfroPuppyYoga is always looking for passionate, energetic people to join our growing team. We value inclusivity, creativity, and a genuine love for wellness and animals.</p>
   <h3>Open Roles</h3>
-  <p>We hire yoga instructors, Puppy Monitors, Puppy Specialists, and event coordinators across our Hamilton, Kitchener, and Oakville locations. Submit your application and video introduction to be considered for upcoming openings.</p>
+  <p>We hire Movement Instructors, Yoga Instructors, Puppy Monitors, Puppy Specialists and Operations Specialists. Dance teaching backgrounds are welcome for our gentle guided movement roles, not dance classes. Apply with a resume and video introduction.</p>
   <ul>
     <li>Yoga Instructor — Kitchener-Waterloo</li>
-    <li>Yoga Instructor — Hamilton / Brantford</li>
+    <li>Yoga Instructor — Oakville</li>
+    <li>Movement Instructor - Kitchener - CA$20/hour</li>
+    <li>Movement Instructor - Guelph - CA$20/hour</li>
+    <li>Puppy Monitor - Guelph - CA$50/shift</li>
+    <li>Operations Specialist - Guelph - CA$20/hour</li>
     <li>Puppy Monitor — Kitchener-Waterloo</li>
     <li>Puppy Monitor — Hamilton</li>
   </ul>

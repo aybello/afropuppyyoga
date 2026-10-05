@@ -40,6 +40,7 @@ type NewEmployeeForm = {
 const LOCATION_LABELS: Record<string, string> = {
   KW: "Kitchener",
   HAM: "Hamilton",
+  GUE: "Guelph",
   OAK: "Oakville",
   CENTRAL: "APY-wide",
 };

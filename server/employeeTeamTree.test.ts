@@ -80,7 +80,7 @@ describe("complete Employee Directory team tree", () => {
     const html = renderTree({ employees: [employee()], today: "2026-10-03" });
     expect(html).toContain("Puppy Monitors: 0 active");
     expect(html).toContain("No employees assigned here.");
-    expect(buildEmployeeTeamTree([]).map((branch) => branch.key)).toEqual(["CENTRAL", "KW", "OAK", "HAM"]);
+    expect(buildEmployeeTeamTree([]).map((branch) => branch.key)).toEqual(["CENTRAL", "KW", "OAK", "HAM", "GUE"]);
   });
 
   it("uses the Directory query for both tabs and updates both views after changes", () => {

@@ -65,6 +65,8 @@ import {
   buildOnboardingEmail,
   buildYogaInstructorOnboardingEmail,
 } from "../email";
+import { buildNewRoleOnboardingEmail } from "../newRoleOnboardingEmail";
+import { normalizeApyRole } from "../../shared/apyPermissions";
 import { communicationsLog, employees, jobApplicationActions, jobApplications } from "../../drizzle/schema";
 import { and, desc, eq, isNull } from "drizzle-orm";
 
@@ -687,8 +689,11 @@ export const careersRouter = router({
       }
       console.log(`[Onboarding] Sending onboarding email to ${applicant.email} for ${applicant.name} (${applicant.role}, ${applicant.location})`);
       // Use role-specific email template
-      const isYogaInstructor = applicant.role.toLowerCase().includes("yoga instructor") || applicant.role.toLowerCase().includes("instructor");
-      const { subject, html, text } = isYogaInstructor
+      const isYogaInstructor = normalizeApyRole(applicant.role) === "yoga instructor";
+      const newRole = ["movement instructor", "operations specialist"].includes(normalizeApyRole(applicant.role));
+      const { subject, html, text } = newRole
+        ? buildNewRoleOnboardingEmail({ ...input, applicantName: applicant.name, role: applicant.role, location: applicant.location })
+        : isYogaInstructor
         ? buildYogaInstructorOnboardingEmail({
             applicantName: applicant.name,
             location: applicant.location,
@@ -825,8 +830,11 @@ export const careersRouter = router({
       await requireActiveEmployeeForDocuments(applicant);
       const claim = await claimInitialOnboardingDelivery(input.id, true);
       if (!claim) throw new TRPCError({ code: "CONFLICT", message: "Another onboarding delivery is pending. Refresh and resolve its outcome first." });
-      const isYogaInstructor = applicant.role.toLowerCase().includes("yoga instructor") || applicant.role.toLowerCase().includes("instructor");
-      const { subject, html, text } = isYogaInstructor
+      const isYogaInstructor = normalizeApyRole(applicant.role) === "yoga instructor";
+      const newRole = ["movement instructor", "operations specialist"].includes(normalizeApyRole(applicant.role));
+      const { subject, html, text } = newRole
+        ? buildNewRoleOnboardingEmail({ ...input, applicantName: applicant.name, role: applicant.role, location: applicant.location })
+        : isYogaInstructor
         ? buildYogaInstructorOnboardingEmail({
             applicantName: applicant.name,
             location: applicant.location,

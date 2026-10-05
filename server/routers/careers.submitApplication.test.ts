@@ -110,6 +110,15 @@ describe("public careers application submission", () => {
     vi.useRealTimers();
   });
 
+  it.each([
+    ["Movement Instructor", "KW"], ["Movement Instructor", "GUE"],
+    ["Puppy Monitor", "GUE"], ["Operations Specialist", "GUE"],
+  ])("saves a %s application for %s with the existing submission flow", async (role, location) => {
+    getDb.mockResolvedValue(createAuditDb().db);
+    await expect(caller().submitApplication({ ...input, role, location })).resolves.toMatchObject({ success: true });
+    expect(createJobApplication).toHaveBeenCalledWith(expect.objectContaining({ role, location, status: "new" }));
+  });
+
   it("confirms a durable application even when the secondary communications audit fails", async () => {
     const prepared = createAuditDb({ rejectCommunication: true });
     getDb.mockResolvedValue(prepared.db);

@@ -3,6 +3,7 @@
    Design: Warm Afro-Wellness Editorial (matches main site)
    ============================================================ */
 import { useState, useRef, useEffect } from "react";
+import { NEW_CAREERS_LISTINGS } from "@shared/newCareersListings";
 import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
@@ -11,10 +12,16 @@ import ScrollToTop from "@/components/ScrollToTop";
 import { recoverCompletedVideoUpload } from "@/lib/videoUploadRecovery";
 import { createLocalVideoPreview, releaseLocalVideoPreview } from "@/lib/localVideoPreview";
 import { createSubmissionKey } from "@/lib/submissionKey";
-import { MapPin, Clock, Heart, Upload, CheckCircle, X, ChevronDown, Link as LinkIcon, Video, Share2, Copy, Check } from "lucide-react";
+import { MapPin, Clock, Heart, Upload, CheckCircle, X, ChevronDown, Link as LinkIcon, Video, Share2, Copy, Check, Activity, PawPrint, Settings } from "lucide-react";
 
 /// ── Job listings ────────────────────────────────────────────
-const JOB_LISTINGS = [
+export type CareerJob = {
+  id: string; title: string; location: string; locationCode: string; type: string;
+  badge?: string; subBadge?: string; pay?: string; emoji?: string; icon?: string;
+  description: string; responsibilities: string[]; requirements: string[]; perks: string[];
+};
+export const JOB_LISTINGS: CareerJob[] = [
+  ...NEW_CAREERS_LISTINGS,
   // ── Yoga Instructors ──────────────────────────────────────
   {
     id: "yoga-instructor-kw",
@@ -1020,7 +1027,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
 }
 
 // ── Job Card ──────────────────────────────────────────────────
-function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTINGS)[0]; onApply: () => void; expanded: boolean; onToggle: () => void }) {
+export function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTINGS)[0]; onApply: () => void; expanded: boolean; onToggle: () => void }) {
   const [shareOpen, setShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const shareRef = useRef<HTMLDivElement>(null);
@@ -1079,12 +1086,12 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
   ];
 
   return (
-    <div className="bg-white border border-[#F0D0DC] rounded-2xl overflow-hidden hover:shadow-lg transition-shadow duration-300">
+    <div id={job.id} className="bg-white border border-[#F0D0DC] rounded-2xl overflow-hidden hover:shadow-lg transition-shadow duration-300">
       <div className="p-6">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-[#F9E4EE] rounded-xl flex items-center justify-center text-2xl shrink-0">
-              {job.emoji}
+              {job.icon === "movement" ? <Activity aria-hidden="true" /> : job.icon === "puppy" ? <PawPrint aria-hidden="true" /> : job.icon === "operations" ? <Settings aria-hidden="true" /> : job.emoji}
             </div>
             <div>
               <h3 className="font-display font-bold text-lg text-[#1A0A12]">{job.title}</h3>
@@ -1095,19 +1102,19 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
                 <span className="flex items-center gap-1 font-body text-xs text-[#3D1A2E]">
                   <Clock size={11} /> {job.type}
                 </span>
-                {(job as any).badge && (
+                {job.badge && (
                   <span className="px-2 py-0.5 font-body text-[10px] font-semibold rounded-full border bg-green-100 text-green-700 border-green-300">
                     🟢 Now Hiring
                   </span>
                 )}
-                {(job as any).subBadge && (
+                {job.subBadge && (
                   <span className="px-2 py-0.5 bg-[#8B2252]/10 text-[#8B2252] font-body text-[10px] font-semibold rounded-full border border-[#8B2252]/20">
-                    {(job as any).subBadge}
+                    {job.subBadge}
                   </span>
                 )}
-                {(job as any).pay && (
+                {job.pay && (
                   <span className="px-2 py-0.5 bg-[#FEFAF4] text-[#8B6010] font-body text-[10px] font-semibold rounded-full border border-[#F0D0DC]">
-                    {(job as any).pay}
+                    {job.pay}
                   </span>
                 )}
               </div>
@@ -1243,7 +1250,7 @@ function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTIN
 export default function Careers() {
   useSeoMeta({
     title: "Careers at AfroPuppyYoga | Join Our Team in Ontario",
-    description: "Join the AfroPuppyYoga team. We're hiring Puppy Monitors and Yoga Instructors in Kitchener-Waterloo, Hamilton, and Brantford. Apply with a short video today.",
+    description: "Movement Instructor jobs in Kitchener and Guelph, plus Puppy Monitor and Operations Specialist jobs in Guelph. Apply to AfroPuppyYoga with your resume and video.",
     canonical: "https://afropuppyyoga.ca/careers",
   });
   const [selectedJob, setSelectedJob] = useState<(typeof JOB_LISTINGS)[0] | null>(null);

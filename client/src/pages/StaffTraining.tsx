@@ -17,7 +17,7 @@ import {
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
-const ROLE_SECTIONS = ["All Staff", "Operations Manager", "Yoga Instructor", "Puppy Monitor"] as const;
+const ROLE_SECTIONS = ["All Staff", "Operations Manager", "Yoga Instructor", "Movement Instructor", "Puppy Monitor"] as const;
 
 const ROLE_INTROS: Record<(typeof ROLE_SECTIONS)[number], { title: string; description: string; icon: typeof ShieldCheck }> = {
   "All Staff": {
@@ -33,6 +33,11 @@ const ROLE_INTROS: Record<(typeof ROLE_SECTIONS)[number], { title: string; descr
   "Yoga Instructor": {
     title: "Lead the room",
     description: "A consistent 40-minute class flow, puppy-safe teaching, and a confident guest briefing.",
+    icon: Sparkles,
+  },
+  "Movement Instructor": {
+    title: "Guide gentle movement",
+    description: "Simple stretches, beginner-friendly options and puppy-safe group guidance.",
     icon: Sparkles,
   },
   "Puppy Monitor": {

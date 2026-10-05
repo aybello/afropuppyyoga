@@ -26,6 +26,17 @@ describe("onboarding after adding employee", () => {
     expect(mocks.sendEmail.mock.calls[0][0].text).toContain("https://afropuppyyoga.ca/staff/training");
     expect(mocks.completeClaimedOnboardingDocumentDelivery).toHaveBeenCalledWith(42, "fictional-claim");
   });
+  it.each(["Movement Instructor", "Operations Specialist"])("uses the correct first-send and resend onboarding for %s in Guelph", async (role) => {
+    mocks.getJobApplicationById.mockResolvedValue({ ...employee, role, location: "GUE" });
+    await caller().sendOnboardingEmail({ id: 42 });
+    expect(mocks.sendEmail.mock.calls[0][0].text).toContain(role);
+    expect(mocks.sendEmail.mock.calls[0][0].text).not.toContain("Yoga Instructor Guide");
+    expect(mocks.sendEmail.mock.calls[0][0].text).not.toContain("PM Availability");
+    mocks.getJobApplicationById.mockResolvedValue({ ...employee, role, location: "GUE", onboardingSentAt: new Date() });
+    await caller().resendOnboardingEmail({ id: 42 });
+    expect(mocks.sendEmail.mock.calls[1][0].text).toContain(role);
+    expect(mocks.sendEmail.mock.calls[1][0].text).toContain("/staff/training");
+  });
   it("does not send documents before the signed applicant is added, or after they leave", async () => {
     mocks.getJobApplicationById.mockResolvedValue({ ...employee, status: "accepted" });
     await expect(caller().sendOnboardingEmail({ id: 42 })).rejects.toThrow("Add the signed applicant");

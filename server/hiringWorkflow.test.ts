@@ -43,6 +43,15 @@ describe("signed offer to employee", () => {
     await expect(hireSignedApplicant(h.db, 42, actor, app)).rejects.toThrow("changed after you opened confirmation");
     expect(h.updates).toEqual([]); expect(h.inserts).toEqual([]);
   });
+  it.each([
+    ["Movement Instructor", "KW"], ["Movement Instructor", "GUE"],
+    ["Operations Specialist", "GUE"], ["Puppy Monitor", "GUE"],
+  ])("hires signed %s applicants in %s without manager privileges", async (role, location) => {
+    const applicant = { ...app, role, location };
+    const h = harness([[applicant], [], [{ ...offer, role, location }], [applicant]]);
+    await expect(hireSignedApplicant(h.db, 42, actor)).resolves.toMatchObject({ portalAccessLevel: "team_member" });
+    expect(h.inserts.find((entry) => entry.table === employees)?.values).toMatchObject({ role, location, sourceApplicationId: app.id });
+  });
   it("keeps Operations Manager access explicit and role-specific", async () => {
     const manager = { ...app, role: "Operations Manager" };
     await expect(hireSignedApplicant(harness([[manager], [], [{ ...offer, role: manager.role }], [manager]]).db, 42, actor)).resolves.toMatchObject({ portalAccessLevel: "operations_manager" });
