@@ -3,7 +3,7 @@
    Design: Warm Afro-Wellness Editorial (matches main site)
    ============================================================ */
 import { useState, useRef, useEffect } from "react";
-import { NEW_CAREERS_LISTINGS } from "@shared/newCareersListings";
+import { NEW_CAREERS_LISTINGS, PUPPY_MONITOR_SHIFT_DESCRIPTION } from "@shared/newCareersListings";
 import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
@@ -98,7 +98,7 @@ export const JOB_LISTINGS: CareerJob[] = [
     pay: "$50/shift",
     emoji: "🐾",
     description:
-      "You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class — feeding, cleaning, and making sure every pup is thriving. This role is perfect for university and college students looking for flexible, fun, part-time work.",
+      `You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class, feeding, cleaning, and making sure every pup is thriving. This role is perfect for university and college students looking for flexible, fun, part-time work. ${PUPPY_MONITOR_SHIFT_DESCRIPTION}`,
     responsibilities: [
       "Supervise and handle puppies throughout each class session",
       "Ensure the safety and wellbeing of all puppies at all times",
@@ -132,7 +132,7 @@ export const JOB_LISTINGS: CareerJob[] = [
     pay: "$50/shift",
     emoji: "🐾",
     description:
-      "You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class — feeding, cleaning, and making sure every pup is thriving. This role is perfect for university and college students looking for flexible, fun, part-time work.",
+      `You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class, feeding, cleaning, and making sure every pup is thriving. This role is perfect for university and college students looking for flexible, fun, part-time work. ${PUPPY_MONITOR_SHIFT_DESCRIPTION}`,
     responsibilities: [
       "Supervise and handle puppies throughout each class session",
       "Ensure the safety and wellbeing of all puppies at all times",
@@ -166,7 +166,7 @@ export const JOB_LISTINGS: CareerJob[] = [
     pay: "$50/shift",
     emoji: "🐾",
     description:
-      "You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class — feeding, cleaning, and making sure every pup is thriving. This role is perfect for university and college students looking for flexible, fun, part-time work.",
+      `You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class, feeding, cleaning, and making sure every pup is thriving. This role is perfect for university and college students looking for flexible, fun, part-time work. ${PUPPY_MONITOR_SHIFT_DESCRIPTION}`,
     responsibilities: [
       "Supervise and handle puppies throughout each class session",
       "Ensure the safety and wellbeing of all puppies at all times",

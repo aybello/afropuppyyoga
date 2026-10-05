@@ -10,6 +10,7 @@
  */
 
 import { type Request, type Response, type NextFunction } from "express";
+import { PUPPY_MONITOR_SHIFT_DESCRIPTION } from "../shared/newCareersListings";
 
 // ─── Crawler Detection ────────────────────────────────────────────────────────
 
@@ -448,6 +449,7 @@ const PAGES: Record<string, () => string> = {
     <li>Puppy Monitor — Kitchener-Waterloo</li>
     <li>Puppy Monitor — Hamilton</li>
   </ul>
+  <p><strong>Puppy Monitor shift:</strong> ${PUPPY_MONITOR_SHIFT_DESCRIPTION}</p>
   <p>To apply, visit our <a href="/careers">Careers page</a> and submit your application.</p>
   <p>Learn more about <a href="/partnerships">Breeder Partnerships</a> or explore our <a href="/ethics">Ethical Standards</a>.</p>
 </main>
