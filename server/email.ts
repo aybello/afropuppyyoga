@@ -292,6 +292,14 @@ export async function sendStaffInviteEmail(opts: {
   await sendEmail({ to: opts.to, subject, html, text });
 }
 
+export async function sendStaffSignInEmail(opts: { to: string; name: string; magicLink: string }): Promise<void> {
+  const hero = `<h1 style="margin:0;font-family:Georgia,serif;font-size:27px;color:#FFFFFF;">Your APY HQ sign-in link</h1>`;
+  const body = `${bodyText(`Hi ${escapeHtml(opts.name)}, use the link below to sign in with your own staff account.`)}
+    ${pillButton(opts.magicLink, "Sign in to APY HQ")}${fallbackLink(opts.magicLink)}
+    ${bodyText("This link expires in 15 minutes and can be used once. Do not forward it. If you did not request it, ignore this email.")}`;
+  await sendEmail({ to: opts.to, subject: "Your AfroPuppyYoga APY HQ sign-in link", html: wrapInBrandedLayout(hero, body), text: `Hi ${opts.name},\n\nUse this link to sign in with your own staff account:\n${opts.magicLink}\n\nThis link expires in 15 minutes and can be used once. Do not forward it. If you did not request it, ignore this email.` });
+}
+
 export function buildApplicationConfirmationEmail(opts: {
   applicantName: string;
   role: string;

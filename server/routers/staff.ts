@@ -24,8 +24,13 @@ import { getTrustedAppOrigin } from "../_core/trustedOrigin";
 import { revokeTeamProfileAccess } from "../staffAccessRevocation";
 import { isActiveTeamMember } from "../teamMembership";
 import { withStaffingMutationLock } from "../staffingMutationLock";
+import { consumeStaffEmailSignIn, requestStaffEmailAccess, STAFF_EMAIL_SIGN_IN_PREFIX } from "../staffEmailAccess";
 
 export const staffRouter = router({
+  /** Public self-service sign-in for existing active staff, never a role grant. */
+  requestEmailAccessLink: publicProcedure
+    .input(z.object({ email: z.string().trim().email().max(320), origin: z.string().url().optional() }))
+    .mutation(({ input }) => requestStaffEmailAccess(input.email, input.origin)),
   /**
    * Public: sends a short-lived verification code only to an active APY HQ team
    * member's saved phone. The generic response avoids revealing who is on staff.
@@ -153,6 +158,14 @@ export const staffRouter = router({
   verifyMagicLink: publicProcedure
     .input(z.object({ token: z.string() }))
     .mutation(async ({ input, ctx }) => {
+      if (input.token.startsWith(STAFF_EMAIL_SIGN_IN_PREFIX)) {
+        const member = await consumeStaffEmailSignIn(input.token);
+        const openId = `staff:${member.email}`;
+        await upsertUser({ openId, name: member.name, email: member.email, loginMethod: "magic_link", role: "staff", lastSignedIn: new Date() });
+        const sessionToken = await sdk.createSessionToken(openId, { name: member.name, expiresInMs: SEVEN_DAYS_MS });
+        ctx.res.cookie(COOKIE_NAME, sessionToken, { ...getSessionCookieOptions(ctx.req), maxAge: SEVEN_DAYS_MS });
+        return { name: member.name, email: member.email };
+      }
       const invite = await getStaffInviteByToken(input.token);
 
       if (!invite) {

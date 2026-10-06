@@ -65,6 +65,15 @@ const formLimiter = rateLimit({
 
 // Standard file/session rate limiter. A video upload has one init and one completion
 // request, while each chunk is protected separately below.
+const staffSignInLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many sign-in requests. Please wait a few minutes." },
+  skip: () => process.env.NODE_ENV === "development",
+});
+
 const uploadLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 300,
@@ -190,6 +199,14 @@ async function startServer() {
   app.use("/api/trpc/partnership.submitInquiry", formLimiter);
   app.use("/api/trpc/invoices.submit", formLimiter);
   app.use("/api/trpc/chatbot.chat", chatbotLimiter);
+
+  app.use("/api/trpc", (req, res, next) => {
+    const procedures = req.path.slice(1).split(",");
+    if (procedures.some((procedure) => ["staff.requestEmailAccessLink", "staff.requestPhoneAccessCode"].includes(procedure))) {
+      return staffSignInLimiter(req, res, next);
+    }
+    next();
+  });
 
   // Phase 2: Protect applicant media routes — only staff/admin can access these
   // These endpoints are only called from ApplicationsDashboard (admin/staff only)
