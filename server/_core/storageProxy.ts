@@ -1,5 +1,7 @@
 import type { Express } from "express";
 import { ENV } from "./env";
+import { sdk } from "./sdk";
+import { resolveApyAccess } from "../apyAccess";
 
 export function registerStorageProxy(app: Express) {
   app.get("/manus-storage/*", async (req, res) => {
@@ -7,6 +9,18 @@ export function registerStorageProxy(app: Express) {
     if (!key) {
       res.status(400).send("Missing storage key");
       return;
+    }
+    // Public submission never grants public access to saved invoice documents.
+    const normalizedKey = key.replace(/^\/+/, "");
+    if (normalizedKey.startsWith("invoices/")) {
+      res.set("Cache-Control", "private, no-store");
+      try {
+        const user = await sdk.authenticateRequest(req);
+        const access = await resolveApyAccess(user);
+        if (access.level !== "owner") return void res.status(403).send("Owner access required");
+      } catch {
+        return void res.status(401).send("Authentication required");
+      }
     }
 
     if (!ENV.forgeApiUrl || !ENV.forgeApiKey) {
@@ -50,7 +64,7 @@ export function registerStorageProxy(app: Express) {
       const contentType = imageResp.headers.get("content-type") || "application/octet-stream";
       const contentLength = imageResp.headers.get("content-length");
       res.set("Content-Type", contentType);
-      res.set("Cache-Control", "public, max-age=86400"); // cache 24h
+      res.set("Cache-Control", normalizedKey.startsWith("invoices/") ? "private, no-store" : "public, max-age=86400");
       if (contentLength) res.set("Content-Length", contentLength);
 
       if (imageResp.body) {

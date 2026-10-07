@@ -83,6 +83,15 @@ const uploadLimiter = rateLimit({
   skip: () => process.env.NODE_ENV === "development",
 });
 
+const invoiceIntakeLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many invoice requests. Please try again later." },
+  skip: () => process.env.NODE_ENV === "development",
+});
+
 // A single 500MB video uses roughly 100 five-megabyte chunk requests. Keeping
 // chunks on the generic limiter previously allowed one large application video
 // to exhaust its own upload allowance before completion.
@@ -181,7 +190,7 @@ async function startServer() {
   // Upload rate limiters applied BEFORE Multer to prevent body-parsing DoS
   app.use("/api/upload-video", uploadLimiter);
   app.use("/api/upload-resume", uploadLimiter);
-  app.use("/api/upload-invoice", uploadLimiter);
+  app.use("/api/upload-invoice", invoiceIntakeLimiter);
   app.use("/api/upload-video-init", uploadLimiter);
   app.use("/api/upload-video-chunk", videoChunkLimiter);
   app.use("/api/upload-video-complete", uploadLimiter);
@@ -197,11 +206,15 @@ async function startServer() {
   app.use("/api/trpc/privateEvents.submitInquiry", formLimiter);
   app.use("/api/trpc/birthday.submitInquiry", formLimiter);
   app.use("/api/trpc/partnership.submitInquiry", formLimiter);
-  app.use("/api/trpc/invoices.submit", formLimiter);
   app.use("/api/trpc/chatbot.chat", chatbotLimiter);
 
   app.use("/api/trpc", (req, res, next) => {
     const procedures = req.path.slice(1).split(",");
+    if (procedures.includes("invoices.submit")) {
+      // httpBatchLink may use batch=1 for a single call; repeated procedures are blocked.
+      if (procedures.length !== 1) return res.status(400).json({ error: "Submit one invoice at a time." });
+      return invoiceIntakeLimiter(req, res, next);
+    }
     if (procedures.some((procedure) => ["staff.requestEmailAccessLink", "staff.requestPhoneAccessCode"].includes(procedure))) {
       return staffSignInLimiter(req, res, next);
     }

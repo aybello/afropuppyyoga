@@ -31,6 +31,7 @@ const moreLinks = [
   { label: "🤝 Partnerships", href: "/partnerships", isPage: true },
   { label: "🐶 Private Event Quote", href: "/private-events/quote", isPage: true },
   { label: "🌿 Ethical Standards", href: "/ethics", isPage: true },
+  { label: "Submit Invoice", href: "/submit-invoice", isPage: true },
 ];
 
 // All links for mobile menu

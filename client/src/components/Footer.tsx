@@ -35,6 +35,7 @@ const navGroups = [
       { label: "Careers", href: "/careers", isPage: true },
       { label: "Partnerships", href: "/partnerships", isPage: true },
       { label: "Private Event Quote", href: "/private-events/quote", isPage: true },
+      { label: "Submit Invoice", href: "/submit-invoice", isPage: true },
     ],
   },
 ];

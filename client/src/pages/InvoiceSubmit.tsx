@@ -1,252 +1,131 @@
 import { LOGO_URL } from "@/const";
-/* ============================================================
-   Invoice Submit — APY Staff Portal
-   Design: Warm Afro-Wellness Editorial (matches main site)
-   ============================================================ */
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import { trpc } from "@/lib/trpc";
-import { useAuth } from "@/_core/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { CheckCircle2, Upload, FileText, AlertCircle, Loader2, LayoutDashboard } from "lucide-react";
-import { Link } from "wouter";
+import { AlertCircle, CheckCircle2, FileText, Loader2, Upload } from "lucide-react";
 
-
+/** Public invoice intake only. Invoice records and payment actions stay private. */
 export default function InvoiceSubmit() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [website, setWebsite] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { user, loading } = useAuth();
-  const access = trpc.staff.myAccess.useQuery(undefined, { enabled: Boolean(user) });
+  const submissionLock = useRef(false);
+  // Keep the receipt for safe retries if registration loses its network response.
+  const receiptRef = useRef<string | null>(null);
+  const submitMutation = trpc.invoices.submit.useMutation();
+  const busy = uploading || submitMutation.isPending;
 
-  const submitMutation = trpc.invoices.submit.useMutation({
-    onSuccess: () => {
-      setSubmitted(true);
-      setFile(null);
-      setError(null);
-      setUploading(false);
-    },
-    onError: (err) => {
-      setError(err.message || "Something went wrong. Please try again.");
-      setUploading(false);
-    },
-  });
-
-  const handleFileChange = (selectedFile: File | null) => {
-    if (!selectedFile) return;
-    if (selectedFile.type !== "application/pdf") {
+  const resetReceipt = () => { receiptRef.current = null; };
+  const selectFile = (selected: File | null) => {
+    resetReceipt();
+    setFile(null);
+    if (!selected) return;
+    if (!(selected.type === "application/pdf" || selected.name.toLowerCase().endsWith(".pdf"))) {
       setError("Please upload a PDF file only.");
       return;
     }
-    if (selectedFile.size > 16 * 1024 * 1024) {
-      setError("File size must be under 16MB.");
+    if (selected.size === 0 || selected.size > 16 * 1024 * 1024) {
+      setError("Choose a PDF between 1 byte and 16MB.");
       return;
     }
     setError(null);
-    setFile(selectedFile);
+    setFile(selected);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    const dropped = e.dataTransfer.files[0];
-    handleFileChange(dropped);
-  };
-
-  const handleSubmit = async () => {
-    if (!file) return;
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!file || submissionLock.current) return;
+    submissionLock.current = true;
     setError(null);
     setUploading(true);
     try {
-      // Step 1: upload the PDF via multipart to avoid base64 body-size issues on the platform
-      const formData = new FormData();
-      formData.append("invoice", file);
-      const uploadRes = await fetch("/api/upload-invoice", { method: "POST", body: formData });
-      if (!uploadRes.ok) {
-        const errData = await uploadRes.json().catch(() => ({}));
-        throw new Error(errData.error ?? `Storage upload failed (${uploadRes.status})`);
+      if (!receiptRef.current) {
+        const body = new FormData();
+        body.append("submitterName", name.trim());
+        body.append("submitterEmail", email.trim());
+        body.append("website", website);
+        body.append("invoice", file);
+        // Multipart is required for PDFs; all invoice registration uses tRPC.
+        const response = await fetch("/api/upload-invoice", { method: "POST", body });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || "Upload failed. Please try again.");
+        if (typeof result.uploadReceipt !== "string") throw new Error("Upload could not be confirmed. Please try again.");
+        receiptRef.current = result.uploadReceipt;
       }
-      const { key: fileKey } = await uploadRes.json();
-      // Step 2: register the invoice in the DB and trigger AI extraction
-      // fileUrl is resolved server-side from the key — we never send an arbitrary URL
-      submitMutation.mutate({ fileKey, filename: file.name });
-    } catch (err: any) {
-      setError(err.message ?? "Upload failed. Please try again.");
+      const uploadReceipt = receiptRef.current;
+      if (!uploadReceipt) throw new Error("Please upload your PDF again.");
+      await submitMutation.mutateAsync({ uploadReceipt });
+      setSubmitted(true);
+      setFile(null);
+      resetReceipt();
+    } catch (failure: any) {
+      if (failure?.data?.code === "BAD_REQUEST") resetReceipt();
+      setError(failure?.message || "Invoice submission failed. Please try again.");
+    } finally {
+      submissionLock.current = false;
       setUploading(false);
     }
   };
 
-  if (loading || (user && access.isLoading)) return <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#8B2252]" /></div>;
-  if (!user || access.data?.level === "none") {
-    return <div className="min-h-screen bg-[#FEFAF4] flex flex-col items-center justify-center p-6 text-center"><img src={LOGO_URL} alt="AfroPuppyYoga" className="w-16 h-16 rounded-full object-cover mb-5" /><h1 className="font-display font-bold text-2xl text-[#1A0A12]">Team sign-in required</h1><p className="font-body text-sm text-[#6B4C5A] mt-2 mb-6">Invoices are tied to the team member who submits them.</p><a href="/staff-access" className="px-6 py-3 rounded-full text-white font-semibold bg-[#8B2252]">Sign in to APY HQ</a></div>;
-  }
-
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-[#FEFAF4] flex flex-col items-center justify-center p-6">
-        {/* Logo */}
-        <a href="/" className="flex items-center gap-3 mb-10">
-          <img src={LOGO_URL} alt="AfroPuppyYoga" className="w-12 h-12 rounded-full object-cover" />
-          <div className="flex flex-col leading-none">
-            <span className="font-display font-bold text-lg text-[#1A0A12]">AfroPuppyYoga</span>
-            <span className="font-body text-[10px] text-[#8B2252] tracking-widest uppercase">Staff Portal</span>
-          </div>
-        </a>
-
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg border border-[#F0D0DC] p-10 text-center">
-          <div className="flex justify-center mb-5">
-            <div className="w-20 h-20 rounded-full bg-[#FFF5F8] flex items-center justify-center">
-              <CheckCircle2 className="w-10 h-10 text-[#8B2252]" />
-            </div>
-          </div>
-          <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-3">Invoice Submitted!</h2>
-          <p className="font-body text-[#1A0A12] mb-8 leading-relaxed">
-            Your invoice has been received and is being processed. You'll be paid by the due date on your invoice.
-          </p>
-          <button
-            onClick={() => setSubmitted(false)}
-            className="inline-flex items-center px-6 py-3 font-body font-semibold text-sm rounded-full text-white transition-all duration-200 hover:-translate-y-0.5"
-            style={{ background: "linear-gradient(135deg, #8B2252, #c2410c)" }}
-          >
-            Submit Another Invoice
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-[#FEFAF4]">
-      {/* Top bar */}
-      <header className="bg-[#FFF5F8] border-b border-[#F0D0DC] px-6 py-4">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <a href="/" className="flex items-center gap-3 group">
-            <img
-              src={LOGO_URL}
-              alt="AfroPuppyYoga"
-              className="w-10 h-10 rounded-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-            <div className="flex flex-col leading-none">
-              <span className="font-display font-bold text-base text-[#1A0A12]">AfroPuppyYoga</span>
-              <span className="font-body text-[10px] text-[#8B2252] tracking-widest uppercase">Staff Portal</span>
-            </div>
+    <div className="min-h-screen bg-[#FEFAF4] text-[#1A0A12]">
+      <header className="bg-[#FFF5F8] border-b border-[#F0D0DC] px-5 py-3">
+        <div className="max-w-2xl mx-auto flex items-center justify-between gap-4">
+          <a href="/" className="flex items-center gap-3">
+            <img src={LOGO_URL} alt="AfroPuppyYoga" className="w-10 h-10 rounded-full object-cover" />
+            <span className="font-display font-bold">AfroPuppyYoga</span>
           </a>
-
-          {/* Admin dashboard link — always visible */}
-          {access.data?.level === "owner" && <Link
-            href="/admin/invoices"
-            className="inline-flex items-center gap-2 px-4 py-2 font-body font-semibold text-sm rounded-full border border-[#F0D0DC] text-[#8B2252] bg-white hover:bg-[#FFF5F8] transition-colors"
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            View Dashboard
-          </Link>}
+          <a href="/" className="font-body text-sm text-[#8B2252] underline underline-offset-4">Back to website</a>
         </div>
       </header>
-
-      {/* Main content */}
-      <div className="max-w-2xl mx-auto px-6 py-12">
-        {/* Page heading */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <span className="h-px w-8 bg-[#8B2252]" />
-            <span className="font-body text-xs font-semibold tracking-widest uppercase text-[#8B2252]">Staff Portal</span>
-            <span className="h-px w-8 bg-[#8B2252]" />
-          </div>
-          <h1 className="font-display font-bold text-4xl text-[#1A0A12] mb-3">Submit Your Invoice</h1>
-          <p className="font-body text-[#1A0A12] text-base max-w-sm mx-auto leading-relaxed">
-            Upload your invoice PDF and we'll process it right away.
-          </p>
-        </div>
-
-        {/* Upload card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-[#F0D0DC] p-8">
-          <h2 className="font-display font-bold text-xl text-[#1A0A12] mb-1">Invoice Upload</h2>
-          <p className="font-body text-sm text-[#1A0A12] mb-6">PDF files only, max 16MB</p>
-
-          {/* Drop zone */}
-          <div
-            className={`border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-200 ${
-              dragOver
-                ? "border-[#8B2252] bg-[#FFF5F8]"
-                : file
-                ? "border-emerald-400 bg-emerald-50"
-                : "border-[#F0D0DC] hover:border-[#8B2252] hover:bg-[#FFF5F8]"
-            }`}
-            onClick={() => fileInputRef.current?.click()}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={handleDrop}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="application/pdf"
-              className="hidden"
-              onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
-            />
-            {file ? (
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center">
-                  <FileText className="w-7 h-7 text-emerald-600" />
-                </div>
-                <p className="font-body font-semibold text-[#1A0A12]">{file.name}</p>
-                <p className="font-body text-sm text-[#1A0A12]">
-                  {(file.size / 1024 / 1024).toFixed(2)} MB
-                </p>
-                <p className="font-body text-xs text-emerald-600">Click to change file</p>
+      <main className="max-w-2xl mx-auto px-5 py-6 sm:py-8">
+        <h1 className="font-display font-bold text-3xl sm:text-4xl mb-2">Submit Your Invoice</h1>
+        <p className="font-body text-sm text-[#6B4C5A] mb-5">No login needed. Add your details and upload your invoice PDF.</p>
+        {submitted ? (
+          <section className="bg-white rounded-2xl border border-[#F0D0DC] p-6" aria-live="polite">
+            <CheckCircle2 className="w-10 h-10 text-[#8B2252] mb-3" />
+            <h2 className="font-display font-bold text-2xl mb-2">Invoice received</h2>
+            <p className="font-body text-sm mb-5">Your invoice has been submitted for review. Submission does not mean payment has been approved.</p>
+            <button onClick={() => { setSubmitted(false); setError(null); }} className="rounded-full bg-[#8B2252] text-white px-5 py-3 font-body font-semibold text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8B2252]">Submit another invoice</button>
+          </section>
+        ) : (
+          <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-[#F0D0DC] p-5 sm:p-6">
+            <fieldset disabled={busy} className="space-y-4 disabled:opacity-70">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <label className="font-body text-sm font-semibold">Full name
+                  <input name="submitterName" autoComplete="name" required minLength={2} maxLength={255} value={name} onChange={event => { setName(event.target.value); resetReceipt(); }} className="block mt-1.5 w-full rounded-xl border border-[#F0D0DC] px-3 py-2.5 font-normal focus:outline-2 focus:outline-[#8B2252]" />
+                </label>
+                <label className="font-body text-sm font-semibold">Email address
+                  <input name="submitterEmail" type="email" autoComplete="email" required maxLength={320} value={email} onChange={event => { setEmail(event.target.value); resetReceipt(); }} className="block mt-1.5 w-full rounded-xl border border-[#F0D0DC] px-3 py-2.5 font-normal focus:outline-2 focus:outline-[#8B2252]" />
+                </label>
               </div>
-            ) : (
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-14 h-14 rounded-full bg-[#FFF5F8] flex items-center justify-center">
-                  <Upload className="w-7 h-7 text-[#8B2252]" />
-                </div>
-                <p className="font-body font-semibold text-[#1A0A12]">
-                  Drop your PDF here or click to browse
-                </p>
-                <p className="font-body text-sm text-[#1A0A12]">PDF files only, max 16MB</p>
+              <div hidden aria-hidden="true">
+                <label>Website<input name="website" tabIndex={-1} autoComplete="off" value={website} onChange={event => setWebsite(event.target.value)} /></label>
               </div>
-            )}
-          </div>
-
-          {/* Error */}
-          {error && (
-            <div className="flex items-start gap-2 mt-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-body">
-              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {/* Submit button */}
-          <button
-            onClick={handleSubmit}
-            disabled={!file || uploading || submitMutation.isPending}
-            className="mt-6 w-full inline-flex items-center justify-center gap-2 px-6 py-4 font-body font-semibold text-base rounded-full text-white transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
-            style={{ background: "linear-gradient(135deg, #8B2252, #c2410c)" }}
-          >
-            {(uploading || submitMutation.isPending) ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Uploading...
-              </>
-            ) : (
-              <>
-                <Upload className="w-5 h-5" />
-                Submit Invoice
-              </>
-            )}
-          </button>
-
-          <p className="font-body text-xs text-center text-[#1A0A12] mt-5">
-            Your invoice will be reviewed and payment processed by the due date.{" "}
-            Questions? Email{" "}
-            <a href="mailto:afropuppyyoga@gmail.com" className="text-[#8B2252] underline">
-              afropuppyyoga@gmail.com
-            </a>
-          </p>
-        </div>
-      </div>
+              <div>
+                <p className="font-body text-sm font-semibold mb-1.5">Invoice PDF</p>
+                <button type="button" onClick={() => fileInputRef.current?.click()} onDragOver={event => { event.preventDefault(); if (!busy) setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={event => { event.preventDefault(); setDragOver(false); if (!busy) selectFile(event.dataTransfer.files[0] ?? null); }} className={`w-full border-2 border-dashed rounded-xl px-4 py-5 text-center font-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8B2252] ${dragOver ? "border-[#8B2252] bg-[#FFF5F8]" : "border-[#F0D0DC] hover:bg-[#FFF5F8]"}`}>
+                  {file ? <FileText className="w-6 h-6 mx-auto mb-2 text-[#8B2252]" /> : <Upload className="w-6 h-6 mx-auto mb-2 text-[#8B2252]" />}
+                  <span className="block text-sm font-semibold break-all">{file ? file.name : "Choose a PDF or drop it here"}</span>
+                  <span className="block text-xs text-[#6B4C5A] mt-1">{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB. Select to change file.` : "PDF only, up to 16MB"}</span>
+                </button>
+                <input ref={fileInputRef} type="file" accept="application/pdf,.pdf" aria-label="Choose invoice PDF" className="sr-only" tabIndex={-1} onChange={event => selectFile(event.target.files?.[0] ?? null)} />
+              </div>
+              {error && <div role="alert" className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-body"><AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /><span>{error}</span></div>}
+              <button type="submit" disabled={!file || !name.trim() || !email.trim() || busy} className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 font-body font-semibold rounded-full bg-[#8B2252] text-white hover:bg-[#722044] disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8B2252]">
+                {busy ? <><Loader2 className="w-5 h-5 animate-spin" />Submitting...</> : <><Upload className="w-5 h-5" />Submit Invoice</>}
+              </button>
+            </fieldset>
+            <p className="font-body text-xs text-[#6B4C5A] mt-4">Include the services, dates, amount and payment details in your PDF. We use your name and email to review your submission and contact you if needed. Invoices are reviewed before payment.</p>
+          </form>
+        )}
+        <p className="font-body text-xs text-[#6B4C5A] mt-4">Questions? <a href="mailto:afropuppyyoga@gmail.com" className="text-[#8B2252] underline">afropuppyyoga@gmail.com</a></p>
+      </main>
     </div>
   );
 }

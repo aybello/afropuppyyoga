@@ -2,8 +2,8 @@ import { Router } from "express";
 import multer from "multer";
 import crypto from "crypto";
 import { storagePut } from "./storage";
-import { requireStaffOrAdmin, requireTeamMember } from "./_core/requireStaff";
 import { isVideoBuffer } from "./videoUploadValidation";
+import { createInvoiceUploadReceipt, invoiceContactSchema } from "./invoiceUploadReceipt";
 
 const router = Router();
 
@@ -70,7 +70,7 @@ const resumeUpload = multer({
 
 const invoiceUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 16 * 1024 * 1024 }, // 16MB max
+  limits: { fileSize: 16 * 1024 * 1024, files: 1, fields: 3, fieldSize: 1024 },
   fileFilter: (_req, file, cb) => {
     if (file.mimetype === "application/pdf" || file.originalname.toLowerCase().endsWith(".pdf")) {
       cb(null, true);
@@ -168,12 +168,12 @@ router.post("/api/upload-resume", (req: any, res: any, next: any) => {
 
 /**
  * POST /api/upload-invoice
- * Public — staff submit invoices without a Manus account.
- * Security: rate limited, PDF magic-bytes check, cryptographically random storage key.
+ * Public invoice intake; viewing and managing invoices remain owner-only.
+ * Rate limited before Multer, PDF magic-bytes checked, with signed upload proof.
  * Accepts multipart/form-data with a single "invoice" field (PDF only, max 16MB).
- * Uploads to S3 and returns { url, key, filename }.
+ * Returns only an upload receipt and sanitized filename, never a download URL.
  */
-router.post("/api/upload-invoice", requireTeamMember, (req: any, res: any, next: any) => {
+router.post("/api/upload-invoice", (req: any, res: any, next: any) => {
   invoiceUpload.single("invoice")(req, res, (err) => {
     if (err) return handleMulterError(err, req, res, next);
     next();
@@ -183,6 +183,11 @@ router.post("/api/upload-invoice", requireTeamMember, (req: any, res: any, next:
     if (!req.file) {
       return res.status(400).json({ error: "No invoice file provided" });
     }
+    res.setHeader("Cache-Control", "no-store");
+    const contact = invoiceContactSchema.safeParse(req.body);
+    if (!contact.success) {
+      return res.status(400).json({ error: "Enter your full name and a valid email address." });
+    }
 
     // Magic-bytes check — must be a real PDF
     if (!isPdfBuffer(req.file.buffer)) {
@@ -191,12 +196,16 @@ router.post("/api/upload-invoice", requireTeamMember, (req: any, res: any, next:
 
     const digest = crypto.createHash("sha256").update(req.file.buffer).digest("hex");
     const key = `invoices/${digest}-${secureId()}.pdf`;
-    const { url } = await storagePut(key, req.file.buffer, "application/pdf");
-    const safeFilename = sanitiseFilename(req.file.originalname);
-    return res.json({ url, key, filename: safeFilename });
+    const safeFilename = sanitiseFilename(req.file.originalname) || "invoice.pdf";
+    const uploadReceipt = await createInvoiceUploadReceipt({
+      fileKey: key, filename: safeFilename,
+      submitterName: contact.data.submitterName, submitterEmail: contact.data.submitterEmail,
+    });
+    await storagePut(key, req.file.buffer, "application/pdf");
+    return res.json({ uploadReceipt, filename: safeFilename });
   } catch (err: any) {
-    console.error("[upload-invoice] Error:", err);
-    return res.status(500).json({ error: err.message ?? "Upload failed" });
+    console.error("[upload-invoice] Upload failed");
+    return res.status(500).json({ error: "Invoice upload failed. Please try again." });
   }
 });
 

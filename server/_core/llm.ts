@@ -56,6 +56,7 @@ export type ToolChoice =
   | ToolChoiceExplicit;
 
 export type InvokeParams = {
+  model?: string;
   messages: Message[];
   tools?: Tool[];
   toolChoice?: ToolChoice;
@@ -265,6 +266,19 @@ const normalizeResponseFormat = ({
   };
 };
 
+/** Runtime catalog for explicitly selected models in new server integrations. */
+export async function listLLMModels(): Promise<{ data: Array<{ id: string }> }> {
+  assertApiKey();
+  const response = await fetch(resolveApiUrl().replace(/\/chat\/completions$/, "/models"), {
+    headers: { authorization: `Bearer ${ENV.forgeApiKey}` },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!response.ok) throw new Error("Model catalog unavailable");
+  const result = await response.json();
+  if (!Array.isArray(result.data)) throw new Error("Invalid model catalog");
+  return result;
+}
+
 export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
   assertApiKey();
 
@@ -280,7 +294,7 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
   } = params;
 
   const payload: Record<string, unknown> = {
-    model: "gemini-2.5-flash",
+    model: params.model ?? "gemini-2.5-flash",
     messages: messages.map(normalizeMessage),
   };
 
@@ -296,10 +310,9 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     payload.tool_choice = normalizedToolChoice;
   }
 
-  payload.max_tokens = 32768
-  payload.thinking = {
-    "budget_tokens": 128
-  }
+  payload.max_tokens = params.maxTokens ?? params.max_tokens ?? 32768;
+  // Preserve legacy defaults only for callers that have not selected a model.
+  if (!params.model) payload.thinking = { budget_tokens: 128 };
 
   const normalizedResponseFormat = normalizeResponseFormat({
     responseFormat,
