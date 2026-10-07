@@ -10,6 +10,10 @@ export function registerStorageProxy(app: Express) {
       res.status(400).send("Missing storage key");
       return;
     }
+    if (key.includes("\\") || key.includes("%") || key.split("/").some(part => part === "." || part === "..")) {
+      res.status(400).send("Invalid storage key");
+      return;
+    }
     // Public submission never grants public access to saved invoice documents.
     const normalizedKey = key.replace(/^\/+/, "");
     if (normalizedKey.startsWith("invoices/")) {

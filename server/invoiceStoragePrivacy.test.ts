@@ -25,6 +25,12 @@ describe("invoice storage privacy", () => {
     expect(response.status).toBe(401); expect(mocks.fetch).not.toHaveBeenCalled();
     expect(response.headers.get("cache-control")).toBe("private, no-store");
   });
+  it("rejects encoded traversal and double encoding before storage access", async () => {
+    for (const path of ["assets/%2e%2e%2finvoices/test.pdf", "%2569nvoices/test.pdf", "assets/%5cinvoices/test.pdf"]) {
+      expect((await realFetch(`${url}/manus-storage/${path}`)).status).toBe(400);
+    }
+    expect(mocks.fetch).not.toHaveBeenCalled();
+  });
   it("blocks team and Operations Manager downloads", async () => {
     mocks.auth.mockResolvedValue({ id: 2 });
     for (const level of ["team", "operations_manager"]) {
