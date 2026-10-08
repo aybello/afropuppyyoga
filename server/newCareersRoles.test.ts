@@ -17,8 +17,8 @@ afterEach(() => vi.unstubAllGlobals());
 describe("confirmed Kitchener and Guelph careers additions", () => {
   it("contains exactly the four requested location and pay combinations", () => {
     expect(NEW_CAREERS_LISTINGS.map((job) => [job.title, job.location, job.pay])).toEqual([
-      ["Movement Instructor", "Kitchener", "CA$20/hr"],
-      ["Movement Instructor", "Guelph", "CA$20/hr"],
+      ["Movement Instructor", "Kitchener", "CA$22/hr"],
+      ["Movement Instructor", "Guelph", "CA$22/hr"],
       ["Puppy Monitor", "Guelph", "CA$60/shift"],
       ["Operations Specialist", "Guelph", "CA$20/hr"],
     ]);
@@ -47,14 +47,15 @@ describe("confirmed Kitchener and Guelph careers additions", () => {
     expect(APY_TEAM_LOCATIONS).toContain(job.locationCode);
   });
 
-  it("gives movement hires their own CA$20 offer, not yoga pay or dance requirements", () => {
+  it("gives movement hires their own CA$22 offer, not yoga pay or dance requirements", () => {
     expect(detectOfferLetterType("Movement Instructor", "GUE")).toBe("movement_instructor");
     expect(detectOfferLetterType("movement_instructor", "KW")).toBe("movement_instructor");
-    const html = renderToStaticMarkup(getOfferLetterContent("Fictional Employee", "Movement Instructor", "Guelph", "movement_instructor"));
+    const html = renderToStaticMarkup(getOfferLetterContent("Fictional Employee", "Movement Instructor", "Guelph", "movement_instructor", null, 22));
     expect(html).toContain("Movement Instructor");
-    expect(html).toContain("CA$20.00 per hour");
+    expect(html).toContain("CA$22.00 per hour");
     expect(html).toContain("gentle, beginner-friendly");
-    expect(html).not.toContain("$22.00");
+    expect(html).not.toContain("CA$20.00");
+    expect(html).not.toContain("teaching yoga classes");
     expect(html).not.toContain("<strong>Yoga Instructor</strong>");
     expect(detectOfferLetterType("Yoga Instructor", "KW")).toBe("yoga_instructor");
     expect(detectOfferLetterType("Operations Specialist", "GUE")).toBe("operations_specialist");

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { CheckCircle2, Loader2, PenLine } from "lucide-react";
 import { getPuppyMonitorOfferShiftPay } from "@shared/puppyMonitorTerms";
+import { getMovementInstructorOfferHourlyPay } from "@shared/movementInstructorTerms";
 import { PUPPY_MONITOR_SHIFT_DESCRIPTION } from "@shared/newCareersListings";
 
 // ─── Inline Document Content ──────────────────────────────────────────────────
@@ -15,7 +16,8 @@ export function getOfferLetterContent(
   role: string,
   location: string,
   offerLetterType: string,
-  puppyMonitorShiftPayCad?: number | null
+  puppyMonitorShiftPayCad?: number | null,
+  movementInstructorHourlyPayCad?: number | null
 ) {
   const today = new Date().toLocaleDateString("en-CA", {
     year: "numeric",
@@ -32,6 +34,8 @@ export function getOfferLetterContent(
   const isBDR = offerLetterType === "bdr";
 
   if (isYogaInstructor || isMovementInstructor) {
+    // Saved compensation protects already-issued offers from future rate changes.
+    const movementHourlyPay = getMovementInstructorOfferHourlyPay(movementInstructorHourlyPayCad);
     return (
       <div className="space-y-4 text-sm text-[#1A0A12] leading-relaxed">
         <p className="text-xs text-[#C4A0B0]">{today}</p>
@@ -46,7 +50,7 @@ export function getOfferLetterContent(
           <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Position Details</p>
           <p><strong>Position:</strong> {instructorTitle}</p>
           <p><strong>Location:</strong> {location}</p>
-          <p><strong>Compensation:</strong> {isMovementInstructor ? "CA$20.00 per hour for guided movement sessions" : "$22.00 per hour for teaching yoga classes"}</p>
+          <p><strong>Compensation:</strong> {isMovementInstructor ? `CA$${movementHourlyPay}.00 per hour for guided movement sessions` : "$22.00 per hour for teaching yoga classes"}</p>
         </div>
 
         <div className="border-t border-[#F0D0DC] pt-4">
@@ -547,6 +551,9 @@ export default function SignDocuments() {
       ...(data.offerLetterType.startsWith("puppy_monitor_") ? {
         confirmedPuppyMonitorShiftPayCad: getPuppyMonitorOfferShiftPay(data.puppyMonitorShiftPayCad),
       } : {}),
+      ...(data.offerLetterType === "movement_instructor" ? {
+        confirmedMovementInstructorHourlyPayCad: getMovementInstructorOfferHourlyPay(data.movementInstructorHourlyPayCad),
+      } : {}),
     });
   };
 
@@ -650,7 +657,8 @@ export default function SignDocuments() {
             data.role,
             data.location,
             data.offerLetterType,
-            data.puppyMonitorShiftPayCad
+            data.puppyMonitorShiftPayCad,
+            data.movementInstructorHourlyPayCad
           )}
         </DocumentCard>
 

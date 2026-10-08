@@ -32,8 +32,8 @@ describe("Puppy Monitor offer payment history", () => {
   });
 
   it("does not change other role offers even when a monitor payment is present", () => {
-    const html = renderToStaticMarkup(getOfferLetterContent("Fictional Applicant", "Movement Instructor", "Guelph", "movement_instructor", 60));
-    expect(html).toContain("CA$20.00 per hour");
+    const html = renderToStaticMarkup(getOfferLetterContent("Fictional Applicant", "Movement Instructor", "Guelph", "movement_instructor", 60, 22));
+    expect(html).toContain("CA$22.00 per hour");
     expect(html).not.toContain("CA$60.00");
     expect(html).not.toContain("paid volunteer");
   });

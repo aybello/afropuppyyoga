@@ -272,6 +272,8 @@ export const signingTokens = mysqlTable("signingTokens", {
   offerLetterType: mysqlEnum("offerLetterType", ["puppy_monitor_kw", "puppy_monitor_hamilton", "yoga_instructor", "puppy_specialist", "operations_specialist", "bdr", "movement_instructor"]).notNull(),
   /** Saved Puppy Monitor per-shift payment in CAD; NULL preserves legacy CA$50 offers. */
   puppyMonitorShiftPayCad: int("puppyMonitorShiftPayCad"),
+  /** Saved Movement Instructor hourly payment in CAD; NULL preserves legacy CA$20 offers. */
+  movementInstructorHourlyPayCad: int("movementInstructorHourlyPayCad"),
   /** Secure random token sent in the signing link */
   token: varchar("token", { length: 128 }).notNull().unique(),
   /** Whether the applicant has signed */

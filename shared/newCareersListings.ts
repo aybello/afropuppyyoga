@@ -1,4 +1,5 @@
 import { PUPPY_MONITOR_PAY_DESCRIPTION, PUPPY_MONITOR_PAY_LABEL, PUPPY_MONITOR_POSITION_TYPE } from "./puppyMonitorTerms";
+import { MOVEMENT_INSTRUCTOR_PAY_DESCRIPTION, MOVEMENT_INSTRUCTOR_PAY_LABEL } from "./movementInstructorTerms";
 
 export const PUPPY_MONITOR_SHIFT_DESCRIPTION =
   "Shifts run from 9:00 a.m. to 2:30 p.m. and cover three classes, with breaks between classes.";
@@ -14,7 +15,7 @@ export const NEW_CAREERS_LISTINGS = [
     badge: "Now Hiring",
     subBadge: "Dance instructors welcome",
     icon: "movement",
-    pay: "CA$20/hr",
+    pay: MOVEMENT_INSTRUCTOR_PAY_LABEL,
     description: "Guide guests through simple stretches, warm-ups and gentle, beginner-friendly movements in a welcoming setting with music and puppies. Dance instructors are welcome, but this is not a dance class: no choreography or yoga certification is required. You lead the movement portion while Puppy Monitors focus on puppy care.",
     responsibilities: [
       "Lead simple warm-ups, gentle stretches and easy, low-impact movements",
@@ -32,7 +33,7 @@ export const NEW_CAREERS_LISTINGS = [
       "Reliability, punctuality and availability for agreed event-based shifts",
       "No choreography or yoga teaching certificate required for this role",
     ],
-    perks: ["CA$20 per hour", "Part-time, event-based scheduling", "Work with a welcoming wellness and puppy-care team"],
+    perks: [MOVEMENT_INSTRUCTOR_PAY_DESCRIPTION, "Part-time, event-based scheduling", "Work with a welcoming wellness and puppy-care team"],
   })),
   {
     id: "puppy-monitor-guelph", title: "Puppy Monitor", location: "Guelph", locationCode: "GUE",

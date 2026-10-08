@@ -12,6 +12,7 @@
 import { type Request, type Response, type NextFunction } from "express";
 import { PUPPY_MONITOR_SHIFT_DESCRIPTION } from "../shared/newCareersListings";
 import { PUPPY_MONITOR_PAY_LABEL, PUPPY_MONITOR_POSITION_TYPE } from "../shared/puppyMonitorTerms";
+import { MOVEMENT_INSTRUCTOR_HOURLY_PAY_CAD } from "../shared/movementInstructorTerms";
 
 // ─── Crawler Detection ────────────────────────────────────────────────────────
 
@@ -443,8 +444,8 @@ const PAGES: Record<string, () => string> = {
   <ul>
     <li>Yoga Instructor — Kitchener-Waterloo</li>
     <li>Yoga Instructor — Oakville</li>
-    <li>Movement Instructor - Kitchener - CA$20/hour</li>
-    <li>Movement Instructor - Guelph - CA$20/hour</li>
+    <li>Movement Instructor - Kitchener - CA$${MOVEMENT_INSTRUCTOR_HOURLY_PAY_CAD}/hour</li>
+    <li>Movement Instructor - Guelph - CA$${MOVEMENT_INSTRUCTOR_HOURLY_PAY_CAD}/hour</li>
     <li>Puppy Monitor - Guelph - ${PUPPY_MONITOR_POSITION_TYPE} - ${PUPPY_MONITOR_PAY_LABEL}</li>
     <li>Operations Specialist - Guelph - CA$20/hour</li>
     <li>Puppy Monitor - Kitchener-Waterloo - ${PUPPY_MONITOR_POSITION_TYPE} - ${PUPPY_MONITOR_PAY_LABEL}</li>
