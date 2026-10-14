@@ -143,12 +143,20 @@ describe("current offer lifecycle", () => {
     await expect(prepareHiringOffer(signed.db, 42)).rejects.toThrow("already signed");
     expect(signed.updates).toEqual([]);
   });
+  it("does not rewrite an unrelated role mismatch when preparing a new offer", async () => {
+    const otherApp = { ...app, role: "Operations Specialist", location: "GUE" };
+    const mismatched = { ...offer, role: otherApp.role, location: otherApp.location, signed: 0, offerLetterType: "puppy_monitor_kw" };
+    const h = harness([[otherApp], [mismatched]]);
+    await expect(prepareHiringOffer(h.db, 42)).resolves.toMatchObject({ reuse: false, offerLetterType: "operations_specialist" });
+    expect(h.updates).toEqual([]);
+    expect(h.inserts).toHaveLength(1);
+  });
   it.each([undefined, 50])("refuses an old signing tab that did not review the stored CA$60 amount: %s", async (displayedAmount) => {
     const h = harness([[{ ...offer, signed: 0, offerLetterType: "puppy_monitor_kw", puppyMonitorShiftPayCad: 60 }]]);
     await expect(recordCurrentOfferSignature(h.db, "fictional", "Fictional", "test", "puppy_monitor_kw", displayedAmount)).rejects.toThrow("refresh this signing page");
     expect(h.updates).toEqual([]);
   });
-  it("signs the exact current amount and still accepts pre-update CA$50 tabs for legacy offers", async () => {
+  it("signs the exact current amount and preserves legacy CA$50 stored offer terms", async () => {
     for (const savedAmount of [null, 60]) {
       const record = { ...offer, signed: 0, offerLetterType: "puppy_monitor_kw", puppyMonitorShiftPayCad: savedAmount };
       const h = harness([[record], [app], [record]]);

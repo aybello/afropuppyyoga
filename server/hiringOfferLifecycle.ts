@@ -21,11 +21,17 @@ export async function prepareHiringOffer(db: any, applicationId: number) {
     const [latest] = await tx.select().from(signingTokens).where(eq(signingTokens.applicationId, applicationId))
       .orderBy(desc(signingTokens.createdAt), desc(signingTokens.id)).limit(1);
     if (latest?.signed === 1) throw new Error("This applicant has already signed their offer.");
-    const reuse = canReuseSigningToken(latest ?? null, applicant);
+    const offerLetterType = detectOfferLetterType(applicant.role, applicant.location);
+    const isSocialMediaTemplateRepair = Boolean(
+      latest && latest.offerLetterType !== offerLetterType &&
+      (offerLetterType === "social_media_intern" || offerLetterType === "social_media_specialist") &&
+      latest.offerLetterType.startsWith("puppy_monitor_")
+    );
+    const reuse = canReuseSigningToken(latest ?? null, applicant) &&
+      (latest?.offerLetterType === offerLetterType || isSocialMediaTemplateRepair);
     const token = reuse ? latest.token : crypto.randomBytes(48).toString("hex");
     const expiresAt = reuse ? latest.expiresAt : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    const offerLetterType = detectOfferLetterType(applicant.role, applicant.location);
-    if (reuse && latest.offerLetterType !== offerLetterType) {
+    if (isSocialMediaTemplateRepair) {
       const [repaired] = await tx.update(signingTokens).set({
         offerLetterType,
         puppyMonitorShiftPayCad: offerLetterType.startsWith("puppy_monitor_") ? PUPPY_MONITOR_SHIFT_PAY_CAD : null,
