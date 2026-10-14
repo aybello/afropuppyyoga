@@ -269,7 +269,7 @@ export const signingTokens = mysqlTable("signingTokens", {
   /** Location (KW / Hamilton / Oakville / Central) */
   location: varchar("location", { length: 100 }).notNull(),
   /** Which offer letter to show */
-  offerLetterType: mysqlEnum("offerLetterType", ["puppy_monitor_kw", "puppy_monitor_hamilton", "yoga_instructor", "puppy_specialist", "operations_specialist", "bdr", "movement_instructor", "social_media_intern", "social_media_specialist"]).notNull(),
+  offerLetterType: mysqlEnum("offerLetterType", ["puppy_monitor_kw", "puppy_monitor_hamilton", "yoga_instructor", "puppy_specialist", "operations_specialist", "bdr", "movement_instructor", "social_media_intern", "social_media_specialist", "operations_manager"]).notNull(),
   /** Saved Puppy Monitor per-shift payment in CAD; NULL preserves legacy CA$50 offers. */
   puppyMonitorShiftPayCad: int("puppyMonitorShiftPayCad"),
   /** Saved Movement Instructor hourly payment in CAD; NULL preserves legacy CA$20 offers. */
