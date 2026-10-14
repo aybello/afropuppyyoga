@@ -25,6 +25,14 @@ export async function prepareHiringOffer(db: any, applicationId: number) {
     const token = reuse ? latest.token : crypto.randomBytes(48).toString("hex");
     const expiresAt = reuse ? latest.expiresAt : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     const offerLetterType = detectOfferLetterType(applicant.role, applicant.location);
+    if (reuse && latest.offerLetterType !== offerLetterType) {
+      const [repaired] = await tx.update(signingTokens).set({
+        offerLetterType,
+        puppyMonitorShiftPayCad: offerLetterType.startsWith("puppy_monitor_") ? PUPPY_MONITOR_SHIFT_PAY_CAD : null,
+        movementInstructorHourlyPayCad: offerLetterType === "movement_instructor" ? MOVEMENT_INSTRUCTOR_HOURLY_PAY_CAD : null,
+      }).where(and(eq(signingTokens.id, latest.id), eq(signingTokens.signed, 0)));
+      if (repaired.affectedRows !== 1) throw new Error("This unsigned offer changed. Please request a current signing link.");
+    }
     if (!reuse) await tx.insert(signingTokens).values({ applicationId, applicantName: applicant.name, applicantEmail: applicant.email,
       role: applicant.role, location: applicant.location, offerLetterType,
       puppyMonitorShiftPayCad: offerLetterType.startsWith("puppy_monitor_") ? PUPPY_MONITOR_SHIFT_PAY_CAD : null,

@@ -34,4 +34,16 @@ describe("offer-letter type routing", () => {
     expect(html).not.toContain("Puppy Monitor");
     expect(html).not.toContain("puppies are already excited");
   });
+
+  it("renders the Social Media Specialist role with social responsibilities", () => {
+    const html = renderToStaticMarkup(getOfferLetterContent(
+      "Jordan Smith",
+      "Social Media Specialist",
+      "REMOTE",
+      "social_media_specialist",
+    ));
+    expect(html).toContain("Social Media Specialist");
+    expect(html).toContain("influencer outreach");
+    expect(html).not.toContain("Puppy Monitor");
+  });
 });

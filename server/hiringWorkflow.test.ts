@@ -132,6 +132,17 @@ describe("current offer lifecycle", () => {
     expect(h.inserts).toEqual([]);
     expect(h.updates).toEqual([]);
   });
+  it("repairs a mismatched unsigned Social Media offer only when the applicant details still match", async () => {
+    const socialApp = { ...app, role: "Social Media Intern", location: "REMOTE" };
+    const wrongOffer = { ...offer, role: socialApp.role, location: socialApp.location, signed: 0, offerLetterType: "puppy_monitor_kw" };
+    const h = harness([[socialApp], [wrongOffer]]);
+    await expect(prepareHiringOffer(h.db, 42)).resolves.toMatchObject({ reuse: true, offerLetterType: "social_media_intern" });
+    expect(h.updates).toContainEqual({ table: signingTokens, values: expect.objectContaining({ offerLetterType: "social_media_intern", puppyMonitorShiftPayCad: null, movementInstructorHourlyPayCad: null }) });
+
+    const signed = harness([[socialApp], [{ ...wrongOffer, signed: 1 }]]);
+    await expect(prepareHiringOffer(signed.db, 42)).rejects.toThrow("already signed");
+    expect(signed.updates).toEqual([]);
+  });
   it.each([undefined, 50])("refuses an old signing tab that did not review the stored CA$60 amount: %s", async (displayedAmount) => {
     const h = harness([[{ ...offer, signed: 0, offerLetterType: "puppy_monitor_kw", puppyMonitorShiftPayCad: 60 }]]);
     await expect(recordCurrentOfferSignature(h.db, "fictional", "Fictional", "test", "puppy_monitor_kw", displayedAmount)).rejects.toThrow("refresh this signing page");
@@ -149,6 +160,10 @@ describe("current offer lifecycle", () => {
   it("rejects a stale page after an unsigned offer is repaired to the correct Social Media template", async () => {
     const socialApp = { ...app, role: "Social Media Intern", location: "REMOTE" };
     const repairedOffer = { ...offer, role: socialApp.role, location: socialApp.location, signed: 0, offerLetterType: "social_media_intern" };
+    const preReleasePage = harness([[repairedOffer]]);
+    await expect(recordCurrentOfferSignature(preReleasePage.db, "fictional", "Fictional", "test", undefined)).rejects.toThrow("current Offer Letter");
+    expect(preReleasePage.updates).toEqual([]);
+
     const stalePage = harness([[repairedOffer]]);
     await expect(recordCurrentOfferSignature(stalePage.db, "fictional", "Fictional", "test", "puppy_monitor_kw")).rejects.toThrow("current Offer Letter");
     expect(stalePage.updates).toEqual([]);

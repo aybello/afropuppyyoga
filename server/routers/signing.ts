@@ -115,7 +115,8 @@ export const signingRouter = router({
       z.object({
         token: z.string(),
         signedName: z.string().min(2, "Please enter your full name"),
-        confirmedOfferLetterType: z.string().min(1),
+        // Optional for pre-release tabs; the lifecycle rejects a missing value with a refresh message.
+        confirmedOfferLetterType: z.string().min(1).optional(),
         confirmedPuppyMonitorShiftPayCad: z.union([z.literal(50), z.literal(60)]).optional(),
         confirmedMovementInstructorHourlyPayCad: z.union([z.literal(20), z.literal(22)]).optional(),
       })
