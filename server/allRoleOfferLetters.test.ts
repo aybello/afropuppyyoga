@@ -103,4 +103,24 @@ describe("unknown roles fail closed instead of borrowing another letter", () => 
   it("does not treat an unrelated title containing specialist as a puppy offer", () => {
     expect(resolveOfferLetterType("Marketing Specialist", "KW")).toBeNull();
   });
+
+  it("throws from the compatibility entry point too, so no caller can receive a wrong letter", () => {
+    expect(() => detectOfferLetterType("Videographer", "KW")).toThrow(/No approved offer letter/);
+  });
+});
+
+describe("Puppy Monitor location routing", () => {
+  it.each(["HAM", "Hamilton", "hamilton", "HAM / KW", "Hamilton, ON"])(
+    "uses the Hamilton letter for %s",
+    (location) => {
+      expect(resolveOfferLetterType("Puppy Monitor", location)).toBe("puppy_monitor_hamilton");
+    }
+  );
+
+  it.each(["KW", "Kitchener", "OAK", "Oakville", "GUE", "Guelph", "Chatham", "Grantham"])(
+    "uses the Kitchener-Waterloo letter for %s",
+    (location) => {
+      expect(resolveOfferLetterType("Puppy Monitor", location)).toBe("puppy_monitor_kw");
+    }
+  );
 });

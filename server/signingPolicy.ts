@@ -31,10 +31,22 @@ function normalizeOfferRole(role: string): string {
   return role.toLowerCase().replaceAll("_", " ").replace(/\s+/g, " ").trim();
 }
 
+/**
+ * Hamilton is matched on whole location tokens so an unrelated place name that
+ * merely contains "ham", such as Chatham, never selects the Hamilton letter.
+ * A combined assignment such as "HAM / KW" still counts as Hamilton.
+ */
+function isHamiltonLocation(location: string): boolean {
+  return location
+    .toLowerCase()
+    .split(/[^a-z]+/)
+    .filter(Boolean)
+    .some((token) => token === "ham" || token === "hamilton");
+}
+
 /** Returns the matching offer letter, or null when APY has no approved letter for the role. */
 export function resolveOfferLetterType(role: string, location: string): OfferLetterType | null {
   const normalizedRole = normalizeOfferRole(role);
-  const normalizedLocation = location.toLowerCase();
   if (normalizedRole === "movement instructor") return "movement_instructor";
   if (normalizedRole === "yoga instructor") return "yoga_instructor";
   if (normalizedRole === "operations manager") return "operations_manager";
@@ -46,7 +58,7 @@ export function resolveOfferLetterType(role: string, location: string): OfferLet
   if (normalizedRole === "puppy specialist") return "puppy_specialist";
   if (normalizedRole === "bdr" || normalizedRole === "business development representative") return "bdr";
   if (normalizedRole === "puppy monitor") {
-    return normalizedLocation.includes("ham") ? "puppy_monitor_hamilton" : "puppy_monitor_kw";
+    return isHamiltonLocation(location) ? "puppy_monitor_hamilton" : "puppy_monitor_kw";
   }
   return null;
 }

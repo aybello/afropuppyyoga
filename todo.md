@@ -1614,3 +1614,13 @@ Separate owner-facing concern: existing CA$50 per shift across 5.5 clock hours i
 - [x] Resending an unchanged, unexpired applicant's unsigned Social Media offer repairs only a Puppy Monitor template mismatch under the staffing lock; changed or expired tokens and unrelated role mismatches receive a new offer, and signed offers are refused and never rewritten.
 - [x] Added regression tests for routing, rendered content, new-offer persistence, stale pages, signed-offer preservation and repair scope; 573 tests pass with 1 predefined skip, TypeScript and production build pass.
 - [x] Verified live on afropuppyyoga.ca: the deployed signing bundle contains the Social Media template and offer-type binding, and the corrected offer now returns `social_media_intern` with no unrelated pay fields. Source synced to GitHub at `e8dc5ec`.
+
+## 2026-10-14 — Every job position gets its own offer letter
+- [x] Audited all roles against the offer-letter router. Found Operations Manager (2 live applications) silently receiving the Puppy Monitor letter, and any unlisted future title doing the same.
+- [x] Replaced substring role matching with exact normalized matching, so no role borrows another role's document.
+- [x] Added a dedicated Operations Manager offer letter covering class-day leadership, escalation authority, elevated systems access and approval limits.
+- [x] Added the additive `operations_manager` offer type and migration 0069. Existing enum values and order preserved.
+- [x] Unknown or future job titles now fail closed: offer creation refuses and writes nothing instead of issuing a wrong letter.
+- [x] Hamilton routing now matches whole location tokens, so a place name like Chatham cannot select the Hamilton letter.
+- [x] Audited all existing offers in production: every stored row already matched its role. No historical or signed offer was modified.
+- [x] 639 tests pass, 1 predefined skip; TypeScript and production build clean.

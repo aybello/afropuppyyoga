@@ -109,6 +109,23 @@ describe("signed offer to employee", () => {
 });
 
 describe("current offer lifecycle", () => {
+  it("issues an Operations Manager offer with its own letter instead of a Puppy Monitor document", async () => {
+    const manager = { ...app, role: "Operations Manager" };
+    const h = harness([[manager], []]);
+    await expect(prepareHiringOffer(h.db, 42)).resolves.toMatchObject({ offerLetterType: "operations_manager" });
+    expect(h.inserts.find((entry) => entry.table === signingTokens)?.values).toMatchObject({
+      offerLetterType: "operations_manager", puppyMonitorShiftPayCad: null, movementInstructorHourlyPayCad: null,
+    });
+  });
+  it.each(["Videographer", "Photographer", "Marketing Lead"])(
+    "refuses to issue any offer for the unsupported role %s and writes nothing",
+    async (role) => {
+      const h = harness([[{ ...app, role }], []]);
+      await expect(prepareHiringOffer(h.db, 42)).rejects.toThrow(/No approved offer letter/);
+      expect(h.inserts).toEqual([]);
+      expect(h.updates).toEqual([]);
+    }
+  );
   it("stores the approved CA$60 only when creating a new Puppy Monitor offer", async () => {
     const h = harness([[app], []]);
     await expect(prepareHiringOffer(h.db, 42)).resolves.toMatchObject({ reuse: false });
