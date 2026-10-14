@@ -33,11 +33,14 @@ export async function prepareHiringOffer(db: any, applicationId: number) {
     return { applicant, reuse, token, expiresAt, offerLetterType };
   });
 }
-export async function recordCurrentOfferSignature(db: any, token: string, signedName: string, signedIp: string, confirmedPuppyMonitorShiftPayCad?: number, confirmedMovementInstructorHourlyPayCad?: number) {
+export async function recordCurrentOfferSignature(db: any, token: string, signedName: string, signedIp: string, confirmedOfferLetterType: string | undefined, confirmedPuppyMonitorShiftPayCad?: number, confirmedMovementInstructorHourlyPayCad?: number) {
   return withStaffingMutationLock(db, async (tx) => {
     const [record]: Array<typeof signingTokens.$inferSelect> = await tx.select().from(signingTokens).where(eq(signingTokens.token, token)).limit(1);
     if (!record || record.expiresAt < new Date()) throw new Error("Invalid or expired signing link. Please contact AfroPuppyYoga.");
     if (record.signed === 1) throw new Error("These documents have already been signed.");
+    if (record.offerLetterType !== confirmedOfferLetterType) {
+      throw new Error("Please refresh this signing page and review the current Offer Letter before signing.");
+    }
     if (record.offerLetterType?.startsWith("puppy_monitor_")) {
       const savedPayment = getPuppyMonitorOfferShiftPay(record.puppyMonitorShiftPayCad);
       if ((savedPayment === 60 && confirmedPuppyMonitorShiftPayCad !== savedPayment) ||

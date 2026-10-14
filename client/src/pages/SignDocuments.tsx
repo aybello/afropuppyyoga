@@ -603,6 +603,7 @@ export default function SignDocuments() {
     submitMutation.mutate({
       token,
       signedName: signedName.trim(),
+      confirmedOfferLetterType: data.offerLetterType,
       ...(data.offerLetterType.startsWith("puppy_monitor_") ? {
         confirmedPuppyMonitorShiftPayCad: getPuppyMonitorOfferShiftPay(data.puppyMonitorShiftPayCad),
       } : {}),

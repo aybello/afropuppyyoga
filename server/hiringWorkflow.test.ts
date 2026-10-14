@@ -9,7 +9,7 @@ vi.mock("./apyAccess", () => ({ resolveApyAccess }));
 import { staffAvailabilityRouter } from "./routers/staffAvailability";
 const actor = { id: 1, name: "Owner", email: "owner@example.com" };
 const app = { id: 42, name: "Fictional Applicant", email: "applicant@example.com", phone: null, role: "Puppy Monitor", location: "Kitchener", status: "accepted", onboardingSentAt: null, onboardingDeliveryToken: null, isTeamMember: false, deletedAt: null };
-const offer = { id: 2, applicationId: 42, signed: 1, applicantName: app.name, applicantEmail: app.email, role: app.role, location: app.location, expiresAt: new Date("2099-01-01"), createdAt: new Date(), token: "fictional" };
+const offer = { id: 2, applicationId: 42, signed: 1, applicantName: app.name, applicantEmail: app.email, role: app.role, location: app.location, offerLetterType: "puppy_monitor_kw", expiresAt: new Date("2099-01-01"), createdAt: new Date(), token: "fictional" };
 function harness(reads: unknown[][], affectedRows = 1) {
   const updates: any[] = [], inserts: any[] = [];
   const tx: any = {
@@ -134,17 +134,34 @@ describe("current offer lifecycle", () => {
   });
   it.each([undefined, 50])("refuses an old signing tab that did not review the stored CA$60 amount: %s", async (displayedAmount) => {
     const h = harness([[{ ...offer, signed: 0, offerLetterType: "puppy_monitor_kw", puppyMonitorShiftPayCad: 60 }]]);
-    await expect(recordCurrentOfferSignature(h.db, "fictional", "Fictional", "test", displayedAmount)).rejects.toThrow("refresh this signing page");
+    await expect(recordCurrentOfferSignature(h.db, "fictional", "Fictional", "test", "puppy_monitor_kw", displayedAmount)).rejects.toThrow("refresh this signing page");
     expect(h.updates).toEqual([]);
   });
   it("signs the exact current amount and still accepts pre-update CA$50 tabs for legacy offers", async () => {
     for (const savedAmount of [null, 60]) {
       const record = { ...offer, signed: 0, offerLetterType: "puppy_monitor_kw", puppyMonitorShiftPayCad: savedAmount };
       const h = harness([[record], [app], [record]]);
-      await recordCurrentOfferSignature(h.db, "fictional", "Fictional", "test", savedAmount ?? undefined);
+      await recordCurrentOfferSignature(h.db, "fictional", "Fictional", "test", "puppy_monitor_kw", savedAmount ?? undefined);
       expect(h.updates).toContainEqual({ table: signingTokens, values: expect.objectContaining({ signed: 1 }) });
       expect(h.updates.some((entry) => "puppyMonitorShiftPayCad" in entry.values)).toBe(false);
     }
+  });
+  it("rejects a stale page after an unsigned offer is repaired to the correct Social Media template", async () => {
+    const socialApp = { ...app, role: "Social Media Intern", location: "REMOTE" };
+    const repairedOffer = { ...offer, role: socialApp.role, location: socialApp.location, signed: 0, offerLetterType: "social_media_intern" };
+    const stalePage = harness([[repairedOffer]]);
+    await expect(recordCurrentOfferSignature(stalePage.db, "fictional", "Fictional", "test", "puppy_monitor_kw")).rejects.toThrow("current Offer Letter");
+    expect(stalePage.updates).toEqual([]);
+
+    const currentPage = harness([[repairedOffer], [socialApp], [repairedOffer]]);
+    await recordCurrentOfferSignature(currentPage.db, "fictional", "Fictional", "test", "social_media_intern");
+    expect(currentPage.updates).toContainEqual({ table: signingTokens, values: expect.objectContaining({ signed: 1 }) });
+  });
+  it("never rewrites a signed offer while checking the submitted offer type", async () => {
+    const signedOffer = { ...offer, signed: 1, offerLetterType: "puppy_monitor_kw" };
+    const h = harness([[signedOffer]]);
+    await expect(recordCurrentOfferSignature(h.db, "fictional", "Fictional", "test", "social_media_intern")).rejects.toThrow("already been signed");
+    expect(h.updates).toEqual([]);
   });
   it("reuses an unsigned current offer and rejects an already-hired applicant", async () => {
     const h = harness([[app], [{ ...offer, signed: 0 }]]);
@@ -153,13 +170,13 @@ describe("current offer lifecycle", () => {
   });
   it("does not accept an obsolete offer link or reset a hired employee", async () => {
     const h = harness([[{ ...offer, signed: 0 }], [app], [{ ...offer, id: 3 }]]);
-    await expect(recordCurrentOfferSignature(h.db, "fictional", "Fictional", "test")).rejects.toThrow("replaced"); expect(h.updates).toEqual([]);
+    await expect(recordCurrentOfferSignature(h.db, "fictional", "Fictional", "test", "puppy_monitor_kw")).rejects.toThrow("replaced"); expect(h.updates).toEqual([]);
     const hired = harness([[{ ...offer, signed: 0 }], [{ ...app, status: "onboarded", isTeamMember: true }]]);
-    await expect(recordCurrentOfferSignature(hired.db, "fictional", "Fictional", "test")).rejects.toThrow("already an employee");
+    await expect(recordCurrentOfferSignature(hired.db, "fictional", "Fictional", "test", "puppy_monitor_kw")).rejects.toThrow("already an employee");
   });
   it("saves the signature but does not grant access until the explicit add employee action", async () => {
     const h = harness([[{ ...offer, signed: 0 }], [app], [offer]]);
-    await recordCurrentOfferSignature(h.db, "fictional", "Fictional", "test");
+    await recordCurrentOfferSignature(h.db, "fictional", "Fictional", "test", "puppy_monitor_kw");
     expect(h.updates).toContainEqual({ table: jobApplications, values: { status: "accepted" } });
     expect(h.updates).toContainEqual({ table: signingTokens, values: expect.objectContaining({ signed: 1 }) });
     expect(h.inserts).toEqual([]);

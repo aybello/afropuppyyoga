@@ -1610,5 +1610,6 @@ Separate owner-facing concern: existing CA$50 per shift across 5.5 clock hours i
 - [x] Fixed offer-type detection so Social Media Intern and Social Media Specialist roles no longer fall through to the Puppy Monitor template.
 - [x] Added dedicated role-specific offer-letter content covering social content creation, Reels, community engagement, approvals, remote scheduling and performance expectations.
 - [x] Added additive signing-token enum values and migration 0068; the existing unsigned Social Media Intern offer for Catherine Halim was corrected from `puppy_monitor_kw` to `social_media_intern` without changing any signed offer.
-- [x] Added regression tests for routing, rendered content and new-offer persistence; 568 tests pass with 1 predefined skip, TypeScript and production build pass.
+- [x] Signing now binds the submitted offer type to the stored token, so a stale or pre-repair page cannot sign a different document; signed historical offers remain unchanged.
+- [x] Added regression tests for routing, rendered content, new-offer persistence, stale pages and signed-offer preservation; 570 tests pass with 1 predefined skip, TypeScript and production build pass.
 - [ ] Owner presses Publish so the corrected offer template appears on the live signing page.

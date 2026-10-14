@@ -115,6 +115,7 @@ export const signingRouter = router({
       z.object({
         token: z.string(),
         signedName: z.string().min(2, "Please enter your full name"),
+        confirmedOfferLetterType: z.string().min(1),
         confirmedPuppyMonitorShiftPayCad: z.union([z.literal(50), z.literal(60)]).optional(),
         confirmedMovementInstructorHourlyPayCad: z.union([z.literal(20), z.literal(22)]).optional(),
       })
@@ -123,7 +124,7 @@ export const signingRouter = router({
       const sourceDb = await getDb();
       if (!sourceDb) throw new Error("Database not available");
       const ip = ctx.req?.headers?.["x-forwarded-for"]?.toString().split(",")[0]?.trim() ?? "unknown";
-      const record = await recordCurrentOfferSignature(sourceDb, input.token, input.signedName, ip, input.confirmedPuppyMonitorShiftPayCad, input.confirmedMovementInstructorHourlyPayCad);
+      const record = await recordCurrentOfferSignature(sourceDb, input.token, input.signedName, ip, input.confirmedOfferLetterType, input.confirmedPuppyMonitorShiftPayCad, input.confirmedMovementInstructorHourlyPayCad);
 
       // Notify owner
       try {
