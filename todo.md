@@ -1595,3 +1595,20 @@ Separate owner-facing concern: existing CA$50 per shift across 5.5 clock hours i
 - Existing PDF extraction uses an explicitly catalog-verified frontier model. Current Forge catalog confirms gemini-3.1-pro-preview; extraction failure does not lose the accepted invoice. No real invoice, payment, message or live test record was created.
 - Full validation: 551 tests passed, 1 intentionally skipped; TypeScript, production build and diff whitespace checks passed. GPT 6.1 Sol approved functional commit d049e1ded84c2def503b4bac7fbea6597d813b49. Direct Claude Opus 5 and approved Opus 4.8 fallback returned HTTP 400; no Claude approval claimed.
 - Local HTTP checks: anonymous empty upload reaches validation (400, no login), invoice listing is 401, forged receipt and mixed batch are 400. Production still required sign-in at the pre-checkpoint check; release publication must be independently verified before claiming live.
+
+## 2026-10-08 — Movement Instructor rate raised to CA$22/hour
+- [x] Shared `movementInstructorTerms.ts` defines CA$22 as the current rate, mirroring the Puppy Monitor pattern.
+- [x] Both Movement Instructor cards (Kitchener, Guelph) and their perks show CA$22; careers crawler copy matches.
+- [x] New offers persist `movementInstructorHourlyPayCad = 22`; legacy/NULL offers still render CA$20.
+- [x] Signing bound to the saved amount so a stale tab cannot sign a changed rate.
+- [x] Additive nullable column applied (migration 0067); zero existing movement offers affected.
+- [x] Operations Specialist CA$20, Puppy Monitor CA$60 and Yoga Instructor $22 unchanged.
+- [x] 566 tests pass (1 predefined skip), TypeScript and production build pass; Gemini 3.1 Pro approved exact commit b4907de.
+- [ ] Owner presses Publish so the CA$22 rate appears on the live website.
+
+## 2026-10-14 — Social Media offer letters customized
+- [x] Fixed offer-type detection so Social Media Intern and Social Media Specialist roles no longer fall through to the Puppy Monitor template.
+- [x] Added dedicated role-specific offer-letter content covering social content creation, Reels, community engagement, approvals, remote scheduling and performance expectations.
+- [x] Added additive signing-token enum values and migration 0068; the existing unsigned Social Media Intern offer for Catherine Halim was corrected from `puppy_monitor_kw` to `social_media_intern` without changing any signed offer.
+- [x] Added regression tests for routing, rendered content and new-offer persistence; 568 tests pass with 1 predefined skip, TypeScript and production build pass.
+- [ ] Owner presses Publish so the corrected offer template appears on the live signing page.

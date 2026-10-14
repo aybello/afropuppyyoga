@@ -32,6 +32,8 @@ export function getOfferLetterContent(
   const isPuppySpecialist = offerLetterType === "puppy_specialist";
   const isOperationsSpecialist = offerLetterType === "operations_specialist";
   const isBDR = offerLetterType === "bdr";
+  const isSocialMediaIntern = offerLetterType === "social_media_intern";
+  const isSocialMediaSpecialist = offerLetterType === "social_media_specialist";
 
   if (isYogaInstructor || isMovementInstructor) {
     // Saved compensation protects already-issued offers from future rate changes.
@@ -259,6 +261,59 @@ export function getOfferLetterContent(
 
         <div className="border-t border-[#F0D0DC] pt-4">
           <p>We are thrilled to welcome you to AfroPuppyYoga and look forward to the partnerships and experiences you will help create.</p>
+          <p className="mt-3">Warm regards,</p>
+          <p className="font-bold">The AfroPuppyYoga Team</p>
+          <p className="text-xs text-[#C4A0B0]">afropuppyyoga@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isSocialMediaIntern || isSocialMediaSpecialist) {
+    const socialTitle = isSocialMediaIntern ? "Social Media Intern" : "Social Media Specialist";
+    return (
+      <div className="space-y-4 text-sm text-[#1A0A12] leading-relaxed">
+        <p className="text-xs text-[#C4A0B0]">{today}</p>
+        <p>Dear <strong>{applicantName}</strong>,</p>
+        <p>
+          We are excited to offer you the position of <strong>{socialTitle}</strong> with <strong>AfroPuppyYoga (APY)</strong>. Your creativity, platform knowledge, and ability to build community will help APY reach more guests and strengthen its online presence.
+        </p>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Position Details</p>
+          <p><strong>Position:</strong> {socialTitle}</p>
+          <p><strong>Work Arrangement:</strong> Remote · Canada</p>
+          <p><strong>Compensation:</strong> Paid part-time role. Compensation and approved hours will follow the terms confirmed in writing by APY.</p>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Key Responsibilities</p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Create and schedule engaging content across Instagram, TikTok, and Facebook</li>
+            <li>Film and edit Reels, Stories, and short-form video content</li>
+            <li>Engage with the APY community by responding to comments, direct messages, and mentions</li>
+            <li>Help plan the social media calendar and maintain a consistent brand voice</li>
+            <li>Track performance metrics and share useful insights with the team</li>
+            <li>Support influencer outreach and brand collaboration campaigns</li>
+          </ul>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Schedule and Hours</p>
+          <p>This is a flexible remote role. Specific hours, content deadlines, meetings, and campaign priorities will be agreed with APY in advance.</p>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Terms and Conditions</p>
+          <p><strong>Probation Period:</strong> A probationary period of 4 months will apply to assess performance and alignment with APY's goals.</p>
+          <p className="mt-2"><strong>Confidentiality:</strong> You will be required to sign a Non-Disclosure Agreement (NDA) to protect AfroPuppyYoga's proprietary information.</p>
+          <p className="mt-2"><strong>Content and approvals:</strong> APY-owned accounts, brand assets, guest information, and unpublished campaign materials must be handled through APY's approved workflow. Do not publish content on behalf of APY without the required approval.</p>
+          <p className="mt-2"><strong>Notice of Resignation:</strong> If you wish to end your engagement with AfroPuppyYoga, please provide at least two weeks' written notice whenever reasonably possible.</p>
+          <p className="mt-2"><strong>Performance Reviews:</strong> Content quality, reliability, audience engagement, and collaboration will be reviewed periodically.</p>
+        </div>
+
+        <div className="border-t border-[#F0D0DC] pt-4">
+          <p>We are excited to have you help tell the AfroPuppyYoga story and build a thoughtful, welcoming online community.</p>
           <p className="mt-3">Warm regards,</p>
           <p className="font-bold">The AfroPuppyYoga Team</p>
           <p className="text-xs text-[#C4A0B0]">afropuppyyoga@gmail.com · 289-788-1885 · afropuppyyoga.ca</p>

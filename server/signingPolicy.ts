@@ -5,7 +5,9 @@ export type OfferLetterType =
   | "movement_instructor"
   | "puppy_specialist"
   | "operations_specialist"
-  | "bdr";
+  | "bdr"
+  | "social_media_intern"
+  | "social_media_specialist";
 
 export function detectOfferLetterType(role: string, location: string): OfferLetterType {
   const normalizedRole = role.toLowerCase();
@@ -15,6 +17,8 @@ export function detectOfferLetterType(role: string, location: string): OfferLett
   if (normalizedRole.includes("operations specialist") || normalizedRole.includes("operation specialist")) {
     return "operations_specialist";
   }
+  if (normalizedRole.includes("social media") && normalizedRole.includes("intern")) return "social_media_intern";
+  if (normalizedRole.includes("social media") && normalizedRole.includes("specialist")) return "social_media_specialist";
   if (normalizedRole.includes("specialist")) return "puppy_specialist";
   if (normalizedRole.includes("bdr") || normalizedRole.includes("business development")) return "bdr";
   if (normalizedLocation.includes("hamilton") || normalizedLocation.includes("ham")) return "puppy_monitor_hamilton";

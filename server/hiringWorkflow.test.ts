@@ -118,6 +118,13 @@ describe("current offer lifecycle", () => {
     const movement = harness([[{ ...app, role: "Movement Instructor" }], []]);
     await prepareHiringOffer(movement.db, 42);
     expect(movement.inserts.find((entry) => entry.table === signingTokens)?.values.puppyMonitorShiftPayCad).toBeNull();
+    const social = harness([[{ ...app, role: "Social Media Intern", location: "REMOTE" }], []]);
+    await prepareHiringOffer(social.db, 42);
+    expect(social.inserts.find((entry) => entry.table === signingTokens)?.values).toMatchObject({
+      offerLetterType: "social_media_intern",
+      puppyMonitorShiftPayCad: null,
+      movementInstructorHourlyPayCad: null,
+    });
   });
   it.each([null, 60])("does not rewrite payment on a reused unsigned offer with saved amount %s", async (savedAmount) => {
     const h = harness([[app], [{ ...offer, signed: 0, puppyMonitorShiftPayCad: savedAmount }]]);
