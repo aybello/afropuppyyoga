@@ -142,6 +142,16 @@ describe("current offer lifecycle", () => {
     const signed = harness([[socialApp], [{ ...wrongOffer, signed: 1 }]]);
     await expect(prepareHiringOffer(signed.db, 42)).rejects.toThrow("already signed");
     expect(signed.updates).toEqual([]);
+
+    const changed = harness([[{ ...socialApp, email: "changed@example.com" }], [wrongOffer]]);
+    await expect(prepareHiringOffer(changed.db, 42)).resolves.toMatchObject({ reuse: false, offerLetterType: "social_media_intern" });
+    expect(changed.updates).toEqual([]);
+    expect(changed.inserts).toHaveLength(1);
+
+    const expired = harness([[socialApp], [{ ...wrongOffer, expiresAt: new Date("2000-01-01") }]]);
+    await expect(prepareHiringOffer(expired.db, 42)).resolves.toMatchObject({ reuse: false, offerLetterType: "social_media_intern" });
+    expect(expired.updates).toEqual([]);
+    expect(expired.inserts).toHaveLength(1);
   });
   it("does not rewrite an unrelated role mismatch when preparing a new offer", async () => {
     const otherApp = { ...app, role: "Operations Specialist", location: "GUE" };

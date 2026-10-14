@@ -22,12 +22,13 @@ export async function prepareHiringOffer(db: any, applicationId: number) {
       .orderBy(desc(signingTokens.createdAt), desc(signingTokens.id)).limit(1);
     if (latest?.signed === 1) throw new Error("This applicant has already signed their offer.");
     const offerLetterType = detectOfferLetterType(applicant.role, applicant.location);
+    const tokenCanBeReused = canReuseSigningToken(latest ?? null, applicant);
     const isSocialMediaTemplateRepair = Boolean(
-      latest && latest.offerLetterType !== offerLetterType &&
+      tokenCanBeReused && latest && latest.offerLetterType !== offerLetterType &&
       (offerLetterType === "social_media_intern" || offerLetterType === "social_media_specialist") &&
       latest.offerLetterType.startsWith("puppy_monitor_")
     );
-    const reuse = canReuseSigningToken(latest ?? null, applicant) &&
+    const reuse = tokenCanBeReused &&
       (latest?.offerLetterType === offerLetterType || isSocialMediaTemplateRepair);
     const token = reuse ? latest.token : crypto.randomBytes(48).toString("hex");
     const expiresAt = reuse ? latest.expiresAt : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
