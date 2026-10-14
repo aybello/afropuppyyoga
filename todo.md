@@ -1624,3 +1624,12 @@ Separate owner-facing concern: existing CA$50 per shift across 5.5 clock hours i
 - [x] Hamilton routing now matches whole location tokens, so a place name like Chatham cannot select the Hamilton letter.
 - [x] Audited all existing offers in production: every stored row already matched its role. No historical or signed offer was modified.
 - [x] 639 tests pass, 1 predefined skip; TypeScript and production build clean.
+
+## 2026-10-14 — Social Media Intern rate published (CA$19 to CA$20)
+- [x] Owner confirmed rate: CA$19/hour to start, CA$20/hour after a 3-month probation.
+- [x] Added shared/socialMediaTerms.ts as the single source for the rate, public labels and offer wording.
+- [x] Public job card now shows CA$19/hr; perks state the full progression. Crawler careers copy lists the role and rate.
+- [x] Additive nullable signingTokens.socialMediaHourlyPayCad (migration 0070, ALTER TABLE ADD only) applied to production.
+- [x] New offers save CA$19 and state both rates. Offers issued before a rate existed keep their original wording unchanged.
+- [x] Signing submission bound to the displayed amount in both directions, so a stale tab cannot sign a different rate.
+- [x] 655 tests pass, 1 predefined skip. TypeScript and production build clean. GPT 6.1 Sol approved exact commit d9a6fb8; its non-blocking coverage note was closed with four direct signing-binding tests.

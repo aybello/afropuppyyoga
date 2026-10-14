@@ -213,6 +213,28 @@ describe("current offer lifecycle", () => {
     await expect(recordCurrentOfferSignature(h.db, "fictional", "Fictional", "test", "social_media_intern")).rejects.toThrow("already been signed");
     expect(h.updates).toEqual([]);
   });
+  it.each([
+    ["a saved CA$19 rate confirmed by the page", 19, 19],
+    ["an offer issued before a rate existed", null, undefined],
+  ])("signs a Social Media offer showing %s", async (_label, savedAmount, confirmedAmount) => {
+    const socialApp = { ...app, role: "Social Media Intern", location: "REMOTE" };
+    const record = { ...offer, role: socialApp.role, location: socialApp.location, signed: 0, offerLetterType: "social_media_intern", socialMediaHourlyPayCad: savedAmount };
+    const h = harness([[record], [socialApp], [record]]);
+    await recordCurrentOfferSignature(h.db, "fictional", "Fictional", "test", "social_media_intern", undefined, undefined, confirmedAmount as number | undefined);
+    expect(h.updates).toContainEqual({ table: signingTokens, values: expect.objectContaining({ signed: 1 }) });
+    expect(h.updates.some((entry) => "socialMediaHourlyPayCad" in entry.values)).toBe(false);
+  });
+  it.each([
+    ["a saved rate the page did not show", 19, undefined],
+    ["a rate the stored offer never carried", null, 19],
+  ])("refuses a Social Media signing tab showing %s", async (_label, savedAmount, confirmedAmount) => {
+    const record = { ...offer, role: "Social Media Intern", location: "REMOTE", signed: 0, offerLetterType: "social_media_intern", socialMediaHourlyPayCad: savedAmount };
+    const h = harness([[record]]);
+    await expect(
+      recordCurrentOfferSignature(h.db, "fictional", "Fictional", "test", "social_media_intern", undefined, undefined, confirmedAmount as number | undefined)
+    ).rejects.toThrow("refresh this signing page");
+    expect(h.updates).toEqual([]);
+  });
   it("reuses an unsigned current offer and rejects an already-hired applicant", async () => {
     const h = harness([[app], [{ ...offer, signed: 0 }]]);
     await expect(prepareHiringOffer(h.db, 42)).resolves.toMatchObject({ reuse: true, token: "fictional" }); expect(h.inserts).toEqual([]);
