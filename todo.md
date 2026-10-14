@@ -1633,3 +1633,5 @@ Separate owner-facing concern: existing CA$50 per shift across 5.5 clock hours i
 - [x] New offers save CA$19 and state both rates. Offers issued before a rate existed keep their original wording unchanged.
 - [x] Signing submission bound to the displayed amount in both directions, so a stale tab cannot sign a different rate.
 - [x] 655 tests pass, 1 predefined skip. TypeScript and production build clean. GPT 6.1 Sol approved exact commit d9a6fb8; its non-blocking coverage note was closed with four direct signing-binding tests.
+- [x] Production verified live: careers crawler copy and the signing bundle match the reviewed build byte for byte; the live signing API returns the saved CA$19 rate for the existing offer.
+- [x] Applicant notified of the added pay details from afropuppyyoga@gmail.com using the site's own branded mailer. An earlier note went out through the Gmail connector, which is bound only to abello@echeloninstitute.ca; that address is off-brand for APY and should not be used for applicant email.
