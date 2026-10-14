@@ -274,6 +274,8 @@ export const signingTokens = mysqlTable("signingTokens", {
   puppyMonitorShiftPayCad: int("puppyMonitorShiftPayCad"),
   /** Saved Movement Instructor hourly payment in CAD; NULL preserves legacy CA$20 offers. */
   movementInstructorHourlyPayCad: int("movementInstructorHourlyPayCad"),
+  /** Saved Social Media starting hourly payment in CAD; NULL preserves offers issued before a rate was approved. */
+  socialMediaHourlyPayCad: int("socialMediaHourlyPayCad"),
   /** Secure random token sent in the signing link */
   token: varchar("token", { length: 128 }).notNull().unique(),
   /** Whether the applicant has signed */

@@ -1,0 +1,1 @@
+ALTER TABLE `signingTokens` ADD `socialMediaHourlyPayCad` int;

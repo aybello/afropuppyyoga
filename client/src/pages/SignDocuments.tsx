@@ -7,7 +7,10 @@ import { toast } from "sonner";
 import { CheckCircle2, Loader2, PenLine } from "lucide-react";
 import { getPuppyMonitorOfferShiftPay } from "@shared/puppyMonitorTerms";
 import { getMovementInstructorOfferHourlyPay } from "@shared/movementInstructorTerms";
+import { getSocialMediaCompensationText, getSocialMediaOfferStartHourlyPay } from "@shared/socialMediaTerms";
 import { PUPPY_MONITOR_SHIFT_DESCRIPTION } from "@shared/newCareersListings";
+
+const isSocialMediaOfferType = (type: string) => type === "social_media_intern" || type === "social_media_specialist";
 
 // ─── Inline Document Content ──────────────────────────────────────────────────
 
@@ -17,7 +20,8 @@ export function getOfferLetterContent(
   location: string,
   offerLetterType: string,
   puppyMonitorShiftPayCad?: number | null,
-  movementInstructorHourlyPayCad?: number | null
+  movementInstructorHourlyPayCad?: number | null,
+  socialMediaHourlyPayCad?: number | null
 ) {
   const today = new Date().toLocaleDateString("en-CA", {
     year: "numeric",
@@ -344,7 +348,7 @@ export function getOfferLetterContent(
           <p className="font-bold text-[#8B2252] uppercase text-xs tracking-wide mb-2">Position Details</p>
           <p><strong>Position:</strong> {socialTitle}</p>
           <p><strong>Work Arrangement:</strong> Remote · Canada</p>
-          <p><strong>Compensation:</strong> Paid part-time role. Compensation and approved hours will follow the terms confirmed in writing by APY.</p>
+          <p><strong>Compensation:</strong> {getSocialMediaCompensationText(socialMediaHourlyPayCad)}</p>
         </div>
 
         <div className="border-t border-[#F0D0DC] pt-4">
@@ -671,6 +675,9 @@ export default function SignDocuments() {
       ...(data.offerLetterType === "movement_instructor" ? {
         confirmedMovementInstructorHourlyPayCad: getMovementInstructorOfferHourlyPay(data.movementInstructorHourlyPayCad),
       } : {}),
+      ...(isSocialMediaOfferType(data.offerLetterType) && data.socialMediaHourlyPayCad != null ? {
+        confirmedSocialMediaHourlyPayCad: getSocialMediaOfferStartHourlyPay(data.socialMediaHourlyPayCad) ?? undefined,
+      } : {}),
     });
   };
 
@@ -775,7 +782,8 @@ export default function SignDocuments() {
             data.location,
             data.offerLetterType,
             data.puppyMonitorShiftPayCad,
-            data.movementInstructorHourlyPayCad
+            data.movementInstructorHourlyPayCad,
+            data.socialMediaHourlyPayCad
           )}
         </DocumentCard>
 

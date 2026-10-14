@@ -5,6 +5,9 @@ import { canReuseSigningToken, detectOfferLetterType } from "./signingPolicy";
 import { withStaffingMutationLock } from "./staffingMutationLock";
 import { getPuppyMonitorOfferShiftPay, PUPPY_MONITOR_SHIFT_PAY_CAD } from "../shared/puppyMonitorTerms";
 import { getMovementInstructorOfferHourlyPay, MOVEMENT_INSTRUCTOR_HOURLY_PAY_CAD } from "../shared/movementInstructorTerms";
+import { getSocialMediaOfferStartHourlyPay, SOCIAL_MEDIA_INTERN_START_HOURLY_PAY_CAD } from "../shared/socialMediaTerms";
+
+const isSocialMediaOfferType = (type: string) => type === "social_media_intern" || type === "social_media_specialist";
 
 function assertOpenApplicant(app: typeof jobApplications.$inferSelect | undefined) {
   if (!app || app.deletedAt) throw new Error("Application not found or archived.");
@@ -37,6 +40,7 @@ export async function prepareHiringOffer(db: any, applicationId: number) {
         offerLetterType,
         puppyMonitorShiftPayCad: offerLetterType.startsWith("puppy_monitor_") ? PUPPY_MONITOR_SHIFT_PAY_CAD : null,
         movementInstructorHourlyPayCad: offerLetterType === "movement_instructor" ? MOVEMENT_INSTRUCTOR_HOURLY_PAY_CAD : null,
+        socialMediaHourlyPayCad: isSocialMediaOfferType(offerLetterType) ? SOCIAL_MEDIA_INTERN_START_HOURLY_PAY_CAD : null,
       }).where(and(eq(signingTokens.id, latest.id), eq(signingTokens.signed, 0)));
       if (repaired.affectedRows !== 1) throw new Error("This unsigned offer changed. Please request a current signing link.");
     }
@@ -44,11 +48,12 @@ export async function prepareHiringOffer(db: any, applicationId: number) {
       role: applicant.role, location: applicant.location, offerLetterType,
       puppyMonitorShiftPayCad: offerLetterType.startsWith("puppy_monitor_") ? PUPPY_MONITOR_SHIFT_PAY_CAD : null,
       movementInstructorHourlyPayCad: offerLetterType === "movement_instructor" ? MOVEMENT_INSTRUCTOR_HOURLY_PAY_CAD : null,
+      socialMediaHourlyPayCad: isSocialMediaOfferType(offerLetterType) ? SOCIAL_MEDIA_INTERN_START_HOURLY_PAY_CAD : null,
       token, signed: 0, expiresAt });
     return { applicant, reuse, token, expiresAt, offerLetterType };
   });
 }
-export async function recordCurrentOfferSignature(db: any, token: string, signedName: string, signedIp: string, confirmedOfferLetterType: string | undefined, confirmedPuppyMonitorShiftPayCad?: number, confirmedMovementInstructorHourlyPayCad?: number) {
+export async function recordCurrentOfferSignature(db: any, token: string, signedName: string, signedIp: string, confirmedOfferLetterType: string | undefined, confirmedPuppyMonitorShiftPayCad?: number, confirmedMovementInstructorHourlyPayCad?: number, confirmedSocialMediaHourlyPayCad?: number) {
   return withStaffingMutationLock(db, async (tx) => {
     const [record]: Array<typeof signingTokens.$inferSelect> = await tx.select().from(signingTokens).where(eq(signingTokens.token, token)).limit(1);
     if (!record || record.expiresAt < new Date()) throw new Error("Invalid or expired signing link. Please contact AfroPuppyYoga.");
@@ -68,6 +73,13 @@ export async function recordCurrentOfferSignature(db: any, token: string, signed
       if ((savedPayment === 22 && confirmedMovementInstructorHourlyPayCad !== savedPayment) ||
           (confirmedMovementInstructorHourlyPayCad !== undefined && confirmedMovementInstructorHourlyPayCad !== savedPayment)) {
         throw new Error("Please refresh this signing page and review the current Movement Instructor payment before signing.");
+      }
+    }
+    if (isSocialMediaOfferType(record.offerLetterType ?? "")) {
+      const savedPayment = getSocialMediaOfferStartHourlyPay(record.socialMediaHourlyPayCad);
+      if ((savedPayment !== null && confirmedSocialMediaHourlyPayCad !== savedPayment) ||
+          (confirmedSocialMediaHourlyPayCad !== undefined && confirmedSocialMediaHourlyPayCad !== savedPayment)) {
+        throw new Error("Please refresh this signing page and review the current compensation before signing.");
       }
     }
     const [appRecord] = await tx.select().from(jobApplications).where(eq(jobApplications.id, record.applicationId)).limit(1);

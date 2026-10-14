@@ -13,6 +13,7 @@ import { type Request, type Response, type NextFunction } from "express";
 import { PUPPY_MONITOR_SHIFT_DESCRIPTION } from "../shared/newCareersListings";
 import { PUPPY_MONITOR_PAY_LABEL, PUPPY_MONITOR_POSITION_TYPE } from "../shared/puppyMonitorTerms";
 import { MOVEMENT_INSTRUCTOR_HOURLY_PAY_CAD } from "../shared/movementInstructorTerms";
+import { SOCIAL_MEDIA_INTERN_PAY_LABEL } from "../shared/socialMediaTerms";
 
 // ─── Crawler Detection ────────────────────────────────────────────────────────
 
@@ -451,6 +452,7 @@ const PAGES: Record<string, () => string> = {
     <li>Puppy Monitor - Kitchener-Waterloo - ${PUPPY_MONITOR_POSITION_TYPE} - ${PUPPY_MONITOR_PAY_LABEL}</li>
     <li>Puppy Monitor - Hamilton - ${PUPPY_MONITOR_POSITION_TYPE} - ${PUPPY_MONITOR_PAY_LABEL}</li>
     <li>Puppy Monitor - Oakville - ${PUPPY_MONITOR_POSITION_TYPE} - ${PUPPY_MONITOR_PAY_LABEL}</li>
+    <li>Social Media Intern - Remote - ${SOCIAL_MEDIA_INTERN_PAY_LABEL}</li>
   </ul>
   <p><strong>Puppy Monitor shift:</strong> ${PUPPY_MONITOR_SHIFT_DESCRIPTION}</p>
   <p>To apply, visit our <a href="/careers">Careers page</a> and submit your application.</p>

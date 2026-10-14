@@ -101,6 +101,7 @@ export const signingRouter = router({
         offerLetterType: record.offerLetterType as OfferLetterType,
         puppyMonitorShiftPayCad: record.puppyMonitorShiftPayCad,
         movementInstructorHourlyPayCad: record.movementInstructorHourlyPayCad,
+        socialMediaHourlyPayCad: record.socialMediaHourlyPayCad,
         signed: record.signed === 1,
         signedName: record.signedName,
         signedAt: record.signedAt,
@@ -119,13 +120,14 @@ export const signingRouter = router({
         confirmedOfferLetterType: z.string().min(1).optional(),
         confirmedPuppyMonitorShiftPayCad: z.union([z.literal(50), z.literal(60)]).optional(),
         confirmedMovementInstructorHourlyPayCad: z.union([z.literal(20), z.literal(22)]).optional(),
+        confirmedSocialMediaHourlyPayCad: z.literal(19).optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
       const sourceDb = await getDb();
       if (!sourceDb) throw new Error("Database not available");
       const ip = ctx.req?.headers?.["x-forwarded-for"]?.toString().split(",")[0]?.trim() ?? "unknown";
-      const record = await recordCurrentOfferSignature(sourceDb, input.token, input.signedName, ip, input.confirmedOfferLetterType, input.confirmedPuppyMonitorShiftPayCad, input.confirmedMovementInstructorHourlyPayCad);
+      const record = await recordCurrentOfferSignature(sourceDb, input.token, input.signedName, ip, input.confirmedOfferLetterType, input.confirmedPuppyMonitorShiftPayCad, input.confirmedMovementInstructorHourlyPayCad, input.confirmedSocialMediaHourlyPayCad);
 
       // Notify owner
       try {

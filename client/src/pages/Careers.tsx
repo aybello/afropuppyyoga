@@ -5,6 +5,7 @@
 import { useState, useRef, useEffect } from "react";
 import { NEW_CAREERS_LISTINGS, PUPPY_MONITOR_SHIFT_DESCRIPTION } from "@shared/newCareersListings";
 import { PUPPY_MONITOR_PAY_DESCRIPTION, PUPPY_MONITOR_PAY_LABEL, PUPPY_MONITOR_POSITION_TYPE } from "@shared/puppyMonitorTerms";
+import { SOCIAL_MEDIA_INTERN_PAY_DESCRIPTION, SOCIAL_MEDIA_INTERN_PAY_LABEL } from "@shared/socialMediaTerms";
 import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
@@ -339,6 +340,7 @@ export const JOB_LISTINGS: CareerJob[] = [
     type: "Part-Time",
     badge: "Now Hiring",
     subBadge: "Paid",
+    pay: SOCIAL_MEDIA_INTERN_PAY_LABEL,
     emoji: "📱",
     description:
       "You live on Instagram, you think in Reels, and you have a genuine love for wellness and community. As our Social Media Intern, you'll help shape the online voice of AfroPuppyYoga — creating content, engaging our community, and growing our presence across platforms. This is a hands-on role where your creativity directly impacts a fast-growing brand.",
@@ -359,7 +361,8 @@ export const JOB_LISTINGS: CareerJob[] = [
       "Portfolio or examples of past social media work is a strong asset",
     ],
     perks: [
-      "Paid part-time role with flexible remote schedule",
+      SOCIAL_MEDIA_INTERN_PAY_DESCRIPTION,
+      "Flexible remote schedule",
       "Free access to APY classes",
       "Hands-on experience growing a real brand with 12.2k+ followers",
       "Mentorship and creative freedom to bring your ideas to life",
