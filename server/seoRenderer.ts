@@ -205,65 +205,7 @@ function breadcrumb(
   };
 }
 
-/**
- * Classes run on weekends, so Event schema must advertise a date that is
- * genuinely still upcoming. Hardcoded dates silently go stale and end up
- * telling Google that a long-past class is still "EventScheduled" and
- * "InStock", which is an inaccurate claim about availability.
- *
- * Returns the next occurrence of the given weekday at the given local time,
- * computed at request time.
- *
- * @param weekday 0 = Sunday ... 6 = Saturday
- */
-export function nextWeekdayIso(
-  weekday: number,
-  startHour: number,
-  durationMinutes: number,
-  now: Date = new Date()
-): { startDate: string; endDate: string } {
-  // Ontario is UTC-4 (EDT) or UTC-5 (EST). Use the offset that applies to the
-  // computed date so the advertised local start time stays correct.
-  const base = new Date(now.getTime());
-  const currentDay = base.getUTCDay();
-  let delta = (weekday - currentDay + 7) % 7;
-  if (delta === 0) delta = 7; // always advertise a future date, never today
-
-  const target = new Date(
-    Date.UTC(
-      base.getUTCFullYear(),
-      base.getUTCMonth(),
-      base.getUTCDate() + delta
-    )
-  );
-
-  // Determine Eastern offset: EDT (-4) roughly mid-March to early November.
-  const month = target.getUTCMonth(); // 0-indexed
-  const isEdt = month > 2 && month < 10;
-  const offset = isEdt ? "-04:00" : "-05:00";
-
-  const y = target.getUTCFullYear();
-  const m = String(target.getUTCMonth() + 1).padStart(2, "0");
-  const d = String(target.getUTCDate()).padStart(2, "0");
-
-  const endTotal = startHour * 60 + durationMinutes;
-  const endH = String(Math.floor(endTotal / 60)).padStart(2, "0");
-  const endM = String(endTotal % 60).padStart(2, "0");
-
-  return {
-    startDate: `${y}-${m}-${d}T${String(startHour).padStart(2, "0")}:00:00${offset}`,
-    endDate: `${y}-${m}-${d}T${endH}:${endM}:00${offset}`,
-  };
-}
-
 // ─── Page Definitions ─────────────────────────────────────────────────────────
-
-// Weekend class schedule, recomputed per request so advertised dates never
-// go stale. Saturday = 6, Sunday = 0; classes start 10:00 local, 90 minutes.
-const SATURDAY = 6;
-const SUNDAY = 0;
-const CLASS_START_HOUR = 10;
-const CLASS_MINUTES = 90;
 
 
 const PAGES: Record<string, () => string> = {
@@ -330,10 +272,6 @@ const PAGES: Record<string, () => string> = {
           ],
         },
         breadcrumb(),
-        // Event schema — 3 top-level Event objects (Google rich results compatible)
-        { "@context": "https://schema.org", "@type": "Event", name: "AfroPuppyYoga \u2014 Kitchener-Waterloo", description: "Guided yoga with adorable puppies and Afro-beat music. Every Saturday and Sunday at TenC Dance Studio, Kitchener.", ...nextWeekdayIso(SATURDAY, CLASS_START_HOUR, CLASS_MINUTES), eventStatus: "https://schema.org/EventScheduled", eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode", location: { "@type": "Place", name: "TenC Dance Studio", address: { "@type": "PostalAddress", streetAddress: "329 King St E", addressLocality: "Kitchener", addressRegion: "ON", postalCode: "N2G 2L3", addressCountry: "CA" } }, organizer: { "@type": "Organization", name: "AfroPuppyYoga", url: BASE }, url: "https://lu.ma/afropuppyyoga", image: OG_IMAGE, offers: { "@type": "Offer", url: "https://lu.ma/afropuppyyoga", priceCurrency: "CAD", availability: "https://schema.org/InStock", validFrom: "2026-01-01" } },
-        { "@context": "https://schema.org", "@type": "Event", name: "AfroPuppyYoga \u2014 Hamilton", description: "Guided yoga with adorable puppies and Afro-beat music. Regular sessions at Colibri Studio, Hamilton.", ...nextWeekdayIso(SATURDAY, CLASS_START_HOUR, CLASS_MINUTES), eventStatus: "https://schema.org/EventScheduled", eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode", location: { "@type": "Place", name: "Colibri Studio", address: { "@type": "PostalAddress", streetAddress: "2751 Barton St E", addressLocality: "Hamilton", addressRegion: "ON", addressCountry: "CA" } }, organizer: { "@type": "Organization", name: "AfroPuppyYoga", url: BASE }, url: "https://lu.ma/afropuppyyoga", image: OG_IMAGE, offers: { "@type": "Offer", url: "https://lu.ma/afropuppyyoga", priceCurrency: "CAD", availability: "https://schema.org/InStock", validFrom: "2026-01-01" } },
-        { "@context": "https://schema.org", "@type": "Event", name: "AfroPuppyYoga \u2014 Oakville", description: "Guided yoga with adorable puppies and Afro-beat music. Regular sessions in Oakville, Ontario.", ...nextWeekdayIso(SUNDAY, CLASS_START_HOUR, CLASS_MINUTES), eventStatus: "https://schema.org/EventScheduled", eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode", location: { "@type": "Place", name: "Oakville", address: { "@type": "PostalAddress", addressLocality: "Oakville", addressRegion: "ON", addressCountry: "CA" } }, organizer: { "@type": "Organization", name: "AfroPuppyYoga", url: BASE }, url: "https://lu.ma/afropuppyyoga", image: OG_IMAGE, offers: { "@type": "Offer", url: "https://lu.ma/afropuppyyoga", priceCurrency: "CAD", availability: "https://schema.org/InStock", validFrom: "2026-01-01" } },
         // Review schema — 6 verified guest reviews
         { "@context": "https://schema.org", "@type": "Review", itemReviewed: { "@type": "LocalBusiness", name: "AfroPuppyYoga", url: BASE }, author: { "@type": "Person", name: "Sheila Soares" }, reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" }, reviewBody: "So fun and well run! Highly recommend this experience. The puppies were adorable and the yoga instructor was amazing. Will definitely be back!", datePublished: "2025-06-01" },
         { "@context": "https://schema.org", "@type": "Review", itemReviewed: { "@type": "LocalBusiness", name: "AfroPuppyYoga", url: BASE }, author: { "@type": "Person", name: "Cameron T." }, reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" }, reviewBody: "Absolutely incredible experience! The Afro-beat music, the puppies, the yoga \u2014 everything was perfectly curated. I've never felt so relaxed and happy at the same time.", datePublished: "2025-05-01" },
