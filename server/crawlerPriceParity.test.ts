@@ -103,6 +103,23 @@ function walk(node: unknown, visit: (obj: Record<string, unknown>) => void) {
   }
 }
 
+/** `@type` may be a string or an array of strings in valid JSON-LD. */
+function hasType(obj: Record<string, unknown>, type: string): boolean {
+  const t = obj["@type"];
+  if (typeof t === "string") return t === type;
+  if (Array.isArray(t)) return t.includes(type);
+  return false;
+}
+
+/** Every schema.org shape that can carry a price. */
+const OFFER_TYPES = ["Offer", "AggregateOffer"];
+const PRICE_FIELDS = [
+  "price",
+  "lowPrice",
+  "highPrice",
+  "priceSpecification",
+];
+
 describe("crawler pages do not assert class ticket prices users never see", () => {
   it.each(TICKET_PAGES)("%s contains no $55 ticket price claim", (path) => {
     expect(crawl(path)).not.toContain("$55");
@@ -119,23 +136,22 @@ describe("crawler pages do not assert class ticket prices users never see", () =
   });
 
   /**
-   * Structural, not string-matching: no Offer anywhere in structured data may
-   * assert a price, in any serialisation (string, number, decimals).
+   * Structural, not string-matching: no offer-bearing node anywhere in the
+   * structured data may assert a price, in any serialisation (string, number,
+   * decimals) or shape (Offer, AggregateOffer, priceSpecification).
+   *
+   * Removing all Offers entirely is a legitimate outcome here, so this
+   * deliberately does not require any Offer to exist.
    */
   it.each(TICKET_PAGES)("%s structured data asserts no ticket price", (path) => {
-    let offersSeen = 0;
     for (const block of jsonLd(path)) {
       walk(block, (obj) => {
-        if (obj["@type"] === "Offer") {
-          offersSeen += 1;
-          expect(obj).not.toHaveProperty("price");
-          expect(obj).not.toHaveProperty("lowPrice");
-          expect(obj).not.toHaveProperty("highPrice");
+        if (!OFFER_TYPES.some((t) => hasType(obj, t))) return;
+        for (const field of PRICE_FIELDS) {
+          expect(obj).not.toHaveProperty(field);
         }
       });
     }
-    // Guard against a vacuous pass if Offers disappear entirely.
-    expect(offersSeen).toBeGreaterThanOrEqual(0);
   });
 });
 
@@ -143,7 +159,7 @@ describe("crawler pages do not advertise unverified dated classes", () => {
   it.each(TICKET_PAGES)("%s publishes no Event objects", (path) => {
     for (const block of jsonLd(path)) {
       walk(block, (obj) => {
-        expect(obj["@type"]).not.toBe("Event");
+        expect(hasType(obj, "Event")).toBe(false);
       });
     }
   });
@@ -217,5 +233,30 @@ describe("real users are never served the crawler HTML", () => {
     const res = render(path, BROWSER_UA);
     expect(res.fellThrough).toBe(true);
     expect(res.body).toBe("");
+  });
+});
+
+/**
+ * Corporate crawler copy previously invented upper bounds ($1,800 / $3,500)
+ * that users never see. Corporate.tsx shows only "Starting at $1,200" and
+ * "Starting at $2,000".
+ */
+describe("corporate pricing matches what users are shown", () => {
+  it("keeps the supported starting prices", () => {
+    const html = crawl("/corporate-puppy-yoga");
+    expect(html).toContain("$1,200");
+    expect(html).toContain("$2,000");
+  });
+
+  it("does not reintroduce the invented ceilings", () => {
+    const html = crawl("/corporate-puppy-yoga");
+    expect(html).not.toContain("$1,800");
+    expect(html).not.toContain("$3,500");
+  });
+
+  it("uses starting-at framing rather than a fabricated range", () => {
+    const html = crawl("/corporate-puppy-yoga");
+    expect(html).not.toMatch(/\$1,200[–-]\$1,800/);
+    expect(html).not.toMatch(/\$2,000[–-]\$3,500/);
   });
 });

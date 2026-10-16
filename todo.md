@@ -1635,3 +1635,30 @@ Separate owner-facing concern: existing CA$50 per shift across 5.5 clock hours i
 - [x] 655 tests pass, 1 predefined skip. TypeScript and production build clean. GPT 6.1 Sol approved exact commit d9a6fb8; its non-blocking coverage note was closed with four direct signing-binding tests.
 - [x] Production verified live: careers crawler copy and the signing bundle match the reviewed build byte for byte; the live signing API returns the saved CA$19 rate for the existing offer.
 - [x] Applicant notified of the added pay details from afropuppyyoga@gmail.com using the site's own branded mailer. An earlier note went out through the Gmail connector, which is bound only to abello@echeloninstitute.ca; that address is off-brand for APY and should not be used for applicant email.
+
+## 2026-10-16 — Crawler/user content parity fix (Google Ads cloaking risk)
+- [x] Removed 26 crawler-only "$55" ticket price claims. Verified the live user
+      HTML contains no "$" prices and no React component renders ticket prices,
+      so these existed only for crawlers. Real Luma ladder is $56-$63.
+- [x] Removed 3 Event schema objects asserting EventScheduled + InStock for
+      hardcoded 2026-07-19/20 dates, three months stale. First attempted a
+      computed next-weekend date; independent review correctly showed that was
+      still an unsupported availability claim (the synchronous renderer cannot
+      know if a class runs, sells out or is cancelled), so the claim was removed
+      at the root rather than patched.
+- [x] Aligned corporate copy to the user-visible "starting at $1,200/$2,000";
+      removed invented ceilings $1,800 and $3,500.
+- [x] Retained LocalBusiness, Review, FAQPage, VideoObject, BreadcrumbList,
+      Organization, ticket tier names and Luma booking links.
+- [x] Left membership ($40/$60) and private-event prices untouched: already
+      user-visible in the SPA, so parity already held.
+- [x] Verified the "discounted"/"reduced per-person rate" wording is true for
+      both live ladders, asserted structurally per ladder.
+- [x] 47 regression tests parsing JSON-LD structurally (Offer, AggregateOffer,
+      priceSpecification, array @type) so a numeric or reworded price cannot
+      evade them. Verified to fail when a $55 claim is re-injected.
+- [x] 702 tests pass, 1 skipped; tsc, build and whitespace clean.
+- [x] Three GPT 6.1 Sol exact-commit reviews; second returned CHANGES NEEDED and
+      both blocking findings were accepted and fixed at the root.
+- Note: this removes the demonstrated unsupported claims. It is not a
+  certification of whole-site policy compliance or of Ads reinstatement.
