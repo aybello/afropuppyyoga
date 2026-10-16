@@ -17,8 +17,12 @@ import { buildRetirementHistoryEntries } from "./staffRetirementHistory";
  * Class assignments are Puppy Monitor duties. Weekend leadership coverage is
  * either Operations Manager or Yoga Instructor. A move away from one of those
  * positions retires the matching upcoming duties, mirroring what already
- * happens when someone departs: class rows stay intact as history, leadership
- * rows become open coverage so the gap is visible.
+ * happens when someone departs: the upcoming class assignment row is removed
+ * from the schedule and preserved as an audit snapshot, while the leadership
+ * row itself remains and becomes open coverage so the gap stays visible.
+ *
+ * The audit snapshot is the same bounded shape the departure path records. It
+ * identifies what was retired; it is not a full-row restore mechanism.
  */
 
 /** Duties a role is allowed to hold going forward. */

@@ -1662,3 +1662,30 @@ Separate owner-facing concern: existing CA$50 per shift across 5.5 clock hours i
       both blocking findings were accepted and fixed at the root.
 - Note: this removes the demonstrated unsupported claims. It is not a
   certification of whole-site policy compliance or of Ads reinstatement.
+
+## 2026-10-16 - Staff positions can be changed safely from either editor
+- [x] Confirmed the core capability already existed: `updateEmployeeRecord` wrote
+      role to both the employee record and the linked profile, the Directory
+      Edit dialog already listed all 8 positions, and portal access already
+      followed the saved position on every request.
+- [x] Fixed a stuck CENTRAL assignment. Moving away from BDR or Social Media
+      Specialist left the person at CENTRAL, so "Puppy Monitor at CENTRAL"
+      could be saved. Added shared `resolveLocationForRole`, used by both
+      dialogs, plus a reverse guard on all four input schemas.
+- [x] Fixed the add-employee form silently excluding Guelph.
+- [x] Added history: a position change now records `employee_role_changed`
+      with the previous and new position and location.
+- [x] Added duty handling: upcoming duties the new position cannot cover are
+      retired. Weekend leadership rows become open coverage so the gap stays
+      visible; class assignment rows leave the upcoming schedule and are kept
+      as an audit snapshot. Past duties are never touched.
+- [x] Applied the same rules to the team profile editor, so neither route can
+      leave a stale duty.
+- [x] Editor self-corrects a legacy invalid pairing on open, so the owner is
+      never locked out of editing an older record.
+- [x] 745 tests pass, 1 skipped, 116 files. TypeScript and production build
+      clean. No schema change and no migration required.
+- [x] Two GPT 6.1 Sol exact-source reviews. First caught a real bug: the
+      surviving profile id after activation or a duplicate merge. Second
+      caught a misleading comment and the second role-writing route. Both
+      fixed; final verdict APPROVE.

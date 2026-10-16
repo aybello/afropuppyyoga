@@ -416,6 +416,8 @@ export const staffAvailabilityRouter = router({
 
       // A position change is recorded and any upcoming duty the new role cannot
       // perform is retired, so the schedule never shows a stale role.
+      // History attaches to the person's profile, so an inactive record that has
+      // never had one carries no entry until it is activated and gains a profile.
       const roleChanged = normalizeApyRole(employee.role) !== normalizeApyRole(input.role);
       let duties = { retiredClassAssignments: 0, releasedLeadershipCoverage: 0 };
       if (roleChanged && profileId !== null) {
@@ -861,7 +863,25 @@ export const staffAvailabilityRouter = router({
         location: input.location,
       }).where(eq(employees.sourceApplicationId, input.id));
 
-      return { success: true };
+      // A position change made from the team profile editor follows the same
+      // rules as one made from Employee Directory, so neither route can leave
+      // an upcoming duty booked under a position the person no longer holds.
+      const roleChanged = normalizeApyRole(existing.role) !== normalizeApyRole(input.role);
+      let duties = { retiredClassAssignments: 0, releasedLeadershipCoverage: 0 };
+      if (roleChanged) {
+        await tx.insert(jobApplicationActions).values({
+          applicationId: input.id,
+          action: "employee_role_changed",
+          actorUserId: ctx.user.id, actorName: ctx.user.name, actorEmail: ctx.user.email,
+          details: JSON.stringify({
+            fromRole: existing.role, toRole: input.role,
+            fromLocation: existing.location, toLocation: input.location,
+          }),
+        });
+        duties = await retireDutiesOutsideNewRole(tx, input.id, input.role, ctx.user);
+      }
+
+      return { success: true, roleChanged, previousRole: existing.role, ...duties };
       });
     }),
 

@@ -86,3 +86,24 @@ describe("Employee Directory position controls", () => {
     expect(directory).toContain("result.roleChanged");
   });
 });
+
+describe("every route that changes a position", () => {
+  const router = readFileSync(new URL("./routers/staffAvailability.ts", import.meta.url), "utf8");
+
+  it("retires duties the new position cannot cover, from both editors", () => {
+    // Employee Directory and the team profile editor both write role, so a
+    // stale duty must be impossible regardless of which one the owner uses.
+    const retirements = router.match(/await retireDutiesOutsideNewRole\(/g) ?? [];
+    expect(retirements).toHaveLength(2);
+  });
+
+  it("records who moved the person, from both editors", () => {
+    const audits = router.match(/action: "employee_role_changed"/g) ?? [];
+    expect(audits).toHaveLength(2);
+  });
+
+  it("only acts when the position actually changed", () => {
+    const guards = router.match(/const roleChanged = normalizeApyRole\(/g) ?? [];
+    expect(guards).toHaveLength(2);
+  });
+});
