@@ -17,7 +17,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { NextFunction, Request, Response } from "express";
-import { seoRenderMiddleware } from "./seoRenderer";
+import { nextWeekdayIso, seoRenderMiddleware } from "./seoRenderer";
 
 const CRAWLER_UA =
   "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)";
@@ -126,5 +126,64 @@ describe("real users are never served the crawler HTML", () => {
     const res = render(path, BROWSER_UA);
     expect(res.fellThrough).toBe(true);
     expect(res.body).toBe("");
+  });
+});
+
+/**
+ * Event schema previously carried hardcoded July 2026 dates while still
+ * claiming "EventScheduled" and "InStock". By October those were three months
+ * stale, telling Google a long-past class was still bookable.
+ */
+describe("advertised class dates never go stale", () => {
+  it("always returns a future date, never today", () => {
+    // A Saturday. Asking for Saturday must roll forward a full week.
+    const saturday = new Date("2026-10-17T12:00:00Z");
+    const { startDate } = nextWeekdayIso(6, 10, 90, saturday);
+    expect(startDate.startsWith("2026-10-24")).toBe(true);
+  });
+
+  it("returns the next Saturday from a mid-week date", () => {
+    const friday = new Date("2026-10-16T12:00:00Z");
+    const { startDate, endDate } = nextWeekdayIso(6, 10, 90, friday);
+    expect(startDate).toBe("2026-10-17T10:00:00-04:00");
+    expect(endDate).toBe("2026-10-17T11:30:00-04:00");
+  });
+
+  it("returns the next Sunday from a mid-week date", () => {
+    const friday = new Date("2026-10-16T12:00:00Z");
+    const { startDate } = nextWeekdayIso(0, 10, 90, friday);
+    expect(startDate).toBe("2026-10-18T10:00:00-04:00");
+  });
+
+  it("uses the standard-time offset in winter", () => {
+    const january = new Date("2027-01-06T12:00:00Z");
+    const { startDate } = nextWeekdayIso(6, 10, 90, january);
+    expect(startDate.endsWith("-05:00")).toBe(true);
+  });
+
+  it("uses the daylight-time offset in summer", () => {
+    const july = new Date("2027-07-07T12:00:00Z");
+    const { startDate } = nextWeekdayIso(6, 10, 90, july);
+    expect(startDate.endsWith("-04:00")).toBe(true);
+  });
+
+  it("crawler pages advertise no past class dates", () => {
+    const today = new Date().toISOString().slice(0, 10);
+    for (const path of TICKET_PAGES) {
+      const html = crawl(path);
+      const dates = [...html.matchAll(/"startDate":"(\d{4}-\d{2}-\d{2})/g)].map(
+        (m) => m[1]
+      );
+      for (const d of dates) {
+        expect(d >= today).toBe(true);
+      }
+    }
+  });
+
+  it("no hardcoded 2026-07 class dates remain", () => {
+    for (const path of TICKET_PAGES) {
+      expect(crawl(path)).not.toContain("2026-07-19");
+      expect(crawl(path)).not.toContain("2026-07-20");
+    }
   });
 });
