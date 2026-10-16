@@ -20,6 +20,9 @@ export type ApyTeamLocation = (typeof APY_TEAM_LOCATIONS)[number];
 
 export const APY_CENTRAL_TEAM_ROLES = ["BDR", "Social Media Specialist"] as const;
 
+/** Every location except the APY-wide CENTRAL assignment. */
+export type ApySiteLocation = Exclude<ApyTeamLocation, "CENTRAL">;
+
 export function isCentralApyTeamRole(role: string | null | undefined): role is (typeof APY_CENTRAL_TEAM_ROLES)[number] {
   return APY_CENTRAL_TEAM_ROLES.some((centralRole) => centralRole === role);
 }
@@ -34,7 +37,7 @@ export function isCentralApyTeamRole(role: string | null | undefined): role is (
 export function resolveLocationForRole(
   nextRole: string,
   currentLocation: string,
-  fallbackLocation: ApyTeamLocation = "KW",
+  fallbackLocation: ApySiteLocation = "KW",
 ): ApyTeamLocation {
   if (isCentralApyTeamRole(nextRole)) return "CENTRAL";
   if (currentLocation === "CENTRAL") return fallbackLocation;

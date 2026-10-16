@@ -399,7 +399,7 @@ export const staffAvailabilityRouter = router({
         ? await prepareActiveEmployeeEdit(tx, employee, updates)
         : undefined;
       await tx.update(employees).set(updates).where(eq(employees.id, employee.id));
-      const profileId = prepared?.canonicalId ?? employee.sourceApplicationId;
+      let profileId = prepared?.canonicalId ?? employee.sourceApplicationId;
       if (profileId !== null) {
         await tx.update(jobApplications).set(updates)
           .where(eq(jobApplications.id, profileId));
@@ -408,7 +408,10 @@ export const staffAvailabilityRouter = router({
       if (employee.employmentStatus === "active") {
         // Saving an active employee keeps login enabled. The transaction rolls
         // back the edit if contacts belong to a genuinely different person.
-        await activateEmployeeWithAccess(tx, employee.id, ctx.user, ctx.apyAccess.level === "owner", prepared);
+        const activated = await activateEmployeeWithAccess(tx, employee.id, ctx.user, ctx.apyAccess.level === "owner", prepared);
+        // Activation may create the profile or settle on a different surviving
+        // one after a duplicate merge. Duties and history must follow that id.
+        profileId = activated.sourceApplicationId ?? profileId;
       }
 
       // A position change is recorded and any upcoming duty the new role cannot

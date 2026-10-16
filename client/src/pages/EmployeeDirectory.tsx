@@ -28,6 +28,15 @@ type Employee = {
   endedAt: Date | string | null;
 };
 
+/**
+ * A legacy record may hold a pairing the current rules reject, such as a site
+ * role saved at CENTRAL. Opening the editor presents a valid starting pairing
+ * so the owner is never blocked from editing that person.
+ */
+function withEditableAssignment(employee: Employee): Employee {
+  return { ...employee, location: resolveLocationForRole(employee.role, employee.location) };
+}
+
 type NewEmployeeForm = {
   name: string;
   email: string;
@@ -96,7 +105,7 @@ export default function EmployeeDirectory() {
     if (!data || openedRequestedEmployee.current === requestedEmployeeId) return;
     openedRequestedEmployee.current = requestedEmployeeId;
     const requested = data.find((employee) => String(employee.id) === requestedEmployeeId);
-    if (requested) setEditingEmployee(requested as Employee);
+    if (requested) setEditingEmployee(withEditableAssignment(requested as Employee));
   }, [data, requestedEmployeeId]);
   // Restores a linked APY HQ profile and therefore grants operational access.
   const restoreApyHqTeamMember = trpc.staffAvailability.reactivateTeamMember.useMutation({
@@ -316,7 +325,7 @@ export default function EmployeeDirectory() {
                         </td>
                         <td className="px-5 py-4 text-right">
                           <div className="flex items-center justify-end gap-3">
-                            <button type="button" onClick={() => setEditingEmployee(employee)} className="inline-flex items-center gap-1.5 font-body text-xs font-bold text-[#8B2252] hover:text-[#6B1A3E]">
+                            <button type="button" onClick={() => setEditingEmployee(withEditableAssignment(employee))} className="inline-flex items-center gap-1.5 font-body text-xs font-bold text-[#8B2252] hover:text-[#6B1A3E]">
                               <Pencil className="h-3.5 w-3.5" /> Edit
                             </button>
                             {isActive && employee.sourceApplicationId && employee.hasApyHqAccess ? (
@@ -382,7 +391,7 @@ export default function EmployeeDirectory() {
               {availability.isLoading && <p role="status" className="mb-4 text-sm text-[#6E5360]">Loading availability controls…</p>}
               {availability.error && <p role="alert" className="mb-4 text-sm text-[#956A7C]">Leave information could not be loaded. <button type="button" onClick={() => availability.refetch()} className="font-semibold underline">Retry availability</button></p>}
               <EmployeeTeamTree employees={employees} leaves={availability.data?.leaves ?? []} today={today}
-                onEditEmployee={(employee) => { const record = employees.find((person) => person.id === employee.id); if (record) setEditingEmployee(record); }}
+                onEditEmployee={(employee) => { const record = employees.find((person) => person.id === employee.id); if (record) setEditingEmployee(withEditableAssignment(record)); }}
                 onManageAvailability={availability.data && !availability.error ? (employee) => setAvailabilityEmployeeId(employee.id) : undefined} />
             </>}
           </TabsContent>

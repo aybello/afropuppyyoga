@@ -32,7 +32,6 @@ describe("moving staff between positions", () => {
     // producing records such as "Puppy Monitor at CENTRAL".
     for (const role of APY_TEAM_ROLES.filter((value) => !isCentralApyTeamRole(value))) {
       expect(resolveLocationForRole(role, "CENTRAL")).toBe("KW");
-      expect(resolveLocationForRole(role, "CENTRAL")).not.toBe("CENTRAL");
     }
   });
 
