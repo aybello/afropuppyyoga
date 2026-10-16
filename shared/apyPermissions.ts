@@ -24,6 +24,24 @@ export function isCentralApyTeamRole(role: string | null | undefined): role is (
   return APY_CENTRAL_TEAM_ROLES.some((centralRole) => centralRole === role);
 }
 
+/**
+ * The location that must accompany a role change.
+ *
+ * BDR and Social Media Specialist are APY-wide, so they are always CENTRAL.
+ * Every other role works at a specific site, so moving away from an APY-wide
+ * role must leave CENTRAL behind instead of keeping an invalid pairing.
+ */
+export function resolveLocationForRole(
+  nextRole: string,
+  currentLocation: string,
+  fallbackLocation: ApyTeamLocation = "KW",
+): ApyTeamLocation {
+  if (isCentralApyTeamRole(nextRole)) return "CENTRAL";
+  if (currentLocation === "CENTRAL") return fallbackLocation;
+  const known = APY_TEAM_LOCATIONS.find((location) => location === currentLocation);
+  return known ?? fallbackLocation;
+}
+
 export function normalizeApyRole(role: string | null | undefined): string {
   return (role ?? "").trim().toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ");
 }

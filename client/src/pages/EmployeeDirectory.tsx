@@ -12,7 +12,7 @@ import EmployeeTeamTree from "@/components/EmployeeTeamTree";
 import EmployeeAvailabilityDialog from "@/components/EmployeeAvailabilityDialog";
 import { employeeDirectoryTabUrl, getEmployeeDirectoryTab, type EmployeeDirectoryTab } from "@shared/employeeDirectoryNavigation";
 import { getTorontoCalendarDate } from "@shared/scheduleVisibility";
-import { APY_TEAM_LOCATIONS, APY_TEAM_ROLES, isCentralApyTeamRole, type ApyTeamRole } from "@shared/apyPermissions";
+import { APY_TEAM_LOCATIONS, APY_TEAM_ROLES, isCentralApyTeamRole, resolveLocationForRole, type ApyTeamLocation, type ApyTeamRole } from "@shared/apyPermissions";
 
 type Employee = {
   id: number;
@@ -33,7 +33,7 @@ type NewEmployeeForm = {
   email: string;
   phone: string;
   role: ApyTeamRole;
-  location: "KW" | "OAK" | "HAM" | "CENTRAL";
+  location: ApyTeamLocation;
   startedAt: string;
 };
 
@@ -107,8 +107,19 @@ export default function EmployeeDirectory() {
     onError: (error) => toast.error(error.message),
   });
   const updateEmployee = trpc.staffAvailability.updateEmployeeRecord.useMutation({
-    onSuccess: () => {
-      toast.success("Employee record updated");
+    onSuccess: (result) => {
+      const retired = result.retiredClassAssignments + result.releasedLeadershipCoverage;
+      if (result.roleChanged && retired > 0) {
+        toast.success(`Position updated from ${result.previousRole}`, {
+          description: `${retired} upcoming ${retired === 1 ? "duty" : "duties"} the new position cannot cover ${retired === 1 ? "was" : "were"} removed from the schedule. Weekend leadership slots are now open for reassignment.`,
+        });
+      } else if (result.roleChanged) {
+        toast.success(`Position updated from ${result.previousRole}`, {
+          description: "Portal access now follows the new position. No upcoming duties were affected.",
+        });
+      } else {
+        toast.success("Employee record updated");
+      }
       setEditingEmployee(null);
       refreshPeople();
     },
@@ -404,7 +415,7 @@ export default function EmployeeDirectory() {
                 <select value={newEmployee.role} onChange={(event) => setNewEmployee((current) => ({
                   ...current,
                   role: event.target.value as ApyTeamRole,
-                  location: isCentralApyTeamRole(event.target.value) ? "CENTRAL" : current.location,
+                  location: resolveLocationForRole(event.target.value, current.location),
                 }))} className="h-9 w-full rounded-md border border-[#EADBE2] bg-white px-3 text-sm outline-none focus:border-[#8B2252] focus:ring-2 focus:ring-[#8B2252]/15">
                   {APY_TEAM_ROLES.map((role) => <option key={role} value={role}>{role}</option>)}
                 </select>
@@ -482,7 +493,7 @@ export default function EmployeeDirectory() {
                     onChange={(event) => setEditingEmployee((current) => current ? {
                       ...current,
                       role: event.target.value,
-                      location: isCentralApyTeamRole(event.target.value) ? "CENTRAL" : current.location,
+                      location: resolveLocationForRole(event.target.value, current.location),
                     } : current)}
                     className="h-9 w-full rounded-md border border-[#EADBE2] bg-white px-3 text-sm outline-none focus:border-[#8B2252] focus:ring-2 focus:ring-[#8B2252]/15"
                   >

@@ -9,6 +9,7 @@ import { isActiveTeamMember } from "../teamMembership";
 import { normalizeCanadianPhoneNumber } from "../../shared/phone";
 import { APY_TEAM_LOCATIONS, APY_TEAM_ROLES, isApprovedApyTeamRole, isCentralApyTeamRole, isOperationsManagerRole, normalizeApyRole } from "../../shared/apyPermissions";
 import { getOperationsManagerDepartureEligibility, validateTeamAssignmentChange } from "../staffRosterPolicy";
+import { retireDutiesOutsideNewRole } from "../employeeRoleChange";
 export { getOperationsManagerDepartureEligibility, validateTeamAssignmentChange } from "../staffRosterPolicy";
 import { revokeTeamProfileAccess } from "../staffAccessRevocation";
 import { activateEmployeeWithAccess, prepareActiveEmployeeEdit } from "../employeeActivation";
@@ -30,6 +31,9 @@ export const directTeamMemberSchema = z.object({
   if (isCentralApyTeamRole(value.role) && value.location !== "CENTRAL") {
     ctx.addIssue({ code: "custom", path: ["location"], message: "BDR and Social Media Specialist roles are APY-wide." });
   }
+  if (!isCentralApyTeamRole(value.role) && value.location === "CENTRAL") {
+    ctx.addIssue({ code: "custom", path: ["location"], message: "Choose the site this role works at. Only BDR and Social Media Specialist are APY-wide." });
+  }
 });
 
 export const teamMemberProfileUpdateSchema = z.object({
@@ -48,6 +52,9 @@ export const teamMemberProfileUpdateSchema = z.object({
   }
   if (isCentralApyTeamRole(value.role) && value.location !== "CENTRAL") {
     ctx.addIssue({ code: "custom", path: ["location"], message: "BDR and Social Media Specialist roles are APY-wide." });
+  }
+  if (!isCentralApyTeamRole(value.role) && value.location === "CENTRAL") {
+    ctx.addIssue({ code: "custom", path: ["location"], message: "Choose the site this role works at. Only BDR and Social Media Specialist are APY-wide." });
   }
 });
 
@@ -73,6 +80,9 @@ export const employeeRecordUpdateSchema = z.object({
   if (isCentralApyTeamRole(value.role) && value.location !== "CENTRAL") {
     ctx.addIssue({ code: "custom", path: ["location"], message: "BDR and Social Media Specialist roles are APY-wide." });
   }
+  if (!isCentralApyTeamRole(value.role) && value.location === "CENTRAL") {
+    ctx.addIssue({ code: "custom", path: ["location"], message: "Choose the site this role works at. Only BDR and Social Media Specialist are APY-wide." });
+  }
 });
 
 /** An owner-created employee record also provisions the matching APY HQ profile and role-based access. */
@@ -92,6 +102,9 @@ export const directEmployeeSchema = z.object({
   }
   if (isCentralApyTeamRole(value.role) && value.location !== "CENTRAL") {
     ctx.addIssue({ code: "custom", path: ["location"], message: "BDR and Social Media Specialist roles are APY-wide." });
+  }
+  if (!isCentralApyTeamRole(value.role) && value.location === "CENTRAL") {
+    ctx.addIssue({ code: "custom", path: ["location"], message: "Choose the site this role works at. Only BDR and Social Media Specialist are APY-wide." });
   }
 });
 
@@ -397,7 +410,32 @@ export const staffAvailabilityRouter = router({
         // back the edit if contacts belong to a genuinely different person.
         await activateEmployeeWithAccess(tx, employee.id, ctx.user, ctx.apyAccess.level === "owner", prepared);
       }
-      return { success: true };
+
+      // A position change is recorded and any upcoming duty the new role cannot
+      // perform is retired, so the schedule never shows a stale role.
+      const roleChanged = normalizeApyRole(employee.role) !== normalizeApyRole(input.role);
+      let duties = { retiredClassAssignments: 0, releasedLeadershipCoverage: 0 };
+      if (roleChanged && profileId !== null) {
+        await tx.insert(jobApplicationActions).values({
+          applicationId: profileId,
+          action: "employee_role_changed",
+          actorUserId: ctx.user.id, actorName: ctx.user.name, actorEmail: ctx.user.email,
+          details: JSON.stringify({
+            fromRole: employee.role, toRole: input.role,
+            fromLocation: employee.location, toLocation: input.location,
+          }),
+        });
+        if (employee.employmentStatus === "active") {
+          duties = await retireDutiesOutsideNewRole(tx, profileId, input.role, ctx.user);
+        }
+      }
+
+      return {
+        success: true,
+        roleChanged,
+        previousRole: roleChanged ? employee.role : null,
+        ...duties,
+      };
       });
     }),
 
