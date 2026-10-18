@@ -326,19 +326,114 @@ describe("atomic interview booking reconciliation", () => {
     expect(mock.updateCalls).toEqual([]);
   });
 
-  it("accepts an equal-time matching cancellation but rejects booking replays", async () => {
+  it.each(["invited", "known B", "legacy B"])("selects the older surviving booking on the first complete scan (initially %s)", async (initial) => {
+    const active = booking();
+    const newer = booking({ eventId: "event-2", slotLabel: "Friday", receivedAt: new Date("2026-10-13T12:00:00Z") });
+    const canceled = { ...newer, kind: "canceled" as const, receivedAt: new Date("2026-10-14T12:00:00Z") };
+    const initiallyBookedB = initial !== "invited";
+    const initialState = initiallyBookedB ? {
+      applications: [application({ status: "interview_scheduled", interviewBookedAt: newer.receivedAt, interviewSlotLabel: newer.slotLabel })],
+      actions: initial === "known B" ? [action({ action: "interview_booking_detected", details: JSON.stringify({ eventId: newer.eventId, eventReceivedAt: newer.receivedAt.toISOString() }) })] : [],
+    } : {};
+    const combined = transactionDatabase(initialState);
+    const split = transactionDatabase(initialState);
+    await expect(reconcileInterviewBookings(combined.db, [canceled, newer, active], actor))
+      .resolves.toEqual({ booked: 1, cleared: 0, checked: 1, unresolved: 0 });
+    expect(combined.updateCalls).toEqual([{ table: jobApplications, values: {
+      status: "interview_scheduled", interviewBookedAt: active.receivedAt, interviewSlotLabel: active.slotLabel,
+    } }]);
+    const addedActions = combined.state().actions.slice(initial === "known B" ? 1 : 0);
+    expect(addedActions.map((row) => row.action)).toEqual(["interview_booking_cancelled", "interview_booking_detected"]);
+    expect(addedActions[0]).toMatchObject({ fromStatus: initiallyBookedB ? "interview_scheduled" : "interview_requested",
+      toStatus: initiallyBookedB ? "interview_scheduled" : "interview_requested" });
+    expect(JSON.parse(addedActions[0].details!)).toMatchObject({ eventId: newer.eventId,
+      eventReceivedAt: canceled.receivedAt.toISOString(), advanceWatermark: false });
+    expect(JSON.parse(addedActions[1].details!)).toMatchObject({ eventId: active.eventId, eventReceivedAt: active.receivedAt.toISOString() });
+    await expect(reconcileInterviewBookings(split.db, [newer, canceled], actor))
+      .resolves.toEqual({ booked: 0, cleared: initiallyBookedB ? 1 : 0, checked: 1, unresolved: 0 });
+    await expect(reconcileInterviewBookings(split.db, [active, newer], actor))
+      .resolves.toEqual({ booked: 1, cleared: 0, checked: 1, unresolved: 0 });
+    expect(split.state().applications).toEqual(combined.state().applications);
+    for (const mock of [combined, split]) {
+      const actionsBefore = structuredClone(mock.state().actions);
+      const updatesBefore = mock.updateCalls.length;
+      for (const events of [[active, newer, canceled], [newer, active]]) {
+        await expect(reconcileInterviewBookings(mock.db, events, actor))
+          .resolves.toEqual({ booked: 0, cleared: 0, checked: 1, unresolved: 0 });
+      }
+      expect(mock.state().actions).toEqual(actionsBefore);
+      expect(mock.updateCalls).toHaveLength(updatesBefore);
+    }
+  });
+
+  it("replaces B directly with surviving A when B's cancellation arrives in a later scan", async () => {
+    const mock = transactionDatabase();
+    const active = booking();
+    const newer = booking({ eventId: "event-2", slotLabel: "Friday", receivedAt: new Date("2026-10-13T12:00:00Z") });
+    const canceled = { ...newer, kind: "canceled" as const, receivedAt: new Date("2026-10-14T12:00:00Z") };
+    await reconcileInterviewBookings(mock.db, [active, newer], actor);
+    expect(mock.state().applications[0]).toMatchObject({ interviewSlotLabel: newer.slotLabel, interviewBookedAt: newer.receivedAt });
+    await expect(reconcileInterviewBookings(mock.db, [active, canceled], actor))
+      .resolves.toEqual({ booked: 1, cleared: 0, checked: 1, unresolved: 0 });
+    expect(mock.state().applications[0]).toMatchObject({ status: "interview_scheduled", interviewSlotLabel: active.slotLabel, interviewBookedAt: active.receivedAt });
+    expect(mock.updateCalls.map((call) => call.values.status)).toEqual(["interview_scheduled", "interview_scheduled"]);
+    await expect(reconcileInterviewBookings(mock.db, [active, newer, canceled], actor))
+      .resolves.toEqual({ booked: 0, cleared: 0, checked: 1, unresolved: 0 });
+    expect(mock.state().actions).toHaveLength(3);
+    expect(mock.updateCalls).toHaveLength(2);
+  });
+
+  it("selects a surviving equal-time other event when the stored event is canceled, without resurrecting the canceled UID", async () => {
     const mock = transactionDatabase();
     const newer = booking({ eventId: "event-2", slotLabel: "Friday", receivedAt: new Date("2026-10-13T12:00:00Z") });
+    const other = booking({ eventId: "equal-time-other-event", receivedAt: newer.receivedAt });
+    const canceled = booking({ kind: "canceled", eventId: newer.eventId, receivedAt: newer.receivedAt });
     await reconcileInterviewBookings(mock.db, [booking()], actor);
     await reconcileInterviewBookings(mock.db, [newer], actor);
-    await expect(reconcileInterviewBookings(mock.db, [booking(), booking({ kind: "canceled", eventId: newer.eventId,
-      receivedAt: newer.receivedAt }), booking({ eventId: "equal-time-other-event", receivedAt: newer.receivedAt })], actor))
-      .resolves.toEqual({ booked: 0, cleared: 1, checked: 1, unresolved: 0 });
-    expect(mock.state().applications[0]).toMatchObject({ status: "interview_requested", interviewSlotLabel: null, interviewBookedAt: null });
-    expect(mock.state().actions).toHaveLength(3);
+    await expect(reconcileInterviewBookings(mock.db, [booking(), canceled, other], actor))
+      .resolves.toEqual({ booked: 1, cleared: 0, checked: 1, unresolved: 0 });
+    expect(mock.state().applications[0]).toMatchObject({ status: "interview_scheduled", interviewSlotLabel: slot, interviewBookedAt: other.receivedAt });
+    expect(mock.state().actions).toHaveLength(4);
     expect(mock.updateCalls).toHaveLength(3);
-    await expect(reconcileInterviewBookings(mock.db, [newer], actor))
+    await expect(reconcileInterviewBookings(mock.db, [newer, other, canceled, booking()], actor))
       .resolves.toEqual({ booked: 0, cleared: 0, checked: 1, unresolved: 0 });
+    expect(mock.state().actions).toHaveLength(4);
+    expect(mock.updateCalls).toHaveLength(3);
+  });
+
+  it("clears an equal-time matching cancellation when no surviving booking exists", async () => {
+    const mock = transactionDatabase();
+    await reconcileInterviewBookings(mock.db, [booking()], actor);
+    const canceled = booking({ kind: "canceled" });
+    await expect(reconcileInterviewBookings(mock.db, [booking(), canceled], actor))
+      .resolves.toEqual({ booked: 0, cleared: 1, checked: 1, unresolved: 0 });
+    expect(mock.state().applications[0]).toMatchObject({ status: "interview_requested", interviewBookedAt: null, interviewSlotLabel: null });
+    await expect(reconcileInterviewBookings(mock.db, [booking(), canceled], actor))
+      .resolves.toEqual({ booked: 0, cleared: 0, checked: 1, unresolved: 0 });
+    expect(mock.state().actions).toHaveLength(2);
+    expect(mock.updateCalls).toHaveLength(2);
+  });
+
+  it("retains a genuinely later rebooking of a canceled UID and converges for combined and split scans", async () => {
+    const combined = transactionDatabase();
+    const split = transactionDatabase();
+    const original = booking();
+    const canceled = booking({ kind: "canceled", receivedAt: new Date("2026-10-13T12:00:00Z") });
+    const rebooked = booking({ receivedAt: new Date("2026-10-14T12:00:00Z"), slotLabel: "Friday" });
+    await expect(reconcileInterviewBookings(combined.db, [rebooked, canceled, original], actor))
+      .resolves.toEqual({ booked: 1, cleared: 0, checked: 1, unresolved: 0 });
+    await reconcileInterviewBookings(split.db, [original, canceled], actor);
+    await expect(reconcileInterviewBookings(split.db, [rebooked], actor))
+      .resolves.toEqual({ booked: 1, cleared: 0, checked: 1, unresolved: 0 });
+    expect(split.state().applications).toEqual(combined.state().applications);
+    expect(split.state().actions).toEqual(combined.state().actions);
+    for (const mock of [combined, split]) {
+      await expect(reconcileInterviewBookings(mock.db, [original, canceled, rebooked], actor))
+        .resolves.toEqual({ booked: 0, cleared: 0, checked: 1, unresolved: 0 });
+      expect(mock.state().applications[0]).toMatchObject({ status: "interview_scheduled", interviewBookedAt: rebooked.receivedAt, interviewSlotLabel: rebooked.slotLabel });
+      expect(mock.state().actions).toHaveLength(2);
+      expect(mock.updateCalls).toHaveLength(1);
+    }
   });
 
   it("converges whether equal-time booking and cancellation arrive together or in separate scans", async () => {

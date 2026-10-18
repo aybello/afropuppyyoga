@@ -147,6 +147,62 @@ describe("booking reconciliation decisions", () => {
     expect(resolveBookingDecisions([bookedEvent], [candidate])[0]?.action).toBe("mark_booked");
     expect(resolveBookingDecisions([{ ...bookedEvent, eventId: "event-b", receivedAt: at("2026-10-16T00:00:00Z") }], [candidate])[0]?.action).toBe("mark_booked");
   });
+  it.each(["invited", "booked A", "booked B"])("selects A immediately from a complete scan when initially %s, then is idempotent", (initial) => {
+    const newer = { ...bookedEvent, eventId: "event-b", slotLabel: "Friday", receivedAt: at("2026-10-15T08:00:00Z") };
+    const canceled = { ...newer, kind: "canceled" as const, receivedAt: cancellation.receivedAt };
+    const candidate = initial === "invited" ? invited : initial === "booked A" ? booked : {
+      ...booked, interviewEventId: newer.eventId, interviewSlotLabel: newer.slotLabel, interviewBookedAt: newer.receivedAt,
+    };
+    const expected = [
+      { action: "record_notice", kind: "canceled", advanceWatermark: false, applicationId: 1,
+        eventId: newer.eventId, receivedAt: canceled.receivedAt },
+      ...(initial === "booked A" ? [] : [{ action: "mark_booked", applicationId: 1,
+        bookedAt: time, slotLabel: slot, eventId: bookedEvent.eventId, receivedAt: time }]),
+    ];
+    const reconciled = { ...booked, interviewCanceledEvents: [{ eventId: newer.eventId, receivedAt: canceled.receivedAt }] };
+    for (const events of [[bookedEvent, newer, canceled], [canceled, newer, bookedEvent], [newer, bookedEvent, canceled]]) {
+      expect(resolveBookingDecisions(events, [candidate])).toEqual(expected);
+      expect(resolveBookingDecisions(events, [reconciled])).toEqual([]);
+    }
+    expect(resolveBookingDecisions([newer, bookedEvent], [reconciled])).toEqual([]);
+  });
+  it("releases a canceled stored booking before selecting older survivors, even from persisted evidence alone", () => {
+    const newer = { ...booked, interviewEventId: "event-b", interviewSlotLabel: "Friday", interviewBookedAt: at("2026-10-15T08:00:00Z"),
+      interviewCanceledEvents: [{ eventId: "event-b", receivedAt: cancellation.receivedAt }] };
+    expect(resolveBookingDecisions([bookedEvent], [newer])).toEqual([
+      { action: "mark_booked", applicationId: 1, bookedAt: time, slotLabel: slot, eventId: bookedEvent.eventId, receivedAt: time },
+    ]);
+    expect(resolveBookingDecisions([], [newer])).toEqual([
+      { action: "clear_booking", applicationId: 1, eventId: "event-b", receivedAt: cancellation.receivedAt },
+    ]);
+  });
+  it("retains the latest cancellation per UID without suppressing a later rebooking of that UID", () => {
+    const canceled = { ...cancellation, receivedAt: at("2026-10-15T10:00:00Z") };
+    const rebook = { ...bookedEvent, receivedAt: at("2026-10-15T11:00:00Z"), slotLabel: "Friday" };
+    const expected = [
+      { action: "record_notice", kind: "canceled", advanceWatermark: false, applicationId: 1,
+        eventId: bookedEvent.eventId, receivedAt: canceled.receivedAt },
+      { action: "mark_booked", applicationId: 1, bookedAt: rebook.receivedAt, slotLabel: rebook.slotLabel,
+        eventId: rebook.eventId, receivedAt: rebook.receivedAt },
+    ];
+    expect(resolveBookingDecisions([rebook, cancellation, bookedEvent, canceled, canceled], [invited])).toEqual(expected);
+    const reconciled = { ...booked, interviewBookedAt: rebook.receivedAt, interviewSlotLabel: rebook.slotLabel,
+      interviewCanceledEvents: [{ eventId: bookedEvent.eventId!, receivedAt: canceled.receivedAt }] };
+    expect(resolveBookingDecisions([bookedEvent, canceled, rebook], [reconciled])).toEqual([]);
+    expect(resolveBookingDecisions([canceled], [reconciled])).toEqual([]);
+  });
+  it("does not release a later current booking on unrelated, stale, wrong-attendee, or pre-invitation cancellations", () => {
+    const newer = { ...booked, interviewEventId: "event-b", interviewBookedAt: at("2026-10-15T08:00:00Z") };
+    for (const canceled of [
+      { ...cancellation, eventId: "different" },
+      { ...cancellation, eventId: newer.interviewEventId, receivedAt: time },
+      { ...cancellation, eventId: newer.interviewEventId, attendeeEmail: "stranger@example.com" },
+      { ...cancellation, eventId: newer.interviewEventId, receivedAt: at("2026-09-30T00:00:00Z") },
+    ]) {
+      const decisions = resolveBookingDecisions([bookedEvent, canceled], [newer]);
+      expect(decisions.every((decision) => decision.action === "record_notice")).toBe(true);
+    }
+  });
   it("resolves equal-time input deterministically, with cancellation winning an unpersisted booking", () => {
     const sameTimeCancellation = { ...cancellation, receivedAt: time };
     const expected = [{ action: "record_notice", kind: "canceled", advanceWatermark: false,
@@ -162,6 +218,15 @@ describe("booking reconciliation decisions", () => {
     expect(countUnresolvedLegacyBookings([legacy], decisions)).toBe(1);
     expect(countUnresolvedLegacyBookings([legacy], [])).toBe(1);
     expect(countUnresolvedLegacyBookings([legacy], resolveBookingDecisions([bookedEvent], [legacy]))).toBe(0);
+  });
+  it("does not clear unidentified legacy rows when a complete scan contains only canceled bookings", () => {
+    for (const interviewBookedAt of [null, time]) {
+      const legacy = { ...invited, status: "interview_scheduled", interviewBookedAt };
+      const decisions = resolveBookingDecisions([bookedEvent, cancellation], [legacy]);
+      expect(decisions).toEqual([{ action: "record_notice", kind: "canceled", advanceWatermark: false,
+        applicationId: 1, eventId: cancellation.eventId, receivedAt: cancellation.receivedAt }]);
+      expect(countUnresolvedLegacyBookings([legacy], decisions)).toBe(1);
+    }
   });
   it("can correlate a legacy booking using trusted event identity without a booked-at value", () => {
     const legacy = { ...invited, status: "interview_scheduled", interviewEventId: cancellation.eventId };

@@ -89,40 +89,59 @@ export function resolveBookingDecisions(events: readonly BookingEvent[], candida
   const decisions: BookingDecision[] = [];
   for (const candidate of candidates) {
     if (!canReceiveBookingUpdate(candidate) || !normalizeEmail(candidate.email)) continue;
+    const eligible = ordered.filter((event) => normalizeEmail(event.attendeeEmail) === normalizeEmail(candidate.email) &&
+      (!candidate.interviewInviteSentAt || event.receivedAt >= candidate.interviewInviteSentAt));
+    const canceledEvents = new Map<string, BookingEvent>();
+    const canceledSlots = new Map<string, BookingEvent>();
+    const unidentifiedCanceledSlots = new Map<string, BookingEvent>();
+    const notices = new Map<string, BookingEvent>();
+    const retainLatest = (ledger: Map<string, BookingEvent>, key: string, event: BookingEvent) => {
+      if (!ledger.has(key) || ledger.get(key)!.receivedAt < event.receivedAt) ledger.set(key, event);
+    };
+    for (const event of candidate.interviewCanceledEvents ?? []) {
+      if (event.eventId && Number.isFinite(event.receivedAt.getTime())) {
+        retainLatest(canceledEvents, event.eventId, { ...event, kind: "canceled", attendeeEmail: normalizeEmail(candidate.email), slotLabel: "" });
+      }
+    }
+    // Resolve the complete cancellation ledger first. Discovering a tombstone
+    // after replacing A with B must not discard A when B is already canceled.
+    for (const event of eligible) {
+      if (event.kind !== "canceled") continue;
+      if (event.eventId) {
+        if ((canceledEvents.get(event.eventId)?.receivedAt.getTime() ?? -Infinity) < event.receivedAt.getTime()) {
+          notices.set(`event:${event.eventId}`, event);
+          canceledEvents.set(event.eventId, event);
+        }
+      } else {
+        retainLatest(notices, `slot:${event.slotLabel}`, event);
+        if (event.slotLabel) retainLatest(unidentifiedCanceledSlots, event.slotLabel, event);
+      }
+      if (event.slotLabel) retainLatest(canceledSlots, event.slotLabel, event);
+    }
+    const cancellationFor = (booking: { eventId?: string; slotLabel: string; bookedAt: Date | null }): BookingEvent | null => {
+      // A shared slot never correlates two different known UIDs. Slot fallback
+      // remains available only when one side lacks the legacy event identity.
+      const byId = booking.eventId ? canceledEvents.get(booking.eventId) : undefined;
+      const bySlot = (booking.eventId ? unidentifiedCanceledSlots : canceledSlots).get(booking.slotLabel);
+      const cancellation = byId && (!bySlot || byId.receivedAt >= bySlot.receivedAt) ? byId : bySlot;
+      return cancellation && (!booking.bookedAt || cancellation.receivedAt >= booking.bookedAt) ? cancellation : null;
+    };
     let current: { eventId?: string; slotLabel: string; bookedAt: Date | null } | null = candidate.status === "interview_scheduled" &&
       (candidate.interviewBookedAt || candidate.interviewEventId || candidate.interviewSlotLabel)
       ? { eventId: candidate.interviewEventId ?? undefined, slotLabel: candidate.interviewSlotLabel ?? "", bookedAt: candidate.interviewBookedAt }
       : null;
-    const unknownLegacyBooking = candidate.status === "interview_scheduled" && !current;
-    const canceledEvents = new Map((candidate.interviewCanceledEvents ?? []).map((event) => [event.eventId, event.receivedAt.getTime()]));
-    const notices = new Map<string, BookingEvent>();
-    let latestApplied: BookingEvent | null = null;
-    for (const event of ordered) {
-      if (normalizeEmail(event.attendeeEmail) !== normalizeEmail(candidate.email)) continue;
-      if (candidate.interviewInviteSentAt && event.receivedAt < candidate.interviewInviteSentAt) continue;
-      if (event.kind === "booked") {
-        if (event.eventId && (canceledEvents.get(event.eventId) ?? -Infinity) >= event.receivedAt.getTime()) continue;
-        if (current?.bookedAt && event.receivedAt < current.bookedAt) continue;
-        // Equal-time evidence cannot replace a known booking with a different event.
-        // A matching cancellation still wins below, even at the same signed DTSTAMP.
-        if (current?.bookedAt && event.receivedAt.getTime() === current.bookedAt.getTime() &&
-            event.eventId !== current.eventId) continue;
-        current = { eventId: event.eventId, slotLabel: event.slotLabel, bookedAt: event.receivedAt };
-        latestApplied = event;
-      } else {
-        if (event.eventId && (canceledEvents.get(event.eventId) ?? -Infinity) >= event.receivedAt.getTime()) continue;
-        if (event.eventId) canceledEvents.set(event.eventId, event.receivedAt.getTime());
-        notices.set(event.eventId ?? event.slotLabel, event);
-        const matches = current && (current.eventId && event.eventId
-          ? current.eventId === event.eventId
-          : Boolean(event.slotLabel) && current.slotLabel === event.slotLabel);
-        if (current?.bookedAt && event.receivedAt < current.bookedAt) continue;
-        // A different event's cancellation is a tombstone, not a global watermark.
-        // A legacy booked status with no identity is not evidence of a match.
-        if (!matches && (current || (unknownLegacyBooking && !latestApplied))) continue;
-        current = null;
-        latestApplied = event;
-      }
+    // Release a canceled stored booking before considering older survivors;
+    // retain its cancellation as the clear/audit source if no survivor exists.
+    let latestApplied = current ? cancellationFor(current) : null;
+    if (latestApplied) current = null;
+    for (const event of eligible) {
+      if (event.kind !== "booked" || cancellationFor({ ...event, bookedAt: event.receivedAt })) continue;
+      if (current?.bookedAt && event.receivedAt < current.bookedAt) continue;
+      // Equal-time evidence cannot replace a surviving known different event.
+      if (current?.bookedAt && event.receivedAt.getTime() === current.bookedAt.getTime() &&
+          event.eventId !== current.eventId) continue;
+      current = { eventId: event.eventId, slotLabel: event.slotLabel, bookedAt: event.receivedAt };
+      latestApplied = event;
     }
     for (const notice of Array.from(notices.values())) {
       if (notice === latestApplied && !current) continue;
