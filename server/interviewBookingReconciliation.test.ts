@@ -278,17 +278,32 @@ describe("atomic interview booking reconciliation", () => {
     expect(mock.updateCalls).toEqual([]);
   });
 
-  it("rejects older and equal signed timestamps after a newer booking is persisted", async () => {
+  it("accepts an equal-time matching cancellation but rejects booking replays", async () => {
     const mock = transactionDatabase();
     const newer = booking({ eventId: "event-2", slotLabel: "Friday", receivedAt: new Date("2026-10-13T12:00:00Z") });
     await reconcileInterviewBookings(mock.db, [booking()], actor);
     await reconcileInterviewBookings(mock.db, [newer], actor);
     await expect(reconcileInterviewBookings(mock.db, [booking(), booking({ kind: "canceled", eventId: newer.eventId,
       receivedAt: newer.receivedAt }), booking({ eventId: "equal-time-other-event", receivedAt: newer.receivedAt })], actor))
+      .resolves.toEqual({ booked: 0, cleared: 1, checked: 1, unresolved: 0 });
+    expect(mock.state().applications[0]).toMatchObject({ status: "interview_requested", interviewSlotLabel: null, interviewBookedAt: null });
+    expect(mock.state().actions).toHaveLength(3);
+    expect(mock.updateCalls).toHaveLength(3);
+    await expect(reconcileInterviewBookings(mock.db, [newer], actor))
       .resolves.toEqual({ booked: 0, cleared: 0, checked: 1, unresolved: 0 });
-    expect(mock.state().applications[0]).toMatchObject({ status: "interview_scheduled", interviewSlotLabel: "Friday", interviewBookedAt: newer.receivedAt });
-    expect(mock.state().actions).toHaveLength(2);
-    expect(mock.updateCalls).toHaveLength(2);
+  });
+
+  it("converges whether equal-time booking and cancellation arrive together or in separate scans", async () => {
+    const combined = transactionDatabase();
+    const split = transactionDatabase();
+    const original = booking();
+    const cancel = booking({ kind: "canceled", receivedAt: original.receivedAt });
+    await reconcileInterviewBookings(combined.db, [original, cancel], actor);
+    await reconcileInterviewBookings(split.db, [original], actor);
+    await reconcileInterviewBookings(split.db, [cancel], actor);
+    expect(split.state().applications).toEqual(combined.state().applications);
+    await expect(reconcileInterviewBookings(split.db, [original, cancel], actor))
+      .resolves.toEqual({ booked: 0, cleared: 0, checked: 1, unresolved: 0 });
   });
 
   it("keeps unmatched cancellation tombstones separate from the current booking watermark", async () => {

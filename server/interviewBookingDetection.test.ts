@@ -71,10 +71,12 @@ describe("booking reconciliation decisions", () => {
   it("compares database timestamp precision at seconds", () => {
     expect(resolveBookingDecisions([{ ...bookedEvent, receivedAt: new Date(time.getTime() + 3) }], [booked])).toEqual([]);
   });
-  it("rejects equal persisted signed timestamps even when booking metadata differs", () => {
+  it("rejects equal-time booking replays but accepts a matching cancellation", () => {
     expect(resolveBookingDecisions([bookedEvent], [{ ...booked, interviewSlotLabel: null }])).toEqual([]);
     expect(resolveBookingDecisions([{ ...bookedEvent, eventId: "event-b", slotLabel: "Friday" }], [booked])).toEqual([]);
-    expect(resolveBookingDecisions([{ ...cancellation, receivedAt: time }], [booked])).toEqual([]);
+    expect(resolveBookingDecisions([{ ...cancellation, receivedAt: time }], [booked])).toEqual([
+      { action: "clear_booking", applicationId: 1, eventId: bookedEvent.eventId, receivedAt: time },
+    ]);
   });
   it("can repair legacy metadata when there is no persisted notice watermark", () => {
     expect(resolveBookingDecisions([bookedEvent], [{ ...booked, interviewLastEventAt: null, interviewSlotLabel: null }])[0]?.action).toBe("mark_booked");

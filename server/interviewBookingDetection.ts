@@ -100,8 +100,15 @@ export function resolveBookingDecisions(events: readonly BookingEvent[], candida
     for (const event of ordered) {
       if (normalizeEmail(event.attendeeEmail) !== normalizeEmail(candidate.email)) continue;
       if (candidate.interviewInviteSentAt && event.receivedAt < candidate.interviewInviteSentAt) continue;
-      // An equal timestamp is the same signed notice, even if it arrived again today.
-      if (candidate.interviewLastEventAt && event.receivedAt <= candidate.interviewLastEventAt) continue;
+      // DTSTAMP is second-precision. A matching cancellation may share the booking's
+      // timestamp, but a booking replay or an already recorded cancellation may not.
+      if (candidate.interviewLastEventAt && event.receivedAt < candidate.interviewLastEventAt) continue;
+      if (candidate.interviewLastEventAt && event.receivedAt.getTime() === candidate.interviewLastEventAt.getTime()) {
+        const matchingCancellation = event.kind === "canceled" && current &&
+          (current.eventId && event.eventId ? current.eventId === event.eventId
+            : Boolean(event.slotLabel) && current.slotLabel === event.slotLabel);
+        if (!matchingCancellation) continue;
+      }
       if (event.kind === "booked") {
         if (event.eventId && (canceledEvents.get(event.eventId) ?? -Infinity) >= event.receivedAt.getTime()) continue;
         if (current?.bookedAt && event.receivedAt < current.bookedAt) continue;
