@@ -35,7 +35,7 @@ type Signature = {
   canonBodyLength?: number;
   canonBodyLengthTotal?: number;
 };
-const signedKeys = ["sender", "from", "subject", "message-id", "content-type", "to"];
+const signedKeys = ["sender", "from", "subject", "message-id", "content-type", "to", "date"];
 const signature = (overrides: Partial<Signature> = {}): Signature => ({
   signingDomain: "google.com",
   status: { result: "pass" },
@@ -87,7 +87,7 @@ const booking: BookingEvent = { kind: "booked", attendeeEmail: "applicant@exampl
 function calendar(method = "REQUEST"): string {
   return [
     "BEGIN:VCALENDAR", "VERSION:2.0", `METHOD:${method}`, "BEGIN:VEVENT",
-    `UID:${eventId}`, "DTSTART:20261015T224000Z", "DTEND:20261015T232000Z",
+    `UID:${eventId}`, "DTSTAMP:20261014T194328Z", "DTSTART:20261015T224000Z", "DTEND:20261015T232000Z",
     `ORGANIZER;CN=AfroPuppyYoga:mailto:${mailbox}`,
     `ATTENDEE;ROLE=REQ-PARTICIPANT:mailto:${mailbox}`,
     "ATTENDEE;CN=Applicant;PARTSTAT=ACCEPTED:mailto:applicant@example.com",
@@ -102,6 +102,7 @@ type MessageOptions = {
   messageId?: string;
   calendarType?: string;
   filename?: string;
+  date?: string;
 };
 function message(options: MessageOptions = {}): Buffer {
   const parts = (options.calendars ?? [calendar()]).flatMap((content) => [
@@ -117,8 +118,9 @@ function message(options: MessageOptions = {}): Buffer {
     // Deliberately omit the applicant from To. Identity must come from the ICS.
     `To: ${mailbox}`, `Subject: ${options.subject ?? subject}`,
     `Message-ID: ${options.messageId ?? "<calendar-fe018076-c283-4df1-9ce3-9a30afdd47be@google.com>"}`,
-    // The untrusted Date and authentication claims must not determine authenticity/time.
-    "Date: Mon, 01 Jan 2001 00:00:00 +0000",
+    // Date must be signed, but event time comes from the signed ICS DTSTAMP.
+    `Date: ${options.date ?? "Wed, 14 Oct 2026 19:43:28 GMT"}`,
+    // Claimed authentication results must never replace cryptographic verification.
     "Authentication-Results: attacker.example; dkim=pass header.d=google.com",
     "DKIM-Signature: v=1; a=rsa-sha256; d=google.com; s=fake; b=not-a-real-signature",
     "MIME-Version: 1.0", "Content-Type: multipart/mixed; boundary=offline-calendar-boundary", "",
@@ -171,7 +173,7 @@ describe("Google Calendar DKIM verification policy", () => {
   it("requires all signed keys on one passing Google signature, not combined across signatures", async () => {
     verify.mockResolvedValue({ results: [
       signature({ signingHeaders: { keys: "sender:from:subject" } }),
-      signature({ signingHeaders: { keys: "message-id:content-type:to" } }),
+      signature({ signingHeaders: { keys: "message-id:content-type:to:date" } }),
       signature({ signingDomain: "gmail.com" }),
     ] });
     await expect(inbox.hasGoogleCalendarSignature(message(), receivedAt)).resolves.toBe(false);
@@ -205,7 +207,7 @@ describe("calendarIdentity", () => {
   it.each(["REQUEST", "CANCEL"])("extracts one %s event with parameterized organizer and attendees", (method) => {
     expect(inbox.calendarIdentity(calendar(method))).toEqual({
       eventId, organizer: mailbox, attendees: [mailbox, "applicant@example.com"],
-      summary: "AfroPuppyYoga Meeting (Applicant)", method,
+      summary: "AfroPuppyYoga Meeting (Applicant)", method, eventTimestamp: receivedAt,
     });
   });
 
@@ -230,6 +232,24 @@ describe("calendarIdentity", () => {
     expect(inbox.calendarIdentity(calendar().replace("METHOD:REQUEST", "METHOD:REQUEST\r\nMETHOD:CANCEL"))).toBeNull();
   });
 
+  it("rejects a missing DTSTAMP", () => {
+    expect(inbox.calendarIdentity(calendar().replace("DTSTAMP:20261014T194328Z\r\n", ""))).toBeNull();
+  });
+
+  it.each(["20261014T194328Z", "20261015T194328Z"])("rejects duplicate DTSTAMP declarations even when the second is %s", (timestamp) => {
+    const content = calendar().replace("DTSTAMP:20261014T194328Z", `DTSTAMP:20261014T194328Z\r\nDTSTAMP:${timestamp}`);
+    expect(inbox.calendarIdentity(content)).toBeNull();
+  });
+
+  it.each([
+    "", "not-a-date", "20261014", "20261014T194328", "20261014T194328+0000",
+    "2026-10-14T19:43:28Z", "20261014T194328.000Z", "20261014t194328z",
+    "20260230T194328Z", "20260229T194328Z", "20261314T194328Z", "20261000T194328Z",
+    "20261014T244328Z", "20261014T196028Z", "20261014T194360Z",
+  ])("rejects DTSTAMP values that are not valid UTC YYYYMMDDTHHMMSSZ (%j)", (timestamp) => {
+    expect(inbox.calendarIdentity(calendar().replace("DTSTAMP:20261014T194328Z", `DTSTAMP:${timestamp}`))).toBeNull();
+  });
+
   it.each(["UID", "ORGANIZER", "SUMMARY"] as const)("does not choose an arbitrary duplicate %s value", (key) => {
     const original = calendar().split("\r\n").find((line) => line.startsWith(`${key}:`) || line.startsWith(`${key};`))!;
     const identity = inbox.calendarIdentity(calendar().replace(original, `${original}\r\n${original}`));
@@ -239,10 +259,44 @@ describe("calendarIdentity", () => {
 });
 
 describe("full-source MIME parsing with an isolated DKIM verifier", () => {
-  it("decodes a base64 ICS attachment and uses receipt time rather than the Date header", async () => {
+  it("decodes a base64 ICS attachment and uses its signed DTSTAMP as event time", async () => {
     const source = message();
     await expect(inbox.parseVerifiedCalendarSource(source, receivedAt)).resolves.toEqual(booking);
     expect(verify).toHaveBeenCalledExactlyOnceWith(source, { curTime: receivedAt });
+  });
+
+  it("keeps the signed ICS event time when delivery and the signed Date header are later", async () => {
+    const deliveredAt = new Date("2026-10-17T20:00:00Z");
+    const source = message({ date: "Sat, 17 Oct 2026 19:59:00 GMT" });
+    await expect(inbox.parseVerifiedCalendarSource(source, deliveredAt)).resolves.toEqual(booking);
+    expect(verify).toHaveBeenCalledExactlyOnceWith(source, { curTime: deliveredAt });
+  });
+
+  it.each(signedKeys)("rejects a missing required raw %s header", async (key) => {
+    const source = message();
+    const separator = source.indexOf("\r\n\r\n");
+    const headers = source.subarray(0, separator).toString().split("\r\n");
+    const retained = headers.filter((line) => !line.toLowerCase().startsWith(`${key}:`));
+    const incomplete = Buffer.concat([Buffer.from(retained.join("\r\n")), source.subarray(separator)]);
+    await expect(inbox.parseVerifiedCalendarSource(incomplete, receivedAt)).resolves.toBeNull();
+  });
+
+  it.each(signedKeys)("rejects duplicate required raw %s headers even with identical values and different casing", async (key) => {
+    const source = message();
+    const separator = source.indexOf("\r\n\r\n");
+    const headers = source.subarray(0, separator).toString().split("\r\n");
+    const original = headers.find((line) => line.toLowerCase().startsWith(`${key}:`))!;
+    headers.push(`${key.toUpperCase()}${original.slice(original.indexOf(":"))}`);
+    const ambiguous = Buffer.concat([Buffer.from(headers.join("\r\n")), source.subarray(separator)]);
+    await expect(inbox.parseVerifiedCalendarSource(ambiguous, receivedAt)).resolves.toBeNull();
+  });
+
+  it.each([
+    ["missing", calendar().replace("DTSTAMP:20261014T194328Z\r\n", "")],
+    ["duplicate", calendar().replace("DTSTAMP:20261014T194328Z", "DTSTAMP:20261014T194328Z\r\nDTSTAMP:20261014T194328Z")],
+    ["invalid", calendar().replace("DTSTAMP:20261014T194328Z", "DTSTAMP:20260230T194328Z")],
+  ])("rejects a MIME calendar with a %s DTSTAMP", async (_label, content) => {
+    await expect(inbox.parseVerifiedCalendarSource(message({ calendars: [content] }), receivedAt)).resolves.toBeNull();
   });
 
   it("extracts the CANCEL attendee from ICS when To contains only the organizer", async () => {
@@ -259,7 +313,7 @@ describe("full-source MIME parsing with an isolated DKIM verifier", () => {
   it.each(["gmail-only", "crypto-fail", "missing-sender-signature"])("ignores forged Authentication-Results when verification is %s", async (mode) => {
     const bad = mode === "gmail-only" ? signature({ signingDomain: "gmail.com" })
       : mode === "crypto-fail" ? signature({ status: { result: "fail" } })
-      : signature({ signingHeaders: { keys: "from:subject:message-id:content-type:to" } });
+      : signature({ signingHeaders: { keys: "from:subject:message-id:content-type:to:date" } });
     verify.mockResolvedValue({ results: [bad] });
     await expect(inbox.parseVerifiedCalendarSource(message(), receivedAt)).resolves.toBeNull();
     expect(verify).toHaveBeenCalledOnce();
@@ -341,6 +395,15 @@ describe("read-only IMAP booking scan", () => {
     expect(imap.release).toHaveBeenCalledOnce();
     expect(imap.client.logout).toHaveBeenCalledOnce();
     expect(imap.client.close).not.toHaveBeenCalled();
+  });
+
+  it("does not turn a later IMAP delivery date into a later booking event time", async () => {
+    const deliveredAt = new Date("2026-10-17T20:00:00Z");
+    const source = message();
+    imap.client.search.mockResolvedValue([17]);
+    queueMessage(source, deliveredAt);
+    await expect(inbox.fetchInterviewBookingEvents()).resolves.toEqual([booking]);
+    expect(verify).toHaveBeenCalledExactlyOnceWith(source, { curTime: deliveredAt });
   });
 
   it("returns both booked and canceled notices from real MIME parsing", async () => {

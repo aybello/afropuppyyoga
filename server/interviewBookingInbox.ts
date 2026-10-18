@@ -22,12 +22,12 @@ export async function hasGoogleCalendarSignature(source: Buffer, receivedAt: Dat
     if (signature.signingDomain !== "google.com" || signature.status.result !== "pass") return false;
     if (signature.canonBodyLength !== undefined && signature.canonBodyLengthTotal !== undefined && signature.canonBodyLength !== signature.canonBodyLengthTotal) return false;
     const keys = (signature.signingHeaders?.keys ?? "").toLowerCase().split(":").map((key) => key.trim());
-    return ["sender", "from", "subject", "message-id", "content-type", "to"].every((key) => keys.includes(key));
+    return ["sender", "from", "subject", "message-id", "content-type", "to", "date"].every((key) => keys.includes(key));
   });
 }
 
 /** Calendar attachments are MIME-decoded by mailparser before their folded lines are read. */
-export function calendarIdentity(content: string): CalendarMessage["calendar"] | null {
+export function calendarIdentity(content: string): (NonNullable<CalendarMessage["calendar"]> & { eventTimestamp: Date }) | null {
   const unfolded = content.replace(/\r?\n[ \t]/g, "");
   const blocks = Array.from(unfolded.matchAll(/BEGIN:VEVENT\r?\n([\s\S]*?)\r?\nEND:VEVENT/g));
   if (blocks.length !== 1) return null;
@@ -40,12 +40,20 @@ export function calendarIdentity(content: string): CalendarMessage["calendar"] |
     .map((line) => line.slice(line.indexOf(":") + 1).replace(/^mailto:/i, "").trim());
   const methods = unfolded.split(/\r?\n/).filter((line) => line.startsWith("METHOD:"));
   if (methods.length !== 1) return null;
+  const stamp = value("DTSTAMP");
+  if (!/^\d{8}T\d{6}Z$/.test(stamp)) return null;
+  const iso = `${stamp.slice(0, 4)}-${stamp.slice(4, 6)}-${stamp.slice(6, 8)}T${stamp.slice(9, 11)}:${stamp.slice(11, 13)}:${stamp.slice(13, 15)}Z`;
+  const eventTimestamp = new Date(iso);
+  if (!Number.isFinite(eventTimestamp.getTime()) || eventTimestamp.toISOString().replace(/[-:]/g, "").replace(".000", "") !== stamp) return null;
   return { eventId: value("UID"), organizer: value("ORGANIZER").replace(/^mailto:/i, ""),
-    attendees, summary: value("SUMMARY"), method: methods[0].slice(7).trim() };
+    attendees, summary: value("SUMMARY"), method: methods[0].slice(7).trim(), eventTimestamp };
 }
 
 export async function parseVerifiedCalendarSource(source: Buffer, receivedAt: Date): Promise<BookingEvent | null> {
   if (!Number.isFinite(receivedAt.getTime()) || source.length > MAX_SOURCE_BYTES) return null;
+  const rawHeader = source.toString("utf8").split(/\r?\n\r?\n/, 1)[0].replace(/\r?\n[ \t]+/g, " ");
+  const names = rawHeader.split(/\r?\n/).map((line) => line.slice(0, line.indexOf(":")).toLowerCase());
+  if (!["sender", "from", "subject", "message-id", "content-type", "to", "date"].every((key) => names.filter((name) => name === key).length === 1)) return null;
   const parsed = await simpleParser(source, { skipHtmlToText: true, skipTextToHtml: true, skipImageLinks: true });
   const subject = parsed.subject ?? "";
   if (!/^Appointment (booked|canceled): AfroPuppyYoga Meeting /.test(subject)) return null;
@@ -57,7 +65,8 @@ export async function parseVerifiedCalendarSource(source: Buffer, receivedAt: Da
   if (!calendar) return null;
   const sender = parsed.headers.get("sender") as { value?: Array<{ address?: string }> } | undefined;
   const verifiedGoogleSignature = await hasGoogleCalendarSignature(source, receivedAt);
-  return parseCalendarMessage({ subject, receivedAt, calendar, verifiedGoogleSignature,
+  // Receipt time can change on redelivery. The signed event time cannot, preventing replay as a fresh booking.
+  return parseCalendarMessage({ subject, receivedAt: calendar.eventTimestamp, calendar, verifiedGoogleSignature,
     messageId: parsed.messageId, sender: (sender?.value ?? []).map((entry) => entry.address ?? ""),
     to: [], from: parsed.from?.value.map((entry) => entry.address ?? "") });
 }

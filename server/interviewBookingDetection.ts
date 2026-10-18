@@ -25,6 +25,7 @@ export type BookingEvent = {
   kind: "booked" | "canceled";
   attendeeEmail: string;
   slotLabel: string;
+  /** Immutable, verified ICS DTSTAMP, not the IMAP delivery time. */
   receivedAt: Date;
   eventId?: string;
 };
@@ -67,59 +68,87 @@ export type BookingCandidate = {
   interviewInviteSentAt: Date | null;
   interviewEventId?: string | null;
   interviewLastEventAt?: Date | null;
+  interviewCanceledEvents?: readonly { eventId: string; receivedAt: Date }[];
 };
 type DecisionSource = { eventId?: string; receivedAt: Date };
 export type BookingDecision = DecisionSource & (
   | { action: "mark_booked"; applicationId: number; bookedAt: Date; slotLabel: string }
   | { action: "clear_booking"; applicationId: number }
+  | { action: "record_notice"; applicationId: number; kind: "canceled"; advanceWatermark: boolean }
 );
 export function canReceiveBookingUpdate(candidate: BookingCandidate): boolean {
   return candidate.status === "interview_requested" || candidate.status === "interview_scheduled";
 }
 function seconds(date: Date): number { return Math.floor(date.getTime() / 1000); }
-/** Replay each event independently so canceling an old slot cannot cancel a rebooking. */
+/** Replay signed notice times; cancellation-only audits also survive partial later scans. */
 export function resolveBookingDecisions(events: readonly BookingEvent[], candidates: readonly BookingCandidate[]): BookingDecision[] {
   const ordered = [...events].filter((event) => Number.isFinite(event.receivedAt.getTime()))
-    .sort((a, b) => a.receivedAt.getTime() - b.receivedAt.getTime() || (a.kind === "canceled" ? 1 : -1));
+    .sort((a, b) => a.receivedAt.getTime() - b.receivedAt.getTime() ||
+      Number(a.kind === "canceled") - Number(b.kind === "canceled") ||
+      (a.eventId ?? "").localeCompare(b.eventId ?? ""));
   const decisions: BookingDecision[] = [];
   for (const candidate of candidates) {
     if (!canReceiveBookingUpdate(candidate) || !normalizeEmail(candidate.email)) continue;
-    let current: { eventId?: string; slotLabel: string; bookedAt: Date } | null = candidate.status === "interview_scheduled" && candidate.interviewBookedAt
+    let current: { eventId?: string; slotLabel: string; bookedAt: Date | null } | null = candidate.status === "interview_scheduled" &&
+      (candidate.interviewBookedAt || candidate.interviewEventId || candidate.interviewSlotLabel)
       ? { eventId: candidate.interviewEventId ?? undefined, slotLabel: candidate.interviewSlotLabel ?? "", bookedAt: candidate.interviewBookedAt }
       : null;
-    const canceledIds = new Set<string>();
+    const unknownLegacyBooking = candidate.status === "interview_scheduled" && !current;
+    const canceledEvents = new Map((candidate.interviewCanceledEvents ?? []).map((event) => [event.eventId, event.receivedAt.getTime()]));
+    const notices = new Map<string, BookingEvent>();
     let latestApplied: BookingEvent | null = null;
     for (const event of ordered) {
       if (normalizeEmail(event.attendeeEmail) !== normalizeEmail(candidate.email)) continue;
       if (candidate.interviewInviteSentAt && event.receivedAt < candidate.interviewInviteSentAt) continue;
-      if (candidate.interviewLastEventAt && event.receivedAt < candidate.interviewLastEventAt) continue;
+      // An equal timestamp is the same signed notice, even if it arrived again today.
+      if (candidate.interviewLastEventAt && event.receivedAt <= candidate.interviewLastEventAt) continue;
       if (event.kind === "booked") {
-        if (event.eventId && canceledIds.has(event.eventId)) continue;
-        if (current && event.receivedAt < current.bookedAt) continue;
+        if (event.eventId && (canceledEvents.get(event.eventId) ?? -Infinity) >= event.receivedAt.getTime()) continue;
+        if (current?.bookedAt && event.receivedAt < current.bookedAt) continue;
         current = { eventId: event.eventId, slotLabel: event.slotLabel, bookedAt: event.receivedAt };
         latestApplied = event;
       } else {
-        if (event.eventId) canceledIds.add(event.eventId);
+        if (event.eventId && (canceledEvents.get(event.eventId) ?? -Infinity) >= event.receivedAt.getTime()) continue;
+        if (event.eventId) canceledEvents.set(event.eventId, event.receivedAt.getTime());
+        notices.set(event.eventId ?? event.slotLabel, event);
         const matches = current && (current.eventId && event.eventId
           ? current.eventId === event.eventId
           : Boolean(event.slotLabel) && current.slotLabel === event.slotLabel);
-        if (!matches || (current && event.receivedAt < current.bookedAt)) continue;
+        if (current?.bookedAt && event.receivedAt < current.bookedAt) continue;
+        // A different event's cancellation is a tombstone, not a global watermark.
+        // A legacy booked status with no identity is not evidence of a match.
+        if (!matches && (current || (unknownLegacyBooking && !latestApplied))) continue;
         current = null;
         latestApplied = event;
       }
     }
+    for (const notice of Array.from(notices.values())) {
+      if (notice === latestApplied && !current) continue;
+      decisions.push({ action: "record_notice", kind: "canceled", advanceWatermark: false,
+        applicationId: candidate.id, eventId: notice.eventId, receivedAt: notice.receivedAt });
+    }
     if (!latestApplied) continue;
-    if (current) {
+    if (current?.bookedAt) {
       if (candidate.status === "interview_scheduled" && candidate.interviewBookedAt &&
           seconds(candidate.interviewBookedAt) === seconds(current.bookedAt) &&
           candidate.interviewSlotLabel === current.slotLabel &&
           (!current.eventId || candidate.interviewEventId === current.eventId)) continue;
       decisions.push({ action: "mark_booked", applicationId: candidate.id, bookedAt: current.bookedAt,
         slotLabel: current.slotLabel, eventId: current.eventId, receivedAt: latestApplied.receivedAt });
-    } else if (candidate.status === "interview_scheduled" || candidate.interviewBookedAt) {
+    } else if (!current && (candidate.status === "interview_scheduled" || candidate.interviewBookedAt)) {
       decisions.push({ action: "clear_booking", applicationId: candidate.id,
         eventId: latestApplied.eventId, receivedAt: latestApplied.receivedAt });
+    } else if (!current) {
+      decisions.push({ action: "record_notice", kind: "canceled", advanceWatermark: true,
+        applicationId: candidate.id, eventId: latestApplied.eventId, receivedAt: latestApplied.receivedAt });
     }
   }
   return decisions;
+}
+
+/** Never silently treat uncorrelated historical booked statuses as reconciled. */
+export function countUnresolvedLegacyBookings(candidates: readonly BookingCandidate[], decisions: readonly BookingDecision[]): number {
+  const resolvedIds = new Set(decisions.filter((decision) => decision.action !== "record_notice").map((decision) => decision.applicationId));
+  return candidates.filter((candidate) => candidate.status === "interview_scheduled" &&
+    !candidate.interviewEventId && !candidate.interviewSlotLabel && !resolvedIds.has(candidate.id)).length;
 }

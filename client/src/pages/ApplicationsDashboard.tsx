@@ -1027,14 +1027,21 @@ export default function ApplicationsDashboard() {
   const syncBookings = trpc.careers.syncInterviewBookings.useMutation({
     onSuccess: (result) => {
       utils.careers.list.invalidate();
+      utils.careers.getTimeline.invalidate();
+      const reviewMessage = result.unresolved > 0
+        ? `${result.unresolved} older booking${result.unresolved === 1 ? " needs" : "s need"} manual review.` : "";
       if (result.booked === 0 && result.cleared === 0) {
-        toast.success("No changes detected in verified booking notices from the last 90 days.");
+        const message = ["No changes detected in verified booking notices from the last 90 days.", reviewMessage].filter(Boolean).join(" ");
+        if (reviewMessage) toast.warning(message);
+        else toast.success(message);
         return;
       }
       const parts: string[] = [];
       if (result.booked > 0) parts.push(`${result.booked} moved to Interview booked`);
       if (result.cleared > 0) parts.push(`${result.cleared} booking cancelled`);
-      toast.success(parts.join(", "));
+      const message = [parts.join(", "), reviewMessage].filter(Boolean).join(". ");
+      if (reviewMessage) toast.warning(message);
+      else toast.success(message);
     },
     onError: (err) => toast.error(err.message),
   });
