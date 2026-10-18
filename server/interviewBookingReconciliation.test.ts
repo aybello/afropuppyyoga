@@ -153,14 +153,14 @@ describe("atomic interview booking reconciliation", () => {
     expect(JSON.parse(audit.details!)).toEqual({ source: "calendar_confirmation", slot, eventId: "event-1", eventReceivedAt: receivedAt.toISOString() });
   });
 
-  it("clears a matching cancellation and persists its event watermark in the same transaction", async () => {
+  it("clears a matching cancellation and persists a non-global event tombstone in the same transaction", async () => {
     const mock = transactionDatabase({ applications: [application({ status: "interview_scheduled", interviewBookedAt: receivedAt, interviewSlotLabel: slot })] });
     const cancellation = booking({ kind: "canceled", receivedAt: new Date("2026-10-13T12:00:00Z") });
     await expect(reconcileInterviewBookings(mock.db, [cancellation], actor)).resolves.toEqual({ booked: 0, cleared: 1, checked: 1, unresolved: 0 });
     expect(mock.state().applications[0]).toMatchObject({ status: "interview_requested", interviewBookedAt: null, interviewSlotLabel: null });
     const audit = mock.state().actions[0];
     expect(audit).toMatchObject({ action: "interview_booking_cancelled", fromStatus: "interview_scheduled", toStatus: "interview_requested" });
-    expect(JSON.parse(audit.details!)).toEqual({ source: "calendar_confirmation", eventId: "event-1", eventReceivedAt: cancellation.receivedAt.toISOString() });
+    expect(JSON.parse(audit.details!)).toEqual({ source: "calendar_confirmation", eventId: "event-1", eventReceivedAt: cancellation.receivedAt.toISOString(), advanceWatermark: false });
   });
 
   it("excludes every signing token and every employee link, not just signed or active rows", async () => {
@@ -263,10 +263,58 @@ describe("atomic interview booking reconciliation", () => {
     expect(mock.state().actions[0]).toMatchObject({ action: "interview_booking_cancelled",
       fromStatus: "interview_requested", toStatus: "interview_requested", actorUserId: actor.id });
     expect(JSON.parse(mock.state().actions[0].details!)).toEqual({ source: "calendar_confirmation",
-      eventId: "event-1", eventReceivedAt: canceled.receivedAt.toISOString(), advanceWatermark: true });
+      eventId: "event-1", eventReceivedAt: canceled.receivedAt.toISOString(), advanceWatermark: false });
     await expect(reconcileInterviewBookings(mock.db, [booking(), canceled], actor)).resolves.toEqual({ booked: 0, cleared: 0, checked: 1, unresolved: 0 });
     expect(mock.state().actions).toHaveLength(1);
     expect(mock.updateCalls).toEqual([]);
+  });
+
+  it.each([false, true])("converges for a later cross-event cancellation scanned first (repeat cancellation: %s)", async (repeatCancellation) => {
+    const combined = transactionDatabase();
+    const split = transactionDatabase();
+    const active = booking();
+    const canceled = booking({ kind: "canceled", eventId: "event-2", receivedAt: new Date("2026-10-13T12:00:00Z") });
+    await expect(reconcileInterviewBookings(combined.db, [canceled, active], actor))
+      .resolves.toEqual({ booked: 1, cleared: 0, checked: 1, unresolved: 0 });
+    await expect(reconcileInterviewBookings(split.db, [canceled], actor))
+      .resolves.toEqual({ booked: 0, cleared: 0, checked: 1, unresolved: 0 });
+    expect(JSON.parse(split.state().actions[0].details!)).toMatchObject({ eventId: "event-2", advanceWatermark: false });
+    await expect(reconcileInterviewBookings(split.db, repeatCancellation ? [active, canceled] : [active], actor))
+      .resolves.toEqual({ booked: 1, cleared: 0, checked: 1, unresolved: 0 });
+    expect(split.state().applications).toEqual(combined.state().applications);
+    expect(split.state().applications[0]).toMatchObject({ status: "interview_scheduled", interviewBookedAt: receivedAt, interviewSlotLabel: slot });
+    expect(split.state().actions).toHaveLength(2);
+    expect(split.state().actions).toEqual(combined.state().actions);
+    for (const mock of [combined, split]) {
+      await expect(reconcileInterviewBookings(mock.db, [active, canceled, booking({ eventId: "event-2" })], actor))
+        .resolves.toEqual({ booked: 0, cleared: 0, checked: 1, unresolved: 0 });
+      expect(mock.state().actions).toHaveLength(2);
+    }
+  });
+
+  it("discovers an older active other-event after a correlated clear while suppressing canceled-event replay", async () => {
+    const mock = transactionDatabase();
+    const current = booking({ eventId: "event-2", slotLabel: "Friday", receivedAt: new Date("2026-10-13T12:00:00Z") });
+    const canceled = { ...current, kind: "canceled" as const, receivedAt: new Date("2026-10-14T12:00:00Z") };
+    await reconcileInterviewBookings(mock.db, [current], actor);
+    await expect(reconcileInterviewBookings(mock.db, [booking()], actor))
+      .resolves.toEqual({ booked: 0, cleared: 0, checked: 1, unresolved: 0 });
+    await expect(reconcileInterviewBookings(mock.db, [canceled], actor))
+      .resolves.toEqual({ booked: 0, cleared: 1, checked: 1, unresolved: 0 });
+    expect(JSON.parse(mock.state().actions[1].details!)).toMatchObject({ eventId: current.eventId, advanceWatermark: false });
+    await expect(reconcileInterviewBookings(mock.db, [current], actor))
+      .resolves.toEqual({ booked: 0, cleared: 0, checked: 1, unresolved: 0 });
+    expect(mock.state().applications[0].status).toBe("interview_requested");
+    await expect(reconcileInterviewBookings(mock.db, [current, booking(), canceled], actor))
+      .resolves.toEqual({ booked: 1, cleared: 0, checked: 1, unresolved: 0 });
+    expect(mock.state().applications[0]).toMatchObject({ status: "interview_scheduled", interviewBookedAt: receivedAt, interviewSlotLabel: slot });
+    await expect(reconcileInterviewBookings(mock.db, [current, booking()], actor))
+      .resolves.toEqual({ booked: 0, cleared: 0, checked: 1, unresolved: 0 });
+    expect(mock.state().actions).toHaveLength(3);
+    // Even though its signed timestamp is older, the latest booking audit supplies the current identity.
+    await expect(reconcileInterviewBookings(mock.db, [booking({ kind: "canceled", slotLabel: "different wording",
+      receivedAt: new Date("2026-10-12T18:00:00Z") })], actor))
+      .resolves.toEqual({ booked: 0, cleared: 1, checked: 1, unresolved: 0 });
   });
 
   it("persists the same tombstone when booking and cancellation are first scanned together", async () => {
@@ -317,7 +365,7 @@ describe("atomic interview booking reconciliation", () => {
     expect(JSON.parse(mock.state().actions[1].details!)).toMatchObject({ eventId: "event-2", advanceWatermark: false });
     // This cancellation must not be dropped just because the other event's audit is newer.
     await expect(reconcileInterviewBookings(mock.db, [currentCancel], actor)).resolves.toEqual({ booked: 0, cleared: 1, checked: 1, unresolved: 0 });
-    // Its per-event tombstone still blocks a replay newer than the global watermark.
+    // Each per-event tombstone blocks replay independently of other events' times.
     await expect(reconcileInterviewBookings(mock.db, [booking({ eventId: "event-2", receivedAt: replayAt }), unrelatedCancel], actor))
       .resolves.toEqual({ booked: 0, cleared: 0, checked: 1, unresolved: 0 });
     await expect(reconcileInterviewBookings(mock.db, [booking({ eventId: "event-3", receivedAt: replayAt })], actor))

@@ -155,7 +155,7 @@ export async function reconcileInterviewBookings(
           ...(decision.action === "mark_booked" ? { slot: decision.slotLabel } : {}),
           eventId: decision.eventId,
           eventReceivedAt: decision.receivedAt.toISOString(),
-          ...(decision.action === "record_notice" ? { advanceWatermark: decision.advanceWatermark } : {}),
+          ...(decision.action !== "mark_booked" ? { advanceWatermark: false } : {}),
         }),
       });
       appliedDecisions.push(decision);

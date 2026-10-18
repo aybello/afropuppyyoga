@@ -74,7 +74,7 @@ type DecisionSource = { eventId?: string; receivedAt: Date };
 export type BookingDecision = DecisionSource & (
   | { action: "mark_booked"; applicationId: number; bookedAt: Date; slotLabel: string }
   | { action: "clear_booking"; applicationId: number }
-  | { action: "record_notice"; applicationId: number; kind: "canceled"; advanceWatermark: boolean }
+  | { action: "record_notice"; applicationId: number; kind: "canceled"; advanceWatermark: false }
 );
 export function canReceiveBookingUpdate(candidate: BookingCandidate): boolean {
   return candidate.status === "interview_requested" || candidate.status === "interview_scheduled";
@@ -100,18 +100,13 @@ export function resolveBookingDecisions(events: readonly BookingEvent[], candida
     for (const event of ordered) {
       if (normalizeEmail(event.attendeeEmail) !== normalizeEmail(candidate.email)) continue;
       if (candidate.interviewInviteSentAt && event.receivedAt < candidate.interviewInviteSentAt) continue;
-      // DTSTAMP is second-precision. A matching cancellation may share the booking's
-      // timestamp, but a booking replay or an already recorded cancellation may not.
-      if (candidate.interviewLastEventAt && event.receivedAt < candidate.interviewLastEventAt) continue;
-      if (candidate.interviewLastEventAt && event.receivedAt.getTime() === candidate.interviewLastEventAt.getTime()) {
-        const matchingCancellation = event.kind === "canceled" && current &&
-          (current.eventId && event.eventId ? current.eventId === event.eventId
-            : Boolean(event.slotLabel) && current.slotLabel === event.slotLabel);
-        if (!matchingCancellation) continue;
-      }
       if (event.kind === "booked") {
         if (event.eventId && (canceledEvents.get(event.eventId) ?? -Infinity) >= event.receivedAt.getTime()) continue;
         if (current?.bookedAt && event.receivedAt < current.bookedAt) continue;
+        // Equal-time evidence cannot replace a known booking with a different event.
+        // A matching cancellation still wins below, even at the same signed DTSTAMP.
+        if (current?.bookedAt && event.receivedAt.getTime() === current.bookedAt.getTime() &&
+            event.eventId !== current.eventId) continue;
         current = { eventId: event.eventId, slotLabel: event.slotLabel, bookedAt: event.receivedAt };
         latestApplied = event;
       } else {
@@ -146,7 +141,7 @@ export function resolveBookingDecisions(events: readonly BookingEvent[], candida
       decisions.push({ action: "clear_booking", applicationId: candidate.id,
         eventId: latestApplied.eventId, receivedAt: latestApplied.receivedAt });
     } else if (!current) {
-      decisions.push({ action: "record_notice", kind: "canceled", advanceWatermark: true,
+      decisions.push({ action: "record_notice", kind: "canceled", advanceWatermark: false,
         applicationId: candidate.id, eventId: latestApplied.eventId, receivedAt: latestApplied.receivedAt });
     }
   }

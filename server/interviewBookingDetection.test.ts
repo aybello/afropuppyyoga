@@ -71,15 +71,17 @@ describe("booking reconciliation decisions", () => {
   it("compares database timestamp precision at seconds", () => {
     expect(resolveBookingDecisions([{ ...bookedEvent, receivedAt: new Date(time.getTime() + 3) }], [booked])).toEqual([]);
   });
-  it("rejects equal-time booking replays but accepts a matching cancellation", () => {
-    expect(resolveBookingDecisions([bookedEvent], [{ ...booked, interviewSlotLabel: null }])).toEqual([]);
+  it("keeps the known booking on an equal-time different event but accepts a matching cancellation", () => {
+    expect(resolveBookingDecisions([bookedEvent], [booked])).toEqual([]);
     expect(resolveBookingDecisions([{ ...bookedEvent, eventId: "event-b", slotLabel: "Friday" }], [booked])).toEqual([]);
     expect(resolveBookingDecisions([{ ...cancellation, receivedAt: time }], [booked])).toEqual([
       { action: "clear_booking", applicationId: 1, eventId: bookedEvent.eventId, receivedAt: time },
     ]);
   });
-  it("can repair legacy metadata when there is no persisted notice watermark", () => {
-    expect(resolveBookingDecisions([bookedEvent], [{ ...booked, interviewLastEventAt: null, interviewSlotLabel: null }])[0]?.action).toBe("mark_booked");
+  it("can repair same-event legacy metadata regardless of the backward-compatible watermark", () => {
+    for (const interviewLastEventAt of [null, time, cancellation.receivedAt]) {
+      expect(resolveBookingDecisions([bookedEvent], [{ ...booked, interviewLastEventAt, interviewSlotLabel: null }])[0]?.action).toBe("mark_booked");
+    }
   });
   it("cancels only the matching event", () => {
     expect(resolveBookingDecisions([cancellation], [booked])).toEqual([{ action: "clear_booking", applicationId: 1, eventId: bookedEvent.eventId, receivedAt: cancellation.receivedAt }]);
@@ -98,10 +100,19 @@ describe("booking reconciliation decisions", () => {
     const rebook = { ...bookedEvent, eventId: "event-b", slotLabel: "Friday", receivedAt: at("2026-10-15T10:00:00Z") };
     expect(resolveBookingDecisions([rebook, cancellation, bookedEvent], [invited]).at(-1)).toMatchObject({ action: "mark_booked", eventId: "event-b", slotLabel: "Friday" });
   });
-  it("ignores old notices before the current invitation or last processed event", () => {
+  it("rejects notices before the invitation and records an older cancellation without clearing the current booking", () => {
     expect(resolveBookingDecisions([bookedEvent], [{ ...invited, interviewInviteSentAt: at("2026-10-16T00:00:00Z") }])).toEqual([]);
-    expect(resolveBookingDecisions([bookedEvent], [{ ...invited, interviewLastEventAt: cancellation.receivedAt }])).toEqual([]);
-    expect(resolveBookingDecisions([{ ...cancellation, receivedAt: at("2026-10-12T00:00:00Z") }], [booked])).toEqual([]);
+    const olderCancellation = { ...cancellation, receivedAt: at("2026-10-12T00:00:00Z") };
+    expect(resolveBookingDecisions([olderCancellation], [booked])).toEqual([
+      { action: "record_notice", kind: "canceled", advanceWatermark: false, applicationId: 1,
+        eventId: bookedEvent.eventId, receivedAt: olderCancellation.receivedAt },
+    ]);
+  });
+  it("ignores a legacy global watermark and stale current identity while invited", () => {
+    expect(resolveBookingDecisions([bookedEvent], [{ ...invited, interviewLastEventAt: cancellation.receivedAt,
+      interviewBookedAt: cancellation.receivedAt, interviewEventId: "other-event", interviewSlotLabel: "Friday" }])).toEqual([
+      { action: "mark_booked", applicationId: 1, bookedAt: time, slotLabel: slot, eventId: bookedEvent.eventId, receivedAt: time },
+    ]);
   });
   it("does not match names, missing email, strangers, or later hiring stages", () => {
     expect(resolveBookingDecisions([bookedEvent], [{ ...invited, email: null }])).toEqual([]);
@@ -116,27 +127,29 @@ describe("booking reconciliation decisions", () => {
   });
   it("persists cancellation tombstones even when the applicant remains invited", () => {
     expect(resolveBookingDecisions([], [invited])).toEqual([]);
-    const expected = [{ action: "record_notice", kind: "canceled", advanceWatermark: true, applicationId: 1,
+    const expected = [{ action: "record_notice", kind: "canceled", advanceWatermark: false, applicationId: 1,
       eventId: bookedEvent.eventId, receivedAt: cancellation.receivedAt }];
     expect(resolveBookingDecisions([bookedEvent, cancellation], [invited])).toEqual(expected);
     expect(resolveBookingDecisions([cancellation], [invited])).toEqual(expected);
     expect(resolveBookingDecisions([bookedEvent, cancellation], [{ ...invited,
-      interviewLastEventAt: cancellation.receivedAt, interviewEventId: bookedEvent.eventId }])).toEqual([]);
+      interviewLastEventAt: cancellation.receivedAt, interviewEventId: bookedEvent.eventId,
+      interviewCanceledEvents: [{ eventId: bookedEvent.eventId!, receivedAt: cancellation.receivedAt }] }])).toEqual([]);
   });
   it("rejects a replayed older signed booking after a newer booking was persisted", () => {
     const newer = { ...booked, interviewEventId: "event-b", interviewBookedAt: cancellation.receivedAt,
-      interviewSlotLabel: "Friday", interviewLastEventAt: cancellation.receivedAt };
+      interviewSlotLabel: "Friday", interviewLastEventAt: null };
     expect(resolveBookingDecisions([bookedEvent], [newer])).toEqual([]);
   });
-  it("uses per-event cancellation tombstones without suppressing a different current booking", () => {
-    const candidate = { ...invited, interviewCanceledEvents: [{ eventId: "event-b", receivedAt: cancellation.receivedAt }] };
+  it("uses per-event tombstones without suppressing an older active booking after a correlated clear", () => {
+    const candidate = { ...invited, interviewEventId: "event-b", interviewLastEventAt: cancellation.receivedAt,
+      interviewCanceledEvents: [{ eventId: "event-b", receivedAt: cancellation.receivedAt }] };
     expect(resolveBookingDecisions([{ ...bookedEvent, eventId: "event-b" }], [candidate])).toEqual([]);
     expect(resolveBookingDecisions([bookedEvent], [candidate])[0]?.action).toBe("mark_booked");
     expect(resolveBookingDecisions([{ ...bookedEvent, eventId: "event-b", receivedAt: at("2026-10-16T00:00:00Z") }], [candidate])[0]?.action).toBe("mark_booked");
   });
   it("resolves equal-time input deterministically, with cancellation winning an unpersisted booking", () => {
     const sameTimeCancellation = { ...cancellation, receivedAt: time };
-    const expected = [{ action: "record_notice", kind: "canceled", advanceWatermark: true,
+    const expected = [{ action: "record_notice", kind: "canceled", advanceWatermark: false,
       applicationId: 1, eventId: bookedEvent.eventId, receivedAt: time }];
     expect(resolveBookingDecisions([bookedEvent, sameTimeCancellation], [invited])).toEqual(expected);
     expect(resolveBookingDecisions([sameTimeCancellation, bookedEvent], [invited])).toEqual(expected);
