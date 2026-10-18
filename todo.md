@@ -1689,3 +1689,16 @@ Separate owner-facing concern: existing CA$50 per shift across 5.5 clock hours i
       surviving profile id after activation or a duplicate merge. Second
       caught a misleading comment and the second role-writing route. Both
       fixed; final verdict APPROVE.
+
+## 2026-10-18 - Separate interview invitations and verified bookings
+- [x] Split Applications into Interview invited and Interview booked with accurate next-step wording.
+- [x] Add staff-requested Check bookings using APY-only read-only mailbox and verified Google Calendar notices.
+- [x] Add both nullable booking columns, migration and snapshot without modifying signed offers or invoices.
+- [x] Protect later hiring stages, signing history, employees and onboarding; make updates and audits transactional.
+- [x] Prevent redelivery replay, correlate cancellations by event, select surviving bookings and report unmatched legacy records.
+- [x] Validate full suite: 949 passed, 1 existing skip; TypeScript and production build passed.
+- [x] Verify real mailbox and rollback-only database/row-lock checks; no persisted applicant changes.
+- [x] GPT 6.1 Sol reviewed exact git-show bytes at e8497a5e with qualified approval and no blockers; Claude API unavailable.
+- [x] Sync GitHub main at e8497a5e and save release checkpoint.
+
+Release handoff: production Publish is still required. After publishing, verify Check bookings in the authenticated production Applications screen. This is not marked complete or represented as a live production release. Historical unchecked entries elsewhere in this file are outside this interview feature.
