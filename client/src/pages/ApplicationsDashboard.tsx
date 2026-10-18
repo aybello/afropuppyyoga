@@ -124,6 +124,8 @@ type Application = {
   status: string;
   onboardingSentAt: Date | null;
   onboardingDeliveryToken: string | null;
+  interviewBookedAt?: Date | null;
+  interviewSlotLabel?: string | null;
   createdAt: Date;
   employeeId?: number | null;
   employeeStatus?: string | null;
@@ -197,8 +199,8 @@ function StatusBadge({ status }: { status: AppStatus }) {
     new: "New",
     reviewed: "Reviewed",
     shortlisted: "Shortlisted",
-    interview_requested: "Interview Request Sent",
-    interview_scheduled: "Interview Scheduled",
+    interview_requested: "Invited, not booked",
+    interview_scheduled: "Interview booked",
     accepted: "Selected for offer",
     rejected: "Rejected",
     onboarded: "Employee",
@@ -1022,6 +1024,21 @@ export default function ApplicationsDashboard() {
     refetchOnWindowFocus: true,
   });
 
+  const syncBookings = trpc.careers.syncInterviewBookings.useMutation({
+    onSuccess: (result) => {
+      utils.careers.list.invalidate();
+      if (result.booked === 0 && result.cleared === 0) {
+        toast.success("No changes detected in verified booking notices from the last 90 days.");
+        return;
+      }
+      const parts: string[] = [];
+      if (result.booked > 0) parts.push(`${result.booked} moved to Interview booked`);
+      if (result.cleared > 0) parts.push(`${result.cleared} booking cancelled`);
+      toast.success(parts.join(", "));
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
   useEffect(() => {
     if (selectedApp && applications) {
       const refreshed = applications.find((item) => item.id === selectedApp.id);
@@ -1148,6 +1165,16 @@ export default function ApplicationsDashboard() {
             variant="outline"
             size="sm"
             className="border-[#F0D0DC] text-[#8B2252] hover:bg-[#FFF5F8] font-body"
+            disabled={syncBookings.isPending}
+            title="Check verified APY calendar booking notices from the last 90 days. Does not send emails or offers."
+            onClick={() => syncBookings.mutate()}
+          >
+            <Calendar className="w-4 h-4 mr-1.5" /> {syncBookings.isPending ? "Checking..." : "Check bookings"}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-[#F0D0DC] text-[#8B2252] hover:bg-[#FFF5F8] font-body"
             onClick={() => setShowArchived(true)}
           >
             <Inbox className="w-4 h-4 mr-1.5" /> Archived
@@ -1187,8 +1214,8 @@ export default function ApplicationsDashboard() {
               <option value="new">New</option>
               <option value="reviewed">Reviewed</option>
               <option value="shortlisted">Shortlisted</option>
-              <option value="interview_requested">Interview request sent</option>
-              <option value="interview_scheduled">Interview scheduled</option>
+              <option value="interview_requested">Invited, not booked</option>
+              <option value="interview_scheduled">Interview booked</option>
               <option value="accepted">Selected / offer</option>
               <option value="rejected">Rejected</option>
               <option value="onboarded">Employee</option>
@@ -1304,6 +1331,11 @@ export default function ApplicationsDashboard() {
                       {/* Stage */}
                       <td className="px-5 py-4">
                         <p className="font-semibold text-sm text-[#8B2252] mb-1">{getHiringWorkflow(app).label}</p>
+                        {app.status === "interview_scheduled" && app.interviewSlotLabel && (
+                          <p className="inline-flex items-center gap-1 text-xs font-semibold text-purple-700 bg-purple-50 border border-purple-200 rounded-md px-2 py-1 mb-2">
+                            <Calendar className="w-3 h-3" /> {app.interviewSlotLabel}
+                          </p>
+                        )}
                         <p className="text-xs text-[#6B4658] max-w-64 mb-2">{getHiringWorkflow(app).next}</p>
                         <Select
                           disabled={Boolean(app.employeeId) || app.status === "onboarded" || Boolean(app.onboardingDeliveryToken)}
@@ -1325,8 +1357,8 @@ export default function ApplicationsDashboard() {
                             <SelectItem value="new">New</SelectItem>
                             <SelectItem value="reviewed">Reviewed</SelectItem>
                             <SelectItem value="shortlisted">Shortlisted</SelectItem>
-                            <SelectItem value="interview_requested">Interview Request Sent</SelectItem>
-                            <SelectItem value="interview_scheduled">Interview Scheduled</SelectItem>
+                            <SelectItem value="interview_requested">Invited, not booked</SelectItem>
+                            <SelectItem value="interview_scheduled">Interview booked</SelectItem>
                             <SelectItem value="accepted">Selected for offer</SelectItem>
                             <SelectItem value="rejected">Rejected</SelectItem>
                           </SelectContent>

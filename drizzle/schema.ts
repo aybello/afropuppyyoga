@@ -110,6 +110,10 @@ export const jobApplications = mysqlTable("jobApplications", {
   isTeamMember: boolean("isTeamMember").default(false).notNull(),
   /** Set when the initial onboarding email is accepted for delivery. */
   onboardingSentAt: timestamp("onboardingSentAt"),
+  /** When this applicant's interview slot was booked, detected from the calendar confirmation. */
+  interviewBookedAt: timestamp("interviewBookedAt"),
+  /** The booked interview slot exactly as the calendar confirmation stated it. */
+  interviewSlotLabel: varchar("interviewSlotLabel", { length: 200 }),
   /** Immutable token binding a claimed onboarding delivery to its completion or recovery action. */
   onboardingDeliveryToken: varchar("onboardingDeliveryToken", { length: 64 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

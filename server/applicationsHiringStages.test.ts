@@ -6,11 +6,11 @@ const mocks = vi.hoisted(() => ({ data: [] as any[], mutate: vi.fn(), invalidate
 vi.mock("../client/src/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: { role: "admin" }, loading: false }) }));
 vi.mock("../client/src/components/AdminNav", () => ({ default: () => null }));
 vi.mock("../client/src/lib/trpc", () => ({ trpc: {
-  useUtils: () => ({}),
+  useUtils: () => ({ careers: { list: { invalidate: mocks.invalidate } } }),
   careers: {
     list: { useQuery: () => ({ data: mocks.data, isLoading: false, error: mocks.error }) },
     listArchived: { useQuery: () => ({ data: [], isLoading: false }) },
-    ...Object.fromEntries(["updateStatus", "deleteApplication", "restoreApplication"].map((name) => [name, { useMutation: () => ({ mutate: mocks.mutate, isPending: false }) }])),
+    ...Object.fromEntries(["updateStatus", "deleteApplication", "restoreApplication", "syncInterviewBookings"].map((name) => [name, { useMutation: () => ({ mutate: mocks.mutate, isPending: false }) }])),
   },
   staffAvailability: { addSignedApplicantToDirectory: { useMutation: () => ({ mutate: mocks.mutate, isPending: false }) } },
 } }));
@@ -51,5 +51,22 @@ describe("Applications hiring screen", () => {
   it("shows a read error rather than falsely reporting no applications", () => {
     mocks.data = []; mocks.error = new Error("Database unavailable");
     expect(render()).toContain("Applications could not be loaded");
+  });
+  it("separates invited applicants from those who booked a time", () => {
+    mocks.data = [
+      { ...app, id: 1, name: "Invited Only", status: "interview_requested", signingStatus: null },
+      { ...app, id: 2, name: "Booked Already", status: "interview_scheduled", signingStatus: null, interviewSlotLabel: "Thu Oct 15, 2026 6:40pm - 7:20pm (EDT)" },
+    ];
+    const html = render();
+    expect(html).toContain("Interview invited");
+    expect(html).toContain("Interview booked");
+    expect(html).toContain("Interview invitation sent, no booking yet");
+    expect(html).toContain("Waiting for this applicant to book a time");
+    expect(html).toContain("Thu Oct 15, 2026 6:40pm - 7:20pm (EDT)");
+  });
+  it("offers a way to check bookings without sending anything", () => {
+    const html = render();
+    expect(html).toContain("Check bookings");
+    expect(mocks.mutate).not.toHaveBeenCalled();
   });
 });

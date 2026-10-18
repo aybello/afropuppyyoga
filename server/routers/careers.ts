@@ -69,6 +69,8 @@ import { buildNewRoleOnboardingEmail } from "../newRoleOnboardingEmail";
 import { normalizeApyRole } from "../../shared/apyPermissions";
 import { communicationsLog, employees, jobApplicationActions, jobApplications } from "../../drizzle/schema";
 import { and, desc, eq, isNull } from "drizzle-orm";
+import { fetchInterviewBookingEvents } from "../interviewBookingInbox";
+import { reconcileInterviewBookings } from "../interviewBookingReconciliation";
 
 export const APP_STATUS = ["new", "reviewed", "shortlisted", "interview_requested", "interview_scheduled", "accepted", "rejected", "onboarded"] as const;
 type AppStatus = (typeof APP_STATUS)[number];
@@ -513,6 +515,32 @@ export const careersRouter = router({
    */
   list: staffProcedure.query(async () => {
     return getAllJobApplications();
+  }),
+
+  /**
+   * Staff-only: reconcile the interview stage against the calendar booking
+   * confirmations that arrive in the APY mailbox.
+   *
+   * This only moves applicants between "invitation sent" and "booked". It never
+   * sends mail, never rejects anyone, and never touches an applicant who already
+   * has an offer, a signature or an employee record.
+   */
+  syncInterviewBookings: staffProcedure.mutation(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+    let events;
+    try {
+      events = await fetchInterviewBookingEvents();
+    } catch (error) {
+      throw new TRPCError({
+        code: "SERVICE_UNAVAILABLE",
+        message: "Could not read interview booking confirmations from the AfroPuppyYoga mailbox. Interview statuses were left unchanged.",
+        cause: error,
+      });
+    }
+
+    return reconcileInterviewBookings(db, events, ctx.user);
   }),
 
   getTimeline: staffProcedure

@@ -7,9 +7,11 @@ export type HiringApplication = {
   employeeStatus?: string | null;
   isTeamMember?: boolean | number | null;
   offerSentAt?: Date | string | null;
+  interviewBookedAt?: Date | string | null;
 };
 export const HIRING_STAGES = [
-  ["review", "Applications"], ["interview", "Interviews"],
+  ["review", "Applications"], ["interview", "Interview invited"],
+  ["interview_booked", "Interview booked"],
   ["offer", "Offer awaiting signature"], ["signed", "Signed, ready to add"],
   ["employee", "Employees, send documents"], ["onboarding", "Onboarding sent"],
   ["rejected", "Rejected"], ["all", "All"],
@@ -25,9 +27,12 @@ export function getHiringWorkflow(app: HiringApplication) {
   let label = app.status === "shortlisted" ? "Shortlisted" : app.status === "reviewed" ? "Reviewed" : "New application";
   let next = "Review the application and send an interview invitation.";
   if (app.status.startsWith("interview_")) {
-    stage = "interview";
-    label = app.status === "interview_scheduled" ? "Interview scheduled" : "Interview invitation sent";
-    next = "Confirm the interview, then send an offer when you are ready.";
+    const booked = app.status === "interview_scheduled";
+    stage = booked ? "interview_booked" : "interview";
+    label = booked ? "Interview booked" : "Interview invitation sent, no booking yet";
+    next = booked
+      ? "Interview time is booked. After the interview, send the offer letter."
+      : "Waiting for this applicant to book a time. Follow up or send an offer directly.";
   }
   if (app.status === "accepted" || app.signingStatus) {
     stage = "offer";
