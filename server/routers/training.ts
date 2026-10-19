@@ -19,16 +19,18 @@ export const trainingRouter = router({
   myTraining: teamMemberProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
-    const access = await resolveApyAccess(ctx.user);
+    ctx.res.setHeader("Cache-Control", "private, no-store");
+    const access = ctx.apyAccess;
     const staff = access.teamMember;
     const modules = staff ? modulesForRole(staff.role) : access.level === "owner" ? TRAINING_MODULES : [];
     const progress = staff ? await db.select().from(staffTrainingProgress).where(eq(staffTrainingProgress.staffId, staff.id)) : [];
-    return { staff: staff ? { id: staff.id, name: staff.name, role: staff.role } : null, modules, completedKeys: progress.map((item) => item.moduleKey), adminPreview: !staff && access.level === "owner", canManageTraining: access.canManageOperations };
+    return { staff: staff ? { id: staff.id, name: staff.name, role: staff.role, location: staff.location } : null, modules, completedKeys: progress.map((item) => item.moduleKey), adminPreview: !staff && access.level === "owner", canManageTraining: access.canManageOperations };
   }),
   complete: teamMemberProcedure.input(z.object({ moduleKey: z.string().min(1).max(128) })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
-    const staff = (await resolveApyAccess(ctx.user)).teamMember;
+    ctx.res.setHeader("Cache-Control", "private, no-store");
+    const staff = ctx.apyAccess.teamMember;
     if (!staff) throw new Error("Your login is not linked to an active APY team profile.");
     if (!modulesForRole(staff.role).some((module) => module.key === input.moduleKey)) throw new Error("This module is not assigned to your role.");
     const [historicCompletion] = await db.select({ id: staffTrainingProgress.id }).from(staffTrainingProgress).where(and(

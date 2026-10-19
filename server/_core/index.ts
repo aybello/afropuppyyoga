@@ -170,7 +170,7 @@ async function startServer() {
     next();
   });
 
-  app.use(["/staff/documents", "/sign"], (_req, res, next) => {
+  app.use(["/staff/documents", "/staff/get-started", "/staff/training", "/sign"], (_req, res, next) => {
     res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
     res.setHeader("Cache-Control", "private, no-store");
     res.setHeader("Referrer-Policy", "no-referrer");

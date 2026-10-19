@@ -76,6 +76,8 @@ export default function StaffTraining() {
     if (nextModule) setOpenKey(nextModule.key);
   };
 
+  if (training.error) return <div className="min-h-screen bg-[#FEFAF4] p-5 text-[#1A0A12]"><main className="mx-auto max-w-3xl py-6"><Link href="/staff/get-started" className="inline-flex min-h-11 items-center gap-2 font-semibold text-[#8B2252]"><ArrowLeft size={16} /> Get Started</Link><section role="alert" className="mt-5 space-y-3 rounded-2xl border border-[#F0D0DC] bg-white p-5"><h1 className="text-xl font-bold">We could not load your training</h1><p className="text-sm">Your progress has not been changed. Try again or sign in with your active staff account.</p><div className="flex flex-wrap gap-4"><button onClick={() => void training.refetch()} className="min-h-11 font-semibold text-[#8B2252] underline">Try again</button><Link href="/staff-access?returnTo=%2Fstaff%2Ftraining" className="inline-flex min-h-11 items-center font-semibold text-[#8B2252] underline">Staff sign-in</Link></div></section></main></div>;
+
   return (
     <div className="min-h-screen bg-[#FEFAF4] text-[#1E1208]">
       <header className="border-b border-[#E3EADB] bg-white/95 backdrop-blur">
@@ -115,10 +117,12 @@ export default function StaffTraining() {
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-black/15">
                 <div className="h-full rounded-full bg-[#F4A800] transition-[width] duration-300" style={{ width: `${canManageTraining && teamAssigned ? Math.round((teamCompletion / teamAssigned) * 100) : percent}%` }} />
               </div>
-              <p className="mt-2 text-xs font-semibold text-white/90">{canManageTraining ? `${overview.data?.length ?? 0} active team members` : `${percent}% ready for your shift`}</p>
+              <p className="mt-2 text-xs font-semibold text-white/90">{canManageTraining ? `${overview.data?.length ?? 0} active team members` : `${percent}% of lessons acknowledged`}</p>
             </div>
           </div>
         </section>
+
+        <p className="mt-4 text-sm text-[#6D4B5B]"><Link href="/staff/get-started" className="font-semibold text-[#8B2252] underline">Get Started</Link> has your document links and invoice guide. Lesson acknowledgments do not replace practical training or approval to work independently.</p>
 
         {training.isLoading && (
           <div className="py-20 text-center text-sm text-[#7A5A6A]">Loading your APY learning path…</div>
@@ -173,7 +177,7 @@ export default function StaffTraining() {
                 )}
                 {!isAdminPreview && staff && !nextModule && (
                   <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-800">
-                    <CheckCircle2 size={18} /> Training complete
+                    <CheckCircle2 size={18} /> Assigned lessons acknowledged
                   </div>
                 )}
               </div>
@@ -246,6 +250,7 @@ export default function StaffTraining() {
                                       </li>
                                     ))}
                                   </ol>
+                                  {module.key === "invoice-submission-v1" && <Link href="/staff/get-started#invoice" className="mt-3 inline-flex min-h-11 items-center text-sm font-bold text-[#8B2252] underline">Open the invoice guide and sample</Link>}
                                   {staff && (
                                     <button
                                       onClick={() => complete.mutate({ moduleKey: module.key })}

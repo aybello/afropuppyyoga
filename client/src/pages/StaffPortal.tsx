@@ -35,6 +35,16 @@ const TEAM_PHOTO = "https://files.manuscdn.com/user_upload_by_module/session_fil
 
 const TOOLS = [
   {
+    id: "get-started",
+    title: "Get Started",
+    description: "Your role, signed documents, training and invoice guide in one place.",
+    href: "/staff/get-started",
+    icon: GraduationCap,
+    accent: "#8B2252",
+    adminOnly: false,
+    category: "People",
+  },
+  {
     id: "my-documents",
     title: "My Documents",
     description: "Download your signed offer letter and NDA.",
@@ -250,7 +260,7 @@ const CATEGORY_ORDER = ["Operations", "People", "Finance", "Events", "Breeders",
 
 function requiredAccessForTool(id: string): ApyHubToolAccess {
   if (id === "invoices" || id === "revenue" || id === "private-revenue-dashboard" || id === "quickbooks" || id === "employee-directory") return "owner";
-  if (id === "staff-training" || id === "submit-invoice" || id === "my-documents") return "team";
+  if (id === "staff-training" || id === "submit-invoice" || id === "my-documents" || id === "get-started") return "team";
   return "operations";
 }
 

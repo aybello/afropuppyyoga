@@ -21,6 +21,20 @@ export const TRAINING_MODULES: TrainingModule[] = [
   { key: "pm-onboarding", role: "Puppy Monitor", title: "Puppy Monitor: Shadowing & Shift Standards", duration: "15 min", summary: "Prepare for independent shifts through APY's hands-on onboarding process.", lessons: ["Complete two or three shadow classes before independently managing puppies and guests.", "Train across different breeds, litter sizes and guest groups rather than assuming every class behaves the same way.", "Arrive 60 minutes before the first class to set up mats, clean the studio and prepare the puppy area.", "Every class requires two assigned Puppy Monitors; coordinate responsibilities before guests arrive.", "Update availability by the APY deadline and report schedule changes as soon as possible."] },
   { key: "pm-puppy-care", role: "Puppy Monitor", title: "Puppy Monitor: Care & Rotation", duration: "20 min", summary: "Monitor puppy behaviour, rest and safe guest interaction throughout the day.", lessons: ["Count puppies at every transition and maintain water, a potty area and a quiet rest space.", "Watch for tucked tails, hiding, whining, crying, shivering, persistent panting, escape attempts, fatigue or rough handling.", "Remove and rest puppies before they become overstimulated; never force interaction with a shy or tired puppy.", "Check for stress or injury after each class and coordinate concerns with the breeder, second Puppy Monitor and Operations.", "Use water, potty breaks and puppy rotations throughout long or back-to-back sessions."] },
   { key: "pm-room-reset", role: "Puppy Monitor", title: "Puppy Monitor: Room & Guest Safety", duration: "20 min", summary: "Keep the studio sanitary while creating a warm and controlled guest experience.", lessons: ["Set up pee pads, water, toys, paper towels, waste bags, gloves and APY-approved disinfectant before guests arrive.", "Clean accidents quickly and discreetly, then restock supplies between every class.", "Demonstrate gentle puppy handling, watch interactions continuously and intervene calmly if a guest mishandles a puppy.", "Engage guests warmly, answer basic puppy questions and support safe cuddle and photo moments.", "Pack puppy supplies, sanitize used carriers or equipment and report shortages or incidents before leaving."] },
+  {
+    key: "invoice-submission-v1",
+    role: "All Staff",
+    title: "Submitting an Invoice",
+    duration: "3 min",
+    summary: "Prepare your invoice and understand the submission confirmation.",
+    lessons: [
+      "Use the guide, fictional example and blank template at /staff/get-started#invoice.",
+      "Include services, dates, amount and payment details using your agreed rate or shift fee. Include tax only if applicable under your actual obligations; the guide is not tax advice.",
+      "Open /invoice-submit with no login, enter your full name and email address, and upload a non-empty PDF only, up to 16MB.",
+      'Wait for "Invoice received": it confirms submission for review, not approval or payment. Do not resubmit the same invoice after success.',
+      "For corrections or uncertainty about receipt, contact afropuppyyoga@gmail.com rather than submitting a duplicate.",
+    ],
+  },
 ];
 
 export function modulesForRole(role: string) {

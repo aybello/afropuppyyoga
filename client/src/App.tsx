@@ -24,6 +24,7 @@ const RunApyDashboard = lazy(() => import("./pages/RunApyDashboard"));
 const StaffManagement = lazy(() => import("./pages/StaffManagement"));
 const StaffTraining = lazy(() => import("./pages/StaffTraining"));
 const StaffDocuments = lazy(() => import("./pages/StaffDocuments"));
+const StaffGettingStarted = lazy(() => import("./pages/StaffGettingStarted"));
 const SignDocuments = lazy(() => import("./pages/SignDocuments"));
 const PrivateEventQuote = lazy(() => import("./pages/PrivateEventQuote"));
 const PrivateEventsDashboard = lazy(() => import("./pages/PrivateEventsDashboard"));
@@ -94,6 +95,7 @@ function Router() {
         <Route path={"/staff"} component={StaffPortal} />
         <Route path={"/staff/training"} component={StaffTraining} />
         <Route path={"/staff/documents"} component={StaffDocuments} />
+        <Route path={"/staff/get-started"} component={StaffGettingStarted} />
         <Route path={"/birthday"}>{() => { window.location.replace("/private-events/quote"); return null; }}</Route>
         <Route path={"/partnerships"} component={Partnerships} />
         <Route path={"/staff-login"} component={StaffLogin} />
