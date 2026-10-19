@@ -10,6 +10,7 @@ export const APY_TEAM_ROLES = [
   "Puppy Monitor",
   "Puppy Specialist",
   "BDR",
+  "Social Media Intern",
   "Social Media Specialist",
 ] as const;
 
