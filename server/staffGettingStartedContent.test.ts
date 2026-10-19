@@ -153,6 +153,8 @@ describe("invoice training module", () => {
     expect(invoice.lessons.length).toBeGreaterThanOrEqual(4);
     const lessons = invoice.lessons.join(" ");
     expect(lessons).toContain("/staff/get-started#invoice");
+    expect(lessons).toContain("/submit-invoice");
+    expect(lessons).not.toContain("/invoice-submit");
     expect(lessons).toContain("full name and email address");
     expect(lessons).toContain("PDF only, up to 16MB");
     expect(lessons).toContain("no login");

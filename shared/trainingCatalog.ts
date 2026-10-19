@@ -30,7 +30,7 @@ export const TRAINING_MODULES: TrainingModule[] = [
     lessons: [
       "Use the guide, fictional example and blank template at /staff/get-started#invoice.",
       "Include services, dates, amount and payment details using your agreed rate or shift fee. Include tax only if applicable under your actual obligations; the guide is not tax advice.",
-      "Open /invoice-submit with no login, enter your full name and email address, and upload a non-empty PDF only, up to 16MB.",
+      "Open /submit-invoice with no login, enter your full name and email address, and upload a non-empty PDF only, up to 16MB.",
       'Wait for "Invoice received": it confirms submission for review, not approval or payment. Do not resubmit the same invoice after success.',
       "For corrections or uncertainty about receipt, contact afropuppyyoga@gmail.com rather than submitting a duplicate.",
     ],
