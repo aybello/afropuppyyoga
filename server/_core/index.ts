@@ -170,6 +170,13 @@ async function startServer() {
     next();
   });
 
+  app.use(["/staff/documents", "/sign"], (_req, res, next) => {
+    res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+    res.setHeader("Cache-Control", "private, no-store");
+    res.setHeader("Referrer-Policy", "no-referrer");
+    next();
+  });
+
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({
     limit: "50mb",

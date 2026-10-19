@@ -491,6 +491,13 @@
       "when": 1792187560823,
       "tag": "0071_demonic_phalanx",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "5",
+      "when": 1792426473411,
+      "tag": "0072_goofy_naoko",
+      "breakpoints": true
     }
   ]
 }

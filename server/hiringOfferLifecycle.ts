@@ -6,6 +6,7 @@ import { withStaffingMutationLock } from "./staffingMutationLock";
 import { getPuppyMonitorOfferShiftPay, PUPPY_MONITOR_SHIFT_PAY_CAD } from "../shared/puppyMonitorTerms";
 import { getMovementInstructorOfferHourlyPay, MOVEMENT_INSTRUCTOR_HOURLY_PAY_CAD } from "../shared/movementInstructorTerms";
 import { getSocialMediaOfferStartHourlyPay, SOCIAL_MEDIA_INTERN_START_HOURLY_PAY_CAD } from "../shared/socialMediaTerms";
+import { createOfferDocumentSnapshot } from "./offerDocumentSnapshot";
 
 const isSocialMediaOfferType = (type: string) => type === "social_media_intern" || type === "social_media_specialist";
 
@@ -53,13 +54,18 @@ export async function prepareHiringOffer(db: any, applicationId: number) {
     return { applicant, reuse, token, expiresAt, offerLetterType };
   });
 }
-export async function recordCurrentOfferSignature(db: any, token: string, signedName: string, signedIp: string, confirmedOfferLetterType: string | undefined, confirmedPuppyMonitorShiftPayCad?: number, confirmedMovementInstructorHourlyPayCad?: number, confirmedSocialMediaHourlyPayCad?: number) {
+export async function recordCurrentOfferSignature(db: any, token: string, signedName: string, signedIp: string, confirmedOfferLetterType: string | undefined, confirmedPuppyMonitorShiftPayCad?: number, confirmedMovementInstructorHourlyPayCad?: number, confirmedSocialMediaHourlyPayCad?: number, confirmedDocumentSha256?: string) {
   return withStaffingMutationLock(db, async (tx) => {
     const [record]: Array<typeof signingTokens.$inferSelect> = await tx.select().from(signingTokens).where(eq(signingTokens.token, token)).limit(1);
     if (!record || record.expiresAt < new Date()) throw new Error("Invalid or expired signing link. Please contact AfroPuppyYoga.");
     if (record.signed === 1) throw new Error("These documents have already been signed.");
     if (record.offerLetterType !== confirmedOfferLetterType) {
       throw new Error("Please refresh this signing page and review the current Offer Letter before signing.");
+    }
+    const snapshot = createOfferDocumentSnapshot(record);
+    // The public router requires the digest. Optional only for existing internal callers.
+    if (confirmedDocumentSha256 !== undefined && confirmedDocumentSha256 !== snapshot.sha256) {
+      throw new Error("Please refresh this signing page and review the current documents before signing.");
     }
     if (record.offerLetterType?.startsWith("puppy_monitor_")) {
       const savedPayment = getPuppyMonitorOfferShiftPay(record.puppyMonitorShiftPayCad);
@@ -91,7 +97,8 @@ export async function recordCurrentOfferSignature(db: any, token: string, signed
       eq(jobApplications.id, app.id), ne(jobApplications.status, "onboarded"), ne(jobApplications.status, "rejected"),
       eq(jobApplications.isTeamMember, false), isNull(jobApplications.deletedAt), isNull(jobApplications.onboardingDeliveryToken)));
     if (changed.affectedRows !== 1) throw new Error("This application changed. Please request a current signing link.");
-    await tx.update(signingTokens).set({ signed: 1, signedName, signedIp, signedAt: new Date() }).where(and(eq(signingTokens.id, record.id), eq(signingTokens.signed, 0)));
+    const [signature] = await tx.update(signingTokens).set({ signed: 1, signedName, signedIp, signedAt: new Date(), signedDocumentSnapshot: JSON.stringify(snapshot) }).where(and(eq(signingTokens.id, record.id), eq(signingTokens.signed, 0)));
+    if (signature.affectedRows !== 1) throw new Error("This offer changed. Please refresh the signing page.");
     return record;
   });
 }

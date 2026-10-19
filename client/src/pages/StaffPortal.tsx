@@ -35,6 +35,16 @@ const TEAM_PHOTO = "https://files.manuscdn.com/user_upload_by_module/session_fil
 
 const TOOLS = [
   {
+    id: "my-documents",
+    title: "My Documents",
+    description: "Download your signed offer letter and NDA.",
+    href: "/staff/documents",
+    icon: FileText,
+    accent: "#8B2252",
+    adminOnly: false,
+    category: "People",
+  },
+  {
     id: "run-apy",
     title: "Run APY",
     description: "Today's classes, staffing gaps, messages, leads, and priority actions.",
@@ -240,7 +250,7 @@ const CATEGORY_ORDER = ["Operations", "People", "Finance", "Events", "Breeders",
 
 function requiredAccessForTool(id: string): ApyHubToolAccess {
   if (id === "invoices" || id === "revenue" || id === "private-revenue-dashboard" || id === "quickbooks" || id === "employee-directory") return "owner";
-  if (id === "staff-training" || id === "submit-invoice") return "team";
+  if (id === "staff-training" || id === "submit-invoice" || id === "my-documents") return "team";
   return "operations";
 }
 

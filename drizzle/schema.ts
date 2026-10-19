@@ -280,6 +280,8 @@ export const signingTokens = mysqlTable("signingTokens", {
   movementInstructorHourlyPayCad: int("movementInstructorHourlyPayCad"),
   /** Saved Social Media starting hourly payment in CAD; NULL preserves offers issued before a rate was approved. */
   socialMediaHourlyPayCad: int("socialMediaHourlyPayCad"),
+  /** Immutable offer/NDA text captured when a new signature is saved. NULL means no original text was retained. */
+  signedDocumentSnapshot: text("signedDocumentSnapshot"),
   /** Secure random token sent in the signing link */
   token: varchar("token", { length: 128 }).notNull().unique(),
   /** Whether the applicant has signed */

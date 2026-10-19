@@ -8,6 +8,7 @@ import { sendEmail } from "../email";
 import crypto from "crypto";
 import { canReuseSigningToken, detectOfferLetterType, type OfferLetterType } from "../signingPolicy";
 import { communicationsLog, jobApplicationActions } from "../../drizzle/schema";
+import { createOfferDocumentSnapshot } from "../offerDocumentSnapshot";
 
 export { canReuseSigningToken, detectOfferLetterType } from "../signingPolicy";
 
@@ -89,12 +90,18 @@ export const signingRouter = router({
    */
   getSigningRequest: publicProcedure
     .input(z.object({ token: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
+      ctx.res.setHeader("Cache-Control", "private, no-store");
       const record = await getSigningTokenByToken(input.token);
       if (!record) throw new Error("Invalid or expired signing link.");
       if (new Date() > record.expiresAt) throw new Error("This signing link has expired. Please contact AfroPuppyYoga.");
+      const snapshot = record.signed === 1 ? null : createOfferDocumentSnapshot(record);
 
       return {
+        documentDate: record.createdAt,
+        documentSha256: snapshot?.sha256 ?? null,
+        offerHtml: snapshot?.offerHtml ?? null,
+        ndaHtml: snapshot?.ndaHtml ?? null,
         applicantName: record.applicantName,
         role: record.role,
         location: record.location,
@@ -116,6 +123,7 @@ export const signingRouter = router({
       z.object({
         token: z.string(),
         signedName: z.string().min(2, "Please enter your full name"),
+        confirmedDocumentSha256: z.string().regex(/^[a-f0-9]{64}$/, "Refresh this page to review the current documents."),
         // Optional for pre-release tabs; the lifecycle rejects a missing value with a refresh message.
         confirmedOfferLetterType: z.string().min(1).optional(),
         confirmedPuppyMonitorShiftPayCad: z.union([z.literal(50), z.literal(60)]).optional(),
@@ -127,7 +135,7 @@ export const signingRouter = router({
       const sourceDb = await getDb();
       if (!sourceDb) throw new Error("Database not available");
       const ip = ctx.req?.headers?.["x-forwarded-for"]?.toString().split(",")[0]?.trim() ?? "unknown";
-      const record = await recordCurrentOfferSignature(sourceDb, input.token, input.signedName, ip, input.confirmedOfferLetterType, input.confirmedPuppyMonitorShiftPayCad, input.confirmedMovementInstructorHourlyPayCad, input.confirmedSocialMediaHourlyPayCad);
+      const record = await recordCurrentOfferSignature(sourceDb, input.token, input.signedName, ip, input.confirmedOfferLetterType, input.confirmedPuppyMonitorShiftPayCad, input.confirmedMovementInstructorHourlyPayCad, input.confirmedSocialMediaHourlyPayCad, input.confirmedDocumentSha256);
 
       // Notify owner
       try {
