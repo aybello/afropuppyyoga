@@ -156,7 +156,7 @@ describe("InterviewInviteModal", () => {
     mocks.mutationOptions!.onError(new Error("request timed out"));
 
     expect(mocks.error).toHaveBeenCalledWith(
-      "The send could not be confirmed: request timed out. Retry here without changing the invitation to check the same attempt.",
+      "The send could not be confirmed: request timed out. Retrying here keeps the same invitation. A channel not yet attempted may send; an existing send will not repeat.",
     );
     expect(mocks.error.mock.calls[0][0]).not.toMatch(/not sent|failed to send/i);
     expect(mocks.listInvalidate).not.toHaveBeenCalled();

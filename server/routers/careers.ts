@@ -73,6 +73,7 @@ import { fetchInterviewBookingEvents } from "../interviewBookingInbox";
 import { reconcileInterviewBookings } from "../interviewBookingReconciliation";
 import { sendInterviewInviteEmail } from "../interviewInviteEmail";
 import { sendInterviewInviteSms } from "../interviewInviteSms";
+import { recordInterviewInviteOutcome } from "../interviewInviteAudit";
 
 export const APP_STATUS = ["new", "reviewed", "shortlisted", "interview_requested", "interview_scheduled", "accepted", "rejected", "onboarded"] as const;
 type AppStatus = (typeof APP_STATUS)[number];
@@ -633,6 +634,7 @@ export const careersRouter = router({
       });
       const anyAccepted = email.status === "sent" || ["queued", "sent", "delivered"].includes(sms.status);
       let trackingWarning: string | undefined;
+      let recordedOutcome = false;
       if (anyAccepted) {
         // Sending a link is not a booking. Never rewind booked/selected applicants.
         const nextStatus = ["new", "reviewed", "shortlisted", "interview_requested"].includes(applicant.status)
@@ -640,18 +642,22 @@ export const careersRouter = router({
         try {
           const transitioned = nextStatus === applicant.status || await updateJobApplicationStatusIfUnclaimed(input.id, applicant.status as AppStatus, nextStatus);
           if (!transitioned) trackingWarning = "An invitation was accepted for sending, but the applicant changed before tracking could update. Refresh the application. Do not resend it.";
-          if (transitioned && !email.reused) await recordHiringAction({
-            ctx, applicationId: input.id, action: "interview_invite_sent",
-            fromStatus: applicant.status, toStatus: nextStatus,
-            details: { bookingLink: input.bookingLink, requestKey: input.requestKey, emailStatus: email.status, smsStatus: sms.status, smsReason: sms.reason },
-          });
+          if (transitioned) {
+            const outcome = await recordInterviewInviteOutcome({
+              applicationId: input.id, requestKey: input.requestKey, actor: ctx.user,
+              fromStatus: applicant.status, toStatus: nextStatus, bookingLink: input.bookingLink,
+              emailStatus: email.status, smsStatus: sms.status, smsReason: sms.reason,
+            });
+            recordedOutcome = outcome.recorded;
+            trackingWarning = outcome.warning;
+          }
         } catch {
           trackingWarning = "An invitation was accepted for sending, but tracking could not update. Refresh the application. Do not resend it.";
         }
       }
 
       // Secondary notifications must not turn a completed send into a retry error.
-      if (!email.reused) {
+      if (recordedOutcome) {
         try {
           await runPostCommitEffect("Interview owner notification", () => notifyOwner({
             title: `Interview invitation update: ${applicant.name}`,

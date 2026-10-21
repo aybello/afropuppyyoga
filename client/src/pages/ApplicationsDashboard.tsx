@@ -248,7 +248,7 @@ function InterviewInviteAttempt({
       utils.careers.getTimeline.invalidate({ id: app.id });
     },
     onError: (err) => {
-      toast.error(`The send could not be confirmed: ${err.message}. Retry here without changing the invitation to check the same attempt.`);
+      toast.error(`The send could not be confirmed: ${err.message}. Retrying here keeps the same invitation. A channel not yet attempted may send; an existing send will not repeat.`);
     },
   });
 
@@ -327,7 +327,7 @@ function InterviewInviteAttempt({
             {sendInvite.isPending ? (
               <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Sending...</>
             ) : (
-              <><Send className="w-4 h-4 mr-2" /> {delivery ? "Attempt recorded" : requestKey.current ? "Check same attempt" : "Send email + text"}</>
+              <><Send className="w-4 h-4 mr-2" /> {delivery ? "Attempt recorded" : requestKey.current ? "Retry same invitation" : "Send email + text"}</>
             )}
           </Button>
         </DialogFooter>

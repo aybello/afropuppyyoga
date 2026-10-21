@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   getJobApplicationById: vi.fn(),
   updateJobApplicationStatusIfUnclaimed: vi.fn(),
   getDb: vi.fn(),
+  recordInterviewInviteOutcome: vi.fn(),
   buildInterviewInviteEmail: vi.fn(),
   sendInterviewInviteEmail: vi.fn(),
   sendInterviewInviteSms: vi.fn(),
@@ -28,6 +29,7 @@ vi.mock("./email", () => ({
 }));
 vi.mock("./interviewInviteEmail", () => ({ sendInterviewInviteEmail: mocks.sendInterviewInviteEmail }));
 vi.mock("./interviewInviteSms", () => ({ sendInterviewInviteSms: mocks.sendInterviewInviteSms }));
+vi.mock("./interviewInviteAudit", () => ({ recordInterviewInviteOutcome: mocks.recordInterviewInviteOutcome }));
 vi.mock("./_core/notification", () => ({ notifyOwner: mocks.notifyOwner }));
 
 import { careersRouter } from "./routers/careers";
@@ -51,18 +53,6 @@ function caller(user: typeof actor | null = actor) {
   return careersRouter.createCaller({ user } as never);
 }
 
-function dbWithActionSink(sink: Array<Record<string, unknown>>, error?: Error) {
-  return {
-    insert: vi.fn(() => ({
-      values: vi.fn(async (value: Record<string, unknown>) => {
-        if (error) throw error;
-        sink.push(value);
-        return [{}];
-      }),
-    })),
-  };
-}
-
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.resolveApyAccess.mockResolvedValue({ level: "owner", canManageOperations: true });
@@ -71,7 +61,7 @@ beforeEach(() => {
   mocks.buildInterviewInviteEmail.mockReturnValue({ subject: "Interview", html: "<p>Interview</p>", text: "Interview" });
   mocks.sendInterviewInviteEmail.mockResolvedValue({ status: "sent" });
   mocks.sendInterviewInviteSms.mockResolvedValue({ status: "queued", phone: "+12895550101" });
-  mocks.getDb.mockResolvedValue(dbWithActionSink([]));
+  mocks.recordInterviewInviteOutcome.mockResolvedValue({ recorded: true });
   mocks.notifyOwner.mockResolvedValue(undefined);
 });
 
@@ -171,33 +161,35 @@ describe("careers.sendInterviewInvite", () => {
     expect(mocks.updateJobApplicationStatusIfUnclaimed).toHaveBeenCalledOnce();
   });
 
-  it("does not transition or write a timeline action when both outcomes are unknown", async () => {
-    const actions: Array<Record<string, unknown>> = [];
-    mocks.getDb.mockResolvedValue(dbWithActionSink(actions));
+  it("does not transition or audit when both outcomes are unknown", async () => {
     mocks.sendInterviewInviteEmail.mockResolvedValue({ status: "unknown" });
     mocks.sendInterviewInviteSms.mockResolvedValue({ status: "unknown", phone: "+12895550101" });
 
     await expect(caller().sendInterviewInvite(input)).resolves.toMatchObject({ success: false });
     expect(mocks.updateJobApplicationStatusIfUnclaimed).not.toHaveBeenCalled();
-    expect(actions).toEqual([]);
+    expect(mocks.recordInterviewInviteOutcome).not.toHaveBeenCalled();
+    expect(mocks.notifyOwner).not.toHaveBeenCalled();
   });
 
-  it("returns a warning without throwing or retrying when the status CAS loses", async () => {
+  it("returns a warning without auditing, throwing, or retrying when the status CAS loses", async () => {
     mocks.updateJobApplicationStatusIfUnclaimed.mockResolvedValue(false);
     const result = await caller().sendInterviewInvite(input);
     expect(result).toMatchObject({ success: true, trackingWarning: expect.stringContaining("Do not resend") });
     expect(mocks.updateJobApplicationStatusIfUnclaimed).toHaveBeenCalledOnce();
+    expect(mocks.recordInterviewInviteOutcome).not.toHaveBeenCalled();
+    expect(mocks.notifyOwner).not.toHaveBeenCalled();
   });
 
-  it("records exact channel statuses and reasons in the timeline rather than blanket delivery", async () => {
-    const actions: Array<Record<string, unknown>> = [];
-    mocks.getDb.mockResolvedValue(dbWithActionSink(actions));
+  it("records exact channel statuses and reasons through the outcome helper rather than blanket delivery", async () => {
     mocks.sendInterviewInviteSms.mockResolvedValue({ status: "queued", reason: "provider accepted", phone: "+12895550101" });
 
     await caller().sendInterviewInvite(input);
-    expect(actions).toHaveLength(1);
-    expect(actions[0]).toMatchObject({ action: "interview_invite_sent", fromStatus: "new", toStatus: "interview_requested" });
-    expect(JSON.parse(String(actions[0].details))).toEqual({
+    expect(mocks.recordInterviewInviteOutcome).toHaveBeenCalledOnce();
+    expect(mocks.recordInterviewInviteOutcome).toHaveBeenCalledWith({
+      applicationId: applicant.id,
+      actor,
+      fromStatus: "new",
+      toStatus: "interview_requested",
       bookingLink: BOOKING_LINK,
       requestKey: REQUEST_KEY,
       emailStatus: "sent",
@@ -206,20 +198,45 @@ describe("careers.sendInterviewInvite", () => {
     });
   });
 
-  it("does not report a false send failure when timeline audit or owner notification fails", async () => {
-    mocks.getDb.mockResolvedValue(dbWithActionSink([], new Error("audit unavailable")));
-    mocks.notifyOwner.mockRejectedValue(new Error("notify unavailable"));
-    await expect(caller().sendInterviewInvite(input)).resolves.toMatchObject({ success: true });
+  it("returns an audit warning without reporting a false send failure or notifying the owner", async () => {
+    mocks.recordInterviewInviteOutcome.mockResolvedValue({ recorded: false, warning: "audit unavailable; do not resend" });
+    await expect(caller().sendInterviewInvite(input)).resolves.toMatchObject({
+      success: true,
+      trackingWarning: "audit unavailable; do not resend",
+    });
+    expect(mocks.notifyOwner).not.toHaveBeenCalled();
   });
 
-  it("suppresses duplicate timeline and owner notification for a reused email result", async () => {
-    const actions: Array<Record<string, unknown>> = [];
-    mocks.getDb.mockResolvedValue(dbWithActionSink(actions));
+  it("does not report a false send failure when owner notification fails", async () => {
+    mocks.notifyOwner.mockRejectedValue(new Error("notify unavailable"));
+    await expect(caller().sendInterviewInvite(input)).resolves.toMatchObject({ success: true });
+    expect(mocks.recordInterviewInviteOutcome).toHaveBeenCalledOnce();
+    expect(mocks.notifyOwner).toHaveBeenCalledOnce();
+  });
+
+  it("recovers a failed audit on a reused-email replay and notifies only after it is recorded", async () => {
+    mocks.recordInterviewInviteOutcome
+      .mockResolvedValueOnce({ recorded: false, warning: "audit unavailable; do not resend" })
+      .mockResolvedValueOnce({ recorded: true });
+
     await caller().sendInterviewInvite(input);
     mocks.sendInterviewInviteEmail.mockResolvedValue({ status: "sent", reused: true });
     await caller().sendInterviewInvite(input);
 
-    expect(actions).toHaveLength(1);
+    expect(mocks.recordInterviewInviteOutcome).toHaveBeenCalledTimes(2);
+    expect(mocks.notifyOwner).toHaveBeenCalledOnce();
+  });
+
+  it("notifies once when duplicate audit outcomes are recorded then ignored, regardless of email replay", async () => {
+    mocks.recordInterviewInviteOutcome
+      .mockResolvedValueOnce({ recorded: true })
+      .mockResolvedValueOnce({ recorded: false });
+
+    await caller().sendInterviewInvite(input);
+    mocks.sendInterviewInviteEmail.mockResolvedValue({ status: "sent", reused: true });
+    await caller().sendInterviewInvite(input);
+
+    expect(mocks.recordInterviewInviteOutcome).toHaveBeenCalledTimes(2);
     expect(mocks.notifyOwner).toHaveBeenCalledOnce();
   });
 });
