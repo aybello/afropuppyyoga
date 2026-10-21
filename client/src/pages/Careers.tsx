@@ -808,6 +808,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                 placeholder="+1 (555) 000-0000"
                 className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#8B2252] focus:ring-1 focus:ring-[#8B2252]/30 transition-colors"
               />
+              <p className="mt-1.5 font-body text-xs leading-5 text-[#6B4C5A]">Optional. We may text this number about your application, including your interview booking link. Reply STOP to opt out. You can still apply without a phone number.</p>
             </div>
 
             <div>

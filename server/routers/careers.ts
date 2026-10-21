@@ -71,6 +71,8 @@ import { communicationsLog, employees, jobApplicationActions, jobApplications } 
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { fetchInterviewBookingEvents } from "../interviewBookingInbox";
 import { reconcileInterviewBookings } from "../interviewBookingReconciliation";
+import { sendInterviewInviteEmail } from "../interviewInviteEmail";
+import { sendInterviewInviteSms } from "../interviewInviteSms";
 
 export const APP_STATUS = ["new", "reviewed", "shortlisted", "interview_requested", "interview_scheduled", "accepted", "rejected", "onboarded"] as const;
 type AppStatus = (typeof APP_STATUS)[number];
@@ -599,14 +601,15 @@ export const careersRouter = router({
     }),
 
   /**
-   * Admin-only: send interview invitation email to applicant
+   * Operations staff: email the invitation and text the saved applicant phone.
    */
   sendInterviewInvite: staffProcedure
     .input(
       z.object({
-        id: z.number(),
-        bookingLink: z.string().url(), // Google Calendar booking link
-        additionalNotes: z.string().optional(),
+        id: z.number().int().positive(),
+        bookingLink: z.string().max(2048).url().refine(link => new URL(link).protocol === "https:", "Use an https:// booking link."),
+        additionalNotes: z.string().max(2000).optional(),
+        requestKey: z.string().uuid(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -620,34 +623,43 @@ export const careersRouter = router({
         additionalNotes: input.additionalNotes,
       });
 
-      await sendEmail({ to: applicant.email, subject, html, text });
-
-      // A booking link has been sent, but no date or time is confirmed yet.
-      const transitioned = await updateJobApplicationStatusIfUnclaimed(input.id, applicant.status as AppStatus, "interview_requested");
-      if (!transitioned) {
-        throw new TRPCError({ code: "CONFLICT", message: "Onboarding delivery started before the interview status could be updated. Refresh and resolve it first." });
+      const email = await sendInterviewInviteEmail({
+        applicationId: applicant.id, requestKey: input.requestKey, actor: ctx.user,
+        email: { to: applicant.email, subject, html, text },
+      });
+      const sms = await sendInterviewInviteSms({
+        applicationId: applicant.id, applicantName: applicant.name, role: applicant.role,
+        phone: applicant.phone, bookingLink: input.bookingLink, requestKey: input.requestKey, actor: ctx.user,
+      });
+      const anyAccepted = email.status === "sent" || ["queued", "sent", "delivered"].includes(sms.status);
+      let trackingWarning: string | undefined;
+      if (anyAccepted) {
+        // Sending a link is not a booking. Never rewind booked/selected applicants.
+        const nextStatus = ["new", "reviewed", "shortlisted", "interview_requested"].includes(applicant.status)
+          ? "interview_requested" : applicant.status as AppStatus;
+        try {
+          const transitioned = nextStatus === applicant.status || await updateJobApplicationStatusIfUnclaimed(input.id, applicant.status as AppStatus, nextStatus);
+          if (!transitioned) trackingWarning = "An invitation was accepted for sending, but the applicant changed before tracking could update. Refresh the application. Do not resend it.";
+          if (transitioned && !email.reused) await recordHiringAction({
+            ctx, applicationId: input.id, action: "interview_invite_sent",
+            fromStatus: applicant.status, toStatus: nextStatus,
+            details: { bookingLink: input.bookingLink, requestKey: input.requestKey, emailStatus: email.status, smsStatus: sms.status, smsReason: sms.reason },
+          });
+        } catch {
+          trackingWarning = "An invitation was accepted for sending, but tracking could not update. Refresh the application. Do not resend it.";
+        }
       }
 
-      await recordHiringAction({
-        ctx,
-        applicationId: input.id,
-        action: "interview_invite_sent",
-        fromStatus: applicant.status,
-        toStatus: "interview_requested",
-        details: { bookingLink: input.bookingLink },
-        communication: {
-          recipient: applicant.email,
-          subject,
-          bodyPreview: text,
-        },
-      });
-
-      await notifyOwner({
-        title: `Interview Invite Sent — ${applicant.name}`,
-        content: `Interview invitation sent to ${applicant.name} (${applicant.email}) for ${applicant.role} (${applicant.location}).\n\nBooking link: ${input.bookingLink}`,
-      });
-
-      return { success: true };
+      // Secondary notifications must not turn a completed send into a retry error.
+      if (!email.reused) {
+        try {
+          await runPostCommitEffect("Interview owner notification", () => notifyOwner({
+            title: `Interview invitation update: ${applicant.name}`,
+            content: `${applicant.name}, ${applicant.role} (${applicant.location}). Email: ${email.status}. Text: ${sms.status}${sms.reason ? ` (${sms.reason})` : ""}. A queued text is not confirmed delivered.`,
+          }));
+        } catch { /* Channel outcomes remain authoritative. */ }
+      }
+      return { success: anyAccepted, email, sms, trackingWarning };
     }),
 
   /**

@@ -47,8 +47,8 @@ import { getLoginUrl, LOGO_URL } from "@/const";
 import { toast } from "sonner";
 import AdminNav from "@/components/AdminNav";
 import { APY_ORIENTATION_TIME_OPTIONS, APY_PLANNING_DOCUMENT_URL } from "@shared/onboarding";
-
-
+import { describeInterviewInviteDelivery, type InterviewInviteDelivery } from "@shared/interviewInviteDelivery";
+import { normalizeCanadianPhoneNumber, formatCanadianPhoneNumber } from "@shared/phone";
 /**
  * Fetches a fresh presigned URL for a stored video key, then opens it in a new tab.
  * Falls back to the raw URL if no key is available (e.g. external links).
@@ -215,7 +215,7 @@ function StatusBadge({ status }: { status: AppStatus }) {
 // ─── Interview Invite Modal ──────────────────────────────────────────────────
 const DEFAULT_BOOKING_LINK = "https://calendar.app.google/RdiW9wP2XYVK27g2A";
 
-function InterviewInviteModal({
+export function InterviewInviteModal({
   app,
   open,
   onClose,
@@ -227,32 +227,41 @@ function InterviewInviteModal({
   const utils = trpc.useUtils();
   const [bookingLink, setBookingLink] = useState(DEFAULT_BOOKING_LINK);
   const [additionalNotes, setAdditionalNotes] = useState("");
+  const requestKey = useRef<string | null>(null);
+  const [delivery, setDelivery] = useState<InterviewInviteDelivery | null>(null);
+  const savedPhone = app.phone ? normalizeCanadianPhoneNumber(app.phone) : null;
 
   const sendInvite = trpc.careers.sendInterviewInvite.useMutation({
-    onSuccess: () => {
-      toast.success(`Interview request sent to ${app.email}!`);
+    onSuccess: (result) => {
+      setDelivery(result);
+      const feedback = describeInterviewInviteDelivery(result);
+      if (feedback.warning) toast.warning(feedback.message, { duration: 12000 });
+      else toast.success(feedback.message);
       utils.careers.list.invalidate();
-      onClose();
+      utils.careers.getTimeline.invalidate({ id: app.id });
     },
     onError: (err) => {
-      toast.error(`Failed to send invite: ${err.message}`);
+      toast.error(`The send could not be confirmed: ${err.message}. Retry here without changing the invitation to check the same attempt.`);
     },
   });
 
   const handleSubmit = () => {
+    if (sendInvite.isPending || delivery) return;
     if (!bookingLink.trim()) {
       toast.error("Please provide a booking link");
       return;
     }
+    if (!requestKey.current) requestKey.current = crypto.randomUUID();
     sendInvite.mutate({
       id: app.id,
       bookingLink: bookingLink.trim(),
       additionalNotes: additionalNotes || undefined,
+      requestKey: requestKey.current,
     });
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+    <Dialog open={open} onOpenChange={(v) => !v && !sendInvite.isPending && onClose()}>
       <DialogContent className="max-w-lg bg-[#FEFAF4] border-[#F0D0DC]">
         <DialogHeader>
           <DialogTitle className="font-display text-xl text-[#1A0A12]">
@@ -266,15 +275,19 @@ function InterviewInviteModal({
         <div className="space-y-4 py-2">
           <div className="bg-[#FFF5F8] border border-[#F0D0DC] rounded-xl p-4">
             <p className="font-body text-sm text-[#3D1A2E] leading-relaxed">
-              The applicant will receive an email with a button to request or book their interview. Their status will remain <strong>Interview Request Sent</strong> until you manually confirm a date and time.
+              Email: <strong className="break-all">{app.email}</strong><br />
+              Text: <strong>{savedPhone ? formatCanadianPhoneNumber(savedPhone) : "No valid saved phone number. Email only."}</strong><br />
+              The text uses the same booking link. Numbers that opted out are skipped. Additional notes are included in the email only. Sending a link does not confirm a booking. Use Check bookings to find confirmed appointments.
             </p>
           </div>
+          {delivery && <div role="status" aria-live="polite" className="rounded-xl border border-[#F0D0DC] bg-white p-4 font-body text-sm leading-6 text-[#3D1A2E]">{describeInterviewInviteDelivery(delivery).message}</div>}
 
           <div>
             <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Booking Link *</Label>
             <Input
               placeholder="https://calendar.app.google/..."
               value={bookingLink}
+              disabled={sendInvite.isPending || Boolean(requestKey.current)}
               onChange={(e) => setBookingLink(e.target.value)}
               className="border-[#F0D0DC] font-body"
             />
@@ -286,6 +299,7 @@ function InterviewInviteModal({
             <Textarea
               placeholder="Any additional info for the applicant..."
               value={additionalNotes}
+              disabled={sendInvite.isPending || Boolean(requestKey.current)}
               onChange={(e) => setAdditionalNotes(e.target.value)}
               className="border-[#F0D0DC] font-body resize-none"
               rows={3}
@@ -294,19 +308,19 @@ function InterviewInviteModal({
         </div>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose} className="font-body border-[#F0D0DC]">
-            Cancel
+          <Button variant="outline" onClick={onClose} disabled={sendInvite.isPending} className="font-body border-[#F0D0DC]">
+            {delivery ? "Close" : "Cancel"}
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={sendInvite.isPending}
+            disabled={sendInvite.isPending || Boolean(delivery)}
             className="font-body text-white"
             style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}
           >
             {sendInvite.isPending ? (
               <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Sending...</>
             ) : (
-              <><Send className="w-4 h-4 mr-2" /> Send Request</>
+              <><Send className="w-4 h-4 mr-2" /> {delivery ? "Attempt recorded" : requestKey.current ? "Check same attempt" : "Send email + text"}</>
             )}
           </Button>
         </DialogFooter>

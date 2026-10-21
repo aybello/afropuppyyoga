@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { getDb } = vi.hoisted(() => ({ getDb: vi.fn() }));
 
@@ -48,7 +48,13 @@ function createDb(responses: unknown[]) {
 const caller = () => puppyScheduleRouter.createCaller({ user: { openId: "owner", name: "Ay Bello", email: "owner@example.com", role: "admin" } } as never);
 
 describe("assignLeadership mutation", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // The upcoming-class fixture must not become historical as wall time passes.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-19T12:00:00Z"));
+  });
+  afterEach(() => vi.useRealTimers());
 
   it("assigns an eligible Operations Manager as coverage for the selected class date and studio", async () => {
     const prepared = createDb([[], [schedule], [leadershipCandidate], [], []]);
