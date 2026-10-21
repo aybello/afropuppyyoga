@@ -96,6 +96,17 @@ beforeEach(() => {
 });
 
 describe("InterviewInviteModal", () => {
+  it("unmounts the attempt when closed instead of retaining its recipient or send state", () => {
+    const html = renderToStaticMarkup(createElement(InterviewInviteModal, {
+      app: baseApp as Parameters<typeof InterviewInviteModal>[0]["app"],
+      open: false,
+      onClose: vi.fn(),
+    }));
+    expect(html).toBe("");
+    expect(mocks.mutationOptions).toBeNull();
+    expect(mocks.mutate).not.toHaveBeenCalled();
+  });
+
   it("renders the saved applicant phone and explains the two delivery channels without sending", () => {
     const html = render();
 

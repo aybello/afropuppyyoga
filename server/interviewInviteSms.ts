@@ -52,8 +52,9 @@ function payloadHash(phone: string, body: string) {
 }
 
 function isDuplicateKeyError(error: unknown) {
-  const candidate = error as { code?: unknown; message?: unknown } | null;
-  return candidate?.code === "ER_DUP_ENTRY" || /duplicate|unique constraint/i.test(String(candidate?.message ?? ""));
+  const candidate = error as { code?: unknown; message?: unknown; cause?: { code?: unknown } } | null;
+  return candidate?.code === "ER_DUP_ENTRY" || candidate?.cause?.code === "ER_DUP_ENTRY"
+    || /duplicate|unique constraint/i.test(String(candidate?.message ?? ""));
 }
 
 function isExplicitProviderRejection(error: unknown) {

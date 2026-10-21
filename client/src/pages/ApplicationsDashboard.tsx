@@ -215,15 +215,22 @@ function StatusBadge({ status }: { status: AppStatus }) {
 // ─── Interview Invite Modal ──────────────────────────────────────────────────
 const DEFAULT_BOOKING_LINK = "https://calendar.app.google/RdiW9wP2XYVK27g2A";
 
-export function InterviewInviteModal({
-  app,
-  open,
-  onClose,
-}: {
+type InterviewInviteModalProps = {
   app: Application;
   open: boolean;
   onClose: () => void;
-}) {
+};
+
+export function InterviewInviteModal(props: InterviewInviteModalProps) {
+  // A later explicit invitation is new. An in-dialog retry keeps its original key.
+  return props.open ? <InterviewInviteAttempt key={props.app.id} {...props} /> : null;
+}
+
+function InterviewInviteAttempt({
+  app,
+  open,
+  onClose,
+}: InterviewInviteModalProps) {
   const utils = trpc.useUtils();
   const [bookingLink, setBookingLink] = useState(DEFAULT_BOOKING_LINK);
   const [additionalNotes, setAdditionalNotes] = useState("");
