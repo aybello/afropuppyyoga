@@ -9,6 +9,9 @@ import crypto from "crypto";
 import { canReuseSigningToken, detectOfferLetterType, type OfferLetterType } from "../signingPolicy";
 import { communicationsLog, jobApplicationActions } from "../../drizzle/schema";
 import { createOfferDocumentSnapshot } from "../offerDocumentSnapshot";
+import { sendOfferSigningEmail } from "../offerSigningEmail";
+import { sendOfferSigningSms } from "../offerSigningSms";
+import { recordOfferSigningOutcome } from "../offerSigningAudit";
 
 export { canReuseSigningToken, detectOfferLetterType } from "../signingPolicy";
 
@@ -19,7 +22,8 @@ export const signingRouter = router({
   createSigningRequest: staffProcedure
     .input(
       z.object({
-        applicationId: z.number(),
+        applicationId: z.number().int().positive(),
+        requestKey: z.string().uuid("Refresh Applications before sending an offer."),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -28,61 +32,50 @@ export const signingRouter = router({
       const { applicant, reuse, token, expiresAt, offerLetterType } = await prepareHiringOffer(sourceDb, input.applicationId);
 
       const signingLink = `https://afropuppyyoga.ca/sign?token=${token}`;
-      const subject = "Action Required: Review & Sign Your Offer — AfroPuppyYoga";
-      const text = `Hi ${applicant.name},\n\nCongratulations! Please review and sign your offer letter for the ${applicant.role} position at AfroPuppyYoga (${applicant.location}).\n\nClick the link below to review and sign your documents:\n${signingLink}\n\nThis link is valid for 7 days.\n\nBest regards,\nThe AfroPuppyYoga Team`;
-
-      // Send signing email to applicant
-      await sendEmail({
-        to: applicant.email,
-        subject,
-        html: buildSigningEmail({ applicantName: applicant.name, role: applicant.role, location: applicant.location, signingLink }),
-        text,
+      const subject = "Action Required: Review & Sign Your Offer | AfroPuppyYoga";
+      const expiryLabel = expiresAt.toLocaleString("en-CA", { timeZone: "America/Toronto", timeZoneName: "short" });
+      const text = `Hi ${applicant.name},\n\nCongratulations! Please review and sign your offer letter and NDA for the ${applicant.role} position at AfroPuppyYoga (${applicant.location}).\n\nBoth documents are on the same signing page:\n${signingLink}\n\nThis private link expires ${expiryLabel}. Do not forward it. Questions? Reply to this email.\n\nBest regards,\nThe AfroPuppyYoga Team`;
+      const email = await sendOfferSigningEmail({
+        applicationId: applicant.id, requestKey: input.requestKey, actor: ctx.user,
+        email: { to: applicant.email, subject,
+          html: buildSigningEmail({ applicantName: applicant.name, role: applicant.role, location: applicant.location, signingLink, expiryLabel }), text },
       });
-      await updateJobApplicationStatusIfUnclaimed(applicant.id, applicant.status, "accepted");
-
-      const db = await getDb();
-      if (db) {
+      const sms = await sendOfferSigningSms({
+        applicationId: applicant.id, requestKey: input.requestKey, actor: ctx.user,
+        applicantName: applicant.name, role: applicant.role, phone: applicant.phone, signingLink,
+      });
+      const anyAccepted = email.status === "sent" || ["queued", "sent", "delivered"].includes(sms.status);
+      let trackingWarning: string | undefined;
+      let recordedOutcome = false;
+      if (anyAccepted) {
         try {
-          await Promise.all([
-            db.insert(jobApplicationActions).values({
-              applicationId: applicant.id,
-              action: reuse ? "offer_resent" : "offer_sent",
-              fromStatus: applicant.status,
-              toStatus: "accepted",
-              actorUserId: ctx.user.id,
-              actorName: ctx.user.name,
-              actorEmail: ctx.user.email,
-              details: JSON.stringify({ offerLetterType, tokenReused: reuse, expiresAt: expiresAt.toISOString() }),
-            }),
-            db.insert(communicationsLog).values({
-              entityType: "job_application",
-              entityId: applicant.id,
-              channel: "email",
-              direction: "outbound",
-              action: reuse ? "offer_resent" : "offer_sent",
-              recipient: applicant.email,
-              subject,
-              bodyPreview: text.slice(0, 1000),
-              deliveryStatus: "sent",
-              actorUserId: ctx.user.id,
-              actorName: ctx.user.name,
-            }),
-          ]);
-        } catch (error) {
-          console.error(`[Signing] Offer sent but history write failed for application ${applicant.id}:`, error);
+          const transitioned = applicant.status === "accepted" || await updateJobApplicationStatusIfUnclaimed(applicant.id, applicant.status, "accepted");
+          if (!transitioned) trackingWarning = "An offer link was accepted for sending, but the application changed before tracking updated. Refresh Applications. Do not resend.";
+          else {
+            const outcome = await recordOfferSigningOutcome({
+              applicationId: applicant.id, requestKey: input.requestKey, actor: ctx.user,
+              fromStatus: applicant.status, toStatus: "accepted", reused: reuse, offerLetterType, expiresAt,
+              emailStatus: email.status, smsStatus: sms.status, smsReason: sms.reason,
+            });
+            recordedOutcome = outcome.recorded;
+            trackingWarning = outcome.warning;
+          }
+        } catch {
+          trackingWarning = "An offer link was accepted for sending, but tracking could not update. Refresh Applications. Do not resend.";
         }
       }
 
-      try {
-        await notifyOwner({
-          title: `Offer Letter Sent: ${applicant.name}`,
-          content: `Offer letter sent to ${applicant.name} (${applicant.email}) for ${applicant.role} (${applicant.location}).`,
-        });
-      } catch (error) {
-        console.error("[Signing] Offer sent, but owner notification failed:", error);
+      if (recordedOutcome) {
+        try {
+          await notifyOwner({
+            title: `Offer invitation update: ${applicant.name}`,
+            content: `${applicant.name}, ${applicant.role} (${applicant.location}). Email: ${email.status}. Text: ${sms.status}. A queued text is not confirmed delivered.`,
+          });
+        } catch { /* Notifications must not turn an accepted send into a retry error. */ }
       }
 
-      return { success: true, signingLink, reused: reuse };
+      ctx.res?.setHeader("Cache-Control", "private, no-store");
+      return { success: anyAccepted, signingLink, reused: reuse, expiresAt, email, sms, trackingWarning };
     }),
 
   /**
@@ -214,7 +207,9 @@ export const signingRouter = router({
 
 // ─── Email Templates ──────────────────────────────────────────────────────────
 
-function buildSigningEmail(opts: { applicantName: string; role: string; location: string; signingLink: string }): string {
+function buildSigningEmail(input: { applicantName: string; role: string; location: string; signingLink: string; expiryLabel: string }): string {
+  const escape = (value: string) => value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]!));
+  const opts = { applicantName: escape(input.applicantName), role: escape(input.role), location: escape(input.location), signingLink: escape(input.signingLink), expiryLabel: escape(input.expiryLabel) };
   const firstName = opts.applicantName.split(" ")[0];
   return `
 <!DOCTYPE html>
@@ -291,7 +286,7 @@ function buildSigningEmail(opts: { applicantName: string; role: string; location
               </p>
 
               <!-- Expiry note -->
-              <p style="margin:0;font-size:12px;color:#B09AA8;text-align:center;">⏳ This link is valid for <strong>7 days</strong>. Questions? Reply to this email.</p>
+              <p style="margin:0;font-size:12px;color:#B09AA8;text-align:center;">This private link expires <strong>${opts.expiryLabel}</strong>. Do not forward it. Questions? Reply to this email.</p>
             </td>
           </tr>
 

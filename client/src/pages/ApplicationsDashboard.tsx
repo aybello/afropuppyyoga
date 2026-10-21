@@ -337,89 +337,69 @@ function InterviewInviteAttempt({
 }
 
 // ─── Send Signing Link Modal ─────────────────────────────────────────────────
-function OfferLetterModal({
-  app,
-  open,
-  onClose,
-}: {
-  app: Application;
-  open: boolean;
-  onClose: () => void;
-}) {
+type OfferLetterModalProps = { app: Application; open: boolean; onClose: () => void };
+export function OfferLetterModal(props: OfferLetterModalProps) {
+  return props.open ? <OfferSigningAttempt key={props.app.id} {...props} /> : null;
+}
+function OfferSigningAttempt({ app, open, onClose }: OfferLetterModalProps) {
   const utils = trpc.useUtils();
-  const [sent, setSent] = useState(false);
-  const [signingLink, setSigningLink] = useState("");
-
+  const [requestKey] = useState(() => crypto.randomUUID());
+  const [result, setResult] = useState<(InterviewInviteDelivery & { signingLink: string; expiresAt: Date }) | null>(null);
+  const savedPhone = app.phone ? normalizeCanadianPhoneNumber(app.phone) : null;
   const sendSigningLink = trpc.signing.createSigningRequest.useMutation({
     onSuccess: (data) => {
-      setSent(true);
-      setSigningLink(data.signingLink);
+      setResult(data);
       utils.careers.list.invalidate();
-      toast.success(`Signing link sent to ${app.email}! 🎉`);
+      utils.careers.getTimeline.invalidate({ id: app.id });
+      const feedback = describeInterviewInviteDelivery(data);
+      if (feedback.warning) toast.warning(feedback.message, { duration: 12000 });
+      else toast.success(feedback.message);
     },
-    onError: (err) => {
-      toast.error(`Failed to send signing link: ${err.message}`);
+    onError: () => {
+      toast.error("The offer send could not be confirmed. Retry here to keep the same attempt. A channel not yet attempted may send; an existing send will not repeat.");
     },
   });
-
-  const handleSend = () => {
-    sendSigningLink.mutate({
-      applicationId: app.id,
-    });
-  };
-
+  const feedback = result ? describeInterviewInviteDelivery(result) : null;
+  const handleSend = () => sendSigningLink.mutate({ applicationId: app.id, requestKey });
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-lg bg-[#FEFAF4] border-[#F0D0DC]">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl text-[#1A0A12]">
-            ✍️ Send Offer for Signing
-          </DialogTitle>
+          <DialogTitle className="font-display text-xl text-[#1A0A12]">Send Offer for Signing</DialogTitle>
           <DialogDescription className="font-body text-sm text-[#1A0A12]">
-            Sending to <strong>{app.name}</strong> ({app.email}) for <strong>{app.role}</strong> — {app.location}
+            <strong>{app.name}</strong>, <strong>{app.role}</strong> in {app.location}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
-          {!sent ? (
+          <div className="rounded-xl border border-[#F0D0DC] bg-white p-4 font-body text-sm space-y-2">
+            <p><strong>Email:</strong> {app.email}</p>
+            <p><strong>Text:</strong> {savedPhone ? formatCanadianPhoneNumber(savedPhone) : "No valid saved phone number. Email only."}</p>
+            <p className="text-xs text-[#6B4A5A]">The text uses the same private signing link as the email. Texts are skipped for applicants who opted out.</p>
+          </div>
+          {!result ? (
             <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-2">
-              <p className="font-body text-sm text-green-800 font-semibold">What happens when you click Send:</p>
+              <p className="font-body text-sm text-green-800 font-semibold">One link, two ways to receive it</p>
               <ul className="font-body text-sm text-green-700 space-y-1 list-disc list-inside">
-                <li>A branded email is sent to the applicant with a secure signing link</li>
-                <li>They view their role-specific Offer Letter + NDA in the browser</li>
-                <li>They type their name as a digital signature and submit</li>
-                <li>You get notified instantly when they sign</li>
-                <li>The link is valid for 7 days</li>
+                <li>We email the offer and text their saved phone number when eligible.</li>
+                <li>They review their role-specific Offer Letter and NDA on the same page, then sign.</li>
+                <li>New links last 7 days. Resending a valid link keeps its original expiry.</li>
+                <li>Existing signed documents and compensation are not changed.</li>
               </ul>
             </div>
           ) : (
-            <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-3">
-              <p className="font-body text-sm text-green-800 font-semibold">✅ Signing link sent!</p>
-              <p className="font-body text-xs text-green-700">You can also share this link directly:</p>
-              <div className="bg-white rounded-lg border border-green-200 p-2">
-                <a href={signingLink} target="_blank" rel="noopener noreferrer" className="font-body text-xs text-[#8B2252] break-all hover:underline">
-                  {signingLink}
-                </a>
-              </div>
+            <div className={`rounded-xl border p-4 space-y-3 ${feedback?.warning ? "bg-amber-50 border-amber-200 text-amber-900" : "bg-green-50 border-green-200 text-green-800"}`}>
+              <p role="status" className="font-body text-sm">{feedback?.message}</p>
+              <p className="font-body text-xs">Private link for {app.name} only. Do not forward it to anyone else.</p>
+              <a href={result.signingLink} target="_blank" rel="noopener noreferrer" className="font-body text-xs text-[#8B2252] break-all hover:underline">Open signing page</a>
+              <p className="font-body text-xs">Expires {new Date(result.expiresAt).toLocaleString("en-CA", { timeZone: "America/Toronto", timeZoneName: "short" })}.</p>
             </div>
           )}
         </div>
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose} className="font-body border-[#F0D0DC]">
-            {sent ? "Close" : "Cancel"}
-          </Button>
-          {!sent && (
-            <Button
-              onClick={handleSend}
-              disabled={sendSigningLink.isPending}
-              className="font-body text-white bg-green-600 hover:bg-green-700"
-            >
-              {sendSigningLink.isPending ? (
-                <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Sending...</>
-              ) : (
-                <><Send className="w-4 h-4 mr-2" /> Send Signing Link</>
-              )}
-            </Button>
-          )}
+          <Button variant="outline" onClick={onClose} className="font-body border-[#F0D0DC]">{result ? "Close" : "Cancel"}</Button>
+          {!result && <Button onClick={handleSend} disabled={sendSigningLink.isPending} className="font-body text-white bg-green-600 hover:bg-green-700">
+            {sendSigningLink.isPending ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Sending...</> : <><Send className="w-4 h-4 mr-2" /> {sendSigningLink.isError ? "Retry same offer attempt" : "Send Email + Text"}</>}
+          </Button>}
         </DialogFooter>
       </DialogContent>
     </Dialog>
