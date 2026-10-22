@@ -417,10 +417,10 @@ export type PrivateEventAction = typeof privateEventActions.$inferSelect;
  * preview, not full attachments or credentials. */
 export const communicationsLog = mysqlTable("communicationsLog", {
   id: int("id").autoincrement().primaryKey(),
-  entityType: mysqlEnum("communicationEntityType", ["private_event", "job_application", "breeder", "class", "general"]).notNull(),
+  entityType: mysqlEnum("entityType", ["private_event", "job_application", "breeder", "class", "general"]).notNull(),
   entityId: int("entityId"),
-  channel: mysqlEnum("communicationChannel", ["email", "sms", "call", "system"]).notNull(),
-  direction: mysqlEnum("communicationDirection", ["outbound", "inbound", "system"]).notNull(),
+  channel: mysqlEnum("channel", ["email", "sms", "call", "system"]).notNull(),
+  direction: mysqlEnum("direction", ["outbound", "inbound", "system"]).notNull(),
   action: varchar("action", { length: 64 }).notNull(),
   recipient: varchar("recipient", { length: 320 }),
   subject: varchar("subject", { length: 500 }),

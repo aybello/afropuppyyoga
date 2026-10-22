@@ -169,10 +169,24 @@ describe("sendOfferSigningSms", () => {
     expect([...unsafeSid.rows.values()][0]!.providerMessageId).toBeNull();
   });
 
-  it("does not dispatch when claiming fails and returns unknown with safe SID if outcome persistence fails", async () => {
+  it("returns failed without dispatch when no delivery database is available", async () => {
+    mocks.getDb.mockResolvedValueOnce(null);
+    await expect(sendOfferSigningSms(baseInput)).resolves.toEqual({
+      status: "failed",
+      reason: "Text was not attempted because its delivery record could not be saved.",
+      phone: "+12897881885",
+    });
+    expect(mocks.create).not.toHaveBeenCalled();
+  });
+
+  it("returns failed without dispatch for a nonduplicate initial claim error, but unknown after provider contact", async () => {
     const claim = makeDb({ claimFails: true });
     mocks.getDb.mockResolvedValueOnce(claim.db);
-    await expect(sendOfferSigningSms(baseInput)).resolves.toMatchObject({ status: "unknown" });
+    await expect(sendOfferSigningSms(baseInput)).resolves.toEqual({
+      status: "failed",
+      reason: "Text was not attempted because its delivery record could not be saved.",
+      phone: "+12897881885",
+    });
     expect(mocks.create).not.toHaveBeenCalled();
 
     const update = makeDb({ updateFails: true });

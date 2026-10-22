@@ -1342,8 +1342,8 @@
           "notNull": true,
           "autoincrement": true
         },
-        "communicationEntityType": {
-          "name": "communicationEntityType",
+        "entityType": {
+          "name": "entityType",
           "type": "enum('private_event','job_application','breeder','class','general')",
           "primaryKey": false,
           "notNull": true,
@@ -1356,15 +1356,15 @@
           "notNull": false,
           "autoincrement": false
         },
-        "communicationChannel": {
-          "name": "communicationChannel",
+        "channel": {
+          "name": "channel",
           "type": "enum('email','sms','call','system')",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "communicationDirection": {
-          "name": "communicationDirection",
+        "direction": {
+          "name": "direction",
           "type": "enum('outbound','inbound','system')",
           "primaryKey": false,
           "notNull": true,
@@ -1447,7 +1447,7 @@
         "idx_communications_entity": {
           "name": "idx_communications_entity",
           "columns": [
-            "communicationEntityType",
+            "entityType",
             "entityId",
             "createdAt"
           ],

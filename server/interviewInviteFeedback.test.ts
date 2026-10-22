@@ -39,6 +39,15 @@ describe("interview invitation delivery feedback", () => {
     expect(result.warning).toBe(false);
   });
 
+  it("shows the safe reason when a text was not attempted because its delivery record could not be saved", () => {
+    const result = feedback({ status: "sent" }, {
+      status: "failed",
+      reason: "Text was not attempted because its delivery record could not be saved.",
+    });
+    expect(result.message).toContain("Text was not sent. Text was not attempted because its delivery record could not be saved.");
+    expect(result.warning).toBe(true);
+  });
+
   it.each(["skipped", "failed", "unknown"] as const)("warns for %s SMS", (status) => {
     expect(feedback({ status: "sent" }, { status }).warning).toBe(true);
   });

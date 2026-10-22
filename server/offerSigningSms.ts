@@ -19,6 +19,7 @@ export type OfferSigningSmsInput = {
 
 const ACTION = "offer_signing_sms";
 const BODY_PREVIEW = "Private offer letter and NDA signing link sent by text. Link redacted.";
+const RESERVATION_FAILURE_REASON = "Text was not attempted because its delivery record could not be saved.";
 const FAILURE_STATUSES = new Set(["failed", "undelivered", "canceled"]);
 const SIGNING_LINK = /^https:\/\/afropuppyyoga\.ca\/sign\?token=[0-9a-f]{96}$/;
 
@@ -123,8 +124,13 @@ export async function sendOfferSigningSms(input: OfferSigningSmsInput): Promise<
     const body = buildBody(input);
     const fingerprint = payloadHash(phone, body);
     const idempotencyKey = `offer-sms:${input.applicationId}:${input.requestKey}`;
-    const db = await getDb();
-    if (!db) return { status: "unknown", reason: "SMS delivery could not be reserved.", phone };
+    let db: Awaited<ReturnType<typeof getDb>>;
+    try {
+      db = await getDb();
+    } catch {
+      return { status: "failed", reason: RESERVATION_FAILURE_REASON, phone };
+    }
+    if (!db) return { status: "failed", reason: RESERVATION_FAILURE_REASON, phone };
 
     try {
       await db.insert(communicationsLog).values({
@@ -144,7 +150,7 @@ export async function sendOfferSigningSms(input: OfferSigningSmsInput): Promise<
       });
     } catch (error) {
       if (!isDuplicateKeyError(error)) {
-        return { status: "unknown", reason: "SMS delivery could not be reserved.", phone };
+        return { status: "failed", reason: RESERVATION_FAILURE_REASON, phone };
       }
       try {
         const [existing] = await db.select({
