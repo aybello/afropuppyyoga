@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { Check, ChevronDown } from "lucide-react";
-import { REVIEW_METRICS } from "../../../shared/reviewMetrics";
+import { FIVE_STAR_REVIEW_COUNT } from "../../../shared/reviewMetrics";
 
 const trustedByLogos = [
   { name: "Wilfrid Laurier University", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/laurier_logo_61911be5.webp", height: 30 },
@@ -154,7 +154,7 @@ export default function Corporate() {
   useSeoMeta({
     title: "Corporate Puppy Yoga Ontario | Team Wellness & Employee Appreciation | AfroPuppyYoga",
     description:
-      "Book a corporate puppy yoga event in Ontario with AfroPuppyYoga. Perfect for employee appreciation, team building, wellness days, and brand activations. Available across Ontario. Get a custom quote.",
+      `Corporate puppy yoga across Ontario. ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Team-building, employee appreciation and puppy cuddles. Request your event quote.`,
     canonical: "https://afropuppyyoga.ca/corporate-puppy-yoga",
   });
 
@@ -218,7 +218,7 @@ export default function Corporate() {
             { stat: "6–50+", label: "Group sizes" },
             { stat: "3+", label: "Ontario locations" },
             { stat: "$1,200", label: "Starting price" },
-            { stat: `${REVIEW_METRICS.google.rating}★`, label: `${REVIEW_METRICS.google.location} Google rating` },
+            { stat: FIVE_STAR_REVIEW_COUNT, label: "Five-Star Reviews" },
           ].map((item) => (
             <div key={item.label}>
               <div className="font-display font-black text-white text-xl">{item.stat}</div>

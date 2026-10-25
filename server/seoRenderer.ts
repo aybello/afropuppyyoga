@@ -15,9 +15,7 @@ import { PUPPY_MONITOR_PAY_LABEL, PUPPY_MONITOR_POSITION_TYPE } from "../shared/
 import { MOVEMENT_INSTRUCTOR_HOURLY_PAY_CAD } from "../shared/movementInstructorTerms";
 import { SOCIAL_MEDIA_INTERN_PAY_LABEL } from "../shared/socialMediaTerms";
 import {
-  REVIEW_COUNT_LABEL,
-  REVIEW_COUNT_NOTE,
-  REVIEW_FEEDBACK_COUNT,
+  FIVE_STAR_REVIEW_COUNT,
   REVIEW_METRICS,
 } from "../shared/reviewMetrics";
 
@@ -211,7 +209,7 @@ const PAGES: Record<string, () => string> = {
     buildHtml({
       title: "AfroPuppyYoga | Ontario's #1 Puppy Yoga Experience",
       description:
-        "Ontario's #1 puppy yoga studio. Guided yoga, Afro-beat rhythms & adorable puppies in Hamilton, Kitchener-Waterloo & Oakville, Ontario. Book your class today!",
+        `Puppy yoga in Kitchener-Waterloo, Hamilton & Oakville. ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Guided movement, Afro-beat music and puppy cuddles. Book your class today.`,
       canonical: `${BASE}/`,
       schema: [
         LOCAL_BUSINESS_SCHEMA,
@@ -348,7 +346,7 @@ const PAGES: Record<string, () => string> = {
     <h2>About AfroPuppyYoga</h2>
     <p>AfroPuppyYoga was founded to create a unique wellness space that celebrates Black culture, community, and joy. We blend the ancient practice of yoga with the infectious energy of Afro-beat music and the undeniable happiness that puppies bring. Our studio is a safe, inclusive, and uplifting space for everyone.</p>
     <p>Our ${REVIEW_METRICS.google.location} studio has a ${REVIEW_METRICS.google.rating} rating from all ${REVIEW_METRICS.google.total} Google reviews.</p>
-    <p>${REVIEW_COUNT_LABEL}: ${REVIEW_FEEDBACK_COUNT}. ${REVIEW_COUNT_NOTE}</p>
+    <p>${FIVE_STAR_REVIEW_COUNT} Five-Star Reviews</p>
   </section>
 
   <section id="private-events">
@@ -674,7 +672,7 @@ const PAGES: Record<string, () => string> = {
     buildHtml({
       title: "Corporate Puppy Yoga in Ontario | Team Wellness Events | AfroPuppyYoga",
       description:
-        "Book a corporate puppy yoga event with AfroPuppyYoga. Team-building, employee appreciation, and wellness days with guided yoga and adorable puppies across Ontario. Groups from 6 to 50+.",
+        `Corporate puppy yoga across Ontario. ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Team-building, employee appreciation and puppy cuddles. Request your event quote.`,
       canonical: `${BASE}/corporate-puppy-yoga`,
       schema: [
         breadcrumb({ name: "Corporate Puppy Yoga", url: `${BASE}/corporate-puppy-yoga` }),
@@ -827,7 +825,7 @@ const PAGES: Record<string, () => string> = {
     buildHtml({
       title: "Private Puppy Yoga Events in Ontario | AfroPuppyYoga",
       description:
-        "Book a private puppy yoga event with AfroPuppyYoga. Birthdays, bachelorettes, corporate wellness days, and team-building events with guided yoga and adorable puppies across Ontario.",
+        `Private puppy yoga in Ontario. ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Birthdays, bachelorettes and team events with adorable puppies. Get your event quote.`,
       canonical: `${BASE}/private-puppy-yoga-events`,
       schema: [
         breadcrumb({ name: "Private Puppy Yoga Events", url: `${BASE}/private-puppy-yoga-events` }),
@@ -955,7 +953,7 @@ const PAGES: Record<string, () => string> = {
     buildHtml({
       title: "Puppy Yoga Kitchener-Waterloo | AfroPuppyYoga",
       description:
-        "Join AfroPuppyYoga for puppy yoga in Kitchener-Waterloo at TenC Dance Studio, 329 King St E. Guided yoga with adorable puppies and Afro-beat music every weekend. Book your class today!",
+        `Puppy yoga in Kitchener-Waterloo at TenC Dance Studio. AfroPuppyYoga has ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Enjoy puppy cuddles and Afro-beat music. Book now.`,
       canonical: `${BASE}/puppy-yoga-kitchener`,
       schema: [
         breadcrumb({ name: "Puppy Yoga Kitchener", url: `${BASE}/puppy-yoga-kitchener` }),
@@ -1085,7 +1083,7 @@ const PAGES: Record<string, () => string> = {
     buildHtml({
       title: "Puppy Yoga Hamilton Ontario | AfroPuppyYoga",
       description:
-        "Join AfroPuppyYoga for puppy yoga in Hamilton at Colibri Studio, 2751 Barton St E. Guided yoga with adorable puppies and Afro-beat music. Book your Hamilton class today!",
+        `Puppy yoga in Hamilton at Colibri Studio. AfroPuppyYoga has ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Enjoy puppy cuddles and Afro-beat music. Book your class.`,
       canonical: `${BASE}/puppy-yoga-hamilton`,
       schema: [
         breadcrumb({ name: "Puppy Yoga Hamilton", url: `${BASE}/puppy-yoga-hamilton` }),
@@ -1204,7 +1202,7 @@ const PAGES: Record<string, () => string> = {
     buildHtml({
       title: "Puppy Yoga Oakville Ontario | AfroPuppyYoga",
       description:
-        "Join AfroPuppyYoga for puppy yoga in Oakville, Ontario. Guided yoga with adorable puppies and Afro-beat music. Book your Oakville class today!",
+        `Puppy yoga in Oakville, Ontario. AfroPuppyYoga has ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Enjoy puppy cuddles and Afro-beat music. Book your class.`,
       canonical: `${BASE}/puppy-yoga-oakville`,
       schema: [
         breadcrumb({ name: "Puppy Yoga Oakville", url: `${BASE}/puppy-yoga-oakville` }),

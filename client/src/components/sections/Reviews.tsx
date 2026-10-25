@@ -5,7 +5,7 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Star, Quote } from "lucide-react";
-import { REVIEW_METRICS, REVIEW_FEEDBACK_COUNT, REVIEW_COUNT_NOTE } from "@shared/reviewMetrics";
+import { REVIEW_METRICS, FIVE_STAR_REVIEW_COUNT } from "@shared/reviewMetrics";
 
 const reviews = [
   {
@@ -116,10 +116,7 @@ export default function Reviews() {
               </a>
             </div>
           </div>
-          <div className="mb-8 rounded-xl border border-[#F0D0DC] bg-white/60 p-4">
-            <p className="font-body font-semibold text-sm text-[#1A0A12]">{REVIEW_FEEDBACK_COUNT} reviews and feedback responses counted</p>
-            <p className="mt-1 font-body text-xs leading-relaxed text-[#1A0A12]/60">{REVIEW_COUNT_NOTE} This count is separate from the Google rating above.</p>
-          </div>
+          <p className="mb-8 font-body font-semibold text-sm text-[#1A0A12]">{FIVE_STAR_REVIEW_COUNT} Five-Star Reviews</p>
         </FadeUp>
 
         {/* Review cards grid */}

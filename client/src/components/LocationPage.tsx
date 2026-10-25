@@ -9,7 +9,7 @@ import { MapPin, Clock, Users, Star, ChevronDown, Quote, Check } from "lucide-re
 import { motion } from "framer-motion";
 import { useMetaPixel } from "@/hooks/useMetaPixel";
 import { appendAttributionToLumaUrl } from "@/lib/lumaAttribution";
-import { REVIEW_METRICS } from "../../../shared/reviewMetrics";
+import { FIVE_STAR_REVIEW_COUNT, REVIEW_METRICS } from "../../../shared/reviewMetrics";
 
 /* ============================================================
    LocationPage — Shared template for all city SEO pages.
@@ -128,6 +128,7 @@ const avatarColors = [
 
 export default function LocationPage({ config }: Props) {
   const canonicalUrl = `https://afropuppyyoga.ca/${config.slug}`;
+  const seoDescription = `AfroPuppyYoga: ${FIVE_STAR_REVIEW_COUNT} five-star reviews. ${config.metaDescription}`;
   const { track } = useMetaPixel();
   const attributedBookUrl = useMemo(() => appendAttributionToLumaUrl(BOOK_URL), []);
   const attributedEmbedUrl = useMemo(
@@ -137,10 +138,10 @@ export default function LocationPage({ config }: Props) {
 
   useSeoMeta({
     title: config.pageTitle,
-    description: config.metaDescription,
+    description: seoDescription,
     canonical: canonicalUrl,
     ogTitle: config.pageTitle,
-    ogDescription: config.metaDescription,
+    ogDescription: seoDescription,
     ogImage: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/og_image_apy.jpg",
   });
 
@@ -277,7 +278,7 @@ export default function LocationPage({ config }: Props) {
             <div className="flex items-center gap-2.5 text-white/80">
               <Star className="w-4 h-4 text-[#F2A0B8]" />
               <span className="font-body text-sm">
-                {REVIEW_METRICS.google.location} Google {REVIEW_METRICS.google.rating} ★ · {REVIEW_METRICS.google.total} reviews
+                {FIVE_STAR_REVIEW_COUNT} Five-Star Reviews
               </span>
             </div>
           </div>
@@ -558,14 +559,14 @@ export default function LocationPage({ config }: Props) {
             </div>
             <div className="flex items-center gap-4">
               <div className="text-center">
-                <div className="font-display font-bold text-4xl text-[#1A0A12]">{REVIEW_METRICS.google.rating}</div>
+                <div className="font-display font-bold text-4xl text-[#1A0A12]">{FIVE_STAR_REVIEW_COUNT}</div>
                 <div className="flex gap-0.5 justify-center my-1">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} size={14} className="fill-[#F2A0B8] text-[#F2A0B8]" />
                   ))}
                 </div>
                 <div className="font-body text-xs text-[#1A0A12]/50">
-                  {REVIEW_METRICS.google.location} Google · {REVIEW_METRICS.google.total} reviews
+                  Five-Star Reviews
                 </div>
               </div>
               <a
