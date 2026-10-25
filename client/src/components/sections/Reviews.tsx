@@ -5,6 +5,7 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Star, Quote } from "lucide-react";
+import { REVIEW_METRICS, REVIEW_FEEDBACK_COUNT, REVIEW_COUNT_NOTE } from "@shared/reviewMetrics";
 
 const reviews = [
   {
@@ -97,13 +98,13 @@ export default function Reviews() {
             </div>
             <div className="flex flex-wrap items-center gap-4 mt-4 md:mt-0">
               <div className="text-center">
-                <div className="font-display font-bold text-4xl md:text-5xl text-[#1A0A12]">4.9</div>
-                <div className="flex gap-0.5 justify-center my-1">
+                <div className="font-display font-bold text-4xl md:text-5xl text-[#1A0A12]">{REVIEW_METRICS.google.rating}</div>
+                <div className="flex gap-0.5 justify-center my-1" aria-label={`${REVIEW_METRICS.google.rating} out of 5 on Google`}>
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={14} className="fill-[#F2A0B8] text-[#F2A0B8]" />
+                    <Star key={i} size={14} aria-hidden="true" className="fill-[#F2A0B8] text-[#F2A0B8]" />
                   ))}
                 </div>
-                <div className="font-body text-xs text-[#1A0A12]/50">Based on 495+ verified reviews</div>
+                <a href={REVIEW_METRICS.google.url} target="_blank" rel="noopener noreferrer" className="font-body text-xs text-[#1A0A12]/70 underline">Google: {REVIEW_METRICS.google.total} reviews, Kitchener</a>
               </div>
               <a
                 href="https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsdiY1GsfLo"
@@ -114,6 +115,10 @@ export default function Reviews() {
                 Leave a Review
               </a>
             </div>
+          </div>
+          <div className="mb-8 rounded-xl border border-[#F0D0DC] bg-white/60 p-4">
+            <p className="font-body font-semibold text-sm text-[#1A0A12]">{REVIEW_FEEDBACK_COUNT} reviews and feedback responses counted</p>
+            <p className="mt-1 font-body text-xs leading-relaxed text-[#1A0A12]/60">{REVIEW_COUNT_NOTE} This count is separate from the Google rating above.</p>
           </div>
         </FadeUp>
 

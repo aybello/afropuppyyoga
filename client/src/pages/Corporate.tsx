@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { Check, ChevronDown } from "lucide-react";
+import { REVIEW_METRICS } from "../../../shared/reviewMetrics";
 
 const trustedByLogos = [
   { name: "Wilfrid Laurier University", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/laurier_logo_61911be5.webp", height: 30 },
@@ -217,7 +218,7 @@ export default function Corporate() {
             { stat: "6–50+", label: "Group sizes" },
             { stat: "3+", label: "Ontario locations" },
             { stat: "$1,200", label: "Starting price" },
-            { stat: "4.9★", label: "Average rating" },
+            { stat: `${REVIEW_METRICS.google.rating}★`, label: `${REVIEW_METRICS.google.location} Google rating` },
           ].map((item) => (
             <div key={item.label}>
               <div className="font-display font-black text-white text-xl">{item.stat}</div>

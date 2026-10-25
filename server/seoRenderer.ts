@@ -14,6 +14,12 @@ import { PUPPY_MONITOR_SHIFT_DESCRIPTION } from "../shared/newCareersListings";
 import { PUPPY_MONITOR_PAY_LABEL, PUPPY_MONITOR_POSITION_TYPE } from "../shared/puppyMonitorTerms";
 import { MOVEMENT_INSTRUCTOR_HOURLY_PAY_CAD } from "../shared/movementInstructorTerms";
 import { SOCIAL_MEDIA_INTERN_PAY_LABEL } from "../shared/socialMediaTerms";
+import {
+  REVIEW_COUNT_LABEL,
+  REVIEW_COUNT_NOTE,
+  REVIEW_FEEDBACK_COUNT,
+  REVIEW_METRICS,
+} from "../shared/reviewMetrics";
 
 // ─── Crawler Detection ────────────────────────────────────────────────────────
 
@@ -172,14 +178,6 @@ const LOCAL_BUSINESS_SCHEMA = {
       containedInPlace: { "@type": "State", name: "Ontario" },
     },
   ],
-  aggregateRating: {
-    "@type": "AggregateRating",
-    // Phase 9 (security hardening): updated to match client-side values (LocationPage.tsx, Reviews.tsx)
-    ratingValue: "4.9",
-    reviewCount: "494",
-    bestRating: "5",
-    worstRating: "1",
-  },
   sameAs: [
     "https://www.instagram.com/afropuppyyoga",
     "https://www.tiktok.com/@afropuppyyoga",
@@ -349,7 +347,8 @@ const PAGES: Record<string, () => string> = {
   <section id="about">
     <h2>About AfroPuppyYoga</h2>
     <p>AfroPuppyYoga was founded to create a unique wellness space that celebrates Black culture, community, and joy. We blend the ancient practice of yoga with the infectious energy of Afro-beat music and the undeniable happiness that puppies bring. Our studio is a safe, inclusive, and uplifting space for everyone.</p>
-    <p>We are proud to be Ontario's #1 puppy yoga studio, with over 494 five-star reviews and thousands of happy participants across Ontario.</p>
+    <p>Our ${REVIEW_METRICS.google.location} studio has a ${REVIEW_METRICS.google.rating} rating from all ${REVIEW_METRICS.google.total} Google reviews.</p>
+    <p>${REVIEW_COUNT_LABEL}: ${REVIEW_FEEDBACK_COUNT}. ${REVIEW_COUNT_NOTE}</p>
   </section>
 
   <section id="private-events">
@@ -978,7 +977,6 @@ const PAGES: Record<string, () => string> = {
           },
           geo: { "@type": "GeoCoordinates", latitude: 43.4516, longitude: -80.4925 },
           image: OG_IMAGE,
-          aggregateRating: { "@type": "AggregateRating", ratingValue: "4.9", reviewCount: "494", bestRating: "5" },
           openingHoursSpecification: [
             { "@type": "OpeningHoursSpecification", dayOfWeek: "Saturday", opens: "09:00", closes: "18:00" },
             { "@type": "OpeningHoursSpecification", dayOfWeek: "Sunday", opens: "09:00", closes: "18:00" },
@@ -1108,7 +1106,6 @@ const PAGES: Record<string, () => string> = {
           },
           geo: { "@type": "GeoCoordinates", latitude: 43.2255, longitude: -79.7747 },
           image: OG_IMAGE,
-          aggregateRating: { "@type": "AggregateRating", ratingValue: "4.9", reviewCount: "494", bestRating: "5" },
           openingHoursSpecification: [
             { "@type": "OpeningHoursSpecification", dayOfWeek: "Saturday", opens: "09:00", closes: "18:00" },
             { "@type": "OpeningHoursSpecification", dayOfWeek: "Sunday", opens: "09:00", closes: "18:00" },
@@ -1228,7 +1225,6 @@ const PAGES: Record<string, () => string> = {
           },
           geo: { "@type": "GeoCoordinates", latitude: 43.4675, longitude: -79.6877 },
           image: OG_IMAGE,
-          aggregateRating: { "@type": "AggregateRating", ratingValue: "4.9", reviewCount: "494", bestRating: "5" },
           openingHoursSpecification: [
             { "@type": "OpeningHoursSpecification", dayOfWeek: "Saturday", opens: "09:00", closes: "18:00" },
             { "@type": "OpeningHoursSpecification", dayOfWeek: "Sunday", opens: "09:00", closes: "18:00" },

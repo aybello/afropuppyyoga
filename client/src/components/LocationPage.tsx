@@ -9,6 +9,7 @@ import { MapPin, Clock, Users, Star, ChevronDown, Quote, Check } from "lucide-re
 import { motion } from "framer-motion";
 import { useMetaPixel } from "@/hooks/useMetaPixel";
 import { appendAttributionToLumaUrl } from "@/lib/lumaAttribution";
+import { REVIEW_METRICS } from "../../../shared/reviewMetrics";
 
 /* ============================================================
    LocationPage — Shared template for all city SEO pages.
@@ -180,13 +181,6 @@ export default function LocationPage({ config }: Props) {
       priceRange: "$35–$45",
       currenciesAccepted: "CAD",
       paymentAccepted: "Credit Card, Debit Card",
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: "4.9",
-        bestRating: "5",
-        worstRating: "1",
-        ratingCount: "494",
-      },
       sameAs: [
         "https://www.instagram.com/afropuppyyoga",
         "https://lu.ma/afropuppyyoga",
@@ -282,7 +276,9 @@ export default function LocationPage({ config }: Props) {
             </div>
             <div className="flex items-center gap-2.5 text-white/80">
               <Star className="w-4 h-4 text-[#F2A0B8]" />
-              <span className="font-body text-sm">4.9 ★ · 494+ reviews</span>
+              <span className="font-body text-sm">
+                {REVIEW_METRICS.google.location} Google {REVIEW_METRICS.google.rating} ★ · {REVIEW_METRICS.google.total} reviews
+              </span>
             </div>
           </div>
         </div>
@@ -562,16 +558,18 @@ export default function LocationPage({ config }: Props) {
             </div>
             <div className="flex items-center gap-4">
               <div className="text-center">
-                <div className="font-display font-bold text-4xl text-[#1A0A12]">4.9</div>
+                <div className="font-display font-bold text-4xl text-[#1A0A12]">{REVIEW_METRICS.google.rating}</div>
                 <div className="flex gap-0.5 justify-center my-1">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} size={14} className="fill-[#F2A0B8] text-[#F2A0B8]" />
                   ))}
                 </div>
-                <div className="font-body text-xs text-[#1A0A12]/50">494+ verified reviews</div>
+                <div className="font-body text-xs text-[#1A0A12]/50">
+                  {REVIEW_METRICS.google.location} Google · {REVIEW_METRICS.google.total} reviews
+                </div>
               </div>
               <a
-                href="https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsdiY1GsfLo"
+                href={REVIEW_METRICS.google.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-5 py-2.5 border-2 border-[#8B2252] text-[#8B2252] font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] hover:text-white transition-all duration-200"

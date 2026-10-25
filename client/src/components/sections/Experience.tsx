@@ -7,6 +7,7 @@ import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Check } from "lucide-react";
 import { useCountUp } from "@/hooks/useCountUp";
+import { REVIEW_FEEDBACK_COUNT, REVIEW_COUNT_LABEL, REVIEW_COUNT_NOTE } from "@shared/reviewMetrics";
 
 const CLASS_IMG = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/VAHzfQKnVMpHXicj.jpg";
 
@@ -143,10 +144,11 @@ export default function Experience() {
         {/* Stats row */}
         <div className="mt-20 md:mt-28 grid grid-cols-2 md:grid-cols-4 gap-8">
           <StatCounter value={3486} suffix="+" label="Happy Participants" delay={0} />
-          <StatCounter value={495} suffix="+" label="5-Star Reviews" delay={0.1} />
+          <StatCounter value={REVIEW_FEEDBACK_COUNT} suffix="" label={REVIEW_COUNT_LABEL} delay={0.1} />
           <StatCounter value={3} suffix="" label="Ontario Locations" delay={0.2} />
           <StatCounter value={100} suffix="%" label="Guest Approval" delay={0.3} />
         </div>
+        <p className="mt-6 mx-auto max-w-3xl text-center font-body text-xs leading-relaxed text-[#1A0A12]/60">{REVIEW_COUNT_NOTE}</p>
       </div>
     </section>
   );
