@@ -1,0 +1,33 @@
+import { describe, expect, it } from "vitest";
+import { getMetaAdsConfiguration } from "./metaAds";
+
+describe("Meta Marketing API configuration", () => {
+  it("does not mistake existing CAPI credentials for Ads publishing access", () => {
+    const config = getMetaAdsConfiguration({ META_CAPI_ACCESS_TOKEN: "capi-only", META_CAPI_ENABLED: "true" });
+    expect(config.ready).toBe(false);
+    expect(config.reason).toContain("not been configured");
+  });
+
+  it("requires an explicit APY account lock and a complete APY-only identity", () => {
+    const base = {
+      META_ADS_APY_ACCESS_TOKEN: "secret-not-returned",
+      META_ADS_APY_AD_ACCOUNT_ID: "12345",
+      META_ADS_APY_FACEBOOK_PAGE_ID: "67890",
+      META_ADS_APY_INSTAGRAM_ACCOUNT_ID: "98765",
+      META_ADS_APY_TARGETING_JSON: '{"geo_locations":{"countries":["CA"]}}',
+    };
+    expect(getMetaAdsConfiguration(base).ready).toBe(false);
+    const config = getMetaAdsConfiguration({ ...base, META_ADS_APY_ACCOUNT_LOCK: "afropuppyyoga" });
+    expect(config).toMatchObject({ ready: true, adAccountId: "12345", facebookPageId: "67890", instagramAccountId: "98765" });
+    expect(JSON.stringify(config)).not.toContain("secret-not-returned");
+  });
+
+  it("rejects nonnumeric or malformed account identifiers", () => {
+    const config = getMetaAdsConfiguration({
+      META_ADS_APY_ACCESS_TOKEN: "token", META_ADS_APY_ACCOUNT_LOCK: "afropuppyyoga",
+      META_ADS_APY_AD_ACCOUNT_ID: "act_echelon", META_ADS_APY_FACEBOOK_PAGE_ID: "67890", META_ADS_APY_INSTAGRAM_ACCOUNT_ID: "98765",
+      META_ADS_APY_TARGETING_JSON: "{}",
+    });
+    expect(config.ready).toBe(false);
+  });
+});

@@ -50,6 +50,7 @@ const Terms = lazy(() => import("./pages/Terms"));
 const RefundPolicy = lazy(() => import("./pages/RefundPolicy"));
 const QuickBooksDisconnect = lazy(() => import("./pages/QuickBooksDisconnect"));
 const PrivateRevenueDashboard = lazy(() => import("./pages/PrivateRevenueDashboard"));
+const MetaCampaignCreator = lazy(() => import("./pages/MetaCampaignCreator"));
 
 function PageLoader() {
   return (
@@ -114,6 +115,7 @@ function Router() {
         <Route path="/admin/review-texts" component={ReviewTexts} />
         <Route path="/admin/revenue" component={RevenueDashboard} />
         <Route path="/admin/quickbooks" component={QuickBooksDashboard} />
+        <Route path="/admin/meta-campaigns" component={MetaCampaignCreator} />
         <Route path="/admin/employees" component={EmployeeDirectory} />
         <Route path="/staff/revenue-dashboard" component={PrivateRevenueDashboard} />
         <Route path="/admin/employee-directory" component={EmployeeDirectory} />

@@ -1,0 +1,91 @@
+CREATE TABLE `metaAdCampaigns` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`metaCampaignSourceType` enum('regular_class','private_event') NOT NULL,
+	`sourceId` int NOT NULL,
+	`eventName` varchar(255) NOT NULL,
+	`eventCity` varchar(128) NOT NULL,
+	`eventDate` varchar(32) NOT NULL,
+	`canonicalBookingUrl` varchar(500) NOT NULL,
+	`ticketPriceCents` int,
+	`seatsRemaining` int,
+	`campaignName` varchar(160) NOT NULL,
+	`campaignSlug` varchar(96) NOT NULL,
+	`primaryText` text NOT NULL,
+	`headline` varchar(255) NOT NULL,
+	`description` varchar(255),
+	`metaCampaignCallToAction` enum('BOOK_NOW','LEARN_MORE') NOT NULL,
+	`placements` varchar(64) NOT NULL,
+	`metaCampaignBudgetType` enum('daily','total') NOT NULL,
+	`budgetCents` int NOT NULL,
+	`maximumSpendCents` int NOT NULL,
+	`startDate` varchar(10) NOT NULL,
+	`endDate` varchar(10) NOT NULL,
+	`metaCampaignStatus` enum('draft','ready','blocked','publishing','partial','paused','active','failed') NOT NULL DEFAULT 'draft',
+	`createdByUserId` int NOT NULL,
+	`createdByName` varchar(255),
+	`metaAdAccountId` varchar(128),
+	`metaFacebookPageId` varchar(128),
+	`metaInstagramAccountId` varchar(128),
+	`metaCampaignId` varchar(128),
+	`metaAdSetId` varchar(128),
+	`lastMetaStatus` varchar(64),
+	`lastError` text,
+	`submittedAt` timestamp,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `metaAdCampaigns_id` PRIMARY KEY(`id`),
+	CONSTRAINT `uq_metaAdCampaigns_slug` UNIQUE(`campaignSlug`)
+);
+--> statement-breakpoint
+CREATE TABLE `metaAdCreatives` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`campaignId` int NOT NULL,
+	`creativeKey` varchar(96) NOT NULL,
+	`originalFilename` varchar(128) NOT NULL,
+	`fileKey` varchar(500) NOT NULL,
+	`contentHash` varchar(64) NOT NULL,
+	`metaCreativeMediaType` enum('image','video') NOT NULL,
+	`mimeType` varchar(64) NOT NULL,
+	`fileSizeBytes` int NOT NULL,
+	`width` int NOT NULL,
+	`height` int NOT NULL,
+	`durationSeconds` int,
+	`metaCreativeValidationStatus` enum('ready','invalid','uploaded','created','failed') NOT NULL DEFAULT 'ready',
+	`validationMessage` varchar(500),
+	`metaMediaId` varchar(128),
+	`metaCreativeId` varchar(128),
+	`metaAdId` varchar(128),
+	`deliveryStatus` varchar(64) NOT NULL DEFAULT 'draft',
+	`lastError` text,
+	`sortOrder` int NOT NULL,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `metaAdCreatives_id` PRIMARY KEY(`id`),
+	CONSTRAINT `uq_metaAdCreatives_key` UNIQUE(`creativeKey`),
+	CONSTRAINT `uq_metaAdCreatives_campaign_hash` UNIQUE(`campaignId`,`contentHash`)
+);
+--> statement-breakpoint
+CREATE TABLE `metaAdMutationLogs` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`campaignId` int NOT NULL,
+	`internalRequestId` varchar(96) NOT NULL,
+	`idempotencyKey` varchar(128) NOT NULL,
+	`actorUserId` int NOT NULL,
+	`actorName` varchar(255),
+	`action` varchar(64) NOT NULL,
+	`targetAdAccountId` varchar(128),
+	`metaMutationResultStatus` enum('pending','succeeded','partial','failed','unknown') NOT NULL DEFAULT 'pending',
+	`safeErrorSummary` text,
+	`externalIds` text,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`completedAt` timestamp,
+	CONSTRAINT `metaAdMutationLogs_id` PRIMARY KEY(`id`),
+	CONSTRAINT `uq_metaAdMutationLogs_request` UNIQUE(`internalRequestId`),
+	CONSTRAINT `uq_metaAdMutationLogs_idempotency` UNIQUE(`idempotencyKey`)
+);
+--> statement-breakpoint
+CREATE INDEX `idx_metaAdCampaigns_status` ON `metaAdCampaigns` (`metaCampaignStatus`);--> statement-breakpoint
+CREATE INDEX `idx_metaAdCampaigns_source` ON `metaAdCampaigns` (`metaCampaignSourceType`,`sourceId`);--> statement-breakpoint
+CREATE INDEX `idx_metaAdCampaigns_createdBy` ON `metaAdCampaigns` (`createdByUserId`);--> statement-breakpoint
+CREATE INDEX `idx_metaAdCreatives_campaign` ON `metaAdCreatives` (`campaignId`,`sortOrder`);--> statement-breakpoint
+CREATE INDEX `idx_metaAdMutationLogs_campaign` ON `metaAdMutationLogs` (`campaignId`,`createdAt`);

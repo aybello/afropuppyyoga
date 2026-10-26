@@ -14,9 +14,10 @@ export function registerStorageProxy(app: Express) {
       res.status(400).send("Invalid storage key");
       return;
     }
-    // Public submission never grants public access to saved invoice documents.
+    // Public submission never grants public access to sensitive APY HQ files.
     const normalizedKey = key.replace(/^\/+/, "");
-    if (normalizedKey.startsWith("invoices/")) {
+    const isOwnerOnlyFile = normalizedKey.startsWith("invoices/") || normalizedKey.startsWith("meta-campaigns/");
+    if (isOwnerOnlyFile) {
       res.set("Cache-Control", "private, no-store");
       try {
         const user = await sdk.authenticateRequest(req);
@@ -68,7 +69,7 @@ export function registerStorageProxy(app: Express) {
       const contentType = imageResp.headers.get("content-type") || "application/octet-stream";
       const contentLength = imageResp.headers.get("content-length");
       res.set("Content-Type", contentType);
-      res.set("Cache-Control", normalizedKey.startsWith("invoices/") ? "private, no-store" : "public, max-age=86400");
+      res.set("Cache-Control", isOwnerOnlyFile ? "private, no-store" : "public, max-age=86400");
       if (contentLength) res.set("Content-Length", contentLength);
 
       if (imageResp.body) {

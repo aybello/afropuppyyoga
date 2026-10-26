@@ -20,7 +20,7 @@ describe("private dashboard route", () => {
   });
 
   it("applies crawler and browser noindex controls", () => {
-    expect(serverSource).toContain('app.use("/staff/revenue-dashboard", (_req, res, next)');
+    expect(serverSource).toContain('normalizedPath === "/staff" || normalizedPath.startsWith("/staff/")');
     expect(serverSource).toContain('"X-Robots-Tag", "noindex, nofollow, noarchive"');
     expect(robotsSource).toContain("Disallow: /staff/revenue-dashboard");
     expect(pageSource).toContain('setAttribute("content", "noindex, nofollow, noarchive")');

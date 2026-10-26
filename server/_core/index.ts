@@ -17,6 +17,7 @@ import twilioWebhookRouter from "../twilioWebhook";
 import lumaWebhookRouter from "../lumaWebhook";
 import { requireStaffOrAdmin } from "./requireStaff";
 import { registerStorageProxy } from "./storageProxy";
+import metaCampaignUploadRouter from "../metaCampaignUploadRoute";
 import crypto from "crypto";
 import { sdk } from "./sdk";
 import { sendEmail } from "../email";
@@ -226,6 +227,9 @@ async function startServer() {
   app.use(uploadRouter);
   // Chunked video upload endpoints (for large files that exceed hosting body size limit)
   app.use(chunkedUploadRouter);
+  // Owner-only campaign-media upload route (auth runs before Multer/body intake).
+  app.use("/api/meta-campaigns/assets", uploadLimiter);
+  app.use(metaCampaignUploadRouter);
 
   // Form rate limiters on public tRPC mutations
   app.use("/api/trpc/careers.submitApplication", formLimiter);
