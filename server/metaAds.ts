@@ -175,17 +175,17 @@ export async function createPausedMetaCreative(input: {
     const upload = await graphFileRequest<{ images?: Record<string, { hash?: string }> }>(`${config.adAccountPath}/adimages`, "filename", { data, filename: input.asset.originalFilename, mimeType: input.asset.mimeType }, { name: input.name });
     const image = Object.values(upload.images ?? {})[0];
     mediaId = image?.hash ?? "";
-    if (!mediaId) throw new MetaAdsSafeError("provider_error", "Meta did not return an image reference.");
+    if (!mediaId) throw new MetaAdsSafeError("unknown_outcome", "Meta returned an image response without a reference. APY stopped safely for reconciliation.");
     objectStorySpec = { page_id: config.facebookPageId, instagram_actor_id: config.instagramAccountId, link_data: { message: input.primaryText, name: input.headline, description: input.description || undefined, link: input.link, image_hash: mediaId, call_to_action: { type: input.callToAction, value: { link: input.link } } } };
   } else {
     const upload = await graphFileRequest<{ id?: string; video_id?: string }>(`${config.adAccountPath}/advideos`, "source", { data, filename: input.asset.originalFilename, mimeType: input.asset.mimeType }, { title: input.name });
     mediaId = upload.video_id ?? upload.id ?? "";
-    if (!mediaId) throw new MetaAdsSafeError("provider_error", "Meta did not return a video reference.");
+    if (!mediaId) throw new MetaAdsSafeError("unknown_outcome", "Meta returned a video response without a reference. APY stopped safely for reconciliation.");
     objectStorySpec = { page_id: config.facebookPageId, instagram_actor_id: config.instagramAccountId, video_data: { video_id: mediaId, message: input.primaryText, title: input.headline, call_to_action: { type: input.callToAction, value: { link: input.link } } } };
   }
   const creative = await graphRequest<{ id: string }>(`${config.adAccountPath}/adcreatives`, new URLSearchParams({ name: input.name, object_story_spec: JSON.stringify(objectStorySpec) }));
-  if (!creative.id) throw new MetaAdsSafeError("provider_error", "Meta did not return an ad creative ID.");
+  if (!creative.id) throw new MetaAdsSafeError("unknown_outcome", "Meta returned an ad creative response without an ID. APY stopped safely for reconciliation.");
   const ad = await graphRequest<{ id: string }>(`${config.adAccountPath}/ads`, new URLSearchParams({ name: input.name, adset_id: input.adSetId, creative: JSON.stringify({ creative_id: creative.id }), status: "PAUSED" }));
-  if (!ad.id) throw new MetaAdsSafeError("provider_error", "Meta did not return an ad ID.");
+  if (!ad.id) throw new MetaAdsSafeError("unknown_outcome", "Meta returned an ad response without an ID. APY stopped safely for reconciliation.");
   return { mediaId, creativeId: creative.id, adId: ad.id };
 }

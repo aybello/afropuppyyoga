@@ -42,5 +42,9 @@ describe("Meta Marketing API configuration", () => {
     const source = readFileSync(new URL("./metaAds.ts", import.meta.url), "utf8");
     expect(source).toContain('MetaAdsSafeError("unknown_outcome", "Meta returned a campaign response without an ID');
     expect(source).toContain('MetaAdsSafeError("unknown_outcome", "Meta returned an ad set response without an ID');
+    expect(source).toContain('MetaAdsSafeError("unknown_outcome", "Meta returned an image response without a reference');
+    expect(source).toContain('MetaAdsSafeError("unknown_outcome", "Meta returned a video response without a reference');
+    expect(source).toContain('MetaAdsSafeError("unknown_outcome", "Meta returned an ad creative response without an ID');
+    expect(source).toContain('MetaAdsSafeError("unknown_outcome", "Meta returned an ad response without an ID');
   });
 });
