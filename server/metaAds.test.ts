@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getMetaAdsConfiguration } from "./metaAds";
+import { buildMetaPlacementTargeting, getMetaAdsConfiguration } from "./metaAds";
 
 describe("Meta Marketing API configuration", () => {
   it("does not mistake existing CAPI credentials for Ads publishing access", () => {
@@ -29,5 +29,11 @@ describe("Meta Marketing API configuration", () => {
       META_ADS_APY_TARGETING_JSON: "{}",
     });
     expect(config.ready).toBe(false);
+  });
+
+  it("sends only the owner-selected Facebook and Instagram placement restrictions", () => {
+    expect(buildMetaPlacementTargeting({ geo_locations: { countries: ["CA"] } }, ["instagram"])).toMatchObject({ publisher_platforms: ["instagram"], instagram_positions: ["stream", "story", "reels"] });
+    expect(buildMetaPlacementTargeting({}, ["facebook"])).toMatchObject({ publisher_platforms: ["facebook"], facebook_positions: ["feed"] });
+    expect(buildMetaPlacementTargeting({}, ["facebook", "instagram"])).toMatchObject({ publisher_platforms: ["facebook", "instagram"], facebook_positions: ["feed"], instagram_positions: ["stream", "story", "reels"] });
   });
 });

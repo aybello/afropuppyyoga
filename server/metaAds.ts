@@ -1,4 +1,5 @@
 import { storageGet } from "./storage";
+import type { CampaignDraftInput } from "../shared/metaCampaigns";
 
 const META_GRAPH_ROOT = "https://graph.facebook.com";
 const DEFAULT_API_VERSION = "v26.0";
@@ -13,12 +14,9 @@ export type MetaAdsConfiguration = {
   reason: string | null;
 };
 
-type ConfiguredMetaAds = MetaAdsConfiguration & {
-  accessToken: string;
-  adAccountPath: string;
-};
-
+type ConfiguredMetaAds = MetaAdsConfiguration & { accessToken: string; adAccountPath: string };
 type MetaGraphError = { error?: { message?: string; error_user_msg?: string; code?: number; error_subcode?: number } };
+export type MetaPlacement = CampaignDraftInput["placements"][number];
 
 function safeId(value: string | undefined): string | null {
   const cleaned = value?.trim() ?? "";
@@ -33,20 +31,14 @@ export function getMetaAdsConfiguration(env: NodeJS.ProcessEnv = process.env): M
   const accountLock = env.META_ADS_APY_ACCOUNT_LOCK?.trim().toLowerCase();
   const apiVersion = /^v\d+\.\d+$/.test(env.META_ADS_API_VERSION ?? "") ? env.META_ADS_API_VERSION! : DEFAULT_API_VERSION;
   if (!adAccountId || !facebookPageId || !instagramAccountId || !accessToken || accountLock !== "afropuppyyoga") {
-    return {
-      ready: false, apiVersion, adAccountId: null, facebookPageId: null, instagramAccountId: null, targeting: null,
-      reason: "The APY Meta Ads connection has not been configured in this deployment.",
-    };
+    return { ready: false, apiVersion, adAccountId: null, facebookPageId: null, instagramAccountId: null, targeting: null, reason: "The APY Meta Ads connection has not been configured in this deployment." };
   }
   try {
     const targeting = JSON.parse(env.META_ADS_APY_TARGETING_JSON ?? "");
     if (!targeting || typeof targeting !== "object" || Array.isArray(targeting)) throw new Error("invalid targeting");
     return { ready: true, apiVersion, adAccountId, facebookPageId, instagramAccountId, targeting, reason: null };
   } catch {
-    return {
-      ready: false, apiVersion, adAccountId: null, facebookPageId: null, instagramAccountId: null, targeting: null,
-      reason: "The APY Meta Ads targeting profile has not been configured safely.",
-    };
+    return { ready: false, apiVersion, adAccountId: null, facebookPageId: null, instagramAccountId: null, targeting: null, reason: "The APY Meta Ads targeting profile has not been configured safely." };
   }
 }
 
@@ -66,10 +58,23 @@ export class MetaAdsSafeError extends Error {
   }
 }
 
+/** Builds exactly the Facebook/Instagram placement restrictions selected by the owner. */
+export function buildMetaPlacementTargeting(base: Record<string, unknown>, placements: MetaPlacement[]): Record<string, unknown> {
+  if (!placements.length || placements.some(item => item !== "facebook" && item !== "instagram")) {
+    throw new MetaAdsSafeError("provider_error", "Choose Facebook, Instagram, or both before submitting the campaign.");
+  }
+  const selected = new Set(placements);
+  const targeting: Record<string, unknown> = { ...base, publisher_platforms: Array.from(selected) };
+  if (selected.has("facebook")) targeting.facebook_positions = ["feed"];
+  else delete targeting.facebook_positions;
+  if (selected.has("instagram")) targeting.instagram_positions = ["stream", "story", "reels"];
+  else delete targeting.instagram_positions;
+  return targeting;
+}
+
 function providerMessage(body: MetaGraphError, fallback: string): string {
   const message = body.error?.error_user_msg || body.error?.message;
-  if (!message) return fallback;
-  return message.replace(/[\r\n]+/g, " ").slice(0, 400);
+  return message ? message.replace(/[\r\n]+/g, " ").slice(0, 400) : fallback;
 }
 
 async function graphRequest<T>(path: string, body: URLSearchParams): Promise<T> {
@@ -77,18 +82,27 @@ async function graphRequest<T>(path: string, body: URLSearchParams): Promise<T> 
   body.set("access_token", config.accessToken);
   let response: Response;
   try {
-    response = await fetch(`${META_GRAPH_ROOT}/${config.apiVersion}/${path.replace(/^\//, "")}`, {
-      method: "POST",
-      headers: { "content-type": "application/x-www-form-urlencoded" },
-      body,
-      signal: AbortSignal.timeout(25_000),
-    });
+    response = await fetch(`${META_GRAPH_ROOT}/${config.apiVersion}/${path.replace(/^\//, "")}`, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body, signal: AbortSignal.timeout(25_000) });
   } catch {
-    // No provider response means the request might still have reached Meta. Never retry it automatically.
+    // No provider response means the request could have reached Meta. Never auto-retry it.
     throw new MetaAdsSafeError("unknown_outcome", "Meta did not return a response. APY stopped safely to avoid creating a duplicate campaign.");
   }
   const data = await response.json().catch(() => ({})) as T & MetaGraphError;
   if (!response.ok) throw new MetaAdsSafeError("rejected", providerMessage(data, "Meta rejected this campaign request."));
+  return data;
+}
+
+async function graphGet<T>(path: string, params: URLSearchParams): Promise<T> {
+  const config = configuredOrThrow();
+  params.set("access_token", config.accessToken);
+  let response: Response;
+  try {
+    response = await fetch(`${META_GRAPH_ROOT}/${config.apiVersion}/${path.replace(/^\//, "")}?${params.toString()}`, { method: "GET", signal: AbortSignal.timeout(15_000) });
+  } catch {
+    throw new MetaAdsSafeError("provider_error", "APY could not verify the configured Meta account. No campaign was created.");
+  }
+  const data = await response.json().catch(() => ({})) as T & MetaGraphError;
+  if (!response.ok) throw new MetaAdsSafeError("provider_error", providerMessage(data, "APY could not verify the configured Meta account. No campaign was created."));
   return data;
 }
 
@@ -116,20 +130,34 @@ export async function inspectMetaAdsConnection(): Promise<{ status: "configured"
   return { status: "configured", account: { adAccountId: config.adAccountId, facebookPageId: config.facebookPageId, instagramAccountId: config.instagramAccountId }, reason: null };
 }
 
-export async function createPausedMetaCampaign(input: { name: string; budgetType: "daily" | "total"; budgetCents: number; startDate: string; endDate: string }): Promise<{ campaignId: string; adSetId: string }> {
+/** Read-only binding check: the token must access this APY account and Page must own the configured Instagram identity. */
+export async function preflightMetaAdsIdentity(): Promise<void> {
+  const config = configuredOrThrow();
+  const account = await graphGet<{ account_id?: string }>(config.adAccountPath, new URLSearchParams({ fields: "account_id" }));
+  if (account.account_id !== config.adAccountId) throw new MetaAdsSafeError("provider_error", "The configured APY ad account could not be verified. No campaign was created.");
+  const page = await graphGet<{ instagram_business_account?: { id?: string } }>(config.facebookPageId!, new URLSearchParams({ fields: "instagram_business_account{id}" }));
+  if (page.instagram_business_account?.id !== config.instagramAccountId) throw new MetaAdsSafeError("provider_error", "The configured APY Facebook Page and Instagram identity do not match. No campaign was created.");
+}
+
+export async function createPausedMetaCampaign(input: { name: string }): Promise<{ campaignId: string }> {
   const config = configuredOrThrow();
   const campaign = await graphRequest<{ id: string }>(`${config.adAccountPath}/campaigns`, new URLSearchParams({ name: input.name, objective: "LINK_CLICKS", status: "PAUSED" }));
   if (!campaign.id) throw new MetaAdsSafeError("provider_error", "Meta did not return a campaign ID.");
+  return { campaignId: campaign.id };
+}
+
+export async function createPausedMetaAdSet(input: { campaignId: string; name: string; budgetType: "daily" | "total"; budgetCents: number; startDate: string; endDate: string; placements: MetaPlacement[] }): Promise<{ adSetId: string }> {
+  const config = configuredOrThrow();
   const budgetField = input.budgetType === "daily" ? "daily_budget" : "lifetime_budget";
   const adsetBody = new URLSearchParams({
-    name: `${input.name} | APY standard audience`, campaign_id: campaign.id, [budgetField]: String(input.budgetCents),
-    targeting: JSON.stringify(config.targeting), status: "PAUSED",
+    name: `${input.name} | APY standard audience`, campaign_id: input.campaignId, [budgetField]: String(input.budgetCents),
+    targeting: JSON.stringify(buildMetaPlacementTargeting(config.targeting!, input.placements)), status: "PAUSED",
     start_time: `${input.startDate}T00:00:00-04:00`, end_time: `${input.endDate}T23:59:59-04:00`,
     billing_event: "IMPRESSIONS", optimization_goal: "LINK_CLICKS",
   });
   const adSet = await graphRequest<{ id: string }>(`${config.adAccountPath}/adsets`, adsetBody);
   if (!adSet.id) throw new MetaAdsSafeError("provider_error", "Meta did not return an ad set ID.");
-  return { campaignId: campaign.id, adSetId: adSet.id };
+  return { adSetId: adSet.id };
 }
 
 export async function createPausedMetaCreative(input: {

@@ -1,5 +1,8 @@
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { inspectCampaignMedia, safeCampaignFilename } from "./metaCampaignMedia";
+import { inspectCampaignMedia, inspectCampaignMediaFile, safeCampaignFilename } from "./metaCampaignMedia";
 
 function png(width: number, height: number): Buffer {
   const out = Buffer.alloc(24);
@@ -24,6 +27,17 @@ describe("campaign media validation", () => {
 
   it("rejects non-media bytes rather than trusting a filename", async () => {
     await expect(inspectCampaignMedia(Buffer.from("not an image or video"))).resolves.toEqual(expect.objectContaining({ ok: false }));
+  });
+
+  it("inspects a disk-backed creative without a Multer memory buffer", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "apy-campaign-test-"));
+    const file = join(directory, "creative.png");
+    try {
+      await writeFile(file, png(1080, 1080));
+      await expect(inspectCampaignMediaFile(file)).resolves.toEqual(expect.objectContaining({ ok: true, metadata: expect.objectContaining({ kind: "image", width: 1080 }) }));
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
   });
 
   it("sanitizes a user filename without retaining traversal characters", () => {

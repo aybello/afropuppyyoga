@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appendCampaignAttribution, calculateMaximumSpendCents, campaignDraftSchema, validateCampaignDates } from "../shared/metaCampaigns";
+import { appendCampaignAttribution, calculateMaximumSpendCents, campaignDraftSchema, validateCampaignDates, validateCampaignSafety } from "../shared/metaCampaigns";
 
 const base = {
   source: { type: "regular_class" as const, id: 4 },
@@ -27,6 +27,14 @@ describe("campaign draft contract", () => {
   it("rejects past-only and inverted date ranges", () => {
     expect(validateCampaignDates({ startDate: "2026-01-01", endDate: "2026-01-02" }, new Date("2026-10-01T16:00:00Z"))).toContain("past");
     expect(validateCampaignDates({ startDate: "2026-11-03", endDate: "2026-11-01" }, new Date("2026-10-01T16:00:00Z"))).toContain("end date");
+  });
+
+  it("enforces event-date, duration, daily and total planned-spend limits server-side", () => {
+    const today = new Date("2026-10-01T16:00:00Z");
+    expect(validateCampaignSafety({ ...base, startDate: "2026-10-01", endDate: "2026-11-02" }, "2026-11-01", undefined, today)).toContain("end on or before");
+    expect(validateCampaignSafety({ ...base, startDate: "2026-10-01", endDate: "2026-11-01" }, "2026-11-01", undefined, today)).toContain("31 days");
+    expect(validateCampaignSafety({ ...base, startDate: "2026-10-30", endDate: "2026-11-01", budgetCents: 50_001 }, "2026-11-01", undefined, today)).toContain("daily budget");
+    expect(validateCampaignSafety({ ...base, budgetType: "total", startDate: "2026-10-30", endDate: "2026-11-01", budgetCents: 500_001 }, "2026-11-01", undefined, today)).toContain("maximum spend");
   });
 
   it("sets canonical paid-social attribution without losing existing Luma parameters", () => {

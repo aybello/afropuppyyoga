@@ -1,4 +1,4 @@
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, open, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFile } from "node:child_process";
@@ -11,7 +11,6 @@ import {
   META_CAMPAIGN_MAX_VIDEO_SECONDS,
   META_CAMPAIGN_MIN_VIDEO_SECONDS,
 } from "../shared/metaCampaigns";
-import { isVideoBuffer } from "./videoUploadValidation";
 
 const execFileAsync = promisify(execFile);
 
@@ -94,6 +93,16 @@ function hasImageSignature(buffer: Buffer): boolean {
     || (buffer.length >= 12 && buffer.subarray(0, 4).toString("ascii") === "RIFF" && buffer.subarray(8, 12).toString("ascii") === "WEBP");
 }
 
+function isSupportedMp4MovBuffer(buffer: Buffer): boolean {
+  if (buffer.length < 12) return false;
+  for (let offset = 0; offset <= 32 && offset + 11 < buffer.length; offset += 4) {
+    if (buffer.subarray(offset + 4, offset + 8).toString("ascii") !== "ftyp") continue;
+    const brand = buffer.subarray(offset + 8, offset + 12).toString("ascii");
+    return brand === "qt  " || ["isom", "iso2", "iso4", "iso5", "iso6", "avc1", "mp41", "mp42", "M4V ", "f4v ", "hvc1", "hev1", "hevc"].includes(brand);
+  }
+  return false;
+}
+
 function imageResult(mimeType: CampaignMediaMetadata["mimeType"], extension: CampaignMediaMetadata["extension"], width: number, height: number): CampaignMediaValidation {
   if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1) return { ok: false, message: "Image dimensions are invalid." };
   if (!isMetaPlacementAspectRatio(width, height)) {
@@ -103,7 +112,7 @@ function imageResult(mimeType: CampaignMediaMetadata["mimeType"], extension: Cam
 }
 
 async function readVideoMetadata(buffer: Buffer): Promise<CampaignMediaValidation> {
-  if (!isVideoBuffer(buffer)) return { ok: false, message: "Only valid MP4 or MOV videos are supported." };
+  if (!isSupportedMp4MovBuffer(buffer)) return { ok: false, message: "Only valid MP4 or MOV videos are supported." };
   const directory = await mkdtemp(join(tmpdir(), "apy-campaign-media-"));
   const inputPath = join(directory, "creative.mp4");
   try {
@@ -149,11 +158,53 @@ export async function inspectCampaignMedia(buffer: Buffer): Promise<CampaignMedi
     if (buffer.length > META_CAMPAIGN_MAX_IMAGE_BYTES) return { ok: false, message: "Images must be 20MB or smaller." };
     return image;
   }
-  if (isVideoBuffer(buffer)) {
+  if (isSupportedMp4MovBuffer(buffer)) {
     if (buffer.length > META_CAMPAIGN_MAX_VIDEO_BYTES) return { ok: false, message: "Videos must be 250MB or smaller." };
     return readVideoMetadata(buffer);
   }
   return { ok: false, message: "Only JPEG, PNG, WebP, MP4, and MOV files are supported." };
+}
+
+async function readFilePrefix(filePath: string, maxBytes = 1_048_576): Promise<Buffer> {
+  const handle = await open(filePath, "r");
+  try {
+    const output = Buffer.alloc(maxBytes);
+    const { bytesRead } = await handle.read(output, 0, maxBytes, 0);
+    return output.subarray(0, bytesRead);
+  } finally {
+    await handle.close();
+  }
+}
+
+/** Inspect a Multer disk file without loading a 250MB video into Node's heap. */
+export async function inspectCampaignMediaFile(filePath: string): Promise<CampaignMediaValidation> {
+  const info = await stat(filePath);
+  if (info.size === 0) return { ok: false, message: "The selected file is empty." };
+  const header = await readFilePrefix(filePath);
+  const image = readImageMetadata(header);
+  if (hasImageSignature(header)) {
+    if (info.size > META_CAMPAIGN_MAX_IMAGE_BYTES) return { ok: false, message: "Images must be 20MB or smaller." };
+    return image;
+  }
+  if (!isSupportedMp4MovBuffer(header)) return { ok: false, message: "Only JPEG, PNG, WebP, MP4, and MOV files are supported." };
+  if (info.size > META_CAMPAIGN_MAX_VIDEO_BYTES) return { ok: false, message: "Videos must be 250MB or smaller." };
+  try {
+    const { stdout } = await execFileAsync(ffprobeStatic.path, [
+      "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_type,width,height:format=duration", "-of", "json", filePath,
+    ], { timeout: 15_000, maxBuffer: 512 * 1024 });
+    const payload = JSON.parse(stdout) as { streams?: Array<{ codec_type?: string; width?: number; height?: number }>; format?: { duration?: string } };
+    const stream = payload.streams?.find(item => item.codec_type === "video");
+    const width = stream?.width ?? 0;
+    const height = stream?.height ?? 0;
+    const duration = Number(payload.format?.duration);
+    if (!stream || !Number.isFinite(duration) || duration <= 0) return { ok: false, message: "Video has no readable video stream." };
+    if (duration < META_CAMPAIGN_MIN_VIDEO_SECONDS || duration > META_CAMPAIGN_MAX_VIDEO_SECONDS) return { ok: false, message: `Videos must be ${META_CAMPAIGN_MIN_VIDEO_SECONDS} to ${META_CAMPAIGN_MAX_VIDEO_SECONDS} seconds long.` };
+    if (!isMetaPlacementAspectRatio(width, height)) return { ok: false, message: "Videos need to be at least 600px wide and high, with an aspect ratio from 4:5 to 1.91:1." };
+    const majorBrand = header.subarray(8, 12).toString("ascii");
+    return { ok: true, metadata: { kind: "video", mimeType: majorBrand === "qt  " ? "video/quicktime" : "video/mp4", extension: majorBrand === "qt  " ? "mov" : "mp4", width, height, durationSeconds: Math.round(duration * 100) / 100 } };
+  } catch {
+    return { ok: false, message: "Video metadata could not be read. Please use a standard MP4 or MOV file." };
+  }
 }
 
 export function safeCampaignFilename(name: string): string {

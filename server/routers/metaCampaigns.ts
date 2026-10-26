@@ -1,14 +1,15 @@
 import crypto from "node:crypto";
-import { and, asc, desc, eq, gte, inArray, isNotNull } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { metaAdCampaigns, metaAdCreatives, metaAdMutationLogs, privateEventInquiries, puppySchedule } from "../../drizzle/schema";
-import { campaignDraftSchema, calculateMaximumSpendCents, META_CAMPAIGN_MAX_CREATIVES, slugifyCampaign, validateCampaignDates } from "../../shared/metaCampaigns";
+import { metaAdCampaigns, metaAdCreatives, metaAdMutationLogs, privateEventInquiries } from "../../drizzle/schema";
+import { campaignDraftSchema, calculateMaximumSpendCents, META_CAMPAIGN_MAX_CREATIVES, slugifyCampaign, validateCampaignSafety } from "../../shared/metaCampaigns";
 import { getTorontoCalendarDate } from "../../shared/scheduleVisibility";
 import { getUpcomingPublicClasses } from "../publicCalendar";
-import { createPausedMetaCampaign, createPausedMetaCreative, getMetaAdsConfiguration, inspectMetaAdsConnection, MetaAdsSafeError } from "../metaAds";
+import { createPausedMetaAdSet, createPausedMetaCampaign, createPausedMetaCreative, getMetaAdsConfiguration, inspectMetaAdsConnection, MetaAdsSafeError, preflightMetaAdsIdentity } from "../metaAds";
 import { getDb } from "../db";
 import { ownerProcedure, router } from "../_core/trpc";
+import { campaignSubmissionBlockReason } from "../metaCampaignSubmission";
 
 type CampaignSource = {
   type: "regular_class" | "private_event";
@@ -28,9 +29,12 @@ function campaignSlug(name: string): string {
   return `${slugifyCampaign(name)}-${crypto.randomBytes(4).toString("hex")}`;
 }
 
-function datesWarning(eventDate: string, endDate: string): string | null {
-  if (/^\d{4}-\d{2}-\d{2}$/.test(eventDate) && endDate > eventDate) return "The campaign ends after the event date.";
-  return null;
+function earliestSafeStartDate(eventDate: string): string {
+  const event = new Date(`${eventDate}T12:00:00-04:00`);
+  event.setDate(event.getDate() - 30);
+  const candidate = event.toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
+  const today = getTorontoCalendarDate();
+  return candidate > today ? candidate : today;
 }
 
 async function listEligibleSources(): Promise<CampaignSource[]> {
@@ -112,7 +116,7 @@ export const metaCampaignsRouter = router({
     const source = await resolveEligibleSource(input);
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Campaign storage is temporarily unavailable." });
-    const startDate = getTorontoCalendarDate();
+    const startDate = earliestSafeStartDate(source.date);
     const endDate = source.date;
     const budgetCents = 2500;
     const campaignName = `APY | ${source.city} | ${source.eventName} | ${source.date}`.slice(0, 160);
@@ -128,9 +132,9 @@ export const metaCampaignsRouter = router({
   }),
 
   createDraft: ownerProcedure.input(campaignDraftSchema).mutation(async ({ input, ctx }) => {
-    const dateError = validateCampaignDates(input);
-    if (dateError) throw new TRPCError({ code: "BAD_REQUEST", message: dateError });
     const source = await resolveEligibleSource(input.source);
+    const safetyError = validateCampaignSafety(input, source.date);
+    if (safetyError) throw new TRPCError({ code: "BAD_REQUEST", message: safetyError });
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Campaign storage is temporarily unavailable." });
     const slug = campaignSlug(input.campaignName);
@@ -142,14 +146,14 @@ export const metaCampaignsRouter = router({
       budgetType: input.budgetType, budgetCents: input.budgetCents, maximumSpendCents: calculateMaximumSpendCents(input),
       startDate: input.startDate, endDate: input.endDate, status: "draft", createdByUserId: ctx.user.id, createdByName: ctx.user.name ?? null,
     });
-    return { id: result.insertId, warning: datesWarning(source.date, input.endDate) };
+    return { id: result.insertId, warning: null };
   }),
 
   updateDraft: ownerProcedure.input(campaignIdInput.merge(campaignDraftSchema.omit({ source: true }))).mutation(async ({ input }) => {
-    const dateError = validateCampaignDates(input);
-    if (dateError) throw new TRPCError({ code: "BAD_REQUEST", message: dateError });
     const { db, campaign } = await getCampaignOrThrow(input.campaignId);
-    if (!["draft", "ready", "blocked", "failed"].includes(campaign.status)) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Only a local draft can be edited." });
+    if (!["draft", "ready", "failed"].includes(campaign.status) || campaign.metaCampaignId || campaign.metaAdSetId) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Only a local draft without Meta objects can be edited." });
+    const safetyError = validateCampaignSafety(input, campaign.eventDate);
+    if (safetyError) throw new TRPCError({ code: "BAD_REQUEST", message: safetyError });
     const existingCreatives = await db.select({ id: metaAdCreatives.id }).from(metaAdCreatives).where(eq(metaAdCreatives.campaignId, campaign.id));
     await db.update(metaAdCampaigns).set({
       campaignName: input.campaignName, primaryText: input.primaryText, headline: input.headline, description: input.description || null,
@@ -157,12 +161,12 @@ export const metaCampaignsRouter = router({
       maximumSpendCents: calculateMaximumSpendCents(input), startDate: input.startDate, endDate: input.endDate,
       status: existingCreatives.length ? "ready" : "draft", lastError: null,
     }).where(eq(metaAdCampaigns.id, campaign.id));
-    return { success: true, warning: datesWarning(campaign.eventDate, input.endDate) };
+    return { success: true, warning: null };
   }),
 
   deleteCreative: ownerProcedure.input(z.object({ campaignId: z.number().int().positive(), creativeId: z.number().int().positive() })).mutation(async ({ input }) => {
     const { db, campaign } = await getCampaignOrThrow(input.campaignId);
-    if (!["draft", "ready", "blocked", "failed"].includes(campaign.status)) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Media cannot be changed after a campaign starts publishing." });
+    if (!["draft", "ready", "failed"].includes(campaign.status) || campaign.metaCampaignId || campaign.metaAdSetId) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Media cannot be changed after a campaign starts publishing." });
     const [creative] = await db.select().from(metaAdCreatives).where(and(eq(metaAdCreatives.id, input.creativeId), eq(metaAdCreatives.campaignId, campaign.id))).limit(1);
     if (!creative) throw new TRPCError({ code: "NOT_FOUND", message: "Creative was not found." });
     await db.delete(metaAdCreatives).where(eq(metaAdCreatives.id, creative.id));
@@ -196,54 +200,65 @@ export const metaCampaignsRouter = router({
     const { db, campaign } = await getCampaignOrThrow(input.campaignId);
     const [previous] = await db.select().from(metaAdMutationLogs).where(eq(metaAdMutationLogs.idempotencyKey, input.idempotencyKey)).limit(1);
     if (previous) return { status: previous.resultStatus, message: previous.safeErrorSummary ?? "This submission was already recorded." };
-    if (!["ready", "failed", "partial", "blocked"].includes(campaign.status)) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Save a complete local draft with at least one valid creative before submitting." });
+    const submissionBlock = campaignSubmissionBlockReason(campaign);
+    if (submissionBlock) throw new TRPCError({ code: "PRECONDITION_FAILED", message: submissionBlock });
     const creatives = await db.select().from(metaAdCreatives).where(eq(metaAdCreatives.campaignId, campaign.id)).orderBy(asc(metaAdCreatives.sortOrder));
     if (!creatives.length || creatives.length > META_CAMPAIGN_MAX_CREATIVES) throw new TRPCError({ code: "PRECONDITION_FAILED", message: `Add 1 to ${META_CAMPAIGN_MAX_CREATIVES} validated ad variations before submitting.` });
     const currentSource = await resolveEligibleSource({ type: campaign.sourceType, id: campaign.sourceId });
     if (currentSource.bookingUrl !== campaign.canonicalBookingUrl) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "The canonical booking link has changed. Refresh the event and review a new draft before submitting." });
-    const dateError = validateCampaignDates({ startDate: campaign.startDate, endDate: campaign.endDate });
-    if (dateError) throw new TRPCError({ code: "PRECONDITION_FAILED", message: dateError });
+    const placements = campaign.placements.split(",").filter((value): value is "facebook" | "instagram" => value === "facebook" || value === "instagram");
+    const safetyError = validateCampaignSafety({ budgetType: campaign.budgetType, budgetCents: campaign.budgetCents, startDate: campaign.startDate, endDate: campaign.endDate }, campaign.eventDate);
+    if (safetyError) throw new TRPCError({ code: "PRECONDITION_FAILED", message: safetyError });
     const config = getMetaAdsConfiguration();
     const requestId = crypto.randomUUID();
     await db.insert(metaAdMutationLogs).values({ campaignId: campaign.id, internalRequestId: requestId, idempotencyKey: input.idempotencyKey, actorUserId: ctx.user.id, actorName: ctx.user.name ?? null, action: "create_campaign", targetAdAccountId: config.adAccountId, resultStatus: "pending" });
     if (!config.ready) {
       const message = config.reason ?? "The APY Meta Ads connection is not configured.";
       await db.update(metaAdMutationLogs).set({ resultStatus: "failed", safeErrorSummary: message, completedAt: new Date() }).where(eq(metaAdMutationLogs.internalRequestId, requestId));
-      await db.update(metaAdCampaigns).set({ status: "blocked", lastError: message }).where(eq(metaAdCampaigns.id, campaign.id));
-      return { status: "blocked" as const, message };
+      await db.update(metaAdCampaigns).set({ status: "ready", lastError: message }).where(eq(metaAdCampaigns.id, campaign.id));
+      return { status: "ready" as const, message };
     }
+    let externalCampaignId: string | null = null;
+    let externalAdSetId: string | null = null;
     try {
+      await preflightMetaAdsIdentity();
       await db.update(metaAdCampaigns).set({ status: "publishing", lastError: null, metaAdAccountId: config.adAccountId, metaFacebookPageId: config.facebookPageId, metaInstagramAccountId: config.instagramAccountId }).where(eq(metaAdCampaigns.id, campaign.id));
-      const campaignResult = await createPausedMetaCampaign({ name: campaign.campaignName, budgetType: campaign.budgetType, budgetCents: campaign.budgetCents, startDate: campaign.startDate, endDate: campaign.endDate });
-      await db.update(metaAdCampaigns).set({ metaCampaignId: campaignResult.campaignId, metaAdSetId: campaignResult.adSetId }).where(eq(metaAdCampaigns.id, campaign.id));
+      const campaignResult = await createPausedMetaCampaign({ name: campaign.campaignName });
+      externalCampaignId = campaignResult.campaignId;
+      await db.update(metaAdCampaigns).set({ metaCampaignId: externalCampaignId }).where(eq(metaAdCampaigns.id, campaign.id));
+      const adSetResult = await createPausedMetaAdSet({ campaignId: externalCampaignId, name: campaign.campaignName, budgetType: campaign.budgetType, budgetCents: campaign.budgetCents, startDate: campaign.startDate, endDate: campaign.endDate, placements });
+      externalAdSetId = adSetResult.adSetId;
+      await db.update(metaAdCampaigns).set({ metaAdSetId: externalAdSetId }).where(eq(metaAdCampaigns.id, campaign.id));
       const successes: string[] = [];
       const failures: Array<{ creativeId: number; message: string }> = [];
+      let unknownCreativeOutcome = false;
       for (const creative of creatives) {
         try {
           const link = new URL(campaign.canonicalBookingUrl);
           link.searchParams.set("utm_source", "meta"); link.searchParams.set("utm_medium", "paid_social"); link.searchParams.set("utm_campaign", campaign.campaignSlug); link.searchParams.set("utm_content", creative.creativeKey);
-          const result = await createPausedMetaCreative({ adSetId: campaignResult.adSetId, name: `${campaign.campaignName} | ${creative.creativeKey}`, asset: { fileKey: creative.fileKey, originalFilename: creative.originalFilename, mediaType: creative.mediaType, mimeType: creative.mimeType }, link: link.toString(), primaryText: campaign.primaryText, headline: campaign.headline, description: campaign.description, callToAction: campaign.callToAction });
+          const result = await createPausedMetaCreative({ adSetId: externalAdSetId, name: `${campaign.campaignName} | ${creative.creativeKey}`, asset: { fileKey: creative.fileKey, originalFilename: creative.originalFilename, mediaType: creative.mediaType, mimeType: creative.mimeType }, link: link.toString(), primaryText: campaign.primaryText, headline: campaign.headline, description: campaign.description, callToAction: campaign.callToAction });
           await db.update(metaAdCreatives).set({ validationStatus: "created", metaMediaId: result.mediaId, metaCreativeId: result.creativeId, metaAdId: result.adId, deliveryStatus: "paused", lastError: null }).where(eq(metaAdCreatives.id, creative.id));
           successes.push(creative.creativeKey);
         } catch (error) {
           const message = error instanceof MetaAdsSafeError ? error.message : "Meta could not create this ad variation.";
           await db.update(metaAdCreatives).set({ validationStatus: "failed", deliveryStatus: "failed", lastError: message }).where(eq(metaAdCreatives.id, creative.id));
           failures.push({ creativeId: creative.id, message });
-          if (error instanceof MetaAdsSafeError && error.kind === "unknown_outcome") break;
+          if (error instanceof MetaAdsSafeError && error.kind === "unknown_outcome") { unknownCreativeOutcome = true; break; }
         }
       }
       const partial = failures.length > 0;
-      const status = partial ? "partial" as const : "paused" as const;
-      const message = partial ? `${successes.length} ad variation(s) were created paused; ${failures.length} need attention.` : `${successes.length} ad variation(s) were created in Meta with delivery paused.`;
+      const status = unknownCreativeOutcome ? "blocked" as const : partial ? "partial" as const : "paused" as const;
+      const message = unknownCreativeOutcome ? "A creative provider response was uncertain. APY stopped safely; reconciliation is required before any further action." : partial ? `${successes.length} ad variation(s) were created paused; ${failures.length} need reconciliation.` : `${successes.length} ad variation(s) were created in Meta with delivery paused.`;
       await db.update(metaAdCampaigns).set({ status, lastMetaStatus: "PAUSED", lastError: partial ? message : null, submittedAt: new Date() }).where(eq(metaAdCampaigns.id, campaign.id));
-      await db.update(metaAdMutationLogs).set({ resultStatus: partial ? "partial" : "succeeded", safeErrorSummary: partial ? message : null, externalIds: JSON.stringify({ campaignId: campaignResult.campaignId, adSetId: campaignResult.adSetId, creativeKeys: successes }), completedAt: new Date() }).where(eq(metaAdMutationLogs.internalRequestId, requestId));
+      await db.update(metaAdMutationLogs).set({ resultStatus: unknownCreativeOutcome ? "unknown" : partial ? "partial" : "succeeded", safeErrorSummary: partial ? message : null, externalIds: JSON.stringify({ campaignId: externalCampaignId, adSetId: externalAdSetId, creativeKeys: successes }), completedAt: new Date() }).where(eq(metaAdMutationLogs.internalRequestId, requestId));
       return { status, message };
     } catch (error) {
       const unknown = error instanceof MetaAdsSafeError && error.kind === "unknown_outcome";
       const message = error instanceof MetaAdsSafeError ? error.message : "Meta campaign creation failed. No automatic retry was attempted.";
-      await db.update(metaAdCampaigns).set({ status: unknown ? "blocked" : "failed", lastError: message }).where(eq(metaAdCampaigns.id, campaign.id));
-      await db.update(metaAdMutationLogs).set({ resultStatus: unknown ? "unknown" : "failed", safeErrorSummary: message, completedAt: new Date() }).where(eq(metaAdMutationLogs.internalRequestId, requestId));
-      return { status: unknown ? "blocked" as const : "failed" as const, message };
+      const requiresReconciliation = unknown || Boolean(externalCampaignId || externalAdSetId);
+      await db.update(metaAdCampaigns).set({ status: requiresReconciliation ? "blocked" : "ready", lastError: message }).where(eq(metaAdCampaigns.id, campaign.id));
+      await db.update(metaAdMutationLogs).set({ resultStatus: requiresReconciliation ? "unknown" : "failed", safeErrorSummary: message, externalIds: externalCampaignId ? JSON.stringify({ campaignId: externalCampaignId, adSetId: externalAdSetId }) : null, completedAt: new Date() }).where(eq(metaAdMutationLogs.internalRequestId, requestId));
+      return { status: requiresReconciliation ? "blocked" as const : "ready" as const, message };
     }
   }),
 });

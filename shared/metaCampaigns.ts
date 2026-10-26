@@ -8,6 +8,10 @@ export const META_CAMPAIGN_MAX_VIDEO_SECONDS = 60;
 export const META_CAMPAIGN_MIN_DIMENSION = 600;
 export const META_CAMPAIGN_MIN_ASPECT_RATIO = 4 / 5;
 export const META_CAMPAIGN_MAX_ASPECT_RATIO = 1.91;
+export const META_CAMPAIGN_INTEGER_LIMIT_CENTS = 2_000_000_000;
+export const META_CAMPAIGN_DEFAULT_MAX_DURATION_DAYS = 31;
+export const META_CAMPAIGN_DEFAULT_MAX_TOTAL_SPEND_CENTS = 500_000;
+export const META_CAMPAIGN_DEFAULT_MAX_DAILY_BUDGET_CENTS = 50_000;
 
 export const campaignSourceSchema = z.object({
   type: z.enum(["regular_class", "private_event"]),
@@ -28,7 +32,7 @@ export const campaignDraftSchema = z.object({
   callToAction: z.enum(["BOOK_NOW", "LEARN_MORE"]),
   placements: campaignPlacementSchema,
   budgetType: z.enum(["daily", "total"]),
-  budgetCents: z.number().int().min(500, "The minimum budget is CA$5.00.").max(500_000, "The maximum per-campaign budget is CA$5,000.00."),
+  budgetCents: z.number().int().min(500, "The minimum budget is CA$5.00.").max(META_CAMPAIGN_INTEGER_LIMIT_CENTS, "The budget is too large."),
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a valid start date."),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a valid end date."),
 });
@@ -57,6 +61,41 @@ export function validateCampaignDates(input: Pick<CampaignDraftInput, "startDate
   const todayDate = new Date(today.toLocaleDateString("en-CA", { timeZone: "America/Toronto" }) + "T12:00:00-04:00");
   if (start < todayDate) return "Campaigns cannot start in the past.";
   if (end < start) return "The end date must be on or after the start date.";
+  return null;
+}
+
+export type CampaignSafetyLimits = {
+  maxDurationDays: number;
+  maxTotalSpendCents: number;
+  maxDailyBudgetCents: number;
+};
+
+export const DEFAULT_CAMPAIGN_SAFETY_LIMITS: CampaignSafetyLimits = {
+  maxDurationDays: META_CAMPAIGN_DEFAULT_MAX_DURATION_DAYS,
+  maxTotalSpendCents: META_CAMPAIGN_DEFAULT_MAX_TOTAL_SPEND_CENTS,
+  maxDailyBudgetCents: META_CAMPAIGN_DEFAULT_MAX_DAILY_BUDGET_CENTS,
+};
+
+/** Applies hard server-side limits and requires the campaign to finish no later than its selected APY event. */
+export function validateCampaignSafety(
+  input: Pick<CampaignDraftInput, "budgetType" | "budgetCents" | "startDate" | "endDate">,
+  eventDate: string,
+  limits: CampaignSafetyLimits = DEFAULT_CAMPAIGN_SAFETY_LIMITS,
+  today = new Date(),
+): string | null {
+  const dateError = validateCampaignDates(input, today);
+  if (dateError) return dateError;
+  const start = parseTorontoDateOnly(input.startDate)!;
+  const end = parseTorontoDateOnly(input.endDate)!;
+  const event = parseTorontoDateOnly(eventDate);
+  if (!event) return "The selected APY event date is invalid. Refresh the event before publishing.";
+  if (end > event) return "The campaign must end on or before the selected APY event date.";
+  const durationDays = Math.floor((end.getTime() - start.getTime()) / 86_400_000) + 1;
+  if (durationDays > limits.maxDurationDays) return `Campaigns are limited to ${limits.maxDurationDays} days.`;
+  if (input.budgetType === "daily" && input.budgetCents > limits.maxDailyBudgetCents) return "The daily budget exceeds the configured APY safety limit.";
+  const maximumSpend = calculateMaximumSpendCents(input);
+  if (!Number.isSafeInteger(maximumSpend) || maximumSpend > META_CAMPAIGN_INTEGER_LIMIT_CENTS) return "The planned maximum spend is too large.";
+  if (maximumSpend > limits.maxTotalSpendCents) return "The planned maximum spend exceeds the configured APY safety limit.";
   return null;
 }
 
