@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { and, asc, desc, eq, inArray, isNotNull } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { metaAdCampaigns, metaAdCreatives, metaAdMutationLogs, privateEventInquiries } from "../../drizzle/schema";
@@ -206,6 +206,7 @@ export const metaCampaignsRouter = router({
     if (!creatives.length || creatives.length > META_CAMPAIGN_MAX_CREATIVES) throw new TRPCError({ code: "PRECONDITION_FAILED", message: `Add 1 to ${META_CAMPAIGN_MAX_CREATIVES} validated ad variations before submitting.` });
     const currentSource = await resolveEligibleSource({ type: campaign.sourceType, id: campaign.sourceId });
     if (currentSource.bookingUrl !== campaign.canonicalBookingUrl) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "The canonical booking link has changed. Refresh the event and review a new draft before submitting." });
+    if (currentSource.date !== campaign.eventDate) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "The APY event date changed. Refresh the event and review a new draft before submitting." });
     const placements = campaign.placements.split(",").filter((value): value is "facebook" | "instagram" => value === "facebook" || value === "instagram");
     const safetyError = validateCampaignSafety({ budgetType: campaign.budgetType, budgetCents: campaign.budgetCents, startDate: campaign.startDate, endDate: campaign.endDate }, campaign.eventDate);
     if (safetyError) throw new TRPCError({ code: "PRECONDITION_FAILED", message: safetyError });
@@ -218,11 +219,18 @@ export const metaCampaignsRouter = router({
       await db.update(metaAdCampaigns).set({ status: "ready", lastError: message }).where(eq(metaAdCampaigns.id, campaign.id));
       return { status: "ready" as const, message };
     }
+    const claim = await db.update(metaAdCampaigns).set({
+      status: "publishing", lastError: null, metaAdAccountId: config.adAccountId, metaFacebookPageId: config.facebookPageId, metaInstagramAccountId: config.instagramAccountId,
+    }).where(and(eq(metaAdCampaigns.id, campaign.id), eq(metaAdCampaigns.status, "ready"), isNull(metaAdCampaigns.metaCampaignId), isNull(metaAdCampaigns.metaAdSetId)));
+    if (Number((claim as unknown as Array<{ affectedRows?: number }>)[0]?.affectedRows ?? 0) !== 1) {
+      const message = "Another submission already claimed this campaign. Refresh APY HQ; no second Meta campaign was created.";
+      await db.update(metaAdMutationLogs).set({ resultStatus: "failed", safeErrorSummary: message, completedAt: new Date() }).where(eq(metaAdMutationLogs.internalRequestId, requestId));
+      return { status: "blocked" as const, message };
+    }
     let externalCampaignId: string | null = null;
     let externalAdSetId: string | null = null;
     try {
       await preflightMetaAdsIdentity();
-      await db.update(metaAdCampaigns).set({ status: "publishing", lastError: null, metaAdAccountId: config.adAccountId, metaFacebookPageId: config.facebookPageId, metaInstagramAccountId: config.instagramAccountId }).where(eq(metaAdCampaigns.id, campaign.id));
       const campaignResult = await createPausedMetaCampaign({ name: campaign.campaignName });
       externalCampaignId = campaignResult.campaignId;
       await db.update(metaAdCampaigns).set({ metaCampaignId: externalCampaignId }).where(eq(metaAdCampaigns.id, campaign.id));

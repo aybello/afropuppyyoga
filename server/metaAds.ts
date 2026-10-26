@@ -142,7 +142,7 @@ export async function preflightMetaAdsIdentity(): Promise<void> {
 export async function createPausedMetaCampaign(input: { name: string }): Promise<{ campaignId: string }> {
   const config = configuredOrThrow();
   const campaign = await graphRequest<{ id: string }>(`${config.adAccountPath}/campaigns`, new URLSearchParams({ name: input.name, objective: "LINK_CLICKS", status: "PAUSED" }));
-  if (!campaign.id) throw new MetaAdsSafeError("provider_error", "Meta did not return a campaign ID.");
+  if (!campaign.id) throw new MetaAdsSafeError("unknown_outcome", "Meta returned a campaign response without an ID. APY stopped safely for reconciliation.");
   return { campaignId: campaign.id };
 }
 
@@ -156,7 +156,7 @@ export async function createPausedMetaAdSet(input: { campaignId: string; name: s
     billing_event: "IMPRESSIONS", optimization_goal: "LINK_CLICKS",
   });
   const adSet = await graphRequest<{ id: string }>(`${config.adAccountPath}/adsets`, adsetBody);
-  if (!adSet.id) throw new MetaAdsSafeError("provider_error", "Meta did not return an ad set ID.");
+  if (!adSet.id) throw new MetaAdsSafeError("unknown_outcome", "Meta returned an ad set response without an ID. APY stopped safely for reconciliation.");
   return { adSetId: adSet.id };
 }
 

@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { buildMetaPlacementTargeting, getMetaAdsConfiguration } from "./metaAds";
 
@@ -35,5 +36,11 @@ describe("Meta Marketing API configuration", () => {
     expect(buildMetaPlacementTargeting({ geo_locations: { countries: ["CA"] } }, ["instagram"])).toMatchObject({ publisher_platforms: ["instagram"], instagram_positions: ["stream", "story", "reels"] });
     expect(buildMetaPlacementTargeting({}, ["facebook"])).toMatchObject({ publisher_platforms: ["facebook"], facebook_positions: ["feed"] });
     expect(buildMetaPlacementTargeting({}, ["facebook", "instagram"])).toMatchObject({ publisher_platforms: ["facebook", "instagram"], facebook_positions: ["feed"], instagram_positions: ["stream", "story", "reels"] });
+  });
+
+  it("keeps missing provider IDs classified as uncertain rather than retryable provider errors", () => {
+    const source = readFileSync(new URL("./metaAds.ts", import.meta.url), "utf8");
+    expect(source).toContain('MetaAdsSafeError("unknown_outcome", "Meta returned a campaign response without an ID');
+    expect(source).toContain('MetaAdsSafeError("unknown_outcome", "Meta returned an ad set response without an ID');
   });
 });
