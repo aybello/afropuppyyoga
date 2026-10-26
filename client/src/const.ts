@@ -1,11 +1,12 @@
 export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
+import { appendAttributionToLumaUrl } from "@/lib/lumaAttribution";
 
 // ─── Brand Constants ─────────────────────────────────────────────────────────
 /** CDN URL for the AfroPuppyYoga logo — used across Navbar, Footer, AdminNav, etc. */
 export const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
 
 /** Luma booking page URL */
-export const BOOK_URL = "https://lu.ma/afropuppyyoga";
+export const BOOK_URL = appendAttributionToLumaUrl("https://lu.ma/afropuppyyoga");
 
 /** Instagram profile URL */
 export const INSTAGRAM_URL = "https://www.instagram.com/afropuppyyoga";

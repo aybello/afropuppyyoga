@@ -60,6 +60,24 @@ export function appendAttributionToLumaUrl(rawUrl: string): string {
     destination.searchParams.set("utm_source", "facebook");
     destination.searchParams.set("utm_medium", "paid_social");
   }
+  // Preserve unpaid demand when a visitor arrived without campaign parameters.
+  // Search and referral traffic remains visible in Luma instead of becoming direct.
+  if (!destination.searchParams.has("utm_source") && document.referrer) {
+    try {
+      const referrer = new URL(document.referrer);
+      if (referrer.origin !== window.location.origin) {
+        const host = referrer.hostname.toLowerCase().replace(/^www\./, "");
+        const searchHost = /(google|bing|duckduckgo|yahoo|ecosia)\./i.test(host);
+        const searchProvider =
+          ["google", "bing", "duckduckgo", "yahoo", "ecosia"].find((provider) => host.includes(`${provider}.`)) ?? host;
+        destination.searchParams.set("utm_source", (searchHost ? searchProvider : host).slice(0, 255));
+        destination.searchParams.set("utm_medium", searchHost ? "organic" : "referral");
+        destination.searchParams.set("utm_campaign", searchHost ? "organic_search" : "referral");
+      }
+    } catch {
+      // A malformed referrer must never interrupt booking.
+    }
+  }
 
   const contentParts = [landing.get("utm_content")?.slice(0, 80) ?? ""];
   if (fbc) contentParts.push(`apy_fbc=${fbc}`);

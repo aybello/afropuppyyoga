@@ -458,76 +458,6 @@ const PAGES: Record<string, () => string> = {
 `,
     }),
 
-  "/birthday": () =>
-    buildHtml({
-      title: "Birthday Puppy Yoga Parties | AfroPuppyYoga",
-      description:
-        "Celebrate your birthday with a private puppy yoga party! AfroPuppyYoga offers unforgettable birthday experiences in Hamilton, Kitchener, and Oakville, Ontario.",
-      canonical: `${BASE}/private-events/quote`,
-      schema: [
-        breadcrumb({ name: "Birthday Packages", url: `${BASE}/birthday` }),
-        {
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          mainEntity: [
-            {
-              "@type": "Question",
-              name: "How far in advance should I book a birthday puppy yoga party?",
-              acceptedAnswer: {
-                "@type": "Answer",
-                text: "We recommend booking at least 2–3 weeks in advance to secure your preferred date and location. Popular dates fill up quickly, especially on weekends.",
-              },
-            },
-            {
-              "@type": "Question",
-              name: "How many people can attend a birthday puppy yoga party?",
-              acceptedAnswer: {
-                "@type": "Answer",
-                text: "Our birthday packages accommodate groups of up to 20 guests for the Classic package. Larger groups can be accommodated with our Premium or Deluxe packages.",
-              },
-            },
-            {
-              "@type": "Question",
-              name: "Can I bring a birthday cake?",
-              acceptedAnswer: {
-                "@type": "Answer",
-                text: "Yes! You are welcome to bring a birthday cake or other treats for your group. Please let us know in advance so we can plan accordingly.",
-              },
-            },
-          ],
-        },
-      ],
-      body: `
-<header>
-  <h1>Birthday Puppy Yoga Parties — AfroPuppyYoga</h1>
-  <nav><a href="/">Home</a> &rsaquo; <a href="/birthday">Birthday Packages</a></nav>
-</header>
-<main>
-  <h2>Make Your Birthday Unforgettable</h2>
-  <p>Celebrate your special day with a private puppy yoga party from AfroPuppyYoga! Our birthday packages include a guided yoga session, Afro-beat music, and a litter of adorable puppies — plus a dedicated host to make your event seamless.</p>
-  <h3>Birthday Package Tiers</h3>
-  <ul>
-    <li><strong>Basic Package ($600):</strong> Up to 10 guests, 45-minute session, studio venue</li>
-    <li><strong>Premium Package ($900):</strong> Up to 15 guests, 60-minute session, studio venue, photography add-on</li>
-    <li><strong>Deluxe Package ($1,200+):</strong> Up to 20 guests, 75-minute session, custom experience, merchandise</li>
-  </ul>
-  <h3>What's Included</h3>
-  <ul>
-    <li>Private guided puppy yoga session</li>
-    <li>Dedicated event host</li>
-    <li>Afro-beat music soundtrack</li>
-    <li>Ethically sourced puppies from registered breeders</li>
-    <li>Available in Hamilton, Kitchener, and Oakville</li>
-  </ul>
-  <p><a href="/birthday">Request a Birthday Package</a> | <a href="/private-events/quote">Get an Instant Quote</a></p>
-  <p>Also explore our <a href="/loyalty">Loyalty Program</a> for returning guests.</p>
-</main>
-<footer>
-  <a href="/">Home</a> | <a href="/partnerships">Partnerships</a> | <a href="/ethics">Ethical Standards</a> | <a href="/private-events/quote">Private Event Quote</a>
-</footer>
-`,
-    }),
-
   "/partnerships": () =>
     buildHtml({
       title: "Partner with AfroPuppyYoga | Corporate & Brand Partnerships",
@@ -1387,7 +1317,7 @@ const PAGES: Record<string, () => string> = {
   <ul>
     <li>Exclusive session — just your group and the puppies</li>
     <li>Flexible scheduling, including weekdays for corporate events</li>
-    <li>Available at our studios in Kitchener, Hamilton, and Oakville, or offsite at your venue</li>
+    <li>Available at our studios in Kitchener, Hamilton, Oakville, and Guelph, or offsite at your venue</li>
     <li>Certified yoga instructors and trained Puppy Monitors included</li>
     <li>Customizable packages: Classic, Signature, and Luxury tiers</li>
     <li>Add-ons available: photography, refreshments, branded merchandise</li>

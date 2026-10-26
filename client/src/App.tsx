@@ -96,7 +96,6 @@ function Router() {
         <Route path={"/staff/training"} component={StaffTraining} />
         <Route path={"/staff/documents"} component={StaffDocuments} />
         <Route path={"/staff/get-started"} component={StaffGettingStarted} />
-        <Route path={"/birthday"}>{() => { window.location.replace("/private-events/quote"); return null; }}</Route>
         <Route path={"/partnerships"} component={Partnerships} />
         <Route path={"/staff-login"} component={StaffLogin} />
         <Route path={"/staff-access"} component={StaffAccess} />

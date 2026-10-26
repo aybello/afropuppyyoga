@@ -146,9 +146,20 @@ async function startServer() {
       "/contact/": "/#contact",
       "/contact": "/#contact",
       "/careers/": "/careers",
+      "/birthday": "/private-events/quote",
+      "/birthday/": "/private-events/quote",
     };
     const target = legacyRedirects[req.path];
-    if (target) return res.redirect(301, target);
+    if (target) {
+      const query = req.originalUrl.includes("?")
+        ? req.originalUrl.slice(req.originalUrl.indexOf("?"))
+        : "";
+      const hashIndex = target.indexOf("#");
+      const redirectTarget = hashIndex === -1
+        ? `${target}${query}`
+        : `${target.slice(0, hashIndex)}${query}${target.slice(hashIndex)}`;
+      return res.redirect(301, redirectTarget);
+    }
     next();
   });
 
@@ -162,15 +173,23 @@ async function startServer() {
     next();
   });
 
-  // The owner dashboard is a private Staff Portal route. Send an indexing prohibition
-  // before client routing or crawler rendering so this protection applies even
-  // if JavaScript never runs.
-  app.use("/staff/revenue-dashboard", (_req, res, next) => {
-    res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
-    next();
-  });
-
-  app.use(["/staff/documents", "/staff/get-started", "/staff/training", "/sign"], (_req, res, next) => {
+  // Internal tools must never be indexed, even when a crawler receives the SPA shell.
+  app.use((req, res, next) => {
+    const normalizedPath = req.path.replace(/\/+$/, "") || "/";
+    const internalPath =
+      (normalizedPath === "/admin" || normalizedPath.startsWith("/admin/")) ||
+      (normalizedPath === "/staff" || normalizedPath.startsWith("/staff/")) ||
+      [
+        "/staff-login",
+        "/staff-access",
+        "/submit-invoice",
+        "/sign",
+        "/predictor",
+        "/breeder-calculator",
+        "/breeder-availability",
+        "/404",
+      ].includes(normalizedPath);
+    if (!internalPath) return next();
     res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
     res.setHeader("Cache-Control", "private, no-store");
     res.setHeader("Referrer-Policy", "no-referrer");
