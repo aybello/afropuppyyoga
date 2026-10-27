@@ -861,6 +861,114 @@ export const metaConversionEvents = mysqlTable("metaConversionEvents", {
 export type MetaConversionEvent = typeof metaConversionEvents.$inferSelect;
 export type InsertMetaConversionEvent = typeof metaConversionEvents.$inferInsert;
 
+// ─── Meta Campaign Creator ───────────────────────────────────────────────────
+/**
+ * Owner-authored local campaign records. These are deliberately separate from
+ * Meta CAPI purchase events: a campaign remains a local draft until an explicit
+ * owner-confirmed Marketing API publish is possible with an APY-only account.
+ */
+export const metaAdCampaigns = mysqlTable("metaAdCampaigns", {
+  id: int("id").autoincrement().primaryKey(),
+  sourceType: mysqlEnum("metaCampaignSourceType", ["regular_class", "private_event"]).notNull(),
+  sourceId: int("sourceId").notNull(),
+  eventName: varchar("eventName", { length: 255 }).notNull(),
+  eventCity: varchar("eventCity", { length: 128 }).notNull(),
+  eventDate: varchar("eventDate", { length: 32 }).notNull(),
+  canonicalBookingUrl: varchar("canonicalBookingUrl", { length: 500 }).notNull(),
+  ticketPriceCents: int("ticketPriceCents"),
+  seatsRemaining: int("seatsRemaining"),
+  campaignName: varchar("campaignName", { length: 160 }).notNull(),
+  campaignSlug: varchar("campaignSlug", { length: 96 }).notNull(),
+  primaryText: text("primaryText").notNull(),
+  headline: varchar("headline", { length: 255 }).notNull(),
+  description: varchar("description", { length: 255 }),
+  callToAction: mysqlEnum("metaCampaignCallToAction", ["BOOK_NOW", "LEARN_MORE"]).notNull(),
+  placements: varchar("placements", { length: 64 }).notNull(),
+  budgetType: mysqlEnum("metaCampaignBudgetType", ["daily", "total"]).notNull(),
+  budgetCents: int("budgetCents").notNull(),
+  maximumSpendCents: int("maximumSpendCents").notNull(),
+  startDate: varchar("startDate", { length: 10 }).notNull(),
+  endDate: varchar("endDate", { length: 10 }).notNull(),
+  status: mysqlEnum("metaCampaignStatus", ["draft", "ready", "blocked", "publishing", "partial", "paused", "active", "failed"]).notNull().default("draft"),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdByName: varchar("createdByName", { length: 255 }),
+  metaAdAccountId: varchar("metaAdAccountId", { length: 128 }),
+  metaFacebookPageId: varchar("metaFacebookPageId", { length: 128 }),
+  metaInstagramAccountId: varchar("metaInstagramAccountId", { length: 128 }),
+  metaCampaignId: varchar("metaCampaignId", { length: 128 }),
+  metaAdSetId: varchar("metaAdSetId", { length: 128 }),
+  lastMetaStatus: varchar("lastMetaStatus", { length: 64 }),
+  lastError: text("lastError"),
+  submittedAt: timestamp("submittedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (t) => [
+  index("idx_metaAdCampaigns_status").on(t.status),
+  index("idx_metaAdCampaigns_source").on(t.sourceType, t.sourceId),
+  index("idx_metaAdCampaigns_createdBy").on(t.createdByUserId),
+  uniqueIndex("uq_metaAdCampaigns_slug").on(t.campaignSlug),
+]);
+
+export type MetaAdCampaign = typeof metaAdCampaigns.$inferSelect;
+export type InsertMetaAdCampaign = typeof metaAdCampaigns.$inferInsert;
+
+/** One local asset and later one Meta ad variation per campaign creative. */
+export const metaAdCreatives = mysqlTable("metaAdCreatives", {
+  id: int("id").autoincrement().primaryKey(),
+  campaignId: int("campaignId").notNull(),
+  creativeKey: varchar("creativeKey", { length: 96 }).notNull(),
+  originalFilename: varchar("originalFilename", { length: 128 }).notNull(),
+  fileKey: varchar("fileKey", { length: 500 }).notNull(),
+  contentHash: varchar("contentHash", { length: 64 }).notNull(),
+  mediaType: mysqlEnum("metaCreativeMediaType", ["image", "video"]).notNull(),
+  mimeType: varchar("mimeType", { length: 64 }).notNull(),
+  fileSizeBytes: int("fileSizeBytes").notNull(),
+  width: int("width").notNull(),
+  height: int("height").notNull(),
+  durationSeconds: int("durationSeconds"),
+  validationStatus: mysqlEnum("metaCreativeValidationStatus", ["ready", "invalid", "uploaded", "created", "failed"]).notNull().default("ready"),
+  validationMessage: varchar("validationMessage", { length: 500 }),
+  metaMediaId: varchar("metaMediaId", { length: 128 }),
+  metaCreativeId: varchar("metaCreativeId", { length: 128 }),
+  metaAdId: varchar("metaAdId", { length: 128 }),
+  deliveryStatus: varchar("deliveryStatus", { length: 64 }).notNull().default("draft"),
+  lastError: text("lastError"),
+  sortOrder: int("sortOrder").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (t) => [
+  index("idx_metaAdCreatives_campaign").on(t.campaignId, t.sortOrder),
+  uniqueIndex("uq_metaAdCreatives_key").on(t.creativeKey),
+  uniqueIndex("uq_metaAdCreatives_campaign_hash").on(t.campaignId, t.contentHash),
+]);
+
+export type MetaAdCreative = typeof metaAdCreatives.$inferSelect;
+export type InsertMetaAdCreative = typeof metaAdCreatives.$inferInsert;
+
+/** Immutable, token-free trail for owner-confirmed marketing API mutations. */
+export const metaAdMutationLogs = mysqlTable("metaAdMutationLogs", {
+  id: int("id").autoincrement().primaryKey(),
+  campaignId: int("campaignId").notNull(),
+  internalRequestId: varchar("internalRequestId", { length: 96 }).notNull(),
+  idempotencyKey: varchar("idempotencyKey", { length: 128 }).notNull(),
+  actorUserId: int("actorUserId").notNull(),
+  actorName: varchar("actorName", { length: 255 }),
+  action: varchar("action", { length: 64 }).notNull(),
+  targetAdAccountId: varchar("targetAdAccountId", { length: 128 }),
+  resultStatus: mysqlEnum("metaMutationResultStatus", ["pending", "succeeded", "partial", "failed", "unknown"]).notNull().default("pending"),
+  safeErrorSummary: text("safeErrorSummary"),
+  externalIds: text("externalIds"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  completedAt: timestamp("completedAt"),
+}, (t) => [
+  index("idx_metaAdMutationLogs_campaign").on(t.campaignId, t.createdAt),
+  uniqueIndex("uq_metaAdMutationLogs_request").on(t.internalRequestId),
+  uniqueIndex("uq_metaAdMutationLogs_idempotency").on(t.idempotencyKey),
+]);
+
+export type MetaAdMutationLog = typeof metaAdMutationLogs.$inferSelect;
+export type InsertMetaAdMutationLog = typeof metaAdMutationLogs.$inferInsert;
+
 // ─── Call Logs (Twilio class cancellation calls) ────────────────────────────
 export const callLogs = mysqlTable("callLogs", {
   id: int("id").autoincrement().primaryKey(),

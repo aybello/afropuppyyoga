@@ -26,6 +26,21 @@ export async function requireStaffOrAdmin(req: Request, res: Response, next: Nex
   }
 }
 
+/** Owner-only Express middleware for sensitive APY HQ media and integrations. */
+export async function requireApyOwner(req: Request, res: Response, next: NextFunction) {
+  try {
+    const user = await sdk.authenticateRequest(req as any);
+    if (!user) return res.status(401).json({ error: "Authentication required" });
+    const access = await resolveApyAccess(user);
+    if (access.level !== "owner") return res.status(403).json({ error: "Owner access required" });
+    (req as any).staffUser = user;
+    (req as any).apyAccess = access;
+    next();
+  } catch {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+}
+
 /** Any active APY HQ team member; intended for self-service uploads only. */
 export async function requireTeamMember(req: Request, res: Response, next: NextFunction) {
   try {

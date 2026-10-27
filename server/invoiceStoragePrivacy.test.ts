@@ -45,6 +45,11 @@ describe("invoice storage privacy", () => {
     expect(response.status).toBe(200); expect(await response.text()).toBe("%PDF-fictional");
     expect(response.headers.get("cache-control")).toBe("private, no-store");
   });
+  it("treats campaign creative media as owner-only and never contacts storage first", async () => {
+    const response = await realFetch(`${url}/manus-storage/meta-campaigns/42/private-creative.jpg`);
+    expect(response.status).toBe(401); expect(mocks.fetch).not.toHaveBeenCalled();
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+  });
   it("keeps public image access unchanged", async () => {
     const response = await realFetch(`${url}/manus-storage/logo.png`);
     expect(response.status).toBe(200); expect(mocks.auth).not.toHaveBeenCalled();

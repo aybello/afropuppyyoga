@@ -29,6 +29,7 @@ import {
   Gauge,
   UsersRound,
   Landmark,
+  Megaphone,
 } from "lucide-react";
 
 const TEAM_PHOTO = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663824308637/IiwudPwckobbrxIv.jpg";
@@ -195,6 +196,16 @@ const TOOLS = [
     category: "Growth",
   },
   {
+    id: "meta-campaigns",
+    title: "Campaign Creator",
+    description: "Prepare private Meta campaign drafts with APY event links and creative variations.",
+    href: "/admin/meta-campaigns",
+    icon: Megaphone,
+    accent: "#8B2252",
+    adminOnly: true,
+    category: "Growth",
+  },
+  {
     id: "review-texts",
     title: "Review Texts",
     description: "Post-class Google review SMS log and status.",
@@ -259,7 +270,7 @@ const TOOLS = [
 const CATEGORY_ORDER = ["Operations", "People", "Finance", "Events", "Breeders", "Growth"];
 
 function requiredAccessForTool(id: string): ApyHubToolAccess {
-  if (id === "invoices" || id === "revenue" || id === "private-revenue-dashboard" || id === "quickbooks" || id === "employee-directory") return "owner";
+  if (id === "invoices" || id === "revenue" || id === "private-revenue-dashboard" || id === "quickbooks" || id === "employee-directory" || id === "meta-campaigns") return "owner";
   if (id === "staff-training" || id === "submit-invoice" || id === "my-documents" || id === "get-started") return "team";
   return "operations";
 }

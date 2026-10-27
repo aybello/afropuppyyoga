@@ -22,6 +22,7 @@ import {
   MessageSquare,
   Gauge,
   UsersRound,
+  Megaphone,
 } from "lucide-react";
 import { Inbox, Star, DollarSign, Dog, Landmark } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -50,6 +51,7 @@ const MORE_ITEMS = [
   { href: "/admin/review-texts",   label: "Review Texts",    icon: Star,         required: "operations" as ApyHubToolAccess },
   { href: "/admin/revenue",         label: "Revenue",         icon: DollarSign,   required: "owner" as ApyHubToolAccess },
   { href: "/admin/quickbooks",      label: "QuickBooks",      icon: Landmark,     required: "owner" as ApyHubToolAccess },
+  { href: "/admin/meta-campaigns",  label: "Campaign Creator", icon: Megaphone,  required: "owner" as ApyHubToolAccess },
   { href: "/admin/employees",       label: "Employees",       icon: UsersRound,   required: "owner" as ApyHubToolAccess },
   { href: "/admin/breeder-leads",   label: "Breeder Leads",   icon: Dog,          required: "operations" as ApyHubToolAccess },
 ];
