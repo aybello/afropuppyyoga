@@ -10,7 +10,7 @@ const config: LocationConfig = {
   heroSubline:
     "Ontario's #1 puppy yoga studio is right next door. Join students, founders, and wellness lovers from Waterloo for a 60-minute session unlike anything else.",
   heroBg:
-    "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/og_image_apy.jpg",
+    "/manus-storage/apy_corporate_hero_202ea280.jpg",
   venueName: "TenC Dance Studio",
   venueAddress: "329 King Street East, Kitchener, ON",
   venueArea: "Kitchener-Waterloo Region",

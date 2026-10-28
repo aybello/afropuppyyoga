@@ -142,7 +142,7 @@ export default function LocationPage({ config }: Props) {
     canonical: canonicalUrl,
     ogTitle: config.pageTitle,
     ogDescription: seoDescription,
-    ogImage: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/og_image_apy.jpg",
+    ogImage: "https://afropuppyyoga.ca/manus-storage/apy_corporate_hero_202ea280.jpg",
   });
 
   // Inject LocalBusiness schema
