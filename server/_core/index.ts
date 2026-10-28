@@ -18,6 +18,7 @@ import lumaWebhookRouter from "../lumaWebhook";
 import { requireStaffOrAdmin } from "./requireStaff";
 import { registerStorageProxy } from "./storageProxy";
 import metaCampaignUploadRouter from "../metaCampaignUploadRoute";
+import { getLegacyImageRecoveryTarget } from "../legacyImageRecovery";
 import crypto from "crypto";
 import { sdk } from "./sdk";
 import { sendEmail } from "../email";
@@ -207,6 +208,16 @@ async function startServer() {
     },
   }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+  // Browsers can retain an older client bundle after an image replacement. Recover
+  // only the retired asset URLs before the storage proxy would return a 403.
+  app.use((req, res, next) => {
+    const replacement = getLegacyImageRecoveryTarget(req.path, req.get("referer"));
+    if (!replacement) return next();
+    res.setHeader("Cache-Control", "private, no-store");
+    res.setHeader("Vary", "Referer");
+    return res.redirect(302, replacement);
+  });
 
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
