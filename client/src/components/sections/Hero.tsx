@@ -20,6 +20,7 @@ import {
 // Each logo: src = CDN URL, height = display height in px
 // All logos are shown in their natural colors on a white/frosted strip
 const trustedBy = [
+  { name: "LiftOff", src: "/manus-storage/LiftOff_Logo_Building_Legacy_banner_5f5d7710.png", height: 72 },
   { name: "Wilfrid Laurier University", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/laurier_logo_61911be5.webp", height: 30 },
   { name: "University of Waterloo", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/waterloo_fixed_a91debfb.png", height: 36 },
   { name: "McMaster University", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/mcmaster_dedf4891.png", height: 38 },

@@ -31,4 +31,11 @@ describe("public website image references", () => {
     expect(sources).not.toContain("og_image_apy.jpg");
     expect(sources).toContain("apy_corporate_hero_202ea280.jpg");
   });
+
+  it("includes the supplied LiftOff logo in the public hero trust banner", () => {
+    const hero = readProjectFile("../client/src/components/sections/Hero.tsx");
+
+    expect(hero).toContain('name: "LiftOff"');
+    expect(hero).toContain("LiftOff_Logo_Building_Legacy_banner_5f5d7710.png");
+  });
 });
