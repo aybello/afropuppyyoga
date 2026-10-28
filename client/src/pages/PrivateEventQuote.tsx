@@ -220,7 +220,7 @@ export default function PrivateEventQuote() {
             <div className="shrink-0 relative">
               <div className="w-52 h-52 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-white shadow-2xl" style={{ backgroundColor: "#F2A0B8" }}>
                 <img
-                  src="/manus-storage/private-events-hero_72e6b8e7.jpg"
+                  src="/manus-storage/apy_private_events_hero_43ef0f7d.jpg"
                   alt=""
                   aria-hidden="true"
                   className="w-full h-full object-cover object-center"

@@ -170,7 +170,7 @@ export default function Corporate() {
       <section
         className="relative pt-28 pb-24 px-6 overflow-hidden"
         style={{
-          backgroundImage: `url('/manus-storage/corporate_hero_95e52cfc.jpg')`,
+          backgroundImage: `url('/manus-storage/apy_corporate_hero_202ea280.jpg')`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
