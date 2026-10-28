@@ -37,5 +37,6 @@ describe("public website image references", () => {
 
     expect(hero).toContain('name: "LiftOff"');
     expect(hero).toContain("LiftOff_Logo_Building_Legacy_banner_5f5d7710.png");
+    expect(hero).toContain("height: 88");
   });
 });
