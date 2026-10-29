@@ -25,12 +25,17 @@ import { revokeTeamProfileAccess } from "../staffAccessRevocation";
 import { isActiveTeamMember } from "../teamMembership";
 import { withStaffingMutationLock } from "../staffingMutationLock";
 import { consumeStaffEmailSignIn, requestStaffEmailAccess, STAFF_EMAIL_SIGN_IN_PREFIX } from "../staffEmailAccess";
+import { requestStaffEmailAccessCode, verifyStaffEmailAccessCode } from "../staffEmailCodeAccess";
 
 export const staffRouter = router({
   /** Public self-service sign-in for existing active staff, never a role grant. */
   requestEmailAccessLink: publicProcedure
     .input(z.object({ email: z.string().trim().email().max(320), origin: z.string().url().optional() }))
     .mutation(({ input }) => requestStaffEmailAccess(input.email, input.origin)),
+  /** Public: sends a six-digit code to an active APY HQ email or the configured owner email. */
+  requestEmailAccessCode: publicProcedure
+    .input(z.object({ email: z.string().trim().email().max(320) }))
+    .mutation(({ input }) => requestStaffEmailAccessCode(input.email)),
   /**
    * Public: sends a short-lived verification code only to an active APY HQ team
    * member's saved phone. The generic response avoids revealing who is on staff.
@@ -101,6 +106,25 @@ export const staffRouter = router({
       const sessionToken = await sdk.createSessionToken(identity.openId, { name: identity.name, expiresInMs: SEVEN_DAYS_MS });
       ctx.res.cookie(COOKIE_NAME, sessionToken, { ...getSessionCookieOptions(ctx.req), maxAge: SEVEN_DAYS_MS });
       return { success: true, name: identity.name, role: identity.apyRole };
+    }),
+
+  /** Public: validates one six-digit email code and issues a seven-day APY HQ session. */
+  verifyEmailAccessCode: publicProcedure
+    .input(z.object({ email: z.string().trim().email().max(320), code: z.string().regex(/^\d{6}$/, "Enter the six-digit code.") }))
+    .mutation(async ({ input, ctx }) => {
+      const identity = await verifyStaffEmailAccessCode(input.email, input.code);
+      const now = new Date();
+      await upsertUser({
+        openId: identity.openId,
+        name: identity.name,
+        email: identity.email,
+        loginMethod: "email_otp",
+        role: identity.role,
+        lastSignedIn: now,
+      });
+      const sessionToken = await sdk.createSessionToken(identity.openId, { name: identity.name, expiresInMs: SEVEN_DAYS_MS });
+      ctx.res.cookie(COOKIE_NAME, sessionToken, { ...getSessionCookieOptions(ctx.req), maxAge: SEVEN_DAYS_MS });
+      return { success: true, name: identity.name, role: identity.role === "admin" ? "Owner" : "Staff" };
     }),
 
   /** Active APY HQ identity and operational authority for role-aware navigation. */

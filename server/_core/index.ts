@@ -256,7 +256,13 @@ async function startServer() {
       if (procedures.length !== 1) return res.status(400).json({ error: "Submit one invoice at a time." });
       return invoiceIntakeLimiter(req, res, next);
     }
-    if (procedures.some((procedure) => ["staff.requestEmailAccessLink", "staff.requestPhoneAccessCode"].includes(procedure))) {
+    if (procedures.some((procedure) => [
+      "staff.requestEmailAccessLink",
+      "staff.requestEmailAccessCode",
+      "staff.verifyEmailAccessCode",
+      "staff.requestPhoneAccessCode",
+      "staff.verifyPhoneAccessCode",
+    ].includes(procedure))) {
       return staffSignInLimiter(req, res, next);
     }
     next();

@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-const mocks = vi.hoisted(() => ({ findPhone: vi.fn(), findEmail: vi.fn(), sendSms: vi.fn(), getDb: vi.fn(), requestEmail: vi.fn(), consumeEmail: vi.fn(), upsert: vi.fn(), session: vi.fn(), oldInvite: vi.fn() }));
+const mocks = vi.hoisted(() => ({ findPhone: vi.fn(), findEmail: vi.fn(), sendSms: vi.fn(), getDb: vi.fn(), requestEmail: vi.fn(), consumeEmail: vi.fn(), requestEmailCode: vi.fn(), verifyEmailCode: vi.fn(), upsert: vi.fn(), session: vi.fn(), oldInvite: vi.fn() }));
 vi.mock("twilio", () => ({ default: () => ({ messages: { create: mocks.sendSms } }) }));
 vi.mock("../apyAccess", () => ({ findActiveTeamMemberByPhone: mocks.findPhone, findActiveTeamMemberByEmail: mocks.findEmail, resolveApyAccess: vi.fn() }));
 vi.mock("../db", () => ({ getDb: mocks.getDb, upsertUser: mocks.upsert, getStaffInviteByToken: mocks.oldInvite, createStaffInvite: vi.fn(), getAllActiveStaff: vi.fn(), updateStaffInvite: vi.fn() }));
 vi.mock("../email", () => ({ sendStaffInviteEmail: vi.fn() }));
 vi.mock("../staffEmailAccess", () => ({ requestStaffEmailAccess: mocks.requestEmail, consumeStaffEmailSignIn: mocks.consumeEmail, STAFF_EMAIL_SIGN_IN_PREFIX: "signin_" }));
+vi.mock("../staffEmailCodeAccess", () => ({ requestStaffEmailAccessCode: mocks.requestEmailCode, verifyStaffEmailAccessCode: mocks.verifyEmailCode }));
 vi.mock("../_core/sdk", () => ({ sdk: { createSessionToken: mocks.session } }));
 import { staffRouter } from "./staff";
 const cookie = vi.fn();
@@ -13,7 +14,7 @@ const member = { id: 42, name: "Fictional Manager", email: "manager@example.com"
 beforeEach(() => {
   vi.clearAllMocks();
   vi.stubEnv("TWILIO_ACCOUNT_SID", "fake-account"); vi.stubEnv("TWILIO_AUTH_TOKEN", "fake-auth"); vi.stubEnv("TWILIO_PHONE_NUMBER", "+14165550100"); vi.stubEnv("OWNER_PHONE_NUMBER", "+12895550999"); vi.stubEnv("JWT_SECRET", "fake-otp-secret");
-  mocks.findPhone.mockResolvedValue(member); mocks.sendSms.mockResolvedValue({}); mocks.requestEmail.mockResolvedValue({ success: true }); mocks.consumeEmail.mockResolvedValue({ name: member.name, email: member.email }); mocks.session.mockResolvedValue("fake-session"); mocks.upsert.mockResolvedValue(undefined);
+  mocks.findPhone.mockResolvedValue(member); mocks.sendSms.mockResolvedValue({}); mocks.requestEmail.mockResolvedValue({ success: true }); mocks.consumeEmail.mockResolvedValue({ name: member.name, email: member.email }); mocks.requestEmailCode.mockResolvedValue({ success: true }); mocks.verifyEmailCode.mockResolvedValue({ openId: "staff:manager@example.com", name: member.name, email: member.email, role: "staff" }); mocks.session.mockResolvedValue("fake-session"); mocks.upsert.mockResolvedValue(undefined);
 });
 function dbWithCodeRows(rows: any[]) {
   const q: any = { from: () => q, where: () => q, orderBy: () => q, limit: async () => rows };
@@ -40,6 +41,14 @@ describe("staff sign-in router", () => {
   it("passes the submitted personal email to self-service without changing roles", async () => {
     await staffRouter.createCaller(ctx).requestEmailAccessLink({ email: " manager@example.com ", origin: "https://afropuppyyoga.ca" });
     expect(mocks.requestEmail).toHaveBeenCalledWith(member.email, "https://afropuppyyoga.ca"); expect(mocks.upsert).not.toHaveBeenCalled(); expect(cookie).not.toHaveBeenCalled();
+  });
+  it("issues an admin session after father verifies his own email code", async () => {
+    mocks.verifyEmailCode.mockResolvedValue({ openId: "owner-open-id", name: "Ay Bello", email: "belllo.ayoola@gmail.com", role: "admin" });
+    await expect(staffRouter.createCaller(ctx).verifyEmailAccessCode({ email: "belllo.ayoola@gmail.com", code: "123456" })).resolves.toEqual({ success: true, name: "Ay Bello", role: "Owner" });
+    expect(mocks.verifyEmailCode).toHaveBeenCalledWith("belllo.ayoola@gmail.com", "123456");
+    expect(mocks.upsert).toHaveBeenCalledWith(expect.objectContaining({ openId: "owner-open-id", email: "belllo.ayoola@gmail.com", role: "admin", loginMethod: "email_otp" }));
+    expect(mocks.session).toHaveBeenCalledWith("owner-open-id", expect.objectContaining({ name: "Ay Bello" }));
+    expect(cookie).toHaveBeenCalledOnce();
   });
   it("creates a staff-only identity after the manager proves her own email", async () => {
     await staffRouter.createCaller(ctx).verifyMagicLink({ token: "signin_fake" });

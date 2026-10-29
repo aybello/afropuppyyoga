@@ -260,6 +260,23 @@ export const staffPhoneAccessCodes = mysqlTable("staffPhoneAccessCodes", {
 
 export type StaffPhoneAccessCode = typeof staffPhoneAccessCodes.$inferSelect;
 
+/** Short-lived, single-use email verification codes for APY HQ access. */
+export const staffEmailAccessCodes = mysqlTable("staffEmailAccessCodes", {
+  id: int("id").autoincrement().primaryKey(),
+  email: varchar("email", { length: 320 }).notNull(),
+  /** Staff codes bind to an active APY HQ profile; owner codes bind to the configured owner identity. */
+  identityType: mysqlEnum("identityType", ["staff", "owner"]).notNull(),
+  applicationId: int("applicationId"),
+  ownerOpenId: varchar("ownerOpenId", { length: 64 }),
+  codeHash: varchar("codeHash", { length: 64 }).notNull(),
+  attempts: int("attempts").default(0).notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  consumedAt: timestamp("consumedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [index("idx_staffEmailAccess_email_created").on(t.email, t.createdAt)]);
+
+export type StaffEmailAccessCode = typeof staffEmailAccessCodes.$inferSelect;
+
 export const signingTokens = mysqlTable("signingTokens", {
   id: int("id").autoincrement().primaryKey(),
   /** The job application this signing request is for */

@@ -300,6 +300,13 @@ export async function sendStaffSignInEmail(opts: { to: string; name: string; mag
   await sendEmail({ to: opts.to, subject: "Your AfroPuppyYoga APY HQ sign-in link", html: wrapInBrandedLayout(hero, body), text: `Hi ${opts.name},\n\nUse this link to sign in with your own staff account:\n${opts.magicLink}\n\nThis link expires in 15 minutes and can be used once. Do not forward it. If you did not request it, ignore this email.` });
 }
 
+export async function sendStaffEmailAccessCode(opts: { to: string; name: string; code: string }): Promise<void> {
+  const hero = `<h1 style="margin:0;font-family:Georgia,serif;font-size:27px;color:#FFFFFF;">Your APY HQ verification code</h1>`;
+  const codeBlock = `<p style="margin:22px 0;text-align:center;font-family:Arial,sans-serif;font-size:31px;font-weight:700;letter-spacing:8px;color:#2D5A27;">${escapeHtml(opts.code)}</p>`;
+  const body = `${bodyText(`Hi ${escapeHtml(opts.name)}, enter this code on the APY HQ sign-in page:`)}${codeBlock}${bodyText("This code expires in 10 minutes and can be used once. Do not share it. If you did not request it, ignore this email.")}`;
+  await sendEmail({ to: opts.to, subject: "Your AfroPuppyYoga APY HQ verification code", html: wrapInBrandedLayout(hero, body), text: `Hi ${opts.name},\n\nYour AfroPuppyYoga APY HQ verification code is: ${opts.code}\n\nIt expires in 10 minutes and can be used once. Do not share it. If you did not request it, ignore this email.` });
+}
+
 export function buildApplicationConfirmationEmail(opts: {
   applicantName: string;
   role: string;
