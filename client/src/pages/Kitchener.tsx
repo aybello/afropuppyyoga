@@ -20,15 +20,14 @@ const config: LocationConfig = {
   lumaTag: "kitchener",
   comingSoon: false,
   photos: [
-    { src: "/manus-storage/apy_kitchener_refresh_01_01_class_group_ac0ef78a.jpg", alt: "Full AfroPuppyYoga Kitchener class posing with puppies" },
-    { src: "/manus-storage/apy_kitchener_refresh_02_02_blue_top_puppy_f94bf3da.jpg", alt: "Kitchener guest in a blue top holding a puppy" },
-    { src: "/manus-storage/apy_kitchener_refresh_03_03_two_friends_9845114b.jpg", alt: "Two friends smiling with puppies at AfroPuppyYoga Kitchener" },
-    { src: "/manus-storage/apy_kitchener_refresh_04_04_couple_with_puppies_4c5409c2.jpg", alt: "Couple holding two puppies at the Kitchener class" },
-    { src: "/manus-storage/apy_kitchener_refresh_05_05_puppy_cuddle_e9b68a33.jpg", alt: "Kitchener guest cuddling a puppy during class" },
-    { src: "/manus-storage/apy_kitchener_refresh_06_06_group_with_puppies_91a94b47.jpg", alt: "Three guests sitting together with puppies at AfroPuppyYoga Kitchener" },
-    { src: "/manus-storage/apy_kitchener_refresh_07_07_portrait_with_puppy_bdaa5a2b.jpg", alt: "Smiling Kitchener guest holding a puppy" },
-    { src: "/manus-storage/apy_kitchener_refresh_08_08_two_friends_two_puppies_28d980f9.jpg", alt: "Two friends with two puppies at AfroPuppyYoga Kitchener" },
-    { src: "/manus-storage/apy_kitchener_refresh_09_09_four_friends_137e81de.jpg", alt: "Four friends posing with puppies after the Kitchener class" },
+    { src: "/manus-storage/apy_kitchener_gallery_01_oct17_group_1855cea5.jpg", alt: "Full AfroPuppyYoga Kitchener class posing with puppies" },
+    { src: "/manus-storage/apy_kitchener_gallery_02_oct24_portrait_7773eb35.jpg", alt: "Kitchener guest smiling while holding a puppy at AfroPuppyYoga" },
+    { src: "/manus-storage/apy_kitchener_gallery_03_oct10_friends_fce63f49.jpg", alt: "Two friends enjoying puppy yoga together in Kitchener" },
+    { src: "/manus-storage/apy_kitchener_gallery_04_oct04_portrait_464e300c.jpg", alt: "Smiling Kitchener guest sitting with a puppy at AfroPuppyYoga" },
+    { src: "/manus-storage/apy_kitchener_gallery_05_sep27_candid_6da4b3f3.jpg", alt: "Kitchener guest sharing a playful puppy moment during class" },
+    { src: "/manus-storage/apy_kitchener_gallery_06_aug01_puppy_bc15310d.jpg", alt: "Kitchener guest cuddling a Bernese puppy at AfroPuppyYoga" },
+    { src: "/manus-storage/apy_kitchener_gallery_07_jun21_on_mat_172ef0af.jpg", alt: "Puppy relaxing with a guest on a yoga mat at AfroPuppyYoga Kitchener" },
+    { src: "/manus-storage/apy_kitchener_gallery_08_may10_couple_2797774a.jpg", alt: "Couple enjoying puppies together at AfroPuppyYoga Kitchener" },
   ],
   whyReasons: [
     {

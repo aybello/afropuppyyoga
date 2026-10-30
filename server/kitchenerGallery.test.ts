@@ -6,23 +6,22 @@ const kitchenerPage = readFileSync(
   "utf8",
 );
 
-const refreshedGalleryPaths = [
-  "/manus-storage/apy_kitchener_refresh_01_01_class_group_ac0ef78a.jpg",
-  "/manus-storage/apy_kitchener_refresh_02_02_blue_top_puppy_f94bf3da.jpg",
-  "/manus-storage/apy_kitchener_refresh_03_03_two_friends_9845114b.jpg",
-  "/manus-storage/apy_kitchener_refresh_04_04_couple_with_puppies_4c5409c2.jpg",
-  "/manus-storage/apy_kitchener_refresh_05_05_puppy_cuddle_e9b68a33.jpg",
-  "/manus-storage/apy_kitchener_refresh_06_06_group_with_puppies_91a94b47.jpg",
-  "/manus-storage/apy_kitchener_refresh_07_07_portrait_with_puppy_bdaa5a2b.jpg",
-  "/manus-storage/apy_kitchener_refresh_08_08_two_friends_two_puppies_28d980f9.jpg",
-  "/manus-storage/apy_kitchener_refresh_09_09_four_friends_137e81de.jpg",
+const multiClassGalleryPaths = [
+  "/manus-storage/apy_kitchener_gallery_01_oct17_group_1855cea5.jpg",
+  "/manus-storage/apy_kitchener_gallery_02_oct24_portrait_7773eb35.jpg",
+  "/manus-storage/apy_kitchener_gallery_03_oct10_friends_fce63f49.jpg",
+  "/manus-storage/apy_kitchener_gallery_04_oct04_portrait_464e300c.jpg",
+  "/manus-storage/apy_kitchener_gallery_05_sep27_candid_6da4b3f3.jpg",
+  "/manus-storage/apy_kitchener_gallery_06_aug01_puppy_bc15310d.jpg",
+  "/manus-storage/apy_kitchener_gallery_07_jun21_on_mat_172ef0af.jpg",
+  "/manus-storage/apy_kitchener_gallery_08_may10_couple_2797774a.jpg",
 ];
 
 describe("Kitchener photo gallery", () => {
-  it("uses nine distinct curated APY images with no duplicated gallery source", () => {
-    expect(new Set(refreshedGalleryPaths).size).toBe(9);
+  it("uses eight curated APY images from distinct Kitchener class dates", () => {
+    expect(new Set(multiClassGalleryPaths).size).toBe(8);
 
-    for (const imagePath of refreshedGalleryPaths) {
+    for (const imagePath of multiClassGalleryPaths) {
       expect(kitchenerPage).toContain(imagePath);
     }
 
@@ -32,12 +31,13 @@ describe("Kitchener photo gallery", () => {
     const sources = [...(photoBlock ?? "").matchAll(/src:\s*"([^"]+)"/g)].map(
       match => match[1],
     );
-    expect(sources).toHaveLength(9);
+    expect(sources).toHaveLength(8);
     expect(new Set(sources).size).toBe(sources.length);
   });
 
-  it("does not reintroduce the earlier Kitchener gallery asset set", () => {
+  it("does not reintroduce the earlier single-class Kitchener gallery assets", () => {
     expect(kitchenerPage).not.toContain("apy_kitchener_01_be82fd91.jpg");
     expect(kitchenerPage).not.toContain("apy_kitchener_09_a602301b.jpg");
+    expect(kitchenerPage).not.toContain("apy_kitchener_refresh_");
   });
 });
