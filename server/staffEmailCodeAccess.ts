@@ -1,12 +1,13 @@
 import { createHmac, randomInt, timingSafeEqual } from "crypto";
-import { and, desc, eq, gt, isNull } from "drizzle-orm";
+import { and, desc, eq, gt, isNull, lt, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { jobApplications, staffEmailAccessCodes, users } from "../drizzle/schema";
+import { jobApplications, staffEmailAccessCodes } from "../drizzle/schema";
 import { findActiveTeamMemberByEmail } from "./apyAccess";
 import { getDb } from "./db";
 import { sendStaffEmailAccessCode } from "./email";
 import { withStaffingMutationLock } from "./staffingMutationLock";
 import { isActiveTeamMember } from "./teamMembership";
+import { ownerEmailFingerprint, resolveTrustedOwner } from "./ownerIdentity";
 
 export const STAFF_EMAIL_CODE_TTL_MS = 10 * 60 * 1000;
 export const STAFF_EMAIL_CODE_COOLDOWN_MS = 60 * 1000;
@@ -41,15 +42,8 @@ export function staffEmailCodeMatches(email: string, code: string, expectedHash:
 }
 
 async function findConfiguredOwnerByEmail(db: Database, email: string): Promise<EmailCodeIdentity | null> {
-  const ownerOpenId = process.env.OWNER_OPEN_ID?.trim();
-  if (!ownerOpenId) return null;
-  const [owner] = await db.select({
-    openId: users.openId,
-    name: users.name,
-    email: users.email,
-    role: users.role,
-  }).from(users).where(eq(users.openId, ownerOpenId)).limit(1);
-  if (!owner || owner.role !== "admin" || owner.email?.trim().toLowerCase() !== email) return null;
+  const owner = await resolveTrustedOwner(db);
+  if (!owner || owner.email?.trim().toLowerCase() !== email) return null;
   return {
     kind: "owner",
     applicationId: null,
@@ -61,8 +55,17 @@ async function findConfiguredOwnerByEmail(db: Database, email: string): Promise<
   };
 }
 
+/** Recheck immediately before session issuance; never creates or promotes a user. */
+export async function recheckOwnerEmailSession(openId: string, email: string): Promise<string | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const owner = await resolveTrustedOwner(db);
+  if (!owner || owner.openId !== openId || owner.email?.trim().toLowerCase() !== email.trim().toLowerCase()) return null;
+  return ownerEmailFingerprint(owner.openId, owner.email);
+}
+
 async function findEmailCodeIdentity(db: Database, email: string): Promise<EmailCodeIdentity | null> {
-  const member = await findActiveTeamMemberByEmail(email);
+  const member = await findActiveTeamMemberByEmail(email, db);
   if (member) {
     return {
       kind: "staff",
@@ -107,10 +110,12 @@ export async function requestStaffEmailAccessCode(email: string) {
     if (!currentIdentity || currentIdentity.openId !== identity.openId) return false;
     const [latest] = await tx.select({ createdAt: staffEmailAccessCodes.createdAt }).from(staffEmailAccessCodes)
       .where(eq(staffEmailAccessCodes.email, normalizedEmail))
-      .orderBy(desc(staffEmailAccessCodes.createdAt)).limit(1);
+      .orderBy(desc(staffEmailAccessCodes.createdAt), desc(staffEmailAccessCodes.id)).limit(1);
     if (latest && latest.createdAt.getTime() > now.getTime() - STAFF_EMAIL_CODE_COOLDOWN_MS) return false;
 
-    await tx.insert(staffEmailAccessCodes).values({
+    await tx.update(staffEmailAccessCodes).set({ consumedAt: now })
+      .where(and(eq(staffEmailAccessCodes.email, normalizedEmail), isNull(staffEmailAccessCodes.consumedAt)));
+    const [inserted] = await tx.insert(staffEmailAccessCodes).values({
       email: normalizedEmail,
       identityType: identity.kind,
       applicationId: identity.applicationId,
@@ -118,7 +123,9 @@ export async function requestStaffEmailAccessCode(email: string) {
       codeHash: hashStaffEmailCode(normalizedEmail, code),
       expiresAt: new Date(now.getTime() + STAFF_EMAIL_CODE_TTL_MS),
     });
-    return true;
+    const id = inserted.insertId;
+    if (!Number.isSafeInteger(id) || id <= 0) throw new Error("Could not identify issued access code");
+    return id;
   });
   if (!issued) return GENERIC_RESULT;
 
@@ -126,7 +133,7 @@ export async function requestStaffEmailAccessCode(email: string) {
     await sendStaffEmailAccessCode({ to: normalizedEmail, name: identity.name, code });
   } catch {
     await db.update(staffEmailAccessCodes).set({ consumedAt: new Date() })
-      .where(and(eq(staffEmailAccessCodes.email, normalizedEmail), isNull(staffEmailAccessCodes.consumedAt), gt(staffEmailAccessCodes.expiresAt, now)));
+      .where(and(eq(staffEmailAccessCodes.id, issued), isNull(staffEmailAccessCodes.consumedAt)));
     console.warn("[Staff email code] Email delivery failed; the new verification code was revoked.");
   }
   return GENERIC_RESULT;
@@ -143,23 +150,24 @@ export async function verifyStaffEmailAccessCode(email: string, code: string): P
     if (!identity) throw invalid();
 
     const [record] = await tx.select().from(staffEmailAccessCodes)
-      .where(and(eq(staffEmailAccessCodes.email, normalizedEmail), isNull(staffEmailAccessCodes.consumedAt), gt(staffEmailAccessCodes.expiresAt, new Date())))
-      .orderBy(desc(staffEmailAccessCodes.createdAt)).limit(1);
+      .where(eq(staffEmailAccessCodes.email, normalizedEmail))
+      .orderBy(desc(staffEmailAccessCodes.createdAt), desc(staffEmailAccessCodes.id)).limit(1);
     const bindsIdentity = record
       && record.identityType === identity.kind
       && record.applicationId === identity.applicationId
       && record.ownerOpenId === identity.ownerOpenId;
-    if (!record || !bindsIdentity || record.attempts >= STAFF_EMAIL_CODE_MAX_ATTEMPTS) throw invalid();
+    if (!record || !bindsIdentity || record.consumedAt || record.expiresAt <= new Date() || record.attempts >= STAFF_EMAIL_CODE_MAX_ATTEMPTS) throw invalid();
+    const usable = and(eq(staffEmailAccessCodes.id, record.id), isNull(staffEmailAccessCodes.consumedAt), gt(staffEmailAccessCodes.expiresAt, new Date()), lt(staffEmailAccessCodes.attempts, STAFF_EMAIL_CODE_MAX_ATTEMPTS));
     if (!staffEmailCodeMatches(normalizedEmail, code, record.codeHash)) {
-      await tx.update(staffEmailAccessCodes).set({ attempts: record.attempts + 1 }).where(eq(staffEmailAccessCodes.id, record.id));
+      await tx.update(staffEmailAccessCodes).set({ attempts: sql`${staffEmailAccessCodes.attempts} + 1` }).where(usable);
       return null; // Commit the failed attempt before reporting the error.
     }
 
     const currentIdentity = await recheckEmailCodeIdentity(tx as Database, identity);
     if (!currentIdentity || currentIdentity.openId !== identity.openId) throw invalid();
     const now = new Date();
-    await tx.update(staffEmailAccessCodes).set({ consumedAt: now, attempts: record.attempts + 1 }).where(eq(staffEmailAccessCodes.id, record.id));
-    return currentIdentity;
+    const [consumed] = await tx.update(staffEmailAccessCodes).set({ consumedAt: now, attempts: sql`${staffEmailAccessCodes.attempts} + 1` }).where(usable);
+    return consumed.affectedRows === 1 ? currentIdentity : null;
   });
   if (!result) throw invalid();
   return result;

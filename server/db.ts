@@ -58,7 +58,6 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.role = user.role;
     } else if (user.openId === ENV.ownerOpenId) {
       values.role = 'admin';
-      updateSet.role = 'admin';
     }
 
     if (!values.lastSignedIn) {
@@ -88,6 +87,12 @@ export async function getUserByOpenId(openId: string) {
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
 
   return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateExistingUserLastSignedIn(openId: string, signedInAt: Date): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.update(users).set({ lastSignedIn: signedInAt }).where(eq(users.openId, openId));
 }
 
 // TODO: add feature queries here as your schema grows.

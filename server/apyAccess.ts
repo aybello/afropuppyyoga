@@ -38,8 +38,10 @@ function toTeamMember(person: typeof jobApplications.$inferSelect): ApyTeamMembe
   return { id: person.id, name: person.name, role: person.role, location: person.location, email: person.email ?? null, phone: person.phone ?? null };
 }
 
-async function getActiveTeamCandidates() {
-  const db = await getDb();
+type Database = NonNullable<Awaited<ReturnType<typeof getDb>>>;
+
+async function getActiveTeamCandidates(connection?: Database) {
+  const db = connection ?? await getDb();
   if (!db) throw new Error("Database unavailable");
   return db.select().from(jobApplications).where(and(eq(jobApplications.isTeamMember, true), isNull(jobApplications.deletedAt)));
 }
@@ -59,8 +61,8 @@ export async function findActiveTeamMemberByPhone(phone: string): Promise<ApyTea
   return match ? toTeamMember(match) : null;
 }
 
-export async function findActiveTeamMemberByEmail(email: string): Promise<ApyTeamMember | null> {
-  const candidates = await getActiveTeamCandidates();
+export async function findActiveTeamMemberByEmail(email: string, connection?: Database): Promise<ApyTeamMember | null> {
+  const candidates = await getActiveTeamCandidates(connection);
   const match = findActiveTeamEmailCandidate(candidates, email);
   return match ? toTeamMember(match) : null;
 }

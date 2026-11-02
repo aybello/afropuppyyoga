@@ -6,6 +6,7 @@ import type { Request } from "express";
 import { SignJWT, jwtVerify } from "jose";
 import type { User } from "../../drizzle/schema";
 import * as db from "../db";
+import { ownerEmailFingerprint, resolveTrustedOwner } from "../ownerIdentity";
 import { ENV } from "./env";
 import type {
   ExchangeTokenRequest,
@@ -22,6 +23,8 @@ export type SessionPayload = {
   openId: string;
   appId: string;
   name: string;
+  ownerEmailOtp?: true;
+  ownerEmailFingerprint?: string;
 };
 
 const CRON_OPEN_ID_PREFIX = "cron_";
@@ -174,13 +177,14 @@ class SDKServer {
    */
   async createSessionToken(
     openId: string,
-    options: { expiresInMs?: number; name?: string } = {}
+    options: { expiresInMs?: number; name?: string; ownerEmailOtp?: true; ownerEmailFingerprint?: string } = {}
   ): Promise<string> {
     return this.signSession(
       {
         openId,
         appId: ENV.appId,
         name: options.name || "",
+        ...(options.ownerEmailOtp ? { ownerEmailOtp: true as const, ownerEmailFingerprint: options.ownerEmailFingerprint } : {}),
       },
       options
     );
@@ -199,6 +203,7 @@ class SDKServer {
       openId: payload.openId,
       appId: payload.appId,
       name: payload.name,
+      ...(payload.ownerEmailOtp ? { ownerEmailOtp: true, ownerEmailFingerprint: payload.ownerEmailFingerprint } : {}),
     })
       .setProtectedHeader({ alg: "HS256", typ: "JWT" })
       .setExpirationTime(expirationSeconds)
@@ -207,7 +212,7 @@ class SDKServer {
 
   async verifySession(
     cookieValue: string | undefined | null
-  ): Promise<{ openId: string; appId: string; name: string } | null> {
+  ): Promise<SessionPayload | null> {
     if (!cookieValue) {
       console.warn("[Auth] Missing session cookie");
       return null;
@@ -229,10 +234,12 @@ class SDKServer {
         return null;
       }
 
+      if (payload.ownerEmailOtp === true && (typeof payload.ownerEmailFingerprint !== "string" || !/^[a-f0-9]{64}$/.test(payload.ownerEmailFingerprint))) return null;
       return {
         openId,
         appId,
         name,
+        ...(payload.ownerEmailOtp === true ? { ownerEmailOtp: true as const, ownerEmailFingerprint: payload.ownerEmailFingerprint as string } : {}),
       };
     } catch (error) {
       console.warn("[Auth] Session verification failed", String(error));
@@ -276,7 +283,7 @@ class SDKServer {
 
     // Scheduled callbacks must never create or update a regular user record.
     // The platform identifies them through a cron-prefixed OpenID and task UID.
-    if (session.openId.startsWith(CRON_OPEN_ID_PREFIX)) {
+    if (!session.ownerEmailOtp && session.openId.startsWith(CRON_OPEN_ID_PREFIX)) {
       const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
       if (!userInfo.taskUid) {
         throw ForbiddenError("Scheduled callback missing task identifier");
@@ -301,6 +308,19 @@ class SDKServer {
     const signedInAt = new Date();
     let user = await db.getUserByOpenId(sessionUserId);
 
+    // Email OTP owner sessions must never fall through to OAuth auto-provisioning
+    // or survive deletion/demotion of the already-authorized owner row.
+    if (session.ownerEmailOtp) {
+      const connection = await db.getDb();
+      const owner = connection ? await resolveTrustedOwner(connection) : null;
+      if (!owner || !user || user.openId !== session.openId || owner.openId !== session.openId ||
+          user.role !== "admin" || !user.email || !owner.email ||
+          ownerEmailFingerprint(session.openId, owner.email) !== session.ownerEmailFingerprint ||
+          ownerEmailFingerprint(session.openId, user.email) !== session.ownerEmailFingerprint) {
+        throw ForbiddenError("Owner session no longer authorized");
+      }
+    }
+
     // If user not in DB, sync from OAuth server automatically
     if (!user) {
       try {
@@ -323,10 +343,9 @@ class SDKServer {
       throw ForbiddenError("User not found");
     }
 
-    await db.upsertUser({
-      openId: user.openId,
-      lastSignedIn: signedInAt,
-    });
+    // Refresh only an existing row: upsertUser may auto-promote the configured
+    // owner, which would undo an administrative demotion on session use.
+    await db.updateExistingUserLastSignedIn(user.openId, signedInAt);
 
     return user;
   }

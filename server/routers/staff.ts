@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { createHash, randomBytes } from "crypto";
-import { and, desc, eq, gt, isNull, sql } from "drizzle-orm";
+import { randomBytes } from "crypto";
+import { and, desc, eq, gt, isNull } from "drizzle-orm";
 import twilio from "twilio";
-import { adminProcedure, ownerProcedure, router, publicProcedure, protectedProcedure } from "../_core/trpc";
+import { adminProcedure, router, publicProcedure, protectedProcedure } from "../_core/trpc";
 import { TRPCError } from "@trpc/server";
 import {
   createStaffInvite,
@@ -25,45 +25,9 @@ import { revokeTeamProfileAccess } from "../staffAccessRevocation";
 import { isActiveTeamMember } from "../teamMembership";
 import { withStaffingMutationLock } from "../staffingMutationLock";
 import { consumeStaffEmailSignIn, requestStaffEmailAccess, STAFF_EMAIL_SIGN_IN_PREFIX } from "../staffEmailAccess";
-import { requestStaffEmailAccessCode, verifyStaffEmailAccessCode } from "../staffEmailCodeAccess";
+import { recheckOwnerEmailSession, requestStaffEmailAccessCode, verifyStaffEmailAccessCode } from "../staffEmailCodeAccess";
 
 export const staffRouter = router({
-  /** Temporary, owner-only email sign-in diagnostic; remove after investigation. */
-  emailSignInDiagnostic: ownerProcedure
-    .input(z.object({ email: z.string().trim().email().max(320).transform(value => value.toLowerCase()) }))
-    .mutation(async ({ input, ctx }) => {
-      const ownerOpenId = process.env.OWNER_OPEN_ID?.trim() || "";
-      const databaseUrl = process.env.DATABASE_URL;
-      try {
-        // Only the normalized endpoint and database name are fingerprinted, never credentials or query parameters.
-        const url = new URL(databaseUrl || "");
-        if (url.protocol !== "mysql:" || !url.hostname || !url.pathname.slice(1)) throw new Error();
-        const fingerprint = createHash("sha256").update(JSON.stringify([
-          url.hostname.toLowerCase(), url.port || "3306", decodeURIComponent(url.pathname.slice(1)),
-        ])).digest("hex");
-        const db = await getDb();
-        if (!db) throw new Error();
-        // Check connectivity even when no owner ID is configured.
-        await db.execute(sql`select 1`);
-        const [owner] = ownerOpenId
-          ? await db.select({ role: users.role, email: users.email }).from(users).where(eq(users.openId, ownerOpenId)).limit(1)
-          : [];
-        return {
-          buildMarker: "email-signin-diagnostic-c42d14bc-v1",
-          ownerOpenIdPresent: Boolean(ownerOpenId),
-          ownerOpenIdMatchesSession: Boolean(ownerOpenId && ownerOpenId === ctx.user.openId),
-          ownerRowExists: Boolean(owner),
-          ownerRowIsAdmin: owner?.role === "admin",
-          ownerRowEmailMatches: Boolean(owner?.email && owner.email.trim().toLowerCase() === input.email),
-          databaseUrlPresent: Boolean(databaseUrl),
-          jwtSecretPresent: Boolean(process.env.JWT_SECRET),
-          gmailAppPasswordPresent: Boolean(process.env.GMAIL_APP_PASSWORD),
-          databaseTargetFingerprint: fingerprint,
-        };
-      } catch {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Diagnostic unavailable." });
-      }
-    }),
   /** Public self-service sign-in for existing active staff, never a role grant. */
   requestEmailAccessLink: publicProcedure
     .input(z.object({ email: z.string().trim().email().max(320), origin: z.string().url().optional() }))
@@ -150,15 +114,23 @@ export const staffRouter = router({
     .mutation(async ({ input, ctx }) => {
       const identity = await verifyStaffEmailAccessCode(input.email, input.code);
       const now = new Date();
-      await upsertUser({
-        openId: identity.openId,
-        name: identity.name,
-        email: identity.email,
-        loginMethod: "email_otp",
-        role: identity.role,
-        lastSignedIn: now,
-      });
-      const sessionToken = await sdk.createSessionToken(identity.openId, { name: identity.name, expiresInMs: SEVEN_DAYS_MS });
+      let ownerFingerprint: string | null = null;
+      if (identity.kind === "owner") {
+        ownerFingerprint = await recheckOwnerEmailSession(identity.openId, identity.email);
+        if (!ownerFingerprint) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "That code is invalid or expired." });
+        }
+      } else {
+        await upsertUser({
+          openId: identity.openId,
+          name: identity.name,
+          email: identity.email,
+          loginMethod: "email_otp",
+          role: identity.role,
+          lastSignedIn: now,
+        });
+      }
+      const sessionToken = await sdk.createSessionToken(identity.openId, { name: identity.name, expiresInMs: SEVEN_DAYS_MS, ...(identity.kind === "owner" ? { ownerEmailOtp: true as const, ownerEmailFingerprint: ownerFingerprint! } : {}) });
       ctx.res.cookie(COOKIE_NAME, sessionToken, { ...getSessionCookieOptions(ctx.req), maxAge: SEVEN_DAYS_MS });
       return { success: true, name: identity.name, role: identity.role === "admin" ? "Owner" : "Staff" };
     }),
