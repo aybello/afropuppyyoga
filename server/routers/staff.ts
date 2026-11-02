@@ -98,7 +98,7 @@ export const staffRouter = router({
       await upsertUser({
         openId: identity.openId,
         name: identity.name,
-        email: identity.email,
+        ...(isOwner && identity.email === null ? {} : { email: identity.email }),
         loginMethod: "phone_otp",
         role: identity.role,
         lastSignedIn: now,

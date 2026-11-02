@@ -137,9 +137,9 @@ export async function verifyStaffEmailAccessCode(email: string, code: string): P
   const normalizedEmail = email.trim().toLowerCase();
   const db = await getDb();
   if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Access verification is temporarily unavailable." });
-  return withStaffingMutationLock(db, async (tx) => {
+  const invalid = () => new TRPCError({ code: "UNAUTHORIZED", message: "That code is invalid or expired." });
+  const result = await withStaffingMutationLock(db, async (tx) => {
     const identity = await findEmailCodeIdentity(tx as Database, normalizedEmail);
-    const invalid = () => new TRPCError({ code: "UNAUTHORIZED", message: "That code is invalid or expired." });
     if (!identity) throw invalid();
 
     const [record] = await tx.select().from(staffEmailAccessCodes)
@@ -151,8 +151,8 @@ export async function verifyStaffEmailAccessCode(email: string, code: string): P
       && record.ownerOpenId === identity.ownerOpenId;
     if (!record || !bindsIdentity || record.attempts >= STAFF_EMAIL_CODE_MAX_ATTEMPTS) throw invalid();
     if (!staffEmailCodeMatches(normalizedEmail, code, record.codeHash)) {
-      if (record) await tx.update(staffEmailAccessCodes).set({ attempts: record.attempts + 1 }).where(eq(staffEmailAccessCodes.id, record.id));
-      throw invalid();
+      await tx.update(staffEmailAccessCodes).set({ attempts: record.attempts + 1 }).where(eq(staffEmailAccessCodes.id, record.id));
+      return null; // Commit the failed attempt before reporting the error.
     }
 
     const currentIdentity = await recheckEmailCodeIdentity(tx as Database, identity);
@@ -161,4 +161,6 @@ export async function verifyStaffEmailAccessCode(email: string, code: string): P
     await tx.update(staffEmailAccessCodes).set({ consumedAt: now, attempts: record.attempts + 1 }).where(eq(staffEmailAccessCodes.id, record.id));
     return currentIdentity;
   });
+  if (!result) throw invalid();
+  return result;
 }

@@ -8,6 +8,7 @@ vi.mock("../staffEmailAccess", () => ({ requestStaffEmailAccess: mocks.requestEm
 vi.mock("../staffEmailCodeAccess", () => ({ requestStaffEmailAccessCode: mocks.requestEmailCode, verifyStaffEmailAccessCode: mocks.verifyEmailCode }));
 vi.mock("../_core/sdk", () => ({ sdk: { createSessionToken: mocks.session } }));
 import { staffRouter } from "./staff";
+import { hashStaffPhoneCode } from "../staffPhoneAccess";
 const cookie = vi.fn();
 const ctx = { user: null, req: { headers: {}, protocol: "https" }, res: { cookie } } as any;
 const member = { id: 42, name: "Fictional Manager", email: "manager@example.com", phone: "+12265550123", role: "Operations Manager", location: "KW" };
@@ -19,6 +20,16 @@ beforeEach(() => {
 function dbWithCodeRows(rows: any[]) {
   const q: any = { from: () => q, where: () => q, orderBy: () => q, limit: async () => rows };
   const values = vi.fn(async () => undefined); mocks.getDb.mockResolvedValue({ select: () => q, insert: () => ({ values }) }); return values;
+}
+function dbForPhoneVerification(phone: string) {
+  const record = { id: 1, attempts: 0, codeHash: hashStaffPhoneCode(phone, "123456") };
+  const codeQuery: any = { from: () => codeQuery, where: () => codeQuery, orderBy: () => codeQuery, limit: async () => [record] };
+  const ownerQuery: any = { from: () => ownerQuery, where: () => ownerQuery, orderBy: async () => [] };
+  const updateWhere = vi.fn(async () => undefined);
+  const updateSet = vi.fn(() => ({ where: updateWhere }));
+  let selectCount = 0;
+  mocks.getDb.mockResolvedValue({ select: () => selectCount++ === 0 ? codeQuery : ownerQuery, update: () => ({ set: updateSet }) });
+  return { updateSet };
 }
 describe("staff sign-in router", () => {
   it("texts the manager's submitted normalized phone, not the configured owner phone", async () => {
@@ -37,6 +48,30 @@ describe("staff sign-in router", () => {
   it("does not send a second SMS inside the existing cooldown", async () => {
     dbWithCodeRows([{ createdAt: new Date() }]);
     await staffRouter.createCaller(ctx).requestPhoneAccessCode({ phone: member.phone }); expect(mocks.sendSms).not.toHaveBeenCalled();
+  });
+  it("preserves the owner's saved email when verifying the owner phone code", async () => {
+    const phone = "+12895550999";
+    vi.stubEnv("OWNER_OPEN_ID", "owner-open-id");
+    vi.stubEnv("OWNER_NAME", "Owner Name");
+    mocks.findPhone.mockResolvedValue(null);
+    const { updateSet } = dbForPhoneVerification(phone);
+
+    await expect(staffRouter.createCaller(ctx).verifyPhoneAccessCode({ phone, code: "123456" })).resolves.toEqual({ success: true, name: "Owner Name", role: "Owner" });
+    expect(updateSet).toHaveBeenCalledWith({ consumedAt: expect.any(Date), attempts: 1 });
+    expect(mocks.upsert).toHaveBeenCalledWith({ openId: "owner-open-id", name: "Owner Name", loginMethod: "phone_otp", role: "admin", lastSignedIn: expect.any(Date) });
+    expect(mocks.upsert.mock.calls[0][0]).not.toHaveProperty("email");
+    expect(mocks.session).toHaveBeenCalledWith("owner-open-id", expect.objectContaining({ name: "Owner Name" }));
+    expect(cookie).toHaveBeenCalledOnce();
+  });
+  it.each([member.email, null])("keeps staff phone sign-in email semantics for email %s", async (email) => {
+    mocks.findPhone.mockResolvedValue({ ...member, email });
+    const { updateSet } = dbForPhoneVerification(member.phone);
+
+    await expect(staffRouter.createCaller(ctx).verifyPhoneAccessCode({ phone: member.phone, code: "123456" })).resolves.toEqual({ success: true, name: member.name, role: member.role });
+    expect(updateSet).toHaveBeenCalledWith({ consumedAt: expect.any(Date), attempts: 1 });
+    expect(mocks.upsert).toHaveBeenCalledWith({ openId: `staff-phone:${member.phone}`, name: member.name, email, loginMethod: "phone_otp", role: "staff", lastSignedIn: expect.any(Date) });
+    expect(mocks.session).toHaveBeenCalledWith(`staff-phone:${member.phone}`, expect.objectContaining({ name: member.name }));
+    expect(cookie).toHaveBeenCalledOnce();
   });
   it("passes the submitted personal email to self-service without changing roles", async () => {
     await staffRouter.createCaller(ctx).requestEmailAccessLink({ email: " manager@example.com ", origin: "https://afropuppyyoga.ca" });

@@ -161,6 +161,59 @@ describe("APY HQ email verification codes", () => {
     expect(updates).toEqual([{ attempts: 1 }]);
   });
 
+  it("commits five wrong-code attempts and rejects the valid code once locked", async () => {
+    const code = "123456";
+    let record = {
+      id: 7,
+      email: member.email,
+      identityType: "staff",
+      applicationId: member.id,
+      ownerOpenId: null,
+      codeHash: hashStaffEmailCode(member.email, code),
+      attempts: 0,
+      expiresAt: new Date(Date.now() + 60_000),
+      consumedAt: null as Date | null,
+    };
+    const db = {};
+    const writes = vi.fn();
+    mocks.getDb.mockResolvedValue(db);
+    mocks.lock.mockImplementation(async (_db, callback) => {
+      // Stage changes on a transaction-local copy; an exception discards them.
+      let staged = { ...record };
+      const tx = {
+        select: () => {
+          const query: any = {
+            from: () => query,
+            where: () => query,
+            orderBy: () => query,
+            limit: async () => [{ ...staged }],
+          };
+          return query;
+        },
+        update: () => ({ set: (value: Partial<typeof record>) => ({
+          where: async () => { writes(value); staged = { ...staged, ...value }; },
+        }) }),
+      };
+      const result = await callback(tx);
+      record = staged;
+      return result;
+    });
+
+    for (let attempt = 1; attempt <= 5; attempt++) {
+      await expect(verifyStaffEmailAccessCode(member.email, "654321")).rejects.toMatchObject({
+        code: "UNAUTHORIZED", message: "That code is invalid or expired.",
+      });
+      expect(record.attempts).toBe(attempt);
+      expect(record.consumedAt).toBeNull();
+    }
+    await expect(verifyStaffEmailAccessCode(member.email, code)).rejects.toMatchObject({
+      code: "UNAUTHORIZED", message: "That code is invalid or expired.",
+    });
+    expect(record.attempts).toBe(5);
+    expect(record.consumedAt).toBeNull();
+    expect(writes).toHaveBeenCalledTimes(5);
+  });
+
   it("rejects a code that has already reached the five-attempt limit without another write", async () => {
     const record = {
       id: 7,
