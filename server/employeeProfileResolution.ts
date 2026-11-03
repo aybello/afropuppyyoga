@@ -19,9 +19,16 @@ function sameEmployeeIdentity(employee: Identity, profile: Identity) {
   return !(email && otherEmail && email !== otherEmail) && !(phone && otherPhone && phone !== otherPhone);
 }
 
+/** Inert history is never selected, retired, or owned by another employee. */
+export function isInertArchivedApplicant(profile: Profile, employee: Employee, directory: Employee[]) {
+  return profile.id !== employee.sourceApplicationId && profile.deletedAt != null
+    && (profile.isTeamMember === false || profile.isTeamMember === 0) && profile.status !== "onboarded"
+    && !directory.some((other) => other.id !== employee.id && other.sourceApplicationId === profile.id);
+}
+
 /** Resolve only for an explicitly selected Directory employee, inside the staffing lock. */
-export function resolveEmployeeLoginProfile<T extends Profile>(employee: Employee, profiles: T[], directory: Employee[]) {
-  const matches = profiles.filter((profile) => employeeContactsMatch(employee, profile));
+export function resolveEmployeeLoginProfile<T extends Profile>(employee: Employee, profiles: T[], directory: Employee[], reviewedIds: ReadonlySet<number> = new Set()) {
+  const matches = profiles.filter((profile) => !reviewedIds.has(profile.id) && employeeContactsMatch(employee, profile));
   if (directory.some((other) => other.id !== employee.id && employeeContactsMatch(employee, other))) {
     throw new Error("Another Employee Directory record uses this contact. Update or restore that record instead of creating a duplicate login.");
   }
@@ -36,9 +43,7 @@ export function resolveEmployeeLoginProfile<T extends Profile>(employee: Employe
   const duplicates = matches.filter((profile) => profile.id !== linked?.id && sameEmployeeIdentity(employee, profile) && profile.status === "onboarded");
   for (const profile of matches) {
     if (profile.id === linked?.id || duplicates.some((duplicate) => duplicate.id === profile.id)) continue;
-    // Archived applicants are inert history, not a second login. Do not merge,
-    // reactivate, rewrite or delete them. Ownership checks above still apply.
-    if (profile.deletedAt != null) continue;
+    if (isInertArchivedApplicant(profile, employee, directory)) continue;
     throw new Error("Another applicant or staff profile uses this contact. Review the conflicting record before activating login.");
   }
   const canonical = linked ?? [...duplicates].sort((a, b) => b.id - a.id)[0];

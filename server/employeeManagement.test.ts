@@ -7,6 +7,7 @@ vi.mock("./db", () => ({ getDb, getUserByOpenId: vi.fn(), upsertUser: vi.fn() })
 vi.mock("./apyAccess", () => ({ resolveApyAccess }));
 import { getRetiredClassAssignmentIds } from "./staffDutyHistory";
 import { activateEmployeeWithAccess, prepareActiveEmployeeEdit } from "./employeeActivation";
+import { hiringReviewEvidence, hiringReviewSnapshot } from "./hiringDuplicateIdentity";
 import { revokeTeamProfileAccess } from "./staffAccessRevocation";
 import { getEventNotificationPreview, puppyScheduleRouter } from "./routers/puppySchedule";
 import { staffAvailabilityRouter } from "./routers/staffAvailability";
@@ -141,7 +142,7 @@ describe("simple employee management", () => {
       { table: employees, values: { employmentStatus: "active", endedAt: null, sourceApplicationId: 42 } },
       { table: jobApplications, values: expect.objectContaining({ isTeamMember: true, deletedAt: null, status: "onboarded" }) },
     ]));
-    expect(db.select).toHaveBeenCalledTimes(3);
+    expect(db.select).toHaveBeenCalledTimes(4);
     expect(inserts).toEqual(expect.arrayContaining([{ table: expect.anything(), values: expect.objectContaining({ action: "employee_and_login_activated" }) }]));
     expect(updates.some((update) => update.table === staffInvites)).toBe(false);
   });
@@ -245,6 +246,49 @@ describe("simple employee management", () => {
     const harness = mockDb([[person, conflicting], [employee]]);
     await expect(prepareActiveEmployeeEdit(harness.db, employee as any, { ...employee, email: "other@example.com" })).rejects.toThrow("Another applicant");
     expect(harness.updates).toEqual([]);
+  });
+
+  it("blocks exact unreviewed live history", async () => {
+    const unreviewed = { ...person, id: 41, status: "accepted", isTeamMember: false };
+    const exact = mockDb([[person, unreviewed], [employee]]);
+    await expect(prepareActiveEmployeeEdit(exact.db, employee as any, { ...employee, role: "Yoga Instructor" })).rejects.toThrow("Another applicant");
+  });
+
+  it("leaves an unrelated archived applicant untouched when editing a contact, but blocks linked history", async () => {
+    const archived = { ...person, id: 41, status: "accepted", isTeamMember: false, name: "Different Person", email: "other@example.com", phone: null, deletedAt: new Date() };
+    const proposed = mockDb([[person, archived], [employee]]);
+    await expect(prepareActiveEmployeeEdit(proposed.db, employee as any, { ...employee, email: "other@example.com" })).resolves.toEqual({ canonicalId: 42, duplicateIds: [] });
+    expect(proposed.updates).toEqual([]);
+    const owner = { ...employee, id: 8, sourceApplicationId: 41, email: "unrelated@example.com", phone: null };
+    const linked = mockDb([[person, archived], [employee, owner]]);
+    await expect(prepareActiveEmployeeEdit(linked.db, employee as any, { ...employee, email: "other@example.com" })).rejects.toThrow();
+    expect(linked.updates).toEqual([]);
+  });
+
+  it.each([
+    { isTeamMember: true, status: "accepted" },
+    { isTeamMember: null, status: "accepted" },
+    { isTeamMember: false, status: "onboarded" },
+  ])("rejects a proposed contact matching archived staff or ambiguous history: %j", async (changes) => {
+    const archived = { ...person, id: 41, name: "Different Person", email: "other@example.com", phone: null, deletedAt: new Date(), ...changes };
+    const harness = mockDb([[person, archived], [employee]]);
+    await expect(prepareActiveEmployeeEdit(harness.db, employee as any, { ...employee, email: archived.email })).rejects.toThrow("Another applicant");
+    expect(harness.updates).toEqual([]);
+  });
+
+  it("does not modify an inert archived applicant during activation after a contact edit", async () => {
+    const archived = { ...person, id: 41, status: "accepted", isTeamMember: false, name: "Different Person", email: "other@example.com", phone: null, deletedAt: new Date() };
+    const next = { ...employee, email: archived.email };
+    const preparation = mockDb([[person, archived], [employee]]);
+    const prepared = await prepareActiveEmployeeEdit(preparation.db, employee as any, next);
+    const activation = mockDb([[next], [person, archived], [next]]);
+    await expect(activateEmployeeWithAccess(activation.db, 7, actor, true, prepared)).resolves.toMatchObject({ sourceApplicationId: 42 });
+    expect(activation.updates.filter((entry) => entry.table === jobApplications)).toEqual([
+      { table: jobApplications, values: expect.objectContaining({ name: next.name, email: next.email, isTeamMember: true }) },
+    ]);
+    expect(activation.updates.some((entry) => entry.table === staffInvites)).toBe(false);
+    const audit = activation.inserts.find((entry) => entry.values.action === "employee_and_login_activated");
+    expect(JSON.parse(String(audit?.values.details)).retiredDuplicateProfileIds).toEqual([]);
   });
 
   it("lets an owner add a monitor without manager coverage or signed documents", async () => {
@@ -352,5 +396,122 @@ describe("simple employee management", () => {
     expect(ui).toContain('utils.staffAvailability.getOrgChart.invalidate()');
     expect(availability).toContain('utils.staffAvailability.listEmployees.invalidate()');
     expect(ui).not.toContain('Blocked: this person still has active APY HQ access');
+  });
+});
+
+describe("reviewed hiring history", () => {
+  const historical = { ...person, id: 41, status: "accepted", isTeamMember: false, deletedAt: null };
+  const review = hiringReviewEvidence(hiringReviewSnapshot({ ...person, status: "accepted", isTeamMember: false }, null, [historical], []), employee.id);
+  const action = { applicationId: 42, action: "employee_added_after_signature", details: JSON.stringify({ employeeId: 7, duplicateReview: review }) };
+
+  it("activates the canonical profile without modifying or retiring reviewed applicant history", async () => {
+    const harness = mockDb([[employee], [person, historical], [employee], [action]]);
+    await expect(activateEmployeeWithAccess(harness.db, 7, actor, true)).resolves.toMatchObject({ sourceApplicationId: 42 });
+    expect(harness.updates.filter((entry) => entry.table === jobApplications)).toEqual([
+      { table: jobApplications, values: expect.objectContaining({ isTeamMember: true }) },
+    ]);
+    expect(harness.updates.some((entry) => entry.table === staffInvites)).toBe(false);
+    const audit = harness.inserts.find((entry) => entry.values.action === "employee_and_login_activated");
+    expect(JSON.parse(String(audit?.values.details)).retiredDuplicateProfileIds).toEqual([]);
+    expect(harness.deletes).toEqual([]);
+  });
+
+  it.each([{ name: "Updated Name" }, { email: "new@example.com" }, { phone: "+14165550100" }, { role: "Yoga Instructor", location: "OAK" }])("allows employee edits without freezing the selected identity: %j", async (change) => {
+    const active = { ...employee, employmentStatus: "active" };
+    const next = { ...active, ...change };
+    const preparation = mockDb([[person, historical], [active], [action]]);
+    const prepared = await prepareActiveEmployeeEdit(preparation.db, active as any, next);
+    expect(prepared).toEqual({ canonicalId: 42, duplicateIds: [] });
+    const activation = mockDb([[next], [{ ...person, ...change }, historical], [next], [action]]);
+    await expect(activateEmployeeWithAccess(activation.db, 7, actor, true, prepared)).resolves.toMatchObject({ sourceApplicationId: 42 });
+    const audit = activation.inserts.find((entry) => entry.values.action === "employee_and_login_activated");
+    expect(JSON.parse(String(audit?.values.details)).retiredDuplicateProfileIds).toEqual([]);
+  });
+
+  it.each([
+    { role: "Yoga Instructor" }, { location: "OAK" }, { status: "rejected" },
+    { deletedAt: new Date("2024-01-01") },
+    { role: "Yoga Instructor", location: "OAK", status: "rejected", deletedAt: new Date("2024-01-01") },
+  ])("allows harmless reviewed history changes without modifying history: %j", async (changes) => {
+    const updatedHistory = { ...historical, ...changes };
+    const current = { ...employee, employmentStatus: "active", email: "new@example.com", phone: "+14165550100" };
+    const canonical = { ...person, email: current.email, phone: current.phone };
+    const preparation = mockDb([[canonical, updatedHistory], [current], [action]]);
+    const prepared = await prepareActiveEmployeeEdit(preparation.db, current as any, { ...current, role: "Yoga Instructor" });
+    expect(prepared).toEqual({ canonicalId: 42, duplicateIds: [] });
+    const activation = mockDb([[current], [canonical, updatedHistory], [current], [action]]);
+    await expect(activateEmployeeWithAccess(activation.db, 7, actor, true, prepared)).resolves.toMatchObject({ sourceApplicationId: 42 });
+    expect(activation.updates.filter((entry) => entry.table === jobApplications)).toHaveLength(1);
+    expect(activation.updates.some((entry) => entry.table === staffInvites)).toBe(false);
+    expect(activation.deletes).toEqual([]);
+    const audit = activation.inserts.find((entry) => entry.values.action === "employee_and_login_activated");
+    expect(JSON.parse(String(audit?.values.details)).retiredDuplicateProfileIds).toEqual([]);
+  });
+
+  it.each([
+    { changes: { name: "Changed" } }, { changes: { email: "changed@example.com" } },
+    { changes: { phone: "+14165550100" } }, { changes: { email: null } },
+    { changes: { phone: null } }, { changes: { isTeamMember: true } },
+    { changes: { isTeamMember: null } }, { changes: { status: "onboarded" } },
+  ])("rejects unsafe or identity-changed reviewed history even after contacts no longer match: %j", async ({ changes }) => {
+    const current = { ...employee, email: "new@example.com", phone: "+14165550100" };
+    const profiles = [{ ...person, email: current.email, phone: current.phone }, ...(changes ? [{ ...historical, ...changes }] : [])];
+    const harness = mockDb([[current], profiles, [current], [action]]);
+    await expect(activateEmployeeWithAccess(harness.db, 7, actor, true)).rejects.toThrow("history changed");
+    expect(harness.updates).toEqual([]);
+    expect(harness.inserts).toEqual([]);
+  });
+
+  it("rejects reviewed history subsequently linked to a different employee", async () => {
+    const owner = { ...employee, id: 8, sourceApplicationId: 41, email: "else@example.com", phone: null };
+    const harness = mockDb([[employee], [person, historical], [employee, owner], [action]]);
+    await expect(activateEmployeeWithAccess(harness.db, 7, actor, true)).rejects.toThrow("history changed");
+    expect(harness.updates).toEqual([]);
+  });
+
+  it.each([{ name: " " }, { email: "bad@example" }, { phone: "4165550101x" }, { email: null }, { phone: null }])("rejects invalid identity even if its hash matches the evidence: %j", async (changes) => {
+    const invalid = { ...historical, ...changes };
+    const fabricated = hiringReviewEvidence(hiringReviewSnapshot({ ...person, status: "accepted", isTeamMember: false }, null, [historical], []), employee.id);
+    // Build a matching hash through the evidence producer, not a stale hash.
+    const snapshot = hiringReviewSnapshot({ ...person, status: "accepted", isTeamMember: false }, null, [historical], []);
+    snapshot.conflicts[0] = { ...snapshot.conflicts[0], ...changes };
+    fabricated.reviewed = hiringReviewEvidence(snapshot, employee.id).reviewed;
+    const badAction = { ...action, details: JSON.stringify({ employeeId: 7, duplicateReview: fabricated }) };
+    const harness = mockDb([[employee], [person, invalid], [employee], [badAction]]);
+    await expect(activateEmployeeWithAccess(harness.db, 7, actor, true)).rejects.toThrow("history changed");
+    expect(harness.updates).toEqual([]);
+  });
+
+  it.each([
+    { ...action, applicationId: 99 },
+    { ...action, action: "other" },
+    { ...action, details: JSON.stringify({ employeeId: 8, duplicateReview: review }) },
+  ])("does not trust an action for another employee, application, or action type", async (wrongAction) => {
+    const harness = mockDb([[employee], [person, historical], [employee], [wrongAction]]);
+    await expect(activateEmployeeWithAccess(harness.db, 7, actor, true)).rejects.toThrow("Another applicant");
+    expect(harness.updates).toEqual([]);
+  });
+
+  it.each([
+    { ...review, version: 1 }, { ...review, employeeId: 8 }, { ...review, canonicalApplicationId: 99 },
+    { ...review, reviewed: [{ applicationId: 41, recordHash: "0".repeat(64) }] },
+    { ...review, reviewed: [review.reviewed[0], review.reviewed[0]] },
+  ])("rejects malformed, stale or mismatched evidence", async (duplicateReview) => {
+    const badAction = { ...action, details: JSON.stringify({ employeeId: 7, duplicateReview }) };
+    const harness = mockDb([[employee], [person, historical], [employee], [badAction]]);
+    await expect(activateEmployeeWithAccess(harness.db, 7, actor, true)).rejects.toThrow("history changed");
+    expect(harness.updates).toEqual([]);
+  });
+
+  it("does not exempt a new unreviewed collision or allow reintroducing a reviewed contact", async () => {
+    const active = { ...employee, employmentStatus: "active", email: "new@example.com", phone: "+14165550100" };
+    const canonical = { ...person, email: active.email, phone: active.phone };
+    const preparation = mockDb([[canonical, historical], [active], [action]]);
+    await expect(prepareActiveEmployeeEdit(preparation.db, active as any, { ...active, email: historical.email })).rejects.toThrow("Another applicant");
+    const unreviewed = { ...historical, id: 40, email: active.email, phone: null };
+    const activation = mockDb([[active], [canonical, historical, unreviewed], [active], [action]]);
+    await expect(activateEmployeeWithAccess(activation.db, 7, actor, true)).rejects.toThrow("Another applicant");
+    expect(preparation.updates).toEqual([]);
+    expect(activation.updates).toEqual([]);
   });
 });

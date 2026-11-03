@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { MySqlDialect } from "drizzle-orm/mysql-core";
 import { employees, jobApplications, signingTokens, staffingMutationLocks } from "../drizzle/schema";
 import { getHiringWorkflow } from "../shared/hiringWorkflow";
-import { hireSignedApplicant } from "./hireSignedApplicant";
+import { hireSignedApplicant, preflightHireSignedApplicant } from "./hireSignedApplicant";
+import { hiringReviewSnapshot, issueHiringReviewToken } from "./hiringDuplicateIdentity";
 import { prepareHiringOffer, recordCurrentOfferSignature } from "./hiringOfferLifecycle";
 const { getDb, resolveApyAccess } = vi.hoisted(() => ({ getDb: vi.fn(), resolveApyAccess: vi.fn() }));
 vi.mock("./db", () => ({ getDb }));
@@ -11,21 +13,21 @@ const actor = { id: 1, name: "Owner", email: "owner@example.com" };
 const app = { id: 42, name: "Fictional Applicant", email: "applicant@example.com", phone: null, role: "Puppy Monitor", location: "Kitchener", status: "accepted", onboardingSentAt: null, onboardingDeliveryToken: null, isTeamMember: false, deletedAt: null };
 const offer = { id: 2, applicationId: 42, signed: 1, applicantName: app.name, applicantEmail: app.email, role: app.role, location: app.location, offerLetterType: "puppy_monitor_kw", expiresAt: new Date("2099-01-01"), createdAt: new Date(), token: "fictional" };
 function harness(reads: unknown[][], affectedRows = 1) {
-  const updates: any[] = [], inserts: any[] = [];
+  const updates: any[] = [], inserts: any[] = [], updatePredicates: any[] = [];
   const tx: any = {
     select: vi.fn(() => {
       let result: unknown[];
       const chain: any = { from: (table: unknown) => { result = table === staffingMutationLocks ? [] : reads.shift() ?? []; return chain; },
-        where: () => chain, orderBy: () => chain, limit: async () => result, for: async () => result, then: (resolve: any) => resolve(result) };
+        where: () => chain, orderBy: () => chain, limit: () => chain, for: async () => result, then: (resolve: any) => resolve(result) };
       return chain;
     }),
     insert: (table: unknown) => ({ values: (values: unknown) => { if (table !== staffingMutationLocks) inserts.push({ table, values }); const result: any = [{ insertId: 7 }]; result.onDuplicateKeyUpdate = async () => result; return result; } }),
-    update: (table: unknown) => ({ set: (values: unknown) => ({ where: async () => { updates.push({ table, values }); return [{ affectedRows }]; } }) }),
+    update: (table: unknown) => ({ set: (values: unknown) => ({ where: async (predicate: unknown) => { updates.push({ table, values }); updatePredicates.push({ table, predicate }); return [{ affectedRows }]; } }) }),
   };
-  const db = { transaction: vi.fn(async (callback: any) => callback(tx)) };
-  return { db, tx, updates, inserts };
+  const db = { select: tx.select, transaction: vi.fn(async (callback: any) => callback(tx)) };
+  return { db, tx, updates, inserts, updatePredicates };
 }
-beforeEach(() => { getDb.mockReset(); resolveApyAccess.mockResolvedValue({ level: "owner", canManageOperations: true }); });
+beforeEach(() => { vi.stubEnv("JWT_SECRET", "test-hiring-review-secret"); getDb.mockReset(); resolveApyAccess.mockResolvedValue({ level: "owner", canManageOperations: true }); });
 
 describe("signed offer to employee", () => {
   it("enables login and adds one employee without onboarding documents, but never marks training complete", async () => {
@@ -92,6 +94,163 @@ describe("signed offer to employee", () => {
     const h = harness([[app], [], [offer], [app, { ...app, id: 55 }]]);
     await expect(hireSignedApplicant(h.db, 42, actor)).rejects.toThrow("Another applicant"); expect(h.updates).toEqual([]);
   });
+  it("requires an explicit acknowledgement and authentic token for exact duplicates", async () => {
+    const selected = { ...app, phone: "4165550101" };
+    const duplicate = { ...selected, id: 55 };
+    const token = issueHiringReviewToken(actor.id, hiringReviewSnapshot(selected, offer, [selected, duplicate], []));
+    for (const review of [undefined, { token: "forged", acknowledged: true }, { token, acknowledged: false }, { token: `${token}x`, acknowledged: true }]) {
+      const h = harness([[selected], [], [offer], [selected, duplicate]]);
+      await expect(hireSignedApplicant(h.db, 42, actor, selected, review as any)).rejects.toThrow("Review all matching");
+      expect(h.updates).toEqual([]); expect(h.inserts).toEqual([]);
+    }
+    const otherActor = harness([[selected], [], [offer], [selected, duplicate]]);
+    await expect(hireSignedApplicant(otherActor.db, 42, { ...actor, id: 2 }, selected, { token, acknowledged: true })).rejects.toThrow("Review all matching");
+  });
+  it.each(["offer", "selected", "conflict", "role", "location", "archived", "addition", "removal", "ownership", "expiry"])("rejects stale review when %s changes", async (change) => {
+    const selected = { ...app, phone: "4165550101" };
+    const duplicate = { ...selected, id: 55 };
+    const token = issueHiringReviewToken(actor.id, hiringReviewSnapshot(selected, offer, [selected, duplicate], []));
+    const current = change === "offer" ? { ...offer, id: 3 } : offer;
+    const changed = change === "selected" ? { ...selected, name: "Fictional  Applicant" } : selected;
+    const changedConflict = change === "conflict" ? { ...duplicate, status: "rejected" }
+      : change === "role" ? { ...duplicate, role: "Yoga Instructor" }
+      : change === "location" ? { ...duplicate, location: "OAK" }
+      : change === "archived" ? { ...duplicate, deletedAt: new Date("2024-01-01") } : duplicate;
+    const records = change === "removal" ? [changed] : change === "addition" ? [changed, duplicate, { ...duplicate, id: 56 }] : [changed, changedConflict];
+    const directory = change === "ownership" ? [{ ...selected, id: 7, sourceApplicationId: null, employmentStatus: "active" }] : [];
+    if (change === "expiry") vi.setSystemTime(Date.now() + 601_000);
+    const h = harness([[changed], directory, [current], records]);
+    await expect(hireSignedApplicant(h.db, 42, actor, changed, { token, acknowledged: true })).rejects.toThrow(change === "removal" || change === "archived" ? "no longer current" : "Review all matching");
+    expect(h.updates).toEqual([]); expect(h.inserts).toEqual([]);
+    vi.useRealTimers();
+  });
+  it("lists archived linked matches in preflight and refuses review", async () => {
+    const selected = { ...app, phone: "4165550101" };
+    const archived = { ...selected, id: 55, deletedAt: new Date("2020-01-01") };
+    const linked = { id: 9, name: "Other", email: "other@example.com", phone: null, sourceApplicationId: 55, employmentStatus: "inactive" };
+    const preview = harness([[selected], [offer], [linked], [selected, archived]]);
+    const result = await preflightHireSignedApplicant(preview.db, 42, actor);
+    expect(result).toMatchObject({ canReview: false, reviewToken: null, conflicts: [{ id: 55, directoryOwnerIds: [9] }] });
+    const h = harness([[selected], [linked], [offer], [selected, archived]]);
+    await expect(hireSignedApplicant(h.db, 42, actor)).rejects.toThrow("Another applicant");
+    expect(h.updates).toEqual([]);
+  });
+  it("allows authorized managers to read all review details but requires a configured signing secret", async () => {
+    const selected = { ...app, phone: "4165550101" };
+    const duplicate = { ...selected, id: 55, status: "rejected", role: "Movement Instructor", location: "GUE" };
+    const preview = harness([[selected], [offer], [], [selected, duplicate]]);
+    getDb.mockResolvedValue(preview.db);
+    const result = await staffAvailabilityRouter.createCaller({ user: actor } as any).preflightHireSignedApplicant({ applicationId: 42 });
+    expect(result).toMatchObject({ canReview: true, selected: { id: 42, email: selected.email }, conflicts: [{ id: 55, name: duplicate.name, email: duplicate.email, phone: duplicate.phone, role: duplicate.role, location: duplicate.location, status: "rejected" }], reviewToken: expect.any(String) });
+    expect(preview.updates).toEqual([]); expect(preview.inserts).toEqual([]);
+    vi.stubEnv("JWT_SECRET", "");
+    const noSecret = harness([[selected], [offer], [], [selected, duplicate]]);
+    await expect(preflightHireSignedApplicant(noSecret.db, 42, actor)).rejects.toThrow("signing secret");
+  });
+  it("hires the selected signed applicant with two exact historical applications, without changing their history", async () => {
+    const selected = { ...app, name: "Kayley  Example", email: "KAYLEY@example.com", phone: "(416) 555-0101" };
+    const older = [
+      { ...selected, id: 8, name: "  kayley\tExample ", email: "kayley@example.com", phone: "+1 416-555-0101", status: "rejected" },
+      { ...selected, id: 12, name: "Ｋａｙｌｅｙ Example", email: " kayley@example.com ", phone: "4165550101", status: "reviewed" },
+    ];
+    const before = structuredClone(older);
+    const current = { ...offer, applicantEmail: selected.email };
+    const preview = harness([[selected], [current], [], [older[1], selected, older[0]]]);
+    const review = await preflightHireSignedApplicant(preview.db, selected.id, actor);
+    expect(review.conflicts.map((p) => p.id)).toEqual([8, 12]);
+    expect(preview.inserts).toEqual([]); expect(preview.updates).toEqual([]);
+    const h = harness([[selected], [], [current], [older[1], selected, older[0]]]);
+    await expect(hireSignedApplicant(h.db, selected.id, actor, selected, { token: review.reviewToken!, acknowledged: true })).resolves.toMatchObject({ id: 7, alreadyAdded: false });
+    expect(older).toEqual(before);
+    expect(h.updates).toHaveLength(1);
+    expect(h.updates[0]).toMatchObject({ table: jobApplications, values: { status: "onboarded", isTeamMember: true } });
+    const sql = new MySqlDialect().sqlToQuery(h.updatePredicates[0].predicate);
+    expect(sql.params).toContain(selected.id);
+    expect(sql.params).not.toContain(older[0].id);
+    expect(sql.params).not.toContain(older[1].id);
+    expect(h.inserts.find((entry) => entry.table === employees)?.values.sourceApplicationId).toBe(selected.id);
+    const action = h.inserts.find((entry) => entry.values.action)?.values;
+    expect(action.applicationId).toBe(selected.id);
+    expect(JSON.parse(action.details)).toMatchObject({ signingTokenId: offer.id, duplicateReview: { version: 2, canonicalApplicationId: 42, employeeId: 7, reviewed: [{ applicationId: 8, recordHash: expect.stringMatching(/^[a-f0-9]{64}$/) }, { applicationId: 12, recordHash: expect.stringMatching(/^[a-f0-9]{64}$/) }] } });
+    expect(action.details).not.toContain(selected.email);
+    expect(h.inserts).toHaveLength(2); // employee and audit only, no document transfer
+  });
+  it.each([
+    ["different name", { name: "Other Applicant" }],
+    ["different email and shared phone", { email: "other@example.com" }],
+    ["different phone and shared email", { phone: "4165550199" }],
+    ["missing email", { email: null }],
+    ["missing phone", { phone: null }],
+    ["invalid email", { email: "bad@example" }],
+    ["invalid phone", { phone: "4165550101 ext 1" }],
+    ["phone containing letters", { phone: "4165550101x" }],
+    ["active team member", { isTeamMember: true }],
+    ["onboarded profile", { status: "onboarded" }],
+  ])("blocks ambiguous duplicate: %s", async (_reason, change) => {
+    const selected = { ...app, phone: "4165550101" };
+    const duplicate = { ...selected, id: 55, ...change };
+    const h = harness([[selected], [], [offer], [selected, duplicate]]);
+    await expect(hireSignedApplicant(h.db, selected.id, actor)).rejects.toThrow("Another applicant");
+    expect(h.updates).toEqual([]); expect(h.inserts).toEqual([]);
+  });
+  it("rejects the whole operation if any one of multiple conflicts is ambiguous", async () => {
+    const selected = { ...app, phone: "4165550101" };
+    const h = harness([[selected], [], [offer], [selected, { ...selected, id: 8 }, { ...selected, id: 12, name: "Another Name" }]]);
+    await expect(hireSignedApplicant(h.db, selected.id, actor)).rejects.toThrow("Another applicant");
+    expect(h.updates).toEqual([]); expect(h.inserts).toEqual([]);
+  });
+  it.each([
+    ["missing selected email", { email: null }],
+    ["malformed selected email", { email: "bad@example" }],
+    ["missing selected phone", { phone: null }],
+    ["malformed selected phone", { phone: "4165550101 ext 1" }],
+  ])("blocks duplicates when %s", async (_reason, change) => {
+    const selected = { ...app, phone: "4165550101", ...change };
+    const duplicate = { ...selected, id: 55 };
+    const current = { ...offer, applicantEmail: selected.email ?? "" };
+    const h = harness([[selected], [], [current], [selected, duplicate]]);
+    await expect(hireSignedApplicant(h.db, selected.id, actor)).rejects.toThrow();
+    expect(h.updates).toEqual([]); expect(h.inserts).toEqual([]);
+  });
+  it.each([false, true])("blocks an employee linked to a historical duplicate (legacy match: %s)", async (legacy) => {
+    const selected = { ...app, phone: "4165550101" };
+    const duplicate = { ...selected, id: 55 };
+    const linked = { id: 99, sourceApplicationId: 55, name: "Unrelated", email: "other@example.com", phone: null, employmentStatus: "inactive" };
+    const legacyEmployee = { ...selected, id: 7, sourceApplicationId: null, employmentStatus: "active" };
+    const h = harness([[selected], legacy ? [linked, legacyEmployee] : [linked], [offer], [selected, duplicate]]);
+    await expect(hireSignedApplicant(h.db, selected.id, actor)).rejects.toThrow("Another applicant");
+    expect(h.updates).toEqual([]); expect(h.inserts).toEqual([]);
+  });
+  it("links a matching unlinked legacy employee while leaving safe historical applications untouched", async () => {
+    const selected = { ...app, phone: "4165550101" };
+    const duplicate = { ...selected, id: 55, status: "rejected" };
+    const legacy = { ...selected, id: 7, sourceApplicationId: null, employmentStatus: "active" };
+    const token = issueHiringReviewToken(actor.id, hiringReviewSnapshot(selected, offer, [duplicate, selected], [legacy]));
+    const h = harness([[selected], [legacy], [offer], [duplicate, selected]]);
+    await expect(hireSignedApplicant(h.db, selected.id, actor, selected, { token, acknowledged: true })).resolves.toMatchObject({ id: 7 });
+    expect(h.updates).toHaveLength(2);
+    expect(h.updates.find((entry) => entry.table === employees)?.values.sourceApplicationId).toBe(selected.id);
+    expect(JSON.parse(h.inserts.find((entry) => entry.values.action).values.details).duplicateReview.reviewed[0].applicationId).toBe(55);
+    expect(h.inserts.some((entry) => entry.table === employees)).toBe(false);
+  });
+  it("ignores an unrelated inert archived applicant without transferring their documents", async () => {
+    const selected = { ...app, phone: "4165550101" };
+    const archived = { ...selected, id: 56, name: "Different", deletedAt: new Date() };
+    const h = harness([[selected], [], [offer], [selected, archived]]);
+    await expect(hireSignedApplicant(h.db, selected.id, actor)).resolves.toMatchObject({ id: 7 });
+    expect(h.updates).toHaveLength(1);
+    const sql = new MySqlDialect().sqlToQuery(h.updatePredicates[0].predicate);
+    expect(sql.params).toContain(selected.id);
+    expect(sql.params).not.toContain(archived.id);
+    expect(h.inserts).toHaveLength(2);
+    expect(JSON.parse(h.inserts.find((entry) => entry.values.action).values.details)).not.toHaveProperty("duplicateReview");
+  });
+  it.each([null, { ...offer, signed: 0 }, { ...offer, applicantEmail: "other@example.com" }])("never bypasses current offer checks when duplicates exist", async (current) => {
+    const selected = { ...app, phone: "4165550101" };
+    const h = harness([[selected], [], current ? [current] : [], [selected, { ...selected, id: 55 }]]);
+    await expect(hireSignedApplicant(h.db, selected.id, actor)).rejects.toThrow();
+    expect(h.updates).toEqual([]); expect(h.inserts).toEqual([]);
+  });
   it("does not insert an employee when a stale status transition loses its race", async () => {
     const h = harness([[app], [], [offer], [app]], 0);
     await expect(hireSignedApplicant(h.db, 42, actor)).rejects.toThrow("applicant changed"); expect(h.inserts).toEqual([]);
@@ -102,7 +261,9 @@ describe("signed offer to employee", () => {
   });
   it("denies anonymous and non-management callers before reading employee records", async () => {
     await expect(staffAvailabilityRouter.createCaller({ user: null } as any).addSignedApplicantToDirectory({ applicationId: 42, confirmed: app })).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    await expect(staffAvailabilityRouter.createCaller({ user: null } as any).preflightHireSignedApplicant({ applicationId: 42 })).rejects.toMatchObject({ code: "UNAUTHORIZED" });
     resolveApyAccess.mockResolvedValue({ level: "team_member", canManageOperations: false });
+    await expect(staffAvailabilityRouter.createCaller({ user: actor } as any).preflightHireSignedApplicant({ applicationId: 42 })).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(staffAvailabilityRouter.createCaller({ user: actor } as any).addSignedApplicantToDirectory({ applicationId: 42, confirmed: app })).rejects.toMatchObject({ code: "FORBIDDEN" });
     expect(getDb).not.toHaveBeenCalled();
   });

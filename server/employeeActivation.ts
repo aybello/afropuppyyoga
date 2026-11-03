@@ -1,7 +1,8 @@
 import { eq } from "drizzle-orm";
 import { employees, jobApplicationActions, jobApplications, staffInvites } from "../drizzle/schema";
 import { getEmployeeLoginDetails } from "./employeeLoginDetails";
-import { employeeContactsMatch, resolveEmployeeLoginProfile } from "./employeeProfileResolution";
+import { employeeContactsMatch, isInertArchivedApplicant, resolveEmployeeLoginProfile } from "./employeeProfileResolution";
+import { reviewedHiringProfileIds } from "./employeeReviewedHiringEvidence";
 import { revokeTeamProfileAccess } from "./staffAccessRevocation";
 import { isActiveTeamMember } from "./teamMembership";
 
@@ -21,7 +22,11 @@ export async function activateEmployeeWithAccess(tx: any, employeeId: number, ac
   const { role, location, email, phone } = getEmployeeLoginDetails(employee);
   const profiles: Array<typeof jobApplications.$inferSelect> = await tx.select().from(jobApplications);
   const directory: Array<typeof employees.$inferSelect> = await tx.select().from(employees);
+  const reviewedIds = await reviewedHiringProfileIds(tx, employee, profiles, directory);
   const historicalIds = new Set(prepared?.duplicateIds ?? []);
+  if (Array.from(historicalIds).some((id) => reviewedIds.has(id))) {
+    throw new Error("Reviewed applicant history cannot be retired as a login duplicate.");
+  }
   const historical = profiles.filter((profile) => historicalIds.has(profile.id));
   if (prepared && (employee.sourceApplicationId !== prepared.canonicalId || historical.length !== historicalIds.size)) {
     throw new Error("The linked employee identity changed during editing. Reload and try again.");
@@ -29,7 +34,7 @@ export async function activateEmployeeWithAccess(tx: any, employeeId: number, ac
   if (historical.some((profile) => directory.some((other) => other.id !== employee.id && other.sourceApplicationId === profile.id))) {
     throw new Error("The matching APY HQ profile is already linked to another employee.");
   }
-  const resolved = resolveEmployeeLoginProfile({ ...employee, email, phone }, profiles.filter((profile) => !historicalIds.has(profile.id)), directory);
+  const resolved = resolveEmployeeLoginProfile({ ...employee, email, phone }, profiles.filter((profile) => !historicalIds.has(profile.id)), directory, reviewedIds);
   const profile = resolved.canonical;
   const duplicates = [...resolved.duplicates, ...historical];
   for (const duplicate of duplicates) {
@@ -71,12 +76,24 @@ export async function prepareActiveEmployeeEdit(tx: any, employee: typeof employ
   getEmployeeLoginDetails(next);
   const profiles: Array<typeof jobApplications.$inferSelect> = await tx.select().from(jobApplications);
   const directory: Array<typeof employees.$inferSelect> = await tx.select().from(employees);
-  const previous = resolveEmployeeLoginProfile(employee, profiles, directory);
+  const reviewedIds = await reviewedHiringProfileIds(tx, employee, profiles, directory);
+  const previous = resolveEmployeeLoginProfile(employee, profiles, directory, reviewedIds);
   const knownIds = new Set([previous.canonical?.id, ...previous.duplicates.map((profile) => profile.id)]);
   if (directory.some((other) => other.id !== employee.id && employeeContactsMatch(next, other))) {
     throw new Error("Another Employee Directory record uses this contact.");
   }
-  if (profiles.some((profile) => !knownIds.has(profile.id) && profile.deletedAt == null && employeeContactsMatch(next, profile))) {
+  if (profiles.some((profile) => {
+    if (profile.id === previous.canonical?.id) return false;
+    if (!reviewedIds.has(profile.id) && !knownIds.has(profile.id)) {
+      return !isInertArchivedApplicant(profile, employee, directory) && employeeContactsMatch(next, profile);
+    }
+    // Preserve existing reviewed contact relationships, but do not use review
+    // evidence or known legacy duplicates to authorize a new collision.
+    return (["email", "phone"] as const).some((field) => {
+      const only = (person: typeof next) => ({ name: person.name, email: field === "email" ? person.email : null, phone: field === "phone" ? person.phone : null });
+      return employeeContactsMatch(only(next), only(profile)) && !employeeContactsMatch(only(employee), only(profile));
+    });
+  })) {
     throw new Error("Another applicant or staff profile uses this contact. Review the conflicting record before saving.");
   }
   // Canonical linking is recorded in the same transaction before the edit.

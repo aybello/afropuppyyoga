@@ -32,6 +32,7 @@ function hiringHarness(options: { role?: string; signed?: number; failAudit?: bo
     audit: [] as Values[],
   };
   const writes: Array<{ table: unknown; values: Values }> = [];
+  const lockedReads: Array<{ table: unknown; filtered: boolean; limited: boolean; ordered: boolean }> = [];
   const dialect = new MySqlDialect();
   let commits = 0, rollbacks = 0;
   const assertSql = (predicate: SQL, sql: string, params: unknown[]) => {
@@ -46,6 +47,7 @@ function hiringHarness(options: { role?: string; signed?: number; failAudit?: bo
         select: () => {
           let table: unknown;
           let rows: unknown[] = [];
+          let filtered = false, limited = false, ordered = false;
           const chain = {
             from(target: unknown) {
               table = target;
@@ -57,6 +59,8 @@ function hiringHarness(options: { role?: string; signed?: number; failAudit?: bo
               return chain;
             },
             where(predicate: SQL) {
+              expect(filtered).toBe(false);
+              filtered = true;
               if (table === staffingMutationLocks) {
                 assertSql(predicate, "staffingMutationLocks.lockName = ?", ["apy_staffing_mutation_v1"]);
               } else if (table === jobApplications) {
@@ -68,17 +72,29 @@ function hiringHarness(options: { role?: string; signed?: number; failAudit?: bo
             },
             orderBy(...columns: SQL[]) {
               expect(table).toBe(signingTokens);
+              expect(ordered).toBe(false);
+              ordered = true;
               expect(columns.map((column) => dialect.sqlToQuery(column).sql.replace(/`/g, "")))
                 .toEqual(["signingTokens.createdAt desc", "signingTokens.id desc"]);
               return chain;
             },
-            limit: async (limit: number) => { expect(limit).toBe(1); return rows.slice(0, limit); },
+            limit(limit: number) {
+              expect(limit).toBe(1);
+              expect(limited).toBe(false);
+              limited = true;
+              rows = rows.slice(0, limit);
+              return chain;
+            },
             for: async (mode: string) => {
-              expect(table).toBe(staffingMutationLocks);
               expect(mode).toBe("update");
+              if (table === staffingMutationLocks) expect([filtered, limited, ordered]).toEqual([true, false, false]);
+              else if (table === jobApplications) expect([filtered, limited, ordered]).toEqual(filtered ? [true, true, false] : [false, false, false]);
+              else if (table === signingTokens) expect([filtered, limited, ordered]).toEqual([true, true, true]);
+              else if (table === employees) expect([filtered, limited, ordered]).toEqual([false, false, false]);
+              else throw new Error("Unexpected locked read");
+              lockedReads.push({ table, filtered, limited, ordered });
               return rows;
             },
-            then: (resolve: (value: unknown[]) => unknown) => Promise.resolve(rows).then(resolve),
           };
           return chain;
         },
@@ -127,7 +143,7 @@ function hiringHarness(options: { role?: string; signed?: number; failAudit?: bo
       }
     }),
   };
-  return { db, writes, get state() { return structuredClone(committed); },
+  return { db, writes, lockedReads, get state() { return structuredClone(committed); },
     get commits() { return commits; }, get rollbacks() { return rollbacks; } };
 }
 
@@ -191,6 +207,13 @@ describe("signed Social Media Intern hiring", () => {
     expect(state.offer).toEqual(before.offer);
     expect(h.writes.map((write) => write.table)).toEqual([jobApplications, employees, jobApplicationActions]);
     expect(h.writes.some((write) => write.table === signingTokens)).toBe(false);
+    expect(h.lockedReads).toEqual([
+      { table: staffingMutationLocks, filtered: true, limited: false, ordered: false },
+      { table: jobApplications, filtered: true, limited: true, ordered: false },
+      { table: employees, filtered: false, limited: false, ordered: false },
+      { table: signingTokens, filtered: true, limited: true, ordered: true },
+      { table: jobApplications, filtered: false, limited: false, ordered: false },
+    ]);
     expect(h.db.transaction).toHaveBeenCalledTimes(1);
     expect(h.commits).toBe(1);
     expect(h.rollbacks).toBe(0);

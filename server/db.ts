@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/mysql2";
 import { randomUUID } from "node:crypto";
 import { InsertInvoice, InsertJobApplication, InsertUser, InsertBirthdayInquiry, InsertPartnershipInquiry, InsertStaffInvite, InsertSigningToken, invoices, employees, jobApplicationActions, jobApplications, users, birthdayInquiries, partnershipInquiries, staffInvites, signingTokens } from "../drizzle/schema";
 import { ENV } from './_core/env';
+import { withStaffingMutationLock } from "./staffingMutationLock";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -137,8 +138,10 @@ export async function deleteInvoice(id: number) {
 export async function createJobApplication(data: InsertJobApplication) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.insert(jobApplications).values(data);
-  return Number(result[0].insertId);
+  return withStaffingMutationLock(db, async (tx) => {
+    const result = await tx.insert(jobApplications).values(data);
+    return Number(result[0].insertId);
+  });
 }
 
 export async function getJobApplicationBySubmissionKey(submissionKey: string) {
@@ -370,7 +373,27 @@ export async function getArchivedJobApplications() {
 export async function restoreJobApplication(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.update(jobApplications).set({ deletedAt: null }).where(eq(jobApplications.id, id));
+  return withStaffingMutationLock(db, async (tx): Promise<"restored" | "not_archived" | "employee" | "changed"> => {
+    const [app]: Array<typeof jobApplications.$inferSelect> = await tx.select().from(jobApplications)
+      .where(eq(jobApplications.id, id)).limit(1).for("update");
+    if (!app || !app.deletedAt) return "not_archived";
+
+    // Check the durable source link, regardless of the employee's status.
+    const linked: Array<{ id: number }> = await tx.select({ id: employees.id }).from(employees)
+      .where(eq(employees.sourceApplicationId, id)).limit(1).for("update");
+    if ((app.isTeamMember !== false && (app.isTeamMember as unknown) !== 0) || app.status === "onboarded" || linked.length) {
+      return "employee";
+    }
+
+    // Also guard the write itself in case a non-staffing path changes the row.
+    const [result] = await tx.update(jobApplications).set({ deletedAt: null }).where(and(
+      eq(jobApplications.id, id),
+      isNotNull(jobApplications.deletedAt),
+      eq(jobApplications.isTeamMember, false),
+      ne(jobApplications.status, "onboarded"),
+    ));
+    return Number(result.affectedRows ?? 0) === 1 ? "restored" : "changed";
+  });
 }
 
 export async function permanentlyDeleteJobApplication(id: number) {

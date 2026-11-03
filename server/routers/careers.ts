@@ -703,7 +703,13 @@ export const careersRouter = router({
   restoreApplication: staffProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input, ctx }) => {
-      await restoreJobApplication(input.id);
+      const result = await restoreJobApplication(input.id);
+      if (result === "employee") {
+        throw new TRPCError({ code: "CONFLICT", message: "This archived profile is a team member or linked to an employee. Manage or restore it through Employee Directory." });
+      }
+      if (result !== "restored") {
+        throw new TRPCError({ code: "CONFLICT", message: "This application is no longer archived or changed before it could be restored. Refresh and review it." });
+      }
       await recordHiringAction({ ctx, applicationId: input.id, action: "application_restored" });
       return { success: true };
     }),

@@ -13,9 +13,38 @@ describe("employee canonical login profile", () => {
     const older = { ...profile, id: 41 };
     expect(resolveEmployeeLoginProfile({ ...employee, sourceApplicationId: null }, [older, profile], [employee])).toEqual({ canonical: profile, duplicates: [older] });
   });
-  it("treats archived applicants as inert history without changing them", () => {
+  it("treats unrelated archived applicants as inert history without changing them", () => {
     const historical = { ...profile, id: 40, name: "Historical Name", status: "new", deletedAt: new Date() };
     expect(resolveEmployeeLoginProfile(employee, [profile, historical], [employee])).toEqual({ canonical: profile, duplicates: [] });
+  });
+  it("does not ignore an archived applicant linked to another employee", () => {
+    const historical = { ...profile, id: 40, name: "Historical Name", status: "new", deletedAt: new Date() };
+    const owner = { ...employee, id: 8, sourceApplicationId: 40, email: "other@example.com", phone: null };
+    expect(() => resolveEmployeeLoginProfile(employee, [profile, historical], [employee, owner])).toThrow("already linked");
+  });
+  it.each([
+    { isTeamMember: true, status: "accepted" },
+    { isTeamMember: 1, status: "accepted" },
+    { isTeamMember: null, status: "accepted" },
+    { isTeamMember: false, status: "onboarded" },
+  ])("fails closed for archived staff or ambiguous team membership: %j", (changes) => {
+    const historical = { ...profile, id: 40, name: "Different Person", deletedAt: new Date(), ...changes };
+    expect(() => resolveEmployeeLoginProfile(employee, [profile, historical], [employee])).toThrow("Another applicant");
+  });
+  it("treats a numeric false team flag as inert without retiring the archived history", () => {
+    const historical = { ...profile, id: 40, status: "accepted", isTeamMember: 0, deletedAt: new Date() };
+    expect(resolveEmployeeLoginProfile(employee, [profile, historical], [employee])).toEqual({ canonical: profile, duplicates: [] });
+  });
+  it("leaves verified reviewed applicants out of canonical and retired duplicate results", () => {
+    const historical = { ...profile, id: 40, status: "accepted" };
+    expect(resolveEmployeeLoginProfile(employee, [profile, historical], [employee], new Set([40])))
+      .toEqual({ canonical: profile, duplicates: [] });
+    expect(() => resolveEmployeeLoginProfile(employee, [profile, historical], [employee])).toThrow("Another applicant");
+  });
+  it("does not exempt other collisions when one history record was reviewed", () => {
+    const reviewed = { ...profile, id: 40, status: "accepted" };
+    const unreviewed = { ...profile, id: 41, status: "accepted" };
+    expect(() => resolveEmployeeLoginProfile(employee, [profile, reviewed, unreviewed], [employee], new Set([40]))).toThrow("Another applicant");
   });
   it.each([
     { name: "Different Person" },

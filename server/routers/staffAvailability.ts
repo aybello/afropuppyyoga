@@ -1,4 +1,4 @@
-import { hireSignedApplicant } from "../hireSignedApplicant";
+import { hireSignedApplicant, preflightHireSignedApplicant } from "../hireSignedApplicant";
 import { z } from "zod";
 import { adminProcedure, staffProcedure, router } from "../_core/trpc";
 import { getDb, getUserByOpenId, upsertUser } from "../db";
@@ -13,6 +13,7 @@ import { retireDutiesOutsideNewRole } from "../employeeRoleChange";
 export { getOperationsManagerDepartureEligibility, validateTeamAssignmentChange } from "../staffRosterPolicy";
 import { revokeTeamProfileAccess } from "../staffAccessRevocation";
 import { activateEmployeeWithAccess, prepareActiveEmployeeEdit } from "../employeeActivation";
+import { employeeContactsMatch } from "../employeeProfileResolution";
 import { withStaffingMutationLock } from "../staffingMutationLock";
 
 export const directTeamMemberSchema = z.object({
@@ -510,13 +511,22 @@ export const staffAvailabilityRouter = router({
       });
     }),
 
-  // The explicit hire step grants login after signature, before onboarding delivery.
-  addSignedApplicantToDirectory: adminProcedure
-    .input(z.object({ applicationId: z.number().int().positive(), confirmed: z.object({ name: z.string(), email: z.string(), phone: z.string().nullable(), role: z.string(), location: z.string() }) }))
-    .mutation(async ({ input, ctx }) => {
+  // Matching applications and Directory records are shown only to users who can manage operations.
+  preflightHireSignedApplicant: adminProcedure
+    .input(z.object({ applicationId: z.number().int().positive() }))
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      return hireSignedApplicant(db, input.applicationId, ctx.user, input.confirmed);
+      return preflightHireSignedApplicant(db, input.applicationId, ctx.user);
+    }),
+  // The explicit hire step grants login after signature, before onboarding delivery.
+  addSignedApplicantToDirectory: adminProcedure
+    .input(z.object({ applicationId: z.number().int().positive(), confirmed: z.object({ name: z.string(), email: z.string(), phone: z.string().nullable(), role: z.string(), location: z.string() }), duplicateReview: z.object({ token: z.string().min(1).max(4096), acknowledged: z.literal(true) }).optional(), expectedDirectory: z.object({ id: z.number().int().positive(), name: z.string(), email: z.string().nullable(), phone: z.string().nullable(), role: z.string(), location: z.string(), employmentStatus: z.string(), sourceApplicationId: z.number().int().positive().nullable() }).nullable().optional() }))
+    .mutation(async ({ input, ctx }) => {
+      if (input.expectedDirectory === undefined) throw new Error("Refresh Applications and review matching Directory records before granting access.");
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      return hireSignedApplicant(db, input.applicationId, ctx.user, input.confirmed, input.duplicateReview, input.expectedDirectory);
     }),
   // Older tabs must reload to review all login identifiers before granting access.
   markOnboardedAndAddToEmployeeDirectory: adminProcedure
@@ -848,20 +858,42 @@ export const staffAvailabilityRouter = router({
       )).limit(1);
       if (!existing) throw new Error("This person is not an active APY HQ team member.");
 
-      await tx.update(jobApplications).set({
+      const updates = {
         name: input.name,
         email: input.email ? input.email.toLowerCase() : null,
         phone: input.phone ? normalizeCanadianPhoneNumber(input.phone) : null,
         role: input.role,
         location: input.location,
-      }).where(eq(jobApplications.id, input.id));
-      await tx.update(employees).set({
-        name: input.name,
-        email: input.email ? input.email.toLowerCase() : null,
-        phone: input.phone ? normalizeCanadianPhoneNumber(input.phone) : null,
-        role: input.role,
-        location: input.location,
-      }).where(eq(employees.sourceApplicationId, input.id));
+      };
+      // Normalize in JavaScript so legacy formatted phones and mixed-case or
+      // whitespace-padded emails cannot evade an exact SQL comparison.
+      const directory = await tx.select().from(employees);
+      const profiles = await tx.select().from(jobApplications);
+      const linked = directory.filter((employee) => employee.sourceApplicationId === input.id);
+      if (linked.length > 1) {
+        throw new Error("This APY HQ profile is linked to multiple Employee Directory records. Review the records before saving.");
+      }
+      if (directory.some((employee) => employee.sourceApplicationId !== input.id && employeeContactsMatch(updates, employee))) {
+        throw new Error("Another Employee Directory record uses this contact. Review the conflicting record before saving.");
+      }
+      if (profiles.some((profile) => profile.id !== input.id && Boolean(profile.isTeamMember)
+        && profile.deletedAt == null && employeeContactsMatch(updates, profile))) {
+        throw new Error("Another active APY HQ profile uses this contact. Review the conflicting record before saving.");
+      }
+
+      // Linked active employees retain the Directory edit's reviewed-history
+      // checks. This is preparation only: never activate or retire duplicates
+      // from a team profile edit. Unlinked legacy profiles do not acquire a
+      // new login, so non-team applicant history alone must not block them.
+      if (linked[0]?.employmentStatus === "active") {
+        const prepared = await prepareActiveEmployeeEdit(tx, linked[0], updates);
+        if (prepared.canonicalId !== input.id) {
+          throw new Error("The linked employee identity changed during editing. Reload and try again.");
+        }
+      }
+
+      await tx.update(jobApplications).set(updates).where(eq(jobApplications.id, input.id));
+      await tx.update(employees).set(updates).where(eq(employees.sourceApplicationId, input.id));
 
       // A position change made from the team profile editor follows the same
       // rules as one made from Employee Directory, so neither route can leave
