@@ -274,3 +274,33 @@
     scroll-behavior: auto;
   }
 }
+
+/* Keep all partner logos visible as the requested Trusted By strip moves. */
+.apy-trust-window {
+  overflow: hidden;
+}
+.apy-trust-track {
+  display: flex;
+  width: max-content;
+  animation: apyTrustMarquee 60s linear infinite;
+}
+.apy-trust-set {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 2.25rem;
+  padding-inline-end: 2.25rem;
+}
+.apy-trust-window:hover .apy-trust-track,
+.apy-trust-window:focus-within .apy-trust-track {
+  animation-play-state: paused;
+}
+@keyframes apyTrustMarquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .apy-trust-window { overflow-x: auto; }
+  .apy-trust-track { animation: none; }
+  .apy-trust-set[aria-hidden="true"] { display: none; }
+}

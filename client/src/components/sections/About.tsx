@@ -6,7 +6,7 @@ import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Heart, Brain, Smile, Activity } from "lucide-react";
 
-const ABOUT_IMG = "/manus-storage/apy_kitchener_gallery_06_aug01_puppy_bc15310d.jpg";
+const ABOUT_IMG = "/manus-storage/apy_kitchener_gallery_04_oct04_portrait_464e300c.jpg";
 
 const benefits = [
   {
@@ -115,7 +115,9 @@ export default function About() {
                 <div className="relative overflow-hidden rounded-3xl shadow-sm aspect-[3/4] max-w-sm mx-auto lg:max-w-none">
                   <img
                     src={ABOUT_IMG}
-                    alt="Kitchener guest cuddling a Bernese puppy at AfroPuppyYoga"
+                    alt="Smiling guest holding a puppy at an AfroPuppyYoga Kitchener class"
+                    width={1500}
+                    height={2000}
                     loading="lazy"
                     decoding="async"
                     className="w-full h-full object-cover"

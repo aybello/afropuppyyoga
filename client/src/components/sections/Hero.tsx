@@ -145,11 +145,15 @@ export default function Hero() {
       <div className="border-b border-[#EBCDD5] bg-[#FEFAF4] py-5">
         <div className="container flex flex-col sm:flex-row sm:items-center gap-4">
           <span className="shrink-0 font-body text-xs font-semibold tracking-[0.14em] uppercase text-[#66514A] sm:pr-5 sm:border-r sm:border-[#EBCDD5]">Trusted By</span>
-          <div className="flex-1 min-w-0 overflow-x-auto pb-2" role="region" aria-label="Trusted APY partners" tabIndex={0}>
-            <div className="flex items-center gap-9 min-w-max">
-              {trustedBy.map((org, i) => (
-                <div key={org.name} className="flex h-[100px] items-center justify-center shrink-0">
-                  <img src={org.src} alt={org.name} loading={i < 6 ? "eager" : "lazy"} decoding="async" style={{ height: org.height }} className="w-auto max-w-[180px] object-contain" />
+          <div className="apy-trust-window flex-1 min-w-0 pb-2" role="region" aria-label="Trusted APY partners" tabIndex={0}>
+            <div className="apy-trust-track">
+              {[0, 1].map((copy) => (
+                <div key={copy} className="apy-trust-set" aria-hidden={copy === 1 ? true : undefined}>
+                  {trustedBy.map((org) => (
+                    <div key={org.name} className="flex h-[100px] w-[180px] items-center justify-center shrink-0">
+                      <img src={org.src} alt={copy === 0 ? org.name : ""} loading="eager" decoding="async" style={{ height: org.height }} className="w-auto max-w-[180px] object-contain" />
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>
