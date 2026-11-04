@@ -196,7 +196,7 @@ export default function PrivateEventQuote() {
 
       <main>
       {/* Package overview */}
-      <section id="private-event-packages" aria-labelledby="private-event-packages-title" className="pt-24 pb-10 sm:pt-28 sm:pb-12 bg-[#FDE9EF]/35 border-b border-[#F29CB8]/35">
+      <section id="private-event-packages" aria-labelledby="private-event-packages-title" className="pt-28 pb-10 sm:pt-32 sm:pb-12 lg:pt-36 bg-[#FDE9EF]/35 border-b border-[#F29CB8]/35">
         <div className="container max-w-6xl mb-8 sm:mb-10">
           <p className="font-body text-sm font-semibold uppercase tracking-[0.22em] text-[#AA365D] mb-3">
             Private Events
@@ -398,9 +398,6 @@ export default function PrivateEventQuote() {
             aria-labelledby="private-event-quote-title"
             className="min-w-0"
           >
-            <p className="font-body text-sm font-semibold uppercase tracking-[0.22em] text-[#AA365D] mb-4">
-              Private Events
-            </p>
             <h2
               id="private-event-quote-title"
               className="font-display text-[clamp(2.75rem,5.2vw,4.75rem)] leading-[1.06] font-medium tracking-[-0.035em] text-[#34221D] mb-5 [text-wrap:pretty]"
