@@ -7,6 +7,7 @@ const spacing = css.slice(css.indexOf("/* Existing public design: tighter vertic
 const stylesheet = postcss.parse(spacing);
 const source = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 
+// Source guards protect unchanged contracts; measured layout evidence lives outside the repo.
 describe("existing public design spacing", () => {
   it("changes only vertical whitespace and anchor clearance, never visibility or geometry", () => {
     expect(spacing).toContain(".apy-homepage main > [data-home-deferred-section] > section");
@@ -28,6 +29,8 @@ describe("existing public design spacing", () => {
     expect(spacing).toContain("padding-top: 7rem;");
     expect(spacing).toContain("scroll-margin-top: 5rem;");
     expect(spacing).toContain("scroll-margin-top: 6rem;");
+    expect(spacing).toContain(".apy-homepage #home > .container { row-gap: 1rem; }");
+    expect(spacing).toContain(".container:has(#quote-form)");
     expect(source("client/src/components/sections/Hero.tsx")).toContain('min-h-12');
     expect(source("client/src/pages/PrivateEventQuote.tsx")).toContain('scroll-mt-28');
   });

@@ -391,7 +391,7 @@
 #private-event-packages > .container.mb-8 {
   margin-bottom: 1.5rem;
 }
-#private-event-packages + .container {
+#private-event-packages ~ .container:has(#quote-form) {
   padding-block: 2rem;
 }
 .apy-public-footer {
@@ -411,4 +411,8 @@
 @media (min-width: 768px) {
   .apy-homepage main section[id] { scroll-margin-top: 6rem; }
   #private-event-packages { padding-block: 2.5rem; }
+}
+@media (min-width: 1024px) {
+  /* The two-row desktop hero already had a compact 1rem row gap. */
+  .apy-homepage #home > .container { row-gap: 1rem; }
 }
