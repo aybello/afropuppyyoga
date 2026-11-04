@@ -51,12 +51,6 @@ const EVENT_TYPES = [
   "Other",
 ];
 
-const LOUNGE_PACKAGE_CONTENT: Record<PrivateEventPackageType, { desc: string; items: Array<{ emoji: string; text: string }> }> = {
-  classic: { desc: "The core supervised puppy lounge, with scope and staffing agreed for your event.", items: [{ emoji: "", text: "Supervised puppy interaction without guided yoga" }, { emoji: "", text: "Puppies and dedicated handlers" }, { emoji: "", text: "Capacity, operating hours and puppy rest agreed for your scope" }] },
-  signature: { desc: "The puppy lounge with professional photography and an enhanced setup, quoted for your scope.", items: [{ emoji: "", text: "The supervised puppy lounge experience" }, { emoji: "", text: "Professional photography and enhanced setup agreed in your quote" }, { emoji: "", text: "Photo moments and event styling tailored to your scope" }] },
-  luxury: { desc: "A more customized puppy lounge, with styling, content and add-on options agreed in your quote.", items: [{ emoji: "", text: "Customized supervised puppy lounge and staffing plan" }, { emoji: "", text: "Photography, videography and branding options" }, { emoji: "", text: "Add-ons, operating hours and setup confirmed in the final scope" }] },
-};
-
 const LOCATIONS = [
   { value: "kitchener", label: "Kitchener" },
   { value: "cambridge", label: "Cambridge" },
@@ -166,8 +160,9 @@ export default function PrivateEventQuote() {
             Choose Your <span className="italic text-[#AA365D]">Package Level</span>
           </h2>
           <p className="font-body text-[#34221D]/80 text-base sm:text-lg leading-relaxed max-w-2xl">
-            Classic is the core experience, Signature adds professional photography and enhanced setup, and Luxury is more customized. These price bands are for standard studio puppy yoga, not every format.
+            Classic is the core experience, Signature adds professional photography and enhanced setup, and Luxury is more customized. These are our standard studio puppy yoga packages and reference price bands. Custom formats are quoted separately.
           </p>
+          {packageCardsCustom && <p className="mt-4 font-body text-sm text-[#AA365D] leading-relaxed">Your selected format needs a custom quote for the full event. The studio package details and ranges below remain visible for comparison; they are not a quote for your selected format.</p>}
         </div>
         <div className="container">
           <div className="grid lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
@@ -175,7 +170,6 @@ export default function PrivateEventQuote() {
               {
                 emoji: "\uD83D\uDC3E",
                 name: "Classic Experience",
-                tier: "classic" as const,
                 price: privateEventBandLabel("classic"),
                 bestFor: "Birthdays, girls' days & intimate private events",
                 desc: "The core studio experience for birthdays, girls' days and intimate wellness events.",
@@ -210,7 +204,6 @@ export default function PrivateEventQuote() {
               {
                 emoji: "\u2728",
                 name: "Signature Experience",
-                tier: "signature" as const,
                 price: privateEventBandLabel("signature"),
                 bestFor:
                   "Bachelorettes, elevated celebrations & premium content",
@@ -248,7 +241,6 @@ export default function PrivateEventQuote() {
               {
                 emoji: "\uD83D\uDC8E",
                 name: "Luxury Experience",
-                tier: "luxury" as const,
                 price: privateEventBandLabel("luxury"),
                 bestFor: "Corporate wellness, brand activations & large groups",
                 desc: "A more customized experience. Larger or more complex events receive a custom quote above this range.",
@@ -297,7 +289,7 @@ export default function PrivateEventQuote() {
                   {pkg.emoji} {pkg.name}
                 </div>
                 <div className="font-display text-3xl font-medium text-[#34221D] mb-3">
-                  {packageCardsCustom ? "Custom event quote" : pkg.price}
+                  {pkg.price}
                 </div>
                 <div className="flex flex-wrap items-baseline gap-1.5 mb-3">
                   <span className="font-body text-xs font-semibold text-[#AA365D] uppercase tracking-wide">
@@ -308,10 +300,10 @@ export default function PrivateEventQuote() {
                   </span>
                 </div>
                 <p className="font-body text-[#34221D]/80 text-sm mb-5 leading-relaxed">
-                  {preferencesDraft.experience === "puppy_lounge" ? LOUNGE_PACKAGE_CONTENT[pkg.tier].desc : pkg.desc}
+                  {pkg.desc}
                 </p>
                 <ul className="space-y-3">
-                  {(preferencesDraft.experience === "puppy_lounge" ? LOUNGE_PACKAGE_CONTENT[pkg.tier].items : pkg.items).map(item => (
+                  {pkg.items.map(item => (
                     <li
                       key={item.text}
                       className="flex items-start gap-2 text-sm font-body text-[#34221D]/80 leading-relaxed"

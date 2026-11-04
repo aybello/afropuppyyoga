@@ -57,6 +57,18 @@ describe("same-page private-event packages before the quote form", () => {
     expect(source).toContain('className="min-w-0 scroll-mt-28"');
   });
 
+  it("keeps the approved package ranges and inclusions as a stable reference rather than rewriting them for custom formats", () => {
+    const cards = source.slice(source.indexOf('{['), source.indexOf('{/* Corporate CTA */}'));
+    expect(cards).toContain("{pkg.price}");
+    expect(cards).toContain("{pkg.desc}");
+    expect(cards).toContain("{pkg.items.map(item => (");
+    expect(cards).not.toContain("packageCardsCustom");
+    expect(cards).not.toContain("preferencesDraft");
+    expect(source).not.toContain("LOUNGE_PACKAGE_CONTENT");
+    expect(source).toContain("they are not a quote for your selected format");
+    expect(text(render())).toContain("reference price bands");
+  });
+
   it("retains the event/contact fields, package controls and disabled untouched inquiry submission", () => {
     const html = render();
     const quote = html.slice(html.indexOf('id="quote-form"'));
