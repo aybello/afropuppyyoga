@@ -194,7 +194,205 @@ export default function PrivateEventQuote() {
     <div className="min-h-screen bg-[#FEFAF4] text-[#34221D] font-body">
       <Navbar />
 
-      <main className="container max-w-7xl pt-28 pb-12 sm:pt-32 sm:pb-16 lg:pt-36 lg:pb-20">
+      <main>
+      {/* Package overview */}
+      <section id="private-event-packages" aria-labelledby="private-event-packages-title" className="pt-24 pb-10 sm:pt-28 sm:pb-12 bg-[#FDE9EF]/35 border-b border-[#F29CB8]/35">
+        <div className="container max-w-6xl mb-8 sm:mb-10">
+          <p className="font-body text-sm font-semibold uppercase tracking-[0.22em] text-[#AA365D] mb-3">
+            Private Events
+          </p>
+          <h1 id="private-event-packages-title" className="font-display text-[clamp(2.5rem,4.5vw,3.75rem)] leading-[1.08] font-medium tracking-[-0.035em] text-[#34221D] mb-4 [text-wrap:pretty]">
+            Choose Your <span className="italic text-[#AA365D]">Experience</span>
+          </h1>
+          <p className="font-body text-[#34221D]/80 text-base sm:text-lg leading-relaxed max-w-2xl">
+            Compare our private-event packages, then use the quote form below to share your event details.
+          </p>
+        </div>
+        <div className="container">
+          <div className="grid lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {[
+              {
+                emoji: "\uD83D\uDC3E",
+                name: "Classic Experience",
+                price: "$1,200-$1,500",
+                bestFor: "Birthdays, girls' days & intimate private events",
+                desc: "Perfect for birthdays, girls' days & intimate wellness experiences.",
+                color: "border-[#F29CB8]/50",
+                badge: "bg-[#FDE9EF] text-[#AA365D]",
+                items: [
+                  {
+                    emoji: "✨",
+                    text: "60-min session: 40 min guided yoga + 20 min puppy playtime",
+                  },
+                  {
+                    emoji: "\uD83D\uDC36",
+                    text: "Puppies + dedicated puppy handlers",
+                  },
+                  {
+                    emoji: "\uD83E\uDDD8",
+                    text: "Professional yoga instructor",
+                  },
+                  {
+                    emoji: "\uD83D\uDCF8",
+                    text: "Group photo + puppy playtime",
+                  },
+                  { emoji: "\uD83D\uDC9B", text: "Basic mats included" },
+                  {
+                    emoji: "\uD83E\uDD64",
+                    text: "Refreshments & wellness treats",
+                  },
+                  { emoji: "\uD83C\uDFB6", text: "Curated music & atmosphere" },
+                  { emoji: "\uD83D\uDC65", text: "Up to 20 guests" },
+                ],
+              },
+              {
+                emoji: "\u2728",
+                name: "Signature Experience",
+                price: "$1,500-$2,250",
+                bestFor:
+                  "Bachelorettes, elevated celebrations & premium content",
+                desc: "Our most popular - for bachelorettes, celebrations & elevated social experiences.",
+                color: "border-[#F29CB8]",
+                badge: "bg-[#F29CB8]/20 text-[#AA365D]",
+                popular: true,
+                items: [
+                  {
+                    emoji: "\uD83D\uDC3E",
+                    text: "Everything in Classic Experience",
+                  },
+                  {
+                    emoji: "\uD83D\uDCF8",
+                    text: "Professional event photography",
+                  },
+                  {
+                    emoji: "\uD83E\uDDD8",
+                    text: "Premium mats & elevated setup",
+                  },
+                  {
+                    emoji: "\u2728",
+                    text: "Enhanced photo moments & event styling",
+                  },
+                  {
+                    emoji: "\uD83D\uDC36",
+                    text: "Extended puppy interaction experience",
+                  },
+                  {
+                    emoji: "\uD83D\uDC9B",
+                    text: "Elevated event atmosphere & setup",
+                  },
+                ],
+              },
+              {
+                emoji: "\uD83D\uDC8E",
+                name: "Luxury Experience",
+                price: "$2,500+",
+                bestFor: "Corporate wellness, brand activations & large groups",
+                desc: "For corporate events, large activations & fully customized luxury experiences.",
+                color: "border-[#F29CB8]/50",
+                badge: "bg-[#FDE9EF] text-[#34221D]",
+                items: [
+                  {
+                    emoji: "\uD83D\uDC8E",
+                    text: "Everything in Signature Experience",
+                  },
+                  {
+                    emoji: "\uD83C\uDFAC",
+                    text: "Professional videography options",
+                  },
+                  {
+                    emoji: "\uD83C\uDF81",
+                    text: "Curated gift bags & branded add-ons",
+                  },
+                  {
+                    emoji: "\uD83D\uDC36",
+                    text: "Larger puppy team & staffing support",
+                  },
+                  {
+                    emoji: "\uD83C\uDF69",
+                    text: "Catering, dessert & wellness vendors",
+                  },
+                  {
+                    emoji: "\u2728",
+                    text: "Fully customized event experience",
+                  },
+                ],
+              },
+            ].map(pkg => (
+              <div
+                key={pkg.name}
+                className={`rounded-2xl border p-6 sm:p-7 relative bg-[#FEFAF4] ${pkg.color}`}
+              >
+                {pkg.popular && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-[#F29CB8] text-[#34221D] text-xs font-body font-bold rounded-full">
+                    Most Popular
+                  </span>
+                )}
+                <div
+                  className={`inline-block px-3 py-1.5 rounded-full text-sm font-body font-semibold mb-3 ${pkg.badge}`}
+                >
+                  {pkg.emoji} {pkg.name}
+                </div>
+                <div className="font-display text-3xl font-medium text-[#34221D] mb-3">
+                  {pkg.price}
+                </div>
+                <div className="flex flex-wrap items-baseline gap-1.5 mb-3">
+                  <span className="font-body text-xs font-semibold text-[#AA365D] uppercase tracking-wide">
+                    Best for:
+                  </span>
+                  <span className="font-body text-sm text-[#34221D]/80">
+                    {(pkg as any).bestFor}
+                  </span>
+                </div>
+                <p className="font-body text-[#34221D]/80 text-sm mb-5 leading-relaxed">
+                  {pkg.desc}
+                </p>
+                <ul className="space-y-3">
+                  {pkg.items.map(item => (
+                    <li
+                      key={item.text}
+                      className="flex items-start gap-2 text-sm font-body text-[#34221D]/80 leading-relaxed"
+                    >
+                      <span
+                        className="shrink-0 text-base leading-none mt-0.5"
+                        style={{ color: "initial", opacity: 1, filter: "none" }}
+                      >
+                        {item.emoji}
+                      </span>
+                      {item.text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <p className="text-center font-body text-[#34221D]/80 text-sm mt-6 max-w-3xl mx-auto leading-relaxed">
+            * Prices shown are for studio location (KW). Travel fees apply for
+            offsite events. Second session required for 21+ guests.
+          </p>
+
+          {/* Corporate CTA */}
+          <div className="mt-10 max-w-6xl mx-auto rounded-2xl border border-[#F29CB8]/40 bg-[#FDE9EF] p-6 sm:p-8 flex flex-col md:flex-row items-center gap-5 text-center md:text-left">
+            <div className="text-3xl shrink-0">🏢</div>
+            <div className="flex-1">
+              <p className="font-display font-medium text-[#34221D] text-2xl mb-2">
+                Planning a team wellness day?
+              </p>
+              <p className="font-body text-[#34221D]/80 text-sm">
+                We work with HR teams, universities, law firms, tech companies &
+                wellness committees across Ontario.
+              </p>
+            </div>
+            <a
+              href="#quote-form"
+              className="shrink-0 inline-flex items-center justify-center gap-2 min-h-12 px-5 py-3 bg-[#F29CB8] text-[#34221D] font-body font-semibold text-sm rounded-full hover:bg-[#F29CB8]/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#AA365D] focus-visible:ring-offset-2 transition-colors motion-reduce:transition-none"
+            >
+              Request a Corporate Quote
+            </a>
+          </div>
+        </div>
+      </section>
+
+        <div className="container max-w-7xl py-10 sm:py-12 lg:py-16">
         <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-10 xl:gap-16">
           <section
             aria-labelledby="private-event-quote-title"
@@ -203,13 +401,13 @@ export default function PrivateEventQuote() {
             <p className="font-body text-sm font-semibold uppercase tracking-[0.22em] text-[#AA365D] mb-4">
               Private Events
             </p>
-            <h1
+            <h2
               id="private-event-quote-title"
               className="font-display text-[clamp(2.75rem,5.2vw,4.75rem)] leading-[1.06] font-medium tracking-[-0.035em] text-[#34221D] mb-5 [text-wrap:pretty]"
             >
               Get an Instant{" "}
               <span className="block italic text-[#AA365D]">Quote</span>
-            </h1>
+            </h2>
             <p className="font-body text-[#34221D]/80 text-base sm:text-lg leading-relaxed max-w-lg mb-7 sm:mb-8">
               Tell us about your event and we'll give you a price estimate in
               seconds. No commitment required.
@@ -737,199 +935,9 @@ export default function PrivateEventQuote() {
             </div>
           </section>
         </div>
+        </div>
       </main>
 
-      {/* Package overview */}
-      <section className="py-12 sm:py-16 bg-[#FDE9EF]/35 border-t border-[#F29CB8]/35">
-        <div className="container">
-          <div className="grid lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {[
-              {
-                emoji: "\uD83D\uDC3E",
-                name: "Classic Experience",
-                price: "$1,200-$1,500",
-                bestFor: "Birthdays, girls' days & intimate private events",
-                desc: "Perfect for birthdays, girls' days & intimate wellness experiences.",
-                color: "border-[#F29CB8]/50",
-                badge: "bg-[#FDE9EF] text-[#AA365D]",
-                items: [
-                  {
-                    emoji: "✨",
-                    text: "60-min session: 40 min guided yoga + 20 min puppy playtime",
-                  },
-                  {
-                    emoji: "\uD83D\uDC36",
-                    text: "Puppies + dedicated puppy handlers",
-                  },
-                  {
-                    emoji: "\uD83E\uDDD8",
-                    text: "Professional yoga instructor",
-                  },
-                  {
-                    emoji: "\uD83D\uDCF8",
-                    text: "Group photo + puppy playtime",
-                  },
-                  { emoji: "\uD83D\uDC9B", text: "Basic mats included" },
-                  {
-                    emoji: "\uD83E\uDD64",
-                    text: "Refreshments & wellness treats",
-                  },
-                  { emoji: "\uD83C\uDFB6", text: "Curated music & atmosphere" },
-                  { emoji: "\uD83D\uDC65", text: "Up to 20 guests" },
-                ],
-              },
-              {
-                emoji: "\u2728",
-                name: "Signature Experience",
-                price: "$1,500-$2,250",
-                bestFor:
-                  "Bachelorettes, elevated celebrations & premium content",
-                desc: "Our most popular - for bachelorettes, celebrations & elevated social experiences.",
-                color: "border-[#F29CB8]",
-                badge: "bg-[#F29CB8]/20 text-[#AA365D]",
-                popular: true,
-                items: [
-                  {
-                    emoji: "\uD83D\uDC3E",
-                    text: "Everything in Classic Experience",
-                  },
-                  {
-                    emoji: "\uD83D\uDCF8",
-                    text: "Professional event photography",
-                  },
-                  {
-                    emoji: "\uD83E\uDDD8",
-                    text: "Premium mats & elevated setup",
-                  },
-                  {
-                    emoji: "\u2728",
-                    text: "Enhanced photo moments & event styling",
-                  },
-                  {
-                    emoji: "\uD83D\uDC36",
-                    text: "Extended puppy interaction experience",
-                  },
-                  {
-                    emoji: "\uD83D\uDC9B",
-                    text: "Elevated event atmosphere & setup",
-                  },
-                ],
-              },
-              {
-                emoji: "\uD83D\uDC8E",
-                name: "Luxury Experience",
-                price: "$2,500+",
-                bestFor: "Corporate wellness, brand activations & large groups",
-                desc: "For corporate events, large activations & fully customized luxury experiences.",
-                color: "border-[#F29CB8]/50",
-                badge: "bg-[#FDE9EF] text-[#34221D]",
-                items: [
-                  {
-                    emoji: "\uD83D\uDC8E",
-                    text: "Everything in Signature Experience",
-                  },
-                  {
-                    emoji: "\uD83C\uDFAC",
-                    text: "Professional videography options",
-                  },
-                  {
-                    emoji: "\uD83C\uDF81",
-                    text: "Curated gift bags & branded add-ons",
-                  },
-                  {
-                    emoji: "\uD83D\uDC36",
-                    text: "Larger puppy team & staffing support",
-                  },
-                  {
-                    emoji: "\uD83C\uDF69",
-                    text: "Catering, dessert & wellness vendors",
-                  },
-                  {
-                    emoji: "\u2728",
-                    text: "Fully customized event experience",
-                  },
-                ],
-              },
-            ].map(pkg => (
-              <div
-                key={pkg.name}
-                className={`rounded-2xl border p-6 sm:p-7 relative bg-[#FEFAF4] ${pkg.color}`}
-              >
-                {pkg.popular && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-[#F29CB8] text-[#34221D] text-xs font-body font-bold rounded-full">
-                    Most Popular
-                  </span>
-                )}
-                <div
-                  className={`inline-block px-3 py-1.5 rounded-full text-sm font-body font-semibold mb-3 ${pkg.badge}`}
-                >
-                  {pkg.emoji} {pkg.name}
-                </div>
-                <div className="font-display text-3xl font-medium text-[#34221D] mb-3">
-                  {pkg.price}
-                </div>
-                <div className="flex flex-wrap items-baseline gap-1.5 mb-3">
-                  <span className="font-body text-xs font-semibold text-[#AA365D] uppercase tracking-wide">
-                    Best for:
-                  </span>
-                  <span className="font-body text-sm text-[#34221D]/80">
-                    {(pkg as any).bestFor}
-                  </span>
-                </div>
-                <p className="font-body text-[#34221D]/80 text-sm mb-5 leading-relaxed">
-                  {pkg.desc}
-                </p>
-                <ul className="space-y-3">
-                  {pkg.items.map(item => (
-                    <li
-                      key={item.text}
-                      className="flex items-start gap-2 text-sm font-body text-[#34221D]/80 leading-relaxed"
-                    >
-                      <span
-                        className="shrink-0 text-base leading-none mt-0.5"
-                        style={{ color: "initial", opacity: 1, filter: "none" }}
-                      >
-                        {item.emoji}
-                      </span>
-                      {item.text}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          <p className="text-center font-body text-[#34221D]/80 text-sm mt-6 max-w-3xl mx-auto leading-relaxed">
-            * Prices shown are for studio location (KW). Travel fees apply for
-            offsite events. Second session required for 21+ guests.
-          </p>
-
-          {/* Corporate CTA */}
-          <div className="mt-10 max-w-6xl mx-auto rounded-2xl border border-[#F29CB8]/40 bg-[#FDE9EF] p-6 sm:p-8 flex flex-col md:flex-row items-center gap-5 text-center md:text-left">
-            <div className="text-3xl shrink-0">🏢</div>
-            <div className="flex-1">
-              <p className="font-display font-medium text-[#34221D] text-2xl mb-2">
-                Planning a team wellness day?
-              </p>
-              <p className="font-body text-[#34221D]/80 text-sm">
-                We work with HR teams, universities, law firms, tech companies &
-                wellness committees across Ontario.
-              </p>
-            </div>
-            <a
-              href="#quote-form"
-              onClick={e => {
-                e.preventDefault();
-                document
-                  .querySelector("#quote-form")
-                  ?.scrollIntoView({ behavior: "smooth" });
-              }}
-              className="shrink-0 inline-flex items-center justify-center gap-2 min-h-12 px-5 py-3 bg-[#F29CB8] text-[#34221D] font-body font-semibold text-sm rounded-full hover:bg-[#F29CB8]/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#AA365D] focus-visible:ring-offset-2 transition-colors motion-reduce:transition-none"
-            >
-              Request a Corporate Quote
-            </a>
-          </div>
-        </div>
-      </section>
 
       <Footer />
     </div>
