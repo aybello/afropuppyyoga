@@ -237,26 +237,25 @@ describe("real users are never served the crawler HTML", () => {
 });
 
 /**
- * Corporate crawler copy previously invented upper bounds ($1,800 / $3,500)
- * that users never see. Corporate.tsx shows only "Starting at $1,200" and
- * "Starting at $2,000".
+ * These package bands are now explicitly approved by the owner for testing.
+ * Crawler copy must show the same bands and HST framing as the visible pages.
  */
 describe("corporate pricing matches what users are shown", () => {
-  it("keeps the supported starting prices", () => {
+  it("shows the approved Classic, Signature and Luxury test bands", () => {
     const html = crawl("/corporate-puppy-yoga");
-    expect(html).toContain("$1,200");
-    expect(html).toContain("$2,000");
+    for (const band of ["$1,500-$1,750 + HST", "$2,000-$2,250 + HST", "$2,500-$3,500 + HST"]) expect(html).toContain(band);
   });
 
-  it("does not reintroduce the invented ceilings", () => {
+  it("does not retain old starting prices or the unapproved Classic ceiling", () => {
     const html = crawl("/corporate-puppy-yoga");
+    expect(html).not.toContain("$1,200");
     expect(html).not.toContain("$1,800");
-    expect(html).not.toContain("$3,500");
   });
 
-  it("uses starting-at framing rather than a fabricated range", () => {
+  it("does not turn the advertised Luxury band into a cap on custom events", () => {
     const html = crawl("/corporate-puppy-yoga");
-    expect(html).not.toMatch(/\$1,200[–-]\$1,800/);
-    expect(html).not.toMatch(/\$2,000[–-]\$3,500/);
+    expect(html).toContain("custom quote");
+    expect(html).toContain("may exceed");
+    expect(html).toContain("Off-site travel is quoted separately");
   });
 });

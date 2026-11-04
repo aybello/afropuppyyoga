@@ -40,10 +40,10 @@ describe("same-page private-event packages before the quote form", () => {
     expect(html.indexOf('id="private-event-packages-title"')).toBeLessThan(html.indexOf('id="private-event-quote-title"'));
   });
 
-  it("preserves advertised prices, inclusions, Most Popular label and travel/session guidance", () => {
+  it("shows the approved test bands with HST and separate travel/custom-session guidance", () => {
     const html = render();
     const packages = text(html.slice(html.indexOf('id="private-event-packages"'), html.indexOf('id="private-event-quote-title"')));
-    for (const value of ["$1,200-$1,500", "$1,500-$2,250", "$2,500+", "Most Popular", "Professional event photography", "Basic mats included", "Professional videography options", "Travel fees apply for offsite events.", "Second session required for 21+ guests."]) {
+    for (const value of ["$1,500-$1,750 + HST", "$2,000-$2,250 + HST", "$2,500-$3,500 + HST", "Most Popular", "Professional event photography", "Basic mats included", "Professional videography options", "Off-site travel is quoted separately.", "Groups of 21+ require a custom session plan and quote."]) {
       expect(packages).toContain(value);
     }
   });

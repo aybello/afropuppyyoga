@@ -19,6 +19,7 @@ import {
   REVIEW_METRICS,
 } from "../shared/reviewMetrics";
 import { HOME_SEO_TITLE, HOME_SEO_DESCRIPTION, LOYALTY_SEO_DESCRIPTION, MEMBERSHIP_LOCATION_COPY, PUBLIC_LOCATION_NAMES, PUBLIC_LOCATION_LIST, PUBLIC_LOCATION_FAQ, PUBLIC_SERVICE_DESCRIPTION } from "../shared/publicLocations";
+import { PRIVATE_EVENT_PACKAGE_BANDS, privateEventBandLabel, PRIVATE_EVENT_PRICE_NOTE, PRIVATE_EVENT_TRAVEL_NOTE, PRIVATE_EVENT_CUSTOM_NOTE } from "../shared/privateEventPricing";
 
 // ─── Crawler Detection ────────────────────────────────────────────────────────
 
@@ -130,6 +131,35 @@ const BASE = "https://afropuppyyoga.ca";
 
 const OG_IMAGE =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/og-image_139020fe.png";
+
+const PRIVATE_EVENT_START_PRICE = `$${PRIVATE_EVENT_PACKAGE_BANDS.classic.min.toLocaleString("en-CA")} + HST`;
+const PRIVATE_EVENT_PRICING_COPY = `Events start at ${PRIVATE_EVENT_START_PRICE}. Classic: ${privateEventBandLabel("classic")} for the core studio experience; Signature: ${privateEventBandLabel("signature")} with professional photography and an enhanced setup; Luxury: ${privateEventBandLabel("luxury")} for a customized experience. Standard events are up to 20 guests; groups of 21 or more require a custom quote. ${PRIVATE_EVENT_PRICE_NOTE} Use the quote tool to view an indicative package range or request a custom quote.`;
+const PRIVATE_EVENT_INCLUSIONS_COPY = "The core experience includes guided yoga, a certified instructor and event host, ethically sourced puppies and handlers, mats and props, setup and cleanup, and a curated playlist. Signature adds professional photography and an enhanced setup. Luxury is customized to the agreed scope. Refreshments, merchandise, and other options are not included by default; availability and costs are confirmed in your quote.";
+const PRIVATE_EVENT_PACKAGES_HTML = `
+  <ul>
+    <li><strong>Classic (${privateEventBandLabel("classic")}):</strong> Core studio experience for standard events up to 20 guests</li>
+    <li><strong>Signature (${privateEventBandLabel("signature")}):</strong> Core experience with professional photography and an enhanced setup</li>
+    <li><strong>Luxury (${privateEventBandLabel("luxury")}):</strong> Customized experience with the final scope confirmed in your quote</li>
+  </ul>
+  <p>${PRIVATE_EVENT_PRICE_NOTE} Groups of 21 or more require a custom quote.</p>`;
+
+function privateEventStartingOffer() {
+  return {
+    "@type": "Offer",
+    name: PRIVATE_EVENT_PACKAGE_BANDS.classic.name,
+    url: `${BASE}/private-events/quote`,
+    priceCurrency: "CAD",
+    price: String(PRIVATE_EVENT_PACKAGE_BANDS.classic.min),
+    description: PRIVATE_EVENT_PRICE_NOTE,
+    priceSpecification: {
+      "@type": "PriceSpecification",
+      minPrice: PRIVATE_EVENT_PACKAGE_BANDS.classic.min,
+      maxPrice: PRIVATE_EVENT_PACKAGE_BANDS.classic.max,
+      priceCurrency: "CAD",
+      valueAddedTaxIncluded: false,
+    },
+  };
+}
 
 /** Canonical LocalBusiness schema — synced with client/index.html */
 const LOCAL_BUSINESS_SCHEMA = {
@@ -643,7 +673,7 @@ const PAGES: Record<string, () => string> = {
     buildHtml({
       title: "Corporate Puppy Yoga in Ontario | Team Wellness Events | AfroPuppyYoga",
       description:
-        `Corporate puppy yoga across Ontario. ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Team-building, employee appreciation and puppy cuddles. Request your event quote.`,
+        `Corporate puppy yoga across Ontario from ${PRIVATE_EVENT_START_PRICE}. ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Team wellness events. Request your quote.`,
       canonical: `${BASE}/corporate-puppy-yoga`,
       schema: [
         breadcrumb({ name: "Corporate Puppy Yoga", url: `${BASE}/corporate-puppy-yoga` }),
@@ -656,14 +686,7 @@ const PAGES: Record<string, () => string> = {
           provider: { "@type": "LocalBusiness", name: "AfroPuppyYoga", url: BASE },
           areaServed: { "@type": "State", name: "Ontario" },
           url: `${BASE}/corporate-puppy-yoga`,
-          offers: {
-            "@type": "Offer",
-            url: `${BASE}/private-events/quote`,
-            priceCurrency: "CAD",
-            price: "1200",
-            priceSpecification: { "@type": "PriceSpecification", minPrice: 1200, priceCurrency: "CAD" },
-            availability: "https://schema.org/InStock",
-          },
+          offers: privateEventStartingOffer(),
         },
         {
           "@context": "https://schema.org",
@@ -682,7 +705,7 @@ const PAGES: Record<string, () => string> = {
               name: "How many people can attend a corporate puppy yoga event?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "AfroPuppyYoga accommodates corporate groups from 6 to 50+ guests. We scale the number of puppies, instructors, and Puppy Monitors to match your group size.",
+                text: `AfroPuppyYoga accommodates corporate groups from 6 to 50+ guests, subject to venue and availability. Standard events are up to 20 guests; groups of 21 or more require a custom quote. ${PRIVATE_EVENT_CUSTOM_NOTE}`,
               },
             },
             {
@@ -690,7 +713,7 @@ const PAGES: Record<string, () => string> = {
               name: "Can you come to our office for a corporate puppy yoga event?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: `Yes. We offer offsite corporate events at your office, boardroom, or suitable space across the Greater Toronto Area and ${PUBLIC_LOCATION_LIST}. A travel fee applies for offsite events.`,
+                text: `Yes. We offer offsite corporate events at your office, boardroom, or suitable space across the Greater Toronto Area and ${PUBLIC_LOCATION_LIST}, subject to availability. ${PRIVATE_EVENT_TRAVEL_NOTE}`,
               },
             },
             {
@@ -698,7 +721,15 @@ const PAGES: Record<string, () => string> = {
               name: "How much does a corporate puppy yoga event cost?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "Corporate puppy yoga events start at $1,200 for groups of up to 20 at a studio location. Pricing scales with group size, location, and package tier. Use our instant quote tool at afropuppyyoga.ca/private-events/quote for an accurate estimate.",
+                text: PRIVATE_EVENT_PRICING_COPY,
+              },
+            },
+            {
+              "@type": "Question",
+              name: "What is included in a corporate puppy yoga event?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: PRIVATE_EVENT_INCLUSIONS_COPY,
               },
             },
             {
@@ -748,13 +779,10 @@ const PAGES: Record<string, () => string> = {
   </ul>
 
   <h3>Corporate Package Options</h3>
-  <ul>
-    <li><strong>Team Wellness Session (starting at $1,200):</strong> Up to 20 guests, 60-minute guided session, studio venue, dedicated host</li>
-    <li><strong>Company Event Package (starting at $2,000):</strong> Up to 40 guests, extended session, custom playlist, photography add-on available</li>
-    <li><strong>Premium Brand Collaboration:</strong> Custom experience for 40+ guests, offsite or studio, fully bespoke — contact us for pricing</li>
-  </ul>
+  ${PRIVATE_EVENT_PACKAGES_HTML}
 
   <h3>What's Included</h3>
+  <p>${PRIVATE_EVENT_INCLUSIONS_COPY}</p>
   <ul>
     <li>Certified yoga instructor</li>
     <li>Ethically sourced puppies from registered breeders</li>
@@ -773,11 +801,13 @@ const PAGES: Record<string, () => string> = {
     <dt>What is corporate puppy yoga?</dt>
     <dd>A guided yoga session with ethically sourced puppies, designed for workplace teams. It combines stress relief, light movement, and the proven mood-boosting effects of puppy interaction.</dd>
     <dt>How many people can attend?</dt>
-    <dd>Groups from 6 to 50+. We scale puppies, instructors, and monitors to match your group size.</dd>
+    <dd>Groups from 6 to 50+, subject to venue and availability. Standard events are up to 20 guests; groups of 21 or more require a custom quote. ${PRIVATE_EVENT_CUSTOM_NOTE}</dd>
     <dt>Can you come to our office?</dt>
-    <dd>Yes. We offer offsite events across the GTA and ${PUBLIC_LOCATION_LIST}. A travel fee applies.</dd>
+    <dd>Yes. We offer offsite events across the GTA and ${PUBLIC_LOCATION_LIST}, subject to availability. ${PRIVATE_EVENT_TRAVEL_NOTE}</dd>
     <dt>How much does it cost?</dt>
-    <dd>Events start at $1,200 for up to 20 guests at a studio location. Use our instant quote tool for an accurate estimate.</dd>
+    <dd>${PRIVATE_EVENT_PRICING_COPY}</dd>
+    <dt>What is included?</dt>
+    <dd>${PRIVATE_EVENT_INCLUSIONS_COPY}</dd>
     <dt>Is yoga experience required?</dt>
     <dd>No. Sessions are designed for all fitness levels. The focus is on fun and stress relief, not athletic performance.</dd>
     <dt>Does the music have to be Afrobeats?</dt>
@@ -796,7 +826,7 @@ const PAGES: Record<string, () => string> = {
     buildHtml({
       title: "Private Puppy Yoga Events in Ontario | AfroPuppyYoga",
       description:
-        `Private puppy yoga in Ontario. ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Birthdays, bachelorettes and team events with adorable puppies. Get your event quote.`,
+        `AfroPuppyYoga: ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Private puppy yoga from ${PRIVATE_EVENT_START_PRICE} for birthdays, bachelorettes and teams across Ontario. Request your event quote.`,
       canonical: `${BASE}/private-puppy-yoga-events`,
       schema: [
         breadcrumb({ name: "Private Puppy Yoga Events", url: `${BASE}/private-puppy-yoga-events` }),
@@ -808,13 +838,7 @@ const PAGES: Record<string, () => string> = {
           provider: { "@type": "LocalBusiness", name: "AfroPuppyYoga", url: BASE },
           areaServed: { "@type": "State", name: "Ontario" },
           url: `${BASE}/private-puppy-yoga-events`,
-          offers: {
-            "@type": "Offer",
-            url: `${BASE}/private-events/quote`,
-            priceCurrency: "CAD",
-            price: "1200",
-            availability: "https://schema.org/InStock",
-          },
+          offers: privateEventStartingOffer(),
         },
         {
           "@context": "https://schema.org",
@@ -833,7 +857,15 @@ const PAGES: Record<string, () => string> = {
               name: "How much does a private puppy yoga event cost in Ontario?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: `Private puppy yoga events start at $1,200 for up to 20 guests. We arrange partner venues in ${PUBLIC_LOCATION_LIST}, subject to availability. Pricing varies based on group size, location, and package tier. Use the instant quote tool at afropuppyyoga.ca/private-events/quote for an accurate estimate.`,
+                text: PRIVATE_EVENT_PRICING_COPY,
+              },
+            },
+            {
+              "@type": "Question",
+              name: "What is included in a private puppy yoga event?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: PRIVATE_EVENT_INCLUSIONS_COPY,
               },
             },
             {
@@ -849,7 +881,7 @@ const PAGES: Record<string, () => string> = {
               name: "Can AfroPuppyYoga host a private event at my venue?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: `Yes. We offer offsite private events at your chosen venue across the Greater Toronto Area and ${PUBLIC_LOCATION_LIST}. A travel fee applies for offsite locations.`,
+                text: `Yes. We offer offsite private events at your chosen venue across the Greater Toronto Area and ${PUBLIC_LOCATION_LIST}, subject to availability. ${PRIVATE_EVENT_TRAVEL_NOTE}`,
               },
             },
           ],
@@ -876,13 +908,10 @@ const PAGES: Record<string, () => string> = {
   </ul>
 
   <h3>Package Tiers</h3>
-  <ul>
-    <li><strong>Classic ($1,200–$1,500):</strong> Up to 20 guests, 60-minute session, studio venue</li>
-    <li><strong>Signature:</strong> Extended session, premium add-ons, larger group capacity</li>
-    <li><strong>Luxury / Custom:</strong> Fully bespoke experience for 40+ guests or special requirements</li>
-  </ul>
+  ${PRIVATE_EVENT_PACKAGES_HTML}
 
   <h3>What's Included in Every Private Event</h3>
+  <p>${PRIVATE_EVENT_INCLUSIONS_COPY}</p>
   <ul>
     <li>Certified yoga instructor</li>
     <li>Ethically sourced puppies from registered breeders</li>
@@ -898,7 +927,7 @@ const PAGES: Record<string, () => string> = {
     <li>Hamilton — Colibri Studio, 2751 Barton St E, Hamilton</li>
     <li>Oakville — 1670 North Service Rd E, Oakville</li>
     <li>Guelph — partner venue subject to availability; request a quote to confirm details</li>
-    <li>Offsite — your venue across the GTA and surrounding regions (travel fee applies)</li>
+    <li>Offsite — your venue across the GTA and surrounding regions; travel quoted separately</li>
   </ul>
 
   <h3>Frequently Asked Questions</h3>
@@ -906,11 +935,13 @@ const PAGES: Record<string, () => string> = {
     <dt>What types of private events do you offer?</dt>
     <dd>Birthdays, bachelorettes, corporate wellness days, team-building, baby showers, student group events, and brand activations.</dd>
     <dt>How much does a private event cost?</dt>
-    <dd>Events start at $1,200 for up to 20 guests at a studio location. Use our instant quote tool for an accurate estimate.</dd>
+    <dd>${PRIVATE_EVENT_PRICING_COPY}</dd>
+    <dt>What is included?</dt>
+    <dd>${PRIVATE_EVENT_INCLUSIONS_COPY}</dd>
     <dt>How far in advance should I book?</dt>
     <dd>3–4 weeks for studio events, 4–6 weeks for offsite or large corporate events.</dd>
     <dt>Can you come to my venue?</dt>
-    <dd>Yes. We offer offsite events across the GTA and ${PUBLIC_LOCATION_LIST}. A travel fee applies.</dd>
+    <dd>Yes. We offer offsite events across the GTA and ${PUBLIC_LOCATION_LIST}, subject to availability. ${PRIVATE_EVENT_TRAVEL_NOTE}</dd>
   </dl>
 
   <p><a href="/private-events/quote">Get an Instant Quote</a> | <a href="/corporate-puppy-yoga">Corporate Events</a> | <a href="/birthday">Birthday Packages</a></p>
@@ -1303,13 +1334,22 @@ const PAGES: Record<string, () => string> = {
     buildHtml({
       title: "Private Puppy Yoga Event Quote | AfroPuppyYoga",
       description:
-        "Get an instant quote for a private puppy yoga event with AfroPuppyYoga. Perfect for corporate wellness days, bachelorette parties, birthdays, and team events across Ontario.",
+        `Private puppy yoga events from ${PRIVATE_EVENT_START_PRICE} across Ontario. Explore Classic, Signature and Luxury package ranges, or request a custom quote.`,
       canonical: `${BASE}/private-events/quote`,
       schema: [
         breadcrumb(
           { name: "Private Events", url: `${BASE}/#private-events` },
           { name: "Get a Quote", url: `${BASE}/private-events/quote` }
         ),
+        {
+          "@context": "https://schema.org",
+          "@type": "Service",
+          name: "Private Puppy Yoga Events",
+          url: `${BASE}/private-events/quote`,
+          provider: { "@type": "Organization", name: "AfroPuppyYoga", url: BASE },
+          areaServed: { "@type": "State", name: "Ontario" },
+          offers: privateEventStartingOffer(),
+        },
         {
           "@context": "https://schema.org",
           "@type": "FAQPage",
@@ -1319,7 +1359,7 @@ const PAGES: Record<string, () => string> = {
               name: "How much does a private puppy yoga event cost?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "Private puppy yoga events start at $1,200 for up to 20 guests at a studio location in Kitchener-Waterloo. Pricing varies based on guest count, location, package tier (Classic, Signature, or Luxury), and any travel fees for offsite events. Use our instant quote tool to get an accurate estimate.",
+                text: PRIVATE_EVENT_PRICING_COPY,
               },
             },
             {
@@ -1327,7 +1367,7 @@ const PAGES: Record<string, () => string> = {
               name: "Where can you host a private puppy yoga event?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: `We arrange private events at partner venues in ${PUBLIC_LOCATION_LIST}, subject to availability. We also offer offsite events at your chosen venue across the Greater Toronto Area and surrounding regions. A travel fee applies for offsite locations.`,
+                text: `We arrange private events at partner venues in ${PUBLIC_LOCATION_LIST}, subject to availability. We also offer offsite events at your chosen venue across the Greater Toronto Area and surrounding regions. ${PRIVATE_EVENT_TRAVEL_NOTE}`,
               },
             },
             {
@@ -1335,7 +1375,7 @@ const PAGES: Record<string, () => string> = {
               name: "What is included in a private puppy yoga event?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "All private events include a guided yoga session with certified instructors, ethically sourced puppies supervised by trained Puppy Monitors, Afro-beat music, all mats and props, and a dedicated event host. Add-ons such as photography, refreshments, and merchandise are available.",
+                text: PRIVATE_EVENT_INCLUSIONS_COPY,
               },
             },
             {
@@ -1356,7 +1396,7 @@ const PAGES: Record<string, () => string> = {
 </header>
 <main>
   <h2>Get an Instant Quote for Your Private Puppy Yoga Event</h2>
-  <p>AfroPuppyYoga offers fully customized private puppy yoga events for corporate wellness days, birthday parties, bachelorette parties, baby showers, and team-building events across Ontario. Use our instant quote tool to get an accurate price estimate based on your group size, location, and package preferences.</p>
+  <p>AfroPuppyYoga offers private puppy yoga events for corporate wellness days, birthday parties, bachelorette parties, baby showers, and team-building events across Ontario. Use our quote tool to view an indicative package range or request a custom quote based on your group size, location, and package preferences. Final scope, date, availability, and delivery costs are confirmed before booking.</p>
 
   <h3>Why Book a Private Event?</h3>
   <ul>
@@ -1365,15 +1405,11 @@ const PAGES: Record<string, () => string> = {
     <li>Partner venues in ${PUBLIC_LOCATION_LIST}, subject to availability, or offsite at your venue</li>
     <li>Certified yoga instructors and trained Puppy Monitors included</li>
     <li>Customizable packages: Classic, Signature, and Luxury tiers</li>
-    <li>Add-ons available: photography, refreshments, branded merchandise</li>
+    <li>Professional photography and enhanced setup in Signature; refreshments, branded merchandise, and other options quoted on request</li>
   </ul>
 
   <h3>Private Event Packages</h3>
-  <ul>
-    <li><strong>Classic ($1,200–$1,500):</strong> Up to 20 guests, 60-minute session, studio venue in Kitchener-Waterloo</li>
-    <li><strong>Signature:</strong> Extended session, premium add-ons, larger group capacity</li>
-    <li><strong>Luxury / Custom:</strong> Fully bespoke experience for 40+ guests or special requirements</li>
-  </ul>
+  ${PRIVATE_EVENT_PACKAGES_HTML}
 
   <h3>Who Books Private Events?</h3>
   <p>Our private events are popular with:</p>
@@ -1389,11 +1425,11 @@ const PAGES: Record<string, () => string> = {
   <h3>Frequently Asked Questions</h3>
   <dl>
     <dt>How much does a private event cost?</dt>
-    <dd>Events start at $1,200 for up to 20 guests at a studio location. Pricing varies by guest count, location, and package tier. Use the quote tool on our website for an accurate estimate.</dd>
+    <dd>${PRIVATE_EVENT_PRICING_COPY}</dd>
     <dt>Where can you host a private event?</dt>
-    <dd>We arrange partner venues in ${PUBLIC_LOCATION_LIST}, subject to availability, and offsite across the GTA and surrounding regions. A travel fee applies for offsite events.</dd>
+    <dd>We arrange partner venues in ${PUBLIC_LOCATION_LIST}, subject to availability, and offsite across the GTA and surrounding regions. ${PRIVATE_EVENT_TRAVEL_NOTE}</dd>
     <dt>What is included?</dt>
-    <dd>All events include certified instructors, ethically sourced puppies, Puppy Monitors, Afro-beat music, mats, props, and a dedicated event host. Add-ons are available.</dd>
+    <dd>${PRIVATE_EVENT_INCLUSIONS_COPY}</dd>
     <dt>How far in advance should I book?</dt>
     <dd>We recommend 3–4 weeks for studio events and 4–6 weeks for offsite or large corporate events.</dd>
   </dl>

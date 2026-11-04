@@ -6,6 +6,7 @@ import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { Check, ChevronDown } from "lucide-react";
 import { FIVE_STAR_REVIEW_COUNT } from "../../../shared/reviewMetrics";
 import { PUBLIC_LOCATION_COUNT, PUBLIC_LOCATION_LIST } from "@shared/publicLocations";
+import { PRIVATE_EVENT_PACKAGE_BANDS, privateEventBandLabel, PRIVATE_EVENT_PRICE_NOTE, PRIVATE_EVENT_TRAVEL_NOTE, PRIVATE_EVENT_CUSTOM_NOTE } from "@shared/privateEventPricing";
 
 const trustedByLogos = [
   {
@@ -116,11 +117,11 @@ const whyItWorks = [
 
 const packages = [
   {
-    name: "In-Studio Private Event",
+    name: PRIVATE_EVENT_PACKAGE_BANDS.classic.name,
     icon: "🏛️",
-    bestFor: "Teams of 6–25",
-    desc: `We arrange partner venues in ${PUBLIC_LOCATION_LIST}, subject to availability. Fully private, fully branded to APY. Includes instructor, puppies, mats, and props.`,
-    price: "Starting at $1,200",
+    bestFor: "Standard events · Up to 20 guests",
+    desc: `Our core studio experience for your team. We arrange partner venues in ${PUBLIC_LOCATION_LIST}, subject to availability. Includes instructor, puppies, mats, and props.`,
+    price: privateEventBandLabel("classic"),
     includes: [
       "Certified yoga instructor",
       "Ethically sourced puppies + handlers",
@@ -130,31 +131,31 @@ const packages = [
     cta: "Get a Quote",
   },
   {
-    name: "On-Site Corporate Event",
+    name: PRIVATE_EVENT_PACKAGE_BANDS.signature.name,
     icon: "🏢",
-    bestFor: "Teams of 15–50+",
-    desc: "We bring the experience to your office, venue, or event space. Ideal for employee appreciation days, wellness weeks, and large-group activations.",
-    price: "Starting at $2,000",
+    bestFor: "Standard events · Up to 20 guests",
+    desc: "The core puppy yoga experience with professional photography and an enhanced setup. Ideal for employee appreciation days and wellness weeks. Off-site delivery can be discussed in your quote.",
+    price: privateEventBandLabel("signature"),
     includes: [
-      "Everything in Studio +",
-      "Full setup & teardown at your venue",
-      "Event coordination",
-      "Branded APY experience",
+      "Core puppy yoga experience",
+      "Professional photography",
+      "Enhanced event setup",
+      "Final scope confirmed with your quote",
     ],
     cta: "Get a Quote",
     badge: "Most Requested",
   },
   {
-    name: "Premium Brand Collaboration",
+    name: PRIVATE_EVENT_PACKAGE_BANDS.luxury.name,
     icon: "✨",
-    bestFor: "Brand activations & partnerships",
-    desc: "Co-branded puppy yoga events for product launches, influencer campaigns, and wellness brand partnerships. Custom packages available.",
-    price: "Custom pricing",
+    bestFor: "Customized events & brand collaborations",
+    desc: "A customized puppy yoga experience for celebrations, brand activations, and partnerships. Larger or more complex events require a custom quote and may exceed the advertised range.",
+    price: privateEventBandLabel("luxury"),
     includes: [
-      "Co-branded event design",
-      "Influencer & media coordination",
-      "Custom merchandise options",
-      "Dedicated account manager",
+      "Core puppy yoga experience",
+      "Customized event scope",
+      "Co-branded design options",
+      "Merchandise options quoted on request",
     ],
     cta: "Contact Us",
   },
@@ -163,11 +164,11 @@ const packages = [
 const faqs = [
   {
     q: "How many people can attend a corporate event?",
-    a: "We accommodate groups from 6 to 50+ guests. For very large groups (50+), we can arrange multiple sessions or a larger venue. Contact us to discuss your group size.",
+    a: `We accommodate groups from 6 to 50+ guests, subject to venue and availability. Advertised package bands are for standard events of up to 20 guests. Groups of 21 or more require a custom quote; multiple sessions or a larger venue may be needed. ${PRIVATE_EVENT_CUSTOM_NOTE}`,
   },
   {
     q: "Where can you host corporate events?",
-    a: "We operate across Ontario including Kitchener, Hamilton, Oakville, Toronto, Guelph, and surrounding areas. We can come to your office or arrange space at one of our partner studios.",
+    a: `We operate across Ontario including Kitchener, Hamilton, Oakville, Toronto, Guelph, and surrounding areas. We can come to your office or arrange partner space, subject to availability. ${PRIVATE_EVENT_TRAVEL_NOTE}`,
   },
   {
     q: "Are the puppies safe for a corporate setting?",
@@ -179,7 +180,11 @@ const faqs = [
   },
   {
     q: "What is included in the price?",
-    a: "Every corporate package includes a certified yoga instructor and event host, ethically sourced puppies and handlers, all mats and props, setup and cleanup, a custom curated playlist, and a branded APY experience. Add-ons like photography, refreshments, and branded merchandise are available.",
+    a: "The core experience includes a certified yoga instructor and event host, ethically sourced puppies and handlers, mats and props, setup and cleanup, and a curated playlist. Signature adds professional photography and an enhanced setup. Luxury is customized to the agreed scope. Refreshments, branded merchandise, and other options are not included by default; availability and costs are confirmed in your quote.",
+  },
+  {
+    q: "How much does a corporate puppy yoga event cost?",
+    a: `Corporate events start at $${PRIVATE_EVENT_PACKAGE_BANDS.classic.min.toLocaleString("en-CA")} + HST. Classic: ${privateEventBandLabel("classic")}; Signature: ${privateEventBandLabel("signature")}; Luxury: ${privateEventBandLabel("luxury")}. ${PRIVATE_EVENT_PRICE_NOTE} Use our quote tool for an indicative range and to submit your inquiry.`,
   },
   {
     q: "How far in advance do I need to book?",
@@ -221,7 +226,7 @@ export default function Corporate() {
   useSeoMeta({
     title:
       "Corporate Puppy Yoga Ontario | Team Wellness & Employee Appreciation | AfroPuppyYoga",
-    description: `Corporate puppy yoga across Ontario. ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Team-building, employee appreciation and puppy cuddles. Request your event quote.`,
+    description: `Corporate puppy yoga across Ontario from $${PRIVATE_EVENT_PACKAGE_BANDS.classic.min.toLocaleString("en-CA")} + HST. ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Team wellness events. Request your quote.`,
     canonical: "https://afropuppyyoga.ca/corporate-puppy-yoga",
   });
 
@@ -282,7 +287,7 @@ export default function Corporate() {
           {[
             { stat: "6–50+", label: "Group sizes" },
             { stat: PUBLIC_LOCATION_COUNT, label: "Ontario locations" },
-            { stat: "$1,200", label: "Starting price" },
+            { stat: `$${PRIVATE_EVENT_PACKAGE_BANDS.classic.min.toLocaleString("en-CA")} + HST`, label: "Starting price" },
             { stat: FIVE_STAR_REVIEW_COUNT, label: "Five-Star Reviews" },
           ].map(item => (
             <div key={item.label}>
@@ -469,6 +474,9 @@ export default function Corporate() {
               </div>
             ))}
           </div>
+          <p className="font-body text-[#34221D]/80 text-sm leading-relaxed mt-6 max-w-3xl mx-auto text-center">
+            {PRIVATE_EVENT_PRICE_NOTE} Standard events are up to 20 guests; groups of 21 or more require a custom quote.
+          </p>
         </div>
       </section>
 

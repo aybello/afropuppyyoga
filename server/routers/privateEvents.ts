@@ -16,6 +16,12 @@ import { buildPrivateEventQuoteDraft } from "../privateEventQuote";
 import { normalizeCanadianPhoneNumber } from "@shared/phone";
 import { torontoDateTimeIso } from "../lumaScheduleHelper";
 import { buildPrivateEventSessionPlan } from "../privateEventMultiSession";
+import {
+  PRIVATE_EVENT_PACKAGE_BANDS,
+  PRIVATE_EVENT_PRICE_NOTE,
+  estimatePrivateEventPackage,
+  privateEventBandLabel,
+} from "@shared/privateEventPricing";
 
 const LUMA_BASE = "https://public-api.luma.com/v1";
 const HST_RATE = 0.13;
@@ -490,6 +496,7 @@ function actionDetails(value: Record<string, unknown>) {
 }
 
 const APY_EMAIL = "afropuppyyoga@gmail.com";
+const INQUIRY_PRICING_NOTE = `This is a non-binding package estimate, not a final quote or confirmed booking. ${PRIVATE_EVENT_PRICE_NOTE}`;
 
 /** Escape user-supplied text before interpolating into HTML email templates */
 function escapeHtml(str: string): string {
@@ -513,6 +520,7 @@ function buildInquiryEmailHtml(input: {
   preferredDate: string;
   notes: string;
   estimateStr: string;
+  estimateLabel: string;
 }): string {
   return `
 <!DOCTYPE html>
@@ -565,7 +573,7 @@ function buildInquiryEmailHtml(input: {
               </tr>
               <tr>
                 <td style="padding:10px 0;border-bottom:1px solid #F5E6EC;font-size:14px;color:#9B6B7A;font-weight:600;">Preferred Date</td>
-                <td style="padding:10px 0;border-bottom:1px solid #F5E6EC;font-size:14px;color:#1A0A12;">${input.preferredDate || "Not specified"}</td>
+                <td style="padding:10px 0;border-bottom:1px solid #F5E6EC;font-size:14px;color:#1A0A12;">${escapeHtml(input.preferredDate || "Not specified")}</td>
               </tr>
               <tr>
                 <td style="padding:10px 0;border-bottom:1px solid #F5E6EC;font-size:14px;color:#9B6B7A;font-weight:600;">Notes</td>
@@ -575,8 +583,9 @@ function buildInquiryEmailHtml(input: {
 
             <!-- Estimate highlight -->
             <div style="margin:28px 0;background:#FFF0F5;border-left:4px solid #F2A0B8;border-radius:8px;padding:20px 24px;">
-              <p style="margin:0 0 4px;font-size:12px;color:#9B6B7A;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;">Estimated Quote</p>
-              <p style="margin:0;font-size:26px;font-weight:800;color:#1A0A12;">${input.estimateStr}</p>
+              <p style="margin:0 0 4px;font-size:12px;color:#9B6B7A;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;">${escapeHtml(input.estimateLabel)}</p>
+              <p style="margin:0;font-size:26px;font-weight:800;color:#1A0A12;">${escapeHtml(input.estimateStr)}</p>
+              <p style="margin:8px 0 0;font-size:12px;color:#9B6B7A;line-height:1.6;">${escapeHtml(INQUIRY_PRICING_NOTE)}</p>
             </div>
 
             <p style="margin:0;font-size:14px;color:#9B6B7A;">Reply directly to this email or reach the client at <a href="mailto:${escapeHtml(input.email)}" style="color:#D4708A;">${escapeHtml(input.email)}</a> to follow up.</p>
@@ -603,6 +612,7 @@ function buildCustomerConfirmationHtml(input: {
   packageLabel: string;
   preferredDate: string;
   estimateStr: string;
+  estimateLabel: string;
 }): string {
   return `
 <!DOCTYPE html>
@@ -627,9 +637,9 @@ function buildCustomerConfirmationHtml(input: {
 
             <!-- Estimate highlight -->
             <div style="margin:0 0 28px;background:#FFF0F5;border-left:4px solid #8B2252;border-radius:8px;padding:20px 24px;">
-              <p style="margin:0 0 4px;font-size:12px;color:#9B6B7A;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;">Your Estimate</p>
-              <p style="margin:0;font-size:28px;font-weight:800;color:#1A0A12;">${input.estimateStr}</p>
-              <p style="margin:4px 0 0;font-size:12px;color:#9B6B7A;">This is an estimate based on the details you provided. Final pricing confirmed upon booking.</p>
+              <p style="margin:0 0 4px;font-size:12px;color:#9B6B7A;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;">${escapeHtml(input.estimateLabel)}</p>
+              <p style="margin:0;font-size:28px;font-weight:800;color:#1A0A12;">${escapeHtml(input.estimateStr)}</p>
+              <p style="margin:8px 0 0;font-size:12px;color:#9B6B7A;line-height:1.6;">${escapeHtml(INQUIRY_PRICING_NOTE)}</p>
             </div>
 
             <!-- Summary table -->
@@ -722,50 +732,15 @@ export const privateEventsRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      // ── Server-side quote recalculation (source of truth) ──────────────
-      const BASE_MIN = 1200, BASE_MAX = 1500;
-      const SECOND_SESSION_MIN = 800, SECOND_SESSION_MAX = 1000;
-      const SIGNATURE_UPGRADE = 750;
-      const LUXURY_MIN = 2500;
-      const TRAVEL_FEES: Record<string, number> = {
-        kitchener: 0, waterloo: 0, cambridge: 0, hamilton: 0,
-        guelph: 75, burlington: 100, oakville: 150,
-        mississauga: 175, toronto: 200, brampton: 175, markham: 225, other: 200,
-      };
-      // Derive location key from the label string (lowercase first word)
-      const locationKey = input.location.toLowerCase().split(/[\s,(]/)[0];
-      const travelFee = TRAVEL_FEES[locationKey] ?? 200;
-
-      // Corporate/brand events get a 20% uplift on Signature/Luxury
-      const isCorporate = ["Corporate Wellness", "Brand Activation", "Team Building"].includes(input.eventType);
-
-      let serverMin: number, serverMax: number;
-      if (input.packageType === "luxury" || input.guests > 40) {
-        serverMin = LUXURY_MIN;
-        serverMax = LUXURY_MIN + 2500;
-        if (isCorporate) { serverMin = Math.round(serverMin * 1.2); serverMax = Math.round(serverMax * 1.2); }
-      } else {
-        const sessions = input.guests > 20 ? 2 : 1;
-        serverMin = BASE_MIN + (sessions === 2 ? SECOND_SESSION_MIN : 0) + travelFee;
-        serverMax = BASE_MAX + (sessions === 2 ? SECOND_SESSION_MAX : 0) + travelFee;
-        if (input.packageType === "signature") {
-          serverMin += SIGNATURE_UPGRADE;
-          serverMax += SIGNATURE_UPGRADE;
-        }
-      }
-      // ── End recalculation ───────────────────────────────────────────────
-
-      const packageLabel =
-        input.packageType === "classic"
-          ? "Classic Experience ($1,200-$1,500)"
-          : input.packageType === "signature"
-          ? "Signature Experience ($1,500-$2,250)"
-          : "Luxury Experience ($2,500+)";
-
-      const estimateStr =
-        serverMin > 0
-          ? `$${serverMin.toLocaleString()} - $${serverMax.toLocaleString()} CAD`
-          : "Custom Luxury quote";
+      // Recompute from shared approved test bands, never client-supplied prices.
+      const estimate = estimatePrivateEventPackage({ guests: input.guests, packageType: input.packageType });
+      // Zero/zero marks a custom quote, not a free event or an automatic session price.
+      const serverMin = estimate.requiresCustomQuote ? 0 : estimate.min;
+      const serverMax = estimate.requiresCustomQuote ? 0 : estimate.max;
+      const bandLabel = `${privateEventBandLabel(input.packageType)} CAD`;
+      const packageLabel = `${PRIVATE_EVENT_PACKAGE_BANDS[input.packageType].name} (${bandLabel}${estimate.requiresCustomQuote ? "; selected reference band only" : ""})`;
+      const estimateStr = estimate.requiresCustomQuote ? "Custom quote required" : bandLabel;
+      const estimateLabel = estimate.requiresCustomQuote ? "Custom Quote" : "Indicative Package Range";
 
       // 1. Save to database first (source of truth)
       const db = await getDb();
@@ -803,6 +778,7 @@ export const privateEventsRouter = router({
             preferredDate: input.preferredDate,
             notes: input.notes,
             estimateStr,
+            estimateLabel,
           }),
           text: [
             `NEW PRIVATE EVENT INQUIRY`,
@@ -818,6 +794,7 @@ export const privateEventsRouter = router({
             `Preferred Date: ${input.preferredDate || "Not specified"}`,
             ``,
             `Estimated Quote: ${estimateStr}`,
+            INQUIRY_PRICING_NOTE,
             ``,
             `Notes: ${input.notes || "None"}`,
           ].join("\n"),
@@ -840,6 +817,7 @@ export const privateEventsRouter = router({
             packageLabel,
             preferredDate: input.preferredDate,
             estimateStr,
+            estimateLabel,
           }),
           text: [
             `Hi ${input.name},`,
@@ -847,6 +825,7 @@ export const privateEventsRouter = router({
             `Thanks for reaching out about a private puppy yoga event! We've received your inquiry and will be in touch within 24 hours.`,
             ``,
             `YOUR ESTIMATE: ${estimateStr}`,
+            INQUIRY_PRICING_NOTE,
             ``,
             `Event Type: ${input.eventType}`,
             `Guests: ${input.guests}`,
@@ -907,6 +886,7 @@ export const privateEventsRouter = router({
             `Preferred Date: ${input.preferredDate || "Not specified"}`,
             ``,
             `Estimated Quote: ${estimateStr}`,
+            INQUIRY_PRICING_NOTE,
             ``,
             `Notes: ${input.notes || "None"}`,
           ].join("\n"),
@@ -1017,7 +997,9 @@ export const privateEventsRouter = router({
       }
 
       const { basePriceCents, hstCents, totalCents } = calculatePrivateEventPrice(input.finalPrice, input.pricingType, input.sessions);
-      const needsApproval = privateEventQuoteNeedsApproval(input.finalPrice * input.sessions, inquiry.estimatedMin);
+      // A custom estimate has no numeric floor; an owner must approve its actual terms.
+      const needsApproval = (inquiry.estimatedMin === 0 && inquiry.estimatedMax === 0)
+        || privateEventQuoteNeedsApproval(input.finalPrice * input.sessions, inquiry.estimatedMin);
       const eventVenue = input.customLocation || inquiry.location;
       // Validate Toronto local date/time before any external event is created.
       torontoDateTimeIso(input.eventDate, input.startTime);

@@ -1,12 +1,13 @@
 import LocationPage, { type LocationConfig } from "@/components/LocationPage";
 import { PUBLIC_LOCATION_LIST } from "@shared/publicLocations";
+import { PRIVATE_EVENT_PACKAGE_BANDS, privateEventBandLabel, PRIVATE_EVENT_PRICE_NOTE, PRIVATE_EVENT_TRAVEL_NOTE, PRIVATE_EVENT_CUSTOM_NOTE } from "@shared/privateEventPricing";
 
 const config: LocationConfig = {
   slug: "private-puppy-yoga-events",
   city: "Private Events",
   pageTitle: "Private Puppy Yoga Events Ontario | AfroPuppyYoga",
   metaDescription:
-    `Private puppy yoga for birthdays, bachelorettes and teams in ${PUBLIC_LOCATION_LIST}, Toronto and surrounding areas. Request your event quote.`,
+    `Private puppy yoga from $${PRIVATE_EVENT_PACKAGE_BANDS.classic.min.toLocaleString("en-CA")} + HST for birthdays, bachelorettes and teams across Ontario. Request your event quote.`,
   heroHeadline: "Private Puppy Yoga Events",
   heroSubline:
     "Birthdays, bachelorettes, corporate wellness days, and more — AfroPuppyYoga brings the puppies, the yoga, and the Afrobeats to your private event across Ontario.",
@@ -16,7 +17,7 @@ const config: LocationConfig = {
   venueAddress: "Available across Ontario",
   venueArea: "Kitchener · Hamilton · Oakville · Toronto · Guelph",
   aboutParagraph:
-    "AfroPuppyYoga's private events are Ontario's most unique group wellness experience. Whether you're celebrating a birthday, planning a bachelorette, rewarding your team, or activating your brand — we bring the certified yoga instructor, the ethically sourced puppies, the Afrobeats playlist, and everything else you need. We serve Kitchener, Hamilton, Oakville, Toronto, Guelph, and surrounding areas. Groups from 6 to 50+ welcome. Starting at $1,200.",
+    `AfroPuppyYoga's private events are Ontario's most unique group wellness experience. Whether you're celebrating a birthday, planning a bachelorette, rewarding your team, or activating your brand — we bring the certified yoga instructor, the ethically sourced puppies, and the Afrobeats playlist. We serve Kitchener, Hamilton, Oakville, Toronto, Guelph, and surrounding areas. Groups from 6 to 50+ welcome, with custom quotes for groups above 20. Starting at $${PRIVATE_EVENT_PACKAGE_BANDS.classic.min.toLocaleString("en-CA")} + HST.`,
   scheduleDescription:
     "Available across Ontario — contact us to check your date",
   comingSoon: false,
@@ -39,7 +40,7 @@ const config: LocationConfig = {
     {
       icon: "📍",
       title: "Your Venue or Ours",
-      desc: "We come to you, or you come to us. APY serves Kitchener, Hamilton, Oakville, Toronto, Guelph, and surrounding areas across Ontario.",
+      desc: "We come to you, or you come to us. APY serves Kitchener, Hamilton, Oakville, Toronto, Guelph, and surrounding areas across Ontario. Venue and date availability are confirmed with your quote.",
     },
   ],
   reviews: [
@@ -66,32 +67,32 @@ const config: LocationConfig = {
     {
       question: "What types of private events do you host?",
       answer:
-        "We host birthdays, bachelorettes, baby showers, girls' days, corporate wellness days, team-building events, student group events, brand activations, and more. If it involves a group of people who want to have fun, we can make it work.",
+        "We host birthdays, bachelorettes, baby showers, girls' days, corporate wellness days, team-building events, student group events, brand activations, and more. Tell us about your plans and we'll confirm the scope and availability.",
     },
     {
       question: "How many people can attend a private event?",
       answer:
-        "We accommodate groups from 6 to 50+ guests depending on the venue. Our Classic package starts at 6–15 guests, Signature at 10–25, and Luxury/Corporate at 20–50+.",
+        `We accommodate groups from 6 to 50+ guests depending on the venue and availability. Advertised package bands are for standard events of up to 20 guests. Groups of 21 or more require a custom quote. ${PRIVATE_EVENT_CUSTOM_NOTE}`,
     },
     {
       question: "Where can you host private events?",
       answer:
-        `We arrange event venues in ${PUBLIC_LOCATION_LIST}, Toronto and surrounding areas, subject to availability. We can come to your venue or discuss partner space.`,
+        `We arrange event venues in ${PUBLIC_LOCATION_LIST}, Toronto and surrounding areas, subject to availability. We can come to your venue or discuss partner space. ${PRIVATE_EVENT_TRAVEL_NOTE}`,
     },
     {
       question: "What is included in a private event?",
       answer:
-        "Every private event includes a 45–60 minute guided yoga session with puppies, a certified yoga instructor and event host, all mats and props, cleanup, a custom Afrobeats playlist, and an Afro-inspired ambiance. Add-ons like photography, refreshments, and merchandise are available.",
+        "The core studio experience includes a guided yoga session with puppies, a certified yoga instructor and event host, mats and props, cleanup, and a curated Afrobeats playlist. Signature adds professional photography and an enhanced setup. Luxury is customized to the agreed scope. Refreshments, merchandise, and other options are not included by default and are confirmed in your quote.",
     },
     {
       question: "How much does a private puppy yoga event cost?",
       answer:
-        "Private events start at $1,200 for our Classic package. Pricing depends on group size, location, package type, and any add-ons. Use our instant quote tool to get an estimate in seconds.",
+        `Private events start at $${PRIVATE_EVENT_PACKAGE_BANDS.classic.min.toLocaleString("en-CA")} + HST. Classic: ${privateEventBandLabel("classic")}; Signature: ${privateEventBandLabel("signature")}; Luxury: ${privateEventBandLabel("luxury")}. ${PRIVATE_EVENT_PRICE_NOTE} Use our quote tool for an indicative range and to submit your inquiry.`,
     },
     {
       question: "How do I book a private event?",
       answer:
-        "Click 'Get an Instant Quote' above or visit our Private Event Quote page. Fill in your event details and we'll follow up within 24–48 hours to confirm availability and finalize your booking.",
+        "Click 'Get an Instant Quote' above or visit our Private Event Quote page. Fill in your event details and we'll follow up within 24–48 hours to confirm availability, final scope, and pricing before booking.",
     },
   ],
   schemaAddress: {

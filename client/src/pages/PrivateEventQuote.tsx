@@ -1,15 +1,13 @@
 /* ============================================================
    Private Event Quote Generator — AfroPuppyYoga
-   Pricing logic:
-   - Classic package: $1,200-$1,500 (up to 20 guests, 1 hr, at studio)
-   - 21-40 guests: second session added (+$800-$1,000)
-   - 40+ guests: Luxury / custom quote
-   - Offsite travel fee by city distance from KW
-   - Package upgrades: Classic / Signature / Luxury
+   Shared indicative test bands, plus HST.
+   Final scope/date/delivery confirmed by APY; off-site travel quoted separately.
+   Larger groups receive a custom quote, never an automatic session surcharge.
    ============================================================ */
 import { useState } from "react";
 import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { formatCanadianPhoneNumber, normalizeCanadianPhoneNumber } from "@shared/phone";
+import { estimatePrivateEventPackage, privateEventBandLabel, PRIVATE_EVENT_PRICE_NOTE, PRIVATE_EVENT_TRAVEL_NOTE, PRIVATE_EVENT_CUSTOM_NOTE, type PrivateEventPackageType } from "@shared/privateEventPricing";
 import { publicPortraitUrl } from "@shared/publicPortraits";
 import { recoverPublicPortrait } from "@/lib/publicPortraitRecovery";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -40,29 +38,6 @@ import {
   Mail,
 } from "lucide-react";
 
-// ── Pricing constants ──────────────────────────────────────
-const BASE_MIN = 1200;
-const BASE_MAX = 1500;
-const SECOND_SESSION_MIN = 800;
-const SECOND_SESSION_MAX = 1000;
-const SIGNATURE_UPGRADE = 750; // professional photographer + premium mats + enhanced styling — Signature = BASE_MAX + SIGNATURE_UPGRADE = $2,250
-const LUXURY_MIN = 2500;
-
-// Travel fees by city (one-way distance from KW studio)
-const TRAVEL_FEES: Record<string, number> = {
-  kitchener: 0,
-  cambridge: 0,
-  hamilton: 0,
-  guelph: 75,
-  burlington: 100,
-  oakville: 150,
-  mississauga: 175,
-  toronto: 200,
-  brampton: 175,
-  markham: 225,
-  other: 200,
-};
-
 const EVENT_TYPES = [
   "Corporate Wellness",
   "Birthday Party",
@@ -83,49 +58,6 @@ const LOCATIONS = [
   { value: "other", label: "Other (specify in notes)" },
 ];
 
-// ── Quote calculation ──────────────────────────────────────
-function calculateQuote(
-  guests: number,
-  locationKey: string,
-  packageType: "classic" | "signature" | "luxury"
-): { min: number; max: number; sessions: number; isVip: boolean; breakdown: string[] } {
-  if (packageType === "luxury" || guests > 40) {
-    return {
-      min: LUXURY_MIN,
-      max: LUXURY_MIN + 2500,
-      sessions: Math.ceil(guests / 20),
-      isVip: true,
-      breakdown: ["Fully customized Luxury experience", "Pricing tailored to your event"],
-    };
-  }
-
-  const sessions = guests > 20 ? 2 : 1;
-  const travelFee = TRAVEL_FEES[locationKey] ?? 200;
-  const isOffsite = travelFee > 0;
-
-  let min = BASE_MIN + (sessions === 2 ? SECOND_SESSION_MIN : 0) + travelFee;
-  let max = BASE_MAX + (sessions === 2 ? SECOND_SESSION_MAX : 0) + travelFee;
-
-  if (packageType === "signature") {
-    min += SIGNATURE_UPGRADE;
-    max += SIGNATURE_UPGRADE;
-  }
-
-  const breakdown: string[] = [];
-  breakdown.push(`Classic package (up to 20 guests, 60-min session (40 min yoga + 20 min puppy play), drinks & photos included): $${BASE_MIN}-$${BASE_MAX}`);
-  if (sessions === 2) {
-    breakdown.push(`Second session for ${guests} guests: +$${SECOND_SESSION_MIN}-$${SECOND_SESSION_MAX}`);
-  }
-  if (isOffsite) {
-    breakdown.push(`Travel fee (${LOCATIONS.find((l) => l.value === locationKey)?.label ?? "offsite"}): +$${travelFee}`);
-  }
-  if (packageType === "signature") {
-    breakdown.push(`Signature upgrade (professional photographer, premium mats, enhanced styling): +$${SIGNATURE_UPGRADE}`);
-  }
-
-  return { min, max, sessions, isVip: false, breakdown };
-}
-
 // ── Main component ─────────────────────────────────────────
 export default function PrivateEventQuote() {
   const reduceMotion = useReducedMotion();
@@ -140,7 +72,7 @@ export default function PrivateEventQuote() {
   const [eventType, setEventType] = useState("");
   const [guests, setGuests] = useState("");
   const [locationKey, setLocationKey] = useState("");
-  const [packageType, setPackageType] = useState<"classic" | "signature" | "luxury">("classic");
+  const [packageType, setPackageType] = useState<PrivateEventPackageType>("classic");
   const [preferredDate, setPreferredDate] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -152,7 +84,7 @@ export default function PrivateEventQuote() {
     guestCount >= 5 && locationKey && eventType && packageType;
 
   const quote = quoteReady
-    ? calculateQuote(guestCount, locationKey, packageType)
+    ? estimatePrivateEventPackage({ guests: guestCount, packageType })
     : null;
 
   const submitInquiry = trpc.privateEvents.submitInquiry.useMutation({
@@ -185,8 +117,8 @@ export default function PrivateEventQuote() {
       packageType,
       preferredDate,
       notes,
-      estimatedMin: quote?.min ?? 0,
-      estimatedMax: quote?.max ?? 0,
+      estimatedMin: quote?.requiresCustomQuote ? 0 : quote?.min ?? 0,
+      estimatedMax: quote?.requiresCustomQuote ? 0 : quote?.max ?? 0,
     });
   }
 
@@ -214,9 +146,9 @@ export default function PrivateEventQuote() {
               {
                 emoji: "\uD83D\uDC3E",
                 name: "Classic Experience",
-                price: "$1,200-$1,500",
+                price: privateEventBandLabel("classic"),
                 bestFor: "Birthdays, girls' days & intimate private events",
-                desc: "Perfect for birthdays, girls' days & intimate wellness experiences.",
+                desc: "The core studio experience for birthdays, girls' days and intimate wellness events.",
                 color: "border-[#F29CB8]/50",
                 badge: "bg-[#FDE9EF] text-[#AA365D]",
                 items: [
@@ -248,10 +180,10 @@ export default function PrivateEventQuote() {
               {
                 emoji: "\u2728",
                 name: "Signature Experience",
-                price: "$1,500-$2,250",
+                price: privateEventBandLabel("signature"),
                 bestFor:
                   "Bachelorettes, elevated celebrations & premium content",
-                desc: "Our most popular - for bachelorettes, celebrations & elevated social experiences.",
+                desc: "The core experience with professional photography and an enhanced setup.",
                 color: "border-[#F29CB8]",
                 badge: "bg-[#F29CB8]/20 text-[#AA365D]",
                 popular: true,
@@ -285,9 +217,9 @@ export default function PrivateEventQuote() {
               {
                 emoji: "\uD83D\uDC8E",
                 name: "Luxury Experience",
-                price: "$2,500+",
+                price: privateEventBandLabel("luxury"),
                 bestFor: "Corporate wellness, brand activations & large groups",
-                desc: "For corporate events, large activations & fully customized luxury experiences.",
+                desc: "A more customized experience. Larger or more complex events receive a custom quote above this range.",
                 color: "border-[#F29CB8]/50",
                 badge: "bg-[#FDE9EF] text-[#34221D]",
                 items: [
@@ -301,15 +233,15 @@ export default function PrivateEventQuote() {
                   },
                   {
                     emoji: "\uD83C\uDF81",
-                    text: "Curated gift bags & branded add-ons",
+                    text: "Curated gift bag & branded add-on options",
                   },
                   {
                     emoji: "\uD83D\uDC36",
-                    text: "Larger puppy team & staffing support",
+                    text: "Puppy team & staffing agreed for your scope",
                   },
                   {
                     emoji: "\uD83C\uDF69",
-                    text: "Catering, dessert & wellness vendors",
+                    text: "Catering, dessert & wellness vendor options",
                   },
                   {
                     emoji: "\u2728",
@@ -366,8 +298,7 @@ export default function PrivateEventQuote() {
             ))}
           </div>
           <p className="text-center font-body text-[#34221D]/80 text-sm mt-6 max-w-3xl mx-auto leading-relaxed">
-            * Prices shown are for studio location (KW). Travel fees apply for
-            offsite events. Second session required for 21+ guests.
+            {PRIVATE_EVENT_PRICE_NOTE} Groups of 21+ require a custom session plan and quote.
           </p>
 
           {/* Corporate CTA */}
@@ -586,13 +517,12 @@ export default function PrivateEventQuote() {
                             />
                             {guestCount > 20 && guestCount <= 40 && (
                               <p className="text-sm font-body text-[#AA365D]">
-                                A second session will be added for {guestCount}{" "}
-                                guests.
+                                With {guestCount} guests, we'll confirm a custom session plan and quote.
                               </p>
                             )}
                             {guestCount > 40 && (
                               <p className="text-sm font-body text-[#AA365D]">
-                                For 40+ guests we'll prepare a custom VIP quote.
+                                For larger groups, we'll prepare a custom quote that may exceed the package range.
                               </p>
                             )}
                           </div>
@@ -620,10 +550,9 @@ export default function PrivateEventQuote() {
                                 ))}
                               </SelectContent>
                             </Select>
-                            {locationKey && TRAVEL_FEES[locationKey] > 0 && (
+                            {locationKey && (
                               <p className="text-sm font-body text-[#AA365D]">
-                                Travel fee: +${TRAVEL_FEES[locationKey]} for
-                                this location.
+                                {PRIVATE_EVENT_TRAVEL_NOTE}
                               </p>
                             )}
                           </div>
@@ -694,24 +623,25 @@ export default function PrivateEventQuote() {
                               </span>
                             </div>
 
-                            {quote.isVip ? (
+                            {quote.requiresCustomQuote ? (
                               <div>
                                 <div className="font-display text-[clamp(1.875rem,3vw,2.5rem)] leading-tight font-medium text-[#34221D] [text-wrap:pretty] mb-2">
-                                  $2,500+
+                                  Custom quote required
                                 </div>
                                 <p className="font-body text-[#34221D]/80 text-sm">
-                                  Custom Luxury quote — we'll reach out with a
-                                  fully tailored proposal.
+                                  Selected package reference: {privateEventBandLabel(packageType)} (CAD). This is not an estimate for your larger event.
+                                </p>
+                                <p className="font-body text-[#34221D]/80 text-sm mt-3">
+                                  {PRIVATE_EVENT_CUSTOM_NOTE} {PRIVATE_EVENT_TRAVEL_NOTE} HST applies to the final quote.
                                 </p>
                               </div>
                             ) : (
                               <>
                                 <div className="font-display text-[clamp(1.875rem,3vw,2.5rem)] leading-tight font-medium text-[#34221D] [text-wrap:pretty] mb-1">
-                                  ${quote.min.toLocaleString()} - $
-                                  {quote.max.toLocaleString()}
+                                  {privateEventBandLabel(packageType)}
                                 </div>
                                 <p className="font-body text-[#34221D]/80 text-sm mb-6">
-                                  Estimated price range (CAD)
+                                  Indicative package range (CAD). Not a final quote.
                                 </p>
 
                                 <div className="space-y-3 border-t border-[#AA365D]/20 pt-5">
@@ -731,15 +661,7 @@ export default function PrivateEventQuote() {
                                   ))}
                                 </div>
 
-                                {quote.sessions === 2 && (
-                                  <div className="mt-4 px-4 py-3 bg-[#F29CB8]/10 rounded-xl border border-[#F29CB8]/20">
-                                    <p className="font-body text-[#AA365D] text-sm leading-relaxed">
-                                      With {guestCount} guests, we'll run{" "}
-                                      {quote.sessions} back-to-back sessions so
-                                      everyone gets the full experience.
-                                    </p>
-                                  </div>
-                                )}
+                                <p className="mt-4 font-body text-[#34221D]/80 text-sm leading-relaxed">{PRIVATE_EVENT_CUSTOM_NOTE}</p>
                               </>
                             )}
                           </motion.div>

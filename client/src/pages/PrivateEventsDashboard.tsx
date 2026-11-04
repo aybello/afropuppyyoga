@@ -65,6 +65,7 @@ import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
 import AdminNav from "@/components/AdminNav";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatStoredPrivateEventEstimate, PRIVATE_EVENT_PACKAGE_BANDS } from "@shared/privateEventPricing";
 
 type InquiryStatus = "new" | "contacted" | "confirmed" | "cancelled" | "quote_sent" | "booked";
 
@@ -400,7 +401,7 @@ export default function PrivateEventsDashboard() {
     setQuoteEmailBody(inq.quoteEmailBody || "");
     // Pre-fill booking form from inquiry data
     setBookingForm({
-      finalPrice: inq.finalPriceCents ? String(inq.finalPriceCents / 100) : String(inq.estimatedMax),
+      finalPrice: inq.finalPriceCents ? String(inq.finalPriceCents / 100) : inq.estimatedMax > 0 ? String(inq.estimatedMax) : "",
       pricingType: (inq.pricingType as "plus_hst" | "all_in") || "plus_hst",
       sessions: String(inq.sessions || 1),
       puppyBreed: inq.puppyBreed || "",
@@ -685,7 +686,7 @@ export default function PrivateEventsDashboard() {
                     <span className="font-display font-medium text-foreground text-lg">
                       {inq.finalPriceCents
                         ? `$${(inq.finalPriceCents / 100).toLocaleString()}`
-                        : `$${inq.estimatedMin.toLocaleString()}${inq.estimatedMax > inq.estimatedMin ? `–$${inq.estimatedMax.toLocaleString()}` : "+"}`
+                        : formatStoredPrivateEventEstimate(inq.estimatedMin, inq.estimatedMax)
                       }
                     </span>
                     <ChevronRight size={16} className="text-brand-link group-hover:translate-x-0.5 transition-transform" />
@@ -945,7 +946,7 @@ export default function PrivateEventsDashboard() {
                         <label className="font-body text-xs font-medium text-foreground mb-1 block">{quickForm.pricingType === "plus_hst" ? "Price Per Session Before HST (CAD) *" : "All-In Price Per Session (CAD) *"}</label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm text-foreground">$</span>
-                          <Input type="number" value={quickForm.finalPrice} onChange={(e) => setQuickForm({ ...quickForm, finalPrice: e.target.value })} placeholder="1200" className="border-border font-body pl-7 bg-card focus:bg-white transition-colors" />
+                          <Input type="number" value={quickForm.finalPrice} onChange={(e) => setQuickForm({ ...quickForm, finalPrice: e.target.value })} placeholder={String(PRIVATE_EVENT_PACKAGE_BANDS.classic.min)} className="border-border font-body pl-7 bg-card focus:bg-white transition-colors" />
                         </div>
                       </div>
                       <div>
@@ -1031,7 +1032,7 @@ export default function PrivateEventsDashboard() {
                   ["Guests", String(selectedInquiry.guests)],
                   ["Location", selectedInquiry.location],
                   ["Preferred Date", selectedInquiry.preferredDate || "Not specified"],
-                  ["Estimated Quote", `$${selectedInquiry.estimatedMin.toLocaleString()}–$${selectedInquiry.estimatedMax.toLocaleString()} CAD`],
+                  ["Estimated Quote", formatStoredPrivateEventEstimate(selectedInquiry.estimatedMin, selectedInquiry.estimatedMax)],
                 ].map(([label, value]) => (
                   <div key={label} className="flex justify-between text-sm font-body">
                     <span className="text-foreground font-medium">{label}</span>
@@ -1357,13 +1358,15 @@ export default function PrivateEventsDashboard() {
                   )}
 
                   {/* Approval warning */}
-                  {priceNum > 0 && (combinedQuoteInput < selectedInquiry.estimatedMin || combinedQuoteInput > 3000) && (
+                  {priceNum > 0 && (selectedInquiry.estimatedMin <= 0 || combinedQuoteInput < selectedInquiry.estimatedMin || combinedQuoteInput > 3000) && (
                     <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3">
                       <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
                       <p className="font-body text-xs text-amber-700">
-                        {combinedQuoteInput < selectedInquiry.estimatedMin
-                          ? "Price is below the estimated minimum — owner approval is required before a Luma page can be created."
-                          : "Large event (over $3,000) — owner approval is required before a Luma page can be created."}
+                        {selectedInquiry.estimatedMin <= 0
+                          ? "This custom quote requires owner approval before a Luma page can be created."
+                          : combinedQuoteInput < selectedInquiry.estimatedMin
+                            ? "Price is below the estimated minimum. Owner approval is required before a Luma page can be created."
+                            : "Large event (over $3,000). Owner approval is required before a Luma page can be created."}
                       </p>
                     </div>
                   )}
