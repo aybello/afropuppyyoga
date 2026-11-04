@@ -9,6 +9,7 @@ import LoyaltyProgram from "../client/src/components/sections/LoyaltyProgram";
 
 const read = (file: string) => readFileSync(new URL(`../client/src/${file}`, import.meta.url), "utf8");
 const plainText = (html: string) => html.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+// Extract valid anchors only; the booking CTA assertion also rejects nested interactive tags.
 const anchorsTo = (html: string, path: string) => [...html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)]
   .filter(match => match[1].includes(`href="${path}"`));
 
@@ -71,8 +72,14 @@ describe("reliable cross-page links from the lean public homepage", () => {
       const path = `components/sections/${file}`;
       const source = ts.createSourceFile(path, read(path), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
       for (const node of source.statements) {
-        if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
-          expect(node.moduleSpecifier.text, `${file} must not use history-only cross-page links`).not.toBe("wouter");
+        if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier) && node.moduleSpecifier.text === "wouter") {
+          const bindings = node.importClause?.namedBindings;
+          if (bindings && ts.isNamedImports(bindings)) {
+            for (const binding of bindings.elements) {
+              const importedName = (binding.propertyName ?? binding.name).text;
+              expect(["Link", "Redirect"], `${file} must not use history-only cross-page navigation`).not.toContain(importedName);
+            }
+          }
         }
       }
     }
