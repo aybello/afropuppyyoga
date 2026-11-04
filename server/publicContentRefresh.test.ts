@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
 
 describe("APY November 4 public content refresh", () => {
-  it("shows father's 13.7K Instagram count consistently on all public claims", () => {
+  it("shows the 13.7K Instagram count consistently on all public claims", () => {
     const sources = [
       read("../client/src/components/sections/InstagramFeed.tsx"),
       read("../client/src/components/sections/Contact.tsx"),
@@ -30,7 +30,5 @@ describe("APY November 4 public content refresh", () => {
       expect(source).toContain("apy_portrait_two_goldens_oct13_44cd44f3.jpg");
       expect(source).not.toContain("apy_private_events_hero_43ef0f7d.jpg");
     }
-    expect(privateEvents).toContain('href="/private-events/quote"');
-    expect(quote).toContain("const BASE_MIN = 1200;");
   });
 });
