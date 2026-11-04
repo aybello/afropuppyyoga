@@ -17,7 +17,7 @@
   <!-- Hamilton Location Page -->
   <url>
     <loc>https://afropuppyyoga.ca/puppy-yoga-hamilton</loc>
-    <lastmod>2026-07-09</lastmod>
+    <lastmod>2026-11-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -25,6 +25,13 @@
   <url>
     <loc>https://afropuppyyoga.ca/puppy-yoga-oakville</loc>
     <lastmod>2026-07-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <!-- Guelph Location Page -->
+  <url>
+    <loc>https://afropuppyyoga.ca/puppy-yoga-guelph</loc>
+    <lastmod>2026-11-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>

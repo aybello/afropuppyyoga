@@ -11,6 +11,7 @@ const navGroups = [
       { label: "Kitchener", href: "/puppy-yoga-kitchener", isPage: true },
       { label: "Hamilton", href: "/puppy-yoga-hamilton", isPage: true },
       { label: "Oakville", href: "/puppy-yoga-oakville", isPage: true },
+      { label: "Guelph", href: "/puppy-yoga-guelph", isPage: true },
       { label: "Corporate Events", href: "/corporate-puppy-yoga", isPage: true },
     ],
   },
@@ -60,7 +61,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="font-body text-muted-foreground text-sm leading-relaxed mb-6 max-w-xs">
-              Where wellness meets culture and puppy love. Serving Hamilton, Kitchener, and Oakville with joy, movement, and adorable puppies.
+              Where wellness meets culture and puppy love. Serving Hamilton, Kitchener, Oakville, and Guelph with joy, movement, and adorable puppies.
             </p>
             <a
               href={BOOK_URL}
@@ -139,7 +140,7 @@ export default function Footer() {
               <div>
                 <div className="font-body text-xs text-muted-foreground uppercase tracking-wide mb-1">Locations</div>
                 <div className="font-body text-sm text-muted-foreground">
-                  Hamilton · Kitchener · Oakville
+                  Hamilton · Kitchener · Oakville · Guelph
                 </div>
               </div>
             </div>

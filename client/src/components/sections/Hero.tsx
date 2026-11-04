@@ -41,7 +41,6 @@ const trustedBy = [
 export default function Hero() {
   const [heroImage, setHeroImage] = useState(HERO_PHOTO);
   const [heroImageFailed, setHeroImageFailed] = useState(false);
-  const [logosPaused, setLogosPaused] = useState(false);
 
   const scrollToExperience = () => {
     scrollToHomeSection("#experience");
@@ -59,7 +58,7 @@ export default function Hero() {
             Meets <span className="italic text-[#B83F67]">Puppy Love</span>
           </h1>
           <p className="font-body text-[#66514A] text-base sm:text-lg leading-relaxed max-w-xl mb-8 [text-wrap:pretty]">
-            Guided yoga, Afro-beat rhythms, and adorable puppies — all in one unforgettable session. Serving Hamilton, Kitchener & Oakville.
+            Guided yoga, Afro-beat rhythms, and adorable puppies in one unforgettable session. Serving Hamilton, Kitchener, Oakville & Guelph.
           </p>
           <div className="flex flex-wrap items-center gap-3">
             <a
@@ -131,6 +130,7 @@ export default function Hero() {
               { city: "Kitchener", href: "/puppy-yoga-kitchener" },
               { city: "Hamilton", href: "/puppy-yoga-hamilton" },
               { city: "Oakville", href: "/puppy-yoga-oakville" },
+              { city: "Guelph", href: "/puppy-yoga-guelph" },
             ].map((location) => (
               <a key={location.city} href={location.href} className="inline-flex items-center gap-2 min-h-11 font-body text-sm hover:text-[#B83F67] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B83F67]">
                 {location.city}<span aria-hidden="true">→</span>
@@ -143,21 +143,20 @@ export default function Hero() {
         </div>
       </div>
 
-      <div className="border-b border-[#EBCDD5] bg-[#FEFAF4] py-5">
-        <div className="container flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="shrink-0 flex items-center gap-3 sm:flex-col sm:items-start sm:pr-5 sm:border-r sm:border-[#EBCDD5]">
-            <span className="font-body text-xs font-semibold tracking-[0.14em] uppercase text-[#66514A]">Trusted By</span>
-            <button type="button" aria-label={logosPaused ? "Resume partner logos" : "Pause partner logos"} aria-pressed={logosPaused} onClick={() => setLogosPaused(!logosPaused)} className="min-h-8 px-2 rounded font-body text-xs text-[#66514A] hover:text-[#B83F67] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B83F67] motion-reduce:hidden">
-              {logosPaused ? "Resume" : "Pause"}
-            </button>
+      <section aria-labelledby="trusted-partners-title" className="border-b border-[#EBCDD5] bg-[#FEFAF4] py-5 sm:py-6">
+        <div className="container">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <span className="h-px w-12 sm:w-20 bg-[#EBCDD5]" aria-hidden="true" />
+            <h2 id="trusted-partners-title" className="font-body text-xs font-semibold tracking-[0.2em] uppercase text-brand-link">Trusted By</h2>
+            <span className="h-px w-12 sm:w-20 bg-[#EBCDD5]" aria-hidden="true" />
           </div>
-          <div className="apy-trust-window flex-1 min-w-0 pb-2" role="region" aria-label="Trusted APY partners" tabIndex={0}>
-            <div className="apy-trust-track" style={logosPaused ? { animationPlayState: "paused" } : undefined}>
+          <div className="apy-trust-window min-w-0 rounded-xl" role="region" aria-label="Trusted APY partners" tabIndex={0}>
+            <div className="apy-trust-track">
               {[0, 1].map((copy) => (
                 <div key={copy} className="apy-trust-set" aria-hidden={copy === 1 ? true : undefined}>
                   {trustedBy.map((org) => (
-                    <div key={org.name} className="flex h-[100px] w-[180px] items-center justify-center shrink-0">
-                      <img src={org.src} alt={copy === 0 ? org.name : ""} loading="eager" decoding="async" style={{ height: org.height }} className="w-auto max-w-[180px] object-contain" />
+                    <div key={org.name} className="apy-trust-logo">
+                      <img src={org.src} alt={copy === 0 ? org.name : ""} loading="eager" decoding="async" style={{ height: org.height }} className="w-auto object-contain" />
                     </div>
                   ))}
                 </div>
@@ -165,7 +164,7 @@ export default function Hero() {
             </div>
           </div>
         </div>
-      </div>
+      </section>
     </section>
   );
 }

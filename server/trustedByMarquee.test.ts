@@ -9,7 +9,9 @@ describe("Trusted By strip and approved photo replacement", () => {
   it("renders two equal stable-width partner sets for a seamless loop", () => {
     expect(hero).toContain('[0, 1].map((copy)');
     expect(hero).toContain('className="apy-trust-set"');
-    expect(hero).toContain('w-[180px]');
+    expect(hero).toContain('className="apy-trust-logo"');
+    expect(css).toContain('width: 176px');
+    expect(css).toContain('gap: 0.875rem');
     expect(css).toContain('animation: apyTrustMarquee 60s linear infinite');
     expect(css).toContain('to { transform: translateX(-50%); }');
   });
@@ -24,12 +26,15 @@ describe("Trusted By strip and approved photo replacement", () => {
     expect(hero).toContain('height: 88');
   });
 
-  it("can pause for reading and provides an unanimated scrollable alternative", () => {
+  it("removes the Pause button while keeping hover, keyboard and reduced-motion behavior", () => {
     expect(css).toContain('.apy-trust-window:hover .apy-trust-track');
     expect(css).toContain('.apy-trust-window:focus-within .apy-trust-track');
-    expect(hero).toContain('aria-pressed={logosPaused}');
-    expect(hero).toContain('"Resume partner logos" : "Pause partner logos"');
-    expect(hero).toContain('animationPlayState: "paused"');
+    expect(hero).not.toContain('logosPaused');
+    expect(hero).not.toContain('Pause partner logos');
+    expect(hero).not.toContain('Resume partner logos');
+    expect(hero).toContain('id="trusted-partners-title"');
+    expect(hero).toContain('tabIndex={0}');
+    expect(css).toContain('.apy-trust-window:focus-visible');
     expect(css).toContain('animation-play-state: paused');
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)\s*\{\s*\.apy-trust-window \{ overflow-x: auto; \}\s*\.apy-trust-track \{ animation: none; \}/);
     expect(css).toContain('.apy-trust-set[aria-hidden="true"] { display: none; }');

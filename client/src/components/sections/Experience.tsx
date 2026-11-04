@@ -147,7 +147,7 @@ export default function Experience() {
         <div className="mt-12 md:mt-16 pt-8 border-t border-[#EBCDD5] grid grid-cols-2 md:grid-cols-4 gap-8">
           <StatCounter value={3486} suffix="+" label="Happy Participants" delay={0} />
           <StatCounter value={FIVE_STAR_REVIEW_COUNT} suffix="" label={REVIEW_COUNT_LABEL} delay={0.1} />
-          <StatCounter value={3} suffix="" label="Ontario Locations" delay={0.2} />
+          <StatCounter value={4} suffix="" label="Ontario Locations" delay={0.2} />
           <StatCounter value={100} suffix="%" label="Guest Approval" delay={0.3} />
         </div>
       </div>

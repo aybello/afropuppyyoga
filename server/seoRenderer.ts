@@ -205,6 +205,52 @@ function breadcrumb(
 
 
 const PAGES: Record<string, () => string> = {
+  "/puppy-yoga-guelph": () =>
+    buildHtml({
+      title: "Puppy Yoga Guelph | AfroPuppyYoga",
+      description: `Puppy yoga in Guelph with AfroPuppyYoga. ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Guided movement, Afrobeats and puppy cuddles. See upcoming classes and venue details.`,
+      canonical: `${BASE}/puppy-yoga-guelph`,
+      ogImage: `${BASE}/manus-storage/apy_portrait_chow_cuddle_nov01_52f30f49.jpg`,
+      schema: [
+        breadcrumb({ name: "Puppy Yoga Guelph", url: `${BASE}/puppy-yoga-guelph` }),
+        {
+          "@context": "https://schema.org",
+          "@type": "Service",
+          "@id": `${BASE}/puppy-yoga-guelph#service`,
+          name: "AfroPuppyYoga in Guelph",
+          serviceType: "Puppy yoga",
+          url: `${BASE}/puppy-yoga-guelph`,
+          areaServed: { "@type": "City", name: "Guelph", containedInPlace: { "@type": "State", name: "Ontario" } },
+          provider: { "@type": "Organization", name: "AfroPuppyYoga", url: BASE },
+        },
+      ],
+      body: `
+<header>
+  <nav><a href="/">Home</a> &rsaquo; Guelph</nav>
+  <h1>Puppy Yoga in Guelph</h1>
+</header>
+<main>
+  <p>Guided movement, Afrobeats and puppy cuddles. Enjoy a beginner-friendly AfroPuppyYoga experience in Guelph, Ontario.</p>
+  <p>${FIVE_STAR_REVIEW_COUNT} five-star reviews for AfroPuppyYoga.</p>
+  <p><a href="https://lu.ma/afropuppyyoga">View Upcoming Classes</a> | <a href="/private-events/quote">Request a Private Event Quote</a></p>
+  <h2>Plan Your Visit</h2>
+  <address>Emotion Dance Company, 375 Southgate Drive, Unit 2, Guelph, ON</address>
+  <p>Our current Guelph event listings use Emotion Dance Company. Check the venue, date and arrival details on your selected event before booking. Ticket options and prices are shown on Luma.</p>
+  <h2>What to Expect</h2>
+  <ul><li>Beginner-friendly guided movement</li><li>Puppy cuddles and photo moments</li><li>An Afrobeats soundtrack and a welcoming atmosphere</li></ul>
+  <h2>Moments from AfroPuppyYoga</h2>
+  <img src="/manus-storage/apy_portrait_chow_cuddle_nov01_52f30f49.jpg" alt="Smiling guest cuddling a Chow puppy at AfroPuppyYoga" width="450" height="600" />
+  <h2>Private Events in Guelph</h2>
+  <p>Planning a celebration, team event or group experience? <a href="/private-events/quote">Request a private event quote</a> to discuss your plans.</p>
+  <h2>Frequently Asked Questions</h2>
+  <dl>
+    <dt>Where is the Guelph class held?</dt><dd>Current Guelph classes are listed at Emotion Dance Company, 375 Southgate Drive, Unit 2, Guelph, ON. Check your selected Luma event for its venue and arrival details before booking.</dd>
+    <dt>Do I need yoga experience?</dt><dd>No. Our guided movement is beginner-friendly.</dd>
+    <dt>Can I enquire about a private event?</dt><dd>Yes. Use our private event quote form to discuss a group experience in Guelph.</dd>
+  </dl>
+</main>
+<footer><a href="/">Home</a> | <a href="/puppy-yoga-kitchener">Kitchener</a> | <a href="/puppy-yoga-hamilton">Hamilton</a> | <a href="/puppy-yoga-oakville">Oakville</a> | <a href="/staff-access">Staff Portal</a></footer>`,
+    }),
   "/": () =>
     buildHtml({
       title: "AfroPuppyYoga | Ontario's #1 Puppy Yoga Experience",
@@ -1013,7 +1059,7 @@ const PAGES: Record<string, () => string> = {
     buildHtml({
       title: "Puppy Yoga Hamilton Ontario | AfroPuppyYoga",
       description:
-        `Puppy yoga in Hamilton at Colibri Studio. AfroPuppyYoga has ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Enjoy puppy cuddles and Afro-beat music. Book your class.`,
+        `Puppy yoga in Hamilton at Colibri Studio, 2751 Barton Street East. AfroPuppyYoga has ${FIVE_STAR_REVIEW_COUNT} five-star reviews. See dates and book your class.`,
       canonical: `${BASE}/puppy-yoga-hamilton`,
       schema: [
         breadcrumb({ name: "Puppy Yoga Hamilton", url: `${BASE}/puppy-yoga-hamilton` }),
@@ -1027,9 +1073,10 @@ const PAGES: Record<string, () => string> = {
           telephone: "+12897881885",
           address: {
             "@type": "PostalAddress",
-            streetAddress: "2751 Barton St E",
+            streetAddress: "2751 Barton Street East",
             addressLocality: "Hamilton",
             addressRegion: "ON",
+            postalCode: "L8E 2J8",
             addressCountry: "CA",
           },
           geo: { "@type": "GeoCoordinates", latitude: 43.2255, longitude: -79.7747 },
@@ -1050,7 +1097,7 @@ const PAGES: Record<string, () => string> = {
               name: "Where is AfroPuppyYoga in Hamilton?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "AfroPuppyYoga Hamilton classes are held at Colibri Studio, 2751 Barton St E, Hamilton, ON. The studio is located in east Hamilton with parking available on site.",
+                text: "Our main Hamilton studio is Colibri Studio, 2751 Barton Street East, Hamilton, ON L8E 2J8. Something New, 416 Concession Street, Hamilton, ON L9A 1B9, is a collaboration location for selected events only. Check your selected Luma event's venue before booking.",
               },
             },
             {
@@ -1079,7 +1126,8 @@ const PAGES: Record<string, () => string> = {
 </header>
 <main>
   <h2>Puppy Yoga in Hamilton, Ontario</h2>
-  <p>AfroPuppyYoga brings guided yoga, Afro-beat rhythms, and a litter of adorable puppies to Hamilton. Classes are held at <strong>Colibri Studio, 2751 Barton St E, Hamilton, ON</strong>.</p>
+  <p>AfroPuppyYoga brings guided yoga, Afro-beat rhythms, and a litter of adorable puppies to Hamilton. Our main Hamilton studio is <strong>Colibri Studio, 2751 Barton Street East, Hamilton, ON L8E 2J8</strong>.</p>
+  <p>Something New, 416 Concession Street, Hamilton, ON L9A 1B9, is a collaboration location for selected events only. Check your chosen Luma event's venue before booking.</p>
   <p>Whether you're a seasoned yogi or a complete beginner, our Hamilton classes are designed to be joyful, accessible, and deeply relaxing. All levels welcome — no yoga experience required.</p>
 
   <h3>What to Expect</h3>
@@ -1101,16 +1149,17 @@ const PAGES: Record<string, () => string> = {
 
   <h3>Location</h3>
   <address>
-    Colibri Studio<br />
-    2751 Barton St E<br />
-    Hamilton, ON
+    Colibri Studio (Main Studio)<br />
+    2751 Barton Street East<br />
+    Hamilton, ON L8E 2J8
   </address>
+  <p>Collaboration location: Something New, 416 Concession Street, Hamilton, ON L9A 1B9.</p>
   <p>Easily accessible from Burlington, Stoney Creek, and the greater Hamilton area.</p>
 
   <h3>Frequently Asked Questions</h3>
   <dl>
     <dt>Where is AfroPuppyYoga in Hamilton?</dt>
-    <dd>Colibri Studio, 2751 Barton St E, Hamilton, ON.</dd>
+    <dd>Our main studio is Colibri Studio, 2751 Barton Street East, Hamilton, ON L8E 2J8. Some collaboration events use Something New, 416 Concession Street. Check the venue on your selected event before booking.</dd>
     <dt>How much does it cost?</dt>
     <dd>Ticket prices vary by date and tier. Current prices for each class are shown at checkout on our Luma booking page.</dd>
     <dt>When are classes?</dt>

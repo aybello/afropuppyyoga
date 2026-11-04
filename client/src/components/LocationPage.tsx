@@ -52,6 +52,8 @@ export interface LocationConfig {
   venueAddress: string;
   /** Venue neighbourhood / area descriptor */
   venueArea: string;
+  /** Some cities use more than one event venue. */
+  venues?: { name: string; address: string }[];
   /** Short paragraph about this location (2–3 sentences) */
   aboutParagraph: string;
   /** Typical schedule description */
@@ -272,6 +274,7 @@ export default function LocationPage({ config }: Props) {
               <div className="font-body text-sm leading-relaxed">
                 <p className="font-semibold text-espresso">{config.venueName}</p>
                 <p className="text-muted-foreground">{config.venueAddress}</p>
+                {config.venues && <p className="mt-2 font-medium text-brand-link">Check your selected event's venue before booking.</p>}
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -295,9 +298,22 @@ export default function LocationPage({ config }: Props) {
               <h2 className="apy-heading mb-6">Puppy Yoga in {config.city}</h2>
               <p className="font-body text-muted-foreground text-base leading-relaxed mb-6">{config.aboutParagraph}</p>
               <div className="bg-blush rounded-2xl p-5 border border-border">
-                <div className="font-body text-xs text-brand-link uppercase tracking-widest mb-2">Venue</div>
-                <div className="font-display font-medium text-espresso text-xl mb-1">{config.venueName}</div>
-                <div className="font-body text-sm text-muted-foreground">{config.venueAddress}</div>
+                <div className="font-body text-xs text-brand-link uppercase tracking-widest mb-2">{config.venues ? "Event Venues" : "Venue"}</div>
+                {config.venues ? (
+                  <div className="divide-y divide-primary/20">
+                    {config.venues.map((venue) => (
+                      <div key={venue.name} className="py-3 first:pt-0 last:pb-0">
+                        <div className="font-display font-medium text-espresso text-xl mb-1">{venue.name}</div>
+                        <address className="font-body text-sm text-muted-foreground not-italic">{venue.address}</address>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    <div className="font-display font-medium text-espresso text-xl mb-1">{config.venueName}</div>
+                    <div className="font-body text-sm text-muted-foreground">{config.venueAddress}</div>
+                  </>
+                )}
                 <div className="font-body text-sm text-muted-foreground mt-1">{config.venueArea}</div>
               </div>
             </div>
@@ -553,6 +569,7 @@ export default function LocationPage({ config }: Props) {
               {config.slug !== "puppy-yoga-kitchener" && <a href="/puppy-yoga-kitchener" className="apy-link inline-flex items-center min-h-11 font-body text-sm rounded-sm">Kitchener →</a>}
               {config.slug !== "puppy-yoga-hamilton" && <a href="/puppy-yoga-hamilton" className="apy-link inline-flex items-center min-h-11 font-body text-sm rounded-sm">Hamilton →</a>}
               {config.slug !== "puppy-yoga-oakville" && <a href="/puppy-yoga-oakville" className="apy-link inline-flex items-center min-h-11 font-body text-sm rounded-sm">Oakville →</a>}
+              {config.slug !== "puppy-yoga-guelph" && <a href="/puppy-yoga-guelph" className="apy-link inline-flex items-center min-h-11 font-body text-sm rounded-sm">Guelph →</a>}
             </div>
           </div>
         </div>

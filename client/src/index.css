@@ -278,6 +278,10 @@
 /* Keep all partner logos visible as the requested Trusted By strip moves. */
 .apy-trust-window {
   overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 1.5rem, black calc(100% - 1.5rem), transparent);
+}
+.apy-trust-window:focus-visible {
+  mask-image: none;
 }
 .apy-trust-track {
   display: flex;
@@ -288,8 +292,25 @@
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  gap: 2.25rem;
-  padding-inline-end: 2.25rem;
+  gap: 0.875rem;
+  padding-inline-end: 0.875rem;
+}
+.apy-trust-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 176px;
+  height: 112px;
+  padding: 12px;
+  background: #FFFFFF;
+  border: 1px solid #F0E2E0;
+  border-radius: 14px;
+}
+.apy-trust-logo img {
+  display: block;
+  max-width: 152px;
+  max-height: 88px;
 }
 .apy-trust-window:hover .apy-trust-track,
 .apy-trust-window:focus-within .apy-trust-track {
@@ -302,5 +323,6 @@
 @media (prefers-reduced-motion: reduce) {
   .apy-trust-window { overflow-x: auto; }
   .apy-trust-track { animation: none; }
+  .apy-trust-window { mask-image: none; }
   .apy-trust-set[aria-hidden="true"] { display: none; }
 }

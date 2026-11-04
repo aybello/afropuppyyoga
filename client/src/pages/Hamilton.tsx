@@ -5,18 +5,22 @@ const config: LocationConfig = {
   city: "Hamilton",
   pageTitle: "Puppy Yoga Hamilton | AfroPuppyYoga",
   metaDescription:
-    "Experience puppy yoga in Hamilton at Colibri Studio with AfroPuppyYoga. Guided yoga, Afrobeats music, and adorable puppies in the heart of Hamilton, Ontario. Book your spot now.",
+    "Puppy yoga in Hamilton at Colibri Studio, 2751 Barton Street East. Enjoy guided movement, Afrobeats and puppy cuddles with AfroPuppyYoga. Book your class.",
   heroHeadline: "Puppy Yoga in Hamilton",
   heroSubline:
-    "Your Sunday wellness ritual just got a whole lot cuter. Guided yoga, Afrobeats, and adorable puppies at Colibri Studio in Hamilton.",
+    "Guided yoga, Afrobeats and adorable puppies at our main Hamilton studio, Colibri Studio, 2751 Barton Street East. Check your event listing for any collaboration venue.",
   heroBg:
     "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/apy_hero_bg-aDMPriKGFaJ3ZgQKWVBv5n.webp",
-  venueName: "Colibri Studio",
-  venueAddress: "Hamilton, ON",
-  venueArea: "Hamilton, Ontario",
+  venueName: "Colibri Studio (Main Studio)",
+  venueAddress: "2751 Barton Street East, Hamilton, ON L8E 2J8",
+  venueArea: "Your selected Luma event confirms whether it is at our main studio or a collaboration location.",
+  venues: [
+    { name: "Colibri Studio (Main Studio)", address: "2751 Barton Street East, Hamilton, ON L8E 2J8" },
+    { name: "Something New (Collaboration Location)", address: "416 Concession Street, Hamilton, ON L9A 1B9" },
+  ],
   aboutParagraph:
-    "AfroPuppyYoga brings its signature experience to Hamilton at Colibri Studio — a beautiful, welcoming space that sets the perfect tone for a Sunday wellness session. Each class blends beginner-friendly yoga with a live Afrobeats soundtrack and ethically sourced puppies, creating an atmosphere that's warm, joyful, and unlike anything else in the city. Hamilton is a city that values community and self-care, and APY fits right in.",
-  scheduleDescription: "Regular sessions — check calendar for dates",
+    "Our main Hamilton studio is Colibri Studio at 2751 Barton Street East. Join us for beginner-friendly yoga, Afrobeats and puppy cuddles. We also hold selected collaboration events at Something New, 416 Concession Street. Check your chosen event's venue and date on Luma before planning your visit.",
+  scheduleDescription: "Check the calendar for dates and each event's venue",
   lumaTag: "hamilton",
   comingSoon: false,
   photos: [
@@ -76,12 +80,12 @@ const config: LocationConfig = {
     {
       question: "Where is the Hamilton class held?",
       answer:
-        "Hamilton sessions are hosted at Colibri Studio in downtown Hamilton. The full address is included in your booking confirmation after you register on Luma.",
+        "Our main studio is Colibri Studio, 2751 Barton Street East, Hamilton, ON L8E 2J8. Something New, 416 Concession Street, Hamilton, ON L9A 1B9, is a collaboration location for selected events only. Check the venue on your selected Luma event before booking.",
     },
     {
       question: "Is parking available near Colibri Studio?",
       answer:
-        "Yes, there is street parking and nearby municipal lots in the area. We recommend arriving 10–15 minutes early to find a spot and get settled before class begins.",
+        "Colibri Studio has on-site parking. It is upstairs from Frank's Glass and Mirror, with the entrance on the right. If your class is at Something New, check that event's arrival details instead.",
     },
     {
       question: "Do I need yoga experience to attend?",
@@ -105,13 +109,13 @@ const config: LocationConfig = {
     },
   ],
   schemaAddress: {
-    streetAddress: "",
+    streetAddress: "2751 Barton Street East",
     addressLocality: "Hamilton",
     addressRegion: "ON",
-    postalCode: "L8N",
+    postalCode: "L8E 2J8",
   },
-  lat: 43.2557,
-  lng: -79.8711,
+  lat: 43.2255,
+  lng: -79.7747,
 };
 
 export default function HamiltonPage() {
