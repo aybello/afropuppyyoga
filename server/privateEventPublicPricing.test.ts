@@ -12,6 +12,7 @@ import {
   PRIVATE_EVENT_CUSTOM_NOTE,
 } from "../shared/privateEventPricing";
 import { PUBLIC_LOCATION_LIST } from "../shared/publicLocations";
+import { PRIVATE_EVENT_FORMAT_PRICE_NOTE, PRIVATE_EVENT_CUSTOM_SCOPE_NOTE } from "../shared/privateEventExperience";
 import { seoRenderMiddleware } from "./seoRenderer";
 import { APY_SYSTEM_PROMPT } from "./chatbot-knowledge";
 
@@ -154,7 +155,7 @@ describe("approved private-event public pricing", () => {
       "@type": "Offer",
       price: "1500",
       priceCurrency: "CAD",
-      description: PRIVATE_EVENT_PRICE_NOTE,
+      description: `${PRIVATE_EVENT_PRICE_NOTE} ${PRIVATE_EVENT_FORMAT_PRICE_NOTE} ${PRIVATE_EVENT_CUSTOM_SCOPE_NOTE}`,
       priceSpecification: {
         "@type": "PriceSpecification",
         minPrice: 1500,

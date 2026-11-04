@@ -33,10 +33,11 @@ describe("same-page private-event packages before the quote form", () => {
   it("uses one page heading and keeps the quote heading after package comparison", () => {
     const html = render();
     expect(html.match(/<h1\b/g)).toHaveLength(1);
-    expect(html).toMatch(/<h1\b[^>]*id="private-event-packages-title"/);
+    expect(html).toMatch(/<h1\b[^>]*id="private-event-experiences-title"/);
+    expect(html).toMatch(/<h2\b[^>]*id="private-event-packages-title"/);
     expect(html).toMatch(/<h2\b[^>]*id="private-event-quote-title"/);
     expect(text(html)).toContain("Choose Your Experience");
-    expect(text(html)).toContain("Get an Instant Quote");
+    expect(text(html)).toContain("Plan Your Quote");
     expect(html.indexOf('id="private-event-packages-title"')).toBeLessThan(html.indexOf('id="private-event-quote-title"'));
   });
 
@@ -59,7 +60,7 @@ describe("same-page private-event packages before the quote form", () => {
   it("retains the event/contact fields, package controls and disabled untouched inquiry submission", () => {
     const html = render();
     const quote = html.slice(html.indexOf('id="quote-form"'));
-    for (const value of ["Event Type", "Number of Guests", "Event Location", "Full Name", "Email Address", "Phone Number", "Additional Notes", "Send My Inquiry", "Canadian mobile or local number required."]) expect(text(quote)).toContain(value);
+    for (const value of ["Event Type", "Total expected attendance", "Event Location", "Full Name", "Email Address", "Phone Number", "Additional Notes", "Send My Inquiry", "Canadian mobile or local number required."]) expect(text(quote)).toContain(value);
     expect(quote).toContain('type="email"');
     expect(quote).toContain('type="tel"');
     expect(quote).toContain('type="number"');

@@ -9,7 +9,10 @@ import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { formatCanadianPhoneNumber, normalizeCanadianPhoneNumber } from "@shared/phone";
 import { estimatePrivateEventPackage, privateEventBandLabel, PRIVATE_EVENT_PRICE_NOTE, PRIVATE_EVENT_TRAVEL_NOTE, PRIVATE_EVENT_CUSTOM_NOTE, type PrivateEventPackageType } from "@shared/privateEventPricing";
 import { publicPortraitUrl } from "@shared/publicPortraits";
+import { FIVE_STAR_REVIEW_COUNT } from "@shared/reviewMetrics";
 import { recoverPublicPortrait } from "@/lib/publicPortraitRecovery";
+import { privateEventPreferencesSchema, privateEventScopeRequiresCustomQuote, validatePrivateEventAttendance, PRIVATE_EVENT_EXPERIENCES, PRIVATE_EVENT_SCHEDULES, PRIVATE_EVENT_VENUES, PRIVATE_EVENT_FORMAT_PRICE_NOTE, PRIVATE_EVENT_CUSTOM_SCOPE_NOTE, type PrivateEventPreferences } from "@shared/privateEventExperience";
+import { ExperienceCards, EventPreferencesFields, DEFAULT_EVENT_PREFERENCES, type EventPreferencesDraft } from "@/components/PrivateEventExperience";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,12 +52,12 @@ const EVENT_TYPES = [
 ];
 
 const LOCATIONS = [
-  { value: "kitchener", label: "Kitchener (APY Studio)" },
+  { value: "kitchener", label: "Kitchener" },
   { value: "cambridge", label: "Cambridge" },
   { value: "guelph", label: "Guelph" },
-  { value: "hamilton", label: "Hamilton (APY Studio)" },
+  { value: "hamilton", label: "Hamilton" },
   { value: "burlington", label: "Burlington" },
-  { value: "oakville", label: "Oakville (APY Studio)" },
+  { value: "oakville", label: "Oakville" },
   { value: "other", label: "Other (specify in notes)" },
 ];
 
@@ -63,7 +66,7 @@ export default function PrivateEventQuote() {
   const reduceMotion = useReducedMotion();
   useSeoMeta({
     title: "Private Event Quote | AfroPuppyYoga",
-    description: "Get an instant quote for a private puppy yoga event with AfroPuppyYoga. Perfect for corporate wellness days, bachelorette parties, birthdays, and team events across Ontario.",
+    description: `${FIVE_STAR_REVIEW_COUNT} five-star reviews. Choose private puppy yoga or a puppy play lounge, then share your schedule and venue. See standard studio package ranges or request a custom quote for your full event.`,
     canonical: "https://afropuppyyoga.ca/private-events/quote",
   });
   const [step, setStep] = useState<"form" | "quote" | "submitted">("form");
@@ -73,18 +76,32 @@ export default function PrivateEventQuote() {
   const [guests, setGuests] = useState("");
   const [locationKey, setLocationKey] = useState("");
   const [packageType, setPackageType] = useState<PrivateEventPackageType>("classic");
+  const [helpChoosePackage, setHelpChoosePackage] = useState(false);
+  const [preferencesDraft, setPreferencesDraft] = useState<EventPreferencesDraft>(DEFAULT_EVENT_PREFERENCES);
   const [preferredDate, setPreferredDate] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
 
-  const guestCount = parseInt(guests) || 0;
+  const guestCount = Number(guests) || 0;
+  const eventPreferences: PrivateEventPreferences = {
+    experience: preferencesDraft.experience, schedule: preferencesDraft.schedule, venue: preferencesDraft.venue,
+    packagePreference: helpChoosePackage ? "help_me_choose" : packageType,
+    durationMinutes: Number(preferencesDraft.durationMinutes),
+    ...(preferencesDraft.schedule === "multiple" ? { sessionCount: Number(preferencesDraft.sessionCount), guestsPerSession: Number(preferencesDraft.guestsPerSession) } : {}),
+    ...(preferencesDraft.schedule === "drop_in" ? { concurrentGuests: Number(preferencesDraft.concurrentGuests) } : {}),
+    scheduleNotes: preferencesDraft.scheduleNotes, venueDetails: preferencesDraft.venueDetails,
+  };
+  const parsedPreferences = privateEventPreferencesSchema.safeParse(eventPreferences);
+  const attendanceError = parsedPreferences.success && guestCount > 0 ? validatePrivateEventAttendance(parsedPreferences.data, guestCount) : null;
+  const preferencesReady = parsedPreferences.success && !attendanceError;
+  const packageCardsCustom = privateEventScopeRequiresCustomQuote(eventPreferences) || guestCount > 20;
   const quoteReady =
-    guestCount >= 5 && locationKey && eventType && packageType;
+    Number.isInteger(guestCount) && guestCount >= 5 && guestCount <= 2000 && locationKey && eventType && packageType;
 
   const quote = quoteReady
-    ? estimatePrivateEventPackage({ guests: guestCount, packageType })
+    ? estimatePrivateEventPackage({ guests: guestCount, packageType, eventPreferences })
     : null;
 
   const submitInquiry = trpc.privateEvents.submitInquiry.useMutation({
@@ -98,6 +115,10 @@ export default function PrivateEventQuote() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!quoteReady || !parsedPreferences.success || attendanceError) {
+      toast.error(attendanceError || "Please complete your event format, duration and attendance details.");
+      return;
+    }
     if (!name || !email || !phone) {
       toast.error("Please enter your name, email, and phone number so we can follow up.");
       return;
@@ -114,7 +135,8 @@ export default function PrivateEventQuote() {
       eventType,
       guests: guestCount,
       location: LOCATIONS.find((l) => l.value === locationKey)?.label ?? locationKey,
-      packageType,
+      packageType: helpChoosePackage ? "classic" : packageType,
+      eventPreferences: parsedPreferences.data,
       preferredDate,
       notes,
       estimatedMin: quote?.requiresCustomQuote ? 0 : quote?.min ?? 0,
@@ -127,17 +149,18 @@ export default function PrivateEventQuote() {
       <Navbar />
 
       <main>
+      <ExperienceCards selected={preferencesDraft.experience} onChoose={experience => setPreferencesDraft({ ...preferencesDraft, experience, durationMinutes: experience === "puppy_yoga" && preferencesDraft.schedule === "single" ? "60" : "" })} />
       {/* Package overview */}
-      <section id="private-event-packages" aria-labelledby="private-event-packages-title" className="pt-28 pb-10 sm:pt-32 sm:pb-12 lg:pt-36 bg-[#FDE9EF]/35 border-b border-[#F29CB8]/35">
+      <section id="private-event-packages" aria-labelledby="private-event-packages-title" className="py-10 sm:py-12 bg-[#FDE9EF]/35 border-b border-[#F29CB8]/35">
         <div className="container max-w-6xl mb-8 sm:mb-10">
           <p className="font-body text-sm font-semibold uppercase tracking-[0.22em] text-[#AA365D] mb-3">
             Private Events
           </p>
-          <h1 id="private-event-packages-title" className="font-display text-[clamp(2.5rem,4.5vw,3.75rem)] leading-[1.08] font-medium tracking-[-0.035em] text-[#34221D] mb-4 [text-wrap:pretty]">
-            Choose Your <span className="italic text-[#AA365D]">Experience</span>
-          </h1>
+          <h2 id="private-event-packages-title" className="font-display text-[clamp(2.5rem,4.5vw,3.75rem)] leading-[1.08] font-medium tracking-[-0.035em] text-[#34221D] mb-4 [text-wrap:pretty]">
+            Choose Your <span className="italic text-[#AA365D]">Package Level</span>
+          </h2>
           <p className="font-body text-[#34221D]/80 text-base sm:text-lg leading-relaxed max-w-2xl">
-            Compare our private-event packages, then use the quote form below to share your event details.
+            Classic is the core experience, Signature adds professional photography and enhanced setup, and Luxury is more customized. These price bands are for standard studio puppy yoga, not every format.
           </p>
         </div>
         <div className="container">
@@ -265,7 +288,7 @@ export default function PrivateEventQuote() {
                   {pkg.emoji} {pkg.name}
                 </div>
                 <div className="font-display text-3xl font-medium text-[#34221D] mb-3">
-                  {pkg.price}
+                  {packageCardsCustom ? "Custom event quote" : pkg.price}
                 </div>
                 <div className="flex flex-wrap items-baseline gap-1.5 mb-3">
                   <span className="font-body text-xs font-semibold text-[#AA365D] uppercase tracking-wide">
@@ -276,10 +299,10 @@ export default function PrivateEventQuote() {
                   </span>
                 </div>
                 <p className="font-body text-[#34221D]/80 text-sm mb-5 leading-relaxed">
-                  {pkg.desc}
+                  {preferencesDraft.experience === "puppy_lounge" ? (pkg.name === "Classic Experience" ? "The core supervised puppy lounge, with scope and staffing agreed for your event." : pkg.name === "Signature Experience" ? "The puppy lounge with professional photography and an enhanced setup, quoted for your scope." : "A more customized puppy lounge, with styling, content and add-on options agreed in your quote.") : pkg.desc}
                 </p>
                 <ul className="space-y-3">
-                  {pkg.items.map(item => (
+                  {(preferencesDraft.experience === "puppy_lounge" ? (pkg.name === "Classic Experience" ? [{ emoji: "", text: "Supervised puppy interaction without guided yoga" }, { emoji: "", text: "Puppies and dedicated handlers" }, { emoji: "", text: "Capacity, operating hours and puppy rest agreed for your scope" }] : pkg.items.filter(item => !/mats|Extended puppy interaction/.test(item.text))) : pkg.items).map(item => (
                     <li
                       key={item.text}
                       className="flex items-start gap-2 text-sm font-body text-[#34221D]/80 leading-relaxed"
@@ -298,7 +321,7 @@ export default function PrivateEventQuote() {
             ))}
           </div>
           <p className="text-center font-body text-[#34221D]/80 text-sm mt-6 max-w-3xl mx-auto leading-relaxed">
-            {PRIVATE_EVENT_PRICE_NOTE} Groups of 21+ require a custom session plan and quote.
+            {PRIVATE_EVENT_FORMAT_PRICE_NOTE} {PRIVATE_EVENT_PRICE_NOTE} Groups of 21+ require a custom session plan and quote.
           </p>
 
           {/* Corporate CTA */}
@@ -333,12 +356,11 @@ export default function PrivateEventQuote() {
               id="private-event-quote-title"
               className="font-display text-[clamp(2.75rem,5.2vw,4.75rem)] leading-[1.06] font-medium tracking-[-0.035em] text-[#34221D] mb-5 [text-wrap:pretty]"
             >
-              Get an Instant{" "}
+              Plan Your{" "}
               <span className="block italic text-[#AA365D]">Quote</span>
             </h2>
             <p className="font-body text-[#34221D]/80 text-base sm:text-lg leading-relaxed max-w-lg mb-7 sm:mb-8">
-              Tell us about your event and we'll give you a price estimate in
-              seconds. No commitment required.
+              Tell us about your experience, schedule and venue. See a standard studio package range or request a custom quote for the full event. No commitment required.
             </p>
             <div className="max-w-lg aspect-[5/4] lg:aspect-[4/5] overflow-hidden rounded-t-[48%] rounded-b-[2rem] bg-[#FDE9EF] border border-[#F29CB8]/30">
               <img
@@ -417,7 +439,7 @@ export default function PrivateEventQuote() {
                           { step: "1", text: "We review your event details" },
                           {
                             step: "2",
-                            text: "We confirm puppy & instructor availability",
+                            text: "We confirm the venue, puppy team and any instructor needed",
                           },
                           {
                             step: "3",
@@ -456,15 +478,14 @@ export default function PrivateEventQuote() {
                       <div className="inline-flex items-center gap-2 text-[#AA365D] mb-3">
                         <Calculator size={16} className="text-[#AA365D]" />
                         <span className="font-body text-sm font-semibold text-[#AA365D]">
-                          Instant Estimate
+                          Event Estimate
                         </span>
                       </div>
                       <h2 className="font-display text-2xl sm:text-3xl font-medium text-[#34221D] mb-2 [text-wrap:pretty]">
                         Tell Us About Your Event
                       </h2>
                       <p className="font-body text-[#34221D]/80">
-                        Fill in the details below to see your estimated price
-                        range instantly.
+                        Choose your format first. Standard studio sessions show a range; other formats receive a custom event quote.
                       </p>
                     </div>
 
@@ -476,6 +497,7 @@ export default function PrivateEventQuote() {
                           Event Details
                         </h3>
 
+                        <EventPreferencesFields value={preferencesDraft} onChange={setPreferencesDraft} />
                         <div className="grid sm:grid-cols-2 gap-x-5 gap-y-6">
                           <div className="space-y-2">
                             <Label className="font-body text-sm font-semibold text-[#34221D]">
@@ -504,12 +526,15 @@ export default function PrivateEventQuote() {
 
                           <div className="space-y-2">
                             <Label className="font-body text-sm font-semibold text-[#34221D]">
-                              Number of Guests *
+                              Total expected attendance *
                             </Label>
                             <Input
+                              id="event-total-guests"
+                              aria-label="Total expected attendance"
                               type="number"
                               min="5"
-                              max="200"
+                              max="2000"
+                              step="1"
                               placeholder="e.g. 25"
                               value={guests}
                               onChange={e => setGuests(e.target.value)}
@@ -573,7 +598,7 @@ export default function PrivateEventQuote() {
                         {/* Package selector */}
                         <div className="space-y-3">
                           <Label className="font-body text-sm font-semibold text-[#34221D]">
-                            Package *
+                            Preferred package level
                           </Label>
                           <div className="grid grid-cols-3 gap-2 sm:gap-3">
                             {(["classic", "signature", "luxury"] as const).map(
@@ -581,10 +606,10 @@ export default function PrivateEventQuote() {
                                 <button
                                   key={pkg}
                                   type="button"
-                                  onClick={() => setPackageType(pkg)}
-                                  aria-pressed={packageType === pkg}
+                                  onClick={() => { setPackageType(pkg); setHelpChoosePackage(false); }}
+                                  aria-pressed={!helpChoosePackage && packageType === pkg}
                                   className={`min-h-12 py-3 px-2 rounded-xl border font-body font-semibold text-[13px] sm:text-sm capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#AA365D] focus-visible:ring-offset-2 motion-reduce:transition-none ${
-                                    packageType === pkg
+                                    !helpChoosePackage && packageType === pkg
                                       ? "border-[#AA365D] bg-[#FDE9EF] text-[#34221D]"
                                       : "border-[#AA365D]/70 bg-[#FEFAF4] text-[#34221D]/80 hover:border-[#AA365D] hover:bg-[#FDE9EF]/50"
                                   }`}
@@ -594,6 +619,10 @@ export default function PrivateEventQuote() {
                               )
                             )}
                           </div>
+                          <button type="button" data-package-help aria-pressed={helpChoosePackage} onClick={() => setHelpChoosePackage(!helpChoosePackage)} className="min-h-12 px-4 py-3 rounded-xl border border-[#AA365D]/60 bg-[#FEFAF4] text-[#34221D] text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#AA365D]">Help me choose</button>
+                          <p className="text-sm text-[#34221D]/70">This is a preference, not a confirmed package or booking price.</p>
+                          {attendanceError && <p role="alert" className="text-sm text-[#AA365D]">{attendanceError}</p>}
+                          {!parsedPreferences.success && <p className="text-sm text-[#34221D]/70">Complete the duration and any required session or simultaneous-attendance fields before sending.</p>}
                         </div>
                       </div>
 
@@ -629,10 +658,10 @@ export default function PrivateEventQuote() {
                                   Custom quote required
                                 </div>
                                 <p className="font-body text-[#34221D]/80 text-sm">
-                                  Selected package reference: {privateEventBandLabel(packageType)} (CAD). This is not an estimate for your larger event.
+                                  Preferred package level: {helpChoosePackage ? "Help me choose" : packageType.charAt(0).toUpperCase() + packageType.slice(1)}. No package price is confirmed for this format.
                                 </p>
                                 <p className="font-body text-[#34221D]/80 text-sm mt-3">
-                                  {PRIVATE_EVENT_CUSTOM_NOTE} {PRIVATE_EVENT_TRAVEL_NOTE} HST applies to the final quote.
+                                  {PRIVATE_EVENT_CUSTOM_SCOPE_NOTE} {PRIVATE_EVENT_CUSTOM_NOTE}
                                 </p>
                               </div>
                             ) : (
@@ -664,6 +693,9 @@ export default function PrivateEventQuote() {
                                 <p className="mt-4 font-body text-[#34221D]/80 text-sm leading-relaxed">{PRIVATE_EVENT_CUSTOM_NOTE}</p>
                               </>
                             )}
+                            <p className="font-body text-sm text-[#34221D]/80 mt-4 border-t border-[#AA365D]/20 pt-4" aria-live="polite">
+                              {PRIVATE_EVENT_EXPERIENCES[eventPreferences.experience].name} · {PRIVATE_EVENT_SCHEDULES[eventPreferences.schedule]} · {PRIVATE_EVENT_VENUES[eventPreferences.venue]} · {guestCount} attendees
+                            </p>
                           </motion.div>
                         )}
                       </AnimatePresence>
@@ -768,6 +800,7 @@ export default function PrivateEventQuote() {
                           <Textarea
                             placeholder="Tell us more about your event — theme, special requests, accessibility needs, etc."
                             value={notes}
+                            maxLength={5000}
                             onChange={e => setNotes(e.target.value)}
                             className="h-12 md:h-12 w-full min-w-0 bg-[#FEFAF4] text-base md:text-base text-[#34221D] border-[#AA365D]/70 focus:border-[#AA365D] focus-visible:border-[#AA365D] focus-visible:ring-[#AA365D]/20 rounded-xl placeholder:text-[#34221D]/60 min-h-[128px] resize-none"
                           />
@@ -778,6 +811,8 @@ export default function PrivateEventQuote() {
                         type="submit"
                         disabled={
                           !quoteReady ||
+                          !preferencesReady ||
+                          !normalizeCanadianPhoneNumber(phone) ||
                           !name ||
                           !email ||
                           submitInquiry.isPending

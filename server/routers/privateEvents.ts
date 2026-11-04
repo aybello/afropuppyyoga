@@ -23,6 +23,14 @@ import {
   privateEventBandLabel,
   isCustomPrivateEventEstimate,
 } from "@shared/privateEventPricing";
+import {
+  PRIVATE_EVENT_FORMAT_PRICE_NOTE,
+  formatPrivateEventPreferences,
+  privateEventPreferencesSchema,
+  validatePrivateEventAttendance,
+  storePrivateEventScope,
+  readStoredPrivateEventScope,
+} from "@shared/privateEventExperience";
 
 const LUMA_BASE = "https://public-api.luma.com/v1";
 const HST_RATE = 0.13;
@@ -82,14 +90,26 @@ const APY_PRIVATE_COVER = "https://images.lumacdn.com/event-covers/up/fc92575f-4
 const APY_TINT_COLOR = "#9B2335";
 
 /** Build a personalized Luma event description based on event type */
-function buildEventDescription(params: {
+export function buildEventDescription(params: {
   eventType: string;
   orgName: string;
   guests: number;
   sessions: number;
   breed: string;
+  eventScopeNotes?: string;
 }): string {
   const { eventType, orgName, guests, sessions, breed } = params;
+  if (params.eventScopeNotes) {
+    const scope = params.eventScopeNotes.split("\n\nClient notes:")[0];
+    return [
+      "## Your Private AfroPuppyYoga Event",
+      `Prepared for ${orgName}. Expected total attendance: ${guests}.`,
+      "", "### Event scope for review", scope,
+      "", "One combined payment covers the agreed event. Format, operating hours or session schedule, capacity, setup, staffing, room resets and puppy rest arrangements are confirmed with APY.",
+      "A lounge-only event does not include a guided yoga class unless separately agreed. Puppies are supervised throughout the event.",
+      "", "### Contact APY", "Email: afropuppyyoga@gmail.com", "Phone: +1 (289) 788-1885",
+    ].join("\n");
+  }
   const sessionText = sessions > 1 ? `${sessions} sessions` : "a private session";
 
   // Personalized header and "Why" section based on event type
@@ -404,6 +424,7 @@ function buildStoredPrivateEventQuote(inquiry: PrivateEventInquiry, eventUrl: st
     pricingType: prepared.pricingType,
     eventUrl,
     puppyBreed: inquiry.puppyBreed,
+    eventScopeNotes: readStoredPrivateEventScope(inquiry.notes),
   });
 }
 
@@ -411,12 +432,14 @@ async function publishPrivateEvent(inquiry: PrivateEventInquiry) {
   const prepared = requirePreparedPrivateEvent(inquiry);
   const orgName = inquiry.organization || inquiry.name;
   const breed = inquiry.puppyBreed || "adorable puppies";
+  const eventScopeNotes = readStoredPrivateEventScope(inquiry.notes);
   const description = buildEventDescription({
     eventType: inquiry.eventType,
     orgName,
     guests: inquiry.guests,
     sessions: inquiry.sessions || 1,
     breed,
+    eventScopeNotes,
   });
   const sessionPlan = buildPrivateEventSessionPlan({
     startTime: prepared.startTime,
@@ -424,14 +447,14 @@ async function publishPrivateEvent(inquiry: PrivateEventInquiry) {
     sessions: inquiry.sessions || 1,
   });
   const scheduleDescription = sessionPlan.length > 1
-    ? `${description}\n\n---\n\n## 📅 Your Included Time Slots\n${sessionPlan.map(slot => `• Session ${slot.sessionNumber}: ${slot.startTime} to ${slot.endTime}`).join("\n")}\n\nOne combined payment covers both sessions. There is a 30-minute break between them.`
+    ? `${description}\n\n---\n\n## 📅 Your Included Time Slots\n${sessionPlan.map(slot => `• Session ${slot.sessionNumber}: ${slot.startTime} to ${slot.endTime}`).join("\n")}\n\n${eventScopeNotes ? "One combined payment covers all included time slots. Reset and puppy rest periods follow the agreed schedule." : "One combined payment covers both sessions. There is a 30-minute break between them."}`
     : description;
   const created: Array<{ eventId: string; eventUrl: string; sessionNumber: number; startTime: string; endTime: string; paymentMode: "combined_checkout" | "included" }> = [];
   try {
     for (const slot of sessionPlan) {
       const isCheckoutClass = slot.paymentMode === "combined_checkout";
       const createdEvent = await createLumaEvent({
-        name: sessionPlan.length > 1 ? `${orgName} — Private PuppyYoga (Session ${slot.sessionNumber} of ${sessionPlan.length})` : `${orgName} — Private PuppyYoga`,
+        name: eventScopeNotes ? (sessionPlan.length > 1 ? `${orgName} - Private APY Event (Session ${slot.sessionNumber} of ${sessionPlan.length})` : `${orgName} - Private APY Event`) : (sessionPlan.length > 1 ? `${orgName} — Private PuppyYoga (Session ${slot.sessionNumber} of ${sessionPlan.length})` : `${orgName} — Private PuppyYoga`),
         startAt: torontoDateTimeIso(prepared.eventDate, slot.startTime),
         endAt: torontoDateTimeIso(prepared.eventDate, slot.endTime),
         location: prepared.venue,
@@ -497,7 +520,7 @@ function actionDetails(value: Record<string, unknown>) {
 }
 
 const APY_EMAIL = "afropuppyyoga@gmail.com";
-const INQUIRY_PRICING_NOTE = `This is a non-binding package estimate, not a final quote or confirmed booking. ${PRIVATE_EVENT_PRICE_NOTE}`;
+const INQUIRY_PRICING_NOTE = `This is a non-binding package estimate, not a final quote or confirmed booking. ${PRIVATE_EVENT_PRICE_NOTE} ${PRIVATE_EVENT_FORMAT_PRICE_NOTE}`;
 
 /** Escape user-supplied text before interpolating into HTML email templates */
 function escapeHtml(str: string): string {
@@ -522,6 +545,7 @@ function buildInquiryEmailHtml(input: {
   notes: string;
   estimateStr: string;
   estimateLabel: string;
+  preferencesSummary?: string;
 }): string {
   return `
 <!DOCTYPE html>
@@ -582,6 +606,11 @@ function buildInquiryEmailHtml(input: {
               </tr>
             </table>
 
+            ${input.preferencesSummary ? `<div style="margin:24px 0;">
+              <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#8B2252;">Experience &amp; Format Preferences</p>
+              <p style="margin:0;font-size:14px;color:#4A2535;line-height:1.6;white-space:pre-wrap;">${escapeHtml(input.preferencesSummary)}</p>
+            </div>` : ""}
+
             <!-- Estimate highlight -->
             <div style="margin:28px 0;background:#FFF0F5;border-left:4px solid #F2A0B8;border-radius:8px;padding:20px 24px;">
               <p style="margin:0 0 4px;font-size:12px;color:#9B6B7A;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;">${escapeHtml(input.estimateLabel)}</p>
@@ -614,6 +643,8 @@ function buildCustomerConfirmationHtml(input: {
   preferredDate: string;
   estimateStr: string;
   estimateLabel: string;
+  preferencesSummary?: string;
+  notes?: string;
 }): string {
   return `
 <!DOCTYPE html>
@@ -634,7 +665,7 @@ function buildCustomerConfirmationHtml(input: {
         <tr>
           <td style="padding:36px 40px;">
             <p style="margin:0 0 20px;font-size:16px;color:#3D1A2E;">Hi <strong>${escapeHtml(input.name)}</strong>,</p>
-            <p style="margin:0 0 24px;font-size:15px;color:#4A2535;line-height:1.6;">Thanks for reaching out about a private puppy yoga event! We've received your inquiry and will be in touch within <strong>24 hours</strong> with availability and a formal quote.</p>
+            <p style="margin:0 0 24px;font-size:15px;color:#4A2535;line-height:1.6;">Thanks for reaching out about a ${input.preferencesSummary ? "private puppy experience" : "private puppy yoga event"}! We've received your inquiry and will be in touch within <strong>24 hours</strong> with availability and a formal quote.</p>
 
             <!-- Estimate highlight -->
             <div style="margin:0 0 28px;background:#FFF0F5;border-left:4px solid #8B2252;border-radius:8px;padding:20px 24px;">
@@ -667,6 +698,12 @@ function buildCustomerConfirmationHtml(input: {
                 <td style="padding:8px 0;border-bottom:1px solid #F5E6EC;font-size:13px;color:#1A0A12;">${escapeHtml(input.preferredDate)}</td>
               </tr>` : ""}
             </table>
+
+            ${input.preferencesSummary ? `<div style="margin:0 0 28px;">
+              <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#8B2252;">Experience &amp; Format Preferences</p>
+              <p style="margin:0;font-size:14px;color:#4A2535;line-height:1.6;white-space:pre-wrap;">${escapeHtml(input.preferencesSummary)}</p>
+              ${input.notes ? `<p style="margin:12px 0 0;font-size:14px;color:#4A2535;white-space:pre-wrap;">Notes: ${escapeHtml(input.notes)}</p>` : ""}
+            </div>` : ""}
 
             <!-- What happens next -->
             <div style="background:#FFF5F9;border-radius:12px;padding:20px 24px;margin-bottom:28px;">
@@ -727,21 +764,44 @@ export const privateEventsRouter = router({
         packageType: z.enum(["classic", "signature", "luxury"]),
         preferredDate: z.string().optional().default(""),
         notes: z.string().optional().default(""),
+        eventPreferences: privateEventPreferencesSchema.optional(),
         // estimatedMin/Max from client are ignored — server recalculates below
         estimatedMin: z.number().optional(),
         estimatedMax: z.number().optional(),
       })
     )
     .mutation(async ({ input }) => {
+      if (input.eventPreferences) {
+        // Bound the new attendance contract without reinterpreting legacy inputs.
+        if (!Number.isInteger(input.guests) || input.guests > 2000) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Enter a whole-number attendance between 1 and 2000 guests." });
+        }
+        const attendanceError = validatePrivateEventAttendance(input.eventPreferences, input.guests);
+        if (attendanceError) throw new TRPCError({ code: "BAD_REQUEST", message: attendanceError });
+        const expectedPackage = input.eventPreferences.packagePreference === "help_me_choose"
+          ? "classic" : input.eventPreferences.packagePreference;
+        if (input.packageType !== expectedPackage) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Package preference must match the selected package level." });
+        }
+      }
+
       // Recompute from shared approved test bands, never client-supplied prices.
-      const estimate = estimatePrivateEventPackage({ guests: input.guests, packageType: input.packageType });
+      const estimate = estimatePrivateEventPackage({ guests: input.guests, packageType: input.packageType, eventPreferences: input.eventPreferences });
       // Zero/zero marks a custom quote, not a free event or an automatic session price.
       const serverMin = estimate.requiresCustomQuote ? 0 : estimate.min;
       const serverMax = estimate.requiresCustomQuote ? 0 : estimate.max;
       const bandLabel = `${privateEventBandLabel(input.packageType)} CAD`;
-      const packageLabel = `${PRIVATE_EVENT_PACKAGE_BANDS[input.packageType].name} (${bandLabel}${estimate.requiresCustomQuote ? "; selected reference band only" : ""})`;
+      const packageLabel = input.eventPreferences?.packagePreference === "help_me_choose"
+        ? "Help me choose"
+        : input.eventPreferences && estimate.requiresCustomQuote
+          ? PRIVATE_EVENT_PACKAGE_BANDS[input.packageType].name
+          : `${PRIVATE_EVENT_PACKAGE_BANDS[input.packageType].name} (${bandLabel}${estimate.requiresCustomQuote ? "; selected reference band only" : ""})`;
       const estimateStr = estimate.requiresCustomQuote ? "Custom quote required" : bandLabel;
       const estimateLabel = estimate.requiresCustomQuote ? "Custom Quote" : "Indicative Package Range";
+      const preferencesSummary = input.eventPreferences ? formatPrivateEventPreferences(input.eventPreferences) : undefined;
+      const storedNotes = preferencesSummary
+        ? storePrivateEventScope(preferencesSummary, input.notes)
+        : input.notes;
 
       // 1. Save to database first (source of truth)
       const db = await getDb();
@@ -755,7 +815,7 @@ export const privateEventsRouter = router({
         location: input.location,
         packageType: input.packageType,
         preferredDate: input.preferredDate || null,
-        notes: input.notes || null,
+        notes: storedNotes || null,
         estimatedMin: serverMin,
         estimatedMax: serverMax,
       });
@@ -780,6 +840,7 @@ export const privateEventsRouter = router({
             notes: input.notes,
             estimateStr,
             estimateLabel,
+            preferencesSummary,
           }),
           text: [
             `NEW PRIVATE EVENT INQUIRY`,
@@ -798,6 +859,7 @@ export const privateEventsRouter = router({
             INQUIRY_PRICING_NOTE,
             ``,
             `Notes: ${input.notes || "None"}`,
+            ...(preferencesSummary ? [``, preferencesSummary] : []),
           ].join("\n"),
         });
       } catch (e) {
@@ -819,11 +881,13 @@ export const privateEventsRouter = router({
             preferredDate: input.preferredDate,
             estimateStr,
             estimateLabel,
+            preferencesSummary,
+            notes: input.notes,
           }),
           text: [
             `Hi ${input.name},`,
             ``,
-            `Thanks for reaching out about a private puppy yoga event! We've received your inquiry and will be in touch within 24 hours.`,
+            `Thanks for reaching out about a ${preferencesSummary ? "private puppy experience" : "private puppy yoga event"}! We've received your inquiry and will be in touch within 24 hours.`,
             ``,
             `YOUR ESTIMATE: ${estimateStr}`,
             INQUIRY_PRICING_NOTE,
@@ -833,6 +897,7 @@ export const privateEventsRouter = router({
             `Location: ${input.location}`,
             `Package: ${packageLabel}`,
             input.preferredDate ? `Preferred Date: ${input.preferredDate}` : "",
+            ...(preferencesSummary ? [preferencesSummary, input.notes ? `Notes: ${input.notes}` : ""] : []),
             ``,
             `Questions? Reply to this email or reach us at afropuppyyoga@gmail.com`,
             ``,
@@ -852,7 +917,7 @@ export const privateEventsRouter = router({
             action: "inquiry_submitted",
             actorName: input.name,
             actorEmail: input.email,
-            details: actionDetails({ estimatedMin: serverMin, estimatedMax: serverMax, packageType: input.packageType }),
+            details: actionDetails({ estimatedMin: serverMin, estimatedMax: serverMax, packageType: input.packageType, ...(input.eventPreferences ? { eventPreferences: input.eventPreferences } : {}) }),
           }),
           db.insert(communicationsLog).values({
             entityType: "private_event",
@@ -890,6 +955,7 @@ export const privateEventsRouter = router({
             INQUIRY_PRICING_NOTE,
             ``,
             `Notes: ${input.notes || "None"}`,
+            ...(preferencesSummary ? [``, preferencesSummary] : []),
           ].join("\n"),
         });
       } catch (e) {
@@ -971,7 +1037,8 @@ export const privateEventsRouter = router({
         inquiryId: z.number(),
         finalPrice: z.number().min(1), // in dollars (CAD)
         pricingType: z.enum(["plus_hst", "all_in"]),
-        sessions: z.number().min(1).default(1),
+        priceBasis: z.enum(["per_session", "event_total"]).optional().default("per_session"),
+        sessions: z.number().int().min(1).max(100).default(1),
         puppyBreed: z.string().optional(),
         organization: z.string().optional(),
         eventDate: z.string(), // ISO date string e.g. "2026-08-08"
@@ -997,10 +1064,12 @@ export const privateEventsRouter = router({
         throw new TRPCError({ code: "PRECONDITION_FAILED", message: "A sent or booked quote cannot be replaced from this control." });
       }
 
-      const { basePriceCents, hstCents, totalCents } = calculatePrivateEventPrice(input.finalPrice, input.pricingType, input.sessions);
+      // A combined event amount is already the full price; sessions still describe the real schedule.
+      const pricingSessions = input.priceBasis === "event_total" ? 1 : input.sessions;
+      const { basePriceCents, hstCents, totalCents } = calculatePrivateEventPrice(input.finalPrice, input.pricingType, pricingSessions);
       // A custom estimate has no numeric floor; an owner must approve its actual terms.
       const needsApproval = isCustomPrivateEventEstimate(inquiry.estimatedMin, inquiry.estimatedMax)
-        || privateEventQuoteNeedsApproval(input.finalPrice * input.sessions, inquiry.estimatedMin);
+        || privateEventQuoteNeedsApproval(input.finalPrice * pricingSessions, inquiry.estimatedMin);
       const eventVenue = input.customLocation || inquiry.location;
       // Validate Toronto local date/time before any external event is created.
       torontoDateTimeIso(input.eventDate, input.startTime);
@@ -1047,7 +1116,7 @@ export const privateEventsRouter = router({
         actorUserId: ctx.user.id,
         actorName: ctx.user.name,
         actorEmail: ctx.user.email,
-        details: actionDetails({ basePriceCents, hstCents, totalCents, pricingType: input.pricingType }),
+        details: actionDetails({ basePriceCents, hstCents, totalCents, pricingType: input.pricingType, ...(input.priceBasis === "event_total" ? { priceBasis: input.priceBasis } : {}) }),
       });
 
       if (needsApproval) {

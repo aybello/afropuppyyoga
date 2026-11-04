@@ -12,6 +12,7 @@ import { FIVE_STAR_REVIEW_COUNT, REVIEW_METRICS } from "../../../shared/reviewMe
 import { publicPortraitUrl } from "@shared/publicPortraits";
 import { recoverPublicPortrait } from "@/lib/publicPortraitRecovery";
 import { PRIVATE_EVENT_PACKAGE_BANDS, privateEventBandLabel, PRIVATE_EVENT_PRICE_NOTE } from "@shared/privateEventPricing";
+import { PRIVATE_EVENT_EXPERIENCES, PRIVATE_EVENT_SCHEDULES, PRIVATE_EVENT_VENUES, PRIVATE_EVENT_FORMAT_PRICE_NOTE, PRIVATE_EVENT_CUSTOM_SCOPE_NOTE } from "@shared/privateEventExperience";
 
 /* Shared city template: presentation changes only. Location configuration,
    schema, booking attribution, calendar filters and checkout events stay intact. */
@@ -189,7 +190,7 @@ export default function LocationPage({ config }: Props) {
           "@type": "Service",
           "@id": `${canonicalUrl}#service`,
           name: "Private Puppy Yoga Events",
-          description: config.metaDescription,
+          description: `${PRIVATE_EVENT_EXPERIENCES.puppy_yoga.description} ${PRIVATE_EVENT_EXPERIENCES.puppy_lounge.name}: ${PRIVATE_EVENT_EXPERIENCES.puppy_lounge.description} ${PRIVATE_EVENT_FORMAT_PRICE_NOTE} ${PRIVATE_EVENT_CUSTOM_SCOPE_NOTE}`,
           url: canonicalUrl,
           areaServed: { "@type": "State", name: "Ontario" },
           provider: { "@type": "Organization", name: "AfroPuppyYoga", url: "https://afropuppyyoga.ca" },
@@ -198,7 +199,7 @@ export default function LocationPage({ config }: Props) {
             url: "https://afropuppyyoga.ca/private-events/quote",
             price: String(PRIVATE_EVENT_PACKAGE_BANDS.classic.min),
             priceCurrency: "CAD",
-            description: PRIVATE_EVENT_PRICE_NOTE,
+            description: `${PRIVATE_EVENT_PRICE_NOTE} ${PRIVATE_EVENT_FORMAT_PRICE_NOTE} ${PRIVATE_EVENT_CUSTOM_SCOPE_NOTE}`,
             priceSpecification: {
               "@type": "PriceSpecification",
               minPrice: PRIVATE_EVENT_PACKAGE_BANDS.classic.min,
@@ -265,6 +266,11 @@ export default function LocationPage({ config }: Props) {
                 <div className="inline-flex items-center gap-2 bg-blush border border-border rounded-full px-6 py-3">
                   <span className="font-body font-semibold text-espresso text-sm">🐾 Coming Soon to {config.city}</span>
                 </div>
+              ) : isPrivateEventPage ? (
+                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
+                  <a href="/private-events/quote#private-event-experiences" className="apy-primary-action min-h-12 px-7">Choose Your Experience <ArrowRight className="w-4 h-4 shrink-0" aria-hidden="true" /></a>
+                  <a href="/private-events/quote" className="inline-flex items-center justify-center min-h-12 px-6 py-3 border border-border text-espresso font-body font-medium text-sm rounded-full hover:bg-blush transition-colors motion-reduce:transition-none">Request a Quote</a>
+                </div>
               ) : (
                 <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3">
                   <a
@@ -325,7 +331,7 @@ export default function LocationPage({ config }: Props) {
             </div>
             <div className="flex items-start gap-3">
               <Users className="w-5 h-5 text-brand-link shrink-0 mt-1" aria-hidden="true" />
-              <span className="font-body text-sm text-espresso leading-relaxed">{isPrivateEventPage ? "Standard events · Up to 20 guests; larger groups quoted separately" : "Small groups · Max 20 guests"}</span>
+              <span className="font-body text-sm text-espresso leading-relaxed">{isPrivateEventPage ? "Standard studio yoga · Up to 20 guests; larger groups quoted separately" : "Small groups · Max 20 guests"}</span>
             </div>
           </div>
         </div>
@@ -336,8 +342,8 @@ export default function LocationPage({ config }: Props) {
         <div className="container max-w-5xl">
           <div className="grid md:grid-cols-2 gap-10 lg:gap-16 items-start">
             <div>
-              <p className="apy-eyebrow mb-3">About This Location</p>
-              <h2 className="apy-heading mb-6">Puppy Yoga in {config.city}</h2>
+              <p className="apy-eyebrow mb-3">{isPrivateEventPage ? "Your Private Event" : "About This Location"}</p>
+              <h2 className="apy-heading mb-6">{isPrivateEventPage ? "Choose Your Experience" : `Puppy Yoga in ${config.city}`}</h2>
               <p className="font-body text-muted-foreground text-base leading-relaxed mb-6">{config.aboutParagraph}</p>
               <div className="bg-blush rounded-2xl p-5 border border-border">
                 <div className="font-body text-xs text-brand-link uppercase tracking-widest mb-2">{config.venues ? "Event Venues" : "Venue"}</div>
@@ -359,7 +365,24 @@ export default function LocationPage({ config }: Props) {
                 <div className="font-body text-sm text-muted-foreground mt-1">{config.venueArea}</div>
               </div>
             </div>
-            <div className="divide-y divide-border">
+            {isPrivateEventPage ? (
+              <div className="bg-white rounded-2xl border border-border p-6 sm:p-8">
+                <div className="divide-y divide-border">
+                  {Object.values(PRIVATE_EVENT_EXPERIENCES).map((experience) => (
+                    <div key={experience.name} className="py-5 first:pt-0">
+                      <h3 className="font-display font-medium text-espresso text-2xl mb-3">{experience.name}</h3>
+                      <p className="font-body text-base text-muted-foreground leading-relaxed">{experience.description}</p>
+                    </div>
+                  ))}
+                </div>
+                <h3 className="font-display font-medium text-espresso text-xl mb-3">Then choose your schedule and venue</h3>
+                <p className="font-body text-base text-muted-foreground leading-relaxed mb-3">Schedule is separate from the experience: {Object.values(PRIVATE_EVENT_SCHEDULES).join("; ")}.</p>
+                <p className="font-body text-base text-muted-foreground leading-relaxed mb-3">{PRIVATE_EVENT_VENUES.studio}, subject to availability, or {PRIVATE_EVENT_VENUES.client_venue.toLowerCase()}. Setup, room resets, capacity and puppy rest are confirmed in the agreed scope.</p>
+                <p className="font-body text-sm text-muted-foreground leading-relaxed mb-5">Lounge, multiple sessions, drop-in rotations, off-site events, nonstandard durations and help choosing receive a full custom quote — never a multiplied package price.</p>
+                <a href="/private-events/quote#private-event-experiences" className="apy-primary-action min-h-12 w-full">Choose Your Experience</a>
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
               {[
                 { icon: "🧘", title: "40-Min Guided Yoga", desc: "Beginner-friendly flow led by a certified instructor to a live Afrobeats soundtrack." },
                 { icon: "🐶", title: "20-Min Puppy Play", desc: "Free-roam puppy playtime — cuddle, pet, and take photos with the adorable pups after class." },
@@ -374,7 +397,8 @@ export default function LocationPage({ config }: Props) {
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -383,8 +407,8 @@ export default function LocationPage({ config }: Props) {
       <section className="apy-section bg-white border-y border-border">
         <div className="container max-w-5xl">
           <div className="mb-10 max-w-2xl">
-            <p className="apy-eyebrow mb-3">Why {config.city}?</p>
-            <h2 className="apy-heading">Why Try Puppy Yoga<br /><span className="italic text-brand-link">in {config.city}?</span></h2>
+            <p className="apy-eyebrow mb-3">{isPrivateEventPage ? "Made for Your Group" : `Why ${config.city}?`}</p>
+            <h2 className="apy-heading">{isPrivateEventPage ? "A Puppy Experience" : "Why Try Puppy Yoga"}<br /><span className="italic text-brand-link">{isPrivateEventPage ? "for Your Occasion" : `in ${config.city}?`}</span></h2>
           </div>
           <div className="grid sm:grid-cols-2 gap-x-10 gap-y-8">
             {config.whyReasons.map((reason) => (
@@ -396,11 +420,11 @@ export default function LocationPage({ config }: Props) {
             ))}
           </div>
           <div className="mt-10 bg-blush rounded-2xl p-6 sm:p-8 border border-border">
-            <h3 className="font-display font-medium text-espresso text-2xl mb-5">What's Included in Every Session</h3>
+            <h3 className="font-display font-medium text-espresso text-2xl mb-5">{isPrivateEventPage ? "Standard Private Puppy Yoga Includes" : "What's Included in Every Session"}</h3>
             <div className="grid sm:grid-cols-2 gap-4">
               {[
-                "40 minutes of guided yoga with puppies",
-                "20 minutes of dedicated puppy playtime",
+                isPrivateEventPage ? "Approximately 40 minutes of guided yoga with puppies" : "40 minutes of guided yoga with puppies",
+                isPrivateEventPage ? "Approximately 20 minutes of dedicated puppy playtime" : "20 minutes of dedicated puppy playtime",
                 ...(isPrivateEventPage ? ["Mats, props, and a dedicated event host"] : ["Complimentary refreshments"]),
                 "Afrobeats music & vibrant atmosphere",
                 "Group photo at the end",
@@ -412,6 +436,7 @@ export default function LocationPage({ config }: Props) {
                 </div>
               ))}
             </div>
+            {isPrivateEventPage && <p className="font-body text-sm text-muted-foreground leading-relaxed mt-5">Puppy Play & Wellness Lounge is supervised puppy interaction without guided yoga. Lounge inclusions and delivery are confirmed in your custom quote.</p>}
           </div>
         </div>
       </section>
@@ -433,7 +458,7 @@ export default function LocationPage({ config }: Props) {
       )}
 
       {/* 4. The original live Luma embed, including city tag and attribution. */}
-      {!config.comingSoon && (
+      {!config.comingSoon && !isPrivateEventPage && (
         <section className="apy-section bg-blush border-y border-border">
           <div className="container max-w-5xl">
             <div className="max-w-2xl mb-8">
@@ -493,8 +518,8 @@ export default function LocationPage({ config }: Props) {
           <div className="grid md:grid-cols-2 gap-10 lg:gap-16 items-start">
             <div>
               <p className="apy-eyebrow mb-3">Private Events</p>
-              <h2 className="apy-heading mb-5">Host a Private Event<br /><span className="italic text-brand-link">in {config.city}</span></h2>
-              <p className="font-body text-muted-foreground text-base leading-relaxed mb-6">Birthdays, bachelorettes, corporate wellness days, team-building events — AfroPuppyYoga brings the puppies, the yoga, and the Afrobeats to your private event. Groups from 6 to 50+ welcome, with custom quotes for groups above 20.</p>
+              <h2 className="apy-heading mb-5">Host a Private Event<br /><span className="italic text-brand-link">{isPrivateEventPage ? "across Ontario" : `in ${config.city}`}</span></h2>
+              <p className="font-body text-muted-foreground text-base leading-relaxed mb-6">Birthdays, bachelorettes, corporate wellness days, team-building events — choose guided puppy yoga or supervised puppy play without yoga. Groups from 6 to 50+ welcome, subject to venue and availability, with custom quotes for groups above 20.</p>
               <ul className="space-y-3 mb-8">
                 {["Birthday parties & bachelorettes", "Corporate wellness & team-building", "Student group events & brand activations", `Private events starting at $${PRIVATE_EVENT_PACKAGE_BANDS.classic.min.toLocaleString("en-CA")} + HST`, ...(isPrivateEventPage ? [`Classic: ${privateEventBandLabel("classic")} — core studio experience`, `Signature: ${privateEventBandLabel("signature")} — professional photography and enhanced setup`, `Luxury: ${privateEventBandLabel("luxury")} — customized experience`] : [])].map((item) => (
                   <li key={item} className="flex items-start gap-3">
@@ -503,7 +528,9 @@ export default function LocationPage({ config }: Props) {
                   </li>
                 ))}
               </ul>
+              <p className="font-body text-muted-foreground text-sm leading-relaxed mb-3">{PRIVATE_EVENT_FORMAT_PRICE_NOTE}</p>
               <p className="font-body text-muted-foreground text-sm leading-relaxed mb-6">{PRIVATE_EVENT_PRICE_NOTE}</p>
+              {isPrivateEventPage && <p className="font-body text-muted-foreground text-sm leading-relaxed mb-6">{PRIVATE_EVENT_CUSTOM_SCOPE_NOTE}</p>}
               <div className="flex flex-col gap-3">
                 <a href="/private-events/quote" className="apy-primary-action min-h-12">Get a Private Event Quote</a>
                 <a href="/corporate-puppy-yoga" className="inline-flex items-center justify-center min-h-12 px-6 py-3 border border-border text-espresso font-body font-medium text-sm rounded-full hover:bg-blush transition-colors motion-reduce:transition-none">Corporate Events →</a>
@@ -583,9 +610,11 @@ export default function LocationPage({ config }: Props) {
       {/* 8. Final booking action */}
       <section className="apy-section bg-blush border-t border-border text-center">
         <div className="container max-w-3xl">
-          <h2 className="apy-heading mb-5">Ready to Join Us in {config.city}?</h2>
-          <p className="font-body text-muted-foreground text-base leading-relaxed mb-8 max-w-2xl mx-auto">Spots are limited and sessions sell out. Book your mat now and experience Ontario's #1 puppy yoga studio.</p>
-          {config.comingSoon ? (
+          <h2 className="apy-heading mb-5">{isPrivateEventPage ? "Ready to Plan Your Private Event?" : `Ready to Join Us in ${config.city}?`}</h2>
+          <p className="font-body text-muted-foreground text-base leading-relaxed mb-8 max-w-2xl mx-auto">{isPrivateEventPage ? "Tell us your preferred experience, schedule and venue. We'll confirm availability, the full event scope and final pricing before booking." : "Spots are limited and sessions sell out. Book your mat now and experience Ontario's #1 puppy yoga studio."}</p>
+          {isPrivateEventPage ? (
+            <a href="/private-events/quote#private-event-experiences" className="apy-primary-action min-h-12 w-full sm:w-auto">Choose Your Experience</a>
+          ) : config.comingSoon ? (
             <a
               href={attributedBookUrl}
               target="_blank"

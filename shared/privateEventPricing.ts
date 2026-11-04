@@ -1,3 +1,5 @@
+import { privateEventScopeRequiresCustomQuote, type PrivateEventPreferences } from "./privateEventExperience";
+
 // Proposed price bands approved for testing. They are not proven optimal prices or margin guarantees.
 export const PRIVATE_EVENT_PACKAGE_BANDS = {
   classic: { name: "Classic Experience", min: 1500, max: 1750 },
@@ -21,9 +23,10 @@ export function privateEventBandLabel(packageType: PrivateEventPackageType): str
 export function estimatePrivateEventPackage(input: {
   guests: number;
   packageType: PrivateEventPackageType;
+  eventPreferences?: PrivateEventPreferences;
 }) {
   const band = PRIVATE_EVENT_PACKAGE_BANDS[input.packageType];
-  const requiresCustomQuote = input.guests > 20;
+  const requiresCustomQuote = input.guests > 20 || privateEventScopeRequiresCustomQuote(input.eventPreferences);
   return {
     min: band.min,
     max: band.max,
@@ -46,4 +49,12 @@ export function isCustomPrivateEventEstimate(min: number, max: number): boolean 
 export function formatStoredPrivateEventEstimate(min: number, max: number): string {
   if (isCustomPrivateEventEstimate(min, max)) return "Custom quote required";
   return `${formatMoney(min)}-${formatMoney(max)} CAD`;
+}
+
+export function storedPrivateEventPriceInput(inquiry: { finalPriceCents: number | null; hstCents?: number | null; pricingType: string | null; estimatedMin: number; estimatedMax: number }): string {
+  if (inquiry.finalPriceCents) {
+    const total = inquiry.finalPriceCents + (inquiry.pricingType === "all_in" ? inquiry.hstCents ?? 0 : 0);
+    return String(total / 100);
+  }
+  return isCustomPrivateEventEstimate(inquiry.estimatedMin, inquiry.estimatedMax) ? "" : String(inquiry.estimatedMax);
 }

@@ -13,6 +13,7 @@ export type PrivateEventQuoteDraftInput = {
   pricingType: "plus_hst" | "all_in";
   eventUrl: string;
   puppyBreed?: string | null;
+  eventScopeNotes?: string | null;
 };
 
 export type PrivateEventQuoteDraft = {
@@ -96,6 +97,13 @@ export function buildPrivateEventQuoteDraft(input: PrivateEventQuoteDraftInput):
     ? `🐾 ${input.puppyBreed.trim()} puppies and dedicated puppy handlers`
     : "🐾 Puppies and dedicated puppy handlers";
   const subjectPrefix = input.organization?.trim() ? `${input.organization.trim()} | ` : "";
+
+  if (input.eventScopeNotes) {
+    return {
+      subject: `${subjectPrefix}Private AfroPuppyYoga Event Quote | ${dateText}`,
+      body: `Hi ${firstName(input.customerName)},\n\nThank you for planning your private event with AfroPuppyYoga.\n\nDate: ${dateText}\nEvent window: ${formatTime(input.startTime)}${input.sessionSchedule?.length ? ` to ${formatTime(input.sessionSchedule[input.sessionSchedule.length - 1].endTime)}` : ""}\nVenue: ${venueText}\nExpected total attendance: ${input.guests}\n\nEvent scope for review:\n${input.eventScopeNotes}\n\nYour combined event quote:\n${priceLine}\n\nThis is one price for the full agreed event, not a price to multiply by the number of sessions. Any agreed travel must be included in this total or stated separately before you pay.\n\nPlease review the scope with APY before payment. The experience, package level, operating hours or session schedule, attendance and simultaneous capacity, setup, staffing, room resets and puppy rest arrangements must be agreed. No guided yoga is included in a lounge-only event unless separately agreed.\n\nPrivate booking link:\n${input.eventUrl}\n\nYour booking is confirmed after payment and agreement on the final scope. Puppy breed and venue availability are confirmed by APY.\n\nWarmly,\nThe AfroPuppyYoga Team`,
+    };
+  }
 
   return {
     subject: `${subjectPrefix}Private AfroPuppyYoga Experience | ${dateText} 🐶`,

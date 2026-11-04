@@ -65,7 +65,7 @@ import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
 import AdminNav from "@/components/AdminNav";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatStoredPrivateEventEstimate, isCustomPrivateEventEstimate, PRIVATE_EVENT_PACKAGE_BANDS } from "@shared/privateEventPricing";
+import { formatStoredPrivateEventEstimate, isCustomPrivateEventEstimate, storedPrivateEventPriceInput, PRIVATE_EVENT_PACKAGE_BANDS } from "@shared/privateEventPricing";
 
 type InquiryStatus = "new" | "contacted" | "confirmed" | "cancelled" | "quote_sent" | "booked";
 
@@ -210,6 +210,7 @@ export default function PrivateEventsDashboard() {
   const [showBookingPanel, setShowBookingPanel] = useState(false);
   const [bookingForm, setBookingForm] = useState({
     finalPrice: "",
+    priceBasis: "event_total" as "event_total" | "per_session",
     pricingType: "plus_hst" as "plus_hst" | "all_in",
     sessions: "1",
     puppyBreed: "",
@@ -401,7 +402,8 @@ export default function PrivateEventsDashboard() {
     setQuoteEmailBody(inq.quoteEmailBody || "");
     // Pre-fill booking form from inquiry data
     setBookingForm({
-      finalPrice: inq.finalPriceCents ? String(inq.finalPriceCents / 100) : isCustomPrivateEventEstimate(inq.estimatedMin, inq.estimatedMax) ? "" : String(inq.estimatedMax),
+      finalPrice: storedPrivateEventPriceInput(inq),
+      priceBasis: inq.finalPriceCents || isCustomPrivateEventEstimate(inq.estimatedMin, inq.estimatedMax) ? "event_total" : "per_session",
       pricingType: (inq.pricingType as "plus_hst" | "all_in") || "plus_hst",
       sessions: String(inq.sessions || 1),
       puppyBreed: inq.puppyBreed || "",
@@ -441,6 +443,7 @@ export default function PrivateEventsDashboard() {
     generateBooking.mutate({
       inquiryId: selectedInquiry.id,
       finalPrice: price,
+      priceBasis: bookingForm.priceBasis,
       pricingType: bookingForm.pricingType,
       sessions: parseInt(bookingForm.sessions) || 1,
       puppyBreed: bookingForm.puppyBreed || undefined,
@@ -518,7 +521,7 @@ export default function PrivateEventsDashboard() {
   // Calculate HST preview
   const priceNum = parseFloat(bookingForm.finalPrice) || 0;
   const sessionCount = Math.max(1, parseInt(bookingForm.sessions) || 1);
-  const combinedQuoteInput = priceNum * sessionCount;
+  const combinedQuoteInput = priceNum * (bookingForm.priceBasis === "event_total" ? 1 : sessionCount);
   const hstPreview = bookingForm.pricingType === "plus_hst"
     ? Math.round(combinedQuoteInput * 13) / 100
     : Math.round((combinedQuoteInput - combinedQuoteInput / 1.13) * 100) / 100;
@@ -1310,9 +1313,16 @@ export default function PrivateEventsDashboard() {
                     </p>
 
                   {/* Price + HST */}
+                  <div className="mb-4">
+                    <label htmlFor="private-quote-price-basis" className="font-body text-xs font-semibold text-foreground mb-1 block">Price entry basis</label>
+                    <select id="private-quote-price-basis" value={bookingForm.priceBasis} onChange={e => setBookingForm({ ...bookingForm, priceBasis: e.target.value as "event_total" | "per_session" })} className="w-full min-h-11 rounded-md border border-border bg-white text-foreground px-3 font-body text-sm">
+                      <option value="event_total">One combined event price</option>
+                      <option value="per_session">Per-session price (legacy entry)</option>
+                    </select>
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="font-body text-xs font-semibold text-foreground mb-1 block">{bookingForm.pricingType === "plus_hst" ? "Price Per Session Before HST (CAD)" : "All-In Price Per Session (CAD)"}</label>
+                      <label className="font-body text-xs font-semibold text-foreground mb-1 block">{bookingForm.priceBasis === "event_total" ? (bookingForm.pricingType === "plus_hst" ? "Full Event Price Before HST (CAD)" : "Full Event Price, HST Included (CAD)") : (bookingForm.pricingType === "plus_hst" ? "Price Per Session Before HST (CAD)" : "All-In Price Per Session (CAD)")}</label>
                       <Input
                         type="number"
                         value={bookingForm.finalPrice}
@@ -1337,7 +1347,7 @@ export default function PrivateEventsDashboard() {
                       </Select>
                     </div>
                     </div>
-                    <p className="col-span-2 -mt-1 font-body text-[11px] leading-4 text-muted-foreground">For multiple sessions, APY multiplies this per-session amount before HST and creates one combined Luma checkout. The additional class is included, not separately charged.</p>
+                    <p className="col-span-2 -mt-1 font-body text-xs leading-5 text-muted-foreground">{bookingForm.priceBasis === "event_total" ? "Enter the complete agreed event amount, including any separately agreed travel. Session count controls the schedule only and does not multiply this price. Confirm format, duration, capacity, setup, staffing, resets and puppy rest in the quote before sending." : "For multiple sessions, APY multiplies this per-session amount before HST and creates one combined Luma checkout. The additional class is included, not separately charged."}</p>
 
                   {/* Price preview */}
                   {priceNum > 0 && (

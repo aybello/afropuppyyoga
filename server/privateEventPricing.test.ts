@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   PRIVATE_EVENT_PACKAGE_BANDS, PRIVATE_EVENT_PRICE_NOTE,
   PRIVATE_EVENT_TRAVEL_NOTE, estimatePrivateEventPackage,
-  privateEventBandLabel, formatStoredPrivateEventEstimate, isCustomPrivateEventEstimate,
+  privateEventBandLabel, formatStoredPrivateEventEstimate, isCustomPrivateEventEstimate, storedPrivateEventPriceInput,
   type PrivateEventPackageType,
 } from "@shared/privateEventPricing";
 
@@ -52,7 +52,7 @@ describe("approved private-event pricing test bands", () => {
       expect(privateEventBandLabel(packageType)).toMatch(/\+ HST$/);
     }
     const client = read("client/src/pages/PrivateEventQuote.tsx");
-    expect(client).toContain("estimatePrivateEventPackage({ guests: guestCount, packageType })");
+    expect(client).toContain("estimatePrivateEventPackage({ guests: guestCount, packageType, eventPreferences })");
     expect(client).not.toContain("TRAVEL_FEES");
     expect(client).not.toContain("SIGNATURE_UPGRADE");
     expect(client).not.toContain("SECOND_SESSION_MIN");
@@ -80,9 +80,11 @@ describe("approved private-event pricing test bands", () => {
     const admin = read("client/src/pages/PrivateEventsDashboard.tsx");
     expect(admin).toContain("formatStoredPrivateEventEstimate(inq.estimatedMin, inq.estimatedMax)");
     expect(admin).toContain("formatStoredPrivateEventEstimate(selectedInquiry.estimatedMin, selectedInquiry.estimatedMax)");
-    expect(admin).toContain('isCustomPrivateEventEstimate(inq.estimatedMin, inq.estimatedMax) ? "" : String(inq.estimatedMax)');
+    expect(admin).toContain("finalPrice: storedPrivateEventPriceInput(inq)");
     expect(admin).toContain("isCustomPrivateEventEstimate(selectedInquiry.estimatedMin, selectedInquiry.estimatedMax)");
-    expect(admin).toContain('String(inq.finalPriceCents / 100)');
+    expect(storedPrivateEventPriceInput({ finalPriceCents: 300000, hstCents: 39000, pricingType: "all_in", estimatedMin: 0, estimatedMax: 0 })).toBe("3390");
+    expect(storedPrivateEventPriceInput({ finalPriceCents: 300000, hstCents: 39000, pricingType: "plus_hst", estimatedMin: 0, estimatedMax: 0 })).toBe("3000");
+    expect(storedPrivateEventPriceInput({ finalPriceCents: null, pricingType: null, estimatedMin: 0, estimatedMax: 0 })).toBe("");
     expect(admin).toContain("combinedQuoteInput > 3000");
   });
 });

@@ -20,6 +20,7 @@ import {
 } from "../shared/reviewMetrics";
 import { HOME_SEO_TITLE, HOME_SEO_DESCRIPTION, LOYALTY_SEO_DESCRIPTION, MEMBERSHIP_LOCATION_COPY, PUBLIC_LOCATION_NAMES, PUBLIC_LOCATION_LIST, PUBLIC_LOCATION_FAQ, PUBLIC_SERVICE_DESCRIPTION } from "../shared/publicLocations";
 import { PRIVATE_EVENT_PACKAGE_BANDS, privateEventBandLabel, PRIVATE_EVENT_PRICE_NOTE, PRIVATE_EVENT_TRAVEL_NOTE, PRIVATE_EVENT_CUSTOM_NOTE } from "../shared/privateEventPricing";
+import { PRIVATE_EVENT_EXPERIENCES, PRIVATE_EVENT_SCHEDULES, PRIVATE_EVENT_VENUES, PRIVATE_EVENT_FORMAT_PRICE_NOTE, PRIVATE_EVENT_CUSTOM_SCOPE_NOTE } from "../shared/privateEventExperience";
 
 // ─── Crawler Detection ────────────────────────────────────────────────────────
 
@@ -133,15 +134,32 @@ const OG_IMAGE =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/og-image_139020fe.png";
 
 const PRIVATE_EVENT_START_PRICE = `$${PRIVATE_EVENT_PACKAGE_BANDS.classic.min.toLocaleString("en-CA")} + HST`;
-const PRIVATE_EVENT_PRICING_COPY = `Events start at ${PRIVATE_EVENT_START_PRICE}. Classic: ${privateEventBandLabel("classic")} for the core studio experience; Signature: ${privateEventBandLabel("signature")} with professional photography and an enhanced setup; Luxury: ${privateEventBandLabel("luxury")} for a customized experience. Standard events are up to 20 guests; groups of 21 or more require a custom quote. ${PRIVATE_EVENT_PRICE_NOTE} Use the quote tool to view an indicative package range or request a custom quote.`;
-const PRIVATE_EVENT_INCLUSIONS_COPY = "The core experience includes guided yoga, a certified instructor and event host, ethically sourced puppies and handlers, mats and props, setup and cleanup, and a curated playlist. Signature adds professional photography and an enhanced setup. Luxury is customized to the agreed scope. Refreshments, merchandise, and other options are not included by default; availability and costs are confirmed in your quote.";
+const PRIVATE_EVENT_EXPERIENCE_COPY = `${PRIVATE_EVENT_EXPERIENCES.puppy_yoga.name}: ${PRIVATE_EVENT_EXPERIENCES.puppy_yoga.description} ${PRIVATE_EVENT_EXPERIENCES.puppy_lounge.name}: ${PRIVATE_EVENT_EXPERIENCES.puppy_lounge.description} The lounge has no guided yoga class.`;
+const PRIVATE_EVENT_SCHEDULE_COPY = `Schedule is separate from the experience: ${Object.values(PRIVATE_EVENT_SCHEDULES).join("; ")}. Venue choices: ${PRIVATE_EVENT_VENUES.studio}, subject to availability, or ${PRIVATE_EVENT_VENUES.client_venue.toLowerCase()}. Timing, capacity, setup, room resets and puppy rest are confirmed in the agreed scope.`;
+const PRIVATE_EVENT_SCOPE_COPY = `${PRIVATE_EVENT_PRICE_NOTE} ${PRIVATE_EVENT_FORMAT_PRICE_NOTE} ${PRIVATE_EVENT_CUSTOM_SCOPE_NOTE}`;
+const PRIVATE_EVENT_SERVICE_COPY = `${PRIVATE_EVENT_EXPERIENCE_COPY} ${PRIVATE_EVENT_SCHEDULE_COPY} ${PRIVATE_EVENT_SCOPE_COPY} Other custom scopes include nonstandard durations and help choosing an experience or package; these receive a full custom quote, never a multiplied package price.`;
+const PRIVATE_EVENT_PRICING_COPY = `Standard 60-minute studio puppy yoga for up to 20 guests starts at ${PRIVATE_EVENT_START_PRICE}. Classic: ${privateEventBandLabel("classic")} for the core studio experience; Signature: ${privateEventBandLabel("signature")} with professional photography and an enhanced setup; Luxury: ${privateEventBandLabel("luxury")} for a customized experience. Groups from 6 to 50+ can be discussed, subject to venue and availability; groups of 21 or more require a custom quote. ${PRIVATE_EVENT_SCOPE_COPY} Nonstandard durations and help choosing an experience or package also receive a full custom quote, never a multiplied package price. Use the quote tool to view an indicative standard package range or request a custom quote.`;
+const PRIVATE_EVENT_INCLUSIONS_COPY = "Standard studio puppy yoga includes guided yoga and puppy play, a certified instructor and event host, ethically sourced puppies and handlers, mats and props, setup and cleanup, and a curated playlist. Signature adds professional photography and an enhanced setup. Luxury is customized to the agreed scope. Puppy Play & Wellness Lounge provides supervised puppy interaction without a guided yoga class; its inclusions are confirmed in a custom quote. Refreshments, merchandise, and other options are not included by default; availability and costs are confirmed in your quote.";
+const PRIVATE_EVENT_EXPERIENCES_HTML = `
+  <section id="private-event-experiences">
+    <h2>Choose Your Experience</h2>
+    <h3>${PRIVATE_EVENT_EXPERIENCES.puppy_yoga.name}</h3>
+    <p>${PRIVATE_EVENT_EXPERIENCES.puppy_yoga.description}</p>
+    <h3>Puppy Play &amp; Wellness Lounge</h3>
+    <p>${PRIVATE_EVENT_EXPERIENCES.puppy_lounge.description} No guided yoga class.</p>
+    <h3>Then Choose Your Schedule and Venue</h3>
+    <p>${PRIVATE_EVENT_SCHEDULE_COPY}</p>
+    <p>${PRIVATE_EVENT_FORMAT_PRICE_NOTE} Nonstandard durations and help choosing also receive a full custom quote, never a multiplied package price.</p>
+    <p>${PRIVATE_EVENT_CUSTOM_SCOPE_NOTE}</p>
+    <p><a href="/private-events/quote#private-event-experiences">Choose Your Experience</a></p>
+  </section>`;
 const PRIVATE_EVENT_PACKAGES_HTML = `
   <ul>
-    <li><strong>Classic (${privateEventBandLabel("classic")}):</strong> Core studio experience for standard events up to 20 guests</li>
-    <li><strong>Signature (${privateEventBandLabel("signature")}):</strong> Core experience with professional photography and an enhanced setup</li>
-    <li><strong>Luxury (${privateEventBandLabel("luxury")}):</strong> Customized experience with the final scope confirmed in your quote</li>
+    <li><strong>Classic (${privateEventBandLabel("classic")}):</strong> Core 60-minute studio puppy yoga for up to 20 guests</li>
+    <li><strong>Signature (${privateEventBandLabel("signature")}):</strong> 60-minute studio puppy yoga for up to 20 guests with professional photography and an enhanced setup</li>
+    <li><strong>Luxury (${privateEventBandLabel("luxury")}):</strong> Customized 60-minute studio puppy yoga for up to 20 guests with the final scope confirmed in your quote</li>
   </ul>
-  <p>${PRIVATE_EVENT_PRICE_NOTE} Groups of 21 or more require a custom quote.</p>`;
+  <p>${PRIVATE_EVENT_SCOPE_COPY} Groups of 21 or more, nonstandard durations and help choosing require a full custom quote, never a multiplied package price.</p>`;
 
 function privateEventStartingOffer() {
   return {
@@ -150,7 +168,7 @@ function privateEventStartingOffer() {
     url: `${BASE}/private-events/quote`,
     priceCurrency: "CAD",
     price: String(PRIVATE_EVENT_PACKAGE_BANDS.classic.min),
-    description: PRIVATE_EVENT_PRICE_NOTE,
+    description: PRIVATE_EVENT_SCOPE_COPY,
     priceSpecification: {
       "@type": "PriceSpecification",
       minPrice: PRIVATE_EVENT_PACKAGE_BANDS.classic.min,
@@ -673,7 +691,7 @@ const PAGES: Record<string, () => string> = {
     buildHtml({
       title: "Corporate Puppy Yoga in Ontario | Team Wellness Events | AfroPuppyYoga",
       description:
-        `Corporate puppy yoga across Ontario from ${PRIVATE_EVENT_START_PRICE}. ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Team wellness events. Request your quote.`,
+        `AfroPuppyYoga: ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Standard 60-minute studio corporate puppy yoga for up to 20 guests from ${PRIVATE_EVENT_START_PRICE}. Puppy lounge and other formats: custom quotes across Ontario.`,
       canonical: `${BASE}/corporate-puppy-yoga`,
       schema: [
         breadcrumb({ name: "Corporate Puppy Yoga", url: `${BASE}/corporate-puppy-yoga` }),
@@ -682,7 +700,7 @@ const PAGES: Record<string, () => string> = {
           "@type": "Service",
           "@id": `${BASE}/corporate-puppy-yoga#service`,
           name: "Corporate Puppy Yoga",
-          description: "Guided puppy yoga sessions for corporate teams. Employee appreciation, team-building, and stress relief in one session. Groups from 6 to 50+ across Ontario.",
+          description: PRIVATE_EVENT_SERVICE_COPY,
           provider: { "@type": "LocalBusiness", name: "AfroPuppyYoga", url: BASE },
           areaServed: { "@type": "State", name: "Ontario" },
           url: `${BASE}/corporate-puppy-yoga`,
@@ -692,6 +710,8 @@ const PAGES: Record<string, () => string> = {
           "@context": "https://schema.org",
           "@type": "FAQPage",
           mainEntity: [
+            { "@type": "Question", name: "Can our team choose puppy play without yoga?", acceptedAnswer: { "@type": "Answer", text: PRIVATE_EVENT_EXPERIENCE_COPY } },
+            { "@type": "Question", name: "Can we arrange multiple sessions or drop-in rotations?", acceptedAnswer: { "@type": "Answer", text: `${PRIVATE_EVENT_SCHEDULE_COPY} ${PRIVATE_EVENT_FORMAT_PRICE_NOTE} ${PRIVATE_EVENT_CUSTOM_SCOPE_NOTE}` } },
             {
               "@type": "Question",
               name: "What is corporate puppy yoga?",
@@ -769,19 +789,21 @@ const PAGES: Record<string, () => string> = {
   <p>AfroPuppyYoga brings guided yoga, adorable ethically-sourced puppies, and a feel-good curated soundtrack directly to your team. Whether you're planning an employee appreciation day, a mental health initiative, a team-building retreat, or a company milestone celebration — a corporate puppy yoga session is an experience your team will talk about for years.</p>
   <p>We have hosted corporate wellness events for teams from Manulife, Wilfrid Laurier University, University of Waterloo, McMaster University, University of Guelph, Brock University, F45 Training, and Scribenote. Groups from 6 to 50+ welcome.</p>
 
+  ${PRIVATE_EVENT_EXPERIENCES_HTML}
+
   <h3>Why Corporate Puppy Yoga Works</h3>
   <ul>
     <li><strong>Proven stress relief:</strong> Interacting with puppies measurably reduces cortisol and increases oxytocin — backed by peer-reviewed research.</li>
     <li><strong>No experience required:</strong> Sessions are designed for all fitness levels, from complete beginners to active yogis.</li>
     <li><strong>Inclusive and memorable:</strong> Unlike typical team activities, puppy yoga creates genuine shared joy across diverse teams.</li>
     <li><strong>Flexible format:</strong> Partner venues in ${PUBLIC_LOCATION_LIST}, subject to availability, or we come to your office or venue.</li>
-    <li><strong>Fully managed:</strong> Certified instructors, trained Puppy Monitors, all equipment, and a dedicated event host included.</li>
+    <li><strong>Fully managed puppy yoga:</strong> Certified instructors, trained Puppy Monitors, mats and props, and a dedicated event host included in standard studio yoga. Lounge delivery is confirmed in its custom quote.</li>
   </ul>
 
-  <h3>Corporate Package Options</h3>
+  <h3>Standard Studio Puppy Yoga Package Options</h3>
   ${PRIVATE_EVENT_PACKAGES_HTML}
 
-  <h3>What's Included</h3>
+  <h3>What's Included in Standard Studio Puppy Yoga</h3>
   <p>${PRIVATE_EVENT_INCLUSIONS_COPY}</p>
   <ul>
     <li>Certified yoga instructor</li>
@@ -826,7 +848,7 @@ const PAGES: Record<string, () => string> = {
     buildHtml({
       title: "Private Puppy Yoga Events in Ontario | AfroPuppyYoga",
       description:
-        `AfroPuppyYoga: ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Private puppy yoga from ${PRIVATE_EVENT_START_PRICE} for birthdays, bachelorettes and teams across Ontario. Request your event quote.`,
+        `AfroPuppyYoga: ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Standard 60-minute studio puppy yoga for up to 20 guests from ${PRIVATE_EVENT_START_PRICE}. Puppy lounge and other formats: custom quotes across Ontario.`,
       canonical: `${BASE}/private-puppy-yoga-events`,
       schema: [
         breadcrumb({ name: "Private Puppy Yoga Events", url: `${BASE}/private-puppy-yoga-events` }),
@@ -834,7 +856,7 @@ const PAGES: Record<string, () => string> = {
           "@context": "https://schema.org",
           "@type": "Service",
           name: "Private Puppy Yoga Events",
-          description: "Private puppy yoga events for birthdays, bachelorettes, corporate wellness, and team-building. Available across Ontario with groups from 6 to 50+.",
+          description: PRIVATE_EVENT_SERVICE_COPY,
           provider: { "@type": "LocalBusiness", name: "AfroPuppyYoga", url: BASE },
           areaServed: { "@type": "State", name: "Ontario" },
           url: `${BASE}/private-puppy-yoga-events`,
@@ -844,12 +866,14 @@ const PAGES: Record<string, () => string> = {
           "@context": "https://schema.org",
           "@type": "FAQPage",
           mainEntity: [
+            { "@type": "Question", name: "Can we choose puppy yoga or puppy play without yoga?", acceptedAnswer: { "@type": "Answer", text: PRIVATE_EVENT_EXPERIENCE_COPY } },
+            { "@type": "Question", name: "Can we arrange multiple sessions or drop-in rotations?", acceptedAnswer: { "@type": "Answer", text: `${PRIVATE_EVENT_SCHEDULE_COPY} ${PRIVATE_EVENT_FORMAT_PRICE_NOTE} ${PRIVATE_EVENT_CUSTOM_SCOPE_NOTE}` } },
             {
               "@type": "Question",
               name: "What types of private puppy yoga events does AfroPuppyYoga offer?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "AfroPuppyYoga offers private puppy yoga events for birthdays, bachelorette parties, bridal showers, corporate wellness days, team-building events, baby showers, student group events, and brand activations. All events include a certified yoga instructor, ethically sourced puppies, and a dedicated event host.",
+                text: `AfroPuppyYoga offers private events for birthdays, bachelorette parties, bridal showers, corporate wellness days, team-building events, baby showers, student group events and brand activations. ${PRIVATE_EVENT_EXPERIENCE_COPY}`,
               },
             },
             {
@@ -895,7 +919,9 @@ const PAGES: Record<string, () => string> = {
 <main>
   <h2>Make Any Occasion Unforgettable with a Private Puppy Yoga Event</h2>
   <p>AfroPuppyYoga brings the puppies, the yoga, and the good vibes directly to your private event. Whether you're celebrating a birthday, planning a bachelorette, organizing a corporate wellness day, or hosting a student group — a private puppy yoga session is an experience your guests will never forget.</p>
-  <p>We serve groups from 6 to 50+ across ${PUBLIC_LOCATION_LIST}, Ontario. Offsite events available across the Greater Toronto Area.</p>
+  <p>We serve groups from 6 to 50+ across ${PUBLIC_LOCATION_LIST}, Ontario, subject to venue, capacity and availability. Offsite events across the Greater Toronto Area are custom quoted.</p>
+
+  ${PRIVATE_EVENT_EXPERIENCES_HTML}
 
   <h3>Private Event Types</h3>
   <ul>
@@ -907,10 +933,10 @@ const PAGES: Record<string, () => string> = {
     <li><strong>Brand Activations:</strong> Co-branded wellness events for lifestyle and pet brands.</li>
   </ul>
 
-  <h3>Package Tiers</h3>
+  <h3>Standard Studio Puppy Yoga Package Tiers</h3>
   ${PRIVATE_EVENT_PACKAGES_HTML}
 
-  <h3>What's Included in Every Private Event</h3>
+  <h3>What's Included in Standard Studio Puppy Yoga</h3>
   <p>${PRIVATE_EVENT_INCLUSIONS_COPY}</p>
   <ul>
     <li>Certified yoga instructor</li>
@@ -922,6 +948,7 @@ const PAGES: Record<string, () => string> = {
   </ul>
 
   <h3>Locations</h3>
+  <p>APY studio or partner space is arranged subject to venue and date availability; locations below are not guarantees for a private booking.</p>
   <ul>
     <li>Kitchener-Waterloo — TenC Dance Studio, 329 King St E, Kitchener</li>
     <li>Hamilton — Colibri Studio, 2751 Barton St E, Hamilton</li>
@@ -1334,7 +1361,7 @@ const PAGES: Record<string, () => string> = {
     buildHtml({
       title: "Private Puppy Yoga Event Quote | AfroPuppyYoga",
       description:
-        `Private puppy yoga events from ${PRIVATE_EVENT_START_PRICE} across Ontario. Explore Classic, Signature and Luxury package ranges, or request a custom quote.`,
+        `AfroPuppyYoga: ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Standard 60-minute studio puppy yoga for up to 20 guests from ${PRIVATE_EVENT_START_PRICE}. Puppy lounge, multiple sessions and other formats: full custom quotes across Ontario.`,
       canonical: `${BASE}/private-events/quote`,
       schema: [
         breadcrumb(
@@ -1345,6 +1372,7 @@ const PAGES: Record<string, () => string> = {
           "@context": "https://schema.org",
           "@type": "Service",
           name: "Private Puppy Yoga Events",
+          description: PRIVATE_EVENT_SERVICE_COPY,
           url: `${BASE}/private-events/quote`,
           provider: { "@type": "Organization", name: "AfroPuppyYoga", url: BASE },
           areaServed: { "@type": "State", name: "Ontario" },
@@ -1354,6 +1382,8 @@ const PAGES: Record<string, () => string> = {
           "@context": "https://schema.org",
           "@type": "FAQPage",
           mainEntity: [
+            { "@type": "Question", name: "Which private event experiences can I choose?", acceptedAnswer: { "@type": "Answer", text: PRIVATE_EVENT_EXPERIENCE_COPY } },
+            { "@type": "Question", name: "Can we arrange multiple sessions or drop-in rotations?", acceptedAnswer: { "@type": "Answer", text: `${PRIVATE_EVENT_SCHEDULE_COPY} ${PRIVATE_EVENT_FORMAT_PRICE_NOTE} ${PRIVATE_EVENT_CUSTOM_SCOPE_NOTE}` } },
             {
               "@type": "Question",
               name: "How much does a private puppy yoga event cost?",
@@ -1396,19 +1426,21 @@ const PAGES: Record<string, () => string> = {
 </header>
 <main>
   <h2>Get an Instant Quote for Your Private Puppy Yoga Event</h2>
-  <p>AfroPuppyYoga offers private puppy yoga events for corporate wellness days, birthday parties, bachelorette parties, baby showers, and team-building events across Ontario. Use our quote tool to view an indicative package range or request a custom quote based on your group size, location, and package preferences. Final scope, date, availability, and delivery costs are confirmed before booking.</p>
+  <p>AfroPuppyYoga offers guided puppy yoga and supervised puppy lounges for corporate wellness days, birthday parties, bachelorette parties, baby showers and team-building events across Ontario. Choose your experience, then your schedule and venue. Indicative bands apply only to standard 60-minute studio puppy yoga for up to 20 guests; other scopes receive a full custom quote. Final scope, date, availability and delivery costs are confirmed before booking.</p>
+
+  ${PRIVATE_EVENT_EXPERIENCES_HTML}
 
   <h3>Why Book a Private Event?</h3>
   <ul>
     <li>Exclusive session — just your group and the puppies</li>
     <li>Flexible scheduling, including weekdays for corporate events</li>
     <li>Partner venues in ${PUBLIC_LOCATION_LIST}, subject to availability, or offsite at your venue</li>
-    <li>Certified yoga instructors and trained Puppy Monitors included</li>
+    <li>Certified yoga instructors for puppy yoga; supervised puppy interaction without a guided yoga class in the lounge</li>
     <li>Customizable packages: Classic, Signature, and Luxury tiers</li>
     <li>Professional photography and enhanced setup in Signature; refreshments, branded merchandise, and other options quoted on request</li>
   </ul>
 
-  <h3>Private Event Packages</h3>
+  <h3>Standard Studio Puppy Yoga Packages</h3>
   ${PRIVATE_EVENT_PACKAGES_HTML}
 
   <h3>Who Books Private Events?</h3>

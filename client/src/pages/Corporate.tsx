@@ -7,6 +7,7 @@ import { Check, ChevronDown } from "lucide-react";
 import { FIVE_STAR_REVIEW_COUNT } from "../../../shared/reviewMetrics";
 import { PUBLIC_LOCATION_COUNT, PUBLIC_LOCATION_LIST } from "@shared/publicLocations";
 import { PRIVATE_EVENT_PACKAGE_BANDS, privateEventBandLabel, PRIVATE_EVENT_PRICE_NOTE, PRIVATE_EVENT_TRAVEL_NOTE, PRIVATE_EVENT_CUSTOM_NOTE } from "@shared/privateEventPricing";
+import { PRIVATE_EVENT_EXPERIENCES, PRIVATE_EVENT_SCHEDULES, PRIVATE_EVENT_VENUES, PRIVATE_EVENT_FORMAT_PRICE_NOTE, PRIVATE_EVENT_CUSTOM_SCOPE_NOTE } from "@shared/privateEventExperience";
 
 const trustedByLogos = [
   {
@@ -163,8 +164,16 @@ const packages = [
 
 const faqs = [
   {
+    q: "Can our team choose puppy play without yoga?",
+    a: `${PRIVATE_EVENT_EXPERIENCES.puppy_yoga.name}: ${PRIVATE_EVENT_EXPERIENCES.puppy_yoga.description} ${PRIVATE_EVENT_EXPERIENCES.puppy_lounge.name}: ${PRIVATE_EVENT_EXPERIENCES.puppy_lounge.description} Lounge events receive a custom quote for the full event.`,
+  },
+  {
+    q: "Can we book multiple sessions or drop-in rotations?",
+    a: `Schedule is separate from your chosen experience: ${Object.values(PRIVATE_EVENT_SCHEDULES).join("; ")}. Setup, room resets, capacity and puppy rest are agreed in the final scope. ${PRIVATE_EVENT_FORMAT_PRICE_NOTE} ${PRIVATE_EVENT_CUSTOM_SCOPE_NOTE}`,
+  },
+  {
     q: "How many people can attend a corporate event?",
-    a: `We accommodate groups from 6 to 50+ guests, subject to venue and availability. Advertised package bands are for standard events of up to 20 guests. Groups of 21 or more require a custom quote; multiple sessions or a larger venue may be needed. ${PRIVATE_EVENT_CUSTOM_NOTE}`,
+    a: `We accommodate groups from 6 to 50+ guests, subject to venue and availability. Advertised bands are only for standard 60-minute studio puppy yoga for up to 20 guests. Groups of 21 or more require a custom quote; multiple sessions or a larger venue may be needed. ${PRIVATE_EVENT_CUSTOM_NOTE}`,
   },
   {
     q: "Where can you host corporate events?",
@@ -176,15 +185,15 @@ const faqs = [
   },
   {
     q: "Do employees need yoga experience?",
-    a: "Not at all. Our sessions are designed to be 100% beginner-friendly. The instructor guides every pose and keeps the energy light and fun.",
+    a: "Not at all. Private Puppy Yoga is beginner-friendly, with an instructor guiding the movement. Puppy Play & Wellness Lounge is supervised puppy interaction without a guided yoga class.",
   },
   {
     q: "What is included in the price?",
-    a: "The core experience includes a certified yoga instructor and event host, ethically sourced puppies and handlers, mats and props, setup and cleanup, and a curated playlist. Signature adds professional photography and an enhanced setup. Luxury is customized to the agreed scope. Refreshments, branded merchandise, and other options are not included by default; availability and costs are confirmed in your quote.",
+    a: "Standard studio puppy yoga includes a certified yoga instructor and event host, ethically sourced puppies and handlers, mats and props, setup and cleanup, and a curated playlist. Signature adds professional photography and an enhanced setup. Luxury is customized to the agreed scope. Lounge events do not include a guided yoga class; their inclusions are confirmed in the custom quote. Refreshments, branded merchandise, and other options are not included by default.",
   },
   {
     q: "How much does a corporate puppy yoga event cost?",
-    a: `Corporate events start at $${PRIVATE_EVENT_PACKAGE_BANDS.classic.min.toLocaleString("en-CA")} + HST. Classic: ${privateEventBandLabel("classic")}; Signature: ${privateEventBandLabel("signature")}; Luxury: ${privateEventBandLabel("luxury")}. ${PRIVATE_EVENT_PRICE_NOTE} Use our quote tool for an indicative range and to submit your inquiry.`,
+    a: `Standard studio puppy yoga starts at $${PRIVATE_EVENT_PACKAGE_BANDS.classic.min.toLocaleString("en-CA")} + HST. Classic: ${privateEventBandLabel("classic")}; Signature: ${privateEventBandLabel("signature")}; Luxury: ${privateEventBandLabel("luxury")}. ${PRIVATE_EVENT_FORMAT_PRICE_NOTE} ${PRIVATE_EVENT_PRICE_NOTE} Nonstandard durations and help choosing an experience or package also receive a custom quote.`,
   },
   {
     q: "How far in advance do I need to book?",
@@ -226,7 +235,7 @@ export default function Corporate() {
   useSeoMeta({
     title:
       "Corporate Puppy Yoga Ontario | Team Wellness & Employee Appreciation | AfroPuppyYoga",
-    description: `Corporate puppy yoga across Ontario from $${PRIVATE_EVENT_PACKAGE_BANDS.classic.min.toLocaleString("en-CA")} + HST. ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Team wellness events. Request your quote.`,
+    description: `AfroPuppyYoga: ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Standard 60-minute studio corporate puppy yoga for up to 20 guests from $${PRIVATE_EVENT_PACKAGE_BANDS.classic.min.toLocaleString("en-CA")} + HST. Puppy lounge and other formats: custom quotes across Ontario.`,
     canonical: "https://afropuppyyoga.ca/corporate-puppy-yoga",
   });
 
@@ -255,9 +264,9 @@ export default function Corporate() {
               <span className="italic text-brand-link">Actually Works</span>
             </h1>
             <p className="font-body text-[#34221D]/80 text-lg leading-relaxed mb-8 max-w-xl">
-              Ontario's #1 puppy yoga studio brings the puppies, the yoga, and
-              the good vibes to your team. Available across Ontario for groups
-              of 6 to 50+.
+              Bring your team together with guided puppy yoga or supervised puppy
+              play without yoga. Plan a session, separate group sessions or
+              drop-in rotations across Ontario, subject to venue and availability.
             </p>
             <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
               <Link href="/private-events/quote">
@@ -287,7 +296,7 @@ export default function Corporate() {
           {[
             { stat: "6–50+", label: "Group sizes" },
             { stat: PUBLIC_LOCATION_COUNT, label: "Ontario locations" },
-            { stat: `$${PRIVATE_EVENT_PACKAGE_BANDS.classic.min.toLocaleString("en-CA")} + HST`, label: "Starting price" },
+            { stat: `$${PRIVATE_EVENT_PACKAGE_BANDS.classic.min.toLocaleString("en-CA")} + HST`, label: "Standard studio yoga from" },
             { stat: FIVE_STAR_REVIEW_COUNT, label: "Five-Star Reviews" },
           ].map(item => (
             <div key={item.label}>
@@ -300,6 +309,7 @@ export default function Corporate() {
             </div>
           ))}
         </div>
+        <p className="font-body text-[#34221D]/80 text-sm leading-relaxed mt-5 max-w-3xl mx-auto text-center">{PRIVATE_EVENT_FORMAT_PRICE_NOTE}</p>
       </section>
 
       {/* ── Trusted By ───────────────────────────────────────────── */}
@@ -331,6 +341,32 @@ export default function Corporate() {
           }
         `}</style>
       </div>
+
+      {/* Experience, schedule and venue are separate planning choices. */}
+      <section className="py-16 px-6 bg-[#FDE9EF] border-b border-[#F29CB8]/30">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-8">
+            <p className="text-brand-link font-body text-xs font-semibold tracking-widest uppercase mb-4">Your Team, Your Experience</p>
+            <h2 className="font-display font-medium text-[#34221D] text-3xl md:text-4xl mb-3">Choose Your Format</h2>
+            <p className="font-body text-[#34221D]/80 text-base">Start with the experience. Then choose the schedule and venue that suit your team.</p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            {Object.values(PRIVATE_EVENT_EXPERIENCES).map(experience => (
+              <div key={experience.name} className="bg-white rounded-2xl p-6 border border-[#F29CB8]/30">
+                <h3 className="font-display font-medium text-[#34221D] text-2xl mb-3">{experience.name}</h3>
+                <p className="font-body text-base text-[#34221D]/80 leading-relaxed">{experience.description}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-6 max-w-3xl mx-auto text-center">
+            <p className="font-body text-base text-[#34221D]/80 leading-relaxed mb-3">Schedule: {Object.values(PRIVATE_EVENT_SCHEDULES).join("; ")}.</p>
+            <p className="font-body text-base text-[#34221D]/80 leading-relaxed mb-3">Venue: {PRIVATE_EVENT_VENUES.studio}, subject to availability, or {PRIVATE_EVENT_VENUES.client_venue.toLowerCase()}. Capacity, setup, room resets and puppy rest are confirmed in your scope.</p>
+            <p className="font-body text-sm text-[#34221D]/80 leading-relaxed mb-3">Lounge, multiple sessions, drop-in rotations, off-site events, nonstandard durations and help choosing receive a full custom quote — never a multiplied package price.</p>
+            <p className="font-body text-sm text-[#34221D]/80 leading-relaxed mb-6">{PRIVATE_EVENT_CUSTOM_SCOPE_NOTE}</p>
+            <a href="/private-events/quote#private-event-experiences" className="inline-flex items-center justify-center min-h-12 px-7 py-4 bg-primary text-[#34221D] font-body font-semibold text-sm rounded-full hover:bg-primary-hover transition-colors motion-reduce:transition-none">Choose Your Experience</a>
+          </div>
+        </div>
+      </section>
 
       {/* ── Who It's For ─────────────────────────────────────────── */}
       <section className="py-20 px-6 bg-[#FEFAF4]">
@@ -415,11 +451,11 @@ export default function Corporate() {
               <div className="w-8 h-0.5 bg-primary" />
             </div>
             <h2 className="font-display font-medium text-[#34221D] text-3xl md:text-4xl mb-3">
-              Choose Your Format
+              Standard Studio Puppy Yoga Packages
             </h2>
             <p className="font-body text-[#34221D]/80 text-base max-w-xl mx-auto">
-              Every package includes our instructor, ethically sourced puppies,
-              and the full APY experience.
+              These bands are for one standard 60-minute studio puppy yoga
+              session for up to 20 guests, including instructor and puppies.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -460,6 +496,7 @@ export default function Corporate() {
                 <p className="font-display font-medium text-brand-link text-lg mb-5">
                   {pkg.price}
                 </p>
+                <p className="font-body text-xs text-[#34221D]/80 leading-relaxed mb-4">Band for one 60-minute studio yoga session · Up to 20 guests. Other formats: full custom quote.</p>
                 <Link href="/private-events/quote">
                   <button
                     className={`w-full py-3.5 font-body font-bold text-sm rounded-2xl transition-colors motion-reduce:transition-none active:scale-[0.97] ${
@@ -475,7 +512,7 @@ export default function Corporate() {
             ))}
           </div>
           <p className="font-body text-[#34221D]/80 text-sm leading-relaxed mt-6 max-w-3xl mx-auto text-center">
-            {PRIVATE_EVENT_PRICE_NOTE} Standard events are up to 20 guests; groups of 21 or more require a custom quote.
+            {PRIVATE_EVENT_FORMAT_PRICE_NOTE} Groups of 21 or more require a custom quote. {PRIVATE_EVENT_PRICE_NOTE}
           </p>
         </div>
       </section>
