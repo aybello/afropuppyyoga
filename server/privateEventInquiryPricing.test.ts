@@ -273,6 +273,20 @@ describe("custom inquiry approval and unchanged legacy commercial controls", () 
     expect(db.insert).not.toHaveBeenCalledWith(privateEventClasses);
   });
 
+  it.each([[0, 1500], [1500, 0], [-1, 1500]])("requires owner review for an incomplete legacy estimate %s/%s", async (estimatedMin, estimatedMax) => {
+    db.setInquiry({
+      id: FAKE_INQUIRY_ID, name: baseInput.name, location: baseInput.location,
+      estimatedMin, estimatedMax, packageType: "classic", guests: 20,
+    });
+    const result = await privateEventsRouter.createCaller(context(true)).generateBookingLink({
+      inquiryId: FAKE_INQUIRY_ID, finalPrice: 1500, pricingType: "plus_hst", sessions: 1,
+      eventDate: "2026-12-12", startTime: "14:00", endTime: "15:30",
+    });
+    expect(result).toMatchObject({ needsApproval: true, approvalStatus: "pending", eventUrl: null });
+    expect(mocks.sendEmail).not.toHaveBeenCalled();
+    expect(db.insert).not.toHaveBeenCalledWith(privateEventClasses);
+  });
+
   it("preserves existing positive-estimate approval thresholds and quote/Luma session arithmetic", () => {
     expect(privateEventQuoteNeedsApproval(1199, 1200)).toBe(true);
     expect(privateEventQuoteNeedsApproval(1200, 1200)).toBe(false);

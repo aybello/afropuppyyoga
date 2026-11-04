@@ -119,7 +119,7 @@ const packages = [
   {
     name: PRIVATE_EVENT_PACKAGE_BANDS.classic.name,
     icon: "🏛️",
-    bestFor: "Standard events · Up to 20 guests",
+    bestFor: "Core studio experience · Up to 20 guests",
     desc: `Our core studio experience for your team. We arrange partner venues in ${PUBLIC_LOCATION_LIST}, subject to availability. Includes instructor, puppies, mats, and props.`,
     price: privateEventBandLabel("classic"),
     includes: [
@@ -133,7 +133,7 @@ const packages = [
   {
     name: PRIVATE_EVENT_PACKAGE_BANDS.signature.name,
     icon: "🏢",
-    bestFor: "Standard events · Up to 20 guests",
+    bestFor: "Professional photography · Up to 20 guests",
     desc: "The core puppy yoga experience with professional photography and an enhanced setup. Ideal for employee appreciation days and wellness weeks. Off-site delivery can be discussed in your quote.",
     price: privateEventBandLabel("signature"),
     includes: [

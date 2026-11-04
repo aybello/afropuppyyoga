@@ -104,7 +104,8 @@ describe("approved private-event public pricing", () => {
     const { html } = render(Corporate, "/corporate-puppy-yoga");
     const visible = text(html);
     for (const band of Object.values(PRIVATE_EVENT_PACKAGE_BANDS)) expect(visible).toContain(band.name);
-    expect(visible).toContain("Standard events · Up to 20 guests");
+    expect(visible).toContain("Core studio experience · Up to 20 guests");
+    expect(visible).toContain("Professional photography · Up to 20 guests");
     expect(visible).toContain("professional photography and an enhanced setup");
     expect(visible).not.toMatch(/In-Studio Private Event|On-Site Corporate Event|Teams of 6–25|Teams of 15–50/);
     expect(html).toContain("/manus-storage/apy_corporate_hero_202ea280.jpg");

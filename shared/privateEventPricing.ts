@@ -27,7 +27,6 @@ export function estimatePrivateEventPackage(input: {
   return {
     min: band.min,
     max: band.max,
-    sessions: Math.max(1, Math.ceil(input.guests / 20)),
     requiresCustomQuote,
     breakdown: [
       `${band.name}: ${privateEventBandLabel(input.packageType)} (CAD)`,
@@ -40,7 +39,11 @@ export function estimatePrivateEventPackage(input: {
 
 // Zero/zero is a non-numeric custom estimate for new larger-group inquiries, never a free event.
 // This display helper does not reprice or rewrite any existing inquiry or final booking amount.
+export function isCustomPrivateEventEstimate(min: number, max: number): boolean {
+  return min <= 0 || max <= 0;
+}
+
 export function formatStoredPrivateEventEstimate(min: number, max: number): string {
-  if (min <= 0 && max <= 0) return "Custom quote required";
-  return `${formatMoney(min)}-${formatMoney(max)} CAD + HST`;
+  if (isCustomPrivateEventEstimate(min, max)) return "Custom quote required";
+  return `${formatMoney(min)}-${formatMoney(max)} CAD`;
 }

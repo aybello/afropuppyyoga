@@ -552,7 +552,7 @@ export default function PrivateEventQuote() {
                             </Select>
                             {locationKey && (
                               <p className="text-sm font-body text-[#AA365D]">
-                                {PRIVATE_EVENT_TRAVEL_NOTE}
+                                If your event is off-site, travel will be quoted separately.
                               </p>
                             )}
                           </div>

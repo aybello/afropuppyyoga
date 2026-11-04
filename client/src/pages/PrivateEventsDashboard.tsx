@@ -65,7 +65,7 @@ import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
 import AdminNav from "@/components/AdminNav";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatStoredPrivateEventEstimate, PRIVATE_EVENT_PACKAGE_BANDS } from "@shared/privateEventPricing";
+import { formatStoredPrivateEventEstimate, isCustomPrivateEventEstimate, PRIVATE_EVENT_PACKAGE_BANDS } from "@shared/privateEventPricing";
 
 type InquiryStatus = "new" | "contacted" | "confirmed" | "cancelled" | "quote_sent" | "booked";
 
@@ -401,7 +401,7 @@ export default function PrivateEventsDashboard() {
     setQuoteEmailBody(inq.quoteEmailBody || "");
     // Pre-fill booking form from inquiry data
     setBookingForm({
-      finalPrice: inq.finalPriceCents ? String(inq.finalPriceCents / 100) : inq.estimatedMax > 0 ? String(inq.estimatedMax) : "",
+      finalPrice: inq.finalPriceCents ? String(inq.finalPriceCents / 100) : isCustomPrivateEventEstimate(inq.estimatedMin, inq.estimatedMax) ? "" : String(inq.estimatedMax),
       pricingType: (inq.pricingType as "plus_hst" | "all_in") || "plus_hst",
       sessions: String(inq.sessions || 1),
       puppyBreed: inq.puppyBreed || "",
@@ -1358,11 +1358,11 @@ export default function PrivateEventsDashboard() {
                   )}
 
                   {/* Approval warning */}
-                  {priceNum > 0 && (selectedInquiry.estimatedMin <= 0 || combinedQuoteInput < selectedInquiry.estimatedMin || combinedQuoteInput > 3000) && (
+                  {priceNum > 0 && (isCustomPrivateEventEstimate(selectedInquiry.estimatedMin, selectedInquiry.estimatedMax) || combinedQuoteInput < selectedInquiry.estimatedMin || combinedQuoteInput > 3000) && (
                     <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3">
                       <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
                       <p className="font-body text-xs text-amber-700">
-                        {selectedInquiry.estimatedMin <= 0
+                        {isCustomPrivateEventEstimate(selectedInquiry.estimatedMin, selectedInquiry.estimatedMax)
                           ? "This custom quote requires owner approval before a Luma page can be created."
                           : combinedQuoteInput < selectedInquiry.estimatedMin
                             ? "Price is below the estimated minimum. Owner approval is required before a Luma page can be created."

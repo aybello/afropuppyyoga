@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   PRIVATE_EVENT_PACKAGE_BANDS, PRIVATE_EVENT_PRICE_NOTE,
   PRIVATE_EVENT_TRAVEL_NOTE, estimatePrivateEventPackage,
-  privateEventBandLabel, formatStoredPrivateEventEstimate,
+  privateEventBandLabel, formatStoredPrivateEventEstimate, isCustomPrivateEventEstimate,
   type PrivateEventPackageType,
 } from "@shared/privateEventPricing";
 
@@ -30,7 +30,8 @@ describe("approved private-event pricing test bands", () => {
   it.each(packages)("shows the complete %s band before HST for a standard 20-guest scope", packageType => {
     const estimate = estimatePrivateEventPackage({ packageType, guests: 20 });
     const band = PRIVATE_EVENT_PACKAGE_BANDS[packageType];
-    expect(estimate).toMatchObject({ min: band.min, max: band.max, requiresCustomQuote: false, sessions: 1 });
+    expect(estimate).toMatchObject({ min: band.min, max: band.max, requiresCustomQuote: false });
+    expect(estimate).not.toHaveProperty("sessions");
   });
 
   it.each(packages)("preserves the selected %s package while requiring a custom larger-event quote", packageType => {
@@ -70,11 +71,17 @@ describe("approved private-event pricing test bands", () => {
 
   it("displays a custom estimate as non-numeric and does not reprice historic stored values", () => {
     expect(formatStoredPrivateEventEstimate(0, 0)).toBe("Custom quote required");
-    expect(formatStoredPrivateEventEstimate(1200, 1500)).toBe("$1,200-$1,500 CAD + HST");
+    expect(formatStoredPrivateEventEstimate(1200, 1500)).toBe("$1,200-$1,500 CAD");
+    expect(isCustomPrivateEventEstimate(1200, 1500)).toBe(false);
+    for (const [min, max] of [[0, 1500], [1500, 0], [-1, 1500]]) {
+      expect(isCustomPrivateEventEstimate(min, max)).toBe(true);
+      expect(formatStoredPrivateEventEstimate(min, max)).toBe("Custom quote required");
+    }
     const admin = read("client/src/pages/PrivateEventsDashboard.tsx");
     expect(admin).toContain("formatStoredPrivateEventEstimate(inq.estimatedMin, inq.estimatedMax)");
     expect(admin).toContain("formatStoredPrivateEventEstimate(selectedInquiry.estimatedMin, selectedInquiry.estimatedMax)");
-    expect(admin).toContain('inq.estimatedMax > 0 ? String(inq.estimatedMax) : ""');
+    expect(admin).toContain('isCustomPrivateEventEstimate(inq.estimatedMin, inq.estimatedMax) ? "" : String(inq.estimatedMax)');
+    expect(admin).toContain("isCustomPrivateEventEstimate(selectedInquiry.estimatedMin, selectedInquiry.estimatedMax)");
     expect(admin).toContain('String(inq.finalPriceCents / 100)');
     expect(admin).toContain("combinedQuoteInput > 3000");
   });

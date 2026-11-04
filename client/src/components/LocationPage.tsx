@@ -220,6 +220,7 @@ export default function LocationPage({ config }: Props) {
     };
     script.type = "application/ld+json";
     script.id = `schema-location-${config.slug}`;
+    // Private events are a quoted service, not a public-class price or a permanent venue; city pages keep LocalBusiness.
     script.textContent = JSON.stringify(isPrivateEventPage ? privateEventSchema : schema);
     document.head.appendChild(script);
     return () => {

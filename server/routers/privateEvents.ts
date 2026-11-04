@@ -21,6 +21,7 @@ import {
   PRIVATE_EVENT_PRICE_NOTE,
   estimatePrivateEventPackage,
   privateEventBandLabel,
+  isCustomPrivateEventEstimate,
 } from "@shared/privateEventPricing";
 
 const LUMA_BASE = "https://public-api.luma.com/v1";
@@ -998,7 +999,7 @@ export const privateEventsRouter = router({
 
       const { basePriceCents, hstCents, totalCents } = calculatePrivateEventPrice(input.finalPrice, input.pricingType, input.sessions);
       // A custom estimate has no numeric floor; an owner must approve its actual terms.
-      const needsApproval = (inquiry.estimatedMin === 0 && inquiry.estimatedMax === 0)
+      const needsApproval = isCustomPrivateEventEstimate(inquiry.estimatedMin, inquiry.estimatedMax)
         || privateEventQuoteNeedsApproval(input.finalPrice * input.sessions, inquiry.estimatedMin);
       const eventVenue = input.customLocation || inquiry.location;
       // Validate Toronto local date/time before any external event is created.
