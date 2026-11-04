@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import Navbar from "../client/src/components/Navbar";
+import Hero from "../client/src/components/sections/Hero";
 
 const renderNav = () => renderToStaticMarkup(createElement(Navbar));
 const source = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
@@ -47,16 +48,24 @@ describe("requested public navigation", () => {
     expect(source("client/src/App.tsx")).toContain('<Route path={"/submit-invoice"} component={InvoiceSubmit} />');
   });
 
-  it("opens the existing private-event page from the header, mobile menu, hero and footer", () => {
+  it("keeps the private-event information page in the header, mobile menu and footer", () => {
     const html = renderNav();
     const privateLinks = html.match(/<a\b[^>]*>Private Events<\/a>/g) ?? [];
     expect(privateLinks).toHaveLength(2);
     for (const link of privateLinks) expect(link).toContain('href="/private-puppy-yoga-events"');
-    const hero = source("client/src/components/sections/Hero.tsx");
-    expect(hero).toContain('href="/private-puppy-yoga-events"');
-    expect(hero).not.toContain('handleHomeSectionClick(e, "#private-events")');
-    expect(hero).toContain('trackCTAClick("Private Events — Hero")');
     expect(source("client/src/components/Footer.tsx")).toContain('{ label: "Private Events", href: "/private-puppy-yoga-events", isPage: true }');
     expect(source("client/src/App.tsx")).toContain('<Route path="/private-puppy-yoga-events" component={PrivatePuppyYogaEvents} />');
+  });
+
+  it("opens packages and the quote form directly from the homepage hero without a router provider", () => {
+    const html = renderToStaticMarkup(createElement(Hero));
+    const privateLinks = html.match(/<a\b[^>]*>Private Events<\/a>/g) ?? [];
+    expect(privateLinks).toHaveLength(1);
+    expect(privateLinks[0]).toContain('href="/private-events/quote"');
+    expect(privateLinks[0]).not.toContain('target="_blank"');
+    const hero = source("client/src/components/sections/Hero.tsx");
+    expect(hero).not.toContain('href="/private-puppy-yoga-events"');
+    expect(hero).not.toContain('handleHomeSectionClick(e, "#private-events")');
+    expect(hero).toContain('trackCTAClick("Private Events — Hero")');
   });
 });

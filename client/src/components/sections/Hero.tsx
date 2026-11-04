@@ -77,7 +77,7 @@ export default function Hero() {
               Memberships
             </a>
             <a
-              href="/private-puppy-yoga-events"
+              href="/private-events/quote"
               onClick={() => trackCTAClick("Private Events — Hero")}
               className="inline-flex flex-1 sm:flex-none items-center justify-center min-h-12 px-5 py-3 font-body font-semibold text-sm sm:text-base rounded-full border border-[#EBCDD5] hover:bg-[#FDE9EF] transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B83F67]"
             >

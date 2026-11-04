@@ -40,6 +40,7 @@ describe("reliable cross-page links from the lean public homepage", () => {
   });
 
   it.each([
+    ["components/sections/Hero.tsx", "/private-events/quote"],
     ["components/sections/PrivateEvents.tsx", "/private-events/quote"],
     ["components/sections/Memberships.tsx", "/loyalty"],
     ["components/sections/LoyaltyProgram.tsx", "/loyalty"],
