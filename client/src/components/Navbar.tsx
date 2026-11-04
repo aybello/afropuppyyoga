@@ -18,16 +18,15 @@ const moreLinks = [
   { label: "📍 Kitchener", href: "/puppy-yoga-kitchener", isPage: true },
   { label: "📍 Hamilton", href: "/puppy-yoga-hamilton", isPage: true },
   { label: "📍 Oakville", href: "/puppy-yoga-oakville", isPage: true },
-  { label: "Guelph", href: "/puppy-yoga-guelph", isPage: true },
+  { label: "📍 Guelph", href: "/puppy-yoga-guelph", isPage: true },
   { label: "🏢 Corporate Events", href: "/corporate-puppy-yoga", isPage: true },
   { label: "🤝 Partnerships", href: "/partnerships", isPage: true },
   { label: "🐶 Private Event Quote", href: "/private-events/quote", isPage: true },
   { label: "🌿 Ethical Standards", href: "/ethics", isPage: true },
-  { label: "Submit Invoice", href: "/submit-invoice", isPage: true },
 ];
-// Compact only the desktop presentation; the original mobile order is unchanged.
-const desktopLinks = primaryLinks.slice(0, 4);
-const desktopMoreLinks = [...primaryLinks.slice(4), ...moreLinks];
+// Keep all primary links visible on desktop and preserve the mobile order.
+const desktopLinks = primaryLinks;
+const desktopMoreLinks = moreLinks;
 const allLinks = [...primaryLinks, loyaltyLink, ...moreLinks];
 
 export default function Navbar() {
@@ -83,7 +82,13 @@ export default function Navbar() {
             <ul className="hidden xl:flex items-center gap-0.5">
               {desktopLinks.map((link) => (
                 <li key={link.href}>
-                  <a href={homeSectionHref(link.href)} onClick={(e) => handleNavClick(e, link.href)} className="apy-nav-link">
+                  <a
+                    href={link.href.startsWith("#") ? homeSectionHref(link.href) : link.href}
+                    target={(link as { isExternal?: boolean }).isExternal ? "_blank" : undefined}
+                    rel={(link as { isExternal?: boolean }).isExternal ? "noopener noreferrer" : undefined}
+                    onClick={(e) => handleNavClick(e, link.href)}
+                    className="apy-nav-link"
+                  >
                     {link.label}
                   </a>
                 </li>

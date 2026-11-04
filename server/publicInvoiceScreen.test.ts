@@ -23,10 +23,10 @@ describe("public invoice page", () => {
     expect(html).toContain("Back to website");
     expect(html).not.toContain('href="/admin/invoices"');
   });
-  it("provides a public footer and navigation entry while retaining a direct route", () => {
+  it("retains public footer and direct access without requiring a main navigation entry", () => {
     const html = renderToStaticMarkup(createElement(Footer));
     expect(html).toContain('href="/submit-invoice"'); expect(html).toContain("Submit Invoice");
-    expect(readFileSync("client/src/components/Navbar.tsx", "utf8")).toContain('{ label: "Submit Invoice", href: "/submit-invoice", isPage: true }');
+    expect(readFileSync("client/src/components/Navbar.tsx", "utf8")).not.toContain('href: "/submit-invoice"');
     expect(readFileSync("client/src/App.tsx", "utf8")).toContain('<Route path={"/submit-invoice"} component={InvoiceSubmit} />');
   });
   it("limits invoice intake before PDF parsing and handles any batch position", () => {
