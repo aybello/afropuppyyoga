@@ -22,7 +22,7 @@ const config: LocationConfig = {
   photos: [
     { src: "/manus-storage/apy_oakville_01_53c61421.jpg", alt: "Guests holding puppies at AfroPuppyYoga Oakville" },
     { src: "/manus-storage/apy_oakville_02_5e215788.jpg", alt: "Group puppy yoga class at AfroPuppyYoga Oakville" },
-    { src: "/manus-storage/apy_oakville_03_6e1d8088.jpg", alt: "Guests enjoying puppy yoga at AfroPuppyYoga Oakville" },
+    { src: "/manus-storage/apy_portrait_two_goldens_oct13_44cd44f3.jpg", alt: "Smiling AfroPuppyYoga guest holding two Golden Retriever puppies" },
     { src: "/manus-storage/apy_oakville_04_9dae40cb.jpg", alt: "Guests cuddling puppies at AfroPuppyYoga Oakville" },
     { src: "/manus-storage/apy_oakville_05_c8c23baf.jpg", alt: "Guest holding a puppy at AfroPuppyYoga Oakville" },
     { src: "/manus-storage/apy_oakville_06_9d9681f7.jpg", alt: "Oakville puppy yoga guests and puppies" },

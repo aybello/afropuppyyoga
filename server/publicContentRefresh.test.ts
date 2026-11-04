@@ -31,4 +31,19 @@ describe("APY November 4 public content refresh", () => {
       expect(source).not.toContain("apy_private_events_hero_43ef0f7d.jpg");
     }
   });
+
+  it("replaces the rejected Hamilton and Oakville hero photos in their galleries too", () => {
+    const pages = [
+      { source: read("../client/src/pages/Hamilton.tsx"), removed: "apy_hamilton_03_f2f5d54e.jpg", replacement: "apy_portrait_golden_cuddle_oct19_d7e4953e.jpg" },
+      { source: read("../client/src/pages/Oakville.tsx"), removed: "apy_oakville_03_6e1d8088.jpg", replacement: "apy_portrait_two_goldens_oct13_44cd44f3.jpg" },
+    ];
+    for (const { source, removed, replacement } of pages) {
+      const photos = source.split("photos: [")[1].split("],")[0];
+      const paths = [...photos.matchAll(/src: "([^"]+)"/g)].map(match => match[1]);
+      expect(paths[2]).toContain(replacement);
+      expect(source).not.toContain(removed);
+      expect(paths).toHaveLength(9);
+      expect(new Set(paths).size).toBe(9);
+    }
+  });
 });

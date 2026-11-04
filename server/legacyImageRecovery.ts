@@ -40,7 +40,7 @@ const SHARED_LEGACY_IMAGES = [
 const HAMILTON_RESTORED_IMAGES = [
   "apy_hamilton_01_7eb2d831.jpg",
   "apy_hamilton_02_9988ec38.jpg",
-  "apy_hamilton_03_f2f5d54e.jpg",
+  "apy_portrait_golden_cuddle_oct19_d7e4953e.jpg",
   "apy_hamilton_04_e6d3a3ec.jpg",
   "apy_hamilton_05_49dbd964.jpg",
   "apy_hamilton_06_2f7917c8.jpg",
@@ -52,7 +52,7 @@ const HAMILTON_RESTORED_IMAGES = [
 const OAKVILLE_RESTORED_IMAGES = [
   "apy_oakville_01_53c61421.jpg",
   "apy_oakville_02_5e215788.jpg",
-  "apy_oakville_03_6e1d8088.jpg",
+  "apy_portrait_two_goldens_oct13_44cd44f3.jpg",
   "apy_oakville_04_9dae40cb.jpg",
   "apy_oakville_05_c8c23baf.jpg",
   "apy_oakville_06_9d9681f7.jpg",
@@ -99,7 +99,11 @@ export function getLegacyImageRecoveryTarget(pathname: string, referrer?: string
     case "og_image_apy.jpg":
       return managed("apy_corporate_hero_202ea280.jpg");
     case "private-events-hero_72e6b8e7.jpg":
-      return managed("apy_private_events_hero_43ef0f7d.jpg");
+    case "apy_private_events_hero_43ef0f7d.jpg":
+    case "apy_oakville_03_6e1d8088.jpg":
+      return managed("apy_portrait_two_goldens_oct13_44cd44f3.jpg");
+    case "apy_hamilton_03_f2f5d54e.jpg":
+      return managed("apy_portrait_golden_cuddle_oct19_d7e4953e.jpg");
     default:
       return null;
   }

@@ -26,9 +26,18 @@ describe("legacy public image recovery", () => {
       "/manus-storage/apy_corporate_hero_202ea280.jpg",
     );
     expect(getLegacyImageRecoveryTarget("/manus-storage/private-events-hero_72e6b8e7.jpg")).toBe(
-      "/manus-storage/apy_private_events_hero_43ef0f7d.jpg",
+      "/manus-storage/apy_portrait_two_goldens_oct13_44cd44f3.jpg",
     );
     expect(getLegacyImageRecoveryTarget("/manus-storage/apy_hamilton_01_7eb2d831.jpg")).toBeNull();
     expect(getLegacyImageRecoveryTarget("/manus-storage/not-an-apy-image.jpg")).toBeNull();
+  });
+
+  it("recovers explicitly rejected photos for visitors running cached page bundles", () => {
+    expect(getLegacyImageRecoveryTarget("/manus-storage/apy_hamilton_03_f2f5d54e.jpg")).toBe("/manus-storage/apy_portrait_golden_cuddle_oct19_d7e4953e.jpg");
+    for (const path of ["apy_oakville_03_6e1d8088.jpg", "apy_private_events_hero_43ef0f7d.jpg"]) {
+      expect(getLegacyImageRecoveryTarget("/manus-storage/" + path)).toBe("/manus-storage/apy_portrait_two_goldens_oct13_44cd44f3.jpg");
+    }
+    expect(getLegacyImageRecoveryTarget("/manus-storage/apy_portrait_two_goldens_oct13_44cd44f3.jpg")).toBeNull();
+    expect(getLegacyImageRecoveryTarget("/manus-storage/ham_oak_IMG_7923_87d8073f.jpg", "https://afropuppyyoga.ca/puppy-yoga-oakville")).toBe("/manus-storage/apy_portrait_two_goldens_oct13_44cd44f3.jpg");
   });
 });

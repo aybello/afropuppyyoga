@@ -22,7 +22,7 @@ const config: LocationConfig = {
   photos: [
     { src: "/manus-storage/apy_hamilton_01_7eb2d831.jpg", alt: "Group puppy yoga class at AfroPuppyYoga Hamilton" },
     { src: "/manus-storage/apy_hamilton_02_9988ec38.jpg", alt: "Guests enjoying puppy yoga at AfroPuppyYoga Hamilton" },
-    { src: "/manus-storage/apy_hamilton_03_f2f5d54e.jpg", alt: "Guests holding puppies at AfroPuppyYoga Hamilton" },
+    { src: "/manus-storage/apy_portrait_golden_cuddle_oct19_d7e4953e.jpg", alt: "Smiling AfroPuppyYoga guest holding a Golden Retriever puppy" },
     { src: "/manus-storage/apy_hamilton_04_e6d3a3ec.jpg", alt: "Guest cuddling a puppy at AfroPuppyYoga Hamilton" },
     { src: "/manus-storage/apy_hamilton_05_49dbd964.jpg", alt: "Guest sharing a puppy yoga class with a puppy in Hamilton" },
     { src: "/manus-storage/apy_hamilton_06_2f7917c8.jpg", alt: "Guest holding a puppy at AfroPuppyYoga Hamilton" },
