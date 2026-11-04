@@ -13,7 +13,7 @@ const config: LocationConfig = {
     "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/apy_hero_bg-aDMPriKGFaJ3ZgQKWVBv5n.webp",
   venueName: "Colibri Studio (Main Studio)",
   venueAddress: "2751 Barton Street East, Hamilton, ON L8E 2J8",
-  venueArea: "Your selected Luma event confirms whether it is at our main studio or a collaboration location.",
+  venueArea: "Hamilton, Ontario",
   venues: [
     { name: "Colibri Studio (Main Studio)", address: "2751 Barton Street East, Hamilton, ON L8E 2J8" },
     { name: "Something New (Collaboration Location)", address: "416 Concession Street, Hamilton, ON L9A 1B9" },

@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import type { Request, Response } from "express";
+import { FIVE_STAR_REVIEW_COUNT } from "@shared/reviewMetrics";
 import { seoRenderMiddleware } from "./seoRenderer";
 
 const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
@@ -34,6 +35,7 @@ describe("APY city landing pages", () => {
     expect(page).toContain('venueName: "Colibri Studio (Main Studio)"');
     expect(page).toContain('venueAddress: "2751 Barton Street East, Hamilton, ON L8E 2J8"');
     expect(page).toContain('streetAddress: "2751 Barton Street East"');
+    expect(page).toContain('venueArea: "Hamilton, Ontario"');
     expect(page).toContain('postalCode: "L8E 2J8"');
     expect(page).toContain("Something New (Collaboration Location)");
     expect(page).toContain("416 Concession Street");
@@ -66,7 +68,7 @@ describe("APY city landing pages", () => {
     const { html, schemas } = crawlerPage("/puppy-yoga-guelph");
     expect(html).toContain('<link rel="canonical" href="https://afropuppyyoga.ca/puppy-yoga-guelph"');
     expect(html).toContain("375 Southgate Drive, Unit 2");
-    expect(html).toContain("546 five-star reviews");
+    expect(html).toContain(`${FIVE_STAR_REVIEW_COUNT} five-star reviews`);
     expect(schemas.find(schema => schema["@type"] === "Service")).toMatchObject({ areaServed: { name: "Guelph" }, provider: { name: "AfroPuppyYoga" } });
     expect(schemas.some(schema => schema["@type"] === "LocalBusiness")).toBe(false);
   });
