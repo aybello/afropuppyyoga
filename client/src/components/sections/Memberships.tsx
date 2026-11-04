@@ -1,6 +1,5 @@
 import { BOOK_URL } from "@/const";
 import { Button } from "@/components/ui/button";
-import { Link } from "wouter";
 import { MEMBERSHIP_LOCATION_COPY, PUBLIC_LOCATION_LIST } from "@shared/publicLocations";
 
 const passes = [
@@ -178,9 +177,9 @@ export default function Memberships() {
         </div>
         <p className="text-center text-sm mt-4" style={{ color: "#34221D" }}>
           3-month minimum commitment. Cancel anytime after that. Memberships are managed through Luma.{" "}
-          <Link href="/loyalty" className="text-[#B83F67] underline underline-offset-4 hover:text-[#34221D]">
+          <a href="/loyalty" className="text-[#B83F67] underline underline-offset-4 hover:text-[#34221D]">
             See our loyalty program →
-          </Link>
+          </a>
         </p>
       </div>
     </section>

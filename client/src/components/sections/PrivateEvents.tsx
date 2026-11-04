@@ -5,7 +5,6 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Building2, PartyPopper, Users, MapPin, Sparkles } from "lucide-react";
-import { Link } from "wouter";
 import { trackCTAClick } from "@/hooks/useAnalytics";
 import { publicPortraitUrl } from "@shared/publicPortraits";
 import { recoverPublicPortrait } from "@/lib/publicPortraitRecovery";
@@ -148,14 +147,14 @@ export default function PrivateEvents() {
         {/* CTA */}
         <FadeUp delay={0.4}>
           <div className="text-center">
-            <Link
+            <a
               href="/private-events/quote"
               onClick={() => trackCTAClick("Book Your Private Event — Private Events")}
               className="inline-flex items-center justify-center gap-3 px-7 sm:px-10 py-4 bg-[#F29CB8] text-[#34221D] font-body font-bold text-lg rounded-full hover:bg-[#FEFAF4] transition-all duration-200 shadow-sm hover:shadow-md"
             >
               <Sparkles size={20} />
               Book Your Private Event
-            </Link>
+            </a>
             <p className="font-body text-[#34221D]/65 text-sm mt-5">
               Get an instant quote in 60 seconds — no commitment required.
             </p>

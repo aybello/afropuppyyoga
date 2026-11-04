@@ -6,7 +6,6 @@ import { BOOK_URL } from "@/const";
    ============================================================ */
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { Link } from "wouter";
 
 const steps = [
   {
@@ -126,12 +125,12 @@ export default function LoyaltyProgram() {
           >
             Book a Class
           </a>
-          <Link
+          <a
             href="/loyalty"
             className="inline-flex items-center px-8 py-4 border border-[#B83F67]/30 text-[#B83F67] font-body font-semibold text-base rounded-full hover:border-[#B83F67]/60 hover:bg-[#B83F67]/5 transition-all duration-200"
           >
             Learn More
-          </Link>
+          </a>
         </motion.div>
       </div>
     </section>
