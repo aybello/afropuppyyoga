@@ -36,7 +36,8 @@ describe("Trusted By strip and approved photo replacement", () => {
   });
 
   it("replaces the disliked About photo while preserving its layout and lazy loading", () => {
-    expect(about).toContain('apy_kitchener_gallery_04_oct04_portrait_464e300c.jpg');
+    expect(about).toContain('apy_portrait_golden_cuddle_oct19_d7e4953e.jpg');
+    expect(about).not.toContain('apy_kitchener_gallery_04_oct04_portrait_464e300c.jpg');
     expect(about).not.toContain('apy_kitchener_gallery_06_aug01_puppy_bc15310d.jpg');
     expect(about).toContain('width={1500}');
     expect(about).toContain('height={2000}');

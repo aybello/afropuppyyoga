@@ -13,6 +13,9 @@ import { X, ChevronLeft, ChevronRight, Instagram, ZoomIn } from "lucide-react";
 const CDN = "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ";
 
 const PHOTOS = [
+  { src: "/manus-storage/apy_portrait_golden_cuddle_oct19_d7e4953e.jpg", cat: "puppies", alt: "Smiling guest cuddling a Golden Retriever puppy at an AfroPuppyYoga class" },
+  { src: "/manus-storage/apy_portrait_two_goldens_oct13_44cd44f3.jpg", cat: "puppies", alt: "Smiling guest holding two Golden Retriever puppies at an AfroPuppyYoga class" },
+  { src: "/manus-storage/apy_portrait_chow_cuddle_nov01_52f30f49.jpg", cat: "puppies", alt: "Smiling guest holding a fluffy Chow Chow puppy at an AfroPuppyYoga class" },
   { src: `${CDN}/IMG_6733_3af1fae4.jpeg`,                      cat: "yoga",    alt: "Yoga class with puppies" },
   { src: `${CDN}/IMG_6587_e22a12de.jpeg`,                      cat: "puppies", alt: "Puppy cuddle time" },
   { src: `${CDN}/IMG_6524_8c62ee38.jpeg`,                      cat: "yoga",    alt: "Group yoga session" },

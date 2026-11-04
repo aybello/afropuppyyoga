@@ -39,4 +39,23 @@ describe("public website image references", () => {
     expect(hero).toContain("LiftOff_Logo_Building_Legacy_banner_5f5d7710.png");
     expect(hero).toContain("height: 88");
   });
+
+  it("leads the gallery with polished APY originals hosted on permanent managed paths", () => {
+    const about = readProjectFile("../client/src/components/sections/About.tsx");
+    const gallery = readProjectFile("../client/src/components/sections/Gallery.tsx");
+    const photos = gallery.split("const PHOTOS = [")[1].split("];")[0];
+    const sources = [...photos.matchAll(/src: (?:"([^"]+)"|`([^`]+)`)/g)]
+      .map(match => match[1] || match[2]);
+
+    expect(sources.slice(0, 3)).toEqual([
+      "/manus-storage/apy_portrait_golden_cuddle_oct19_d7e4953e.jpg",
+      "/manus-storage/apy_portrait_two_goldens_oct13_44cd44f3.jpg",
+      "/manus-storage/apy_portrait_chow_cuddle_nov01_52f30f49.jpg",
+    ]);
+    expect(about).toContain(sources[0]);
+    expect(about).not.toContain("apy_kitchener_gallery_04_oct04_portrait_464e300c.jpg");
+    expect(sources).toHaveLength(33);
+    expect(new Set(sources).size).toBe(sources.length);
+    expect(about + gallery).not.toContain("cdninstagram.com");
+  });
 });
