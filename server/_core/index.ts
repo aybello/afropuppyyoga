@@ -19,6 +19,7 @@ import { requireStaffOrAdmin } from "./requireStaff";
 import { registerStorageProxy } from "./storageProxy";
 import metaCampaignUploadRouter from "../metaCampaignUploadRoute";
 import { getLegacyImageRecoveryTarget } from "../legacyImageRecovery";
+import { canonicalPublishedHostRedirect } from "../canonicalHostRedirect";
 import crypto from "crypto";
 import { sdk } from "./sdk";
 import { sendEmail } from "../email";
@@ -165,15 +166,8 @@ async function startServer() {
     next();
   });
 
-  // Redirect manus.space domains to the canonical custom domain
-  app.use((req, res, next) => {
-    const host = req.headers.host || "";
-    if (host.includes(".manus.space") || host.includes(".manus.computer")) {
-      const targetUrl = `https://afropuppyyoga.ca${req.originalUrl}`;
-      return res.redirect(301, targetUrl);
-    }
-    next();
-  });
+  // Preserve canonical redirects for published aliases, never preview hosts.
+  app.use(canonicalPublishedHostRedirect);
 
   // Internal tools must never be indexed, even when a crawler receives the SPA shell.
   app.use((req, res, next) => {
