@@ -218,12 +218,12 @@ export default function Guelph() {
               </div>
               <figure className="mx-auto w-full max-w-[420px] lg:mr-0 lg:ml-auto">
                 <div className="overflow-hidden rounded-[50%_50%_1rem_1rem/22%_22%_1rem_1rem] bg-blush">
-                    <img
-                      src={publicPortraitUrl(HERO_PHOTO)}
-                      onError={recoverPublicPortrait}
-                      alt="Smiling guest holding a fluffy Chow Chow puppy at AfroPuppyYoga"
-                      width={1500}
-                      height={2000}
+                  <img
+                    src={publicPortraitUrl(HERO_PHOTO)}
+                    onError={recoverPublicPortrait}
+                    alt="Smiling guest holding a fluffy Chow Chow puppy at AfroPuppyYoga"
+                    width={1500}
+                    height={2000}
                     fetchPriority="high"
                     decoding="async"
                     className="block h-auto w-full"

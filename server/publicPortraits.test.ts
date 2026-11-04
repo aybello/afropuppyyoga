@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SyntheticEvent } from "react";
+import { readFileSync } from "node:fs";
 import { publicPortraitUrl, publicPortraitSources, nextPublicPortraitSource } from "../shared/publicPortraits";
 import { recoverPublicPortrait } from "../client/src/lib/publicPortraitRecovery";
 
@@ -43,5 +44,17 @@ describe("exact approved portrait delivery", () => {
     expect(current).toBe(publicPortraitSources(portraits[0][0])[1]);
     recoverPublicPortrait(event);
     expect(writes).toBe(1);
+  });
+
+  it.each([
+    "components/sections/About.tsx", "components/sections/PrivateEvents.tsx",
+    "components/sections/Gallery.tsx", "pages/PrivateEventQuote.tsx",
+    "pages/Guelph.tsx", "components/LocationPage.tsx",
+  ])("wires direct delivery and same-photo recovery in %s", file => {
+    const source = readFileSync(new URL(`../client/src/${file}`, import.meta.url), "utf8");
+    expect(source).toContain('import { publicPortraitUrl } from "@shared/publicPortraits"');
+    expect(source).toContain('import { recoverPublicPortrait } from "@/lib/publicPortraitRecovery"');
+    expect(source).toContain("publicPortraitUrl(");
+    expect(source).toContain("onError={recoverPublicPortrait}");
   });
 });

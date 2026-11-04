@@ -24,7 +24,7 @@ export function heroImageReducer(state: HeroImageState, action: HeroImageAction)
     return state.failed ? { index: 0, cycle: state.cycle + 1, failed: false } : state;
   }
   if (state.failed || action.index !== state.index || action.cycle !== state.cycle) return state;
-  return state.index < HERO_IMAGE_SOURCES.length - 1
+  return getNextHeroImageOnError(HERO_IMAGE_SOURCES[state.index]) !== null
     ? { ...state, index: state.index + 1 }
     : { ...state, failed: true };
 }
