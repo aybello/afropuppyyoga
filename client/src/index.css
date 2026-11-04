@@ -326,3 +326,89 @@
   .apy-trust-window { mask-image: none; }
   .apy-trust-set[aria-hidden="true"] { display: none; }
 }
+
+/* Existing public design: tighter vertical rhythm, never clipped or hidden content.
+   Keep tokens, type sizes, image geometry, media, controls and staff layouts intact. */
+.apy-homepage main > [data-home-deferred-section] > section {
+  padding-block: clamp(1.75rem, 3.5vw, 3rem);
+}
+.apy-homepage main > [data-home-deferred-section] > section > .container > :is(.mb-12, .mb-10) {
+  margin-bottom: 1.75rem;
+}
+.apy-homepage main > [data-home-deferred-section] > section > .container > :is(.mt-12, .mt-14, .mt-16) {
+  margin-top: 2rem;
+}
+.apy-homepage main section[id] {
+  scroll-margin-top: 5rem;
+}
+.apy-homepage #home {
+  padding-top: 6rem;
+}
+.apy-homepage #home > .container {
+  padding-bottom: 1.5rem;
+  row-gap: 1.5rem;
+}
+.apy-homepage #home h1 {
+  margin-bottom: 1rem;
+}
+.apy-homepage #home > .container > div:first-child > p:first-child {
+  margin-bottom: 0.75rem;
+}
+.apy-homepage #home > .container > div:first-child > h1 + p {
+  margin-bottom: 1.25rem;
+}
+.apy-homepage #home > .container > div:first-child > .mt-6 {
+  margin-top: 1rem;
+}
+.apy-homepage #home aside[aria-label="Local dogs in need contribution"] {
+  margin-top: 1rem;
+}
+.apy-homepage #home > .border-y > .container {
+  padding-block: 0.75rem;
+}
+.apy-homepage #home > section[aria-labelledby="trusted-partners-title"] {
+  padding-block: 1rem;
+}
+.apy-homepage #home > section[aria-labelledby="trusted-partners-title"] > .container > .mb-4 {
+  margin-bottom: 0.75rem;
+}
+/* Existing city/private-information sections, not DashboardLayout or staff forms. */
+.apy-page > section.apy-section,
+.apy-page > main > section.apy-section {
+  padding-block: clamp(2rem, 4vw, 3rem);
+}
+/* The existing packages-first quote stays a single page with its full form. */
+#private-event-experiences {
+  padding-top: 6rem;
+  padding-bottom: 2rem;
+}
+#private-event-experiences > .container > .mb-8 {
+  margin-bottom: 1.5rem;
+}
+#private-event-packages {
+  padding-block: 2rem;
+}
+#private-event-packages > .container.mb-8 {
+  margin-bottom: 1.5rem;
+}
+#private-event-packages + .container {
+  padding-block: 2rem;
+}
+.apy-public-footer {
+  padding-block: clamp(2rem, 3.5vw, 3rem);
+}
+.apy-public-footer > .container > .grid {
+  row-gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+.apy-public-footer > .container > .border-t {
+  padding-top: 1rem;
+}
+@media (min-width: 640px) {
+  .apy-homepage #home,
+  #private-event-experiences { padding-top: 7rem; }
+}
+@media (min-width: 768px) {
+  .apy-homepage main section[id] { scroll-margin-top: 6rem; }
+  #private-event-packages { padding-block: 2.5rem; }
+}
