@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { KeyRound, Loader2, Mail, MessageSquareText, ShieldCheck } from "lucide-react";
+import { ArrowRight, FileText, KeyRound, Loader2, Mail, MessageSquareText, ShieldCheck } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { getLoginUrl, LOGO_URL } from "@/const";
 import { getSafeApyHqReturnPath } from "@shared/apyHqQueryState";
@@ -48,6 +48,18 @@ export default function StaffAccess() {
           <h1 className="mt-2 font-display text-3xl font-medium text-foreground">Staff sign-in</h1>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">Use your own saved phone or email. Managers use their own staff account, not the owner&apos;s.</p>
         </div>
+
+        <a
+          href="/submit-invoice"
+          className="mt-4 flex min-h-11 items-center gap-3 rounded-xl border border-border bg-accent p-3 text-foreground transition-colors hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          <FileText size={22} className="shrink-0 text-brand-link" aria-hidden="true" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-bold">Submit Invoice</span>
+            <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">For contractors and one-time staff. No login needed.</span>
+          </span>
+          <ArrowRight size={18} className="shrink-0 text-brand-link" aria-hidden="true" />
+        </a>
 
         <div className="mt-5 grid grid-cols-2 gap-2" aria-label="Sign-in method">
           {(["phone", "email"] as const).map((value) => (

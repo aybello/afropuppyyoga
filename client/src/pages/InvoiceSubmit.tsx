@@ -104,12 +104,20 @@ export default function InvoiceSubmit() {
             />
             <span className="font-display font-medium">AfroPuppyYoga</span>
           </a>
-          <a
-            href="/"
-            className="font-body text-sm text-brand-link underline underline-offset-4"
+          <nav
+            aria-label="Invoice page navigation"
+            className="flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-4"
           >
-            Back to website
-          </a>
+            <a href="/staff-access" className="font-body text-sm font-semibold text-brand-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-link">
+              Staff Portal
+            </a>
+            <a
+              href="/"
+              className="font-body text-sm text-brand-link underline underline-offset-4"
+            >
+              Back to website
+            </a>
+          </nav>
         </div>
       </header>
       <main className="max-w-2xl mx-auto px-5 py-10 sm:py-12">

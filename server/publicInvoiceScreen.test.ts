@@ -16,6 +16,13 @@ describe("public invoice page", () => {
     expect(source).not.toContain("useAuth"); expect(source).not.toContain("staff.myAccess"); expect(source).not.toContain("iframe");
     expect(source).toContain("receiptRef"); expect(source).toContain("submissionLock");
   });
+  it("provides a return to the staff sign-in page without an invoice dashboard link", () => {
+    const html = renderToStaticMarkup(createElement(InvoiceSubmit));
+    expect(html).toContain('href="/staff-access"');
+    expect(html).toContain("Staff Portal");
+    expect(html).toContain("Back to website");
+    expect(html).not.toContain('href="/admin/invoices"');
+  });
   it("provides a public footer and navigation entry while retaining a direct route", () => {
     const html = renderToStaticMarkup(createElement(Footer));
     expect(html).toContain('href="/submit-invoice"'); expect(html).toContain("Submit Invoice");

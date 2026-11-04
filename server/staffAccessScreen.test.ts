@@ -15,6 +15,21 @@ import StaffAccess from "../client/src/pages/StaffAccess";
 function render() { mocks.index = 0; return renderToStaticMarkup(createElement(StaffAccess)); }
 beforeEach(() => { vi.clearAllMocks(); mocks.state = []; });
 describe("staff sign-in screen", () => {
+  it.each([
+    ["phone entry", []],
+    ["email entry", ["email"]],
+    ["phone verification", ["phone", "", "", "+12265550123", "", "", true, false]],
+    ["email verification", ["email", "", "", "", "contractor@example.com", "", false, true]],
+  ])("offers public invoice submission during %s without requesting or verifying a code", (_label, state) => {
+    mocks.state = state;
+    const html = render();
+    expect(html).toMatch(/<a[^>]+href="\/submit-invoice"[^>]*>/);
+    expect(html).toContain("Submit Invoice");
+    expect(html).toContain("For contractors and one-time staff. No login needed.");
+    expect(html.indexOf('href="/submit-invoice"')).toBeLessThan(html.indexOf('aria-label="Sign-in method"'));
+    expect(mocks.verify).not.toHaveBeenCalled();
+  });
+
   it("does not advertise the owner's actual phone as the input example", () => {
     const html = render();
     expect(html).not.toContain("289"); expect(html).not.toContain("1885");
