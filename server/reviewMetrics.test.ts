@@ -111,7 +111,7 @@ describe("five-star review count baseline", () => {
 
   it("renders concise customer copy while keeping the Google source badge separate", () => {
     const html = renderToStaticMarkup(createElement(Reviews));
-    expect(html).toContain("546 Five-Star Reviews");
+    expect(html).toContain("546 five-star reviews");
     expect(html).not.toContain("Google + Luma");
     expect(html).not.toContain("across Google and Luma");
     expect(html).toContain("4.7");

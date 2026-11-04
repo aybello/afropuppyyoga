@@ -67,7 +67,7 @@ const STATUS_COLORS: Record<PartnerStatus, string> = {
 };
 
 const TYPE_COLORS: Record<string, string> = {
-  "Corporate Wellness": "bg-purple-50 text-purple-700 border-purple-200",
+  "Corporate Wellness": "bg-accent text-brand-link border-border",
   "Brand Collaboration": "bg-pink-50 text-pink-700 border-pink-200",
   "Media & Production": "bg-orange-50 text-orange-700 border-orange-200",
   "Local Business": "bg-teal-50 text-teal-700 border-teal-200",
@@ -98,19 +98,19 @@ export default function PartnershipsDashboard() {
   // Auth guard
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#8B2252]" />
+      <div className="min-h-screen apy-staff-ui bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-link" />
       </div>
     );
   }
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
+      <div className="min-h-screen apy-staff-ui bg-background flex items-center justify-center">
         <div className="text-center">
-          <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Login Required</h2>
-          <p className="font-body text-sm text-[#3D1A2E] mb-4">Please sign in to access the Partnerships Dashboard.</p>
-          <a href={getLoginUrl()} className="inline-flex items-center gap-2 px-4 py-2 bg-[#8B2252] text-white rounded-full font-body font-semibold text-sm">
+          <h2 className="font-display font-medium text-2xl text-foreground mb-2">Login Required</h2>
+          <p className="font-body text-sm text-foreground mb-4">Please sign in to access the Partnerships Dashboard.</p>
+          <a href={getLoginUrl()} className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-full font-body font-semibold text-sm">
             Sign In
           </a>
         </div>
@@ -120,10 +120,10 @@ export default function PartnershipsDashboard() {
 
   if (user?.role !== "admin" && user?.role !== "staff") {
     return (
-      <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
+      <div className="min-h-screen apy-staff-ui bg-background flex items-center justify-center">
         <div className="text-center">
-          <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Access Denied</h2>
-          <p className="font-body text-sm text-[#3D1A2E]">You do not have permission to view this page.</p>
+          <h2 className="font-display font-medium text-2xl text-foreground mb-2">Access Denied</h2>
+          <p className="font-body text-sm text-foreground">You do not have permission to view this page.</p>
         </div>
       </div>
     );
@@ -144,20 +144,20 @@ export default function PartnershipsDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FEFAF4]">
+    <div className="min-h-screen apy-staff-ui bg-background">
       <AdminNav />
 
       <main className="max-w-6xl mx-auto px-6 py-10">
         {/* Header */}
         <div className="mb-8">
-          <p className="font-body text-xs font-semibold text-[#8B2252] uppercase tracking-widest mb-2">
+          <p className="font-body text-xs font-semibold text-brand-link uppercase tracking-widest mb-2">
             Admin Portal
           </p>
           <div className="flex items-center gap-3 mb-1">
-            <Handshake className="w-7 h-7 text-[#8B2252]" />
-            <h1 className="font-display font-bold text-3xl text-[#1A0A12]">Partnership Inquiries</h1>
+            <Handshake className="w-7 h-7 text-brand-link" />
+            <h1 className="font-display font-medium text-3xl text-foreground">Partnership Inquiries</h1>
           </div>
-          <p className="font-body text-sm text-[#3D1A2E]">
+          <p className="font-body text-sm text-foreground">
             Review and manage all incoming partnership inquiries.
           </p>
         </div>
@@ -170,9 +170,9 @@ export default function PartnershipsDashboard() {
             { label: "Active", value: counts.active, color: "text-green-600" },
             { label: "Declined", value: counts.declined, color: "text-red-500" },
           ].map((stat) => (
-            <div key={stat.label} className="bg-white border border-[#F0D0DC] rounded-2xl p-4">
-              <p className="font-body text-xs text-[#3D1A2E] mb-1">{stat.label}</p>
-              <p className={`font-display font-bold text-2xl ${stat.color}`}>{stat.value}</p>
+            <div key={stat.label} className="bg-white border border-border rounded-2xl p-4">
+              <p className="font-body text-xs text-foreground mb-1">{stat.label}</p>
+              <p className={`font-display font-medium text-2xl ${stat.color}`}>{stat.value}</p>
             </div>
           ))}
         </div>
@@ -180,7 +180,7 @@ export default function PartnershipsDashboard() {
         {/* Filters */}
         <div className="flex flex-wrap gap-3 mb-6">
           <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="w-48 font-body text-sm border-[#F0D0DC]">
+            <SelectTrigger className="w-48 font-body text-sm border-border">
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
             <SelectContent>
@@ -193,7 +193,7 @@ export default function PartnershipsDashboard() {
             </SelectContent>
           </Select>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-40 font-body text-sm border-[#F0D0DC]">
+            <SelectTrigger className="w-40 font-body text-sm border-border">
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -209,40 +209,40 @@ export default function PartnershipsDashboard() {
         {/* Table */}
         {isLoading ? (
           <div className="flex justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-[#8B2252]" />
+            <Loader2 className="w-8 h-8 animate-spin text-brand-link" />
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Inbox className="w-12 h-12 text-[#C4A0B0] mb-4" />
-            <p className="font-display font-bold text-lg text-[#1A0A12] mb-1">No inquiries found</p>
-            <p className="font-body text-sm text-[#3D1A2E]">
+            <Inbox className="w-12 h-12 text-muted-foreground mb-4" />
+            <p className="font-display font-medium text-lg text-foreground mb-1">No inquiries found</p>
+            <p className="font-body text-sm text-foreground">
               {counts.total === 0 ? "No partnership inquiries have been submitted yet." : "Try adjusting your filters."}
             </p>
           </div>
         ) : (
-          <div className="bg-white border border-[#F0D0DC] rounded-2xl overflow-hidden">
+          <div className="bg-white border border-border rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[640px]">
                 <thead>
-                  <tr className="border-b border-[#F0D0DC] bg-[#FFF5F8]">
-                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-[#8B2252] uppercase tracking-wider">Organization</th>
-                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-[#8B2252] uppercase tracking-wider">Type</th>
-                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-[#8B2252] uppercase tracking-wider">Contact</th>
-                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-[#8B2252] uppercase tracking-wider">Status</th>
-                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-[#8B2252] uppercase tracking-wider">Date</th>
-                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-[#8B2252] uppercase tracking-wider">Actions</th>
+                  <tr className="border-b border-border bg-accent">
+                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-brand-link uppercase tracking-wider">Organization</th>
+                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-brand-link uppercase tracking-wider">Type</th>
+                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-brand-link uppercase tracking-wider">Contact</th>
+                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-brand-link uppercase tracking-wider">Status</th>
+                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-brand-link uppercase tracking-wider">Date</th>
+                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-brand-link uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((inq, idx) => (
                     <tr
                       key={inq.id}
-                      className={`border-b border-[#F9EEF2] hover:bg-[#FFF5F8] transition-colors ${idx % 2 === 0 ? "" : "bg-[#FEFAF4]"}`}
+                      className={`border-b border-border hover:bg-accent transition-colors ${idx % 2 === 0 ? "" : "bg-background"}`}
                     >
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2">
-                          <Building2 className="w-4 h-4 text-[#C4A0B0] shrink-0" />
-                          <span className="font-body font-semibold text-sm text-[#1A0A12]">{inq.organizationName}</span>
+                          <Building2 className="w-4 h-4 text-muted-foreground shrink-0" />
+                          <span className="font-body font-semibold text-sm text-foreground">{inq.organizationName}</span>
                         </div>
                       </td>
                       <td className="px-5 py-4">
@@ -251,22 +251,22 @@ export default function PartnershipsDashboard() {
                         </span>
                       </td>
                       <td className="px-5 py-4">
-                        <p className="font-body text-sm text-[#1A0A12]">{inq.contactName}</p>
-                        <p className="font-body text-xs text-[#3D1A2E]">{inq.email}</p>
+                        <p className="font-body text-sm text-foreground">{inq.contactName}</p>
+                        <p className="font-body text-xs text-foreground">{inq.email}</p>
                       </td>
                       <td className="px-5 py-4">
                         <span className={`px-2 py-0.5 text-xs font-body font-semibold rounded-full border ${STATUS_COLORS[inq.status]}`}>
                           {STATUS_LABELS[inq.status]}
                         </span>
                       </td>
-                      <td className="px-5 py-4 font-body text-xs text-[#3D1A2E]">
+                      <td className="px-5 py-4 font-body text-xs text-foreground">
                         {new Date(inq.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-5 py-4">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="font-body text-xs border-[#F0D0DC] text-[#8B2252] hover:bg-[#FFF5F8]"
+                          className="font-body text-xs border-border text-brand-link hover:bg-accent"
                           onClick={() => setSelectedInquiry(inq as PartnershipInquiry)}
                         >
                           View
@@ -286,10 +286,10 @@ export default function PartnershipsDashboard() {
         <Dialog open={!!selectedInquiry} onOpenChange={() => setSelectedInquiry(null)}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="font-display font-bold text-xl text-[#1A0A12]">
+              <DialogTitle className="font-display font-medium text-xl text-foreground">
                 {selectedInquiry.organizationName}
               </DialogTitle>
-              <DialogDescription className="font-body text-sm text-[#3D1A2E]">
+              <DialogDescription className="font-body text-sm text-foreground">
                 {selectedInquiry.partnershipType} inquiry
               </DialogDescription>
             </DialogHeader>
@@ -298,40 +298,40 @@ export default function PartnershipsDashboard() {
               {/* Contact info */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex items-start gap-2">
-                  <User className="w-4 h-4 text-[#C4A0B0] mt-0.5 shrink-0" />
+                  <User className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-body text-xs text-[#3D1A2E]">Contact</p>
-                    <p className="font-body text-sm font-semibold text-[#1A0A12]">{selectedInquiry.contactName}</p>
+                    <p className="font-body text-xs text-foreground">Contact</p>
+                    <p className="font-body text-sm font-semibold text-foreground">{selectedInquiry.contactName}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Mail className="w-4 h-4 text-[#C4A0B0] mt-0.5 shrink-0" />
+                  <Mail className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-body text-xs text-[#3D1A2E]">Email</p>
-                    <a href={`mailto:${selectedInquiry.email}`} className="font-body text-sm font-semibold text-[#8B2252] hover:underline">
+                    <p className="font-body text-xs text-foreground">Email</p>
+                    <a href={`mailto:${selectedInquiry.email}`} className="font-body text-sm font-semibold text-brand-link hover:underline">
                       {selectedInquiry.email}
                     </a>
                   </div>
                 </div>
                 {selectedInquiry.phone && (
                   <div className="flex items-start gap-2">
-                    <Phone className="w-4 h-4 text-[#C4A0B0] mt-0.5 shrink-0" />
+                    <Phone className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
                     <div>
-                      <p className="font-body text-xs text-[#3D1A2E]">Phone</p>
-                      <p className="font-body text-sm font-semibold text-[#1A0A12]">{selectedInquiry.phone}</p>
+                      <p className="font-body text-xs text-foreground">Phone</p>
+                      <p className="font-body text-sm font-semibold text-foreground">{selectedInquiry.phone}</p>
                     </div>
                   </div>
                 )}
                 {selectedInquiry.website && (
                   <div className="flex items-start gap-2">
-                    <Globe className="w-4 h-4 text-[#C4A0B0] mt-0.5 shrink-0" />
+                    <Globe className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
                     <div>
-                      <p className="font-body text-xs text-[#3D1A2E]">Website</p>
+                      <p className="font-body text-xs text-foreground">Website</p>
                       <a
                         href={selectedInquiry.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-body text-sm font-semibold text-[#8B2252] hover:underline flex items-center gap-1"
+                        className="font-body text-sm font-semibold text-brand-link hover:underline flex items-center gap-1"
                       >
                         Visit <ExternalLink className="w-3 h-3" />
                       </a>
@@ -342,15 +342,15 @@ export default function PartnershipsDashboard() {
 
               {/* Proposal */}
               <div>
-                <p className="font-body text-xs font-semibold text-[#3D1A2E] uppercase tracking-wider mb-2">Proposal</p>
-                <div className="bg-[#FFF5F8] border border-[#F0D0DC] rounded-xl p-4">
-                  <p className="font-body text-sm text-[#1A0A12] leading-relaxed whitespace-pre-wrap">{selectedInquiry.proposal}</p>
+                <p className="font-body text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Proposal</p>
+                <div className="bg-accent border border-border rounded-xl p-4">
+                  <p className="font-body text-sm text-foreground leading-relaxed whitespace-pre-wrap">{selectedInquiry.proposal}</p>
                 </div>
               </div>
 
               {/* Status update */}
               <div>
-                <p className="font-body text-xs font-semibold text-[#3D1A2E] uppercase tracking-wider mb-2">Update Status</p>
+                <p className="font-body text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Update Status</p>
                 <div className="flex items-center gap-3">
                   <Select
                     value={selectedInquiry.status}
@@ -359,7 +359,7 @@ export default function PartnershipsDashboard() {
                       setSelectedInquiry((prev) => prev ? { ...prev, status: val as PartnerStatus } : null);
                     }}
                   >
-                    <SelectTrigger className="w-44 font-body text-sm border-[#F0D0DC]">
+                    <SelectTrigger className="w-44 font-body text-sm border-border">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -369,7 +369,7 @@ export default function PartnershipsDashboard() {
                       <SelectItem value="declined">Declined</SelectItem>
                     </SelectContent>
                   </Select>
-                  {updateStatusMutation.isPending && <Loader2 className="w-4 h-4 animate-spin text-[#8B2252]" />}
+                  {updateStatusMutation.isPending && <Loader2 className="w-4 h-4 animate-spin text-brand-link" />}
                 </div>
               </div>
             </div>

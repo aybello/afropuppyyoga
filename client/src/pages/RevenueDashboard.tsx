@@ -49,19 +49,19 @@ export default function RevenueDashboard() {
   );
 
   return (
-    <div className="min-h-screen bg-[#FEFAF4]">
+    <div className="min-h-screen apy-staff-ui bg-background">
       <AdminNav />
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
-            <h1 className="font-display text-3xl text-[#1A0A12]">Sales & Revenue</h1>
-            <p className="font-body text-sm text-[#6B4C3B] mt-1">
+            <h1 className="font-display text-3xl text-foreground">Sales & Revenue</h1>
+            <p className="font-body text-sm text-muted-foreground mt-1">
               Live data from Stripe{data ? ` · ${data.chargesAnalyzed} transactions analyzed` : ""}
             </p>
           </div>
           <Select value={String(rangeMonths)} onValueChange={v => setRangeMonths(Number(v))}>
-            <SelectTrigger className="w-44 font-body border-[#F0D0DC] bg-white">
+            <SelectTrigger className="w-44 font-body border-border bg-white">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -91,64 +91,64 @@ export default function RevenueDashboard() {
           <>
             {/* KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <Card className="bg-white border-[#F0D0DC] rounded-2xl">
+              <Card className="bg-white border-border rounded-2xl">
                 <CardContent className="pt-5 pb-4">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
                       <DollarSign size={16} className="text-green-700" />
                     </div>
-                    <span className="font-body text-xs text-[#6B4C3B] uppercase tracking-wide">Total Revenue</span>
+                    <span className="font-body text-xs text-muted-foreground uppercase tracking-wide">Total Revenue</span>
                   </div>
-                  <p className="font-display text-2xl text-[#1A0A12]">{fmt(data.summary.totalRevenueCents)}</p>
-                  <p className="font-body text-xs text-[#9B7A69] mt-1">net: {fmt(data.summary.totalNetCents)}</p>
+                  <p className="font-display text-2xl text-foreground">{fmt(data.summary.totalRevenueCents)}</p>
+                  <p className="font-body text-xs text-muted-foreground mt-1">net: {fmt(data.summary.totalNetCents)}</p>
                 </CardContent>
               </Card>
 
-              <Card className="bg-white border-[#F0D0DC] rounded-2xl">
+              <Card className="bg-white border-border rounded-2xl">
                 <CardContent className="pt-5 pb-4">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
                       <CreditCard size={16} className="text-blue-700" />
                     </div>
-                    <span className="font-body text-xs text-[#6B4C3B] uppercase tracking-wide">Transactions</span>
+                    <span className="font-body text-xs text-muted-foreground uppercase tracking-wide">Transactions</span>
                   </div>
-                  <p className="font-display text-2xl text-[#1A0A12]">{data.summary.totalTransactions}</p>
-                  <p className="font-body text-xs text-[#9B7A69] mt-1">refunded: {fmt(data.summary.totalRefundedCents)}</p>
+                  <p className="font-display text-2xl text-foreground">{data.summary.totalTransactions}</p>
+                  <p className="font-body text-xs text-muted-foreground mt-1">refunded: {fmt(data.summary.totalRefundedCents)}</p>
                 </CardContent>
               </Card>
 
-              <Card className="bg-white border-[#F0D0DC] rounded-2xl">
+              <Card className="bg-white border-border rounded-2xl">
                 <CardContent className="pt-5 pb-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
-                      <TrendingUp size={16} className="text-purple-700" />
+                    <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center">
+                      <TrendingUp size={16} className="text-brand-link" />
                     </div>
-                    <span className="font-body text-xs text-[#6B4C3B] uppercase tracking-wide">Avg Transaction</span>
+                    <span className="font-body text-xs text-muted-foreground uppercase tracking-wide">Avg Transaction</span>
                   </div>
-                  <p className="font-display text-2xl text-[#1A0A12]">{fmt(data.summary.avgTransactionCents)}</p>
-                  <p className="font-body text-xs text-[#9B7A69] mt-1">per booking</p>
+                  <p className="font-display text-2xl text-foreground">{fmt(data.summary.avgTransactionCents)}</p>
+                  <p className="font-body text-xs text-muted-foreground mt-1">per booking</p>
                 </CardContent>
               </Card>
 
-              <Card className="bg-white border-[#F0D0DC] rounded-2xl">
+              <Card className="bg-white border-border rounded-2xl">
                 <CardContent className="pt-5 pb-4">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
                       <Wallet size={16} className="text-amber-700" />
                     </div>
-                    <span className="font-body text-xs text-[#6B4C3B] uppercase tracking-wide">Stripe Balance</span>
+                    <span className="font-body text-xs text-muted-foreground uppercase tracking-wide">Stripe Balance</span>
                   </div>
-                  <p className="font-display text-2xl text-[#1A0A12]">{fmt(data.summary.availableBalanceCents + data.summary.pendingBalanceCents)}</p>
-                  <p className="font-body text-xs text-[#9B7A69] mt-1">{fmt(data.summary.pendingBalanceCents)} pending</p>
+                  <p className="font-display text-2xl text-foreground">{fmt(data.summary.availableBalanceCents + data.summary.pendingBalanceCents)}</p>
+                  <p className="font-body text-xs text-muted-foreground mt-1">{fmt(data.summary.pendingBalanceCents)} pending</p>
                 </CardContent>
               </Card>
             </div>
 
             {/* Revenue by Location & Monthly */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <Card className="bg-white border-[#F0D0DC] rounded-2xl">
+              <Card className="bg-white border-border rounded-2xl">
                 <CardHeader className="pb-3">
-                  <CardTitle className="font-display text-base text-[#1A0A12] flex items-center gap-2">
+                  <CardTitle className="font-display text-base text-foreground flex items-center gap-2">
                     <MapPin size={16} /> Revenue by Location
                   </CardTitle>
                 </CardHeader>
@@ -160,22 +160,22 @@ export default function RevenueDashboard() {
                         <div key={loc.location}>
                           <div className="flex justify-between text-sm mb-1">
                             <span className="font-medium">{loc.location}</span>
-                            <span className="text-[#6B4C3B]">{fmt(loc.revenueCents)} ({loc.transactions} txns)</span>
+                            <span className="text-muted-foreground">{fmt(loc.revenueCents)} ({loc.transactions} txns)</span>
                           </div>
-                          <div className="h-2 bg-[#F6E6EC] rounded-full overflow-hidden">
-                            <div className="h-full bg-[#8B2252] rounded-full" style={{ width: `${pct}%` }} />
+                          <div className="h-2 bg-accent rounded-full overflow-hidden">
+                            <div className="h-full bg-primary rounded-full" style={{ width: `${pct}%` }} />
                           </div>
                         </div>
                       );
                     })}
-                    {data.byLocation.length === 0 && <p className="text-sm text-[#9B7A69]">No location data.</p>}
+                    {data.byLocation.length === 0 && <p className="text-sm text-muted-foreground">No location data.</p>}
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-white border-[#F0D0DC] rounded-2xl">
+              <Card className="bg-white border-border rounded-2xl">
                 <CardHeader className="pb-3">
-                  <CardTitle className="font-display text-base text-[#1A0A12] flex items-center gap-2">
+                  <CardTitle className="font-display text-base text-foreground flex items-center gap-2">
                     <Calendar size={16} /> Monthly Revenue
                   </CardTitle>
                 </CardHeader>
@@ -189,15 +189,15 @@ export default function RevenueDashboard() {
                         <div key={m.month}>
                           <div className="flex justify-between text-sm mb-1">
                             <span className="font-medium">{monthLabel}</span>
-                            <span className="text-[#6B4C3B]">{fmt(m.revenueCents)} ({m.transactions} txns)</span>
+                            <span className="text-muted-foreground">{fmt(m.revenueCents)} ({m.transactions} txns)</span>
                           </div>
-                          <div className="h-2 bg-[#F6E6EC] rounded-full overflow-hidden">
-                            <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${pct}%` }} />
+                          <div className="h-2 bg-accent rounded-full overflow-hidden">
+                            <div className="h-full bg-foreground rounded-full" style={{ width: `${pct}%` }} />
                           </div>
                         </div>
                       );
                     })}
-                    {data.byMonth.length === 0 && <p className="text-sm text-[#9B7A69]">No monthly data.</p>}
+                    {data.byMonth.length === 0 && <p className="text-sm text-muted-foreground">No monthly data.</p>}
                   </div>
                 </CardContent>
               </Card>
@@ -205,17 +205,17 @@ export default function RevenueDashboard() {
 
             {/* Public vs Private */}
             {data.byEventType.length > 0 && (
-              <Card className="bg-white border-[#F0D0DC] rounded-2xl mb-8">
+              <Card className="bg-white border-border rounded-2xl mb-8">
                 <CardHeader className="pb-3">
-                  <CardTitle className="font-display text-base text-[#1A0A12]">Public vs Private Events</CardTitle>
+                  <CardTitle className="font-display text-base text-foreground">Public vs Private Events</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-4">
                     {data.byEventType.map(et => (
-                      <div key={et.type} className="text-center p-4 bg-[#FFF0F4] rounded-xl">
-                        <p className="text-sm text-[#6B4C3B] capitalize">{et.type} Classes</p>
-                        <p className="font-display text-xl text-[#1A0A12] mt-1">{fmt(et.revenueCents)}</p>
-                        <p className="text-xs text-[#9B7A69]">{et.transactions} transactions</p>
+                      <div key={et.type} className="text-center p-4 bg-accent rounded-xl">
+                        <p className="text-sm text-muted-foreground capitalize">{et.type} Classes</p>
+                        <p className="font-display text-xl text-foreground mt-1">{fmt(et.revenueCents)}</p>
+                        <p className="text-xs text-muted-foreground">{et.transactions} transactions</p>
                       </div>
                     ))}
                   </div>
@@ -226,21 +226,21 @@ export default function RevenueDashboard() {
             {/* Ticket Types & Time Slots */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
               {data.byTicketType && data.byTicketType.length > 0 && (
-                <Card className="bg-white border-[#F0D0DC] rounded-2xl">
+                <Card className="bg-white border-border rounded-2xl">
                   <CardHeader className="pb-3">
-                    <CardTitle className="font-display text-base text-[#1A0A12] flex items-center gap-2">
+                    <CardTitle className="font-display text-base text-foreground flex items-center gap-2">
                       <Ticket size={16} /> Top Ticket Types
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       {data.byTicketType.slice(0, 8).map(t => (
-                        <div key={t.name} className="flex items-center justify-between gap-4 border-b border-[#F6E6EC] pb-2 last:border-0">
+                        <div key={t.name} className="flex items-center justify-between gap-4 border-b border-border pb-2 last:border-0">
                           <div className="min-w-0">
-                            <p className="font-body text-sm text-[#1A0A12] truncate">{t.name}</p>
-                            <p className="font-body text-xs text-[#9B7A69]">{t.count} sold</p>
+                            <p className="font-body text-sm text-foreground truncate">{t.name}</p>
+                            <p className="font-body text-xs text-muted-foreground">{t.count} sold</p>
                           </div>
-                          <span className="font-display text-base text-[#8B2252] shrink-0">{fmt(t.revenueCents)}</span>
+                          <span className="font-display text-base text-brand-link shrink-0">{fmt(t.revenueCents)}</span>
                         </div>
                       ))}
                     </div>
@@ -249,21 +249,21 @@ export default function RevenueDashboard() {
               )}
 
               {data.byTimeSlot && data.byTimeSlot.length > 0 && (
-                <Card className="bg-white border-[#F0D0DC] rounded-2xl">
+                <Card className="bg-white border-border rounded-2xl">
                   <CardHeader className="pb-3">
-                    <CardTitle className="font-display text-base text-[#1A0A12] flex items-center gap-2">
+                    <CardTitle className="font-display text-base text-foreground flex items-center gap-2">
                       <Clock size={16} /> Class Time Performance
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       {data.byTimeSlot.map(s => (
-                        <div key={s.slot} className="flex items-center justify-between gap-4 border-b border-[#F6E6EC] pb-2 last:border-0">
+                        <div key={s.slot} className="flex items-center justify-between gap-4 border-b border-border pb-2 last:border-0">
                           <div>
-                            <p className="font-display text-base text-[#1A0A12]">{s.slot}</p>
-                            <p className="font-body text-xs text-[#9B7A69]">{s.count} tickets sold</p>
+                            <p className="font-display text-base text-foreground">{s.slot}</p>
+                            <p className="font-body text-xs text-muted-foreground">{s.count} tickets sold</p>
                           </div>
-                          <span className="font-display text-base text-[#8B2252]">{fmt(s.revenueCents)}</span>
+                          <span className="font-display text-base text-brand-link">{fmt(s.revenueCents)}</span>
                         </div>
                       ))}
                     </div>
@@ -273,34 +273,34 @@ export default function RevenueDashboard() {
             </div>
 
             {/* Recent Transactions */}
-            <Card className="bg-white border-[#F0D0DC] rounded-2xl">
+            <Card className="bg-white border-border rounded-2xl">
               <CardHeader className="pb-3">
-                <CardTitle className="font-display text-base text-[#1A0A12]">Recent Transactions</CardTitle>
+                <CardTitle className="font-display text-base text-foreground">Recent Transactions</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
-                  <table className="w-full font-body text-sm">
+                  <table className="w-full font-body text-sm min-w-[640px]">
                     <thead>
-                      <tr className="border-b border-[#F0D0DC]">
-                        <th className="text-left px-5 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Date</th>
-                        <th className="text-left px-3 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Event</th>
-                        <th className="text-left px-3 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Location</th>
-                        <th className="text-left px-3 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Customer</th>
-                        <th className="text-right px-5 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Amount</th>
+                      <tr className="border-b border-border">
+                        <th className="text-left px-5 py-3 text-xs text-muted-foreground uppercase tracking-wide">Date</th>
+                        <th className="text-left px-3 py-3 text-xs text-muted-foreground uppercase tracking-wide">Event</th>
+                        <th className="text-left px-3 py-3 text-xs text-muted-foreground uppercase tracking-wide">Location</th>
+                        <th className="text-left px-3 py-3 text-xs text-muted-foreground uppercase tracking-wide">Customer</th>
+                        <th className="text-right px-5 py-3 text-xs text-muted-foreground uppercase tracking-wide">Amount</th>
                       </tr>
                     </thead>
                     <tbody>
                       {data.recentTransactions.map(tx => (
-                        <tr key={tx.id} className="border-b border-[#F6E6EC] last:border-0 hover:bg-[#FFF8FA]">
-                          <td className="px-5 py-3 text-[#9B7A69]">{new Date(tx.date).toLocaleDateString("en-CA", { month: "short", day: "numeric" })}</td>
+                        <tr key={tx.id} className="border-b border-border last:border-0 hover:bg-accent">
+                          <td className="px-5 py-3 text-muted-foreground">{new Date(tx.date).toLocaleDateString("en-CA", { month: "short", day: "numeric" })}</td>
                           <td className="px-3 py-3 max-w-[200px] truncate">{tx.description}</td>
-                          <td className="px-3 py-3"><span className="px-2 py-0.5 bg-[#FFF0F4] rounded text-xs text-[#8B2252]">{tx.location}</span></td>
-                          <td className="px-3 py-3 text-[#9B7A69] truncate max-w-[150px]">{tx.customerName || tx.customerEmail || "—"}</td>
-                          <td className="px-5 py-3 text-right font-display text-[#8B2252]">{fmt(tx.amount)}</td>
+                          <td className="px-3 py-3"><span className="px-2 py-0.5 bg-accent rounded text-xs text-brand-link">{tx.location}</span></td>
+                          <td className="px-3 py-3 text-muted-foreground truncate max-w-[150px]">{tx.customerName || tx.customerEmail || "—"}</td>
+                          <td className="px-5 py-3 text-right font-display text-brand-link">{fmt(tx.amount)}</td>
                         </tr>
                       ))}
                       {data.recentTransactions.length === 0 && (
-                        <tr><td colSpan={5} className="px-5 py-8 text-center text-[#9B7A69]">No transactions in this period.</td></tr>
+                        <tr><td colSpan={5} className="px-5 py-8 text-center text-muted-foreground">No transactions in this period.</td></tr>
                       )}
                     </tbody>
                   </table>
@@ -327,17 +327,17 @@ function LumaAttendanceSection({ fromDate }: { fromDate: string | undefined }) {
     <div className="mt-8">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="font-display text-xl text-[#1A0A12] flex items-center gap-2">
+          <h2 className="font-display text-xl text-foreground flex items-center gap-2">
             <Users size={20} /> Luma Attendance
           </h2>
-          <p className="font-body text-xs text-[#9B7A69] mt-1">Guest registrations and check-ins from Luma (fetched on demand)</p>
+          <p className="font-body text-xs text-muted-foreground mt-1">Guest registrations and check-ins from Luma (fetched on demand)</p>
         </div>
         <Button
           variant="outline"
           size="sm"
           onClick={() => refetch()}
           disabled={isFetching}
-          className="border-[#F0D0DC] text-[#8B2252] hover:bg-[#FFF0F4]"
+          className="border-border text-brand-link hover:bg-accent"
         >
           <RefreshCw size={14} className={isFetching ? "animate-spin mr-2" : "mr-2"} />
           {isFetching ? "Loading..." : data ? "Refresh" : "Load Luma Data"}
@@ -360,60 +360,60 @@ function LumaAttendanceSection({ fromDate }: { fromDate: string | undefined }) {
       {data && (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <Card className="bg-white border-[#F0D0DC] rounded-2xl">
+            <Card className="bg-white border-border rounded-2xl">
               <CardContent className="pt-5 pb-4">
-                <p className="font-body text-xs text-[#6B4C3B] uppercase tracking-wide">Events</p>
-                <p className="font-display text-2xl text-[#1A0A12] mt-1">{data.totalEvents}</p>
+                <p className="font-body text-xs text-muted-foreground uppercase tracking-wide">Events</p>
+                <p className="font-display text-2xl text-foreground mt-1">{data.totalEvents}</p>
               </CardContent>
             </Card>
-            <Card className="bg-white border-[#F0D0DC] rounded-2xl">
+            <Card className="bg-white border-border rounded-2xl">
               <CardContent className="pt-5 pb-4">
-                <p className="font-body text-xs text-[#6B4C3B] uppercase tracking-wide">Paid Seats</p>
-                <p className="font-display text-2xl text-[#1A0A12] mt-1">{data.totalGuests.toLocaleString()}</p>
+                <p className="font-body text-xs text-muted-foreground uppercase tracking-wide">Paid Seats</p>
+                <p className="font-display text-2xl text-foreground mt-1">{data.totalGuests.toLocaleString()}</p>
               </CardContent>
             </Card>
-            <Card className="bg-white border-[#F0D0DC] rounded-2xl">
+            <Card className="bg-white border-border rounded-2xl">
               <CardContent className="pt-5 pb-4">
-                <p className="font-body text-xs text-[#6B4C3B] uppercase tracking-wide">Checked-in Seats</p>
-                <p className="font-display text-2xl text-[#1A0A12] mt-1">{data.totalCheckedIn.toLocaleString()}</p>
+                <p className="font-body text-xs text-muted-foreground uppercase tracking-wide">Checked-in Seats</p>
+                <p className="font-display text-2xl text-foreground mt-1">{data.totalCheckedIn.toLocaleString()}</p>
               </CardContent>
             </Card>
-            <Card className="bg-white border-[#F0D0DC] rounded-2xl">
+            <Card className="bg-white border-border rounded-2xl">
               <CardContent className="pt-5 pb-4">
-                <p className="font-body text-xs text-[#6B4C3B] uppercase tracking-wide">Attendance Rate</p>
-                <p className="font-display text-2xl text-[#1A0A12] mt-1">{(data.attendanceRate * 100).toFixed(0)}%</p>
+                <p className="font-body text-xs text-muted-foreground uppercase tracking-wide">Attendance Rate</p>
+                <p className="font-display text-2xl text-foreground mt-1">{(data.attendanceRate * 100).toFixed(0)}%</p>
               </CardContent>
             </Card>
           </div>
 
-          <Card className="bg-white border-[#F0D0DC] rounded-2xl">
+          <Card className="bg-white border-border rounded-2xl">
             <CardHeader className="pb-3">
-              <CardTitle className="font-display text-base text-[#1A0A12]">Event Attendance</CardTitle>
+              <CardTitle className="font-display text-base text-foreground">Event Attendance</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
-                <table className="w-full font-body text-sm">
+                <table className="w-full font-body text-sm min-w-[640px]">
                   <thead>
-                    <tr className="border-b border-[#F0D0DC]">
-                      <th className="text-left px-5 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Event</th>
-                      <th className="text-left px-3 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Date</th>
-                      <th className="text-right px-3 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Registrations</th>
-                      <th className="text-right px-3 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Paid Seats</th>
-                      <th className="text-right px-3 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Checked In</th>
-                      <th className="text-center px-3 py-3 text-xs text-[#6B4C3B] uppercase tracking-wide">Link</th>
+                    <tr className="border-b border-border">
+                      <th className="text-left px-5 py-3 text-xs text-muted-foreground uppercase tracking-wide">Event</th>
+                      <th className="text-left px-3 py-3 text-xs text-muted-foreground uppercase tracking-wide">Date</th>
+                      <th className="text-right px-3 py-3 text-xs text-muted-foreground uppercase tracking-wide">Registrations</th>
+                      <th className="text-right px-3 py-3 text-xs text-muted-foreground uppercase tracking-wide">Paid Seats</th>
+                      <th className="text-right px-3 py-3 text-xs text-muted-foreground uppercase tracking-wide">Checked In</th>
+                      <th className="text-center px-3 py-3 text-xs text-muted-foreground uppercase tracking-wide">Link</th>
                     </tr>
                   </thead>
                   <tbody>
                     {data.eventAttendance.map((ev, i) => (
-                      <tr key={i} className="border-b border-[#F6E6EC] last:border-0 hover:bg-[#FFF8FA]">
+                      <tr key={i} className="border-b border-border last:border-0 hover:bg-accent">
                         <td className="px-5 py-3 max-w-[250px] truncate">{ev.name}</td>
-                        <td className="px-3 py-3 text-[#9B7A69]">{new Date(ev.date).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}</td>
+                        <td className="px-3 py-3 text-muted-foreground">{new Date(ev.date).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}</td>
                         <td className="px-3 py-3 text-right font-medium">{ev.registrations}</td>
                         <td className="px-3 py-3 text-right font-medium">{ev.guests}</td>
                         <td className="px-3 py-3 text-right font-medium">{ev.checkedIn}</td>
                         <td className="px-3 py-3 text-center">
                           {ev.url && (
-                            <a href={ev.url.startsWith("http") ? ev.url : `https://lu.ma/${ev.url}`} target="_blank" rel="noopener noreferrer" className="text-[#8B2252] hover:underline">
+                            <a href={ev.url.startsWith("http") ? ev.url : `https://lu.ma/${ev.url}`} target="_blank" rel="noopener noreferrer" className="text-brand-link hover:underline">
                               <ExternalLink size={14} className="inline" />
                             </a>
                           )}

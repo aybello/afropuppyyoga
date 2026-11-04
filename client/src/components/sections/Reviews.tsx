@@ -53,12 +53,12 @@ const reviews = [
 ];
 
 const avatarColors = [
-  "bg-[#8B2252]",
-  "bg-[#8B2252]",
-  "bg-[#F2A0B8]",
-  "bg-[#8B2252]",
-  "bg-[#8B2252]",
-  "bg-[#F2A0B8]",
+  "bg-[#FDE9EF]",
+  "bg-[#FDE9EF]",
+  "bg-[#F29CB8]",
+  "bg-[#FDE9EF]",
+  "bg-[#FDE9EF]",
+  "bg-[#F29CB8]",
 ];
 
 function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
@@ -67,7 +67,7 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 30 }}
+      initial={false}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.6, delay, ease: "easeOut" }}
     >
@@ -78,76 +78,76 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export default function Reviews() {
   return (
-    <section id="reviews" className="py-10 md:py-20 bg-[#FFF5F8]">
+    <section id="reviews" className="py-10 md:py-20 bg-[#FEFAF4]">
       <div className="container">
         {/* Header */}
         <FadeUp>
           <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-16 gap-6">
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-0.5 bg-[#8B2252]" />
-                <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">
+                <div className="w-8 h-0.5 bg-[#B83F67]" />
+                <span className="text-[#B83F67] font-body text-xs font-semibold tracking-widest uppercase">
                   Reviews
                 </span>
               </div>
-              <h2 className="font-display text-4xl md:text-5xl font-bold text-[#1A0A12]">
+              <h2 className="font-display text-4xl md:text-5xl font-medium text-[#34221D]">
                 See What Our
                 <br />
-                <span className="italic text-[#8B2252]">Clients Say</span>
+                <span className="italic text-[#B83F67]">Clients Say</span>
               </h2>
             </div>
             <div className="flex flex-wrap items-center gap-4 mt-4 md:mt-0">
               <div className="text-center">
-                <div className="font-display font-bold text-4xl md:text-5xl text-[#1A0A12]">{REVIEW_METRICS.google.rating}</div>
+                <div className="font-display font-medium text-4xl md:text-5xl text-[#34221D]">{REVIEW_METRICS.google.rating}</div>
                 <div className="flex gap-0.5 justify-center my-1" aria-label={`${REVIEW_METRICS.google.rating} out of 5 on Google`}>
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={14} aria-hidden="true" className="fill-[#F2A0B8] text-[#F2A0B8]" />
+                    <Star key={i} size={14} aria-hidden="true" className="fill-[#F29CB8] text-[#F29CB8]" />
                   ))}
                 </div>
-                <a href={REVIEW_METRICS.google.url} target="_blank" rel="noopener noreferrer" className="font-body text-xs text-[#1A0A12]/70 underline">Google: {REVIEW_METRICS.google.total} reviews, Kitchener</a>
+                <a href={REVIEW_METRICS.google.url} target="_blank" rel="noopener noreferrer" className="font-body text-xs text-[#34221D]/70 underline">Google: {REVIEW_METRICS.google.total} reviews, Kitchener</a>
               </div>
               <a
                 href="https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsdiY1GsfLo"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-5 py-2.5 border-2 border-[#8B2252] text-[#8B2252] font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] hover:text-white transition-all duration-200"
+                className="px-5 py-2.5 border-2 border-[#B83F67] text-[#B83F67] font-body font-semibold text-sm rounded-full hover:bg-[#FDE9EF] hover:text-[#34221D] transition-all duration-200"
               >
                 Leave a Review
               </a>
             </div>
           </div>
-          <p className="mb-8 font-body font-semibold text-sm text-[#1A0A12]">{FIVE_STAR_REVIEW_COUNT} Five-Star Reviews</p>
+          <p className="mb-8 font-body font-semibold text-sm text-[#34221D]">{FIVE_STAR_REVIEW_COUNT} five-star reviews</p>
         </FadeUp>
 
         {/* Review cards grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mb-20">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mb-4">
           {reviews.map((review, i) => (
             <motion.div
               key={review.name}
-              initial={{ opacity: 0, y: 25 }}
+              initial={false}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1, duration: 0.5 }}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-[#F0D0DC] hover:shadow-md hover:-translate-y-1 transition-all duration-300"
+              className="bg-white rounded-2xl p-6 shadow-sm border border-[#EBCDD5] hover:shadow-md transition-all duration-300"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-full ${avatarColors[i]} flex items-center justify-center text-white font-body font-bold text-sm`}>
+                  <div className={`w-10 h-10 rounded-full ${avatarColors[i]} flex items-center justify-center text-[#34221D] font-body font-bold text-sm`}>
                     {review.avatar}
                   </div>
                   <div>
-                    <div className="font-display font-bold text-sm text-[#1A0A12]">{review.name}</div>
-                    <div className="font-body text-xs text-[#1A0A12]/40">{review.date}</div>
+                    <div className="font-display font-medium text-sm text-[#34221D]">{review.name}</div>
+                    <div className="font-body text-xs text-[#34221D]/70">{review.date}</div>
                   </div>
                 </div>
-                <Quote size={20} className="text-[#F2A0B8]/40 shrink-0" />
+                <Quote size={20} className="text-[#F29CB8]/40 shrink-0" />
               </div>
               <div className="flex gap-0.5 mb-3">
                 {[...Array(review.rating)].map((_, j) => (
-                  <Star key={j} size={13} className="fill-[#F2A0B8] text-[#F2A0B8]" />
+                  <Star key={j} size={13} className="fill-[#F29CB8] text-[#F29CB8]" />
                 ))}
               </div>
-              <p className="font-body text-[#1A0A12]/70 text-sm leading-relaxed">{review.text}</p>
+              <p className="font-body text-[#34221D]/70 text-sm leading-relaxed">{review.text}</p>
             </motion.div>
           ))}
         </div>

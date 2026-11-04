@@ -85,33 +85,33 @@ export default function AdminNav() {
   );
 
   return (
-    <header className="bg-[#FFF5F8] border-b border-[#F0D0DC] px-4 py-3 sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto flex items-center gap-3">
+    <header className="apy-staff-ui bg-background border-b border-border px-4 py-3 sticky top-0 z-40">
+      <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-x-3 gap-y-2">
         {/* Logo */}
         <a href="/" className="flex items-center gap-2.5 group shrink-0">
           <img
             src={LOGO_URL}
             alt="AfroPuppyYoga"
-            className="w-9 h-9 rounded-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-11 h-11 object-contain"
           />
           <div className="flex flex-col leading-none hidden sm:flex">
-            <span className="font-display font-bold text-sm text-[#1A0A12]">AfroPuppyYoga</span>
-            <span className="font-body text-[9px] text-[#8B2252] tracking-widest uppercase">Admin Portal</span>
+            <span className="font-display font-medium text-lg text-foreground">AfroPuppyYoga</span>
+            <span className="mt-1 font-body text-[10px] text-brand-link tracking-widest uppercase">Admin Portal</span>
           </div>
         </a>
 
         {/* Primary nav tabs */}
-        <nav className="flex items-center gap-1 flex-1">
+        <nav className="order-3 flex w-full min-w-0 flex-wrap items-center gap-1 lg:order-none lg:w-auto lg:flex-1">
           {visiblePrimary.map(({ href, label, icon: Icon }) => {
             const active = location === href || location.startsWith(href);
             return (
               <Link
                 key={href}
                 href={href}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 font-body font-semibold text-sm rounded-full transition-colors whitespace-nowrap ${
+                className={`inline-flex min-h-10 items-center gap-1.5 px-3 py-2 font-body font-medium text-sm rounded-full transition-colors whitespace-nowrap focus-visible:ring-2 focus-visible:ring-ring ${
                   active
-                    ? "bg-[#8B2252] text-white"
-                    : "text-[#8B2252] hover:bg-[#FFF0F4] border border-[#F0D0DC] bg-white"
+                    ? "bg-accent text-accent-foreground border border-primary"
+                    : "text-foreground hover:bg-accent border border-transparent"
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -122,13 +122,13 @@ export default function AdminNav() {
 
           {/* More dropdown */}
           {visibleMore.length > 0 && (
-            <div className="relative" ref={moreRef}>
+            <div className="static lg:relative" ref={moreRef}>
               <button
                 onClick={() => setMoreOpen((o) => !o)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 font-body font-semibold text-sm rounded-full transition-colors whitespace-nowrap ${
+                className={`inline-flex min-h-10 items-center gap-1.5 px-3 py-2 font-body font-medium text-sm rounded-full transition-colors whitespace-nowrap focus-visible:ring-2 focus-visible:ring-ring ${
                   moreIsActive
-                    ? "bg-[#8B2252] text-white"
-                    : "text-[#8B2252] hover:bg-[#FFF0F4] border border-[#F0D0DC] bg-white"
+                    ? "bg-accent text-accent-foreground border border-primary"
+                    : "text-foreground hover:bg-accent border border-transparent"
                 }`}
               >
                 More
@@ -136,7 +136,7 @@ export default function AdminNav() {
               </button>
 
               {moreOpen && (
-                <div className="absolute top-full left-0 mt-1.5 bg-white border border-[#F0D0DC] rounded-xl shadow-lg py-1.5 min-w-[170px] z-50">
+                <div className="absolute top-full left-4 right-4 mt-1.5 max-h-[65vh] overflow-y-auto bg-white border border-border rounded-xl shadow-md py-1.5 z-50 lg:left-auto lg:right-0 lg:w-56">
                   {visibleMore.map(({ href, label, icon: Icon }) => {
                     const active = location === href || location.startsWith(href);
                     return (
@@ -146,8 +146,8 @@ export default function AdminNav() {
                         onClick={() => setMoreOpen(false)}
                         className={`flex items-center gap-2.5 px-4 py-2 font-body font-semibold text-sm transition-colors ${
                           active
-                            ? "bg-[#FFF0F4] text-[#8B2252]"
-                            : "text-[#3D1A2E] hover:bg-[#FFF8FB] hover:text-[#8B2252]"
+                            ? "bg-accent text-brand-link"
+                            : "text-foreground hover:bg-accent hover:text-brand-link"
                         }`}
                       >
                         <Icon className="w-4 h-4 shrink-0" />
@@ -162,20 +162,20 @@ export default function AdminNav() {
         </nav>
 
         {/* Right side: All Tools + Back to Site */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="ml-auto flex items-center gap-1.5 shrink-0">
           <Link
             href="/staff"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 font-body font-semibold text-sm rounded-full border border-[#F0D0DC] text-[#8B2252] bg-white hover:bg-[#FFF0F4] transition-colors whitespace-nowrap"
+            className="inline-flex min-h-10 items-center gap-1.5 px-3 py-2 font-body font-medium text-sm rounded-full border border-border text-brand-link bg-white hover:bg-accent transition-colors whitespace-nowrap"
           >
             <LayoutGrid className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">All Tools</span>
+            <span>All Tools</span>
           </Link>
           <a
             href="/"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 font-body font-semibold text-sm rounded-full border border-[#F0D0DC] text-[#6B4C3B] bg-white hover:bg-[#FFF0F4] transition-colors whitespace-nowrap"
+            className="inline-flex min-h-10 items-center gap-1.5 px-3 py-2 font-body font-medium text-sm rounded-full border border-border text-muted-foreground bg-white hover:bg-accent transition-colors whitespace-nowrap"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Back to Site</span>
+            <span>Back to Site</span>
           </a>
         </div>
       </div>

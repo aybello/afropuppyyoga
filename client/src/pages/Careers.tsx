@@ -3,24 +3,64 @@
    Design: Warm Afro-Wellness Editorial (matches main site)
    ============================================================ */
 import { useState, useRef, useEffect } from "react";
-import { NEW_CAREERS_LISTINGS, PUPPY_MONITOR_SHIFT_DESCRIPTION } from "@shared/newCareersListings";
-import { PUPPY_MONITOR_PAY_DESCRIPTION, PUPPY_MONITOR_PAY_LABEL, PUPPY_MONITOR_POSITION_TYPE } from "@shared/puppyMonitorTerms";
-import { SOCIAL_MEDIA_INTERN_PAY_DESCRIPTION, SOCIAL_MEDIA_INTERN_PAY_LABEL } from "@shared/socialMediaTerms";
+import {
+  NEW_CAREERS_LISTINGS,
+  PUPPY_MONITOR_SHIFT_DESCRIPTION,
+} from "@shared/newCareersListings";
+import {
+  PUPPY_MONITOR_PAY_DESCRIPTION,
+  PUPPY_MONITOR_PAY_LABEL,
+  PUPPY_MONITOR_POSITION_TYPE,
+} from "@shared/puppyMonitorTerms";
+import {
+  SOCIAL_MEDIA_INTERN_PAY_DESCRIPTION,
+  SOCIAL_MEDIA_INTERN_PAY_LABEL,
+} from "@shared/socialMediaTerms";
 import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
 import { recoverCompletedVideoUpload } from "@/lib/videoUploadRecovery";
-import { createLocalVideoPreview, releaseLocalVideoPreview } from "@/lib/localVideoPreview";
+import {
+  createLocalVideoPreview,
+  releaseLocalVideoPreview,
+} from "@/lib/localVideoPreview";
 import { createSubmissionKey } from "@/lib/submissionKey";
-import { MapPin, Clock, Heart, Upload, CheckCircle, X, ChevronDown, Link as LinkIcon, Video, Share2, Copy, Check, Activity, PawPrint, Settings } from "lucide-react";
+import {
+  MapPin,
+  Clock,
+  Heart,
+  Upload,
+  CheckCircle,
+  X,
+  ChevronDown,
+  Link as LinkIcon,
+  Video,
+  Share2,
+  Copy,
+  Check,
+  Activity,
+  PawPrint,
+  Settings,
+} from "lucide-react";
 
 /// ── Job listings ────────────────────────────────────────────
 export type CareerJob = {
-  id: string; title: string; location: string; locationCode: string; type: string;
-  badge?: string; subBadge?: string; pay?: string; emoji?: string; icon?: string;
-  description: string; responsibilities: string[]; requirements: string[]; perks: string[];
+  id: string;
+  title: string;
+  location: string;
+  locationCode: string;
+  type: string;
+  badge?: string;
+  subBadge?: string;
+  pay?: string;
+  emoji?: string;
+  icon?: string;
+  description: string;
+  responsibilities: string[];
+  requirements: string[];
+  perks: string[];
 };
 export const JOB_LISTINGS: CareerJob[] = [
   ...NEW_CAREERS_LISTINGS,
@@ -99,8 +139,7 @@ export const JOB_LISTINGS: CareerJob[] = [
     badge: "Now Hiring",
     pay: PUPPY_MONITOR_PAY_LABEL,
     emoji: "🐾",
-    description:
-      `You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class, feeding, cleaning, and making sure every pup is thriving. This role is perfect for university and college students looking for flexible, fun, part-time work. ${PUPPY_MONITOR_SHIFT_DESCRIPTION}`,
+    description: `You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class, feeding, cleaning, and making sure every pup is thriving. This role is perfect for university and college students looking for flexible, fun, part-time work. ${PUPPY_MONITOR_SHIFT_DESCRIPTION}`,
     responsibilities: [
       "Supervise and handle puppies throughout each class session",
       "Ensure the safety and wellbeing of all puppies at all times",
@@ -133,8 +172,7 @@ export const JOB_LISTINGS: CareerJob[] = [
     badge: "Now Hiring",
     pay: PUPPY_MONITOR_PAY_LABEL,
     emoji: "🐾",
-    description:
-      `You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class, feeding, cleaning, and making sure every pup is thriving. This role is perfect for university and college students looking for flexible, fun, part-time work. ${PUPPY_MONITOR_SHIFT_DESCRIPTION}`,
+    description: `You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class, feeding, cleaning, and making sure every pup is thriving. This role is perfect for university and college students looking for flexible, fun, part-time work. ${PUPPY_MONITOR_SHIFT_DESCRIPTION}`,
     responsibilities: [
       "Supervise and handle puppies throughout each class session",
       "Ensure the safety and wellbeing of all puppies at all times",
@@ -167,8 +205,7 @@ export const JOB_LISTINGS: CareerJob[] = [
     badge: "Now Hiring",
     pay: PUPPY_MONITOR_PAY_LABEL,
     emoji: "🐾",
-    description:
-      `You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class, feeding, cleaning, and making sure every pup is thriving. This role is perfect for university and college students looking for flexible, fun, part-time work. ${PUPPY_MONITOR_SHIFT_DESCRIPTION}`,
+    description: `You'll be the guardian of our four-legged guests during every class. Your job is to keep the puppies safe, happy, and engaged while our guests enjoy their yoga session. You'll handle puppies before, during, and after class, feeding, cleaning, and making sure every pup is thriving. This role is perfect for university and college students looking for flexible, fun, part-time work. ${PUPPY_MONITOR_SHIFT_DESCRIPTION}`,
     responsibilities: [
       "Supervise and handle puppies throughout each class session",
       "Ensure the safety and wellbeing of all puppies at all times",
@@ -387,12 +424,22 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
   });
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
-  const [videoPreviewError, setVideoPreviewError] = useState<string | null>(null);
+  const [videoPreviewError, setVideoPreviewError] = useState<string | null>(
+    null
+  );
   const [videoLink, setVideoLink] = useState("");
   const [videoMode, setVideoMode] = useState<"upload" | "link">("upload");
   const [resumeFile, setResumeFile] = useState<File | null>(null);
-  const [uploadedVideo, setUploadedVideo] = useState<{ fingerprint: string; url: string; key: string } | null>(null);
-  const [uploadedResume, setUploadedResume] = useState<{ fingerprint: string; url: string; key: string } | null>(null);
+  const [uploadedVideo, setUploadedVideo] = useState<{
+    fingerprint: string;
+    url: string;
+    key: string;
+  } | null>(null);
+  const [uploadedResume, setUploadedResume] = useState<{
+    fingerprint: string;
+    url: string;
+    key: string;
+  } | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
@@ -426,7 +473,8 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
 
   const applyMutation = trpc.careers.submitApplication.useMutation({
     onSuccess: () => setSubmitted(true),
-    onError: (err) => setError(err.message || "Something went wrong. Please try again."),
+    onError: err =>
+      setError(err.message || "Something went wrong. Please try again."),
   });
 
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -470,18 +518,24 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       return;
     }
     if (!resumeFile) {
-      setError("A resume is required. Please upload your resume (PDF or Word).");
+      setError(
+        "A resume is required. Please upload your resume (PDF or Word)."
+      );
       return;
     }
     // Video is required
     if (videoMode === "upload" && !videoFile) {
-      setError("A video introduction is required. Please upload a video or paste a link.");
+      setError(
+        "A video introduction is required. Please upload a video or paste a link."
+      );
       return;
     }
     if (videoMode === "link") {
       const trimmed = videoLink.trim();
       if (!trimmed) {
-        setError("A video introduction is required. Please upload a video or paste a link.");
+        setError(
+          "A video introduction is required. Please upload a video or paste a link."
+        );
         return;
       }
       try {
@@ -489,21 +543,34 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
         if (videoUrl.protocol !== "https:") {
           throw new Error("Please use a secure https:// video link.");
         }
-        if (videoUrl.hostname === "linkedin.com" || videoUrl.hostname.endsWith(".linkedin.com")) {
-          throw new Error("LinkedIn profile links are not video submissions. Please use a viewable YouTube, Google Drive, Dropbox, Loom, or similar video link.");
+        if (
+          videoUrl.hostname === "linkedin.com" ||
+          videoUrl.hostname.endsWith(".linkedin.com")
+        ) {
+          throw new Error(
+            "LinkedIn profile links are not video submissions. Please use a viewable YouTube, Google Drive, Dropbox, Loom, or similar video link."
+          );
         }
       } catch (linkError: any) {
-        setError(linkError?.message ?? "Please enter a valid secure video URL (e.g. a YouTube, Google Drive, Dropbox, or Loom link).");
+        setError(
+          linkError?.message ??
+            "Please enter a valid secure video URL (e.g. a YouTube, Google Drive, Dropbox, or Loom link)."
+        );
         return;
       }
     }
 
     // Helper: upload a small file with XHR for progress tracking (used for resume)
-    const uploadWithProgress = (url: string, fieldName: string, file: File, label: string): Promise<{ url: string; key: string }> => {
+    const uploadWithProgress = (
+      url: string,
+      fieldName: string,
+      file: File,
+      label: string
+    ): Promise<{ url: string; key: string }> => {
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.timeout = 3 * 60 * 1000; // 3 minute timeout
-        xhr.upload.onprogress = (e) => {
+        xhr.upload.onprogress = e => {
           if (e.lengthComputable) {
             const pct = Math.round((e.loaded / e.total) * 100);
             setUploadProgress(pct);
@@ -520,14 +587,24 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
           } else {
             try {
               const err = JSON.parse(xhr.responseText);
-              reject(new Error(err.error ?? `${label} upload failed (${xhr.status})`));
+              reject(
+                new Error(err.error ?? `${label} upload failed (${xhr.status})`)
+              );
             } catch {
               reject(new Error(`${label} upload failed (${xhr.status})`));
             }
           }
         };
-        xhr.onerror = () => reject(new Error(`${label} upload failed. Please check your connection.`));
-        xhr.ontimeout = () => reject(new Error(`${label} upload timed out. Please try a smaller file or check your connection.`));
+        xhr.onerror = () =>
+          reject(
+            new Error(`${label} upload failed. Please check your connection.`)
+          );
+        xhr.ontimeout = () =>
+          reject(
+            new Error(
+              `${label} upload timed out. Please try a smaller file or check your connection.`
+            )
+          );
         const fd = new FormData();
         fd.append(fieldName, file);
         xhr.open("POST", url);
@@ -535,30 +612,46 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       });
     };
 
-    const retryRequest = async (request: () => Promise<Response>, label: string, attempts = 5): Promise<Response> => {
+    const retryRequest = async (
+      request: () => Promise<Response>,
+      label: string,
+      attempts = 5
+    ): Promise<Response> => {
       let lastError: Error | null = null;
       for (let attempt = 1; attempt <= attempts; attempt++) {
         try {
           const response = await request();
           if (response.ok) return response;
-          const retryable = response.status === 408 || response.status === 429 || response.status >= 500;
+          const retryable =
+            response.status === 408 ||
+            response.status === 429 ||
+            response.status >= 500;
           if (!retryable || attempt === attempts) return response;
-          lastError = new Error(`${label} temporarily failed (${response.status})`);
+          lastError = new Error(
+            `${label} temporarily failed (${response.status})`
+          );
 
           const retryAfterSeconds = Number(response.headers.get("Retry-After"));
-          const delay = Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
-            ? retryAfterSeconds * 1000
-            : Math.min(1000 * 2 ** (attempt - 1), 10_000) + Math.round(Math.random() * 500);
-          setUploadStatus(`${label} paused — retrying (${attempt}/${attempts})…`);
-          await new Promise((resolve) => setTimeout(resolve, delay));
+          const delay =
+            Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
+              ? retryAfterSeconds * 1000
+              : Math.min(1000 * 2 ** (attempt - 1), 10_000) +
+                Math.round(Math.random() * 500);
+          setUploadStatus(
+            `${label} paused — retrying (${attempt}/${attempts})…`
+          );
+          await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         } catch (error: any) {
-          lastError = error instanceof Error ? error : new Error(`${label} failed`);
+          lastError =
+            error instanceof Error ? error : new Error(`${label} failed`);
           if (attempt === attempts) throw lastError;
         }
         setUploadStatus(`${label} paused — retrying (${attempt}/${attempts})…`);
-        const delay = Math.min(1000 * 2 ** (attempt - 1), 10_000) + Math.round(Math.random() * 500);
-        await new Promise((resolve) => setTimeout(resolve, delay));
+        const delay =
+          Math.min(1000 * 2 ** (attempt - 1), 10_000) +
+          Math.round(Math.random() * 500);
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
       throw lastError ?? new Error(`${label} failed`);
     };
@@ -566,17 +659,28 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
     // Chunked upload for video — splits file into 5MB pieces
     // Bug 3 fix: was 1MB → 500MB video = 500 chunks > MAX_CHUNKS=200 → init rejected
     // Bug 1+2 fix: /api/upload-video-complete now assembles synchronously and returns { url, key } directly
-    const uploadVideoChunked = async (file: File): Promise<{ url: string; key: string }> => {
+    const uploadVideoChunked = async (
+      file: File
+    ): Promise<{ url: string; key: string }> => {
       const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB per chunk → 500MB / 5MB = 100 chunks (well under 200)
       const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
       // 1. Initiate upload session
       setUploadStatus("Preparing video upload...");
-      const initRes = await retryRequest(() => fetch("/api/upload-video-init", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: file.name, totalChunks, totalSize: file.size, chunkSize: CHUNK_SIZE }),
-      }), "Preparing video upload");
+      const initRes = await retryRequest(
+        () =>
+          fetch("/api/upload-video-init", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              filename: file.name,
+              totalChunks,
+              totalSize: file.size,
+              chunkSize: CHUNK_SIZE,
+            }),
+          }),
+        "Preparing video upload"
+      );
       if (!initRes.ok) {
         const err = await initRes.json().catch(() => ({}));
         throw new Error(err.error ?? "Failed to initiate video upload");
@@ -612,25 +716,36 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
         uploadedChunks += 1;
         const pct = Math.round((uploadedChunks / totalChunks) * 85); // reserve last 15% for assembly
         setUploadProgress(pct);
-        setUploadStatus(`Uploading video... ${pct}% (${uploadedChunks} of ${totalChunks} parts)`);
+        setUploadStatus(
+          `Uploading video... ${pct}% (${uploadedChunks} of ${totalChunks} parts)`
+        );
         await uploadNextChunk();
       };
 
       const parallelUploads = Math.min(3, totalChunks);
-      await Promise.all(Array.from({ length: parallelUploads }, () => uploadNextChunk()));
+      await Promise.all(
+        Array.from({ length: parallelUploads }, () => uploadNextChunk())
+      );
 
       // 3. Synchronous assembly — server assembles all chunks and returns { url, key } directly.
       // The status endpoint provides durable recovery if the final response is interrupted.
       setUploadProgress(90);
-      setUploadStatus("Processing video... (this may take up to 2 minutes for large files)");
+      setUploadStatus(
+        "Processing video... (this may take up to 2 minutes for large files)"
+      );
       let completeRes: Response | null = null;
       try {
-        completeRes = await retryRequest(() => fetch("/api/upload-video-complete", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ uploadId }),
-          signal: AbortSignal.timeout(180_000), // allow the server's 170s processing window to finish
-        }), "Processing video", 3);
+        completeRes = await retryRequest(
+          () =>
+            fetch("/api/upload-video-complete", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ uploadId }),
+              signal: AbortSignal.timeout(180_000), // allow the server's 170s processing window to finish
+            }),
+          "Processing video",
+          3
+        );
       } catch {
         setUploadStatus("Checking whether your video finished processing...");
         const recovered = await recoverCompletedVideoUpload(uploadId);
@@ -638,7 +753,9 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
           setUploadProgress(100);
           return recovered;
         }
-        throw new Error("We could not confirm your video upload. Please try the upload again, or paste a viewable YouTube, Google Drive, Dropbox, or Loom link instead.");
+        throw new Error(
+          "We could not confirm your video upload. Please try the upload again, or paste a viewable YouTube, Google Drive, Dropbox, or Loom link instead."
+        );
       }
       if (!completeRes.ok) {
         setUploadStatus("Checking whether your video finished processing...");
@@ -648,11 +765,16 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
           return recovered;
         }
         const err = await completeRes.json().catch(() => ({}));
-        throw new Error(err.error ?? "We could not process your video. Please try again, or paste a viewable YouTube, Google Drive, Dropbox, or Loom link instead.");
+        throw new Error(
+          err.error ??
+            "We could not process your video. Please try again, or paste a viewable YouTube, Google Drive, Dropbox, or Loom link instead."
+        );
       }
       const result = await completeRes.json();
       if (!result.url || !result.key) {
-        throw new Error("Video processing returned an unexpected response. Please try again.");
+        throw new Error(
+          "Video processing returned an unexpected response. Please try again."
+        );
       }
       setUploadProgress(100);
       return { url: result.url, key: result.key };
@@ -669,9 +791,10 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
     } else {
       try {
         const fingerprint = `${videoFile!.name}:${videoFile!.size}:${videoFile!.lastModified}`;
-        const data = uploadedVideo?.fingerprint === fingerprint
-          ? uploadedVideo
-          : await uploadVideoChunked(videoFile!);
+        const data =
+          uploadedVideo?.fingerprint === fingerprint
+            ? uploadedVideo
+            : await uploadVideoChunked(videoFile!);
         videoUrl = data.url;
         videoKey = data.key;
         if (uploadedVideo?.fingerprint !== fingerprint) {
@@ -690,11 +813,17 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
     let resumeKey: string;
     try {
       const fingerprint = `${resumeFile.name}:${resumeFile.size}:${resumeFile.lastModified}`;
-      let data = uploadedResume?.fingerprint === fingerprint ? uploadedResume : null;
+      let data =
+        uploadedResume?.fingerprint === fingerprint ? uploadedResume : null;
       if (!data) {
         setUploadProgress(0);
         setUploadStatus("Uploading resume...");
-        const uploaded = await uploadWithProgress("/api/upload-resume", "resume", resumeFile, "Resume");
+        const uploaded = await uploadWithProgress(
+          "/api/upload-resume",
+          "resume",
+          resumeFile,
+          "Resume"
+        );
         data = { fingerprint, ...uploaded };
         setUploadedResume(data);
       }
@@ -727,19 +856,28 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div ref={modalRef} className="relative bg-[#FEFAF4] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div
+        ref={modalRef}
+        className="relative bg-[#FEFAF4] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+      >
         {/* Header */}
-        <div className="sticky top-0 bg-[#FEFAF4] border-b border-[#F0D0DC] px-6 py-4 flex items-start justify-between rounded-t-2xl z-10">
+        <div className="sticky top-0 bg-[#FEFAF4] border-b border-[#E8D8D0] px-6 py-4 flex items-start justify-between rounded-t-2xl z-10">
           <div>
-            <p className="font-body text-xs text-[#8B2252] uppercase tracking-widest mb-1">Apply Now</p>
-            <h2 className="font-display font-bold text-xl text-[#1A0A12]">
-              {job.title} <span className="text-[#8B2252]">— {job.location}</span>
+            <p className="font-body text-xs text-brand-link uppercase tracking-widest mb-1">
+              Apply Now
+            </p>
+            <h2 className="font-display font-medium text-xl text-[#34221D]">
+              {job.title}{" "}
+              <span className="text-brand-link">— {job.location}</span>
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-[#F0D0DC] transition-colors text-[#1A0A12] mt-1"
+            className="p-2 rounded-full hover:bg-[#E8D8D0] transition-colors text-[#34221D] mt-1"
           >
             <X size={18} />
           </button>
@@ -747,102 +885,115 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
 
         {submitted ? (
           <div className="p-10 text-center">
-            <div className="w-16 h-16 bg-[#F9E4EE] rounded-full flex items-center justify-center mx-auto mb-5">
-              <CheckCircle size={32} className="text-[#8B2252]" />
+            <div className="w-16 h-16 bg-[#FDE9EF] rounded-full flex items-center justify-center mx-auto mb-5">
+              <CheckCircle size={32} className="text-brand-link" />
             </div>
-            <h3 className="font-display font-bold text-2xl text-[#1A0A12] mb-3">Application Received!</h3>
-            <p className="font-body text-[#3D1A2E] text-base leading-relaxed mb-6">
-              Your application has been received. We'll review it and reach out if you're a great fit.
+            <h3 className="font-display font-medium text-2xl text-[#34221D] mb-3">
+              Application Received!
+            </h3>
+            <p className="font-body text-[#34221D] text-base leading-relaxed mb-6">
+              Your application has been received. We'll review it and reach out
+              if you're a great fit.
             </p>
             <button
               onClick={onClose}
-              className="px-6 py-2.5 bg-[#8B2252] text-white font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] transition-colors"
+              className="px-6 py-2.5 bg-primary text-[#34221D] font-body font-semibold text-base min-h-12 rounded-full hover:bg-primary-hover transition-colors"
             >
               Close
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} noValidate className="p-6 space-y-5">
+          <form onSubmit={handleSubmit} noValidate className="p-6 space-y-6">
             {/* Error banner — shown at top so it's always visible */}
             {error && (
-              <div ref={errorRef} className="p-3 bg-red-50 border border-red-200 rounded-xl">
-                <p className="font-body text-sm text-red-600">{error}</p>
+              <div
+                ref={errorRef}
+                className="p-3 bg-red-50 border border-red-200 rounded-xl"
+              >
+                <p className="font-body text-base text-red-600">{error}</p>
               </div>
             )}
             {/* Personal Info */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block font-body text-xs font-semibold text-[#3D1A2E] uppercase tracking-wide mb-1.5">
-                  Full Name <span className="text-[#8B2252]">*</span>
+                <label className="block font-body text-sm font-semibold text-[#34221D] uppercase tracking-wide mb-1.5">
+                  Full Name <span className="text-brand-link">*</span>
                 </label>
                 <input
                   type="text"
                   value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  onChange={e => setForm({ ...form, name: e.target.value })}
                   placeholder="Your full name"
-                  className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#8B2252] focus:ring-1 focus:ring-[#8B2252]/30 transition-colors"
+                  className="w-full px-4 py-2.5 bg-white border border-input rounded-xl font-body text-base text-[#34221D] placeholder:text-[#71574F] focus:outline-none focus:border-brand-link focus:ring-1 focus:ring-brand-link/30 transition-colors"
                 />
               </div>
               <div>
-                <label className="block font-body text-xs font-semibold text-[#3D1A2E] uppercase tracking-wide mb-1.5">
-                  Email <span className="text-[#8B2252]">*</span>
+                <label className="block font-body text-sm font-semibold text-[#34221D] uppercase tracking-wide mb-1.5">
+                  Email <span className="text-brand-link">*</span>
                 </label>
                 <input
                   type="email"
                   value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  onChange={e => setForm({ ...form, email: e.target.value })}
                   placeholder="your@email.com"
-                  className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#8B2252] focus:ring-1 focus:ring-[#8B2252]/30 transition-colors"
+                  className="w-full px-4 py-2.5 bg-white border border-input rounded-xl font-body text-base text-[#34221D] placeholder:text-[#71574F] focus:outline-none focus:border-brand-link focus:ring-1 focus:ring-brand-link/30 transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block font-body text-xs font-semibold text-[#3D1A2E] uppercase tracking-wide mb-1.5">
+              <label className="block font-body text-sm font-semibold text-[#34221D] uppercase tracking-wide mb-1.5">
                 Phone Number
               </label>
               <input
                 type="tel"
                 value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                onChange={e => setForm({ ...form, phone: e.target.value })}
                 placeholder="+1 (555) 000-0000"
-                className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#8B2252] focus:ring-1 focus:ring-[#8B2252]/30 transition-colors"
+                className="w-full px-4 py-2.5 bg-white border border-input rounded-xl font-body text-base text-[#34221D] placeholder:text-[#71574F] focus:outline-none focus:border-brand-link focus:ring-1 focus:ring-brand-link/30 transition-colors"
               />
-              <p className="mt-1.5 font-body text-xs leading-5 text-[#6B4C5A]">Optional. We may text this number about your application, including your interview booking link. Reply STOP to opt out. You can still apply without a phone number.</p>
+              <p className="mt-1.5 font-body text-xs leading-5 text-[#71574F]">
+                Optional. We may text this number about your application,
+                including your interview booking link. Reply STOP to opt out.
+                You can still apply without a phone number.
+              </p>
             </div>
 
             <div>
-              <label className="block font-body text-xs font-semibold text-[#3D1A2E] uppercase tracking-wide mb-1.5">
+              <label className="block font-body text-sm font-semibold text-[#34221D] uppercase tracking-wide mb-1.5">
                 Why do you want to join AfroPuppyYoga?
               </label>
               <textarea
                 value={form.whyAPY}
-                onChange={(e) => setForm({ ...form, whyAPY: e.target.value })}
+                onChange={e => setForm({ ...form, whyAPY: e.target.value })}
                 placeholder="Tell us what draws you to APY and what you'd bring to the team..."
                 rows={3}
-                className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#8B2252] focus:ring-1 focus:ring-[#8B2252]/30 transition-colors resize-none"
+                className="w-full px-4 py-2.5 bg-white border border-input rounded-xl font-body text-base text-[#34221D] placeholder:text-[#71574F] focus:outline-none focus:border-brand-link focus:ring-1 focus:ring-brand-link/30 transition-colors resize-none"
               />
             </div>
 
             <div>
-              <label className="block font-body text-xs font-semibold text-[#3D1A2E] uppercase tracking-wide mb-1.5">
+              <label className="block font-body text-sm font-semibold text-[#34221D] uppercase tracking-wide mb-1.5">
                 Relevant Experience
               </label>
               <textarea
                 value={form.experience}
-                onChange={(e) => setForm({ ...form, experience: e.target.value })}
+                onChange={e => setForm({ ...form, experience: e.target.value })}
                 placeholder="Share your relevant experience (yoga certifications, dog handling, event work, etc.)..."
                 rows={3}
-                className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#8B2252] focus:ring-1 focus:ring-[#8B2252]/30 transition-colors resize-none"
+                className="w-full px-4 py-2.5 bg-white border border-input rounded-xl font-body text-base text-[#34221D] placeholder:text-[#71574F] focus:outline-none focus:border-brand-link focus:ring-1 focus:ring-brand-link/30 transition-colors resize-none"
               />
             </div>
 
             {/* Resume Upload */}
             <div>
-              <label className="block font-body text-xs font-semibold text-[#3D1A2E] uppercase tracking-wide mb-1.5">
-                Resume <span className="text-[#8B2252]">*</span> <span className="text-[#8B2252] font-normal">(PDF or Word, Max 10MB)</span>
+              <label className="block font-body text-sm font-semibold text-[#34221D] uppercase tracking-wide mb-1.5">
+                Resume <span className="text-brand-link">*</span>{" "}
+                <span className="text-brand-link font-normal">
+                  (PDF or Word, Max 10MB)
+                </span>
               </label>
-              <p className="font-body text-xs text-[#3D1A2E] mb-3">
+              <p className="font-body text-xs text-[#34221D] mb-3">
                 Upload your most recent resume or CV.
               </p>
               <input
@@ -853,13 +1004,19 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                 className="hidden"
               />
               {resumeFile ? (
-                <div className="flex items-center gap-3 p-3 bg-[#F9E4EE] border border-[#F0D0DC] rounded-xl">
-                  <CheckCircle size={18} className="text-[#8B2252] shrink-0" />
-                  <span className="font-body text-sm text-[#1A0A12] truncate flex-1">{resumeFile.name}</span>
+                <div className="flex items-center gap-3 p-3 bg-[#FDE9EF] border border-[#E8D8D0] rounded-xl">
+                  <CheckCircle size={18} className="text-brand-link shrink-0" />
+                  <span className="font-body text-base text-[#34221D] truncate flex-1">
+                    {resumeFile.name}
+                  </span>
                   <button
                     type="button"
-                    onClick={() => { setResumeFile(null); if (resumeInputRef.current) resumeInputRef.current.value = ""; }}
-                    className="p-1 hover:bg-[#F0D0DC] rounded-full transition-colors text-[#3D1A2E]"
+                    onClick={() => {
+                      setResumeFile(null);
+                      if (resumeInputRef.current)
+                        resumeInputRef.current.value = "";
+                    }}
+                    className="p-1 hover:bg-[#E8D8D0] rounded-full transition-colors text-[#34221D]"
                   >
                     <X size={14} />
                   </button>
@@ -868,34 +1025,44 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                 <button
                   type="button"
                   onClick={() => resumeInputRef.current?.click()}
-                  className="w-full flex flex-col items-center gap-2 p-6 border-2 border-dashed border-[#F0D0DC] rounded-xl hover:border-[#8B2252] hover:bg-[#FFF5F8] transition-colors group"
+                  className="w-full flex flex-col items-center gap-2 p-6 border-2 border-dashed border-[#E8D8D0] rounded-xl hover:border-primary hover:bg-[#FDE9EF] transition-colors group"
                 >
-                  <Upload size={24} className="text-[#C4A0B0] group-hover:text-[#8B2252] transition-colors" />
-                  <span className="font-body text-sm text-[#3D1A2E] group-hover:text-[#8B2252] transition-colors">
+                  <Upload
+                    size={24}
+                    className="text-[#71574F] group-hover:text-brand-link transition-colors"
+                  />
+                  <span className="font-body text-base text-[#34221D] group-hover:text-brand-link transition-colors">
                     Click to upload your resume
                   </span>
-                  <span className="font-body text-xs text-[#C4A0B0]">PDF, DOC, DOCX — Max 10MB</span>
+                  <span className="font-body text-xs text-[#71574F]">
+                    PDF, DOC, DOCX — Max 10MB
+                  </span>
                 </button>
               )}
             </div>
 
             {/* Video Introduction — Required */}
             <div>
-              <label className="block font-body text-xs font-semibold text-[#3D1A2E] uppercase tracking-wide mb-1.5">
-                Video Introduction <span className="text-[#8B2252]">*</span>
+              <label className="block font-body text-sm font-semibold text-[#34221D] uppercase tracking-wide mb-1.5">
+                Video Introduction <span className="text-brand-link">*</span>
               </label>
-              <p className="font-body text-xs text-[#3D1A2E] mb-3">
-                Record a short 1-2 minute video introducing yourself. Tell us your name, why you love what you do, and why APY feels like the right fit. Be yourself!
+              <p className="font-body text-xs text-[#34221D] mb-3">
+                Record a short 1-2 minute video introducing yourself. Tell us
+                your name, why you love what you do, and why APY feels like the
+                right fit. Be yourself!
               </p>
               {/* Tab toggle: Upload vs Link */}
-              <div className="flex rounded-xl overflow-hidden border border-[#F0D0DC] mb-3">
+              <div className="flex rounded-xl overflow-hidden border border-[#E8D8D0] mb-3">
                 <button
                   type="button"
-                  onClick={() => { setVideoMode("upload"); setVideoLink(""); }}
+                  onClick={() => {
+                    setVideoMode("upload");
+                    setVideoLink("");
+                  }}
                   className={`flex-1 flex items-center justify-center gap-2 py-2.5 font-body text-xs font-semibold transition-colors ${
                     videoMode === "upload"
-                      ? "bg-[#8B2252] text-white"
-                      : "bg-white text-[#3D1A2E] hover:bg-[#FFF5F8]"
+                      ? "bg-primary text-[#34221D]"
+                      : "bg-white text-[#34221D] hover:bg-[#FDE9EF]"
                   }`}
                 >
                   <Upload size={14} />
@@ -903,11 +1070,14 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setVideoMode("link"); clearVideoSelection(); }}
+                  onClick={() => {
+                    setVideoMode("link");
+                    clearVideoSelection();
+                  }}
                   className={`flex-1 flex items-center justify-center gap-2 py-2.5 font-body text-xs font-semibold transition-colors ${
                     videoMode === "link"
-                      ? "bg-[#8B2252] text-white"
-                      : "bg-white text-[#3D1A2E] hover:bg-[#FFF5F8]"
+                      ? "bg-primary text-[#34221D]"
+                      : "bg-white text-[#34221D] hover:bg-[#FDE9EF]"
                   }`}
                 >
                   <LinkIcon size={14} />
@@ -923,15 +1093,20 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
               />
               {videoMode === "upload" ? (
                 videoFile ? (
-                  <div className="space-y-3 p-3 bg-[#F9E4EE] border border-[#F0D0DC] rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle size={18} className="text-[#8B2252] shrink-0" />
-                      <span className="font-body text-sm text-[#1A0A12] truncate flex-1">{videoFile.name}</span>
+                  <div className="space-y-3 p-3 bg-[#FDE9EF] border border-[#E8D8D0] rounded-xl">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <CheckCircle
+                        size={18}
+                        className="text-brand-link shrink-0"
+                      />
+                      <span className="font-body text-base text-[#34221D] truncate flex-1">
+                        {videoFile.name}
+                      </span>
                       <button
                         type="button"
                         onClick={clearVideoSelection}
                         aria-label="Remove selected video"
-                        className="p-1 hover:bg-[#F0D0DC] rounded-full transition-colors text-[#3D1A2E]"
+                        className="p-1 hover:bg-[#E8D8D0] rounded-full transition-colors text-[#34221D]"
                       >
                         <X size={14} aria-hidden="true" />
                       </button>
@@ -943,43 +1118,61 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                         preload="metadata"
                         src={videoPreviewUrl}
                         onLoadedMetadata={() => setVideoPreviewError(null)}
-                        onError={() => setVideoPreviewError("This video cannot play in this browser. You can choose another video or still submit this selected file.")}
+                        onError={() =>
+                          setVideoPreviewError(
+                            "This video cannot play in this browser. You can choose another video or still submit this selected file."
+                          )
+                        }
                         aria-label={`Preview of selected video: ${videoFile.name}`}
-                        className="w-full max-h-64 rounded-lg bg-[#1A0A12]"
+                        className="w-full max-h-64 rounded-lg bg-[#34221D]"
                       >
-                        Your browser does not support video playback. You can choose another video or submit this selected file.
+                        Your browser does not support video playback. You can
+                        choose another video or submit this selected file.
                       </video>
                     )}
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="font-body text-xs text-[#3D1A2E]">
-                        Preview is only on this device. Your video is uploaded only when you submit the application.
+                      <p className="font-body text-xs text-[#34221D]">
+                        Preview is only on this device. Your video is uploaded
+                        only when you submit the application.
                       </p>
                       <button
                         type="button"
                         onClick={() => {
-                          if (fileInputRef.current) fileInputRef.current.value = "";
+                          if (fileInputRef.current)
+                            fileInputRef.current.value = "";
                           fileInputRef.current?.click();
                         }}
-                        className="font-body text-xs font-semibold text-[#8B2252] underline underline-offset-2 hover:text-[#5C1438]"
+                        className="font-body text-xs font-semibold text-brand-link underline underline-offset-2 hover:text-brand-link"
                       >
                         Change video
                       </button>
                     </div>
                     {videoPreviewError && (
-                      <p className="font-body text-xs text-[#8B2252]" role="status">{videoPreviewError}</p>
+                      <p
+                        className="font-body text-xs text-brand-link"
+                        role="status"
+                      >
+                        {videoPreviewError}
+                      </p>
                     )}
                   </div>
                 ) : (
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full flex flex-col items-center gap-2 p-6 border-2 border-dashed border-[#F0D0DC] rounded-xl hover:border-[#8B2252] hover:bg-[#FFF5F8] transition-colors group"
+                    className="w-full flex flex-col items-center gap-2 p-6 border-2 border-dashed border-[#E8D8D0] rounded-xl hover:border-primary hover:bg-[#FDE9EF] transition-colors group"
                   >
-                    <Video size={24} className="text-[#C4A0B0] group-hover:text-[#8B2252] transition-colors" />
-                    <span className="font-body text-sm text-[#3D1A2E] group-hover:text-[#8B2252] transition-colors">
+                    <Video
+                      size={24}
+                      className="text-[#71574F] group-hover:text-brand-link transition-colors"
+                    />
+                    <span className="font-body text-base text-[#34221D] group-hover:text-brand-link transition-colors">
                       Click to upload your video
                     </span>
-                    <span className="font-body text-xs text-[#C4A0B0]">MP4, MOV, WebM, AVI — Max 500MB. Upload resumes automatically after brief connection issues.</span>
+                    <span className="font-body text-xs text-[#71574F]">
+                      MP4, MOV, WebM, AVI — Max 500MB. Upload resumes
+                      automatically after brief connection issues.
+                    </span>
                   </button>
                 )
               ) : (
@@ -987,19 +1180,34 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                   <input
                     type="url"
                     value={videoLink}
-                    onChange={(e) => setVideoLink(e.target.value)}
+                    onChange={e => setVideoLink(e.target.value)}
                     placeholder="https://youtube.com/... or Google Drive / Dropbox link"
-                    className="w-full px-4 py-2.5 bg-white border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] placeholder-[#C4A0B0] focus:outline-none focus:border-[#8B2252] focus:ring-1 focus:ring-[#8B2252]/30 transition-colors"
+                    className="w-full px-4 py-2.5 bg-white border border-input rounded-xl font-body text-base text-[#34221D] placeholder:text-[#71574F] focus:outline-none focus:border-brand-link focus:ring-1 focus:ring-brand-link/30 transition-colors"
                   />
-                  <p className="font-body text-xs text-[#3D1A2E]">
-                    Accepted: YouTube, Google Drive, Dropbox, or any direct video link. Make sure sharing is set to "Anyone with the link".
+                  <p className="font-body text-xs text-[#34221D]">
+                    Accepted: YouTube, Google Drive, Dropbox, or any direct
+                    video link. Make sure sharing is set to "Anyone with the
+                    link".
                   </p>
-                  {videoLink.trim() && (() => { try { new URL(videoLink.trim()); return true; } catch { return false; } })() && (
-                    <div className="flex items-center gap-2 p-2.5 bg-[#F9E4EE] border border-[#F0D0DC] rounded-xl">
-                      <CheckCircle size={16} className="text-[#8B2252] shrink-0" />
-                      <span className="font-body text-xs text-[#3D1A2E]">Link looks good!</span>
-                    </div>
-                  )}
+                  {videoLink.trim() &&
+                    (() => {
+                      try {
+                        new URL(videoLink.trim());
+                        return true;
+                      } catch {
+                        return false;
+                      }
+                    })() && (
+                      <div className="flex items-center gap-2 p-2.5 bg-[#FDE9EF] border border-[#E8D8D0] rounded-xl">
+                        <CheckCircle
+                          size={16}
+                          className="text-brand-link shrink-0"
+                        />
+                        <span className="font-body text-xs text-[#34221D]">
+                          Link looks good!
+                        </span>
+                      </div>
+                    )}
                 </div>
               )}
             </div>
@@ -1007,22 +1215,28 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
             {/* Upload progress bar */}
             {(isUploading || uploadStatus) && (
               <div className="space-y-2">
-                <div className="w-full bg-[#F0D0DC] rounded-full h-2 overflow-hidden">
+                <div className="w-full bg-[#E8D8D0] rounded-full h-2 overflow-hidden">
                   <div
-                    className="h-2 bg-[#8B2252] rounded-full transition-all duration-300"
+                    className="h-2 bg-primary rounded-full transition-colors motion-reduce:transition-none duration-300"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
-                <p className="font-body text-xs text-[#8B2252] text-center">{uploadStatus}</p>
+                <p className="font-body text-xs text-brand-link text-center">
+                  {uploadStatus}
+                </p>
               </div>
             )}
 
             <button
               type="submit"
               disabled={applyMutation.isPending || isUploading}
-              className="w-full py-3 bg-[#8B2252] text-white font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-primary text-[#34221D] font-body font-semibold text-base min-h-12 rounded-full hover:bg-primary-hover transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {isUploading ? uploadStatus ?? "Uploading..." : applyMutation.isPending ? "Submitting..." : "Submit Application"}
+              {isUploading
+                ? (uploadStatus ?? "Uploading...")
+                : applyMutation.isPending
+                  ? "Submitting..."
+                  : "Submit Application"}
             </button>
           </form>
         )}
@@ -1032,7 +1246,17 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
 }
 
 // ── Job Card ──────────────────────────────────────────────────
-export function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB_LISTINGS)[0]; onApply: () => void; expanded: boolean; onToggle: () => void }) {
+export function JobCard({
+  job,
+  onApply,
+  expanded,
+  onToggle,
+}: {
+  job: (typeof JOB_LISTINGS)[0];
+  onApply: () => void;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
   const [shareOpen, setShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const shareRef = useRef<HTMLDivElement>(null);
@@ -1074,51 +1298,70 @@ export function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB
       label: "Facebook",
       icon: "f",
       color: "#1877F2",
-      href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl())}` as string | null,
+      href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl())}` as
+        | string
+        | null,
     },
     {
       label: "X (Twitter)",
       icon: "𝕏",
       color: "#000000",
-      href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(getShareUrl())}` as string | null,
+      href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(getShareUrl())}` as
+        | string
+        | null,
     },
     {
       label: "LinkedIn",
       icon: "in",
       color: "#0A66C2",
-      href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getShareUrl())}` as string | null,
+      href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getShareUrl())}` as
+        | string
+        | null,
     },
   ];
 
   return (
-    <div id={job.id} className="bg-white border border-[#F0D0DC] rounded-2xl overflow-hidden hover:shadow-lg transition-shadow duration-300">
+    <div
+      id={job.id}
+      className="bg-white border border-[#E8D8D0] rounded-2xl overflow-hidden hover:shadow-sm transition-shadow duration-200 motion-reduce:transition-none"
+    >
       <div className="p-6">
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-[#F9E4EE] rounded-xl flex items-center justify-center text-2xl shrink-0">
-              {job.icon === "movement" ? <Activity aria-hidden="true" /> : job.icon === "puppy" ? <PawPrint aria-hidden="true" /> : job.icon === "operations" ? <Settings aria-hidden="true" /> : job.emoji}
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-12 h-12 bg-[#FDE9EF] rounded-xl flex items-center justify-center text-2xl shrink-0">
+              {job.icon === "movement" ? (
+                <Activity aria-hidden="true" />
+              ) : job.icon === "puppy" ? (
+                <PawPrint aria-hidden="true" />
+              ) : job.icon === "operations" ? (
+                <Settings aria-hidden="true" />
+              ) : (
+                job.emoji
+              )}
             </div>
             <div>
-              <h3 className="font-display font-bold text-lg text-[#1A0A12]">{job.title}</h3>
+              <h3 className="font-display font-medium text-xl md:text-2xl text-[#34221D]">
+                {job.title}
+              </h3>
               <div className="flex items-center gap-3 mt-1 flex-wrap">
-                <span className="flex items-center gap-1 font-body text-xs text-[#8B2252]">
+                <span className="flex items-center gap-1 font-body text-xs text-brand-link">
                   <MapPin size={11} /> {job.location}
                 </span>
-                <span className="flex items-center gap-1 font-body text-xs text-[#3D1A2E]">
+                <span className="flex items-center gap-1 font-body text-xs text-[#34221D]">
                   <Clock size={11} /> {job.type}
                 </span>
                 {job.badge && (
-                  <span className="px-2 py-0.5 font-body text-[10px] font-semibold rounded-full border bg-green-100 text-green-700 border-green-300">
+                  <span className="px-2 py-0.5 font-body text-xs font-semibold rounded-full border bg-green-100 text-green-700 border-green-300">
                     🟢 Now Hiring
                   </span>
                 )}
                 {job.subBadge && (
-                  <span className="px-2 py-0.5 bg-[#8B2252]/10 text-[#8B2252] font-body text-[10px] font-semibold rounded-full border border-[#8B2252]/20">
+                  <span className="px-2 py-0.5 bg-blush text-brand-link font-body text-xs font-semibold rounded-full border border-primary/20">
                     {job.subBadge}
                   </span>
                 )}
                 {job.pay && (
-                  <span className="px-2 py-0.5 bg-[#FEFAF4] text-[#8B6010] font-body text-[10px] font-semibold rounded-full border border-[#F0D0DC]">
+                  <span className="px-2 py-0.5 bg-[#FEFAF4] text-[#71574F] font-body text-xs font-semibold rounded-full border border-[#E8D8D0]">
                     {job.pay}
                   </span>
                 )}
@@ -1129,19 +1372,21 @@ export function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB
             {/* Share button */}
             <div ref={shareRef} className="relative">
               <button
-                onClick={() => setShareOpen((v) => !v)}
-                className="flex items-center gap-1.5 px-3 py-2 border border-[#F0D0DC] text-[#8B2252] font-body font-semibold text-xs rounded-full hover:bg-[#FFF5F8] hover:border-[#8B2252] transition-colors"
+                onClick={() => setShareOpen(v => !v)}
+                className="flex items-center gap-1.5 min-h-11 px-4 py-2.5 border border-[#E8D8D0] text-brand-link font-body font-semibold text-xs rounded-full hover:bg-[#FDE9EF] hover:border-primary transition-colors"
                 aria-label="Share this job"
               >
                 <Share2 size={13} />
                 <span className="hidden sm:inline">Share</span>
               </button>
               {shareOpen && (
-                <div className="absolute right-0 top-full mt-2 w-44 bg-white border border-[#F0D0DC] rounded-2xl shadow-lg z-20 overflow-hidden">
-                  <div className="px-3 py-2 border-b border-[#F0D0DC]">
-                    <p className="font-body text-[10px] font-semibold text-[#3D1A2E] uppercase tracking-wide">Share this role</p>
+                <div className="absolute right-0 top-full mt-2 w-44 bg-white border border-[#E8D8D0] rounded-2xl shadow-lg z-20 overflow-hidden">
+                  <div className="px-3 py-2 border-b border-[#E8D8D0]">
+                    <p className="font-body text-sm font-semibold text-[#34221D] uppercase tracking-wide">
+                      Share this role
+                    </p>
                   </div>
-                  {shareLinks.map((s) =>
+                  {shareLinks.map(s =>
                     s.href ? (
                       <a
                         key={s.label}
@@ -1149,7 +1394,7 @@ export function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => setShareOpen(false)}
-                        className="flex items-center gap-3 px-3 py-2.5 hover:bg-[#FFF5F8] transition-colors"
+                        className="flex items-center gap-3 px-3 py-2.5 hover:bg-[#FDE9EF] transition-colors"
                       >
                         <span
                           className="w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-[10px] shrink-0"
@@ -1157,13 +1402,18 @@ export function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB
                         >
                           {s.icon}
                         </span>
-                        <span className="font-body text-xs text-[#1A0A12]">{s.label}</span>
+                        <span className="font-body text-xs text-[#34221D]">
+                          {s.label}
+                        </span>
                       </a>
                     ) : (
                       <button
                         key={s.label}
-                        onClick={() => { handleCopyLink(); setShareOpen(false); }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[#FFF5F8] transition-colors"
+                        onClick={() => {
+                          handleCopyLink();
+                          setShareOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[#FDE9EF] transition-colors"
                       >
                         <span
                           className="w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-[10px] shrink-0"
@@ -1171,76 +1421,113 @@ export function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB
                         >
                           {s.icon}
                         </span>
-                        <span className="font-body text-xs text-[#1A0A12]">{s.label} (Copy Link)</span>
+                        <span className="font-body text-xs text-[#34221D]">
+                          {s.label} (Copy Link)
+                        </span>
                       </button>
                     )
                   )}
                   <button
-                    onClick={() => { handleCopyLink(); setShareOpen(false); }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[#FFF5F8] transition-colors border-t border-[#F0D0DC]"
+                    onClick={() => {
+                      handleCopyLink();
+                      setShareOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[#FDE9EF] transition-colors border-t border-[#E8D8D0]"
                   >
-                    <span className="w-6 h-6 rounded-full bg-[#F0D0DC] flex items-center justify-center shrink-0">
-                      {copied ? <Check size={11} className="text-green-600" /> : <Copy size={11} className="text-[#8B2252]" />}
+                    <span className="w-6 h-6 rounded-full bg-[#E8D8D0] flex items-center justify-center shrink-0">
+                      {copied ? (
+                        <Check size={11} className="text-green-600" />
+                      ) : (
+                        <Copy size={11} className="text-brand-link" />
+                      )}
                     </span>
-                    <span className="font-body text-xs text-[#1A0A12]">{copied ? "Copied!" : "Copy Link"}</span>
+                    <span className="font-body text-xs text-[#34221D]">
+                      {copied ? "Copied!" : "Copy Link"}
+                    </span>
                   </button>
                 </div>
               )}
             </div>
             <button
               onClick={onApply}
-              className="px-4 py-2 bg-[#8B2252] text-white font-body font-semibold text-xs rounded-full hover:bg-[#8B2252] transition-colors"
+              className="min-h-11 px-5 py-2.5 bg-primary text-[#34221D] font-body font-semibold text-xs rounded-full hover:bg-primary-hover transition-colors"
             >
               Apply
             </button>
           </div>
         </div>
 
-        <p className="font-body text-sm text-[#3D1A2E] leading-relaxed mb-4">{job.description}</p>
+        <p className="font-body text-base text-[#34221D] leading-relaxed mb-4">
+          {job.description}
+        </p>
 
         <button
           onClick={onToggle}
-          className="flex items-center gap-1.5 font-body text-xs font-semibold text-[#8B2252] hover:text-[#8B2252] transition-colors"
+          className="flex items-center gap-1.5 min-h-11 font-body text-sm font-semibold text-brand-link hover:underline transition-colors"
         >
           {expanded ? "Show less" : "See full details"}
-          <ChevronDown size={14} className={`transition-transform ${expanded ? "rotate-180" : ""}`} />
+          <ChevronDown
+            size={14}
+            className={`transition-transform ${expanded ? "rotate-180" : ""}`}
+          />
         </button>
 
         {expanded && (
-          <div className="mt-5 space-y-4 border-t border-[#F0D0DC] pt-5">
+          <div className="mt-5 space-y-4 border-t border-[#E8D8D0] pt-5">
             <div>
-              <h4 className="font-body text-xs font-bold text-[#1A0A12] uppercase tracking-wide mb-2">Responsibilities</h4>
+              <h4 className="font-body text-xs font-bold text-[#34221D] uppercase tracking-wide mb-2">
+                Responsibilities
+              </h4>
               <ul className="space-y-1.5">
                 {job.responsibilities.map((r, i) => (
-                  <li key={i} className="flex items-start gap-2 font-body text-sm text-[#3D1A2E]">
-                    <span className="text-[#8B2252] mt-0.5 shrink-0">•</span> {r}
+                  <li
+                    key={i}
+                    className="flex items-start gap-2 font-body text-base text-[#34221D]"
+                  >
+                    <span className="text-brand-link mt-0.5 shrink-0">•</span>{" "}
+                    {r}
                   </li>
                 ))}
               </ul>
             </div>
             <div>
-              <h4 className="font-body text-xs font-bold text-[#1A0A12] uppercase tracking-wide mb-2">Requirements</h4>
+              <h4 className="font-body text-xs font-bold text-[#34221D] uppercase tracking-wide mb-2">
+                Requirements
+              </h4>
               <ul className="space-y-1.5">
                 {job.requirements.map((r, i) => (
-                  <li key={i} className="flex items-start gap-2 font-body text-sm text-[#3D1A2E]">
-                    <span className="text-[#8B2252] mt-0.5 shrink-0">•</span> {r}
+                  <li
+                    key={i}
+                    className="flex items-start gap-2 font-body text-base text-[#34221D]"
+                  >
+                    <span className="text-brand-link mt-0.5 shrink-0">•</span>{" "}
+                    {r}
                   </li>
                 ))}
               </ul>
             </div>
             <div>
-              <h4 className="font-body text-xs font-bold text-[#1A0A12] uppercase tracking-wide mb-2">Perks</h4>
+              <h4 className="font-body text-xs font-bold text-[#34221D] uppercase tracking-wide mb-2">
+                Perks
+              </h4>
               <ul className="space-y-1.5">
                 {job.perks.map((p, i) => (
-                  <li key={i} className="flex items-start gap-2 font-body text-sm text-[#3D1A2E]">
-                    <Heart size={12} className="text-[#8B2252] mt-0.5 shrink-0" /> {p}
+                  <li
+                    key={i}
+                    className="flex items-start gap-2 font-body text-base text-[#34221D]"
+                  >
+                    <Heart
+                      size={12}
+                      className="text-brand-link mt-0.5 shrink-0"
+                    />{" "}
+                    {p}
                   </li>
                 ))}
               </ul>
             </div>
             <button
               onClick={onApply}
-              className="w-full py-2.5 bg-[#8B2252] text-white font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] transition-colors"
+              className="w-full py-2.5 bg-primary text-[#34221D] font-body font-semibold text-base min-h-12 rounded-full hover:bg-primary-hover transition-colors"
             >
               Apply for This Role
             </button>
@@ -1255,10 +1542,13 @@ export function JobCard({ job, onApply, expanded, onToggle }: { job: (typeof JOB
 export default function Careers() {
   useSeoMeta({
     title: "Careers at AfroPuppyYoga | Join Our Team in Ontario",
-    description: "Movement Instructor jobs in Kitchener and Guelph, plus Puppy Monitor and Operations Specialist jobs in Guelph. Apply to AfroPuppyYoga with your resume and video.",
+    description:
+      "Movement Instructor jobs in Kitchener and Guelph, plus Puppy Monitor and Operations Specialist jobs in Guelph. Apply to AfroPuppyYoga with your resume and video.",
     canonical: "https://afropuppyyoga.ca/careers",
   });
-  const [selectedJob, setSelectedJob] = useState<(typeof JOB_LISTINGS)[0] | null>(null);
+  const [selectedJob, setSelectedJob] = useState<
+    (typeof JOB_LISTINGS)[0] | null
+  >(null);
   // Track expanded state per job ID so each card is fully independent
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const toggleExpanded = (id: string) => {
@@ -1275,40 +1565,38 @@ export default function Careers() {
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-28 pb-16 bg-[#FFF5F8] relative overflow-hidden">
-        <div
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: `radial-gradient(circle at 20% 60%, #F2A0B8 0%, transparent 55%), radial-gradient(circle at 85% 20%, #F2A0B8 0%, transparent 40%)`,
-          }}
-        />
+      <section className="pt-28 pb-16 md:pt-32 md:pb-20 bg-[#FEFAF4] relative">
         <div className="container relative">
           <div className="max-w-2xl">
-            <p className="font-body text-xs text-[#8B2252] uppercase tracking-widest mb-4">
+            <p className="font-body text-xs text-brand-link uppercase tracking-widest mb-4">
               — Join the Pack
             </p>
-            <h1 className="font-display font-bold text-4xl md:text-5xl text-[#1A0A12] leading-tight mb-5">
-              Work With <span className="text-[#8B2252]">AfroPuppyYoga</span>
+            <h1 className="font-display font-medium text-[clamp(2.5rem,5vw,4.5rem)] text-[#34221D] leading-[1.1] tracking-[-0.03em] mb-6">
+              Work With <span className="text-brand-link">AfroPuppyYoga</span>
             </h1>
-            <p className="font-body text-base text-[#3D1A2E]/70 leading-relaxed max-w-xl">
-              We're building Canada's most joyful wellness brand — one puppy at a time. If you love dogs, community, and creating unforgettable experiences, we want to hear from you.
+            <p className="font-body text-base text-[#34221D]/80 leading-relaxed max-w-xl">
+              We're building Canada's most joyful wellness brand — one puppy at
+              a time. If you love dogs, community, and creating unforgettable
+              experiences, we want to hear from you.
             </p>
           </div>
         </div>
       </section>
 
       {/* Values strip */}
-      <section className="bg-[#F9E4EE] py-8 border-y border-[#F0D0DC]">
+      <section className="bg-[#FDE9EF] py-8 border-y border-[#E8D8D0]">
         <div className="container">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
             {[
               { icon: "🐾", label: "Puppy-First Culture" },
               { icon: "💛", label: "Community Driven" },
               { icon: "✨", label: "Flexible Schedules" },
-            ].map((v) => (
+            ].map(v => (
               <div key={v.label} className="flex flex-col items-center gap-2">
                 <span className="text-2xl">{v.icon}</span>
-                <span className="font-body text-xs font-semibold text-[#3D1A2E] uppercase tracking-wide">{v.label}</span>
+                <span className="font-body text-sm font-semibold text-[#34221D] uppercase tracking-wide">
+                  {v.label}
+                </span>
               </div>
             ))}
           </div>
@@ -1319,17 +1607,21 @@ export default function Careers() {
       <section className="py-16">
         <div className="container">
           <div className="mb-10">
-            <p className="font-body text-xs text-[#8B2252] uppercase tracking-widest mb-2">Open Positions</p>
-            <h2 className="font-display font-bold text-3xl md:text-4xl text-[#1A0A12]">
+            <p className="font-body text-xs text-brand-link uppercase tracking-widest mb-2">
+              Open Positions
+            </p>
+            <h2 className="font-display font-medium text-3xl md:text-4xl text-[#34221D]">
               We're Hiring
             </h2>
-            <p className="font-body text-sm text-[#3D1A2E] mt-3 max-w-xl">
-              All roles at AfroPuppyYoga are part-time given the nature of our event-based business. Perfect for passionate people who want flexibility without sacrificing impact.
+            <p className="font-body text-base text-[#34221D] mt-3 max-w-xl">
+              All roles at AfroPuppyYoga are part-time given the nature of our
+              event-based business. Perfect for passionate people who want
+              flexibility without sacrificing impact.
             </p>
           </div>
 
           <div className="flex flex-col gap-6">
-            {JOB_LISTINGS.map((job) => (
+            {JOB_LISTINGS.map(job => (
               <JobCard
                 key={job.id}
                 job={job}
@@ -1343,18 +1635,21 @@ export default function Careers() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 bg-[#FFF5F8] border-t border-[#F0D0DC]">
+      <section className="py-16 bg-[#FDE9EF] border-t border-[#E8D8D0]">
         <div className="container text-center">
-          <p className="font-body text-xs text-[#8B2252] uppercase tracking-widest mb-3">Don't see your role?</p>
-          <h2 className="font-display font-bold text-2xl md:text-3xl text-[#1A0A12] mb-4">
+          <p className="font-body text-xs text-brand-link uppercase tracking-widest mb-3">
+            Don't see your role?
+          </p>
+          <h2 className="font-display font-medium text-2xl md:text-3xl text-[#34221D] mb-4">
             We're always open to great people
           </h2>
-          <p className="font-body text-sm text-[#3D1A2E]/60 mb-6 max-w-md mx-auto">
-            If you have a skill that could help AfroPuppyYoga grow, reach out. We love hearing from passionate people.
+          <p className="font-body text-base text-[#34221D]/80 mb-6 max-w-md mx-auto">
+            If you have a skill that could help AfroPuppyYoga grow, reach out.
+            We love hearing from passionate people.
           </p>
           <a
             href="mailto:afropuppyyoga@gmail.com"
-            className="inline-flex items-center px-6 py-3 bg-[#8B2252] text-white font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] transition-colors"
+            className="inline-flex items-center px-6 py-3 bg-primary text-[#34221D] font-body font-semibold text-base min-h-12 rounded-full hover:bg-primary-hover transition-colors"
           >
             Say Hello
           </a>
@@ -1366,7 +1661,10 @@ export default function Careers() {
 
       {/* Application Modal */}
       {selectedJob && (
-        <ApplicationModal job={selectedJob} onClose={() => setSelectedJob(null)} />
+        <ApplicationModal
+          job={selectedJob}
+          onClose={() => setSelectedJob(null)}
+        />
       )}
     </div>
   );

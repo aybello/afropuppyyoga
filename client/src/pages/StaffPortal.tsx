@@ -41,7 +41,7 @@ const TOOLS = [
     description: "Your role, signed documents, training and invoice guide in one place.",
     href: "/staff/get-started",
     icon: GraduationCap,
-    accent: "#8B2252",
+    accent: "#B52F5A",
     adminOnly: false,
     category: "People",
   },
@@ -51,7 +51,7 @@ const TOOLS = [
     description: "Download your signed offer letter and NDA.",
     href: "/staff/documents",
     icon: FileText,
-    accent: "#8B2252",
+    accent: "#B52F5A",
     adminOnly: false,
     category: "People",
   },
@@ -61,7 +61,7 @@ const TOOLS = [
     description: "Today's classes, staffing gaps, messages, leads, and priority actions.",
     href: "/admin/run-apy",
     icon: Gauge,
-    accent: "#2D5A27",
+    accent: "#B52F5A",
     adminOnly: true,
     category: "Operations",
   },
@@ -71,7 +71,7 @@ const TOOLS = [
     description: "Invite staff by email or manage secure phone access.",
     href: "/admin/staff",
     icon: UserCog,
-    accent: "#7C3AED",
+    accent: "#B52F5A",
     adminOnly: true,
     category: "People",
   },
@@ -81,7 +81,7 @@ const TOOLS = [
     description: "Role-based onboarding, safety and event-day playbooks.",
     href: "/staff/training",
     icon: GraduationCap,
-    accent: "#8B2252",
+    accent: "#B52F5A",
     adminOnly: true,
     category: "People",
   },
@@ -91,7 +91,7 @@ const TOOLS = [
     description: "Upload and submit invoices for processing.",
     href: "/submit-invoice",
     icon: Upload,
-    accent: "#8B2252",
+    accent: "#B52F5A",
     adminOnly: false,
     category: "Finance",
   },
@@ -101,7 +101,7 @@ const TOOLS = [
     description: "Track all staff invoices, totals, and payment status.",
     href: "/admin/invoices",
     icon: FileText,
-    accent: "#8B2252",
+    accent: "#B52F5A",
     adminOnly: true,
     category: "Finance",
   },
@@ -111,7 +111,7 @@ const TOOLS = [
     description: "Stripe sales, ticket types, time slots, and attendance.",
     href: "/admin/revenue",
     icon: DollarSign,
-    accent: "#2E7D32",
+    accent: "#B52F5A",
     adminOnly: true,
     category: "Finance",
   },
@@ -121,7 +121,7 @@ const TOOLS = [
     description: "Private estimated Luma performance, location trends, and upcoming demand.",
     href: "/staff/revenue-dashboard",
     icon: DollarSign,
-    accent: "#A95543",
+    accent: "#B52F5A",
     adminOnly: true,
     category: "Finance",
   },
@@ -131,7 +131,7 @@ const TOOLS = [
     description: "Read-only expenses, bank activity, daily sync, and AI-ready summaries.",
     href: "/admin/quickbooks",
     icon: Landmark,
-    accent: "#1F6B52",
+    accent: "#B52F5A",
     adminOnly: true,
     category: "Finance",
   },
@@ -141,7 +141,7 @@ const TOOLS = [
     description: "Review applications, filter by role and status.",
     href: "/admin/applications",
     icon: Users,
-    accent: "#6B3A7D",
+    accent: "#B52F5A",
     adminOnly: true,
     category: "People",
   },
@@ -151,7 +151,7 @@ const TOOLS = [
     description: "Inquiries, quick booking links, and quote emails.",
     href: "/admin/private-events",
     icon: Sparkles,
-    accent: "#8B2252",
+    accent: "#B52F5A",
     adminOnly: true,
     category: "Events",
   },
@@ -161,7 +161,7 @@ const TOOLS = [
     description: "Class calendar with auto Luma event generation.",
     href: "/admin/puppy-schedule",
     icon: CalendarDays,
-    accent: "#8B2252",
+    accent: "#B52F5A",
     adminOnly: true,
     category: "Events",
   },
@@ -171,7 +171,7 @@ const TOOLS = [
     description: "Contacts, breeds, rates, confirmations, and calculator.",
     href: "/admin/breeders",
     icon: PawPrint,
-    accent: "#8B2252",
+    accent: "#B52F5A",
     adminOnly: true,
     category: "Breeders",
   },
@@ -181,7 +181,7 @@ const TOOLS = [
     description: "Kijiji sourcing, AI scoring, and outreach pipeline.",
     href: "/admin/breeder-leads",
     icon: Dog,
-    accent: "#8B2252",
+    accent: "#B52F5A",
     adminOnly: true,
     category: "Breeders",
   },
@@ -191,7 +191,7 @@ const TOOLS = [
     description: "Corporate wellness, brand collabs, and media inquiries.",
     href: "/admin/partnerships",
     icon: Handshake,
-    accent: "#2E7D32",
+    accent: "#B52F5A",
     adminOnly: true,
     category: "Growth",
   },
@@ -201,7 +201,7 @@ const TOOLS = [
     description: "Prepare private Meta campaign drafts with APY event links and creative variations.",
     href: "/admin/meta-campaigns",
     icon: Megaphone,
-    accent: "#8B2252",
+    accent: "#B52F5A",
     adminOnly: true,
     category: "Growth",
   },
@@ -211,7 +211,7 @@ const TOOLS = [
     description: "Post-class Google review SMS log and status.",
     href: "/admin/review-texts",
     icon: Star,
-    accent: "#B8860B",
+    accent: "#B52F5A",
     adminOnly: true,
     category: "Growth",
   },
@@ -221,7 +221,7 @@ const TOOLS = [
     description: "Inbound replies from breeders and guests.",
     href: "/admin/sms-inbox",
     icon: Inbox,
-    accent: "#7C3AED",
+    accent: "#B52F5A",
     adminOnly: true,
     category: "Operations",
   },
@@ -231,7 +231,7 @@ const TOOLS = [
     description: "Cancel and notify all attendees via call and SMS.",
     href: "/admin/cancellation",
     icon: PhoneOff,
-    accent: "#C0392B",
+    accent: "#B52F5A",
     adminOnly: true,
     category: "Operations",
   },
@@ -241,7 +241,7 @@ const TOOLS = [
     description: "Text one person, a list, or upload a CSV for bulk sends.",
     href: "/admin/sms-broadcast",
     icon: MessageSquare,
-    accent: "#7C3AED",
+    accent: "#B52F5A",
     adminOnly: true,
     category: "Operations",
   },
@@ -251,7 +251,7 @@ const TOOLS = [
     description: "Weekend staffing, coverage, and leave management.",
     href: "/admin/staff-availability",
     icon: CalendarCheck,
-    accent: "#0891B2",
+    accent: "#B52F5A",
     adminOnly: true,
     category: "People",
   },
@@ -261,7 +261,7 @@ const TOOLS = [
     description: "Employee records, team tree, login access, and availability.",
     href: "/admin/employees",
     icon: UsersRound,
-    accent: "#8B2252",
+    accent: "#B52F5A",
     adminOnly: true,
     category: "People",
   },
@@ -288,8 +288,8 @@ export default function StaffPortal() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#8B2252] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen apy-staff-ui bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-border border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -304,19 +304,19 @@ export default function StaffPortal() {
   })).filter(g => g.tools.length > 0);
 
   return (
-    <div className="min-h-screen bg-[#F7F2EE]">
+    <div className="min-h-screen apy-staff-ui bg-background">
 
       {/* Sticky top bar */}
-      <header className="bg-white/90 backdrop-blur-md border-b border-[#EDE0D8] sticky top-0 z-40">
+      <header className="bg-white/90 backdrop-blur-md border-b border-border sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={LOGO_URL} alt="APY" className="w-8 h-8 rounded-lg object-cover" />
             <div>
-              <p className="font-bold text-[13px] text-[#1A0A12] leading-none">APY HQ</p>
-              <p className="text-[10px] text-[#8B2252] leading-none mt-0.5 font-medium tracking-wide uppercase">Command Centre</p>
+              <p className="font-bold text-[13px] text-foreground leading-none">APY HQ</p>
+              <p className="text-[10px] text-brand-link leading-none mt-0.5 font-medium tracking-wide uppercase">Command Centre</p>
             </div>
           </div>
-          <Link href="/" className="flex items-center gap-1.5 text-xs text-[#8B2252] hover:text-[#6B1A3E] transition-colors font-medium">
+          <Link href="/" className="flex items-center gap-1.5 text-xs text-brand-link hover:text-foreground transition-colors font-medium">
             <ExternalLink size={12} />
             Back to Site
           </Link>
@@ -324,7 +324,7 @@ export default function StaffPortal() {
       </header>
 
       {/* Hero — clean full photo, no overlay */}
-      <div className="relative overflow-hidden" style={{ height: "380px" }}>
+      <div className="relative h-48 overflow-hidden sm:h-64 lg:h-72">
         <img
           src={TEAM_PHOTO}
           alt="APY Team"
@@ -334,14 +334,14 @@ export default function StaffPortal() {
       </div>
 
       {/* Welcome bar below photo */}
-      <div className="bg-white border-b border-[#EDE0D8] px-6 md:px-10 py-4">
+      <div className="bg-white border-b border-border px-6 md:px-10 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <p className="text-[10px] font-bold tracking-widest uppercase text-[#8B2252]/60 mb-0.5">
+            <p className="text-[10px] font-bold tracking-widest uppercase text-brand-link mb-0.5">
               {getGreeting()} · {new Date().toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric" })}
             </p>
-            <h1 className="text-xl md:text-2xl font-bold text-[#1A0A12] leading-tight">
-              Welcome back, <span style={{ color: "#8B2252" }}>{displayName}</span> 👑
+            <h1 className="text-xl md:text-2xl font-medium text-foreground leading-tight">
+              Welcome back, <span style={{ color: "#B52F5A" }}>{displayName}</span> 👑
             </h1>
           </div>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200">
@@ -376,8 +376,8 @@ export default function StaffPortal() {
             <div key={category}>
               {/* Section header */}
               <div className="flex items-center gap-3 mb-3">
-                <h2 className="text-xs font-bold tracking-widest uppercase text-[#8B2252]">{category}</h2>
-                <div className="flex-1 h-px bg-[#E8D5CC]" />
+                <h2 className="text-xs font-medium tracking-widest uppercase text-brand-link">{category}</h2>
+                <div className="flex-1 h-px bg-accent" />
               </div>
               {/* Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -393,7 +393,7 @@ export default function StaffPortal() {
                             ? "opacity-45 cursor-not-allowed"
                             : "cursor-pointer hover:shadow-md hover:-translate-y-0.5"
                         }`}
-                        style={{ boxShadow: "0 1px 3px rgba(139,34,82,0.07)" }}
+                        style={{ boxShadow: "0 1px 3px rgba(52,34,29,0.07)" }}
                       >
                         <div className="p-4 py-5">
                           <div className="flex items-center justify-between mb-3">
@@ -404,12 +404,12 @@ export default function StaffPortal() {
                               <Icon size={19} style={{ color: tool.accent }} />
                             </div>
                             <div className="flex items-center gap-1">
-                              {isLocked && <Lock size={9} className="text-[#C4A0B0]" />}
-                              <ArrowRight size={14} className="text-[#D4B8C4] group-hover:text-[#8B2252] transition-colors" />
+                              {isLocked && <Lock size={9} className="text-muted-foreground" />}
+                              <ArrowRight size={14} className="text-muted-foreground group-hover:text-brand-link transition-colors" />
                             </div>
                           </div>
-                          <h3 className="font-semibold text-[15px] text-[#1A0A12] leading-snug">{tool.title}</h3>
-                          <p className="text-[12px] text-[#7A5A6A] leading-relaxed mt-1">{tool.description}</p>
+                          <h3 className="font-semibold text-[15px] text-foreground leading-snug">{tool.title}</h3>
+                          <p className="text-[12px] text-muted-foreground leading-relaxed mt-1">{tool.description}</p>
                         </div>
                       </div>
                     </Link>
@@ -421,8 +421,8 @@ export default function StaffPortal() {
         </div>
 
         {/* Footer */}
-        <p className="mt-6 text-[10px] text-[#C4A0B0] text-center">
-          APY HQ · <a href="mailto:afropuppyyoga@gmail.com" className="hover:text-[#8B2252] transition-colors">afropuppyyoga@gmail.com</a>
+        <p className="mt-6 text-[10px] text-muted-foreground text-center">
+          APY HQ · <a href="mailto:afropuppyyoga@gmail.com" className="hover:text-brand-link transition-colors">afropuppyyoga@gmail.com</a>
         </p>
       </main>
     </div>

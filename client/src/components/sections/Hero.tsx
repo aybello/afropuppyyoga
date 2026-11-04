@@ -1,25 +1,17 @@
+/* Homepage hero — approved ivory editorial layout with authentic APY photography. */
 import { BOOK_URL } from "@/const";
-/* ============================================================
-   Hero Section — Full-bleed editorial, text anchored bottom-left
-   Background: AI-generated warm yoga studio with puppies
-   Design: Afro-editorial, warm tones, asymmetric layout
-   ============================================================ */
 import { useState } from "react";
 import { ChevronDownIcon } from "@/components/PublicIcons";
 import { trackCTAClick } from "@/hooks/useAnalytics";
 import LocalDogsImpact from "@/components/sections/LocalDogsImpact";
 import { handleHomeSectionClick, homeSectionHref, scrollToHomeSection } from "@/components/homeSectionNavigation";
-import {
-  getNextHeroImageOnError,
-  PRIMARY_HERO_IMAGE,
-} from "@shared/heroImage";
+import { FIVE_STAR_REVIEW_COUNT } from "@shared/reviewMetrics";
 
-// The stable CDN URL is preconnected and preloaded from client/index.html. The
-// managed-storage route is retained only as a fallback because it adds a
-// redirect and disables caching on every first request.
+// Existing managed source photographs, not generated concept artwork.
+const HERO_PHOTO = "/manus-storage/apy_kitchener_gallery_07_jun21_on_mat_172ef0af.jpg";
+const HERO_FALLBACK_PHOTO = "/manus-storage/apy_kitchener_gallery_02_oct24_portrait_7773eb35.jpg";
 
-// Each logo: src = CDN URL, height = display height in px
-// All logos are shown in their natural colors on a white/frosted strip
+// Partner logos remain in their original colors and at their approved display sizes.
 const trustedBy = [
   { name: "LiftOff", src: "/manus-storage/LiftOff_Logo_Building_Legacy_banner_5f5d7710.png", height: 88 },
   { name: "Wilfrid Laurier University", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/laurier_logo_61911be5.webp", height: 30 },
@@ -46,12 +38,8 @@ const trustedBy = [
   { name: "Brock Solutions", src: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/dwXWkrdWFpxsxxJF.png", height: 72 },
 ];
 
-const heroRevealStyle = (delay: number) => ({
-  animation: `heroReveal 0.65s ease-out ${delay}s both`,
-});
-
 export default function Hero() {
-  const [heroImage, setHeroImage] = useState(PRIMARY_HERO_IMAGE);
+  const [heroImage, setHeroImage] = useState(HERO_PHOTO);
   const [heroImageFailed, setHeroImageFailed] = useState(false);
 
   const scrollToExperience = () => {
@@ -59,190 +47,115 @@ export default function Hero() {
   };
 
   return (
-    <section id="home" className="relative min-h-screen flex flex-col">
-      {/* The direct CDN image is both preloaded and used as the first visual layer. */}
-      <div
-        className="absolute inset-0 overflow-hidden bg-black"
-        style={{
-          backgroundImage: `url(${heroImage})`,
-          backgroundPosition: "center",
-          backgroundSize: "cover",
-        }}
-      >
-        {!heroImageFailed && (
-          <img
-            src={heroImage}
-            alt=""
-            aria-hidden="true"
-            width={1920}
-            height={1072}
-            loading="eager"
-            decoding="sync"
-            fetchPriority="high"
-            onLoad={() => document.documentElement.classList.remove("home-pending")}
-            onError={() => {
-              const fallbackImage = getNextHeroImageOnError(heroImage);
-              if (fallbackImage) {
-                setHeroImage(fallbackImage);
-              } else {
-                document.documentElement.classList.remove("home-pending");
-                setHeroImageFailed(true);
-              }
-            }}
-            className="w-full h-full object-cover object-center scale-105 animate-[kenBurns_20s_ease-in-out_infinite_alternate]"
-          />
-        )}
-        {/* Gradient overlay — dark at bottom-left for text legibility, dark at top for nav */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/40" />
-        {/* Warm amber tint */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#F2A0B8]/10 to-transparent" />
-      </div>
-
-      {/* Content — bottom-left anchored editorial layout */}
-      <div className="relative flex-1 flex flex-col justify-end container pb-20 pt-28 md:pb-28 md:pt-36">
-        <div className="max-w-2xl">
-          {/* Eyebrow */}
-          <div
-            style={heroRevealStyle(0.1)}
-            className="flex items-center gap-3 mb-6"
-          >
-            <div className="w-8 h-0.5 bg-[#F2A0B8]" />
-            <span className="text-[#F2A0B8] font-body text-sm font-semibold tracking-widest uppercase">
-              Ontario's #1 Puppy Yoga Studio
-            </span>
-          </div>
-
-          {/* Headline */}
-          <h1
-            style={heroRevealStyle(0.22)}
-            className="font-display text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-bold text-white leading-[1.05] mb-6"
-          >
-            Where Wellness
-            <br />
-            Meets{" "}
-            <span className="italic text-[#F2A0B8]">Puppy Love</span>
+    <section id="home" className="relative bg-[#FEFAF4] text-[#34221D] pt-28 sm:pt-32 lg:pt-36">
+      <div className="container grid items-center gap-8 pb-10 lg:grid-cols-[1.08fr_1fr] lg:gap-x-14 lg:gap-y-4 lg:pb-14">
+        <div className="min-w-0 lg:col-start-1 lg:row-start-1 lg:self-end">
+          <p className="font-body text-xs sm:text-sm font-semibold tracking-[0.16em] uppercase text-[#B83F67] mb-5">
+            Ontario's #1 Puppy Yoga Studio
+          </p>
+          <h1 className="font-display font-medium text-[clamp(2.75rem,5.2vw,5.25rem)] leading-[1.08] tracking-[-0.035em] mb-6 [text-wrap:balance]">
+            Where Wellness<br />
+            Meets <span className="italic text-[#B83F67]">Puppy Love</span>
           </h1>
-
-          {/* Subheadline */}
-          <p
-            style={{ ...heroRevealStyle(0.34), textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}
-            className="font-body text-white/85 text-base md:text-xl leading-relaxed mb-10 max-w-lg"
-          >
+          <p className="font-body text-[#66514A] text-base sm:text-lg leading-relaxed max-w-xl mb-8 [text-wrap:pretty]">
             Guided yoga, Afro-beat rhythms, and adorable puppies — all in one unforgettable session. Serving Hamilton, Kitchener & Oakville.
           </p>
-
-          {/* CTAs */}
-          <div
-            style={heroRevealStyle(0.46)}
-            className="flex flex-row gap-2"
-          >
+          <div className="flex flex-wrap items-center gap-3">
             <a
               href={BOOK_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center px-3 py-2.5 sm:px-8 sm:py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-xs sm:text-base rounded-full hover:bg-[#F2A0B8] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1 whitespace-nowrap"
+              className="inline-flex w-full sm:w-auto items-center justify-center gap-3 min-h-12 px-7 py-3.5 bg-[#F29CB8] text-[#34221D] font-body font-semibold text-base rounded-full hover:bg-[#FDE9EF] transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B83F67]"
               onClick={() => trackCTAClick("Book a Class — Hero")}
             >
-              Book a Class
+              Book a Class <span aria-hidden="true">→</span>
             </a>
             <a
               href={homeSectionHref("#memberships")}
               onClick={(e) => { trackCTAClick("Memberships — Hero"); handleHomeSectionClick(e, "#memberships"); }}
-              className="inline-flex items-center justify-center px-3 py-2.5 sm:px-8 sm:py-4 font-body font-bold text-xs sm:text-base rounded-full transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1 whitespace-nowrap"
-              style={{ background: "linear-gradient(135deg, #F2A0B8, #F97316)", color: "#1A0A12" }}
+              className="inline-flex flex-1 sm:flex-none items-center justify-center min-h-12 px-5 py-3 font-body font-semibold text-sm sm:text-base rounded-full border border-[#EBCDD5] hover:bg-[#FDE9EF] transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B83F67]"
             >
               Memberships
             </a>
             <a
               href={homeSectionHref("#private-events")}
               onClick={(e) => { trackCTAClick("Private Events — Hero"); handleHomeSectionClick(e, "#private-events"); }}
-              className="inline-flex items-center justify-center px-3 py-2.5 sm:px-8 sm:py-4 bg-white/15 backdrop-blur-sm text-white font-body font-semibold text-xs sm:text-base rounded-full border border-white/30 hover:bg-white/25 transition-all duration-200 whitespace-nowrap"
+              className="inline-flex flex-1 sm:flex-none items-center justify-center min-h-12 px-5 py-3 font-body font-semibold text-sm sm:text-base rounded-full border border-[#EBCDD5] hover:bg-[#FDE9EF] transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B83F67]"
             >
               Private Events
             </a>
           </div>
-
-          {/* Trust line */}
-          <p
-            style={{ ...heroRevealStyle(0.58), textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}
-            className="font-body text-white/60 text-xs sm:text-sm mt-5"
-          >
+          <div className="mt-6 flex flex-wrap items-center gap-3 font-body text-sm">
+            <span aria-hidden="true" className="text-[#B83F67] text-xl tracking-[0.08em]">★★★★★</span>
+            <span>{FIVE_STAR_REVIEW_COUNT} five-star reviews</span>
+          </div>
+          <p className="font-body text-[#66514A] text-sm leading-relaxed mt-4 max-w-lg">
             Trusted by universities, brands, and wellness communities across Ontario.
           </p>
+        </div>
 
-          <div
-            style={heroRevealStyle(0.66)}
-            className="lg:hidden"
-          >
-            <LocalDogsImpact />
-          </div>
+        <div className="relative w-full max-w-xl mx-auto overflow-hidden rounded-t-[50%] bg-[#FDE9EF] aspect-[3/4] lg:aspect-[4/5] lg:col-start-2 lg:row-start-1 lg:row-span-2">
+          {!heroImageFailed && (
+            <img
+              src={heroImage}
+              alt={heroImage === HERO_PHOTO ? "Puppy relaxing with a smiling guest on a yoga mat at AfroPuppyYoga Kitchener" : "Kitchener guest smiling while holding a puppy at AfroPuppyYoga"}
+              width={1500}
+              height={2000}
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
+              onLoad={() => document.documentElement.classList.remove("home-pending")}
+              onError={() => {
+                if (heroImage === HERO_PHOTO) {
+                  setHeroImage(HERO_FALLBACK_PHOTO);
+                } else {
+                  document.documentElement.classList.remove("home-pending");
+                  setHeroImageFailed(true);
+                }
+              }}
+              className="w-full h-full object-cover object-center"
+            />
+          )}
+        </div>
+        <div className="min-w-0 lg:col-start-1 lg:row-start-2 lg:self-start">
+          <LocalDogsImpact />
         </div>
       </div>
 
-      <div
-        style={heroRevealStyle(0.54)}
-        className="absolute right-10 top-28 z-10 hidden w-[340px] lg:block xl:right-14"
-      >
-        <LocalDogsImpact />
-      </div>
-
-      {/* Trusted By — infinite scrolling marquee on a frosted white strip */}
-      <div
-        style={heroRevealStyle(0.72)}
-        className="relative bg-white border-t border-gray-100 py-3 flex items-center"
-      >
-        {/* Pinned label — sits outside the scrolling track */}
-        <span className="hidden xs:inline-flex shrink-0 text-black/40 font-body text-[10px] font-bold tracking-[0.2em] uppercase whitespace-nowrap pl-5 pr-4 border-r border-black/15 z-20 sm:inline-flex items-center">
-          Trusted By
-        </span>
-
-        {/* Scrolling marquee — overflow hidden on this wrapper only */}
-        <div className="relative flex-1 overflow-hidden">
-          {/* Fade edges */}
-          <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
-
-          {/* Marquee track — two identical sets for seamless loop */}
-          <div className="flex items-center animate-[marquee_28s_linear_infinite] gap-0 min-w-max">
-            {[...trustedBy, ...trustedBy].map((org, i) => (
-              <div key={`${org.name}-${i}`} className="flex items-center px-8 border-r border-black/10 last:border-r-0 shrink-0">
-                <img
-                  src={org.src}
-                  alt={org.name}
-                  loading={i < 6 ? "eager" : "lazy"}
-                  decoding="async"
-                  style={{ height: org.height }}
-                  className="w-auto object-contain transition-all duration-300 hover:scale-105"
-                />
-              </div>
+      <div className="bg-[#FDE9EF] border-y border-[#EBCDD5]">
+        <div className="container flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-8 py-4">
+          <p className="font-body text-xs font-semibold uppercase tracking-[0.14em] text-[#B83F67]">Find a Class Near You</p>
+          <div className="flex flex-wrap justify-center gap-x-5 sm:gap-x-8">
+            {[
+              { city: "Kitchener", href: "/puppy-yoga-kitchener" },
+              { city: "Hamilton", href: "/puppy-yoga-hamilton" },
+              { city: "Oakville", href: "/puppy-yoga-oakville" },
+            ].map((location) => (
+              <a key={location.city} href={location.href} className="inline-flex items-center gap-2 min-h-11 font-body text-sm hover:text-[#B83F67] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B83F67]">
+                {location.city}<span aria-hidden="true">→</span>
+              </a>
             ))}
           </div>
+          <button onClick={scrollToExperience} className="hidden lg:inline-flex items-center justify-center min-h-11 min-w-11 text-[#66514A] hover:text-[#B83F67] rounded-full focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B83F67]" aria-label="Scroll down">
+            <ChevronDownIcon size={24} aria-hidden />
+          </button>
         </div>
       </div>
 
-      {/* Scroll indicator */}
-      <button
-        onClick={scrollToExperience}
-        className="absolute bottom-28 right-8 md:right-12 text-white/60 hover:text-white transition-colors animate-bounce"
-        aria-label="Scroll down"
-      >
-        <ChevronDownIcon size={28} aria-hidden />
-      </button>
-
-      <style>{`
-        @keyframes kenBurns {
-          from { transform: scale(1.05) translate(0, 0); }
-          to { transform: scale(1.12) translate(-1%, -1%); }
-        }
-        @keyframes heroReveal {
-          from { opacity: 0; transform: translateY(14px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-      `}</style>
+      <div className="border-b border-[#EBCDD5] bg-[#FEFAF4] py-5">
+        <div className="container flex flex-col sm:flex-row sm:items-center gap-4">
+          <span className="shrink-0 font-body text-xs font-semibold tracking-[0.14em] uppercase text-[#66514A] sm:pr-5 sm:border-r sm:border-[#EBCDD5]">Trusted By</span>
+          <div className="flex-1 min-w-0 overflow-x-auto pb-2" role="region" aria-label="Trusted APY partners" tabIndex={0}>
+            <div className="flex items-center gap-9 min-w-max">
+              {trustedBy.map((org, i) => (
+                <div key={org.name} className="flex h-[100px] items-center justify-center shrink-0">
+                  <img src={org.src} alt={org.name} loading={i < 6 ? "eager" : "lazy"} decoding="async" style={{ height: org.height }} className="w-auto max-w-[180px] object-contain" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }

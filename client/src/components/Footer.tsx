@@ -43,47 +43,47 @@ const navGroups = [
 
 export default function Footer() {
   return (
-    <footer className="bg-[#1A0A12] text-white py-16">
+    <footer className="apy-public-footer bg-ivory text-espresso border-t border-border py-12 md:py-16">
       <div className="container">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-10 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-10 mb-12">
           {/* Brand */}
-          <div className="md:col-span-1">
+          <div className="lg:col-span-1">
             <div className="flex items-center gap-3 mb-4">
               <img
                 src={LOGO_URL}
                 alt="AfroPuppyYoga"
-                className="w-12 h-12 rounded-full object-cover"
+                className="w-14 h-14 object-contain"
               />
               <div>
-                <div className="font-display font-bold text-lg text-white">AfroPuppyYoga</div>
-                <div className="font-body text-xs text-[#F2A0B8] tracking-widest uppercase">Ontario's #1 Puppy Yoga</div>
+                <div className="font-display font-medium text-2xl text-espresso">AfroPuppyYoga</div>
+                <div className="font-body text-xs text-brand-link tracking-widest uppercase">Ontario's #1 Puppy Yoga</div>
               </div>
             </div>
-            <p className="font-body text-white/50 text-sm leading-relaxed mb-6 max-w-xs">
+            <p className="font-body text-muted-foreground text-sm leading-relaxed mb-6 max-w-xs">
               Where wellness meets culture and puppy love. Serving Hamilton, Kitchener, and Oakville with joy, movement, and adorable puppies.
             </p>
             <a
               href={BOOK_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center px-6 py-2.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-semibold text-sm rounded-full hover:bg-[#F2A0B8] transition-colors"
+              className="apy-primary-action"
             >
               Book a Class
             </a>
           </div>
 
           {/* Navigation — three grouped columns */}
-          <div className="md:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-6 sm:gap-8">
             {navGroups.map((group) => (
               <div key={group.heading}>
-                <h4 className="font-display font-bold text-xs text-white/40 uppercase tracking-widest mb-4">{group.heading}</h4>
+                <h4 className="font-body font-semibold text-xs text-brand-link uppercase tracking-[0.12em] mb-4">{group.heading}</h4>
                 <ul className="space-y-2.5">
                   {group.links.map((link) => (
                     <li key={link.href}>
                       {(link as any).isPage ? (
                         <a
                           href={link.href}
-                          className="font-body text-sm text-white/50 hover:text-[#F2A0B8] transition-colors"
+                          className="font-body text-sm text-muted-foreground hover:text-brand-link hover:underline underline-offset-4 transition-colors"
                         >
                           {link.label}
                         </a>
@@ -92,7 +92,7 @@ export default function Footer() {
                           href={link.href}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="font-body text-sm text-[#F2A0B8] font-semibold hover:text-white transition-colors"
+                          className="font-body text-sm text-brand-link font-semibold hover:underline underline-offset-4 transition-colors"
                         >
                           {link.label} →
                         </a>
@@ -100,7 +100,7 @@ export default function Footer() {
                         <a
                           href={homeSectionHref(link.href)}
                           onClick={(e) => handleHomeSectionClick(e, link.href)}
-                          className="font-body text-sm text-white/50 hover:text-[#F2A0B8] transition-colors"
+                          className="font-body text-sm text-muted-foreground hover:text-brand-link hover:underline underline-offset-4 transition-colors"
                         >
                           {link.label}
                         </a>
@@ -114,31 +114,31 @@ export default function Footer() {
 
           {/* Contact */}
           <div>
-            <h4 className="font-display font-bold text-sm text-white/80 uppercase tracking-widest mb-5">Contact</h4>
+            <h4 className="font-body font-semibold text-xs text-brand-link uppercase tracking-[0.12em] mb-5">Contact</h4>
             <div className="space-y-3">
               <div>
-                <div className="font-body text-xs text-white/30 uppercase tracking-wide mb-1">Email</div>
+                <div className="font-body text-xs text-muted-foreground uppercase tracking-wide mb-1">Email</div>
                 <a
                   href="mailto:afropuppyyoga@gmail.com"
-                  className="font-body text-sm text-white/60 hover:text-[#F2A0B8] transition-colors"
+                  className="font-body text-sm text-muted-foreground hover:text-brand-link hover:underline underline-offset-4 break-words transition-colors"
                 >
                   afropuppyyoga@gmail.com
                 </a>
               </div>
               <div>
-                <div className="font-body text-xs text-white/30 uppercase tracking-wide mb-1">Instagram</div>
+                <div className="font-body text-xs text-muted-foreground uppercase tracking-wide mb-1">Instagram</div>
                 <a
                   href="https://www.instagram.com/afropuppyyoga"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-body text-sm text-white/60 hover:text-[#F2A0B8] transition-colors"
+                  className="font-body text-sm text-muted-foreground hover:text-brand-link hover:underline underline-offset-4 break-words transition-colors"
                 >
                   @afropuppyyoga
                 </a>
               </div>
               <div>
-                <div className="font-body text-xs text-white/30 uppercase tracking-wide mb-1">Locations</div>
-                <div className="font-body text-sm text-white/60">
+                <div className="font-body text-xs text-muted-foreground uppercase tracking-wide mb-1">Locations</div>
+                <div className="font-body text-sm text-muted-foreground">
                   Hamilton · Kitchener · Oakville
                 </div>
               </div>
@@ -147,23 +147,23 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="font-body text-xs text-white/30">
+        <div className="border-t border-border pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="font-body text-xs text-muted-foreground">
             © {new Date().getFullYear()} AfroPuppyYoga. All rights reserved.
           </p>
-          <div className="flex items-center gap-4">
-            <p className="font-body text-xs text-white/20">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-3">
+            <p className="font-body text-xs text-muted-foreground">
               Made with ❤️ in Canada
             </p>
             <a
               href="/staff"
-              className="font-body text-xs text-white/20 hover:text-white/40 transition-colors"
+              className="font-body text-xs text-muted-foreground hover:text-brand-link hover:underline underline-offset-4 transition-colors"
             >
               Staff Portal
             </a>
-            <a href="/privacy" className="font-body text-xs text-white/20 hover:text-white/40 transition-colors">Privacy</a>
-            <a href="/terms" className="font-body text-xs text-white/20 hover:text-white/40 transition-colors">Terms</a>
-            <a href="/refund-policy" className="font-body text-xs text-white/20 hover:text-white/40 transition-colors">Refund Policy</a>
+            <a href="/privacy" className="font-body text-xs text-muted-foreground hover:text-brand-link hover:underline underline-offset-4 transition-colors">Privacy</a>
+            <a href="/terms" className="font-body text-xs text-muted-foreground hover:text-brand-link hover:underline underline-offset-4 transition-colors">Terms</a>
+            <a href="/refund-policy" className="font-body text-xs text-muted-foreground hover:text-brand-link hover:underline underline-offset-4 transition-colors">Refund Policy</a>
           </div>
         </div>
       </div>

@@ -13,20 +13,20 @@ export default function RewardsStrip() {
   return (
     <div
       className="w-full py-3 px-4 flex items-center justify-center gap-3 cursor-pointer"
-      style={{ background: "linear-gradient(90deg, #fce7f3 0%, #fdf2f8 50%, #fce7f3 100%)", borderBottom: "1px solid #f9a8d4" }}
+      style={{ background: "#FDE9EF", borderBottom: "1px solid #F29CB8" }}
       onClick={scrollToRewards}
     >
-      <SparkleIcon size={16} style={{ color: "#8B2252" }} aria-hidden />
-      <p className="text-sm font-semibold text-center" style={{ color: "#8B2252" }}>
-        🐾 <span style={{ color: "#8B2252" }}>Earn rewards</span> with every class —{" "}
+      <SparkleIcon size={16} style={{ color: "#B52F5A" }} aria-hidden />
+      <p className="text-sm font-semibold text-center" style={{ color: "#34221D" }}>
+        🐾 <span style={{ color: "#B52F5A" }}>Earn rewards</span> with every class —{" "}
         <span
           className="underline underline-offset-2"
-          style={{ color: "#8B2252" }}
+          style={{ color: "#B52F5A" }}
         >
           Join the loyalty program
         </span>
       </p>
-      <SparkleIcon size={16} style={{ color: "#8B2252" }} aria-hidden />
+      <SparkleIcon size={16} style={{ color: "#B52F5A" }} aria-hidden />
     </div>
   );
 }

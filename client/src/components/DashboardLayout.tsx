@@ -58,8 +58,8 @@ export default function DashboardLayout({
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
+      <div className="apy-page apy-staff-ui flex items-center justify-center min-h-screen">
+        <div className="apy-panel flex flex-col items-center gap-6 p-6 max-w-md w-full">
           <div className="flex flex-col items-center gap-6">
             <h1 className="text-2xl font-semibold tracking-tight text-center">
               Sign in to continue
@@ -73,7 +73,7 @@ export default function DashboardLayout({
               window.location.href = getLoginUrl();
             }}
             size="lg"
-            className="w-full shadow-lg hover:shadow-xl transition-all"
+            className="w-full"
           >
             Sign in
           </Button>
@@ -191,7 +191,7 @@ function DashboardLayoutContent({
                       className={`h-10 transition-all font-normal`}
                     >
                       <item.icon
-                        className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
+                        className={`h-4 w-4 ${isActive ? "text-brand-link" : ""}`}
                       />
                       <span>{item.label}</span>
                     </SidebarMenuButton>
@@ -257,7 +257,7 @@ function DashboardLayoutContent({
             </div>
           </div>
         )}
-        <main className="flex-1 p-4">{children}</main>
+        <main className="apy-staff-ui flex-1 p-4 sm:p-6">{children}</main>
       </SidebarInset>
     </>
   );

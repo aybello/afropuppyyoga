@@ -11,7 +11,7 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 30 }}
+      initial={false}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.6, delay, ease: "easeOut" }}
     >
@@ -29,56 +29,56 @@ export default function OurStory() {
           {/* Section label */}
           <FadeUp>
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-0.5 bg-[#8B2252]" />
-              <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">
+              <div className="w-8 h-0.5 bg-[#B83F67]" />
+              <span className="text-[#B83F67] font-body text-xs font-semibold tracking-widest uppercase">
                 Our Story
               </span>
             </div>
-            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-[#1A0A12] leading-tight mb-10">
+            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-medium text-[#34221D] leading-tight mb-10">
               Born From Love —
               <br />
-              <span className="italic text-[#8B2252]">A Dog, A Dream & A Community</span>
+              <span className="italic text-[#B83F67]">A Dog, A Dream & A Community</span>
             </h2>
           </FadeUp>
 
           {/* Story body */}
           <div className="space-y-6">
             <FadeUp delay={0.1}>
-              <p className="font-body text-[#1A0A12]/75 text-lg leading-relaxed">
-                <strong className="text-[#1A0A12] font-semibold">AfroPuppyYoga</strong> was founded by <strong className="text-[#1A0A12] font-semibold">Ay</strong> in 2024 — not from a business plan, but from a feeling. Growing up without dogs, his world changed the moment his brother brought one home. That dog opened doors he never expected: new friendships, spontaneous joy, and a sense of belonging he hadn't felt before.
+              <p className="font-body text-[#34221D]/75 text-lg leading-relaxed">
+                <strong className="text-[#34221D] font-semibold">AfroPuppyYoga</strong> was founded by <strong className="text-[#34221D] font-semibold">Ay</strong> in 2024 — not from a business plan, but from a feeling. Growing up without dogs, his world changed the moment his brother brought one home. That dog opened doors he never expected: new friendships, spontaneous joy, and a sense of belonging he hadn't felt before.
               </p>
             </FadeUp>
 
             {/* Pull quote */}
             <FadeUp delay={0.2}>
-              <blockquote className="border-l-4 border-[#8B2252] pl-6 py-3 my-8">
-                <p className="font-accent text-xl md:text-2xl italic text-[#1A0A12]/80 leading-relaxed">
+              <blockquote className="border-l-4 border-[#B83F67] pl-6 py-3 my-8">
+                <p className="font-accent text-xl md:text-2xl italic text-[#34221D]/80 leading-relaxed">
                   "There was a point in my life when I wasn't very happy. My dog was the one good thing I could always look forward to. He saved me."
                 </p>
-                <footer className="mt-3 font-body text-sm text-[#8B2252] font-semibold tracking-wide">— Ay, Founder of AfroPuppyYoga</footer>
+                <footer className="mt-3 font-body text-sm text-[#B83F67] font-semibold tracking-wide">— Ay, Founder of AfroPuppyYoga</footer>
               </blockquote>
             </FadeUp>
 
             <FadeUp delay={0.25}>
-              <p className="font-body text-[#1A0A12]/75 text-lg leading-relaxed">
+              <p className="font-body text-[#34221D]/75 text-lg leading-relaxed">
                 That experience became the seed of something bigger — a space where wellness, community, and unconditional love could exist together. Ay wanted to share the kind of joy and connection that his dog had given him, and make it accessible to everyone.
               </p>
             </FadeUp>
 
             <FadeUp delay={0.3}>
-              <p className="font-body text-[#1A0A12]/75 text-lg leading-relaxed">
-                Ay built APY with the help of close collaborators <strong className="text-[#1A0A12] font-semibold">Megan Durkin</strong> and <strong className="text-[#1A0A12] font-semibold">Ala Zeidan</strong> — engineering graduates from the University of Guelph — alongside students from Guelph's Animal Biology program and the Ontario Veterinary College. Together, they designed the program from the ground up with both human and puppy wellbeing at its core.
+              <p className="font-body text-[#34221D]/75 text-lg leading-relaxed">
+                Ay built APY with the help of close collaborators <strong className="text-[#34221D] font-semibold">Megan Durkin</strong> and <strong className="text-[#34221D] font-semibold">Ala Zeidan</strong> — engineering graduates from the University of Guelph — alongside students from Guelph's Animal Biology program and the Ontario Veterinary College. Together, they designed the program from the ground up with both human and puppy wellbeing at its core.
               </p>
             </FadeUp>
 
             <FadeUp delay={0.35}>
-              <p className="font-body text-[#1A0A12]/75 text-lg leading-relaxed">
+              <p className="font-body text-[#34221D]/75 text-lg leading-relaxed">
                 The wellness space isn't always inclusive — and Ay knew that firsthand. APY was built to be different: a warm, welcoming environment where everyone belongs, regardless of background, fitness level, or experience with yoga or dogs.
               </p>
             </FadeUp>
 
             <FadeUp delay={0.4}>
-              <p className="font-body text-[#1A0A12]/75 text-lg leading-relaxed">
+              <p className="font-body text-[#34221D]/75 text-lg leading-relaxed">
                 The Afro-beat soundtrack? That's personal too. It was the music playing in the background while Ay was building APY late into the night — and it stayed, because wellness should feel like culture, not a chore.
               </p>
             </FadeUp>
@@ -86,19 +86,19 @@ export default function OurStory() {
 
           {/* Founders strip */}
           <FadeUp delay={0.45}>
-            <div className="mt-14 pt-10 border-t border-[#F0D0DC]">
-              <p className="font-body text-xs text-[#1A0A12]/40 uppercase tracking-widest mb-4">Built with the support of</p>
+            <div className="mt-14 pt-10 border-t border-[#EBCDD5]">
+              <p className="font-body text-xs text-[#34221D]/70 uppercase tracking-widest mb-4">Built with the support of</p>
               <div className="flex flex-wrap gap-4">
                 {["Ay — Founder", "Megan Durkin — Collaborator", "Ala Zeidan — Collaborator"].map((name) => (
                   <div
                     key={name}
-                    className="bg-[#FFF5F8] border border-[#F0D0DC] rounded-full px-5 py-2 font-body text-sm text-[#1A0A12]/70 font-medium"
+                    className="bg-[#FEFAF4] border border-[#EBCDD5] rounded-full px-5 py-2 font-body text-sm text-[#34221D]/70 font-medium"
                   >
                     {name}
                   </div>
                 ))}
               </div>
-              <p className="font-body text-xs text-[#1A0A12]/40 mt-4">
+              <p className="font-body text-xs text-[#34221D]/70 mt-4">
                 In collaboration with the University of Guelph Animal Biology Program & Ontario Veterinary College
               </p>
             </div>

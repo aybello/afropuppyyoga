@@ -13,7 +13,7 @@ import { Plus, Search, Dog, MapPin, ExternalLink, AlertCircle } from "lucide-rea
 
 const STATUS_COLORS: Record<string, string> = {
   new: "bg-slate-100 text-slate-700", qualified: "bg-blue-100 text-blue-700",
-  contacted: "bg-yellow-100 text-yellow-700", replied: "bg-purple-100 text-purple-700",
+  contacted: "bg-yellow-100 text-yellow-700", replied: "bg-accent text-brand-link",
   interested: "bg-orange-100 text-orange-700", negotiating: "bg-pink-100 text-pink-700",
   booked: "bg-green-100 text-green-700", not_interested: "bg-red-100 text-red-700",
   disqualified: "bg-gray-100 text-gray-500", no_response: "bg-gray-100 text-gray-500",
@@ -74,12 +74,12 @@ export default function BreederLeadsDashboard() {
   const handleImport = (url: string) => { setImportingUrl(url); importUrlMutation.mutate({ url }); };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen apy-staff-ui bg-background">
       <AdminNav />
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold">Breeder Leads</h1>
+            <h1 className="text-2xl font-medium">Breeder Leads</h1>
             <p className="text-muted-foreground text-sm mt-1">Discover, qualify, and convert new breeders</p>
           </div>
           <div className="flex gap-2">
@@ -97,7 +97,7 @@ export default function BreederLeadsDashboard() {
               { label: "Awaiting Reply", value: stats.awaitingResponse, color: "text-yellow-600", filter: "contacted" },
               { label: "Interested", value: stats.interested, color: "text-orange-500", filter: "interested" },
               { label: "Booked", value: stats.booked, color: "text-green-600", filter: "booked" },
-              { label: "Conversion", value: `${stats.conversionRate}%`, color: "text-primary", filter: null },
+              { label: "Conversion", value: `${stats.conversionRate}%`, color: "text-brand-link", filter: null },
             ].map(({ label, value, color, filter }) => (
               <Card key={label} className={filter ? "cursor-pointer hover:shadow-md transition-shadow" : ""} onClick={() => filter && setStatusFilter(filter)}>
                 <CardContent className="p-4">
@@ -143,7 +143,7 @@ export default function BreederLeadsDashboard() {
         {/* Table */}
         <Card>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[640px]">
               <thead>
                 <tr className="border-b bg-muted/30">
                   {["Breed", "Puppies", "Location", "Score", "Status", "Source", "Last Contact", ""].map(h => (
@@ -285,7 +285,7 @@ export default function BreederLeadsDashboard() {
                       <div className="flex flex-wrap gap-2 mt-1">
                         {listing.contactInfo.phones.map((p: string) => <span key={p} className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">📞 {p}</span>)}
                         {listing.contactInfo.emails.map((e: string) => <span key={e} className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">📧 {e}</span>)}
-                        {listing.contactInfo.instagrams.map((ig: string) => <span key={ig} className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">📸 @{ig}</span>)}
+                        {listing.contactInfo.instagrams.map((ig: string) => <span key={ig} className="text-xs bg-accent text-brand-link px-1.5 py-0.5 rounded">📸 @{ig}</span>)}
                       </div>
                     )}
                   </div>

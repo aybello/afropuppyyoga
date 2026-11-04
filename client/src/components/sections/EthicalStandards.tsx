@@ -38,7 +38,7 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 24 }}
+      initial={false}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.6, delay, ease: "easeOut" }}
     >
@@ -57,22 +57,22 @@ export default function EthicalStandards() {
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-0.5 bg-[#8B2252]" />
-                <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">
+                <div className="w-8 h-0.5 bg-[#B83F67]" />
+                <span className="text-[#B83F67] font-body text-xs font-semibold tracking-widest uppercase">
                   Our Commitment
                 </span>
               </div>
-              <h2 className="font-display text-4xl md:text-5xl font-bold text-[#1A0A12] leading-tight">
+              <h2 className="font-display text-4xl md:text-5xl font-medium text-[#34221D] leading-tight">
                 Puppy Welfare &{" "}
-                <span className="italic text-[#8B2252]">Ethical Standards</span>
+                <span className="italic text-[#B83F67]">Ethical Standards</span>
               </h2>
-              <p className="mt-4 font-body text-[#1A0A12]/65 text-base md:text-lg leading-relaxed max-w-xl">
+              <p className="mt-4 font-body text-[#34221D]/65 text-base md:text-lg leading-relaxed max-w-xl">
                 The wellbeing of our puppies comes first — always. Every decision we make is guided by four core commitments.
               </p>
             </div>
             <a
               href="/ethics"
-              className="inline-flex items-center gap-2 px-6 py-3 border-2 border-[#8B2252] text-[#8B2252] font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] hover:text-white transition-all duration-200 self-start md:self-auto shrink-0"
+              className="inline-flex items-center gap-2 px-6 py-3 border-2 border-[#B83F67] text-[#B83F67] font-body font-semibold text-sm rounded-full hover:bg-[#FDE9EF] hover:text-[#34221D] transition-all duration-200 self-start md:self-auto shrink-0"
             >
               Read Full Standards
               <ArrowRight size={15} />
@@ -87,17 +87,17 @@ export default function EthicalStandards() {
             return (
               <motion.div
                 key={pillar.title}
-                initial={{ opacity: 0, y: 20 }}
+                initial={false}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1, duration: 0.5 }}
-                className="bg-[#FFF5F8] border border-[#F0D0DC] rounded-2xl p-6 hover:shadow-md hover:-translate-y-1 transition-all duration-300"
+                className="bg-[#FEFAF4] border border-[#EBCDD5] rounded-2xl p-6 hover:shadow-md transition-all duration-300"
               >
-                <div className="w-11 h-11 rounded-xl bg-[#8B2252]/10 flex items-center justify-center mb-4">
-                  <Icon size={20} className="text-[#8B2252]" />
+                <div className="w-11 h-11 rounded-xl bg-[#B83F67]/10 flex items-center justify-center mb-4">
+                  <Icon size={20} className="text-[#B83F67]" />
                 </div>
-                <h3 className="font-display font-bold text-base text-[#1A0A12] mb-2">{pillar.title}</h3>
-                <p className="font-body text-sm text-[#1A0A12]/65 leading-relaxed">{pillar.summary}</p>
+                <h3 className="font-display font-medium text-base text-[#34221D] mb-2">{pillar.title}</h3>
+                <p className="font-body text-sm text-[#34221D]/65 leading-relaxed">{pillar.summary}</p>
               </motion.div>
             );
           })}
@@ -105,13 +105,13 @@ export default function EthicalStandards() {
 
         {/* Transparency callout */}
         <FadeUp delay={0.3}>
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#FFF5F8] border border-[#F0D0DC] rounded-2xl px-8 py-6">
-            <p className="font-body text-[#1A0A12]/70 text-sm md:text-base max-w-lg">
-              <strong className="text-[#1A0A12]">Transparency is our promise.</strong> Questions about our practices or puppy partners? We're happy to share everything.
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#FEFAF4] border border-[#EBCDD5] rounded-2xl px-8 py-6">
+            <p className="font-body text-[#34221D]/70 text-sm md:text-base max-w-lg">
+              <strong className="text-[#34221D]">Transparency is our promise.</strong> Questions about our practices or puppy partners? We're happy to share everything.
             </p>
             <a
               href="#contact"
-              className="shrink-0 inline-flex items-center gap-2 px-6 py-2.5 bg-[#8B2252] text-white font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] transition-colors duration-200"
+              className="shrink-0 inline-flex items-center gap-2 px-6 py-2.5 bg-[#F29CB8] text-[#34221D] font-body font-semibold text-sm rounded-full hover:bg-[#FDE9EF] transition-colors duration-200"
             >
               Get in Touch
             </a>

@@ -64,30 +64,30 @@ export default function LumaCalendar() {
   }, [calendarActive]);
 
   return (
-    <section ref={sectionRef} id="classes" className="py-10 md:py-28" style={{ background: "oklch(0.98 0.01 350)" }}>
+    <section ref={sectionRef} id="classes" className="py-10 md:py-20" style={{ background: "#FEFAF4" }}>
       <div className="container">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <div className="h-px w-8" style={{ background: "#8B2252" }} />
+              <div className="h-px w-8" style={{ background: "#F29CB8" }} />
               <span
                 className="text-xs font-semibold tracking-widest uppercase"
-                style={{ color: "#8B2252" }}
+                style={{ color: "#B83F67" }}
               >
                 Book a Class
               </span>
             </div>
             <h2
-              className="text-4xl md:text-5xl font-bold leading-tight"
-              style={{ fontFamily: "'Fraunces', serif", color: "#1A0A12" }}
+              className="text-4xl md:text-5xl font-medium leading-tight"
+              style={{ fontFamily: "'Fraunces', serif", color: "#34221D" }}
             >
               Upcoming{" "}
-              <em className="not-italic" style={{ color: "#8B2252" }}>
+              <em className="not-italic" style={{ color: "#B83F67" }}>
                 Classes
               </em>
             </h2>
-            <p className="mt-3 text-base md:text-lg max-w-xl" style={{ color: "#5a3040" }}>
+            <p className="mt-3 text-base md:text-lg max-w-xl" style={{ color: "#66514A" }}>
               Browse and book upcoming puppy yoga sessions in Kitchener, Hamilton, and beyond, directly below.
             </p>
           </div>
@@ -102,9 +102,9 @@ export default function LumaCalendar() {
             }}
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold transition-all hover:scale-105 shrink-0"
             style={{
-              background: "#8B2252",
-              color: "#fff",
-              boxShadow: "0 4px 20px rgba(233,30,140,0.3)",
+              background: "#F29CB8",
+              color: "#34221D",
+              boxShadow: "none",
             }}
           >
             <CalendarDays size={16} />
@@ -116,12 +116,11 @@ export default function LumaCalendar() {
         {/* Luma Calendar Embed */}
         {/* Force light color-scheme at the DOM level so Luma's prefers-color-scheme detection sees light mode regardless of OS setting */}
         <div
-          className="relative rounded-2xl overflow-hidden luma-embed-wrapper"
+          className="relative min-h-[500px] md:min-h-[600px] rounded-2xl overflow-hidden luma-embed-wrapper"
           style={{
-            border: "1px solid rgba(194,24,91,0.15)",
-            boxShadow: "0 8px 40px rgba(194,24,91,0.08)",
+            border: "1px solid #EBCDD5",
+            boxShadow: "0 4px 20px rgba(52,34,29,0.04)",
             background: "#ffffff",
-            minHeight: "600px",
             colorScheme: "light",
             // Force light mode at the CSS level — overrides OS dark mode for this subtree
           }}
@@ -132,24 +131,19 @@ export default function LumaCalendar() {
               color-scheme: light only !important;
             }
           `}</style>
-          {/* Loading skeleton — shimmer cards */}
+          {/* Loading skeleton — static blush cards */}
           {calendarActive && !loaded && (
             <div className="absolute inset-0 p-6" style={{ background: "#fff" }}>
               <style>{`
-                @keyframes shimmer {
-                  0% { background-position: -600px 0; }
-                  100% { background-position: 600px 0; }
-                }
                 .skeleton-shimmer {
-                  background: linear-gradient(90deg, #f5e8ef 25%, #fce4ef 50%, #f5e8ef 75%);
-                  background-size: 600px 100%;
-                  animation: shimmer 1.4s infinite linear;
+                  background: #FDE9EF;
+                  animation: none;
                   border-radius: 10px;
                 }
               `}</style>
               {/* Skeleton event cards */}
               {[1, 2, 3].map(i => (
-                <div key={i} className="mb-4 p-4 border border-[#F0D0DC] rounded-xl flex gap-4 items-start">
+                <div key={i} className="mb-4 p-4 border border-[#EBCDD5] rounded-xl flex gap-4 items-start">
                   <div className="skeleton-shimmer w-14 h-14 shrink-0 rounded-lg" />
                   <div className="flex-1 space-y-2">
                     <div className="skeleton-shimmer h-4 w-3/4" />
@@ -159,19 +153,19 @@ export default function LumaCalendar() {
                   <div className="skeleton-shimmer w-20 h-8 rounded-full shrink-0" />
                 </div>
               ))}
-              <p className="text-center text-xs mt-4" style={{ color: "#8B2252" }}>Loading upcoming classes…</p>
+              <p className="text-center text-xs mt-4" style={{ color: "#B83F67" }}>Loading upcoming classes…</p>
             </div>
           )}
           {!calendarActive ? (
             <div className="flex min-h-[500px] flex-col items-center justify-center px-6 text-center md:min-h-[600px]">
-              <CalendarDays size={34} style={{ color: "#8B2252" }} />
-              <p className="mt-4 font-semibold" style={{ color: "#3D1A2E" }}>Live upcoming classes</p>
-              <p className="mt-2 max-w-sm text-sm" style={{ color: "#956A7C" }}>The calendar loads when you reach this section, so the rest of the site opens faster.</p>
+              <CalendarDays size={34} style={{ color: "#B83F67" }} />
+              <p className="mt-4 font-semibold" style={{ color: "#34221D" }}>Live upcoming classes</p>
+              <p className="mt-2 max-w-sm text-sm" style={{ color: "#66514A" }}>The calendar loads when you reach this section, so the rest of the site opens faster.</p>
               <button
                 type="button"
                 onClick={() => setRequestedByVisitor(true)}
-                className="mt-5 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:scale-[1.02] active:scale-[0.98]"
-                style={{ background: "#8B2252" }}
+                className="mt-5 rounded-full px-5 py-2.5 text-sm font-semibold text-[#34221D] transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                style={{ background: "#F29CB8" }}
               >
                 Show upcoming classes
               </button>
@@ -202,18 +196,18 @@ export default function LumaCalendar() {
           )}
         </div>
 
-        <p className="mt-5 text-center text-sm" style={{ color: "#5a3040" }}>
+        <p className="mt-5 text-center text-sm" style={{ color: "#66514A" }}>
           Open a class to see its admission ticket options and total at checkout. Mat rental is optional and priced separately from admission.
         </p>
         {/* Footer note */}
-        <p className="text-center text-sm mt-5" style={{ color: "#9e6070" }}>
+        <p className="text-center text-sm mt-5" style={{ color: "#66514A" }}>
           Powered by{" "}
           <a
             href="https://lu.ma"
             target="_blank"
             rel="noopener noreferrer"
             className="underline underline-offset-2 hover:opacity-70 transition-opacity"
-            style={{ color: "#8B2252" }}
+            style={{ color: "#B83F67" }}
           >
             Luma
           </a>{" "}

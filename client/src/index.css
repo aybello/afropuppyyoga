@@ -1,10 +1,5 @@
-/* ============================================================
-   AfroPuppyYoga — Pink Blossom Wellness Editorial Design System
-   Design Movement: Editorial wellness meets feminine floral warmth
-   Palette: Blush ivory · Deep rose · Warm pink · Dusty mauve
-   Typography: Fraunces (display) + Plus Jakarta Sans (body)
-   ============================================================ */
-
+/* AfroPuppyYoga — approved pink boutique-wellness foundations.
+   Original brand fonts, authentic assets, and existing selectors are preserved. */
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -23,6 +18,8 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-brand-link: var(--brand-link);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -48,57 +45,59 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Custom brand tokens — Pink Blossom palette */
-  --color-forest: oklch(0.42 0.14 355);        /* deep rose (replaces forest green) */
-  --color-forest-light: oklch(0.55 0.13 355);  /* medium rose */
-  --color-forest-dark: oklch(0.30 0.13 355);   /* dark rose */
-  --color-saffron: oklch(0.82 0.10 10);        /* warm blush pink (replaces saffron) */
-  --color-saffron-dark: oklch(0.68 0.12 5);    /* deeper blush */
-  --color-terracotta: oklch(0.62 0.12 350);    /* dusty mauve (replaces terracotta) */
-  --color-ivory: oklch(0.99 0.008 355);        /* blush-tinted ivory */
-  --color-ivory-dark: oklch(0.96 0.012 350);   /* soft blush white */
-  --color-espresso: oklch(0.22 0.03 355);      /* deep rose-black */
-
+  /* Compatibility aliases for existing pages. Dark legacy fills stay readable. */
+  --color-forest: #34221D;
+  --color-forest-light: #B52F5A;
+  --color-forest-dark: #291A16;
+  --color-saffron: #F29CB8;
+  --color-saffron-dark: #B52F5A;
+  --color-terracotta: #B52F5A;
+  --color-ivory: #FEFAF4;
+  --color-ivory-dark: #FDE9EF;
+  --color-espresso: #34221D;
+  --color-blush: #FDE9EF;
   --font-display: "Fraunces", Georgia, serif;
   --font-body: "Plus Jakarta Sans", system-ui, sans-serif;
-  --font-accent: "Cormorant Garamond", Georgia, serif;
+  --font-accent: "Fraunces", Georgia, serif;
 }
 
 :root {
-  --radius: 0.5rem;
-  /* Pink Blossom palette */
-  --background: oklch(0.99 0.008 355);         /* blush-tinted ivory */
-  --foreground: oklch(0.22 0.03 355);          /* deep rose-black */
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.03 355);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.03 355);
-  --primary: oklch(0.42 0.14 355);             /* deep rose */
-  --primary-foreground: oklch(0.99 0.008 355);
-  --secondary: oklch(0.96 0.012 350);          /* soft blush white */
-  --secondary-foreground: oklch(0.42 0.14 355);
-  --muted: oklch(0.96 0.012 350);
-  --muted-foreground: oklch(0.52 0.06 355);
-  --accent: oklch(0.82 0.10 10);               /* warm blush pink */
-  --accent-foreground: oklch(0.22 0.03 355);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.90 0.018 350);
-  --input: oklch(0.90 0.018 350);
-  --ring: oklch(0.42 0.14 355);
-  --chart-1: oklch(0.42 0.14 355);
-  --chart-2: oklch(0.82 0.10 10);
-  --chart-3: oklch(0.62 0.12 350);
-  --chart-4: oklch(0.55 0.13 355);
-  --chart-5: oklch(0.68 0.12 5);
-  --sidebar: oklch(0.99 0.008 355);
-  --sidebar-foreground: oklch(0.22 0.03 355);
-  --sidebar-primary: oklch(0.42 0.14 355);
-  --sidebar-primary-foreground: oklch(0.99 0.008 355);
-  --sidebar-accent: oklch(0.96 0.012 350);
-  --sidebar-accent-foreground: oklch(0.22 0.03 355);
-  --sidebar-border: oklch(0.90 0.018 350);
-  --sidebar-ring: oklch(0.42 0.14 355);
+  color-scheme: light;
+  --radius: 0.75rem;
+  --background: #FEFAF4;
+  --foreground: #34221D;
+  --card: #FFFFFF;
+  --card-foreground: #34221D;
+  --popover: #FEFAF4;
+  --popover-foreground: #34221D;
+  --primary: #F29CB8;
+  --primary-foreground: #34221D;
+  --primary-hover: #EB8DAA;
+  --brand-link: #B52F5A;
+  --secondary: #FDE9EF;
+  --secondary-foreground: #34221D;
+  --muted: #F6EEE7;
+  --muted-foreground: #71574F;
+  --accent: #FDE9EF;
+  --accent-foreground: #34221D;
+  --destructive: #B42318;
+  --destructive-foreground: #FFFFFF;
+  --border: #E8D8D0;
+  --input: #A58A81;
+  --ring: #B52F5A;
+  --chart-1: #B52F5A;
+  --chart-2: #34221D;
+  --chart-3: #E687A4;
+  --chart-4: #94766A;
+  --chart-5: #5C816F;
+  --sidebar: #FEFAF4;
+  --sidebar-foreground: #34221D;
+  --sidebar-primary: #F29CB8;
+  --sidebar-primary-foreground: #34221D;
+  --sidebar-accent: #FDE9EF;
+  --sidebar-accent-foreground: #34221D;
+  --sidebar-border: #E8D8D0;
+  --sidebar-ring: #B52F5A;
 }
 
 @layer base {
@@ -107,15 +106,20 @@
   }
   body {
     @apply bg-background text-foreground;
+    margin: 0;
     font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
-    font-weight: 700;
-    line-height: 1.15;
+    font-weight: 500;
+    line-height: 1.2;
+    text-wrap: pretty;
   }
+  p { text-wrap: pretty; }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
   [type="button"]:not(:disabled),
@@ -127,88 +131,146 @@
   input[type="radio"]:not(:disabled) {
     @apply cursor-pointer;
   }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+  ::selection {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
 }
 
 @layer components {
   .container {
     width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 1rem;
-    padding-right: 1rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
   }
+  .flex { min-height: 0; min-width: 0; }
+  .font-display { font-family: var(--font-display); }
+  .font-accent { font-family: var(--font-accent); }
+  .font-body { font-family: var(--font-body); }
 
-  .flex {
-    min-height: 0;
-    min-width: 0;
+  .apy-page {
+    min-height: 100svh;
+    background: var(--background);
+    color: var(--foreground);
   }
-
-  @media (min-width: 640px) {
-    .container {
-      padding-left: 1.5rem;
-      padding-right: 1.5rem;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .container {
-      padding-left: 2rem;
-      padding-right: 2rem;
-      max-width: 1280px;
-    }
-  }
-
-  /* Brand utility classes */
-  .font-display {
-    font-family: var(--font-display);
-  }
-  .font-accent {
-    font-family: var(--font-accent);
-  }
-  .font-body {
+  .apy-section { padding-block: clamp(3rem, 6vw, 6rem); }
+  .apy-eyebrow {
     font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--brand-link);
   }
-
-  /* Decorative rule */
-  .section-rule {
-    display: flex;
+  .apy-heading {
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 5vw, 4.5rem);
+    font-weight: 400;
+    line-height: 1.12;
+    letter-spacing: -0.035em;
+    text-wrap: pretty;
+  }
+  .apy-panel {
+    background: var(--card);
+    color: var(--card-foreground);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: clamp(1rem, 2vw, 1.5rem);
+  }
+  .apy-hero-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    border-radius: 48% 48% 0.75rem 0.75rem;
+  }
+  .apy-link {
+    color: var(--brand-link);
+    text-underline-offset: 0.25em;
+    text-decoration-thickness: 1px;
+  }
+  .apy-link:hover { text-decoration-line: underline; }
+  .apy-primary-action {
+    display: inline-flex;
     align-items: center;
-    gap: 0.75rem;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border-radius: 999px;
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.35;
+    text-align: center;
+    transition: background-color 160ms ease;
   }
-  .section-rule::before,
-  .section-rule::after {
+  .apy-primary-action:hover { background: var(--primary-hover); }
+  .apy-nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 999px;
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--foreground);
+    transition: background-color 160ms ease, color 160ms ease;
+  }
+  .apy-nav-link:hover {
+    background: var(--accent);
+    color: var(--brand-link);
+  }
+  .apy-staff-ui { font-size: 0.875rem; line-height: 1.5; }
+  .apy-staff-ui .apy-heading { font-size: clamp(1.75rem, 3vw, 2.5rem); }
+
+  /* Existing decorative selectors retained without heavy visual treatment. */
+  .section-rule { display: flex; align-items: center; gap: 0.75rem; }
+  .section-rule::before, .section-rule::after {
     content: '';
     flex: 1;
     height: 1px;
     background: currentColor;
-    opacity: 0.25;
+    opacity: 0.2;
   }
-
-  /* Wave divider */
-  .wave-divider {
-    overflow: hidden;
-    line-height: 0;
-  }
-
-  /* Grain texture overlay */
-  .grain-overlay {
-    position: relative;
-  }
+  .wave-divider { overflow: hidden; line-height: 0; }
+  .grain-overlay { position: relative; }
   .grain-overlay::after {
     content: '';
     position: absolute;
     inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.02'/%3E%3C/svg%3E");
     pointer-events: none;
     z-index: 1;
   }
+  .animate-pulse-subtle { animation: none; }
 
-  /* Subtle glow pulse for Memberships & Rewards nav buttons */
-  .animate-pulse-subtle {
-    animation: pulse-glow 2.5s ease-in-out infinite;
+  @media (min-width: 640px) {
+    .container { padding-inline: 1.5rem; }
   }
-  @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 2px 12px rgba(212,112,138,0.5), 0 0 20px rgba(139,34,82,0.3); }
-    50% { box-shadow: 0 2px 18px rgba(212,112,138,0.7), 0 0 30px rgba(139,34,82,0.5); }
+  @media (min-width: 1024px) {
+    .container { padding-inline: 2rem; max-width: 1280px; }
+  }
+}
+
+/* State motion only. Higher-specificity scoped selectors avoid blanket overrides. */
+@media (prefers-reduced-motion: reduce) {
+  [data-slot][data-slot],
+  .apy-page .animate-pulse,
+  .apy-nav-link,
+  .apy-primary-action,
+  .apy-public-nav *,
+  .apy-public-footer * {
+    animation: none;
+    transition-duration: 0s;
+    scroll-behavior: auto;
   }
 }

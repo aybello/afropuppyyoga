@@ -200,24 +200,24 @@ export default function SmsBroadcast() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fdf6f9]">
+    <div className="min-h-screen apy-staff-ui bg-background">
       <AdminNav />
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-full bg-[#8b5cf6]/10 flex items-center justify-center">
-              <MessageSquare className="w-5 h-5 text-[#8b5cf6]" />
+            <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center">
+              <MessageSquare className="w-5 h-5 text-brand-link" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-[#2d1b4e]">SMS Broadcast</h1>
+              <h1 className="text-2xl font-medium text-foreground">SMS Broadcast</h1>
               <p className="text-sm text-gray-500">Send messages to individuals or bulk lists</p>
             </div>
           </div>
         </div>
 
         <Tabs defaultValue="single">
-          <TabsList className="mb-6 bg-white border border-[#e8dff5]">
+          <TabsList className="mb-6 bg-white border border-border">
             <TabsTrigger value="single" className="flex items-center gap-2">
               <Send className="w-4 h-4" /> Single Send
             </TabsTrigger>
@@ -231,9 +231,9 @@ export default function SmsBroadcast() {
 
           {/* ── Single Send Tab ── */}
           <TabsContent value="single">
-            <Card className="border-[#e8dff5]">
+            <Card className="border-border">
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg text-[#2d1b4e]">Send to One Person</CardTitle>
+                <CardTitle className="text-lg text-foreground">Send to One Person</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -244,7 +244,7 @@ export default function SmsBroadcast() {
                       value={singlePhone}
                       onChange={(e) => { setSinglePhone(e.target.value); setSingleResult(null); }}
                       placeholder="e.g. 2897881885"
-                      className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                      className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                   </div>
                   <div>
@@ -254,7 +254,7 @@ export default function SmsBroadcast() {
                       value={singleName}
                       onChange={(e) => { setSingleName(e.target.value); }}
                       placeholder="e.g. Ay Bello"
-                      className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                      className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                   </div>
                 </div>
@@ -266,7 +266,7 @@ export default function SmsBroadcast() {
                     rows={4}
                     maxLength={1600}
                     placeholder="Type your message here..."
-                    className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#8b5cf6] resize-none"
+                    className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                   />
                   <p className="text-xs text-gray-400 mt-1 text-right">{singleMessage.length}/1600</p>
                 </div>
@@ -276,7 +276,7 @@ export default function SmsBroadcast() {
                     singleMutation.mutate({ ...payload, requestKey: getSmsRequestKey("single", JSON.stringify({ ...payload, name: payload.name ?? "" })) });
                   }}
                   disabled={singleMutation.isPending || singlePhone.replace(/\D/g, "").length < 10 || !singleMessage.trim()}
-                  className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white"
+                  className="bg-primary hover:bg-primary text-primary-foreground"
                 >
                   {singleMutation.isPending ? <><Spinner className="w-4 h-4 mr-2" /> Sending...</> : <><Send className="w-4 h-4 mr-2" /> Send SMS</>}
                 </Button>
@@ -302,9 +302,9 @@ export default function SmsBroadcast() {
 
           {/* ── Manual Bulk Tab ── */}
           <TabsContent value="bulk">
-            <Card className="border-[#e8dff5]">
+            <Card className="border-border">
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg text-[#2d1b4e]">Send to Multiple Numbers</CardTitle>
+                <CardTitle className="text-lg text-foreground">Send to Multiple Numbers</CardTitle>
                 <p className="text-sm text-gray-500 mt-1">Enter one number per line, or separate with commas. Optionally prefix with a name: <code className="bg-gray-100 px-1 rounded text-xs">Ay Bello: 2897881885</code></p>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -315,7 +315,7 @@ export default function SmsBroadcast() {
                     onChange={(e) => { setBulkNumbers(e.target.value); setBulkResults(null); }}
                     rows={6}
                     placeholder={"2897881885\n4165550123\nAy Bello: 6475550199"}
-                    className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#8b5cf6] resize-none font-mono"
+                    className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none font-mono"
                   />
                   <p className="text-xs text-gray-400 mt-1">{parseBulkNumbers().length} valid number{parseBulkNumbers().length !== 1 ? "s" : ""} detected</p>
                 </div>
@@ -327,7 +327,7 @@ export default function SmsBroadcast() {
                     rows={4}
                     maxLength={1600}
                     placeholder={"Hi {name}, just a reminder about your upcoming AfroPuppyYoga class! 🐶"}
-                    className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#8b5cf6] resize-none"
+                    className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                   />
                   <p className="text-xs text-gray-400 mt-1 text-right">{bulkMessage.length}/1600</p>
                 </div>
@@ -341,19 +341,19 @@ export default function SmsBroadcast() {
                     bulkMutation.mutate({ ...payload, requestKey: getSmsRequestKey("bulk", JSON.stringify(payload)) });
                   }}
                   disabled={bulkMutation.isPending || parseBulkNumbers().length === 0 || !bulkMessage.trim()}
-                  className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white"
+                  className="bg-primary hover:bg-primary text-primary-foreground"
                 >
                   {bulkMutation.isPending ? <><Spinner className="w-4 h-4 mr-2" /> Sending...</> : <><Send className="w-4 h-4 mr-2" /> Send to {parseBulkNumbers().length} recipient{parseBulkNumbers().length !== 1 ? "s" : ""}</>}
                 </Button>
 
                 {bulkSummary && (
-                  <div className="p-3 rounded-lg bg-purple-50 border border-purple-200 text-sm text-purple-800">
+                  <div className="p-3 rounded-lg bg-accent border border-border text-sm text-brand-link">
                     <strong>{bulkSummary.sent}</strong> sent · <strong>{bulkSummary.failed}</strong> failed · <strong>{bulkSummary.total}</strong> total
                   </div>
                 )}
                 {bulkResults && bulkResults.length > 0 && (
                   <div className="overflow-x-auto mt-2">
-                    <table className="w-full text-sm">
+                    <table className="w-full text-sm min-w-[640px]">
                       <thead>
                         <tr className="border-b border-gray-200">
                           <th className="text-left py-2 px-2 text-gray-500 font-medium">Name</th>
@@ -383,33 +383,33 @@ export default function SmsBroadcast() {
 
           {/* ── CSV Upload Tab ── */}
           <TabsContent value="csv">
-            <Card className="border-[#e8dff5]">
+            <Card className="border-border">
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg text-[#2d1b4e]">Upload CSV &amp; Send</CardTitle>
+                <CardTitle className="text-lg text-foreground">Upload CSV &amp; Send</CardTitle>
                 <p className="text-sm text-gray-500 mt-1">Upload a CSV with <code className="bg-gray-100 px-1 rounded text-xs">phone</code> and optional <code className="bg-gray-100 px-1 rounded text-xs">name</code> columns. Max 500 rows.</p>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-[#8b5cf6] rounded-lg text-[#8b5cf6] text-sm hover:bg-[#8b5cf6]/5 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-border rounded-lg text-brand-link text-sm hover:bg-accent transition-colors"
                   >
                     <Upload className="w-4 h-4" />
                     {csvFileName ? csvFileName : "Choose CSV file"}
                   </button>
                   <input ref={fileInputRef} type="file" accept=".csv,text/csv" className="hidden" onChange={handleCsvUpload} />
-                  <button onClick={downloadSampleCsv} className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#8b5cf6] transition-colors">
+                  <button onClick={downloadSampleCsv} className="flex items-center gap-1 text-xs text-gray-500 hover:text-brand-link transition-colors">
                     <Download className="w-3 h-3" /> Sample CSV
                   </button>
                 </div>
 
                 {csvRecipients.length > 0 && (
-                  <div className="p-3 rounded-lg bg-purple-50 border border-purple-200 text-sm text-purple-800">
+                  <div className="p-3 rounded-lg bg-accent border border-border text-sm text-brand-link">
                     <strong>{csvRecipients.length}</strong> recipients loaded
                     {csvRecipients.slice(0, 3).map((r, i) => (
-                      <span key={i} className="ml-2 text-xs text-purple-600">{r.name || r.phone}{i < Math.min(2, csvRecipients.length - 1) ? "," : ""}</span>
+                      <span key={i} className="ml-2 text-xs text-brand-link">{r.name || r.phone}{i < Math.min(2, csvRecipients.length - 1) ? "," : ""}</span>
                     ))}
-                    {csvRecipients.length > 3 && <span className="text-xs text-purple-600 ml-1">+{csvRecipients.length - 3} more</span>}
+                    {csvRecipients.length > 3 && <span className="text-xs text-brand-link ml-1">+{csvRecipients.length - 3} more</span>}
                   </div>
                 )}
 
@@ -421,7 +421,7 @@ export default function SmsBroadcast() {
                     rows={4}
                     maxLength={1600}
                     placeholder={"Hi {name}, just a reminder about your upcoming AfroPuppyYoga class! 🐶"}
-                    className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#8b5cf6] resize-none"
+                    className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                   />
                   <p className="text-xs text-gray-400 mt-1 text-right">{csvMessage.length}/1600</p>
                 </div>
@@ -435,19 +435,19 @@ export default function SmsBroadcast() {
                     csvMutation.mutate({ ...payload, requestKey: getSmsRequestKey("csv", JSON.stringify(payload)) });
                   }}
                   disabled={csvMutation.isPending || csvRecipients.length === 0 || !csvMessage.trim()}
-                  className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white"
+                  className="bg-primary hover:bg-primary text-primary-foreground"
                 >
                   {csvMutation.isPending ? <><Spinner className="w-4 h-4 mr-2" /> Sending...</> : <><Send className="w-4 h-4 mr-2" /> Send to {csvRecipients.length} recipient{csvRecipients.length !== 1 ? "s" : ""}</>}
                 </Button>
 
                 {csvSummary && (
-                  <div className="p-3 rounded-lg bg-purple-50 border border-purple-200 text-sm text-purple-800">
+                  <div className="p-3 rounded-lg bg-accent border border-border text-sm text-brand-link">
                     <strong>{csvSummary.sent}</strong> sent · <strong>{csvSummary.failed}</strong> failed · <strong>{csvSummary.total}</strong> total
                   </div>
                 )}
                 {csvResults && csvResults.length > 0 && (
                   <div className="overflow-x-auto mt-2">
-                    <table className="w-full text-sm">
+                    <table className="w-full text-sm min-w-[640px]">
                       <thead>
                         <tr className="border-b border-gray-200">
                           <th className="text-left py-2 px-2 text-gray-500 font-medium">Name</th>

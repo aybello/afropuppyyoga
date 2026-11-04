@@ -16,7 +16,8 @@ const config: LocationConfig = {
   venueArea: "Kitchener · Hamilton · Oakville · Toronto · Guelph",
   aboutParagraph:
     "AfroPuppyYoga's private events are Ontario's most unique group wellness experience. Whether you're celebrating a birthday, planning a bachelorette, rewarding your team, or activating your brand — we bring the certified yoga instructor, the ethically sourced puppies, the Afrobeats playlist, and everything else you need. We serve Kitchener, Hamilton, Oakville, Toronto, Guelph, and surrounding areas. Groups from 6 to 50+ welcome. Starting at $1,200.",
-  scheduleDescription: "Available across Ontario — contact us to check your date",
+  scheduleDescription:
+    "Available across Ontario — contact us to check your date",
   comingSoon: false,
   whyReasons: [
     {
@@ -103,5 +104,9 @@ const config: LocationConfig = {
 };
 
 export default function PrivatePuppyYogaEventsPage() {
-  return <LocationPage config={config} />;
+  return (
+    <div className="bg-[#FEFAF4] text-[#34221D]">
+      <LocationPage config={config} />
+    </div>
+  );
 }

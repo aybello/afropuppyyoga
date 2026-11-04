@@ -122,14 +122,14 @@ const STATUS_COLORS: Record<InquiryStatus, string> = {
   contacted: "bg-amber-50 text-amber-700 border-amber-200",
   confirmed: "bg-green-50 text-green-700 border-green-200",
   cancelled: "bg-red-50 text-red-700 border-red-200",
-  quote_sent: "bg-purple-50 text-purple-700 border-purple-200",
+  quote_sent: "bg-accent text-brand-link border-border",
   booked: "bg-emerald-50 text-emerald-700 border-emerald-200",
 };
 
 const PACKAGE_COLORS: Record<string, string> = {
-  classic: "bg-[#8B2252]/10 text-[#8B2252] border-[#8B2252]/20",
-  signature: "bg-[#F2A0B8]/20 text-[#8B2252] border-[#F2A0B8]/40",
-  luxury: "bg-[#1A0A12]/10 text-[#1A0A12] border-[#1A0A12]/20",
+  classic: "bg-accent text-brand-link border-border",
+  signature: "bg-accent text-brand-link border-border",
+  luxury: "bg-foreground/10 text-foreground border-foreground/20",
 };
 
 const PACKAGE_LABELS: Record<string, string> = {
@@ -362,20 +362,20 @@ export default function PrivateEventsDashboard() {
 
   if (loading || !isAuthenticated || access.isLoading) {
     return (
-      <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#8B2252]" />
+      <div className="min-h-screen apy-staff-ui bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-link" />
       </div>
     );
   }
 
   if (!canManageOperations) {
     return (
-      <div className="min-h-screen bg-[#FEFAF4]">
+      <div className="min-h-screen apy-staff-ui bg-background">
         <AdminNav />
         <main className="mx-auto max-w-3xl px-6 py-16">
-          <p className="font-body text-xs font-semibold uppercase tracking-[0.2em] text-[#8B2252]">APY HQ</p>
-          <h1 className="mt-2 font-display text-4xl text-[#1A0A12]">Private-event operations access required</h1>
-          <p className="mt-4 max-w-xl font-body text-[#6B4658]">This workspace is available to the Owner and Operations Managers. Your training and assigned-shift tools remain available through APY HQ.</p>
+          <p className="font-body text-xs font-semibold uppercase tracking-[0.2em] text-brand-link">APY HQ</p>
+          <h1 className="mt-2 font-display text-3xl text-foreground">Private-event operations access required</h1>
+          <p className="mt-4 max-w-xl font-body text-muted-foreground">This workspace is available to the Owner and Operations Managers. Your training and assigned-shift tools remain available through APY HQ.</p>
         </main>
       </div>
     );
@@ -536,7 +536,7 @@ export default function PrivateEventsDashboard() {
     : quickCombinedInput;
 
   return (
-    <div className="min-h-screen bg-[#FEFAF4]">
+    <div className="min-h-screen apy-staff-ui bg-background">
       <AdminNav />
 
       <div className="container py-10 max-w-6xl">
@@ -544,15 +544,15 @@ export default function PrivateEventsDashboard() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Sparkles size={18} className="text-[#F2A0B8]" />
-              <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">
+              <Sparkles size={18} className="text-brand-link" />
+              <span className="text-brand-link font-body text-xs font-semibold tracking-widest uppercase">
                 Admin Portal
               </span>
             </div>
-            <h1 className="font-display text-3xl font-bold text-[#1A0A12]">
+            <h1 className="font-display text-3xl font-medium text-foreground">
               Private Event Inquiries
             </h1>
-            <p className="font-body text-[#3D1A2E]/55 text-sm mt-1">
+            <p className="font-body text-foreground text-sm mt-1">
               All inquiries submitted through the quote form — manage, generate booking links, and send quotes.
             </p>
           </div>
@@ -568,12 +568,12 @@ export default function PrivateEventsDashboard() {
 
         {/* Tabs */}
         <Tabs value={canManageOperations ? activeTab : "inquiries"} onValueChange={(v) => setActiveTab(v as "inquiries" | "quick-link")} className="mb-6">
-          <TabsList className="bg-[#F2A0B8]/10 border border-[#F2A0B8]/20">
-            <TabsTrigger value="inquiries" className="font-body text-sm data-[state=active]:bg-[#8B2252] data-[state=active]:text-white">
+          <TabsList className="bg-accent border border-border">
+            <TabsTrigger value="inquiries" className="font-body text-sm data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
               Inquiries
             </TabsTrigger>
             {canManageOperations && (
-              <TabsTrigger value="quick-link" className="font-body text-sm data-[state=active]:bg-[#8B2252] data-[state=active]:text-white">
+              <TabsTrigger value="quick-link" className="font-body text-sm data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                 Quick Booking Link
               </TabsTrigger>
             )}
@@ -584,7 +584,7 @@ export default function PrivateEventsDashboard() {
         {/* Filters */}
         <div className="flex flex-wrap gap-3 mb-6">
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-44 border-[#F2A0B8]/40 font-body text-sm">
+            <SelectTrigger className="w-44 border-border font-body text-sm">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
@@ -599,7 +599,7 @@ export default function PrivateEventsDashboard() {
           </Select>
 
           <Select value={filterPackage} onValueChange={setFilterPackage}>
-            <SelectTrigger className="w-52 border-[#F2A0B8]/40 font-body text-sm">
+            <SelectTrigger className="w-52 border-border font-body text-sm">
               <SelectValue placeholder="Filter by package" />
             </SelectTrigger>
             <SelectContent>
@@ -610,7 +610,7 @@ export default function PrivateEventsDashboard() {
             </SelectContent>
           </Select>
 
-          <span className="ml-auto font-body text-sm text-[#3D1A2E]/50 self-center">
+          <span className="ml-auto font-body text-sm text-foreground self-center">
             {filtered.length} {filtered.length === 1 ? "result" : "results"}
           </span>
         </div>
@@ -618,15 +618,15 @@ export default function PrivateEventsDashboard() {
         {/* Inquiry list */}
         {isLoading ? (
           <div className="flex items-center justify-center py-24">
-            <Loader2 className="w-8 h-8 animate-spin text-[#8B2252]" />
+            <Loader2 className="w-8 h-8 animate-spin text-brand-link" />
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="w-16 h-16 rounded-full bg-[#F2A0B8]/20 flex items-center justify-center mb-4">
-              <Inbox size={28} className="text-[#8B2252]" />
+            <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center mb-4">
+              <Inbox size={28} className="text-brand-link" />
             </div>
-            <p className="font-display text-lg font-bold text-[#1A0A12] mb-1">No inquiries yet</p>
-            <p className="font-body text-[#3D1A2E]/50 text-sm">
+            <p className="font-display text-lg font-bold text-foreground mb-1">No inquiries yet</p>
+            <p className="font-body text-foreground text-sm">
               Inquiries submitted through the quote form will appear here automatically.
             </p>
           </div>
@@ -636,7 +636,7 @@ export default function PrivateEventsDashboard() {
               <button
                 key={inq.id}
                 onClick={() => openInquiry(inq as PrivateEventInquiry)}
-                className="w-full text-left bg-white rounded-2xl border border-[#F2A0B8]/20 p-5 hover:border-[#F2A0B8]/60 hover:shadow-sm transition-all group"
+                className="w-full text-left bg-white rounded-2xl border border-border p-5 hover:border-border hover:shadow-sm transition-all group"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
@@ -652,43 +652,43 @@ export default function PrivateEventsDashboard() {
                           Luma Link Ready
                         </span>
                       )}
-                      <span className="font-body text-xs text-[#3D1A2E]/40">
+                      <span className="font-body text-xs text-foreground">
                         {new Date(inq.createdAt).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}
                       </span>
                     </div>
                     <div className="flex items-center gap-4 flex-wrap">
-                      <span className="font-display font-bold text-[#1A0A12]">{inq.name}</span>
-                      <span className="flex items-center gap-1 font-body text-sm text-[#3D1A2E]/60">
+                      <span className="font-display font-medium text-foreground">{inq.name}</span>
+                      <span className="flex items-center gap-1 font-body text-sm text-foreground">
                         <Users size={13} /> {inq.guests} guests
                       </span>
-                      <span className="flex items-center gap-1 font-body text-sm text-[#3D1A2E]/60">
+                      <span className="flex items-center gap-1 font-body text-sm text-foreground">
                         <MapPin size={13} /> {inq.location}
                       </span>
                       {inq.preferredDate && (
-                        <span className="flex items-center gap-1 font-body text-sm text-[#3D1A2E]/60">
+                        <span className="flex items-center gap-1 font-body text-sm text-foreground">
                           <Calendar size={13} /> {inq.preferredDate}
                         </span>
                       )}
                     </div>
                     <div className="flex items-center gap-4 mt-1 flex-wrap">
-                      <span className="flex items-center gap-1 font-body text-sm text-[#3D1A2E]/50">
+                      <span className="flex items-center gap-1 font-body text-sm text-foreground">
                         <Mail size={13} /> {inq.email}
                       </span>
                       {inq.phone && (
-                        <span className="flex items-center gap-1 font-body text-sm text-[#3D1A2E]/50">
+                        <span className="flex items-center gap-1 font-body text-sm text-foreground">
                           <Phone size={13} /> {inq.phone}
                         </span>
                       )}
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-2 shrink-0">
-                    <span className="font-display font-bold text-[#1A0A12] text-lg">
+                    <span className="font-display font-medium text-foreground text-lg">
                       {inq.finalPriceCents
                         ? `$${(inq.finalPriceCents / 100).toLocaleString()}`
                         : `$${inq.estimatedMin.toLocaleString()}${inq.estimatedMax > inq.estimatedMin ? `–$${inq.estimatedMax.toLocaleString()}` : "+"}`
                       }
                     </span>
-                    <ChevronRight size={16} className="text-[#F2A0B8] group-hover:translate-x-0.5 transition-transform" />
+                    <ChevronRight size={16} className="text-brand-link group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </div>
               </button>
@@ -701,14 +701,14 @@ export default function PrivateEventsDashboard() {
           {canManageOperations && <TabsContent value="quick-link">
             <div className="space-y-6">
               {/* Header */}
-              <div className="bg-gradient-to-br from-[#8B2252]/5 via-white to-[#D4708A]/5 rounded-2xl border border-[#F2A0B8]/25 p-6">
+              <div className="bg-card via-white rounded-2xl border border-border p-6">
                 <div className="flex items-center gap-3 mb-1">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#8B2252] to-[#D4708A] flex items-center justify-center shadow-sm">
-                    <Zap size={16} className="text-white" />
+                  <div className="bg-primary w-9 h-9 rounded-xl flex items-center justify-center shadow-sm">
+                    <Zap size={16} className="text-primary-foreground" />
                   </div>
                   <div>
-                    <h2 className="font-display text-lg font-bold text-[#1A0A12]">Tracked Booking Workflow</h2>
-                    <p className="font-body text-xs text-[#3D1A2E]/50">Private payment pages must be created from a client inquiry so approval, payment, communication, and cancellation records stay together.</p>
+                    <h2 className="font-display text-lg font-medium text-foreground">Tracked Booking Workflow</h2>
+                    <p className="font-body text-xs text-foreground">Private payment pages must be created from a client inquiry so approval, payment, communication, and cancellation records stay together.</p>
                   </div>
                 </div>
               </div>
@@ -726,7 +726,7 @@ export default function PrivateEventsDashboard() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 bg-white rounded-xl border border-emerald-200/60 p-3 shadow-sm">
-                      <a href={quickGeneratedLink} target="_blank" rel="noopener noreferrer" className="flex-1 font-body text-sm text-[#8B2252] underline truncate">
+                      <a href={quickGeneratedLink} target="_blank" rel="noopener noreferrer" className="flex-1 font-body text-sm text-brand-link underline truncate">
                         {quickGeneratedLink}
                       </a>
                       <Button size="sm" variant="outline" className="shrink-0 border-emerald-200 hover:bg-emerald-50" onClick={() => { navigator.clipboard.writeText(quickGeneratedLink); toast.success("Copied!"); }}>
@@ -802,53 +802,53 @@ export default function PrivateEventsDashboard() {
                     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1${toParam}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
                     return (
-                      <div className="bg-white rounded-2xl border border-[#F2A0B8]/20 p-5 shadow-sm">
+                      <div className="bg-white rounded-2xl border border-border p-5 shadow-sm">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
-                            <Mail size={14} className="text-[#8B2252]" />
-                            <h3 className="font-display text-sm font-bold text-[#1A0A12]">Email Template</h3>
+                            <Mail size={14} className="text-brand-link" />
+                            <h3 className="font-display text-sm font-medium text-foreground">Email Template</h3>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Button size="sm" variant="outline" className="border-[#F2A0B8]/40 hover:bg-[#FFF5F8] font-body text-xs" onClick={() => { navigator.clipboard.writeText(fullEmail); toast.success("Email template copied to clipboard!"); }}>
+                            <Button size="sm" variant="outline" className="border-border hover:bg-accent font-body text-xs" onClick={() => { navigator.clipboard.writeText(fullEmail); toast.success("Email template copied to clipboard!"); }}>
                               <Copy size={12} className="mr-1" /> Copy
                             </Button>
-                            <Button size="sm" className="bg-[#8B2252] hover:bg-[#6B1A3F] text-white font-body text-xs" onClick={() => { window.open(gmailUrl, "_blank"); }}>
+                            <Button size="sm" className="bg-primary hover:bg-primary-hover text-primary-foreground font-body text-xs" onClick={() => { window.open(gmailUrl, "_blank"); }}>
                               <Send size={12} className="mr-1" /> Send via Gmail
                             </Button>
                           </div>
                         </div>
-                        <div className="bg-[#FAFAFA] rounded-xl border border-[#F2A0B8]/10 p-4 font-body text-xs text-[#3D1A2E]/70 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
+                        <div className="bg-card rounded-xl border border-border p-4 font-body text-xs text-foreground whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
                           {`Subject: ${subject}\n\n${body}`}
                         </div>
                       </div>
                     );
                   })()}
 
-                  <Button variant="outline" className="font-body border-[#F2A0B8]/40 hover:bg-[#FFF5F8]" onClick={() => { setQuickGeneratedLink(null); setQuickForm({ clientName: "", clientEmail: "", organization: "", eventType: "Team Building", eventDate: "", sessions: "1", maxCapacity: "20", finalPrice: "", pricingType: "plus_hst", puppyBreed: "", location: "hamilton", customLocation: "", notes: "", sessionSchedule: [{ startTime: "11:00", endTime: "12:00" }] }); }}>
+                  <Button variant="outline" className="font-body border-border hover:bg-accent" onClick={() => { setQuickGeneratedLink(null); setQuickForm({ clientName: "", clientEmail: "", organization: "", eventType: "Team Building", eventDate: "", sessions: "1", maxCapacity: "20", finalPrice: "", pricingType: "plus_hst", puppyBreed: "", location: "hamilton", customLocation: "", notes: "", sessionSchedule: [{ startTime: "11:00", endTime: "12:00" }] }); }}>
                     <Sparkles size={14} className="mr-2" /> Generate Another Link
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {/* Section 1: Client + Event */}
-                  <div className="bg-white rounded-2xl border border-[#F2A0B8]/20 p-5 shadow-sm">
+                  <div className="bg-white rounded-2xl border border-border p-5 shadow-sm">
                     <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                       <div>
-                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">Client Name *</label>
-                        <Input value={quickForm.clientName} onChange={(e) => setQuickForm({ ...quickForm, clientName: e.target.value })} placeholder="e.g. Sidney Thompson" className="border-[#F2A0B8]/30 font-body bg-[#FAFAFA] focus:bg-white transition-colors" />
+                        <label className="font-body text-xs font-medium text-foreground mb-1 block">Client Name *</label>
+                        <Input value={quickForm.clientName} onChange={(e) => setQuickForm({ ...quickForm, clientName: e.target.value })} placeholder="e.g. Sidney Thompson" className="border-border font-body bg-card focus:bg-white transition-colors" />
                       </div>
                       <div>
-                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">Client Email</label>
-                        <Input type="email" value={quickForm.clientEmail} onChange={(e) => setQuickForm({ ...quickForm, clientEmail: e.target.value })} placeholder="e.g. samantha@email.com" className="border-[#F2A0B8]/30 font-body bg-[#FAFAFA] focus:bg-white transition-colors" />
+                        <label className="font-body text-xs font-medium text-foreground mb-1 block">Client Email</label>
+                        <Input type="email" value={quickForm.clientEmail} onChange={(e) => setQuickForm({ ...quickForm, clientEmail: e.target.value })} placeholder="e.g. samantha@email.com" className="border-border font-body bg-card focus:bg-white transition-colors" />
                       </div>
                       <div className="col-span-2">
-                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">Organization</label>
-                        <Input value={quickForm.organization} onChange={(e) => setQuickForm({ ...quickForm, organization: e.target.value })} placeholder="e.g. Hamilton Girls Flag Football" className="border-[#F2A0B8]/30 font-body bg-[#FAFAFA] focus:bg-white transition-colors" />
+                        <label className="font-body text-xs font-medium text-foreground mb-1 block">Organization</label>
+                        <Input value={quickForm.organization} onChange={(e) => setQuickForm({ ...quickForm, organization: e.target.value })} placeholder="e.g. Hamilton Girls Flag Football" className="border-border font-body bg-card focus:bg-white transition-colors" />
                       </div>
                       <div>
-                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">Event Type</label>
+                        <label className="font-body text-xs font-medium text-foreground mb-1 block">Event Type</label>
                         <Select value={quickForm.eventType} onValueChange={(v) => setQuickForm({ ...quickForm, eventType: v })}>
-                          <SelectTrigger className="border-[#F2A0B8]/30 font-body text-sm bg-[#FAFAFA]"><SelectValue /></SelectTrigger>
+                          <SelectTrigger className="border-border font-body text-sm bg-card"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Team Building">Team Building</SelectItem>
                             <SelectItem value="Birthday">Birthday</SelectItem>
@@ -861,52 +861,52 @@ export default function PrivateEventsDashboard() {
                         </Select>
                       </div>
                       <div>
-                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">Event Date *</label>
-                        <Input type="date" value={quickForm.eventDate} onChange={(e) => setQuickForm({ ...quickForm, eventDate: e.target.value })} className="border-[#F2A0B8]/30 font-body text-sm bg-[#FAFAFA] focus:bg-white transition-colors" />
+                        <label className="font-body text-xs font-medium text-foreground mb-1 block">Event Date *</label>
+                        <Input type="date" value={quickForm.eventDate} onChange={(e) => setQuickForm({ ...quickForm, eventDate: e.target.value })} className="border-border font-body text-sm bg-card focus:bg-white transition-colors" />
                       </div>
                       <div>
-                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">Max Guests</label>
-                        <Input type="number" min="1" value={quickForm.maxCapacity} onChange={(e) => setQuickForm({ ...quickForm, maxCapacity: e.target.value })} className="border-[#F2A0B8]/30 font-body text-sm bg-[#FAFAFA] focus:bg-white transition-colors" />
+                        <label className="font-body text-xs font-medium text-foreground mb-1 block">Max Guests</label>
+                        <Input type="number" min="1" value={quickForm.maxCapacity} onChange={(e) => setQuickForm({ ...quickForm, maxCapacity: e.target.value })} className="border-border font-body text-sm bg-card focus:bg-white transition-colors" />
                       </div>
                       <div>
-                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">Puppy Breed</label>
-                        <Input value={quickForm.puppyBreed} onChange={(e) => setQuickForm({ ...quickForm, puppyBreed: e.target.value })} placeholder="e.g. French Bulldog" className="border-[#F2A0B8]/30 font-body bg-[#FAFAFA] focus:bg-white transition-colors" />
+                        <label className="font-body text-xs font-medium text-foreground mb-1 block">Puppy Breed</label>
+                        <Input value={quickForm.puppyBreed} onChange={(e) => setQuickForm({ ...quickForm, puppyBreed: e.target.value })} placeholder="e.g. French Bulldog" className="border-border font-body bg-card focus:bg-white transition-colors" />
                       </div>
                     </div>
                   </div>
 
                   {/* Section 2: Schedule + Location */}
-                  <div className="bg-white rounded-2xl border border-[#F2A0B8]/20 p-5 shadow-sm">
+                  <div className="bg-white rounded-2xl border border-border p-5 shadow-sm">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <Clock size={14} className="text-[#8B2252]" />
-                        <h3 className="font-display text-sm font-bold text-[#1A0A12]">Schedule & Location</h3>
+                        <Clock size={14} className="text-brand-link" />
+                        <h3 className="font-display text-sm font-medium text-foreground">Schedule & Location</h3>
                       </div>
-                      <Button type="button" variant="ghost" size="sm" className="text-[#8B2252] font-body text-xs hover:bg-[#FFF5F8] rounded-full px-3 h-7" onClick={addSession}>
+                      <Button type="button" variant="ghost" size="sm" className="text-brand-link font-body text-xs hover:bg-accent rounded-full px-3 h-7" onClick={addSession}>
                         + Add Session
                       </Button>
                     </div>
                     <div className="space-y-2 mb-4">
                       {quickForm.sessionSchedule.map((session, idx) => (
-                        <div key={idx} className="flex items-center gap-2 bg-[#FAFAFA] rounded-lg p-2 border border-[#F2A0B8]/10">
-                          <span className="w-5 h-5 rounded-full bg-gradient-to-br from-[#8B2252] to-[#D4708A] flex items-center justify-center shrink-0 text-white text-[9px] font-bold">{idx + 1}</span>
-                          <Input type="time" value={session.startTime} onChange={(e) => updateSession(idx, "startTime", e.target.value)} disabled={idx > 0} className="border-[#F2A0B8]/30 font-body text-sm w-32 bg-white h-8 disabled:opacity-60" />
-                          <span className="font-body text-xs text-[#3D1A2E]/40">to</span>
-                          <Input type="time" value={session.endTime} onChange={(e) => updateSession(idx, "endTime", e.target.value)} disabled={idx > 0} className="border-[#F2A0B8]/30 font-body text-sm w-32 bg-white h-8 disabled:opacity-60" />
+                        <div key={idx} className="flex items-center gap-2 bg-card rounded-lg p-2 border border-border">
+                          <span className="bg-primary w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-primary-foreground text-[9px] font-bold">{idx + 1}</span>
+                          <Input type="time" value={session.startTime} onChange={(e) => updateSession(idx, "startTime", e.target.value)} disabled={idx > 0} className="border-border font-body text-sm w-32 bg-white h-8 disabled:opacity-60" />
+                          <span className="font-body text-xs text-foreground">to</span>
+                          <Input type="time" value={session.endTime} onChange={(e) => updateSession(idx, "endTime", e.target.value)} disabled={idx > 0} className="border-border font-body text-sm w-32 bg-white h-8 disabled:opacity-60" />
                           {quickForm.sessionSchedule.length > 1 && (
                             idx === quickForm.sessionSchedule.length - 1 && <Button type="button" variant="ghost" size="sm" className="text-red-400 hover:text-red-600 text-xs px-2 h-7 ml-auto" onClick={removeSession}>Remove</Button>
                           )}
                         </div>
                       ))}
                       {quickForm.sessionSchedule.length > 1 && (
-                        <p className="font-body text-[11px] text-[#3D1A2E]/40 flex items-center gap-1">
-                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#D4708A]/40"></span>
+                        <p className="font-body text-[11px] text-foreground flex items-center gap-1">
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent"></span>
                           30-min puppy rest break between sessions
                         </p>
                       )}
                     </div>
-                    <div className="border-t border-[#F2A0B8]/15 pt-3">
-                      <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-2 block">Location</label>
+                    <div className="border-t border-border pt-3">
+                      <label className="font-body text-xs font-medium text-foreground mb-2 block">Location</label>
                       <div className="grid grid-cols-4 gap-2">
                         {["kitchener", "hamilton", "oakville", "__custom__"].map((loc) => {
                           const labels: Record<string, string> = { kitchener: "Kitchener", hamilton: "Hamilton", oakville: "Oakville", __custom__: "Custom" };
@@ -918,8 +918,8 @@ export default function PrivateEventsDashboard() {
                               onClick={() => setQuickForm({ ...quickForm, location: loc, customLocation: loc === "__custom__" ? "" : "" })}
                               className={`text-center rounded-lg py-2 px-2 border text-xs font-body font-medium transition-all ${
                                 isSelected
-                                  ? "border-[#8B2252]/40 bg-[#FFF5F8] text-[#8B2252] shadow-sm"
-                                  : "border-[#F2A0B8]/15 bg-[#FAFAFA] text-[#3D1A2E]/60 hover:border-[#F2A0B8]/40"
+                                  ? "border-border bg-accent text-brand-link shadow-sm"
+                                  : "border-border bg-card text-foreground hover:border-border"
                               }`}
                             >
                               {labels[loc]}
@@ -932,26 +932,26 @@ export default function PrivateEventsDashboard() {
                           value={quickForm.customLocation}
                           onChange={(e) => setQuickForm({ ...quickForm, customLocation: e.target.value })}
                           placeholder="e.g. 2751 Barton Street East, Hamilton, ON"
-                          className="mt-2 border-[#F2A0B8]/30 font-body text-sm bg-[#FAFAFA] focus:bg-white transition-colors"
+                          className="mt-2 border-border font-body text-sm bg-card focus:bg-white transition-colors"
                         />
                       )}
                     </div>
                   </div>
 
                   {/* Section 3: Pricing + Notes + CTA */}
-                  <div className="bg-white rounded-2xl border border-[#F2A0B8]/20 p-5 shadow-sm">
+                  <div className="bg-white rounded-2xl border border-border p-5 shadow-sm">
                     <div className="grid grid-cols-2 gap-4 mb-3">
                       <div>
-                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">{quickForm.pricingType === "plus_hst" ? "Price Per Session Before HST (CAD) *" : "All-In Price Per Session (CAD) *"}</label>
+                        <label className="font-body text-xs font-medium text-foreground mb-1 block">{quickForm.pricingType === "plus_hst" ? "Price Per Session Before HST (CAD) *" : "All-In Price Per Session (CAD) *"}</label>
                         <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm text-[#3D1A2E]/40">$</span>
-                          <Input type="number" value={quickForm.finalPrice} onChange={(e) => setQuickForm({ ...quickForm, finalPrice: e.target.value })} placeholder="1200" className="border-[#F2A0B8]/30 font-body pl-7 bg-[#FAFAFA] focus:bg-white transition-colors" />
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm text-foreground">$</span>
+                          <Input type="number" value={quickForm.finalPrice} onChange={(e) => setQuickForm({ ...quickForm, finalPrice: e.target.value })} placeholder="1200" className="border-border font-body pl-7 bg-card focus:bg-white transition-colors" />
                         </div>
                       </div>
                       <div>
-                        <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">Pricing Type</label>
+                        <label className="font-body text-xs font-medium text-foreground mb-1 block">Pricing Type</label>
                         <Select value={quickForm.pricingType} onValueChange={(v) => setQuickForm({ ...quickForm, pricingType: v as "plus_hst" | "all_in" })}>
-                          <SelectTrigger className="border-[#F2A0B8]/30 font-body text-sm bg-[#FAFAFA]"><SelectValue /></SelectTrigger>
+                          <SelectTrigger className="border-border font-body text-sm bg-card"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="plus_hst">+ HST (13%)</SelectItem>
                             <SelectItem value="all_in">All-in (HST included)</SelectItem>
@@ -959,30 +959,30 @@ export default function PrivateEventsDashboard() {
                         </Select>
                       </div>
                     </div>
-                    <p className="mb-3 font-body text-[11px] leading-4 text-[#765967]">For multiple sessions, APY multiplies the per-session amount before HST and issues one combined checkout. The second class is included, not separately charged.</p>
+                    <p className="mb-3 font-body text-[11px] leading-4 text-muted-foreground">For multiple sessions, APY multiplies the per-session amount before HST and issues one combined checkout. The second class is included, not separately charged.</p>
                     {quickPricePerSession > 0 && (
-                      <div className="bg-[#FFF5F8] rounded-lg p-3 border border-[#F2A0B8]/15 mb-3">
+                      <div className="bg-accent rounded-lg p-3 border border-border mb-3">
                         <div className="flex justify-between text-xs font-body">
-                          <span className="text-[#3D1A2E]/50">{quickSessionCount > 1 ? `${quickSessionCount} sessions × $${quickPricePerSession.toFixed(2)}` : "Base"}</span>
+                          <span className="text-foreground">{quickSessionCount > 1 ? `${quickSessionCount} sessions × $${quickPricePerSession.toFixed(2)}` : "Base"}</span>
                           <span className="font-medium">${quickForm.pricingType === "plus_hst" ? quickCombinedInput.toLocaleString() : (quickCombinedInput - quickHstPreview).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-xs font-body mt-1">
-                          <span className="text-[#3D1A2E]/50">HST (13%)</span>
+                          <span className="text-foreground">HST (13%)</span>
                           <span className="font-medium">${quickHstPreview.toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between text-sm font-body font-bold border-t border-[#D4708A]/15 pt-2 mt-2">
-                          <span className="text-[#1A0A12]">Client pays on Luma</span>
-                          <span className="text-[#8B2252]">${quickTotalPreview.toFixed(2)} CAD</span>
+                        <div className="flex justify-between text-sm font-body font-bold border-t border-border pt-2 mt-2">
+                          <span className="text-foreground">Client pays on Luma</span>
+                          <span className="text-brand-link">${quickTotalPreview.toFixed(2)} CAD</span>
                         </div>
                       </div>
                     )}
                     <div className="mb-4">
-                      <label className="font-body text-xs font-medium text-[#3D1A2E]/50 mb-1 block">Internal Notes <span className="text-[#3D1A2E]/30">(optional)</span></label>
-                      <Textarea value={quickForm.notes} onChange={(e) => setQuickForm({ ...quickForm, notes: e.target.value })} placeholder="Any extra details — not shown to the client..." className="border-[#F2A0B8]/30 font-body text-sm bg-[#FAFAFA] focus:bg-white transition-colors resize-none" rows={2} />
+                      <label className="font-body text-xs font-medium text-foreground mb-1 block">Internal Notes <span className="text-foreground">(optional)</span></label>
+                      <Textarea value={quickForm.notes} onChange={(e) => setQuickForm({ ...quickForm, notes: e.target.value })} placeholder="Any extra details — not shown to the client..." className="border-border font-body text-sm bg-card focus:bg-white transition-colors resize-none" rows={2} />
                     </div>
                     <Button
                       onClick={handleQuickGenerate}
-                      className="w-full bg-gradient-to-r from-[#8B2252] to-[#D4708A] hover:from-[#6B1A40] hover:to-[#B85A74] text-white font-body font-bold rounded-full py-5 text-sm shadow-lg shadow-[#8B2252]/20 transition-all hover:shadow-xl hover:shadow-[#8B2252]/25 active:scale-[0.98]"
+                      className="bg-primary w-full text-primary-foreground font-body font-bold rounded-full py-5 text-sm shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/25 active:scale-[0.98]"
                     >
                       <><Link2 size={16} className="mr-2" /> Go to Tracked Inquiries</>
                     </Button>
@@ -998,10 +998,10 @@ export default function PrivateEventsDashboard() {
       <Dialog open={!!selectedInquiry} onOpenChange={(open) => !open && setSelectedInquiry(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl text-[#1A0A12]">
+            <DialogTitle className="font-display text-xl text-foreground">
               {selectedInquiry?.name}
             </DialogTitle>
-            <DialogDescription className="font-body text-[#3D1A2E]/55 text-sm">
+            <DialogDescription className="font-body text-foreground text-sm">
               {selectedInquiry?.eventType} &bull; {selectedInquiry?.location} &bull; {selectedInquiry?.guests} guests
             </DialogDescription>
           </DialogHeader>
@@ -1010,22 +1010,22 @@ export default function PrivateEventsDashboard() {
             <div className="space-y-5 mt-2">
               {/* Contact info */}
               <div className="space-y-2">
-                <p className="font-body text-xs font-semibold text-[#3D1A2E]/50 uppercase tracking-wider">Contact</p>
-                <div className="flex items-center gap-2 font-body text-sm text-[#1A0A12]">
-                  <Mail size={14} className="text-[#F2A0B8]" />
-                  <a href={`mailto:${selectedInquiry.email}`} className="text-[#8B2252] hover:underline">{selectedInquiry.email}</a>
+                <p className="font-body text-xs font-semibold text-foreground uppercase tracking-wider">Contact</p>
+                <div className="flex items-center gap-2 font-body text-sm text-foreground">
+                  <Mail size={14} className="text-brand-link" />
+                  <a href={`mailto:${selectedInquiry.email}`} className="text-brand-link hover:underline">{selectedInquiry.email}</a>
                 </div>
                 {selectedInquiry.phone && (
-                  <div className="flex items-center gap-2 font-body text-sm text-[#1A0A12]">
-                    <Phone size={14} className="text-[#F2A0B8]" />
+                  <div className="flex items-center gap-2 font-body text-sm text-foreground">
+                    <Phone size={14} className="text-brand-link" />
                     <a href={`tel:${selectedInquiry.phone}`} className="hover:underline">{selectedInquiry.phone}</a>
                   </div>
                 )}
               </div>
 
               {/* Event details */}
-              <div className="bg-[#FFF5F8] rounded-xl p-4 space-y-2">
-                <p className="font-body text-xs font-semibold text-[#3D1A2E]/50 uppercase tracking-wider mb-3">Event Details</p>
+              <div className="bg-accent rounded-xl p-4 space-y-2">
+                <p className="font-body text-xs font-semibold text-foreground uppercase tracking-wider mb-3">Event Details</p>
                 {[
                   ["Package", PACKAGE_LABELS[selectedInquiry.packageType] ?? selectedInquiry.packageType],
                   ["Guests", String(selectedInquiry.guests)],
@@ -1034,8 +1034,8 @@ export default function PrivateEventsDashboard() {
                   ["Estimated Quote", `$${selectedInquiry.estimatedMin.toLocaleString()}–$${selectedInquiry.estimatedMax.toLocaleString()} CAD`],
                 ].map(([label, value]) => (
                   <div key={label} className="flex justify-between text-sm font-body">
-                    <span className="text-[#3D1A2E]/55 font-medium">{label}</span>
-                    <span className="text-[#1A0A12] font-semibold text-right max-w-[60%]">{value}</span>
+                    <span className="text-foreground font-medium">{label}</span>
+                    <span className="text-foreground font-semibold text-right max-w-[60%]">{value}</span>
                   </div>
                 ))}
               </div>
@@ -1043,8 +1043,8 @@ export default function PrivateEventsDashboard() {
               {/* Notes from client */}
               {selectedInquiry.notes && (
                 <div>
-                  <p className="font-body text-xs font-semibold text-[#3D1A2E]/50 uppercase tracking-wider mb-2">Client Notes</p>
-                  <p className="font-body text-sm text-[#3D1A2E]/70 bg-white border border-[#F2A0B8]/20 rounded-xl p-3">
+                  <p className="font-body text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Client Notes</p>
+                  <p className="font-body text-sm text-foreground bg-white border border-border rounded-xl p-3">
                     {selectedInquiry.notes}
                   </p>
                 </div>
@@ -1098,21 +1098,21 @@ export default function PrivateEventsDashboard() {
               )}
 
               <div>
-                <p className="font-body text-xs font-semibold text-[#3D1A2E]/50 uppercase tracking-wider mb-2">Activity & Communications</p>
-                <div className="border border-[#F2A0B8]/20 rounded-xl bg-white divide-y divide-[#F2A0B8]/15">
+                <p className="font-body text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Activity & Communications</p>
+                <div className="border border-border rounded-xl bg-white divide-y divide-border/15">
                   {timelineLoading ? (
-                    <div className="p-3 flex items-center gap-2 font-body text-xs text-[#6B4658]"><Loader2 size={13} className="animate-spin" /> Loading activity…</div>
+                    <div className="p-3 flex items-center gap-2 font-body text-xs text-muted-foreground"><Loader2 size={13} className="animate-spin" /> Loading activity…</div>
                   ) : !inquiryTimeline?.actions.length ? (
-                    <p className="p-3 font-body text-xs text-[#6B4658]">Workflow actions and sent communications will appear here.</p>
+                    <p className="p-3 font-body text-xs text-muted-foreground">Workflow actions and sent communications will appear here.</p>
                   ) : inquiryTimeline.actions.slice(0, 8).map((item) => (
                     <div key={item.id} className="p-3 flex items-start justify-between gap-3">
                       <div>
-                        <p className="font-body text-xs font-semibold text-[#1A0A12]">
+                        <p className="font-body text-xs font-semibold text-foreground">
                           {item.action.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase())}
                         </p>
-                        <p className="font-body text-[11px] text-[#6B4658] mt-0.5">{item.actorName || item.actorEmail || "APY HQ"}</p>
+                        <p className="font-body text-[11px] text-muted-foreground mt-0.5">{item.actorName || item.actorEmail || "APY HQ"}</p>
                       </div>
-                      <time className="font-body text-[10px] text-[#8B6070] whitespace-nowrap">
+                      <time className="font-body text-[10px] text-muted-foreground whitespace-nowrap">
                         {new Date(item.createdAt).toLocaleString("en-CA", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
                       </time>
                     </div>
@@ -1150,7 +1150,7 @@ export default function PrivateEventsDashboard() {
                   {!showEmailPanel && !selectedInquiry.quoteSentAt && selectedInquiry.approvalStatus === "approved" && (
                     <div className="flex items-center gap-2 mt-3">
                       <Button
-                        className="bg-[#8B2252] hover:bg-[#6B1A40] text-white font-body font-semibold rounded-full text-sm"
+                        className="bg-primary hover:bg-primary-hover text-primary-foreground font-body font-semibold rounded-full text-sm"
                         onClick={() => setShowEmailPanel(true)}
                       >
                         <Send size={14} className="mr-2" />
@@ -1240,35 +1240,35 @@ export default function PrivateEventsDashboard() {
                 const effectiveBody = quoteEmailBody || body;
 
                 return (
-                  <div className="bg-white border border-[#F2A0B8]/30 rounded-xl p-5 space-y-3">
+                  <div className="bg-white border border-border rounded-xl p-5 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Mail size={14} className="text-[#8B2252]" />
-                        <p className="font-body text-xs font-semibold text-[#8B2252] uppercase tracking-wider">Client offer preview</p>
+                        <Mail size={14} className="text-brand-link" />
+                        <p className="font-body text-xs font-semibold text-brand-link uppercase tracking-wider">Client offer preview</p>
                       </div>
                     </div>
-                    <div className="border-t border-[#F2A0B8]/20 pt-3 space-y-2">
-                      <div className="rounded-lg bg-[#FFF5F8] border border-[#F2A0B8]/20 px-3 py-2 font-body text-xs text-[#8B2252]">
+                    <div className="border-t border-border pt-3 space-y-2">
+                      <div className="rounded-lg bg-accent border border-border px-3 py-2 font-body text-xs text-brand-link">
                         APY HQ will record delivery to <span className="font-semibold">{selectedInquiry.email}</span> before sending the private Luma payment link.
                       </div>
-                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 block">Subject</label>
+                      <label className="font-body text-xs font-semibold text-foreground block">Subject</label>
                       <Input
                         value={effectiveSubject}
                         onChange={(e) => setQuoteEmailSubject(e.target.value)}
-                        className="border-[#F2A0B8]/20 focus:border-[#F2A0B8] font-body text-sm"
+                        className="border-border focus:border-border font-body text-sm"
                       />
-                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 block">Message</label>
+                      <label className="font-body text-xs font-semibold text-foreground block">Message</label>
                       <Textarea
                         value={effectiveBody}
                         onChange={(e) => setQuoteEmailBody(e.target.value)}
-                        className="border-[#F2A0B8]/20 focus:border-[#F2A0B8] font-body text-sm min-h-[250px] resize-y"
+                        className="border-border focus:border-border font-body text-sm min-h-[250px] resize-y"
                       />
                       <div className="flex gap-2">
                         <Button
                           onClick={() => handleSendEmail(effectiveSubject, effectiveBody)}
                           disabled={isSendingEmail}
                           size="sm"
-                          className="bg-gradient-to-r from-[#8B2252] to-[#D4708A] hover:from-[#6B1A40] hover:to-[#B85A74] text-white font-body font-semibold rounded-full text-xs"
+                          className="bg-primary text-primary-foreground font-body font-semibold rounded-full text-xs"
                         >
                           {isSendingEmail ? <Loader2 size={12} className="animate-spin mr-1" /> : <Send size={12} className="mr-1" />}
                           Approve & Send Offer
@@ -1290,7 +1290,7 @@ export default function PrivateEventsDashboard() {
               {/* Generate Booking Link Panel */}
               {!generatedLink && !showBookingPanel && selectedInquiry.approvalStatus !== "pending" && (
                 <Button
-                  className="w-full bg-gradient-to-r from-[#8B2252] to-[#D4708A] hover:from-[#6B1A40] hover:to-[#B85A74] text-white font-body font-bold rounded-full py-3"
+                  className="bg-primary w-full text-primary-foreground font-body font-bold rounded-full py-3"
                   onClick={() => setShowBookingPanel(true)}
                 >
                   <Link2 size={16} className="mr-2" />
@@ -1299,34 +1299,34 @@ export default function PrivateEventsDashboard() {
               )}
 
               {showBookingPanel && !generatedLink && (
-                <div className="bg-[#FFF5F8] border border-[#F2A0B8]/40 rounded-xl p-5 space-y-4">
+                <div className="bg-accent border border-border rounded-xl p-5 space-y-4">
                     <div className="flex items-center gap-2 mb-1">
-                      <DollarSign size={16} className="text-[#8B2252]" />
-                      <p className="font-body text-sm font-bold text-[#1A0A12]">Build Payment-Ready Offer</p>
+                      <DollarSign size={16} className="text-brand-link" />
+                      <p className="font-body text-sm font-bold text-foreground">Build Payment-Ready Offer</p>
                     </div>
-                    <p className="font-body text-xs text-[#3D1A2E]/55 -mt-2">
+                    <p className="font-body text-xs text-foreground -mt-2">
                       Confirm the quote, date, venue and timing. APY HQ will create the private Luma payment page and draft the exact client reply for your review.
                     </p>
 
                   {/* Price + HST */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">{bookingForm.pricingType === "plus_hst" ? "Price Per Session Before HST (CAD)" : "All-In Price Per Session (CAD)"}</label>
+                      <label className="font-body text-xs font-semibold text-foreground mb-1 block">{bookingForm.pricingType === "plus_hst" ? "Price Per Session Before HST (CAD)" : "All-In Price Per Session (CAD)"}</label>
                       <Input
                         type="number"
                         value={bookingForm.finalPrice}
                         onChange={(e) => setBookingForm({ ...bookingForm, finalPrice: e.target.value })}
                         placeholder="e.g. 2250"
-                        className="border-[#F2A0B8]/40 font-body"
+                        className="border-border font-body"
                       />
                     </div>
                     <div>
-                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Pricing Type</label>
+                      <label className="font-body text-xs font-semibold text-foreground mb-1 block">Pricing Type</label>
                       <Select
                         value={bookingForm.pricingType}
                         onValueChange={(v) => setBookingForm({ ...bookingForm, pricingType: v as "plus_hst" | "all_in" })}
                       >
-                        <SelectTrigger className="border-[#F2A0B8]/40 font-body text-sm">
+                        <SelectTrigger className="border-border font-body text-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -1336,22 +1336,22 @@ export default function PrivateEventsDashboard() {
                       </Select>
                     </div>
                     </div>
-                    <p className="col-span-2 -mt-1 font-body text-[11px] leading-4 text-[#765967]">For multiple sessions, APY multiplies this per-session amount before HST and creates one combined Luma checkout. The additional class is included, not separately charged.</p>
+                    <p className="col-span-2 -mt-1 font-body text-[11px] leading-4 text-muted-foreground">For multiple sessions, APY multiplies this per-session amount before HST and creates one combined Luma checkout. The additional class is included, not separately charged.</p>
 
                   {/* Price preview */}
                   {priceNum > 0 && (
-                    <div className="bg-white rounded-lg p-3 border border-[#F2A0B8]/20">
+                    <div className="bg-white rounded-lg p-3 border border-border">
                       <div className="flex justify-between text-sm font-body">
-                        <span className="text-[#3D1A2E]/55">{sessionCount > 1 ? `${sessionCount} sessions × $${priceNum.toFixed(2)}` : "Base price"}</span>
+                        <span className="text-foreground">{sessionCount > 1 ? `${sessionCount} sessions × $${priceNum.toFixed(2)}` : "Base price"}</span>
                         <span className="font-semibold">${bookingForm.pricingType === "plus_hst" ? combinedQuoteInput.toLocaleString() : (combinedQuoteInput - hstPreview).toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-sm font-body">
-                        <span className="text-[#3D1A2E]/55">HST (13%)</span>
+                        <span className="text-foreground">HST (13%)</span>
                         <span className="font-semibold">${hstPreview.toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between text-sm font-body font-bold border-t border-[#F2A0B8]/20 pt-2 mt-2">
-                        <span className="text-[#1A0A12]">Client pays on Luma</span>
-                        <span className="text-[#8B2252]">${totalPreview.toFixed(2)} CAD</span>
+                      <div className="flex justify-between text-sm font-body font-bold border-t border-border pt-2 mt-2">
+                        <span className="text-foreground">Client pays on Luma</span>
+                        <span className="text-brand-link">${totalPreview.toFixed(2)} CAD</span>
                       </div>
                     </div>
                   )}
@@ -1371,30 +1371,30 @@ export default function PrivateEventsDashboard() {
                   {/* Event date/time */}
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Event Date</label>
+                      <label className="font-body text-xs font-semibold text-foreground mb-1 block">Event Date</label>
                       <Input
                         type="date"
                         value={bookingForm.eventDate}
                         onChange={(e) => setBookingForm({ ...bookingForm, eventDate: e.target.value })}
-                        className="border-[#F2A0B8]/40 font-body text-sm"
+                        className="border-border font-body text-sm"
                       />
                     </div>
                     <div>
-                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Start Time</label>
+                      <label className="font-body text-xs font-semibold text-foreground mb-1 block">Start Time</label>
                       <Input
                         type="time"
                         value={bookingForm.startTime}
                         onChange={(e) => setBookingForm({ ...bookingForm, startTime: e.target.value })}
-                        className="border-[#F2A0B8]/40 font-body text-sm"
+                        className="border-border font-body text-sm"
                       />
                     </div>
                     <div>
-                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">End Time</label>
+                      <label className="font-body text-xs font-semibold text-foreground mb-1 block">End Time</label>
                       <Input
                         type="time"
                         value={bookingForm.endTime}
                         onChange={(e) => setBookingForm({ ...bookingForm, endTime: e.target.value })}
-                        className="border-[#F2A0B8]/40 font-body text-sm"
+                        className="border-border font-body text-sm"
                       />
                     </div>
                   </div>
@@ -1402,50 +1402,50 @@ export default function PrivateEventsDashboard() {
                   {/* Sessions + Breed + Org */}
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Sessions</label>
+                      <label className="font-body text-xs font-semibold text-foreground mb-1 block">Sessions</label>
                       <Input
                         type="number"
                         min="1"
                         value={bookingForm.sessions}
                         onChange={(e) => setBookingForm({ ...bookingForm, sessions: e.target.value })}
-                        className="border-[#F2A0B8]/40 font-body text-sm"
+                        className="border-border font-body text-sm"
                       />
                     </div>
                     <div>
-                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Puppy Breed</label>
+                      <label className="font-body text-xs font-semibold text-foreground mb-1 block">Puppy Breed</label>
                       <Input
                         value={bookingForm.puppyBreed}
                         onChange={(e) => setBookingForm({ ...bookingForm, puppyBreed: e.target.value })}
                         placeholder="e.g. French Bulldog"
-                        className="border-[#F2A0B8]/40 font-body text-sm"
+                        className="border-border font-body text-sm"
                       />
                     </div>
                     <div>
-                      <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Organization</label>
+                      <label className="font-body text-xs font-semibold text-foreground mb-1 block">Organization</label>
                       <Input
                         value={bookingForm.organization}
                         onChange={(e) => setBookingForm({ ...bookingForm, organization: e.target.value })}
                         placeholder="e.g. Laurier Women's Soccer"
-                        className="border-[#F2A0B8]/40 font-body text-sm"
+                        className="border-border font-body text-sm"
                       />
                     </div>
                   </div>
 
                   {bookingSessionSlots.length > 1 && (
-                    <div className="rounded-lg border border-[#F2A0B8]/25 bg-white p-3">
-                      <p className="font-body text-xs font-semibold text-[#8B2252]">Client-facing schedule — one combined checkout</p>
-                      <div className="mt-2 space-y-1 font-body text-xs text-[#3D1A2E]/70">
+                    <div className="rounded-lg border border-border bg-white p-3">
+                      <p className="font-body text-xs font-semibold text-brand-link">Client-facing schedule — one combined checkout</p>
+                      <div className="mt-2 space-y-1 font-body text-xs text-foreground">
                         {bookingSessionSlots.map((slot, index) => (
                           <p key={`${slot.startTime}-${slot.endTime}`}>Session {index + 1}: {displayTime(slot.startTime)}–{displayTime(slot.endTime)}{index > 0 ? " (included)" : " (checkout)"}</p>
                         ))}
                       </div>
-                      <p className="mt-2 font-body text-[11px] text-[#765967]">A 30-minute break is automatically placed between classes.</p>
+                      <p className="mt-2 font-body text-[11px] text-muted-foreground">A 30-minute break is automatically placed between classes.</p>
                     </div>
                   )}
 
                   {/* Location */}
                   <div>
-                    <label className="font-body text-xs font-semibold text-[#3D1A2E]/60 mb-1 block">Event Location</label>
+                    <label className="font-body text-xs font-semibold text-foreground mb-1 block">Event Location</label>
                     <select
                       value={bookingForm.customLocation.startsWith("__custom__") ? "__custom__" : bookingForm.customLocation}
                       onChange={(e) => {
@@ -1455,7 +1455,7 @@ export default function PrivateEventsDashboard() {
                           setBookingForm({ ...bookingForm, customLocation: e.target.value });
                         }
                       }}
-                      className="w-full rounded-md border border-[#F2A0B8]/40 bg-white px-3 py-2 font-body text-sm text-[#3D1A2E]"
+                      className="w-full rounded-md border border-border bg-white px-3 py-2 font-body text-sm text-foreground"
                     >
                       <option value="">Use inquiry location ({selectedInquiry?.location || "Kitchener"})</option>
                       <option value="kitchener">APY Kitchener — 329 King St E</option>
@@ -1468,7 +1468,7 @@ export default function PrivateEventsDashboard() {
                         value={bookingForm.customLocation.replace("__custom__", "")}
                         onChange={(e) => setBookingForm({ ...bookingForm, customLocation: "__custom__" + e.target.value })}
                         placeholder="e.g. 123 Main St, Waterloo, ON"
-                        className="mt-2 border-[#F2A0B8]/40 font-body text-sm"
+                        className="mt-2 border-border font-body text-sm"
                       />
                     )}
                   </div>
@@ -1477,7 +1477,7 @@ export default function PrivateEventsDashboard() {
                     <Button
                       onClick={handleGenerateLink}
                       disabled={isGenerating}
-                    className="w-full bg-[#8B2252] hover:bg-[#6B1A40] text-white font-body font-bold rounded-full py-3"
+                    className="w-full bg-primary hover:bg-primary-hover text-primary-foreground font-body font-bold rounded-full py-3"
                   >
                       {isGenerating ? (
                         <><Loader2 size={16} className="animate-spin mr-2" /> Creating Luma Event...</>
@@ -1491,9 +1491,9 @@ export default function PrivateEventsDashboard() {
               {/* Commercial states are assigned by the signed payment or dedicated cancellation workflow. */}
               {(["new", "contacted", "confirmed"] as InquiryStatus[]).includes(selectedInquiry.status as InquiryStatus) ? (
                 <div>
-                  <p className="font-body text-xs font-semibold text-[#3D1A2E]/50 uppercase tracking-wider mb-2">Update Status</p>
+                  <p className="font-body text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Update Status</p>
                   <Select value={newStatus} onValueChange={(v) => setNewStatus(v as InquiryStatus)}>
-                    <SelectTrigger className="border-[#F2A0B8]/40 font-body text-sm">
+                    <SelectTrigger className="border-border font-body text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1504,26 +1504,26 @@ export default function PrivateEventsDashboard() {
                   </Select>
                 </div>
               ) : (
-                <p className="rounded-lg bg-[#FFF5F8] px-3 py-2 font-body text-xs text-[#6B4658]">
+                <p className="rounded-lg bg-accent px-3 py-2 font-body text-xs text-muted-foreground">
                   Payment and cancellation status is managed through the linked booking workflow. You can still save internal notes below.
                 </p>
               )}
 
               {/* Admin notes */}
               <div>
-                <p className="font-body text-xs font-semibold text-[#3D1A2E]/50 uppercase tracking-wider mb-2">Admin Notes</p>
+                <p className="font-body text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Admin Notes</p>
                 <Textarea
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
                   placeholder="Add internal notes (e.g. 'Called back May 23, confirmed for June 14')"
-                  className="border-[#F2A0B8]/40 focus:border-[#8B2252] font-body text-sm min-h-[80px] resize-none"
+                  className="border-border focus:border-border font-body text-sm min-h-[80px] resize-none"
                 />
               </div>
 
               <Button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="w-full bg-[#8B2252] hover:bg-[#6B1A40] text-white font-body font-bold rounded-full"
+                className="w-full bg-primary hover:bg-primary-hover text-primary-foreground font-body font-bold rounded-full"
               >
                 {isSaving ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
                 Save Changes

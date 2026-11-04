@@ -191,8 +191,8 @@ export default function RefundTracker() {
   // Auth guard
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
-        <div className="w-8 h-8 border-3 border-[#8B2252] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen apy-staff-ui bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-3 border-border border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -276,21 +276,21 @@ export default function RefundTracker() {
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <div className="min-h-screen bg-[#FEFAF4]">
+    <div className="min-h-screen apy-staff-ui bg-background">
       <AdminNav />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Page header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="font-display font-bold text-2xl text-[#1A0A12]">Refund Tracker</h1>
-            <p className="font-body text-sm text-[#8B2252] mt-0.5">
+            <h1 className="font-display font-medium text-2xl text-foreground">Refund Tracker</h1>
+            <p className="font-body text-sm text-brand-link mt-0.5">
               Track and manage all customer refund requests
             </p>
           </div>
           <Button
             onClick={openAdd}
-            className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body font-semibold gap-2"
+            className="bg-primary hover:bg-primary text-primary-foreground font-body font-semibold gap-2"
           >
             <Plus size={16} />
             Log Refund
@@ -300,12 +300,12 @@ export default function RefundTracker() {
         {/* Stats cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <StatCard
-            icon={<DollarSign size={20} className="text-[#8B2252]" />}
+            icon={<DollarSign size={20} className="text-brand-link" />}
             label="Total Refunds"
             value={stats ? centsToDisplay(stats.totalAmountCents) : "—"}
             sub={`${stats?.total ?? 0} records`}
-            bg="bg-[#FFF5F8]"
-            border="border-[#F0D0DC]"
+            bg="bg-accent"
+            border="border-border"
           />
           <StatCard
             icon={<Clock size={20} className="text-amber-600" />}
@@ -336,17 +336,17 @@ export default function RefundTracker() {
         {/* Filters */}
         <div className="flex flex-wrap gap-3 mb-5">
           <div className="relative flex-1 min-w-[200px]">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C4A0B0]" />
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search by name, email, order ref…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 font-body text-sm border-[#F0D0DC] bg-white"
+              className="pl-9 font-body text-sm border-border bg-white"
             />
           </div>
           <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as any)}>
-            <SelectTrigger className="w-36 font-body text-sm border-[#F0D0DC] bg-white">
-              <Filter size={13} className="mr-1 text-[#C4A0B0]" />
+            <SelectTrigger className="w-36 font-body text-sm border-border bg-white">
+              <Filter size={13} className="mr-1 text-muted-foreground" />
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -355,7 +355,7 @@ export default function RefundTracker() {
             </SelectContent>
           </Select>
           <Select value={filterLocation} onValueChange={(v) => setFilterLocation(v as any)}>
-            <SelectTrigger className="w-36 font-body text-sm border-[#F0D0DC] bg-white">
+            <SelectTrigger className="w-36 font-body text-sm border-border bg-white">
               <SelectValue placeholder="Location" />
             </SelectTrigger>
             <SelectContent>
@@ -366,66 +366,66 @@ export default function RefundTracker() {
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-xl border border-[#F0D0DC] overflow-hidden shadow-sm">
+        <div className="bg-white rounded-xl border border-border overflow-hidden shadow-sm">
           {isLoading ? (
-            <div className="flex items-center justify-center py-16 text-[#C4A0B0] font-body text-sm">
+            <div className="flex items-center justify-center py-16 text-muted-foreground font-body text-sm">
               <RefreshCw size={18} className="animate-spin mr-2" /> Loading refunds…
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-[#C4A0B0]">
+            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
               <DollarSign size={32} className="mb-3 opacity-40" />
               <p className="font-body text-sm">No refund records found</p>
               {refundList.length === 0 && (
-                <Button onClick={openAdd} variant="outline" className="mt-4 border-[#F0D0DC] text-[#8B2252] font-body text-sm">
+                <Button onClick={openAdd} variant="outline" className="mt-4 border-border text-brand-link font-body text-sm">
                   <Plus size={14} className="mr-1" /> Log your first refund
                 </Button>
               )}
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm font-body">
+              <table className="w-full text-sm font-body min-w-[640px]">
                 <thead>
-                  <tr className="bg-[#FFF5F8] border-b border-[#F0D0DC]">
-                    <th className="text-left px-4 py-3 text-[#8B2252] font-semibold">Customer</th>
-                    <th className="text-left px-4 py-3 text-[#8B2252] font-semibold">Event</th>
-                    <th className="text-left px-4 py-3 text-[#8B2252] font-semibold">Location</th>
-                    <th className="text-left px-4 py-3 text-[#8B2252] font-semibold">Amount</th>
-                    <th className="text-left px-4 py-3 text-[#8B2252] font-semibold">Reason</th>
-                    <th className="text-left px-4 py-3 text-[#8B2252] font-semibold">Method</th>
-                    <th className="text-left px-4 py-3 text-[#8B2252] font-semibold">Requested</th>
-                    <th className="text-left px-4 py-3 text-[#8B2252] font-semibold">Status</th>
-                    <th className="text-left px-4 py-3 text-[#8B2252] font-semibold">Actions</th>
+                  <tr className="bg-accent border-b border-border">
+                    <th className="text-left px-4 py-3 text-brand-link font-semibold">Customer</th>
+                    <th className="text-left px-4 py-3 text-brand-link font-semibold">Event</th>
+                    <th className="text-left px-4 py-3 text-brand-link font-semibold">Location</th>
+                    <th className="text-left px-4 py-3 text-brand-link font-semibold">Amount</th>
+                    <th className="text-left px-4 py-3 text-brand-link font-semibold">Reason</th>
+                    <th className="text-left px-4 py-3 text-brand-link font-semibold">Method</th>
+                    <th className="text-left px-4 py-3 text-brand-link font-semibold">Requested</th>
+                    <th className="text-left px-4 py-3 text-brand-link font-semibold">Status</th>
+                    <th className="text-left px-4 py-3 text-brand-link font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((r, i) => (
                     <tr
                       key={r.id}
-                      className={`border-b border-[#FFF5F8] hover:bg-[#FFF8FB] transition-colors ${i % 2 === 0 ? "bg-white" : "bg-[#FFFBFD]"}`}
+                      className={`border-b border-accent hover:bg-accent transition-colors ${i % 2 === 0 ? "bg-white" : "bg-card"}`}
                     >
                       <td className="px-4 py-3">
-                        <div className="font-semibold text-[#1A0A12]">{r.customerName}</div>
+                        <div className="font-semibold text-foreground">{r.customerName}</div>
                         {r.customerEmail && (
-                          <div className="text-xs text-[#3D1A2E]">{r.customerEmail}</div>
+                          <div className="text-xs text-foreground">{r.customerEmail}</div>
                         )}
                         {r.orderRef && (
-                          <div className="text-xs text-[#C4A0B0] font-mono">{r.orderRef}</div>
+                          <div className="text-xs text-muted-foreground font-mono">{r.orderRef}</div>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-[#3D1A2E]">{r.eventName || <span className="text-[#C4A0B0]">—</span>}</td>
+                      <td className="px-4 py-3 text-foreground">{r.eventName || <span className="text-muted-foreground">—</span>}</td>
                       <td className="px-4 py-3">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#FFF0F4] text-[#8B2252] border border-[#F0D0DC]">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-accent text-brand-link border border-border">
                           {r.location}
                         </span>
                       </td>
-                      <td className="px-4 py-3 font-semibold text-[#1A0A12]">
+                      <td className="px-4 py-3 font-semibold text-foreground">
                         {centsToDisplay(r.amountCents)}
                       </td>
-                      <td className="px-4 py-3 text-[#3D1A2E] max-w-[140px]">
+                      <td className="px-4 py-3 text-foreground max-w-[140px]">
                         <span className="truncate block">{r.reason}</span>
                       </td>
-                      <td className="px-4 py-3 text-[#3D1A2E]">{r.method}</td>
-                      <td className="px-4 py-3 text-[#3D1A2E] whitespace-nowrap">
+                      <td className="px-4 py-3 text-foreground">{r.method}</td>
+                      <td className="px-4 py-3 text-foreground whitespace-nowrap">
                         {formatDate(r.requestedAt)}
                       </td>
                       <td className="px-4 py-3">{statusBadge(r.status as Status)}</td>
@@ -457,7 +457,7 @@ export default function RefundTracker() {
                           <button
                             title="Edit"
                             onClick={() => openEdit(r)}
-                            className="p-1.5 rounded-md text-[#8B2252] hover:bg-[#FFF0F4] transition-colors"
+                            className="p-1.5 rounded-md text-brand-link hover:bg-accent transition-colors"
                           >
                             <Pencil size={15} />
                           </button>
@@ -479,7 +479,7 @@ export default function RefundTracker() {
         </div>
 
         {filtered.length > 0 && (
-          <p className="mt-3 font-body text-xs text-[#C4A0B0] text-right">
+          <p className="mt-3 font-body text-xs text-muted-foreground text-right">
             Showing {filtered.length} of {refundList.length} records
           </p>
         )}
@@ -487,9 +487,9 @@ export default function RefundTracker() {
 
       {/* Add / Edit Modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-[#FEFAF4] border-[#F0D0DC]">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-background border-border">
           <DialogHeader>
-            <DialogTitle className="font-display font-bold text-[#1A0A12]">
+            <DialogTitle className="font-display font-medium text-foreground">
               {editingId !== null ? "Edit Refund" : "Log New Refund"}
             </DialogTitle>
           </DialogHeader>
@@ -497,58 +497,58 @@ export default function RefundTracker() {
           <div className="space-y-4 py-2">
             {/* Customer Name */}
             <div className="space-y-1.5">
-              <Label className="font-body font-semibold text-[#3D1A2E]">Customer Name *</Label>
+              <Label className="font-body font-semibold text-foreground">Customer Name *</Label>
               <Input
                 value={form.customerName}
                 onChange={(e) => setForm({ ...form, customerName: e.target.value })}
                 placeholder="Jane Smith"
-                className="border-[#F0D0DC] bg-white font-body"
+                className="border-border bg-white font-body"
               />
             </div>
 
             {/* Email + Order Ref */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="font-body font-semibold text-[#3D1A2E]">Customer Email</Label>
+                <Label className="font-body font-semibold text-foreground">Customer Email</Label>
                 <Input
                   type="email"
                   value={form.customerEmail}
                   onChange={(e) => setForm({ ...form, customerEmail: e.target.value })}
                   placeholder="jane@email.com"
-                  className="border-[#F0D0DC] bg-white font-body"
+                  className="border-border bg-white font-body"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="font-body font-semibold text-[#3D1A2E]">Order / Booking Ref</Label>
+                <Label className="font-body font-semibold text-foreground">Order / Booking Ref</Label>
                 <Input
                   value={form.orderRef}
                   onChange={(e) => setForm({ ...form, orderRef: e.target.value })}
                   placeholder="pi_xxx or Luma ID"
-                  className="border-[#F0D0DC] bg-white font-body"
+                  className="border-border bg-white font-body"
                 />
               </div>
             </div>
 
             {/* Event Name */}
             <div className="space-y-1.5">
-              <Label className="font-body font-semibold text-[#3D1A2E]">Event / Class Name</Label>
+              <Label className="font-body font-semibold text-foreground">Event / Class Name</Label>
               <Input
                 value={form.eventName}
                 onChange={(e) => setForm({ ...form, eventName: e.target.value })}
                 placeholder="e.g. Puppy Yoga Hamilton – June 21"
-                className="border-[#F0D0DC] bg-white font-body"
+                className="border-border bg-white font-body"
               />
             </div>
 
             {/* Location + Amount */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="font-body font-semibold text-[#3D1A2E]">Location</Label>
+                <Label className="font-body font-semibold text-foreground">Location</Label>
                 <Select
                   value={form.location}
                   onValueChange={(v) => setForm({ ...form, location: v as Location })}
                 >
-                  <SelectTrigger className="border-[#F0D0DC] bg-white font-body">
+                  <SelectTrigger className="border-border bg-white font-body">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -557,7 +557,7 @@ export default function RefundTracker() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="font-body font-semibold text-[#3D1A2E]">Amount ($) *</Label>
+                <Label className="font-body font-semibold text-foreground">Amount ($) *</Label>
                 <Input
                   type="number"
                   min="0.01"
@@ -565,7 +565,7 @@ export default function RefundTracker() {
                   value={form.amountDollars}
                   onChange={(e) => setForm({ ...form, amountDollars: e.target.value })}
                   placeholder="50.00"
-                  className="border-[#F0D0DC] bg-white font-body"
+                  className="border-border bg-white font-body"
                 />
               </div>
             </div>
@@ -573,12 +573,12 @@ export default function RefundTracker() {
             {/* Reason + Method */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="font-body font-semibold text-[#3D1A2E]">Reason</Label>
+                <Label className="font-body font-semibold text-foreground">Reason</Label>
                 <Select
                   value={form.reason}
                   onValueChange={(v) => setForm({ ...form, reason: v as Reason })}
                 >
-                  <SelectTrigger className="border-[#F0D0DC] bg-white font-body">
+                  <SelectTrigger className="border-border bg-white font-body">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -587,12 +587,12 @@ export default function RefundTracker() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="font-body font-semibold text-[#3D1A2E]">Refund Method</Label>
+                <Label className="font-body font-semibold text-foreground">Refund Method</Label>
                 <Select
                   value={form.method}
                   onValueChange={(v) => setForm({ ...form, method: v as Method })}
                 >
-                  <SelectTrigger className="border-[#F0D0DC] bg-white font-body">
+                  <SelectTrigger className="border-border bg-white font-body">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -605,12 +605,12 @@ export default function RefundTracker() {
             {/* Status + Requested Date */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="font-body font-semibold text-[#3D1A2E]">Status</Label>
+                <Label className="font-body font-semibold text-foreground">Status</Label>
                 <Select
                   value={form.status}
                   onValueChange={(v) => setForm({ ...form, status: v as Status })}
                 >
-                  <SelectTrigger className="border-[#F0D0DC] bg-white font-body">
+                  <SelectTrigger className="border-border bg-white font-body">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -619,36 +619,36 @@ export default function RefundTracker() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="font-body font-semibold text-[#3D1A2E]">Date Requested</Label>
+                <Label className="font-body font-semibold text-foreground">Date Requested</Label>
                 <Input
                   type="date"
                   value={form.requestedAt}
                   onChange={(e) => setForm({ ...form, requestedAt: e.target.value })}
-                  className="border-[#F0D0DC] bg-white font-body"
+                  className="border-border bg-white font-body"
                 />
               </div>
             </div>
 
             {/* Processed By */}
             <div className="space-y-1.5">
-              <Label className="font-body font-semibold text-[#3D1A2E]">Processed By</Label>
+              <Label className="font-body font-semibold text-foreground">Processed By</Label>
               <Input
                 value={form.processedBy}
                 onChange={(e) => setForm({ ...form, processedBy: e.target.value })}
                 placeholder="Staff name (optional)"
-                className="border-[#F0D0DC] bg-white font-body"
+                className="border-border bg-white font-body"
               />
             </div>
 
             {/* Notes */}
             <div className="space-y-1.5">
-              <Label className="font-body font-semibold text-[#3D1A2E]">Internal Notes</Label>
+              <Label className="font-body font-semibold text-foreground">Internal Notes</Label>
               <Textarea
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 placeholder="Any additional context…"
                 rows={3}
-                className="border-[#F0D0DC] bg-white font-body resize-none"
+                className="border-border bg-white font-body resize-none"
               />
             </div>
           </div>
@@ -657,14 +657,14 @@ export default function RefundTracker() {
             <Button
               variant="outline"
               onClick={() => setModalOpen(false)}
-              className="border-[#F0D0DC] text-[#8B2252] font-body"
+              className="border-border text-brand-link font-body"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSubmit}
               disabled={isSaving}
-              className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body font-semibold"
+              className="bg-primary hover:bg-primary text-primary-foreground font-body font-semibold"
             >
               {isSaving ? "Saving…" : editingId !== null ? "Save Changes" : "Add Refund"}
             </Button>
@@ -674,15 +674,15 @@ export default function RefundTracker() {
 
       {/* Delete Confirmation */}
       <AlertDialog open={deleteId !== null} onOpenChange={(o) => !o && setDeleteId(null)}>
-        <AlertDialogContent className="bg-[#FEFAF4] border-[#F0D0DC]">
+        <AlertDialogContent className="bg-background border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-[#1A0A12]">Delete Refund?</AlertDialogTitle>
-            <AlertDialogDescription className="font-body text-[#3D1A2E]">
+            <AlertDialogTitle className="font-display text-foreground">Delete Refund?</AlertDialogTitle>
+            <AlertDialogDescription className="font-body text-foreground">
               This will permanently remove the refund record. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-[#F0D0DC] text-[#8B2252] font-body">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="border-border text-brand-link font-body">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteId !== null && deleteMutation.mutate({ id: deleteId })}
               className="bg-red-500 hover:bg-red-600 text-white font-body"
@@ -717,10 +717,10 @@ function StatCard({
     <div className={`${bg} border ${border} rounded-xl p-4`}>
       <div className="flex items-center gap-2 mb-2">
         {icon}
-        <span className="font-body text-xs font-semibold text-[#3D1A2E] uppercase tracking-wide">{label}</span>
+        <span className="font-body text-xs font-semibold text-foreground uppercase tracking-wide">{label}</span>
       </div>
-      <div className="font-display font-bold text-xl text-[#1A0A12]">{value}</div>
-      <div className="font-body text-xs text-[#3D1A2E] mt-0.5">{sub}</div>
+      <div className="font-display font-medium text-xl text-foreground">{value}</div>
+      <div className="font-body text-xs text-foreground mt-0.5">{sub}</div>
     </div>
   );
 }

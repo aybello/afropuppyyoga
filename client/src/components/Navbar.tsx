@@ -1,15 +1,8 @@
-import { BOOK_URL, LOGO_URL  } from "@/const";
-/* ============================================================
-   Navbar — Warm Afro-Wellness Editorial
-   Transparent on hero, solid ivory on scroll
-   Primary links: Home, Experience, Memberships, Private Events, Gallery, Careers, Loyalty
-   Secondary links (More ▾): Partnerships
-   ============================================================ */
+import { BOOK_URL, LOGO_URL } from "@/const";
 import { useState, useEffect, useRef } from "react";
 import { ChevronDownIcon, CloseIcon, MenuIcon } from "@/components/PublicIcons";
 import { trackCTAClick } from "@/hooks/useAnalytics";
 import { handleHomeSectionClick, homeSectionHref, scrollToHomeSection } from "./homeSectionNavigation";
-
 
 const primaryLinks = [
   { label: "Home", href: "#home" },
@@ -19,10 +12,7 @@ const primaryLinks = [
   { label: "Class Pictures", href: "https://drive.google.com/drive/folders/1Q8WpKFj4cUsXlnn0jeKdBeWz5hSunp2t?usp=drive_link", isPage: true, isExternal: true },
   { label: "Careers", href: "/careers", isPage: true },
 ];
-
-// Loyalty is highlighted separately (pill style like Memberships)
 const loyaltyLink = { label: "🐾 Rewards", href: "/loyalty", isPage: true };
-
 const moreLinks = [
   { label: "🖼️ Gallery", href: "#gallery" },
   { label: "📍 Kitchener", href: "/puppy-yoga-kitchener", isPage: true },
@@ -34,16 +24,15 @@ const moreLinks = [
   { label: "🌿 Ethical Standards", href: "/ethics", isPage: true },
   { label: "Submit Invoice", href: "/submit-invoice", isPage: true },
 ];
-
-// All links for mobile menu
+// Compact only the desktop presentation; the original mobile order is unchanged.
+const desktopLinks = primaryLinks.slice(0, 4);
+const desktopMoreLinks = [...primaryLinks.slice(4), ...moreLinks];
 const allLinks = [...primaryLinks, loyaltyLink, ...moreLinks];
 
 export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef<HTMLLIElement>(null);
-
   const isSubPage = typeof window !== "undefined" && window.location.pathname !== "/";
 
   useEffect(() => {
@@ -58,13 +47,6 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 60);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  // Close More dropdown when clicking outside
-  useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
         setMoreOpen(false);
@@ -77,115 +59,59 @@ export default function Navbar() {
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     setMenuOpen(false);
     setMoreOpen(false);
-    if (href.startsWith("#")) {
-      handleHomeSectionClick(e, href);
-    }
+    if (href.startsWith("#")) handleHomeSectionClick(e, href);
   };
-
-  const navTextClass = scrolled || isSubPage ? "text-[#1A0A12]" : "text-white/90";
-  const navHoverClass = "hover:bg-[#8B2252]/10 hover:text-[#8B2252]";
 
   return (
     <>
-      <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          scrolled || isSubPage
-            ? "bg-[#FFF5F8]/95 backdrop-blur-md shadow-sm border-b border-[#F0D0DC]"
-            : "bg-transparent"
-        }`}
-      >
+      <header className="apy-public-nav fixed top-0 left-0 right-0 z-50 border-b border-border bg-ivory text-espresso">
         <div className="container">
-          <nav className="flex items-center justify-between h-16 md:h-20">
-            {/* Logo */}
+          <nav aria-label="Main navigation" className="flex items-center justify-between gap-2 h-16 md:h-20">
             <a
               href={isSubPage ? "/" : "#home"}
               onClick={(e) => { if (!isSubPage) handleNavClick(e, "#home"); }}
-              className="flex items-center gap-2.5 group shrink-0"
+              className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 rounded-md"
             >
-              <img
-                src={LOGO_URL}
-                alt="AfroPuppyYoga"
-                className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
+              <img src={LOGO_URL} alt="AfroPuppyYoga" className="w-7 h-9 sm:w-10 sm:h-12 md:w-14 md:h-14 object-contain" />
               <div className="flex flex-col leading-none">
-                <span className={`font-display font-bold text-base md:text-lg tracking-tight transition-colors duration-300 ${scrolled || isSubPage ? "text-[#1A0A12]" : "text-white"}`}>
-                  AfroPuppyYoga
-                </span>
-                <span className={`text-[10px] font-body tracking-widest uppercase transition-colors duration-300 ${scrolled || isSubPage ? "text-[#8B2252]" : "text-[#F2A0B8]"}`}>
-                  Ontario's #1 Puppy Yoga
-                </span>
+                <span className="font-display font-medium text-xs sm:text-base md:text-2xl tracking-tight text-espresso">AfroPuppyYoga</span>
+                <span className="hidden sm:block mt-1.5 text-[9px] font-body tracking-[0.12em] uppercase text-brand-link">Ontario's #1 Puppy Yoga</span>
               </div>
             </a>
 
-            {/* Desktop Nav */}
-            <ul className="hidden lg:flex items-center gap-0.5">
-              {primaryLinks.map((link) => (
+            <ul className="hidden xl:flex items-center gap-0.5">
+              {desktopLinks.map((link) => (
                 <li key={link.href}>
-                  {link.label === "Memberships" ? (
-                    <a
-                      href={homeSectionHref(link.href)}
-                      onClick={(e) => handleNavClick(e, link.href)}
-                      className="px-3 py-1.5 text-sm font-body font-bold rounded-full transition-colors duration-200 bg-[#F3B4A5] text-[#34221D] hover:bg-[#EBA392] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#34221D]"
-                    >
-                      {link.label}
-                    </a>
-                  ) : (link as any).isExternal ? (
-                    <a
-                      href={link.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`px-3 py-2 text-sm font-body font-medium rounded-md transition-all duration-200 ${navTextClass} ${navHoverClass}`}
-                    >
-                      {link.label}
-                    </a>
-                  ) : (link as any).isPage ? (
-                    <a
-                      href={link.href}
-                      onClick={() => { setMenuOpen(false); setMoreOpen(false); }}
-                      className={`px-3 py-2 text-sm font-body font-medium rounded-md transition-all duration-200 ${navTextClass} ${navHoverClass}`}
-                    >
-                      {link.label}
-                    </a>
-                  ) : (
-                    <a
-                      href={homeSectionHref(link.href)}
-                      onClick={(e) => handleNavClick(e, link.href)}
-                      className={`px-3 py-2 text-sm font-body font-medium rounded-md transition-all duration-200 ${navTextClass} ${navHoverClass}`}
-                    >
-                      {link.label}
-                    </a>
-                  )}
+                  <a href={homeSectionHref(link.href)} onClick={(e) => handleNavClick(e, link.href)} className="apy-nav-link">
+                    {link.label}
+                  </a>
                 </li>
               ))}
-
-              {/* Rewards uses a warm neutral alongside the coral Memberships pill. */}
               <li>
-                <a
-                  href={loyaltyLink.href}
-                  onClick={() => { setMenuOpen(false); setMoreOpen(false); }}
-                  className="px-3 py-1.5 text-sm font-body font-bold rounded-full transition-colors duration-200 bg-[#EAD8C7] text-[#34221D] hover:bg-[#DFC9B5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#34221D]"
-                >
+                <a href={loyaltyLink.href} onClick={() => { setMenuOpen(false); setMoreOpen(false); }} className="apy-nav-link">
                   {loyaltyLink.label}
                 </a>
               </li>
-
-              {/* More dropdown */}
               <li ref={moreRef} className="relative">
                 <button
                   onClick={() => setMoreOpen(!moreOpen)}
-                  className={`flex items-center gap-1 px-3 py-2 text-sm font-body font-medium rounded-md transition-all duration-200 ${navTextClass} ${navHoverClass}`}
+                  className="apy-nav-link"
+                  aria-expanded={moreOpen}
+                  aria-controls="apy-more-navigation"
                 >
                   More
-                  <ChevronDownIcon size={14} className={`transition-transform duration-200 ${moreOpen ? "rotate-180" : ""}`} aria-hidden />
+                  <ChevronDownIcon size={14} className={`transition-transform duration-150 ${moreOpen ? "rotate-180" : ""}`} aria-hidden />
                 </button>
                 {moreOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-52 bg-[#FFF5F8] border border-[#F0D0DC] rounded-2xl shadow-xl overflow-hidden z-50">
-                    {moreLinks.map((link) => (
+                  <div id="apy-more-navigation" className="absolute top-full right-0 mt-2 w-60 max-h-[calc(100svh-7rem)] overflow-y-auto bg-ivory border border-border rounded-xl shadow-md z-50 p-1.5">
+                    {desktopMoreLinks.map((link) => (
                       <a
                         key={link.href}
                         href={link.href.startsWith("#") ? homeSectionHref(link.href) : link.href}
+                        target={(link as { isExternal?: boolean }).isExternal ? "_blank" : undefined}
+                        rel={(link as { isExternal?: boolean }).isExternal ? "noopener noreferrer" : undefined}
                         onClick={(e) => handleNavClick(e, link.href)}
-                        className="block px-4 py-3 text-sm font-body font-medium text-[#1A0A12] hover:bg-[#8B2252]/10 hover:text-[#8B2252] transition-colors"
+                        className="flex items-center min-h-11 px-3 py-2.5 text-sm font-body font-medium text-espresso hover:bg-blush hover:text-brand-link rounded-lg transition-colors"
                       >
                         {link.label}
                       </a>
@@ -195,16 +121,8 @@ export default function Navbar() {
               </li>
             </ul>
 
-            {/* CTA + Mobile Toggle */}
-            <div className="flex items-center gap-3">
-              <a
-                href="/staff-access"
-                className={`hidden lg:inline-flex items-center px-4 py-2 text-xs font-body font-semibold rounded-full border transition-all duration-200 hover:-translate-y-0.5 ${
-                  scrolled || isSubPage
-                    ? "border-[#8B2252] text-[#8B2252] hover:bg-[#8B2252]/10"
-                    : "border-white/60 text-white/90 hover:bg-white/10"
-                }`}
-              >
+            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+              <a href="/staff-access" className="hidden xl:inline-flex items-center min-h-11 px-3 py-2 text-xs font-body font-medium rounded-full border border-border text-espresso hover:bg-blush transition-colors">
                 Staff Portal
               </a>
               <a
@@ -212,14 +130,16 @@ export default function Navbar() {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackCTAClick("Book a Class — Navbar")}
-                className="inline-flex items-center px-4 py-2 sm:px-5 sm:py-2.5 bg-[#F2A0B8] text-[#1A0A12] font-body font-semibold text-xs sm:text-sm rounded-full hover:bg-[#F2A0B8] transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5"
+                className="apy-primary-action px-3 sm:px-5 text-xs sm:text-sm"
               >
                 Book a Class
               </a>
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className={`lg:hidden p-2 rounded-md transition-colors ${scrolled || isSubPage ? "text-[#1A0A12]" : "text-white"}`}
+                className="xl:hidden min-h-11 w-9 sm:w-11 flex items-center justify-center rounded-lg text-espresso hover:bg-blush transition-colors"
                 aria-label="Toggle menu"
+                aria-expanded={menuOpen}
+                aria-controls="apy-mobile-navigation"
               >
                 {menuOpen ? <CloseIcon size={22} aria-hidden /> : <MenuIcon size={22} aria-hidden />}
               </button>
@@ -228,74 +148,31 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* Mobile Menu */}
-      <div
-        className={`fixed inset-0 z-40 lg:hidden transition-all duration-300 ${
-          menuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-        }`}
-      >
-        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMenuOpen(false)} />
-        <div className={`absolute top-0 right-0 h-full w-72 bg-[#FFF5F8] shadow-2xl transition-transform duration-300 ${menuOpen ? "translate-x-0" : "translate-x-full"}`}>
-          <div className="flex items-center justify-between p-5 border-b border-[#F0D0DC]">
-            <span className="font-display font-bold text-lg text-[#1A0A12]">Menu</span>
-            <button onClick={() => setMenuOpen(false)} className="p-1 text-[#1A0A12]">
+      <div className={`apy-public-nav fixed inset-0 z-40 xl:hidden transition-opacity duration-150 ${menuOpen ? "visible opacity-100 pointer-events-auto" : "invisible opacity-0 pointer-events-none"}`}>
+        <div className="absolute inset-0 bg-espresso/30" onClick={() => setMenuOpen(false)} />
+        <div id="apy-mobile-navigation" className={`absolute top-16 md:top-20 bottom-0 right-0 w-80 max-w-full bg-ivory border-l border-border shadow-md flex flex-col transition-transform duration-150 ${menuOpen ? "translate-x-0" : "translate-x-full"}`}>
+          <div className="flex items-center justify-between px-5 py-3 border-b border-border shrink-0">
+            <span className="font-display font-medium text-xl text-espresso">Menu</span>
+            <button onClick={() => setMenuOpen(false)} aria-label="Close menu" className="h-11 w-11 flex items-center justify-center rounded-lg text-espresso hover:bg-blush">
               <CloseIcon size={20} aria-hidden />
             </button>
           </div>
-          <ul className="p-4 space-y-1 overflow-y-auto max-h-[calc(100vh-80px)]">
+          <ul className="p-4 space-y-1 overflow-y-auto flex-1">
             {allLinks.map((link) => (
               <li key={link.href}>
-                {link.label === "Memberships" ? (
-                  <a
-                    href={homeSectionHref(link.href)}
-                    onClick={(e) => { handleNavClick(e, link.href); setMenuOpen(false); }}
-                    className="block px-4 py-3 font-body font-bold rounded-lg transition-colors bg-[#F3B4A5] text-[#34221D] hover:bg-[#EBA392] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#34221D]"
-                  >
-                    {link.label}
-                  </a>
-                ) : link.label === loyaltyLink.label ? (
-                  <a
-                    href={link.href}
-                    onClick={() => setMenuOpen(false)}
-                    className="block px-4 py-3 font-body font-bold rounded-lg transition-colors bg-[#EAD8C7] text-[#34221D] hover:bg-[#DFC9B5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#34221D]"
-                  >
-                    {link.label}
-                  </a>
-                ) : (link as any).isExternal ? (
-                  <a
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => setMenuOpen(false)}
-                    className="block px-4 py-3 text-[#1A0A12] font-body font-medium rounded-lg hover:bg-[#8B2252]/10 hover:text-[#8B2252] transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                ) : (link as any).isPage ? (
-                  <a
-                    href={link.href}
-                    onClick={() => setMenuOpen(false)}
-                    className="block px-4 py-3 text-[#1A0A12] font-body font-medium rounded-lg hover:bg-[#8B2252]/10 hover:text-[#8B2252] transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                ) : (
-                  <a
-                    href={homeSectionHref(link.href)}
-                    onClick={(e) => { handleNavClick(e, link.href); setMenuOpen(false); }}
-                    className="block px-4 py-3 text-[#1A0A12] font-body font-medium rounded-lg hover:bg-[#8B2252]/10 hover:text-[#8B2252] transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                )}
+                <a
+                  href={link.href.startsWith("#") ? homeSectionHref(link.href) : link.href}
+                  target={(link as { isExternal?: boolean }).isExternal ? "_blank" : undefined}
+                  rel={(link as { isExternal?: boolean }).isExternal ? "noopener noreferrer" : undefined}
+                  onClick={(e) => handleNavClick(e, link.href)}
+                  className={`flex items-center min-h-11 px-4 py-3 text-espresso font-body text-sm font-medium rounded-lg hover:bg-blush hover:text-brand-link transition-colors ${link.label === "Memberships" || link.label === loyaltyLink.label ? "bg-blush" : ""}`}
+                >
+                  {link.label}
+                </a>
               </li>
             ))}
             <li className="pt-4">
-              <a
-                href="/staff-access"
-                onClick={() => setMenuOpen(false)}
-                className="block text-center px-5 py-3 mb-2 border border-[#8B2252] text-[#8B2252] font-body font-semibold rounded-full hover:bg-[#8B2252]/10 transition-colors"
-              >
+              <a href="/staff-access" onClick={() => setMenuOpen(false)} className="flex justify-center min-h-11 px-5 py-3 mb-2 border border-input text-espresso font-body text-sm font-medium rounded-full hover:bg-blush transition-colors">
                 Staff Portal
               </a>
               <a
@@ -303,7 +180,7 @@ export default function Navbar() {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackCTAClick("Book a Class — Mobile Menu")}
-                className="block text-center px-5 py-3 bg-[#F2A0B8] text-[#1A0A12] font-body font-semibold rounded-full hover:bg-[#F2A0B8] transition-colors"
+                className="apy-primary-action w-full"
               >
                 Book a Class
               </a>

@@ -7,7 +7,7 @@
    - CSS columns masonry layout, responsive
    ============================================================ */
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { X, ChevronLeft, ChevronRight, Instagram, ZoomIn } from "lucide-react";
 
 const CDN = "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ";
@@ -55,6 +55,7 @@ const CATS = [
 const INITIAL_COUNT = 12;
 
 export default function Gallery() {
+  const reduceMotion = useReducedMotion();
   const [activeCat, setActiveCat] = useState("all");
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
@@ -86,28 +87,28 @@ export default function Gallery() {
   }, [lightboxIdx]);
 
   return (
-    <section id="gallery" className="py-10 md:py-20 bg-[#FFF5F8]">
+    <section id="gallery" className="py-10 md:py-20 bg-[#FEFAF4]">
       <div className="container">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={false}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-0.5 bg-[#8B2252]" />
-              <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">
+              <div className="w-8 h-0.5 bg-[#B83F67]" />
+              <span className="text-[#B83F67] font-body text-xs font-semibold tracking-widest uppercase">
                 Our Gallery
               </span>
             </div>
-            <h2 className="font-display text-4xl md:text-5xl font-bold text-[#1A0A12]">
+            <h2 className="font-display text-4xl md:text-5xl font-medium text-[#34221D]">
               Moments of Joy,
               <br />
-              <span className="italic text-[#8B2252]">Captured</span>
+              <span className="italic text-[#B83F67]">Captured</span>
             </h2>
-            <p className="mt-3 font-body text-[#1A0A12]/60 text-base max-w-md">
+            <p className="mt-3 font-body text-[#34221D]/70 text-base max-w-md">
               Real photos from our past classes — every smile, stretch, and puppy cuddle.
             </p>
           </motion.div>
@@ -116,11 +117,11 @@ export default function Gallery() {
             href="https://www.instagram.com/afropuppyyoga"
             target="_blank"
             rel="noopener noreferrer"
-            initial={{ opacity: 0, x: 20 }}
+            initial={false}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-[#8B2252] text-[#8B2252] font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] hover:text-white transition-all duration-200 self-start md:self-auto"
+            className="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-[#B83F67] text-[#B83F67] font-body font-semibold text-sm rounded-full hover:bg-[#FDE9EF] hover:text-[#34221D] transition-all duration-200 self-start md:self-auto"
           >
             <Instagram size={16} />
             Follow @afropuppyyoga
@@ -129,7 +130,7 @@ export default function Gallery() {
 
         {/* Category filters */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={false}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.1 }}
@@ -139,14 +140,14 @@ export default function Gallery() {
             <button
               key={cat.key}
               onClick={() => handleCatChange(cat.key)}
-              className={`px-5 py-2 rounded-full font-body text-sm font-semibold transition-all duration-200 ${
+              className={`min-h-11 px-5 py-2 rounded-full font-body text-sm font-semibold transition-all duration-200 ${
                 activeCat === cat.key
-                  ? "bg-[#8B2252] text-white shadow-md"
-                  : "bg-[#1A0A12]/8 text-[#1A0A12]/70 hover:bg-[#1A0A12]/15"
+                  ? "bg-[#F29CB8] text-[#34221D] shadow-sm"
+                  : "bg-[#34221D]/8 text-[#34221D]/70 hover:bg-[#34221D]/15"
               }`}
             >
               {cat.label}
-              <span className={`ml-1.5 text-xs ${activeCat === cat.key ? "text-white/70" : "text-[#1A0A12]/40"}`}>
+              <span className={`ml-1.5 text-xs ${activeCat === cat.key ? "text-[#34221D]/70" : "text-[#34221D]/70"}`}>
                 ({cat.key === "all" ? PHOTOS.length : PHOTOS.filter(p => p.cat === cat.key).length})
               </span>
             </button>
@@ -160,14 +161,14 @@ export default function Gallery() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: reduceMotion ? 0 : 0.3 }}
             style={{ columnCount: undefined }}
             className="[column-count:2] md:[column-count:3] lg:[column-count:4] [column-gap:12px]"
           >
             {visible.map((photo, i) => (
               <motion.div
                 key={photo.src}
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={false}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: Math.min(i * 0.04, 0.4), duration: 0.4 }}
                 className="break-inside-avoid mb-3 group relative overflow-hidden rounded-xl cursor-pointer"
@@ -184,15 +185,15 @@ export default function Gallery() {
                   className="w-full h-auto block object-cover object-top transition-transform duration-500 group-hover:scale-105"
                 />
                 {/* Hover overlay */}
-                <div className="absolute inset-0 bg-[#1A0A12]/0 group-hover:bg-[#1A0A12]/35 transition-all duration-300 flex items-center justify-center">
+                <div className="absolute inset-0 bg-[#34221D]/0 group-hover:bg-[#34221D]/35 transition-all duration-300 flex items-center justify-center">
                   <ZoomIn
                     size={26}
-                    className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg"
+                    className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-sm"
                   />
                 </div>
                 {/* Category badge on hover */}
                 <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span className="px-2 py-0.5 bg-[#F2A0B8] text-[#1A0A12] font-body text-xs font-bold rounded-full capitalize">
+                  <span className="px-2 py-0.5 bg-[#F29CB8] text-[#34221D] font-body text-xs font-bold rounded-full capitalize">
                     {photo.cat}
                   </span>
                 </div>
@@ -210,7 +211,7 @@ export default function Gallery() {
           >
             <button
               onClick={() => setVisibleCount(c => c + 12)}
-              className="px-8 py-3 border-2 border-[#8B2252] text-[#8B2252] font-body font-semibold text-sm rounded-full hover:bg-[#8B2252] hover:text-white transition-all duration-200"
+              className="px-8 py-3 border-2 border-[#B83F67] text-[#B83F67] font-body font-semibold text-sm rounded-full hover:bg-[#FDE9EF] hover:text-[#34221D] transition-all duration-200"
             >
               Load More Photos ({filtered.length - visibleCount} remaining)
             </button>
@@ -219,20 +220,20 @@ export default function Gallery() {
 
         {/* Instagram CTA */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={false}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.2 }}
           className="mt-14 text-center"
         >
-          <p className="font-body text-[#1A0A12]/50 text-sm mb-3">
+          <p className="font-body text-[#34221D]/70 text-sm mb-3">
             Tag us in your photos for a chance to be featured!
           </p>
           <div className="flex flex-wrap items-center justify-center gap-2">
             {["@afropuppyyoga", "#afropuppyyoga", "#puppyyoga", "#yogacanada"].map(tag => (
               <span
                 key={tag}
-                className="px-3 py-1 bg-[#8B2252]/10 text-[#8B2252] font-body text-xs font-semibold rounded-full"
+                className="px-3 py-1 bg-[#B83F67]/10 text-[#B83F67] font-body text-xs font-semibold rounded-full"
               >
                 {tag}
               </span>
@@ -248,7 +249,7 @@ export default function Gallery() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: reduceMotion ? 0 : 0.2 }}
             className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
             onClick={() => setLightboxIdx(null)}
           >
@@ -286,20 +287,20 @@ export default function Gallery() {
             {/* Image */}
             <motion.div
               key={lightboxIdx}
-              initial={{ scale: 0.92, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.92, opacity: 0 }}
-              transition={{ duration: 0.22 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: reduceMotion ? 0 : 0.22 }}
               className="relative mx-4 sm:mx-16 max-w-5xl w-full"
               onClick={e => e.stopPropagation()}
             >
               <img
                 src={filtered[lightboxIdx].src}
                 alt={filtered[lightboxIdx].alt}
-                className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl"
+                className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-sm"
               />
               {/* Caption bar */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent rounded-b-xl px-5 py-4">
+              <div className="absolute bottom-0 left-0 right-0 bg-black/70 rounded-b-xl px-5 py-4">
                 <p className="font-body text-white/80 text-sm">{filtered[lightboxIdx].alt}</p>
                 <p className="font-body text-white/40 text-xs mt-0.5">
                   {lightboxIdx + 1} / {filtered.length} · <span className="hidden sm:inline">Use ← → keys to navigate</span><span className="sm:hidden">Tap edges to navigate</span>

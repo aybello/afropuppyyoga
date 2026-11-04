@@ -62,7 +62,20 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FEFAF4]">
+    <div className="apy-homepage min-h-screen bg-[#FEFAF4] text-[#34221D]">
+      <style>{`
+        .apy-homepage main p { text-wrap: pretty; }
+        .apy-homepage main :is(a, button, [role="button"]):focus-visible {
+          outline: 2px solid #B83F67;
+          outline-offset: 4px;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .apy-homepage main * {
+            animation: none !important;
+            transition-duration: 0s !important;
+          }
+        }
+      `}</style>
       <Navbar />
       <main>
         {/* Above the fold — loaded immediately */}

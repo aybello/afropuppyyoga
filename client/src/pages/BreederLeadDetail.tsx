@@ -14,7 +14,7 @@ import { ArrowLeft, MapPin, Phone, Mail, ExternalLink, MessageSquare, Send, Chec
 
 const STATUS_COLORS: Record<string, string> = {
   new: "bg-slate-100 text-slate-700", qualified: "bg-blue-100 text-blue-700",
-  contacted: "bg-yellow-100 text-yellow-700", replied: "bg-purple-100 text-purple-700",
+  contacted: "bg-yellow-100 text-yellow-700", replied: "bg-accent text-brand-link",
   interested: "bg-orange-100 text-orange-700", negotiating: "bg-pink-100 text-pink-700",
   booked: "bg-green-100 text-green-700", not_interested: "bg-red-100 text-red-700",
   disqualified: "bg-gray-100 text-gray-500", no_response: "bg-gray-100 text-gray-500",
@@ -53,32 +53,32 @@ export default function BreederLeadDetail() {
   });
   const deleteMutation = trpc.breederLeads.delete.useMutation({ onSuccess: () => { toast.success("Deleted"); navigate("/admin/breeder-leads"); }, onError: (e) => toast.error(e.message) });
 
-  if (authLoading || isLoading) return <div className="min-h-screen bg-background"><AdminNav /><div className="max-w-5xl mx-auto px-4 py-8 space-y-4">{Array.from({length:4}).map((_,i) => <Skeleton key={i} className="h-32" />)}</div></div>;
-  if (!user) return <div className="min-h-screen bg-background"><AdminNav /><div className="max-w-5xl mx-auto px-4 py-8 text-center text-muted-foreground">Please log in to view this page.</div></div>;
-  if (error) return <div className="min-h-screen bg-background"><AdminNav /><div className="max-w-5xl mx-auto px-4 py-8 text-center text-red-500">Error loading lead: {error.message}</div></div>;
-  if (!lead) return <div className="min-h-screen bg-background"><AdminNav /><div className="max-w-5xl mx-auto px-4 py-8 text-center text-muted-foreground">Lead not found.</div></div>;
+  if (authLoading || isLoading) return <div className="min-h-screen apy-staff-ui bg-background"><AdminNav /><div className="max-w-5xl mx-auto px-4 py-8 space-y-4">{Array.from({length:4}).map((_,i) => <Skeleton key={i} className="h-32" />)}</div></div>;
+  if (!user) return <div className="min-h-screen apy-staff-ui bg-background"><AdminNav /><div className="max-w-5xl mx-auto px-4 py-8 text-center text-muted-foreground">Please log in to view this page.</div></div>;
+  if (error) return <div className="min-h-screen apy-staff-ui bg-background"><AdminNav /><div className="max-w-5xl mx-auto px-4 py-8 text-center text-red-500">Error loading lead: {error.message}</div></div>;
+  if (!lead) return <div className="min-h-screen apy-staff-ui bg-background"><AdminNav /><div className="max-w-5xl mx-auto px-4 py-8 text-center text-muted-foreground">Lead not found.</div></div>;
 
   const reasons: string[] = (() => { try { return JSON.parse(lead.qualificationReasons ?? "[]"); } catch { return []; } })();
   const warnings: string[] = (() => { try { return JSON.parse(lead.disqualificationReasons ?? "[]"); } catch { return []; } })();
   const imageUrls: string[] = (() => { try { return JSON.parse(lead.listingImageUrls ?? "[]"); } catch { return []; } })();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen apy-staff-ui bg-background">
       <AdminNav />
       <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="flex items-start justify-between mb-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-6">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => navigate("/admin/breeder-leads")}><ArrowLeft className="w-4 h-4 mr-1" />Back</Button>
             <div>
-              <h1 className="text-xl font-bold">{lead.breed}</h1>
-              <div className="flex items-center gap-2 mt-1">
+              <h1 className="text-xl font-medium">{lead.breed}</h1>
+              <div className="flex flex-wrap items-center gap-2 mt-1">
                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[lead.pipelineStatus] ?? "bg-gray-100"}`}>{STATUS_LABELS[lead.pipelineStatus] ?? lead.pipelineStatus}</span>
                 <span className="text-xs text-muted-foreground capitalize">{lead.source}</span>
                 <span className="text-xs text-muted-foreground">Added {new Date(lead.createdAt).toLocaleDateString("en-CA")}</span>
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Select value={lead.pipelineStatus} onValueChange={v => updateMutation.mutate({ id, pipelineStatus: v })}>
               <SelectTrigger className="w-40 text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>{Object.entries(STATUS_LABELS).map(([s,l]) => <SelectItem key={s} value={s}>{l}</SelectItem>)}</SelectContent>
@@ -90,7 +90,7 @@ export default function BreederLeadDetail() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="col-span-1 space-y-4">
             <Card>
               <CardHeader className="pb-2"><CardTitle className="text-sm">Opportunity</CardTitle></CardHeader>
@@ -135,11 +135,11 @@ export default function BreederLeadDetail() {
             )}
           </div>
 
-          <div className="col-span-2 space-y-4">
+          <div className="min-w-0 space-y-4 md:col-span-2">
             <div className="flex border-b">
               {(["outreach", "notes", "timeline"] as const).map(tab => (
                 <button key={tab} onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 text-sm font-medium capitalize border-b-2 transition-colors ${activeTab === tab ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+                  className={`px-4 py-2 text-sm font-medium capitalize border-b-2 transition-colors ${activeTab === tab ? "border-primary bg-accent text-brand-link" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
                   {tab}
                 </button>
               ))}

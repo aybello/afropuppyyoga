@@ -2,7 +2,7 @@
    FAQ Section — Accordion-style Q&A
    Layout: Two-column on desktop, single on mobile
    ============================================================ */
-import { motion, useInView, AnimatePresence } from "framer-motion";
+import { motion, useInView, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useRef, useState } from "react";
 import { Plus, Minus } from "lucide-react";
 import type { ReactNode } from "react";
@@ -59,7 +59,7 @@ const faqs: { q: string; a: ReactNode }[] = [
         Book directly on our site using our{" "}
         <a
           href="/private-events/quote"
-          className="text-[#8B2252] underline underline-offset-2 hover:text-[#8B2252] transition-colors"
+          className="text-[#B83F67] underline underline-offset-2 hover:text-[#B83F67] transition-colors"
         >
           instant quote tool
         </a>
@@ -80,7 +80,7 @@ const faqs: { q: string; a: ReactNode }[] = [
           href="https://luma.com/15iajebr"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[#8B2252] underline underline-offset-2 hover:text-[#8B2252] transition-colors"
+          className="text-[#B83F67] underline underline-offset-2 hover:text-[#B83F67] transition-colors"
         >
           Luma gift card page
         </a>
@@ -96,22 +96,24 @@ const faqs: { q: string; a: ReactNode }[] = [
 
 function FAQItem({ q, a, index }: { q: string; a: ReactNode; index: number }) {
   const [open, setOpen] = useState(false);
+  const reduceMotion = useReducedMotion();
   return (
     <motion.div
-      initial={{ opacity: 0, y: 15 }}
+      initial={false}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.06, duration: 0.45 }}
-      className="border-b border-[#F0D0DC] last:border-0"
+      className="border-b border-[#EBCDD5] last:border-0"
     >
       <button
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
         className="w-full flex items-start justify-between gap-4 py-5 text-left group"
       >
-        <span className="font-display font-bold text-base md:text-lg text-[#1A0A12] group-hover:text-[#8B2252] transition-colors leading-snug">
+        <span className="font-display font-medium text-base md:text-lg text-[#34221D] group-hover:text-[#B83F67] transition-colors leading-snug">
           {q}
         </span>
-        <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 transition-colors ${open ? "bg-[#8B2252] text-white" : "bg-[#F0D0DC] text-[#1A0A12]"}`}>
+        <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 transition-colors ${open ? "bg-[#F29CB8] text-[#34221D]" : "bg-[#EBCDD5] text-[#34221D]"}`}>
           {open ? <Minus size={14} /> : <Plus size={14} />}
         </div>
       </button>
@@ -121,10 +123,10 @@ function FAQItem({ q, a, index }: { q: string; a: ReactNode; index: number }) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
+            transition={{ duration: reduceMotion ? 0 : 0.3, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="font-body text-[#1A0A12]/70 text-base leading-relaxed pb-5 pr-10">
+            <div className="font-body text-[#34221D]/70 text-base leading-relaxed pb-5 pr-10">
               {a}
             </div>
           </motion.div>
@@ -140,7 +142,7 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 30 }}
+      initial={false}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.6, delay, ease: "easeOut" }}
     >
@@ -155,23 +157,23 @@ export default function FAQ() {
   const rightFaqs = faqs.slice(half);
 
   return (
-    <section id="faq" className="py-10 md:py-16 bg-[#FFF5F8]">
+    <section id="faq" className="py-10 md:py-16 bg-[#FEFAF4]">
       <div className="container">
         {/* Header */}
         <FadeUp>
           <div className="text-center mb-16">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="w-8 h-0.5 bg-[#8B2252]" />
-              <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">
+              <div className="w-8 h-0.5 bg-[#B83F67]" />
+              <span className="text-[#B83F67] font-body text-xs font-semibold tracking-widest uppercase">
                 FAQ
               </span>
-              <div className="w-8 h-0.5 bg-[#8B2252]" />
+              <div className="w-8 h-0.5 bg-[#B83F67]" />
             </div>
-            <h2 className="font-display text-4xl md:text-5xl font-bold text-[#1A0A12] mb-4">
+            <h2 className="font-display text-4xl md:text-5xl font-medium text-[#34221D] mb-4">
               Questions? We've Got{" "}
-              <span className="italic text-[#8B2252]">Answers</span>
+              <span className="italic text-[#B83F67]">Answers</span>
             </h2>
-            <p className="font-body text-[#1A0A12]/60 text-lg max-w-xl mx-auto">
+            <p className="font-body text-[#34221D]/70 text-lg max-w-xl mx-auto">
               Everything you need to know before your first puppy yoga session.
             </p>
           </div>
@@ -193,16 +195,16 @@ export default function FAQ() {
 
         {/* Still have questions CTA */}
         <FadeUp delay={0.3}>
-          <div className="mt-16 text-center bg-[#FFF5F8] rounded-2xl p-8 md:p-12">
-            <h3 className="font-display font-bold text-2xl text-[#1A0A12] mb-3">
+          <div className="mt-12 text-center bg-[#FDE9EF] rounded-2xl p-8 md:p-12">
+            <h3 className="font-display font-medium text-2xl text-[#34221D] mb-3">
               Still have questions?
             </h3>
-            <p className="font-body text-[#1A0A12]/60 mb-6">
+            <p className="font-body text-[#34221D]/70 mb-6">
               We're happy to help! Reach out and we'll get back to you within 48 hours.
             </p>
             <a
               href="mailto:afropuppyyoga@gmail.com"
-              className="inline-flex items-center px-8 py-3.5 bg-[#8B2252] text-white font-body font-semibold rounded-full hover:bg-[#8B2252] transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5"
+              className="inline-flex items-center px-8 py-3.5 bg-[#F29CB8] text-[#34221D] font-body font-semibold rounded-full hover:bg-[#FDE9EF] transition-all duration-200 shadow-md hover:shadow-md"
             >
               Contact Us
             </a>

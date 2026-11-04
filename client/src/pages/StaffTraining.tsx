@@ -76,30 +76,30 @@ export default function StaffTraining() {
     if (nextModule) setOpenKey(nextModule.key);
   };
 
-  if (training.error) return <div className="min-h-screen bg-[#FEFAF4] p-5 text-[#1A0A12]"><main className="mx-auto max-w-3xl py-6"><Link href="/staff/get-started" className="inline-flex min-h-11 items-center gap-2 font-semibold text-[#8B2252]"><ArrowLeft size={16} /> Get Started</Link><section role="alert" className="mt-5 space-y-3 rounded-2xl border border-[#F0D0DC] bg-white p-5"><h1 className="text-xl font-bold">We could not load your training</h1><p className="text-sm">Your progress has not been changed. Try again or sign in with your active staff account.</p><div className="flex flex-wrap gap-4"><button onClick={() => void training.refetch()} className="min-h-11 font-semibold text-[#8B2252] underline">Try again</button><Link href="/staff-access?returnTo=%2Fstaff%2Ftraining" className="inline-flex min-h-11 items-center font-semibold text-[#8B2252] underline">Staff sign-in</Link></div></section></main></div>;
+  if (training.error) return <div className="min-h-screen apy-staff-ui bg-background p-5 text-foreground"><main className="mx-auto max-w-3xl py-6"><Link href="/staff/get-started" className="inline-flex min-h-11 items-center gap-2 font-semibold text-brand-link"><ArrowLeft size={16} /> Get Started</Link><section role="alert" className="mt-5 space-y-3 rounded-2xl border border-border bg-white p-5"><h1 className="text-xl font-medium">We could not load your training</h1><p className="text-sm">Your progress has not been changed. Try again or sign in with your active staff account.</p><div className="flex flex-wrap gap-4"><button onClick={() => void training.refetch()} className="min-h-11 font-semibold text-brand-link underline">Try again</button><Link href="/staff-access?returnTo=%2Fstaff%2Ftraining" className="inline-flex min-h-11 items-center font-semibold text-brand-link underline">Staff sign-in</Link></div></section></main></div>;
 
   return (
-    <div className="min-h-screen bg-[#FEFAF4] text-[#1E1208]">
-      <header className="border-b border-[#E3EADB] bg-white/95 backdrop-blur">
+    <div className="min-h-screen apy-staff-ui bg-background text-foreground">
+      <header className="border-b border-border bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-4">
-          <Link href="/staff" className="flex items-center gap-1.5 text-xs font-bold text-[#2D5A27] transition-colors hover:text-[#173B1A]">
+          <Link href="/staff" className="flex items-center gap-1.5 text-xs font-bold text-foreground transition-colors hover:text-foreground">
             <ArrowLeft size={14} /> APY HQ
           </Link>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#2D5A27]"><span className="h-1.5 w-1.5 rotate-45 bg-[#F4A800]" /> Training Centre</div>
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-foreground"><span className="h-1.5 w-1.5 rotate-45 bg-primary" /> Training Centre</div>
         </div>
       </header>
 
       <main className="mx-auto max-w-5xl px-5 py-7 pb-12 md:py-10">
-        <section className="relative overflow-hidden rounded-[2rem] bg-[#2D5A27] px-6 py-7 text-white shadow-[0_18px_45px_rgba(45,90,39,0.2)] md:px-9 md:py-9">
-          <div className="absolute -right-20 -top-24 h-56 w-56 rounded-full bg-[#F4A800]/15" />
-          <div className="absolute -bottom-28 right-32 h-48 w-48 rounded-full border-[18px] border-white/10" />
+        <section className="relative overflow-hidden rounded-2xl border border-border bg-accent px-5 py-6 text-foreground shadow-sm md:px-7 md:py-7">
+          <div className="absolute -right-20 -top-24 h-56 w-56 rounded-full bg-accent" />
+          <div className="absolute -bottom-28 right-32 h-48 w-48 rounded-full border-[18px] border-primary/15" />
           <div className="relative grid gap-7 md:grid-cols-[1fr_auto] md:items-end">
             <div className="max-w-2xl">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#F9D781]">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-brand-link">
                 <GraduationCap size={17} /> {canManageTraining ? "Training management" : "Your APY learning path"}
               </div>
-              <h1 className="mt-3 font-serif text-3xl font-bold tracking-tight md:text-4xl">Train with clarity. Show up with confidence.</h1>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-white/82">
+              <h1 className="mt-3 font-display text-3xl font-medium tracking-tight md:text-3xl">Train with clarity. Show up with confidence.</h1>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
                 {staff
                   ? `${staff.name}, complete the short lessons assigned to your ${staff.role} role before your next independent shift.`
                   : canManageTraining
@@ -108,24 +108,24 @@ export default function StaffTraining() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-white/20 bg-white/10 px-5 py-4 backdrop-blur-sm md:min-w-52">
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#F9D781]">{canManageTraining ? "Team completion" : "Your progress"}</p>
+            <div className="rounded-2xl border border-border bg-white px-5 py-4 backdrop-blur-sm md:min-w-52">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-brand-link">{canManageTraining ? "Team completion" : "Your progress"}</p>
               <div className="mt-1 flex items-end gap-2">
                 <span className="text-3xl font-bold">{canManageTraining ? teamCompletion : done}</span>
-                <span className="mb-1 text-sm text-white/75">of {canManageTraining ? teamAssigned : total} complete</span>
+                <span className="mb-1 text-sm text-muted-foreground">of {canManageTraining ? teamAssigned : total} complete</span>
               </div>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-black/15">
-                <div className="h-full rounded-full bg-[#F4A800] transition-[width] duration-300" style={{ width: `${canManageTraining && teamAssigned ? Math.round((teamCompletion / teamAssigned) * 100) : percent}%` }} />
+                <div className="h-full rounded-full bg-primary transition-[width] duration-300" style={{ width: `${canManageTraining && teamAssigned ? Math.round((teamCompletion / teamAssigned) * 100) : percent}%` }} />
               </div>
-              <p className="mt-2 text-xs font-semibold text-white/90">{canManageTraining ? `${overview.data?.length ?? 0} active team members` : `${percent}% of lessons acknowledged`}</p>
+              <p className="mt-2 text-xs font-semibold text-muted-foreground">{canManageTraining ? `${overview.data?.length ?? 0} active team members` : `${percent}% of lessons acknowledged`}</p>
             </div>
           </div>
         </section>
 
-        <p className="mt-4 text-sm text-[#6D4B5B]"><Link href="/staff/get-started" className="font-semibold text-[#8B2252] underline">Get Started</Link> has your document links and invoice guide. Lesson acknowledgments do not replace practical training or approval to work independently.</p>
+        <p className="mt-4 text-sm text-muted-foreground"><Link href="/staff/get-started" className="font-semibold text-brand-link underline">Get Started</Link> has your document links and invoice guide. Lesson acknowledgments do not replace practical training or approval to work independently.</p>
 
         {training.isLoading && (
-          <div className="py-20 text-center text-sm text-[#7A5A6A]">Loading your APY learning path…</div>
+          <div className="py-20 text-center text-sm text-muted-foreground">Loading your APY learning path…</div>
         )}
 
         {training.data && !staff && !isAdminPreview && (
@@ -138,40 +138,40 @@ export default function StaffTraining() {
         {training.data && (
           <>
             {canManageTraining && (
-              <section className="mt-6 rounded-2xl border border-[#DFE8DA] bg-white p-5 shadow-sm">
+              <section className="mt-6 rounded-2xl border border-border bg-white p-5 shadow-sm">
                 <div className="flex flex-wrap items-end justify-between gap-3">
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#C05A35]">Manager view</p>
-                    <h2 className="mt-1 font-serif text-2xl font-bold text-[#1E1208]">Team training at a glance</h2>
-                    <p className="mt-1 text-sm text-[#665A36]">Use this to see who needs a reminder before taking an independent shift. Staff complete their own lessons; managers only oversee readiness.</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-brand-link">Manager view</p>
+                    <h2 className="mt-1 font-display text-2xl font-medium text-foreground">Team training at a glance</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">Use this to see who needs a reminder before taking an independent shift. Staff complete their own lessons; managers only oversee readiness.</p>
                   </div>
-                  <span className="rounded-full bg-[#EDF3E7] px-3 py-1.5 text-xs font-bold text-[#2D5A27]">No manager completion actions</span>
+                  <span className="rounded-full bg-accent px-3 py-1.5 text-xs font-bold text-foreground">No manager completion actions</span>
                 </div>
                 <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {overview.data?.map((person) => (
-                    <div key={person.id} className="rounded-xl border border-[#E7EEE2] bg-[#FFFEFB] px-3 py-3">
-                      <div className="flex items-start justify-between gap-2"><p className="font-bold text-[#2D3527]">{person.name}</p><span className="shrink-0 text-xs font-bold text-[#2D5A27]">{person.completed}/{person.total}</span></div>
-                      <p className="mt-0.5 text-xs text-[#7A7462]">{person.role} · {person.location}</p>
-                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#E7EEE2]"><div className="h-full rounded-full bg-[#2D5A27]" style={{ width: `${person.total ? Math.round((person.completed / person.total) * 100) : 0}%` }} /></div>
+                    <div key={person.id} className="rounded-xl border border-border bg-card px-3 py-3">
+                      <div className="flex items-start justify-between gap-2"><p className="font-bold text-foreground">{person.name}</p><span className="shrink-0 text-xs font-bold text-foreground">{person.completed}/{person.total}</span></div>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{person.role} · {person.location}</p>
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-accent"><div className="h-full rounded-full bg-primary" style={{ width: `${person.total ? Math.round((person.completed / person.total) * 100) : 0}%` }} /></div>
                     </div>
                   ))}
                 </div>
               </section>
             )}
-            <section className="mt-6 rounded-2xl border border-[#DFE8DA] bg-white p-5 shadow-sm">
+            <section className="mt-6 rounded-2xl border border-border bg-white p-5 shadow-sm">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#C05A35]">How to complete your training</p>
-                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-[#4B4434]">
-                    <span className="flex items-center gap-1.5"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2D5A27] text-xs font-bold text-white">1</span> Open a lesson</span>
-                    <ChevronRight size={15} className="hidden text-[#BFCDB8] sm:block" />
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-brand-link">How to complete your training</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-foreground">
+                    <span className="flex items-center gap-1.5"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">1</span> Open a lesson</span>
+                    <ChevronRight size={15} className="hidden text-muted-foreground sm:block" />
                     <span className="flex items-center gap-1.5"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FFF0C9] text-xs font-bold text-[#855D00]">2</span> Review the shift standard</span>
-                    <ChevronRight size={15} className="hidden text-[#BFCDB8] sm:block" />
+                    <ChevronRight size={15} className="hidden text-muted-foreground sm:block" />
                     <span className="flex items-center gap-1.5"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">3</span> Confirm completion</span>
                   </div>
                 </div>
                 {!isAdminPreview && staff && nextModule && (
-                  <button onClick={selectNextModule} className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#2D5A27] px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#173B1A] active:scale-[0.97]">
+                  <button onClick={selectNextModule} className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary-hover active:scale-[0.97]">
                     Continue training <ChevronRight size={16} />
                   </button>
                 )}
@@ -186,10 +186,10 @@ export default function StaffTraining() {
             <section className="mt-8">
               <div className="mb-4 flex items-end justify-between gap-4">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#C05A35]">{canManageTraining ? "Training library" : "Your assigned modules"}</p>
-                  <h2 className="mt-1 font-serif text-2xl font-bold text-[#1E1208]">One practical lesson at a time.</h2>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-brand-link">{canManageTraining ? "Training library" : "Your assigned modules"}</p>
+                  <h2 className="mt-1 font-display text-2xl font-medium text-foreground">One practical lesson at a time.</h2>
                 </div>
-                <span className="hidden text-xs text-[#7A5A6A] sm:block">Tap a module to read it</span>
+                <span className="hidden text-xs text-muted-foreground sm:block">Tap a module to read it</span>
               </div>
 
               <div className="space-y-8">
@@ -203,13 +203,13 @@ export default function StaffTraining() {
                     <section key={role} aria-labelledby={`training-${role.replace(/\s+/g, "-").toLowerCase()}`}>
                       <div className="mb-3 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EDF3E7] text-[#2D5A27]"><SectionIcon size={18} /></div>
+                          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent text-foreground"><SectionIcon size={18} /></div>
                           <div>
-                            <h3 id={`training-${role.replace(/\s+/g, "-").toLowerCase()}`} className="font-bold text-[#2D3527]">{intro.title}</h3>
-                            <p className="text-xs text-[#6B695A]">{intro.description}</p>
+                            <h3 id={`training-${role.replace(/\s+/g, "-").toLowerCase()}`} className="font-medium text-foreground">{intro.title}</h3>
+                            <p className="text-xs text-muted-foreground">{intro.description}</p>
                           </div>
                         </div>
-                        {!isAdminPreview && <span className="shrink-0 text-xs font-bold text-[#2D5A27]">{roleDone}/{roleModules.length}</span>}
+                        {!isAdminPreview && <span className="shrink-0 text-xs font-bold text-foreground">{roleDone}/{roleModules.length}</span>}
                       </div>
 
                       <div className="space-y-3">
@@ -217,7 +217,7 @@ export default function StaffTraining() {
                           const isDone = completed.has(module.key);
                           const isOpen = openKey === module.key;
                           return (
-                            <article key={module.key} className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition-shadow ${isOpen ? "border-[#D4603A] shadow-[0_8px_24px_rgba(45,90,39,0.1)]" : "border-[#DFE8DA] hover:shadow-md"}`}>
+                            <article key={module.key} className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition-shadow ${isOpen ? "border-border shadow-[0_8px_24px_rgba(52,34,29,0.1)]" : "border-border hover:shadow-md"}`}>
                               <button
                                 onClick={() => setOpenKey(isOpen ? null : module.key)}
                                 aria-expanded={isOpen}
@@ -228,34 +228,34 @@ export default function StaffTraining() {
                                 </div>
                                 <div className="min-w-0 flex-1">
                                   <div className="flex flex-wrap items-center gap-2">
-                                    <h4 className="font-bold text-[#1A0A12]">{module.title}</h4>
+                                    <h4 className="font-medium text-foreground">{module.title}</h4>
                                     {isDone && <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">Complete</span>}
                                   </div>
-                                  <p className="mt-1 text-xs leading-5 text-[#6B695A]">{module.summary}</p>
-                                  <p className="mt-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-[#8B8978]"><Clock size={11} /> {module.duration}</p>
+                                  <p className="mt-1 text-xs leading-5 text-muted-foreground">{module.summary}</p>
+                                  <p className="mt-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground"><Clock size={11} /> {module.duration}</p>
                                 </div>
-                                <ChevronDown size={18} className={`shrink-0 text-[#2D5A27] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                                <ChevronDown size={18} className={`shrink-0 text-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
                               </button>
 
                               {isOpen && (
-                                <div className="border-t border-[#E7EEE2] bg-[#FFFEFB] p-4 sm:p-5">
-                                  <div className="mb-4 rounded-xl border border-[#F3DE9C] bg-[#FFF9E9] px-4 py-3 text-xs leading-5 text-[#665A36]">
-                                    <strong className="text-[#2D5A27]">On shift, this means:</strong> Review each point below, then confirm when you understand how it applies to your role.
+                                <div className="border-t border-border bg-card p-4 sm:p-5">
+                                  <div className="mb-4 rounded-xl border border-[#F3DE9C] bg-[#FFF9E9] px-4 py-3 text-xs leading-5 text-muted-foreground">
+                                    <strong className="text-foreground">On shift, this means:</strong> Review each point below, then confirm when you understand how it applies to your role.
                                   </div>
                                   <ol className="space-y-3">
                                     {module.lessons.map((lesson, lessonIndex) => (
-                                      <li key={lesson} className="flex gap-3 text-sm leading-6 text-[#3D2731]">
-                                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#2D5A27] text-[10px] font-bold text-white">{lessonIndex + 1}</span>
+                                      <li key={lesson} className="flex gap-3 text-sm leading-6 text-foreground">
+                                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">{lessonIndex + 1}</span>
                                         <span>{lesson}</span>
                                       </li>
                                     ))}
                                   </ol>
-                                  {module.key === "invoice-submission-v1" && <Link href="/staff/get-started#invoice" className="mt-3 inline-flex min-h-11 items-center text-sm font-bold text-[#8B2252] underline">Open the invoice guide and sample</Link>}
+                                  {module.key === "invoice-submission-v1" && <Link href="/staff/get-started#invoice" className="mt-3 inline-flex min-h-11 items-center text-sm font-bold text-brand-link underline">Open the invoice guide and sample</Link>}
                                   {staff && (
                                     <button
                                       onClick={() => complete.mutate({ moduleKey: module.key })}
                                       disabled={isDone || complete.isPending}
-                                      className={`mt-5 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-colors active:scale-[0.97] ${isDone ? "bg-emerald-600 text-white" : "bg-[#2D5A27] text-white hover:bg-[#173B1A]"} disabled:cursor-not-allowed`}
+                                      className={`mt-5 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-colors active:scale-[0.97] ${isDone ? "bg-emerald-600 text-white" : "bg-primary text-primary-foreground hover:bg-primary-hover"} disabled:cursor-not-allowed`}
                                     >
                                       {isDone ? <><CheckCircle2 size={18} /> Completed</> : complete.isPending ? "Saving completion…" : <><ClipboardCheck size={18} /> I’ve reviewed this — mark complete</>}
                                     </button>

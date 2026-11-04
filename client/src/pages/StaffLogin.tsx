@@ -46,12 +46,12 @@ export default function StaffLogin() {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center p-6"
-      style={{ background: "#FEFAF4" }}
+      className="min-h-screen apy-staff-ui flex flex-col items-center justify-center p-6"
+      style={{ background: "var(--background)" }}
     >
       <div
-        className="w-full max-w-md rounded-2xl p-10 text-center"
-        style={{ background: "#fff", border: "1px solid #F0D0DC" }}
+        className="w-full max-w-md rounded-2xl p-6 sm:p-10 text-center"
+        style={{ background: "#fff", border: "1px solid var(--border)" }}
       >
         <img
           src={LOGO_URL}
@@ -61,14 +61,14 @@ export default function StaffLogin() {
 
         {status === "verifying" && (
           <>
-            <Loader2 className="w-10 h-10 animate-spin mx-auto mb-4" style={{ color: "#8B2252" }} />
+            <Loader2 className="w-10 h-10 animate-spin mx-auto mb-4" style={{ color: "#B52F5A" }} />
             <h2
-              className="font-bold text-xl mb-2"
-              style={{ fontFamily: "'Georgia', serif", color: "#1A0A12" }}
+              className="font-medium text-xl mb-2"
+              style={{ fontFamily: "var(--font-display)", color: "var(--foreground)" }}
             >
               Verifying your link...
             </h2>
-            <p style={{ color: "#1A0A12", fontSize: "14px" }}>
+            <p style={{ color: "var(--foreground)", fontSize: "14px" }}>
               Just a moment while we log you in.
             </p>
           </>
@@ -78,12 +78,12 @@ export default function StaffLogin() {
           <>
             <CheckCircle2 className="w-12 h-12 mx-auto mb-4" style={{ color: "#16a34a" }} />
             <h2
-              className="font-bold text-xl mb-2"
-              style={{ fontFamily: "'Georgia', serif", color: "#1A0A12" }}
+              className="font-medium text-xl mb-2"
+              style={{ fontFamily: "var(--font-display)", color: "var(--foreground)" }}
             >
               Welcome, {staffName}! 🐾
             </h2>
-            <p style={{ color: "#1A0A12", fontSize: "14px" }}>
+            <p style={{ color: "var(--foreground)", fontSize: "14px" }}>
               You're logged in. Redirecting you to the staff portal...
             </p>
           </>
@@ -93,19 +93,19 @@ export default function StaffLogin() {
           <>
             <XCircle className="w-12 h-12 mx-auto mb-4" style={{ color: "#dc2626" }} />
             <h2
-              className="font-bold text-xl mb-2"
-              style={{ fontFamily: "'Georgia', serif", color: "#1A0A12" }}
+              className="font-medium text-xl mb-2"
+              style={{ fontFamily: "var(--font-display)", color: "var(--foreground)" }}
             >
               Link Invalid
             </h2>
-            <p style={{ color: "#1A0A12", fontSize: "14px", marginBottom: "24px" }}>
+            <p style={{ color: "var(--foreground)", fontSize: "14px", marginBottom: "24px" }}>
               {errorMessage}
             </p>
-            <p style={{ color: "#C4A0B0", fontSize: "13px" }}>
-              Use your email invite link, or <a href="/staff-access" style={{ color: "#8B2252", fontWeight: 700 }}>verify your APY HQ mobile number</a>. You can also contact your manager or email us at{" "}
+            <p style={{ color: "var(--muted-foreground)", fontSize: "13px" }}>
+              Use your email invite link, or <a href="/staff-access" style={{ color: "#B52F5A", fontWeight: 700 }}>verify your APY HQ mobile number</a>. You can also contact your manager or email us at{" "}
               <a
                 href="mailto:afropuppyyoga@gmail.com"
-                style={{ color: "#8B2252" }}
+                style={{ color: "#B52F5A" }}
               >
                 afropuppyyoga@gmail.com
               </a>

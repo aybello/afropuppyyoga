@@ -55,7 +55,7 @@ const MetaCampaignCreator = lazy(() => import("./pages/MetaCampaignCreator"));
 function PageLoader() {
   return (
     <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
-      <Loader2 className="w-8 h-8 animate-spin text-[#8B2252]" />
+      <Loader2 className="w-8 h-8 animate-spin text-[#B52F5A]" />
     </div>
   );
 }

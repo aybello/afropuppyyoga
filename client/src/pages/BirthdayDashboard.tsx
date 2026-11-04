@@ -67,7 +67,7 @@ const STATUS_COLORS: Record<InquiryStatus, string> = {
 
 const TIER_COLORS: Record<string, string> = {
   Basic: "bg-gray-50 text-gray-700 border-gray-200",
-  Premium: "bg-purple-50 text-purple-700 border-purple-200",
+  Premium: "bg-accent text-brand-link border-border",
   Deluxe: "bg-yellow-50 text-yellow-700 border-yellow-200",
 };
 
@@ -96,19 +96,19 @@ export default function BirthdayDashboard() {
   // Auth guard
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#8B2252]" />
+      <div className="min-h-screen apy-staff-ui bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-link" />
       </div>
     );
   }
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
+      <div className="min-h-screen apy-staff-ui bg-background flex items-center justify-center">
         <div className="text-center">
-          <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Login Required</h2>
-          <p className="font-body text-sm text-[#3D1A2E] mb-4">Please sign in to access the Birthday Dashboard.</p>
-          <a href={getLoginUrl()} className="inline-flex items-center gap-2 px-4 py-2 bg-[#8B2252] text-white rounded-full font-body font-semibold text-sm">
+          <h2 className="font-display font-medium text-2xl text-foreground mb-2">Login Required</h2>
+          <p className="font-body text-sm text-foreground mb-4">Please sign in to access the Birthday Dashboard.</p>
+          <a href={getLoginUrl()} className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-full font-body font-semibold text-sm">
             Sign In
           </a>
         </div>
@@ -118,10 +118,10 @@ export default function BirthdayDashboard() {
 
   if (user?.role !== "admin" && user?.role !== "staff") {
     return (
-      <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
+      <div className="min-h-screen apy-staff-ui bg-background flex items-center justify-center">
         <div className="text-center">
-          <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Access Denied</h2>
-          <p className="font-body text-sm text-[#3D1A2E]">You do not have permission to view this page.</p>
+          <h2 className="font-display font-medium text-2xl text-foreground mb-2">Access Denied</h2>
+          <p className="font-body text-sm text-foreground">You do not have permission to view this page.</p>
         </div>
       </div>
     );
@@ -143,20 +143,20 @@ export default function BirthdayDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FEFAF4]">
+    <div className="min-h-screen apy-staff-ui bg-background">
       <AdminNav />
 
       <main className="max-w-6xl mx-auto px-6 py-10">
         {/* Header */}
         <div className="mb-8">
-          <p className="font-body text-xs font-semibold text-[#8B2252] uppercase tracking-widest mb-2">
+          <p className="font-body text-xs font-semibold text-brand-link uppercase tracking-widest mb-2">
             Admin Portal
           </p>
           <div className="flex items-center gap-3 mb-1">
-            <Cake className="w-7 h-7 text-[#8B2252]" />
-            <h1 className="font-display font-bold text-3xl text-[#1A0A12]">Birthday Inquiries</h1>
+            <Cake className="w-7 h-7 text-brand-link" />
+            <h1 className="font-display font-medium text-3xl text-foreground">Birthday Inquiries</h1>
           </div>
-          <p className="font-body text-sm text-[#3D1A2E]">
+          <p className="font-body text-sm text-foreground">
             Review and manage all incoming birthday package inquiries.
           </p>
         </div>
@@ -169,9 +169,9 @@ export default function BirthdayDashboard() {
             { label: "Confirmed", value: counts.confirmed, color: "text-green-600" },
             { label: "Cancelled", value: counts.cancelled, color: "text-red-500" },
           ].map((stat) => (
-            <div key={stat.label} className="bg-white border border-[#F0D0DC] rounded-2xl p-4">
-              <p className="font-body text-xs text-[#3D1A2E] mb-1">{stat.label}</p>
-              <p className={`font-display font-bold text-2xl ${stat.color}`}>{stat.value}</p>
+            <div key={stat.label} className="bg-white border border-border rounded-2xl p-4">
+              <p className="font-body text-xs text-foreground mb-1">{stat.label}</p>
+              <p className={`font-display font-medium text-2xl ${stat.color}`}>{stat.value}</p>
             </div>
           ))}
         </div>
@@ -179,7 +179,7 @@ export default function BirthdayDashboard() {
         {/* Filters */}
         <div className="flex flex-wrap gap-3 mb-6">
           <Select value={filterTier} onValueChange={setFilterTier}>
-            <SelectTrigger className="w-40 font-body text-sm border-[#F0D0DC]">
+            <SelectTrigger className="w-40 font-body text-sm border-border">
               <SelectValue placeholder="All Tiers" />
             </SelectTrigger>
             <SelectContent>
@@ -190,7 +190,7 @@ export default function BirthdayDashboard() {
             </SelectContent>
           </Select>
           <Select value={filterLocation} onValueChange={setFilterLocation}>
-            <SelectTrigger className="w-40 font-body text-sm border-[#F0D0DC]">
+            <SelectTrigger className="w-40 font-body text-sm border-border">
               <SelectValue placeholder="All Locations" />
             </SelectTrigger>
             <SelectContent>
@@ -200,7 +200,7 @@ export default function BirthdayDashboard() {
             </SelectContent>
           </Select>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-40 font-body text-sm border-[#F0D0DC]">
+            <SelectTrigger className="w-40 font-body text-sm border-border">
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -216,40 +216,40 @@ export default function BirthdayDashboard() {
         {/* Table */}
         {isLoading ? (
           <div className="flex justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-[#8B2252]" />
+            <Loader2 className="w-8 h-8 animate-spin text-brand-link" />
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Inbox className="w-12 h-12 text-[#C4A0B0] mb-4" />
-            <p className="font-display font-bold text-lg text-[#1A0A12] mb-1">No inquiries found</p>
-            <p className="font-body text-sm text-[#3D1A2E]">
+            <Inbox className="w-12 h-12 text-muted-foreground mb-4" />
+            <p className="font-display font-medium text-lg text-foreground mb-1">No inquiries found</p>
+            <p className="font-body text-sm text-foreground">
               {counts.total === 0 ? "No birthday inquiries have been submitted yet." : "Try adjusting your filters."}
             </p>
           </div>
         ) : (
-          <div className="bg-white border border-[#F0D0DC] rounded-2xl overflow-hidden">
+          <div className="bg-white border border-border rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[640px]">
                 <thead>
-                  <tr className="border-b border-[#F0D0DC] bg-[#FFF5F8]">
-                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-[#8B2252] uppercase tracking-wider">Name</th>
-                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-[#8B2252] uppercase tracking-wider">Tier</th>
-                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-[#8B2252] uppercase tracking-wider">Location</th>
-                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-[#8B2252] uppercase tracking-wider">Date</th>
-                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-[#8B2252] uppercase tracking-wider">Guests</th>
-                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-[#8B2252] uppercase tracking-wider">Status</th>
-                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-[#8B2252] uppercase tracking-wider">Actions</th>
+                  <tr className="border-b border-border bg-accent">
+                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-brand-link uppercase tracking-wider">Name</th>
+                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-brand-link uppercase tracking-wider">Tier</th>
+                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-brand-link uppercase tracking-wider">Location</th>
+                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-brand-link uppercase tracking-wider">Date</th>
+                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-brand-link uppercase tracking-wider">Guests</th>
+                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-brand-link uppercase tracking-wider">Status</th>
+                    <th className="text-left px-5 py-3 font-body font-semibold text-xs text-brand-link uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((inq, idx) => (
                     <tr
                       key={inq.id}
-                      className={`border-b border-[#F9EEF2] hover:bg-[#FFF5F8] transition-colors ${idx % 2 === 0 ? "" : "bg-[#FEFAF4]"}`}
+                      className={`border-b border-border hover:bg-accent transition-colors ${idx % 2 === 0 ? "" : "bg-background"}`}
                     >
                       <td className="px-5 py-4">
-                        <p className="font-body font-semibold text-sm text-[#1A0A12]">{inq.name}</p>
-                        <p className="font-body text-xs text-[#3D1A2E]">{inq.email}</p>
+                        <p className="font-body font-semibold text-sm text-foreground">{inq.name}</p>
+                        <p className="font-body text-xs text-foreground">{inq.email}</p>
                       </td>
                       <td className="px-5 py-4">
                         <span className={`px-2 py-0.5 text-xs font-body font-semibold rounded-full border ${TIER_COLORS[inq.tier] ?? "bg-gray-50 text-gray-600 border-gray-200"}`}>
@@ -258,20 +258,20 @@ export default function BirthdayDashboard() {
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3 text-[#C4A0B0]" />
-                          <span className="font-body text-sm text-[#1A0A12]">{inq.location === "KW" ? "Kitchener-Waterloo" : "Hamilton"}</span>
+                          <MapPin className="w-3 h-3 text-muted-foreground" />
+                          <span className="font-body text-sm text-foreground">{inq.location === "KW" ? "Kitchener-Waterloo" : "Hamilton"}</span>
                         </div>
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-1">
-                          <CalendarDays className="w-3 h-3 text-[#C4A0B0]" />
-                          <span className="font-body text-sm text-[#1A0A12]">{inq.preferredDate}</span>
+                          <CalendarDays className="w-3 h-3 text-muted-foreground" />
+                          <span className="font-body text-sm text-foreground">{inq.preferredDate}</span>
                         </div>
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-1">
-                          <Users className="w-3 h-3 text-[#C4A0B0]" />
-                          <span className="font-body text-sm text-[#1A0A12]">{inq.groupSize}</span>
+                          <Users className="w-3 h-3 text-muted-foreground" />
+                          <span className="font-body text-sm text-foreground">{inq.groupSize}</span>
                         </div>
                       </td>
                       <td className="px-5 py-4">
@@ -282,7 +282,7 @@ export default function BirthdayDashboard() {
                       <td className="px-5 py-4">
                         <button
                           onClick={() => setSelectedInquiry(inq as BirthdayInquiry)}
-                          className="px-3 py-1.5 text-xs font-body font-semibold text-[#8B2252] border border-[#8B2252] rounded-full hover:bg-[#8B2252] hover:text-white transition-colors"
+                          className="px-3 py-1.5 text-xs font-body font-semibold text-brand-link border border-border rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
                         >
                           View
                         </button>
@@ -299,69 +299,69 @@ export default function BirthdayDashboard() {
       {/* Detail Dialog */}
       {selectedInquiry && (
         <Dialog open={!!selectedInquiry} onOpenChange={(open) => !open && setSelectedInquiry(null)}>
-          <DialogContent className="max-w-lg bg-[#FEFAF4] border-[#F0D0DC]">
+          <DialogContent className="max-w-lg bg-background border-border">
             <DialogHeader>
-              <DialogTitle className="font-display font-bold text-xl text-[#1A0A12] flex items-center gap-2">
-                <Cake className="w-5 h-5 text-[#8B2252]" />
+              <DialogTitle className="font-display font-medium text-xl text-foreground flex items-center gap-2">
+                <Cake className="w-5 h-5 text-brand-link" />
                 Birthday Inquiry — {selectedInquiry.name}
               </DialogTitle>
-              <DialogDescription className="font-body text-sm text-[#3D1A2E]">
+              <DialogDescription className="font-body text-sm text-foreground">
                 Submitted {new Date(selectedInquiry.createdAt).toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" })}
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 mt-2">
               {/* Contact info */}
-              <div className="bg-white rounded-xl border border-[#F0D0DC] p-4 space-y-2">
-                <p className="font-body text-xs font-semibold text-[#8B2252] uppercase tracking-wider mb-3">Contact</p>
+              <div className="bg-white rounded-xl border border-border p-4 space-y-2">
+                <p className="font-body text-xs font-semibold text-brand-link uppercase tracking-wider mb-3">Contact</p>
                 <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-[#C4A0B0]" />
-                  <a href={`mailto:${selectedInquiry.email}`} className="font-body text-sm text-[#1A0A12] hover:underline">{selectedInquiry.email}</a>
+                  <Mail className="w-4 h-4 text-muted-foreground" />
+                  <a href={`mailto:${selectedInquiry.email}`} className="font-body text-sm text-foreground hover:underline">{selectedInquiry.email}</a>
                 </div>
                 {selectedInquiry.phone && (
                   <div className="flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-[#C4A0B0]" />
-                    <span className="font-body text-sm text-[#1A0A12]">{selectedInquiry.phone}</span>
+                    <Phone className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-body text-sm text-foreground">{selectedInquiry.phone}</span>
                   </div>
                 )}
               </div>
 
               {/* Event details */}
-              <div className="bg-white rounded-xl border border-[#F0D0DC] p-4 space-y-2">
-                <p className="font-body text-xs font-semibold text-[#8B2252] uppercase tracking-wider mb-3">Event Details</p>
+              <div className="bg-white rounded-xl border border-border p-4 space-y-2">
+                <p className="font-body text-xs font-semibold text-brand-link uppercase tracking-wider mb-3">Event Details</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <p className="font-body text-xs text-[#3D1A2E]">Package Tier</p>
+                    <p className="font-body text-xs text-foreground">Package Tier</p>
                     <span className={`px-2 py-0.5 text-xs font-body font-semibold rounded-full border ${TIER_COLORS[selectedInquiry.tier]}`}>
                       {selectedInquiry.tier}
                     </span>
                   </div>
                   <div>
-                    <p className="font-body text-xs text-[#3D1A2E]">Location</p>
-                    <p className="font-body text-sm font-semibold text-[#1A0A12]">{selectedInquiry.location === "KW" ? "Kitchener-Waterloo" : "Hamilton"}</p>
+                    <p className="font-body text-xs text-foreground">Location</p>
+                    <p className="font-body text-sm font-semibold text-foreground">{selectedInquiry.location === "KW" ? "Kitchener-Waterloo" : "Hamilton"}</p>
                   </div>
                   <div>
-                    <p className="font-body text-xs text-[#3D1A2E]">Preferred Date</p>
-                    <p className="font-body text-sm font-semibold text-[#1A0A12]">{selectedInquiry.preferredDate}</p>
+                    <p className="font-body text-xs text-foreground">Preferred Date</p>
+                    <p className="font-body text-sm font-semibold text-foreground">{selectedInquiry.preferredDate}</p>
                   </div>
                   <div>
-                    <p className="font-body text-xs text-[#3D1A2E]">Group Size</p>
-                    <p className="font-body text-sm font-semibold text-[#1A0A12]">{selectedInquiry.groupSize} guests</p>
+                    <p className="font-body text-xs text-foreground">Group Size</p>
+                    <p className="font-body text-sm font-semibold text-foreground">{selectedInquiry.groupSize} guests</p>
                   </div>
                 </div>
               </div>
 
               {/* Message */}
               {selectedInquiry.message && (
-                <div className="bg-white rounded-xl border border-[#F0D0DC] p-4">
-                  <p className="font-body text-xs font-semibold text-[#8B2252] uppercase tracking-wider mb-2">Additional Notes</p>
-                  <p className="font-body text-sm text-[#1A0A12] whitespace-pre-wrap">{selectedInquiry.message}</p>
+                <div className="bg-white rounded-xl border border-border p-4">
+                  <p className="font-body text-xs font-semibold text-brand-link uppercase tracking-wider mb-2">Additional Notes</p>
+                  <p className="font-body text-sm text-foreground whitespace-pre-wrap">{selectedInquiry.message}</p>
                 </div>
               )}
 
               {/* Status update */}
-              <div className="bg-white rounded-xl border border-[#F0D0DC] p-4">
-                <p className="font-body text-xs font-semibold text-[#8B2252] uppercase tracking-wider mb-3">Update Status</p>
+              <div className="bg-white rounded-xl border border-border p-4">
+                <p className="font-body text-xs font-semibold text-brand-link uppercase tracking-wider mb-3">Update Status</p>
                 <div className="flex flex-wrap gap-2">
                   {(["new", "contacted", "confirmed", "cancelled"] as InquiryStatus[]).map((s) => (
                     <button
@@ -371,7 +371,7 @@ export default function BirthdayDashboard() {
                       className={`px-3 py-1.5 text-xs font-body font-semibold rounded-full border transition-colors ${
                         selectedInquiry.status === s
                           ? STATUS_COLORS[s] + " opacity-100"
-                          : "bg-white text-[#3D1A2E] border-[#F0D0DC] hover:bg-[#FFF5F8]"
+                          : "bg-white text-foreground border-border hover:bg-accent"
                       }`}
                     >
                       {updateStatusMutation.isPending && updateStatusMutation.variables?.status === s ? (

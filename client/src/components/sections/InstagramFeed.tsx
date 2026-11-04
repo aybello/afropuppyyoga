@@ -89,7 +89,7 @@ function VideoCard({ reel, index }: { reel: (typeof REELS)[0]; index: number }) 
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={false}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.1, duration: 0.5 }}
@@ -97,7 +97,7 @@ function VideoCard({ reel, index }: { reel: (typeof REELS)[0]; index: number }) 
     >
       {/* 9:16 video container */}
       <div
-        className="relative rounded-2xl overflow-hidden bg-[#1A0A12] shadow-md group-hover:shadow-xl transition-shadow duration-300 cursor-pointer"
+        className="relative rounded-2xl overflow-hidden bg-[#34221D] shadow-md group-hover:shadow-md transition-shadow duration-300 cursor-pointer"
         style={{ paddingBottom: "177.78%" }}
         onClick={togglePlay}
       >
@@ -128,7 +128,7 @@ function VideoCard({ reel, index }: { reel: (typeof REELS)[0]; index: number }) 
           }`}
           style={{ background: playing ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.35)" }}
         >
-          <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm border border-white/40 flex items-center justify-center shadow-lg">
+          <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm border border-white/40 flex items-center justify-center shadow-sm">
             {playing ? (
               <Pause size={22} className="text-white" fill="white" />
             ) : (
@@ -168,13 +168,13 @@ function VideoCard({ reel, index }: { reel: (typeof REELS)[0]; index: number }) 
         <span
           className={`inline-block font-body text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full mb-1.5 ${
             reel.tag === "Review"
-              ? "bg-[#8B2252]/10 text-[#8B2252]"
-              : "bg-[#F2A0B8]/30 text-[#8B2252]"
+              ? "bg-[#B83F67]/10 text-[#B83F67]"
+              : "bg-[#F29CB8]/30 text-[#B83F67]"
           }`}
         >
           {reel.tag}
         </span>
-        <p className="font-body text-[#1A0A12]/70 text-xs leading-relaxed line-clamp-2">
+        <p className="font-body text-[#34221D]/70 text-xs leading-relaxed line-clamp-2">
           {reel.caption}
         </p>
       </div>
@@ -184,28 +184,28 @@ function VideoCard({ reel, index }: { reel: (typeof REELS)[0]; index: number }) 
 
 export default function InstagramFeed() {
   return (
-    <section id="instagram" className="py-10 md:py-32 bg-[#FFF5F8] overflow-hidden">
+    <section id="instagram" className="py-10 md:py-20 bg-[#FEFAF4] overflow-hidden">
       <div className="container">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={false}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-0.5 bg-[#8B2252]" />
-              <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">
+              <div className="w-8 h-0.5 bg-[#B83F67]" />
+              <span className="text-[#B83F67] font-body text-xs font-semibold tracking-widest uppercase">
                 @afropuppyyoga
               </span>
             </div>
-            <h2 className="font-display text-4xl md:text-5xl font-bold text-[#1A0A12]">
+            <h2 className="font-display text-4xl md:text-5xl font-medium text-[#34221D]">
               Watch the Magic
               <br />
-              <span className="italic text-[#8B2252]">Unfold</span>
+              <span className="italic text-[#B83F67]">Unfold</span>
             </h2>
-            <p className="mt-3 font-body text-[#1A0A12]/60 text-base max-w-md">
+            <p className="mt-3 font-body text-[#34221D]/70 text-base max-w-md">
               Real moments from real classes — plus what our guests have to say.
             </p>
           </motion.div>
@@ -214,11 +214,11 @@ export default function InstagramFeed() {
             href="https://www.instagram.com/afropuppyyoga"
             target="_blank"
             rel="noopener noreferrer"
-            initial={{ opacity: 0, x: 20 }}
+            initial={false}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#F2A0B8] to-[#E1306C] text-white font-body font-semibold text-sm rounded-full shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 self-start md:self-auto"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#F29CB8] text-[#34221D] font-body font-semibold text-sm rounded-full shadow-md hover:shadow-md transition-all duration-200 self-start md:self-auto"
           >
             <Instagram size={16} />
             Follow on Instagram
@@ -226,7 +226,7 @@ export default function InstagramFeed() {
         </div>
 
         {/* Video grid — 2-col on desktop, horizontal scroll on mobile */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-4xl mx-auto">
           {REELS.map((reel, i) => (
             <VideoCard key={reel.id} reel={reel} index={i} />
           ))}
@@ -234,20 +234,20 @@ export default function InstagramFeed() {
 
         {/* Bottom CTA */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={false}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.3 }}
           className="mt-12 text-center"
         >
-          <p className="font-body text-[#1A0A12]/50 text-sm mb-4">
+          <p className="font-body text-[#34221D]/70 text-sm mb-4">
             New content every week — follow us to stay in the loop!
           </p>
           <a
             href="https://www.instagram.com/afropuppyyoga"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 font-body text-sm font-semibold text-[#8B2252] hover:text-[#1A0A12] transition-colors duration-200"
+            className="inline-flex items-center gap-2 font-body text-sm font-semibold text-[#B83F67] hover:text-[#34221D] transition-colors duration-200"
           >
             <Instagram size={15} />
             @afropuppyyoga · 12.2K followers

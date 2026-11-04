@@ -87,7 +87,7 @@ for (let h = 6; h <= 23; h++) {
 function TimeSelect({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
   return (
     <Select value={value || ""} onValueChange={onChange}>
-      <SelectTrigger className="mt-1 border-[#F0D0DC] font-body text-sm">
+      <SelectTrigger className="mt-1 border-border font-body text-sm">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent className="max-h-60">
@@ -407,7 +407,7 @@ export default function BreedersDashboard() {
   const upcomingMonths = getUpcomingMonths();
 
   return (
-    <div className="min-h-screen bg-[#FEFAF4]">
+    <div className="min-h-screen apy-staff-ui bg-background">
       <AdminNav />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -415,17 +415,17 @@ export default function BreedersDashboard() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-1 h-6 bg-[#8B2252] rounded-full" />
-              <span className="font-body text-xs font-semibold text-[#8B2252] uppercase tracking-widest">Admin</span>
+              <div className="w-1 h-6 bg-primary rounded-full" />
+              <span className="font-body text-xs font-semibold text-brand-link uppercase tracking-widest">Admin</span>
             </div>
-            <h1 className="font-display text-3xl font-bold text-[#1A0A12]">Breeder Database</h1>
-            <p className="font-body text-sm text-[#6B4C3B] mt-1">Manage breeders, send confirmations, and check availability</p>
+            <h1 className="font-display text-3xl font-medium text-foreground">Breeder Database</h1>
+            <p className="font-body text-sm text-muted-foreground mt-1">Manage breeders, send confirmations, and check availability</p>
           </div>
           <div className="flex gap-2 flex-wrap justify-end">
             <Button
               variant="outline"
               onClick={() => setShowPresetsModal(true)}
-              className="border-[#F0D0DC] text-[#8B2252] hover:bg-[#FFF0F4] font-body gap-2"
+              className="border-border text-brand-link hover:bg-accent font-body gap-2"
             >
               <MapPin className="w-4 h-4" />
               <span className="hidden sm:inline">Locations</span>
@@ -433,14 +433,14 @@ export default function BreedersDashboard() {
             <Button
               variant="outline"
               onClick={() => { setBlastResult(null); setBlastCustomMessage(""); setShowBlastModal(true); }}
-              className="border-[#8B2252] text-[#8B2252] hover:bg-[#FFF0F4] font-body gap-2"
+              className="border-border text-brand-link hover:bg-accent font-body gap-2"
             >
               <CalendarCheck className="w-4 h-4" />
               <span className="hidden sm:inline">Availability Blast</span>
             </Button>
             <Button
               onClick={() => { setForm({ ...EMPTY_FORM }); setShowAddModal(true); }}
-              className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body font-semibold gap-2"
+              className="bg-primary hover:bg-primary text-primary-foreground font-body font-semibold gap-2"
             >
               <Plus className="w-4 h-4" />
               Add Breeder
@@ -449,13 +449,13 @@ export default function BreedersDashboard() {
         </div>
 
         {/* Tab switcher */}
-        <div className="flex gap-1 mb-6 bg-white border border-[#F0D0DC] rounded-xl p-1 w-fit">
+        <div className="flex gap-1 mb-6 bg-white border border-border rounded-xl p-1 w-fit">
           <button
             onClick={() => setActiveView("breeders")}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-body text-sm font-semibold transition-all ${
               activeView === "breeders"
-                ? "bg-[#8B2252] text-white shadow-sm"
-                : "text-[#6B4C3B] hover:text-[#8B2252]"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-brand-link"
             }`}
           >
             <PawPrint size={15} /> Breeders
@@ -464,8 +464,8 @@ export default function BreedersDashboard() {
             onClick={() => setActiveView("schedule")}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-body text-sm font-semibold transition-all ${
               activeView === "schedule"
-                ? "bg-[#8B2252] text-white shadow-sm"
-                : "text-[#6B4C3B] hover:text-[#8B2252]"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-brand-link"
             }`}
           >
             <CalendarDays size={15} /> Schedule Calendar
@@ -477,13 +477,13 @@ export default function BreedersDashboard() {
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           {[
-            { label: "Total", value: contractCounts.all, color: "text-[#1A0A12]" },
+            { label: "Total", value: contractCounts.all, color: "text-foreground" },
             { label: "No Contract", value: contractCounts["No contract yet"], color: "text-gray-600" },
             { label: "Contract Sent", value: contractCounts["Contract sent"], color: "text-amber-600" },
             { label: "Contracted", value: contractCounts["Contract completed"], color: "text-green-600" },
           ].map(({ label, value, color }) => (
-            <div key={label} className="bg-white rounded-xl border border-[#F0D0DC] p-4">
-              <p className="font-body text-xs text-[#6B4C3B] uppercase tracking-wider mb-1">{label}</p>
+            <div key={label} className="bg-white rounded-xl border border-border p-4">
+              <p className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
               <p className={`font-display text-3xl font-bold ${color}`}>{value}</p>
             </div>
           ))}
@@ -492,16 +492,16 @@ export default function BreedersDashboard() {
         {/* Search + Filter */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8B2252]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-link" />
             <Input
               placeholder="Search by name, breed, contact, email, or Instagram..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 border-[#F0D0DC] bg-white font-body focus-visible:ring-[#8B2252]"
+              className="pl-9 border-border bg-white font-body focus-visible:ring-ring"
             />
           </div>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-full sm:w-52 border-[#F0D0DC] bg-white font-body">
+            <SelectTrigger className="w-full sm:w-52 border-border bg-white font-body">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
@@ -515,105 +515,105 @@ export default function BreedersDashboard() {
 
         {/* Breeder List */}
         {isLoading ? (
-          <div className="text-center py-16 text-[#6B4C3B] font-body">Loading breeders...</div>
+          <div className="text-center py-16 text-muted-foreground font-body">Loading breeders...</div>
         ) : breeders.length === 0 ? (
           <div className="text-center py-16">
-            <PawPrint className="w-12 h-12 text-[#F0D0DC] mx-auto mb-3" />
-            <p className="font-body text-[#6B4C3B]">No breeders found</p>
+            <PawPrint className="w-12 h-12 text-border mx-auto mb-3" />
+            <p className="font-body text-muted-foreground">No breeders found</p>
           </div>
         ) : (
           <div className="space-y-2">
             {breeders.map((b: any) => {
               const isExpanded = expandedId === b.id;
               return (
-                <div key={b.id} className="bg-white rounded-xl border border-[#F0D0DC] overflow-hidden">
+                <div key={b.id} className="bg-white rounded-xl border border-border overflow-hidden">
                   <div
-                    className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-[#FFF5F8] transition-colors"
+                    className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-accent transition-colors"
                     onClick={() => setExpandedId(isExpanded ? null : b.id)}
                   >
-                    <div className="w-9 h-9 rounded-full bg-[#FFF0F4] flex items-center justify-center shrink-0">
-                      <PawPrint className="w-4 h-4 text-[#8B2252]" />
+                    <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center shrink-0">
+                      <PawPrint className="w-4 h-4 text-brand-link" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-body font-semibold text-[#1A0A12] text-sm">{b.name}</span>
+                        <span className="font-body font-semibold text-foreground text-sm">{b.name}</span>
                         {b.breed && (
-                          <span className="font-body text-xs text-[#6B4C3B] bg-[#FFF5F8] px-2 py-0.5 rounded-full border border-[#F0D0DC]">{b.breed}</span>
+                          <span className="font-body text-xs text-muted-foreground bg-accent px-2 py-0.5 rounded-full border border-border">{b.breed}</span>
                         )}
                       </div>
-                      <p className="font-body text-xs text-[#C4A0B0] truncate mt-0.5">{b.contactName || "—"}</p>
+                      <p className="font-body text-xs text-muted-foreground truncate mt-0.5">{b.contactName || "—"}</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <span className={`font-body text-xs font-medium px-2.5 py-1 rounded-full border ${CONTRACT_STATUS_COLORS[b.contractStatus as ContractStatus] ?? "bg-gray-100 text-gray-600"}`}>
                         {b.contractStatus}
                       </span>
                       {b.typicalRate && (
-                        <span className="font-body text-xs text-[#6B4C3B] hidden sm:inline">${b.typicalRate}</span>
+                        <span className="font-body text-xs text-muted-foreground hidden sm:inline">${b.typicalRate}</span>
                       )}
-                      {isExpanded ? <ChevronUp className="w-4 h-4 text-[#8B2252]" /> : <ChevronDown className="w-4 h-4 text-[#8B2252]" />}
+                      {isExpanded ? <ChevronUp className="w-4 h-4 text-brand-link" /> : <ChevronDown className="w-4 h-4 text-brand-link" />}
                     </div>
                   </div>
 
                   {isExpanded && (
-                    <div className="border-t border-[#F0D0DC] px-4 py-4 bg-[#FEFAF4]">
+                    <div className="border-t border-border px-4 py-4 bg-background">
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                         {b.phone && (
                           <div className="flex items-start gap-2">
-                            <Phone className="w-3.5 h-3.5 text-[#8B2252] mt-0.5 shrink-0" />
+                            <Phone className="w-3.5 h-3.5 text-brand-link mt-0.5 shrink-0" />
                             <div>
-                              <p className="font-body text-xs text-[#C4A0B0] uppercase tracking-wider">Phone</p>
-                              <p className="font-body text-sm text-[#1A0A12]">{b.phone}</p>
+                              <p className="font-body text-xs text-muted-foreground uppercase tracking-wider">Phone</p>
+                              <p className="font-body text-sm text-foreground">{b.phone}</p>
                             </div>
                           </div>
                         )}
                         {b.email && (
                           <div className="flex items-start gap-2">
-                            <Mail className="w-3.5 h-3.5 text-[#8B2252] mt-0.5 shrink-0" />
+                            <Mail className="w-3.5 h-3.5 text-brand-link mt-0.5 shrink-0" />
                             <div>
-                              <p className="font-body text-xs text-[#C4A0B0] uppercase tracking-wider">Email</p>
-                              <a href={`mailto:${b.email}`} className="font-body text-sm text-[#8B2252] hover:underline">{b.email}</a>
+                              <p className="font-body text-xs text-muted-foreground uppercase tracking-wider">Email</p>
+                              <a href={`mailto:${b.email}`} className="font-body text-sm text-brand-link hover:underline">{b.email}</a>
                             </div>
                           </div>
                         )}
                         {b.instagram && (
                           <div className="flex items-start gap-2">
-                            <Instagram className="w-3.5 h-3.5 text-[#8B2252] mt-0.5 shrink-0" />
+                            <Instagram className="w-3.5 h-3.5 text-brand-link mt-0.5 shrink-0" />
                             <div>
-                              <p className="font-body text-xs text-[#C4A0B0] uppercase tracking-wider">Instagram</p>
-                              <p className="font-body text-sm text-[#1A0A12]">{b.instagram}</p>
+                              <p className="font-body text-xs text-muted-foreground uppercase tracking-wider">Instagram</p>
+                              <p className="font-body text-sm text-foreground">{b.instagram}</p>
                             </div>
                           </div>
                         )}
                         {b.litterTimeline && (
                           <div>
-                            <p className="font-body text-xs text-[#C4A0B0] uppercase tracking-wider">Litter Timeline</p>
-                            <p className="font-body text-sm text-[#1A0A12]">{b.litterTimeline}</p>
+                            <p className="font-body text-xs text-muted-foreground uppercase tracking-wider">Litter Timeline</p>
+                            <p className="font-body text-sm text-foreground">{b.litterTimeline}</p>
                           </div>
                         )}
                         {b.typicalRate && (
                           <div>
-                            <p className="font-body text-xs text-[#C4A0B0] uppercase tracking-wider">Typical Rate</p>
-                            <p className="font-body text-sm text-[#1A0A12]">{b.typicalRate.startsWith("$") ? b.typicalRate : `$${b.typicalRate}`}</p>
+                            <p className="font-body text-xs text-muted-foreground uppercase tracking-wider">Typical Rate</p>
+                            <p className="font-body text-sm text-foreground">{b.typicalRate.startsWith("$") ? b.typicalRate : `$${b.typicalRate}`}</p>
                           </div>
                         )}
                         {b.transport && (
                           <div>
-                            <p className="font-body text-xs text-[#C4A0B0] uppercase tracking-wider">Transport</p>
-                            <p className="font-body text-sm text-[#1A0A12]">{b.transport}</p>
+                            <p className="font-body text-xs text-muted-foreground uppercase tracking-wider">Transport</p>
+                            <p className="font-body text-sm text-foreground">{b.transport}</p>
                           </div>
                         )}
                       </div>
                       {b.notes && (
                         <div className="mb-4">
-                          <p className="font-body text-xs text-[#C4A0B0] uppercase tracking-wider mb-1">Notes</p>
-                          <p className="font-body text-sm text-[#1A0A12] bg-white rounded-lg p-3 border border-[#F0D0DC]">{b.notes}</p>
+                          <p className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-1">Notes</p>
+                          <p className="font-body text-sm text-foreground bg-white rounded-lg p-3 border border-border">{b.notes}</p>
                         </div>
                       )}
                       <div className="flex flex-wrap gap-2">
                         <Button
                           size="sm"
                           onClick={(e) => { e.stopPropagation(); openConfirm(b); }}
-                          className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body gap-1.5"
+                          className="bg-primary hover:bg-primary text-primary-foreground font-body gap-1.5"
                         >
                           <Send className="w-3.5 h-3.5" />
                           Send Confirmation
@@ -621,7 +621,7 @@ export default function BreedersDashboard() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="border-[#8B2252] text-[#8B2252] hover:bg-[#FFF0F4] font-body gap-1.5"
+                          className="border-border text-brand-link hover:bg-accent font-body gap-1.5"
                           onClick={(e) => { e.stopPropagation(); setShowAvailability(b); setReqSent(false); setReqMonth(getUpcomingMonths()[1]); setReqMessage(""); }}
                         >
                           <CalendarCheck className="w-3.5 h-3.5" />
@@ -630,7 +630,7 @@ export default function BreedersDashboard() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="border-[#F0D0DC] text-[#8B2252] hover:bg-[#FFF0F4] font-body gap-1.5"
+                          className="border-border text-brand-link hover:bg-accent font-body gap-1.5"
                           onClick={(e) => { e.stopPropagation(); setShowHistory(b.id); }}
                         >
                           <History className="w-3.5 h-3.5" />
@@ -639,7 +639,7 @@ export default function BreedersDashboard() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="border-[#F0D0DC] text-[#8B2252] hover:bg-[#FFF0F4] font-body gap-1.5"
+                          className="border-border text-brand-link hover:bg-accent font-body gap-1.5"
                           onClick={(e) => { e.stopPropagation(); openEdit(b); }}
                         >
                           <Pencil className="w-3.5 h-3.5" />
@@ -677,7 +677,7 @@ export default function BreedersDashboard() {
       <Dialog open={showBlastModal} onOpenChange={(open) => { if (!open) { setShowBlastModal(false); setBlastResult(null); } }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl text-[#1A0A12]">Send Availability Blast</DialogTitle>
+            <DialogTitle className="font-display text-xl text-foreground">Send Availability Blast</DialogTitle>
           </DialogHeader>
           {blastResult ? (
             <div className="py-4 text-center space-y-4">
@@ -685,19 +685,19 @@ export default function BreedersDashboard() {
                 <CheckCircle2 className="w-8 h-8 text-green-600" />
               </div>
               <div>
-                <p className="font-display text-lg text-[#1A0A12] font-semibold">Blast Sent!</p>
-                <p className="font-body text-sm text-[#6B4C3B] mt-1">
+                <p className="font-display text-lg text-foreground font-semibold">Blast Sent!</p>
+                <p className="font-body text-sm text-muted-foreground mt-1">
                   {blastResult.sent} email{blastResult.sent !== 1 ? "s" : ""} sent successfully.
                   {blastResult.failed > 0 && <span className="text-red-600"> {blastResult.failed} failed.</span>}
                 </p>
-                <p className="font-body text-xs text-[#C4A0B0] mt-2">Each breeder received a unique link to submit their availability for {blastMonth.label}. Responses will appear in each breeder's Availability tab.</p>
+                <p className="font-body text-xs text-muted-foreground mt-2">Each breeder received a unique link to submit their availability for {blastMonth.label}. Responses will appear in each breeder's Availability tab.</p>
               </div>
-              <Button onClick={() => { setShowBlastModal(false); setBlastResult(null); }} className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body w-full">Done</Button>
+              <Button onClick={() => { setShowBlastModal(false); setBlastResult(null); }} className="bg-primary hover:bg-primary text-primary-foreground font-body w-full">Done</Button>
             </div>
           ) : (
             <div className="space-y-5 py-2">
               <div>
-                <Label className="font-body text-sm text-[#1A0A12] font-semibold">Month to Check Availability For *</Label>
+                <Label className="font-body text-sm text-foreground font-semibold">Month to Check Availability For *</Label>
                 <Select
                   value={blastMonth.key}
                   onValueChange={(key) => {
@@ -705,7 +705,7 @@ export default function BreedersDashboard() {
                     if (m) setBlastMonth(m);
                   }}
                 >
-                  <SelectTrigger className="mt-1 border-[#F0D0DC] font-body">
+                  <SelectTrigger className="mt-1 border-border font-body">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -716,17 +716,17 @@ export default function BreedersDashboard() {
                 </Select>
               </div>
               <div>
-                <Label className="font-body text-sm text-[#1A0A12] font-semibold">Custom Message (optional)</Label>
+                <Label className="font-body text-sm text-foreground font-semibold">Custom Message (optional)</Label>
                 <Textarea
                   value={blastCustomMessage}
                   onChange={(e) => setBlastCustomMessage(e.target.value)}
-                  className="mt-1 border-[#F0D0DC] font-body resize-none"
+                  className="mt-1 border-border font-body resize-none"
                   rows={3}
                   placeholder="e.g. We are looking for 2-3 puppies per class, ideally small breeds..."
                 />
               </div>
-              <div className="p-3 bg-[#FFF5F8] border border-[#F0D0DC] rounded-lg">
-                <p className="font-body text-xs text-[#6B4C3B]">
+              <div className="p-3 bg-accent border border-border rounded-lg">
+                <p className="font-body text-xs text-muted-foreground">
                   This will email <strong>all active breeders with an email address</strong> asking for their availability in <strong>{blastMonth.label}</strong>. Each breeder gets a unique link to submit their dates.
                 </p>
               </div>
@@ -740,11 +740,11 @@ export default function BreedersDashboard() {
           )}
           {!blastResult && (
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowBlastModal(false)} className="font-body border-[#F0D0DC]">Cancel</Button>
+              <Button variant="outline" onClick={() => setShowBlastModal(false)} className="font-body border-border">Cancel</Button>
               <Button
                 onClick={handleBlast}
                 disabled={blastMutation.isPending}
-                className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body gap-2"
+                className="bg-primary hover:bg-primary text-primary-foreground font-body gap-2"
               >
                 {blastMutation.isPending ? (
                   <><Loader2 className="w-4 h-4 animate-spin" />Sending...</>
@@ -761,17 +761,17 @@ export default function BreedersDashboard() {
       <Dialog open={showAvailability !== null} onOpenChange={(open) => { if (!open) { setShowAvailability(null); setReqSent(false); } }}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl text-[#1A0A12]">
+            <DialogTitle className="font-display text-xl text-foreground">
               Availability — {showAvailability?.contactName || showAvailability?.name}
             </DialogTitle>
             {showAvailability?.email && (
-              <p className="font-body text-xs text-[#C4A0B0] mt-1">{showAvailability.email}</p>
+              <p className="font-body text-xs text-muted-foreground mt-1">{showAvailability.email}</p>
             )}
           </DialogHeader>
 
           {/* ── Request Section ── */}
-          <div className="border border-[#F0D0DC] rounded-xl p-4 bg-[#FFF5F8] mb-4">
-            <p className="font-body text-sm font-semibold text-[#8B2252] mb-3">Request Availability</p>
+          <div className="border border-border rounded-xl p-4 bg-accent mb-4">
+            <p className="font-body text-sm font-semibold text-brand-link mb-3">Request Availability</p>
             {reqSent ? (
               <div className="flex items-center gap-2 text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
@@ -785,9 +785,9 @@ export default function BreedersDashboard() {
             ) : (
               <div className="space-y-3">
                 <div>
-                  <Label className="font-body text-xs text-[#1A0A12] font-semibold">Month *</Label>
+                  <Label className="font-body text-xs text-foreground font-semibold">Month *</Label>
                   <Select value={reqMonth.key} onValueChange={(k) => { const m = getUpcomingMonths().find(x => x.key === k); if (m) setReqMonth(m); }}>
-                    <SelectTrigger className="mt-1 border-[#F0D0DC] font-body text-sm">
+                    <SelectTrigger className="mt-1 border-border font-body text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -798,9 +798,9 @@ export default function BreedersDashboard() {
                   </Select>
                 </div>
                 <div>
-                  <Label className="font-body text-xs text-[#1A0A12] font-semibold">Custom Message (optional)</Label>
+                  <Label className="font-body text-xs text-foreground font-semibold">Custom Message (optional)</Label>
                   <Textarea
-                    className="mt-1 border-[#F0D0DC] font-body text-sm resize-none"
+                    className="mt-1 border-border font-body text-sm resize-none"
                     rows={2}
                     placeholder="Any extra context for this breeder..."
                     value={reqMessage}
@@ -809,7 +809,7 @@ export default function BreedersDashboard() {
                 </div>
                 <Button
                   size="sm"
-                  className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body gap-1.5 w-full"
+                  className="bg-primary hover:bg-primary text-primary-foreground font-body gap-1.5 w-full"
                   disabled={reqAvailMutation.isPending}
                   onClick={() => reqAvailMutation.mutate({
                     breederId: showAvailability.id,
@@ -828,20 +828,20 @@ export default function BreedersDashboard() {
 
           {/* ── Response Log ── */}
           <div>
-            <p className="font-body text-sm font-semibold text-[#1A0A12] mb-3">Response Log</p>
+            <p className="font-body text-sm font-semibold text-foreground mb-3">Response Log</p>
             {availLoading ? (
               <div className="flex items-center justify-center py-6">
-                <Loader2 className="w-5 h-5 animate-spin text-[#8B2252]" />
+                <Loader2 className="w-5 h-5 animate-spin text-brand-link" />
               </div>
             ) : breederAvailability.length === 0 ? (
               <div className="text-center py-6">
-                <CalendarCheck className="w-8 h-8 text-[#F0D0DC] mx-auto mb-2" />
-                <p className="font-body text-sm text-[#6B4C3B]">No requests sent yet</p>
+                <CalendarCheck className="w-8 h-8 text-border mx-auto mb-2" />
+                <p className="font-body text-sm text-muted-foreground">No requests sent yet</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {breederAvailability.map((r: any) => (
-                  <div key={r.id} className="border border-[#F0D0DC] rounded-xl p-4 bg-[#FEFAF4]">
+                  <div key={r.id} className="border border-border rounded-xl p-4 bg-background">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
                         {r.responded ? (
@@ -853,32 +853,32 @@ export default function BreedersDashboard() {
                             <Clock className="w-3 h-3" /> Pending
                           </span>
                         )}
-                        <span className="font-body text-xs text-[#C4A0B0] font-medium">{r.monthLabel ?? ""}</span>
+                        <span className="font-body text-xs text-muted-foreground font-medium">{r.monthLabel ?? ""}</span>
                       </div>
-                      <span className="font-body text-xs text-[#C4A0B0]">
+                      <span className="font-body text-xs text-muted-foreground">
                         {new Date(r.createdAt).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}
                       </span>
                     </div>
                     {r.responded ? (
                       <div className="space-y-2">
                         <div>
-                          <p className="font-body text-xs text-[#C4A0B0] uppercase tracking-wider mb-1">Available Dates</p>
-                          <p className="font-body text-sm text-[#1A0A12] bg-white rounded-lg p-3 border border-[#F0D0DC] whitespace-pre-wrap">{r.availabilityText}</p>
+                          <p className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-1">Available Dates</p>
+                          <p className="font-body text-sm text-foreground bg-white rounded-lg p-3 border border-border whitespace-pre-wrap">{r.availabilityText}</p>
                         </div>
                         {r.responseNotes && (
                           <div>
-                            <p className="font-body text-xs text-[#C4A0B0] uppercase tracking-wider mb-1">Notes</p>
-                            <p className="font-body text-sm text-[#1A0A12] bg-white rounded-lg p-3 border border-[#F0D0DC]">{r.responseNotes}</p>
+                            <p className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-1">Notes</p>
+                            <p className="font-body text-sm text-foreground bg-white rounded-lg p-3 border border-border">{r.responseNotes}</p>
                           </div>
                         )}
                         {r.respondedAt && (
-                          <p className="font-body text-xs text-[#C4A0B0]">
+                          <p className="font-body text-xs text-muted-foreground">
                             Responded {new Date(r.respondedAt).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}
                           </p>
                         )}
                       </div>
                     ) : (
-                      <p className="font-body text-xs text-[#C4A0B0] italic">Awaiting response from breeder...</p>
+                      <p className="font-body text-xs text-muted-foreground italic">Awaiting response from breeder...</p>
                     )}
                   </div>
                 ))}
@@ -892,7 +892,7 @@ export default function BreedersDashboard() {
       <Dialog open={!!confirmBreeder} onOpenChange={(open) => { if (!open) { setConfirmBreeder(null); setCalendarConfirmationScheduleId(null); setPreviewHtml(null); } }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl text-[#1A0A12]">
+            <DialogTitle className="font-display text-xl text-foreground">
               Send Booking Confirmation — {confirmBreeder?.name}
             </DialogTitle>
           </DialogHeader>
@@ -921,17 +921,17 @@ export default function BreedersDashboard() {
                 </p>
               </div>
               <div
-                className="border border-[#F0D0DC] rounded-xl overflow-hidden"
+                className="border border-border rounded-xl overflow-hidden"
                 dangerouslySetInnerHTML={{ __html: previewHtml }}
               />
               <div className="flex gap-3 mt-4">
-                <Button variant="outline" onClick={() => setPreviewHtml(null)} className="font-body border-[#F0D0DC]">
+                <Button variant="outline" onClick={() => setPreviewHtml(null)} className="font-body border-border">
                   Back to Edit
                 </Button>
                 <Button
                   onClick={handleSend}
                   disabled={sendMutation.isPending}
-                  className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body gap-2"
+                  className="bg-primary hover:bg-primary text-primary-foreground font-body gap-2"
                 >
                   <Send className="w-4 h-4" />
                   {sendMutation.isPending ? "Sending..." : deliveryFailed ? "Retry Delivery" : "Send Confirmation"}
@@ -941,9 +941,9 @@ export default function BreedersDashboard() {
           ) : (
             <div className="space-y-6 py-2">
               {events.map((ev, idx) => (
-                <div key={idx} className="border border-[#F0D0DC] rounded-xl p-4 bg-[#FEFAF4] relative">
+                <div key={idx} className="border border-border rounded-xl p-4 bg-background relative">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="font-body text-sm font-semibold text-[#8B2252]">Event {idx + 1}</span>
+                    <span className="font-body text-sm font-semibold text-brand-link">Event {idx + 1}</span>
                     {events.length > 1 && (
                       <button
                         onClick={() => setEvents(ev => {
@@ -960,13 +960,13 @@ export default function BreedersDashboard() {
 
                   {/* Studio / Location selector */}
                   <div className="mb-3">
-                    <Label className="font-body text-xs text-[#6B4C3B] font-semibold uppercase tracking-wider">Location *</Label>
+                    <Label className="font-body text-xs text-muted-foreground font-semibold uppercase tracking-wider">Location *</Label>
                     <Select
                       value={ev.isPrivateEvent ? "private" : (STUDIO_LOCATIONS.find(s => s.address === ev.location)?.label ?? "")}
                       onValueChange={(val) => applyStudio(idx, val)}
                       disabled={calendarConfirmationScheduleId !== null}
                     >
-                      <SelectTrigger className="mt-1 border-[#F0D0DC] font-body text-sm">
+                      <SelectTrigger className="mt-1 border-border font-body text-sm">
                         <SelectValue placeholder="Select a studio..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -980,35 +980,35 @@ export default function BreedersDashboard() {
                       <Input
                         value={ev.location}
                         onChange={(e) => updateEvent(idx, "location", e.target.value)}
-                        className="mt-2 border-[#F0D0DC] font-body text-sm"
+                        className="mt-2 border-border font-body text-sm"
                         placeholder="Enter full address for private event"
                       />
                     )}
                     {!ev.isPrivateEvent && ev.city && (
-                      <p className="text-xs text-[#8B2252] mt-1 font-body">📍 {ev.city} · {ev.location}</p>
+                      <p className="text-xs text-brand-link mt-1 font-body">📍 {ev.city} · {ev.location}</p>
                     )}
                   </div>
 
                   {/* Date picker */}
                   <div className="mb-3">
-                    <Label className="font-body text-xs text-[#6B4C3B] font-semibold uppercase tracking-wider">Date *</Label>
+                    <Label className="font-body text-xs text-muted-foreground font-semibold uppercase tracking-wider">Date *</Label>
                     <input
                       type="date"
                       value={ev.date}
                       onChange={(e) => updateEvent(idx, "date", e.target.value)}
                       disabled={calendarConfirmationScheduleId !== null}
-                      className="mt-1 w-full border border-[#F0D0DC] rounded-md px-3 py-2 font-body text-sm bg-white text-[#1A0A12] focus:outline-none focus:ring-2 focus:ring-[#8B2252]/30"
+                      className="mt-1 w-full border border-border rounded-md px-3 py-2 font-body text-sm bg-white text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
                     />
                     {ev.date && (
-                      <p className="text-xs text-[#8B2252] mt-1 font-body">{formatDateForDisplay(ev.date)}</p>
+                      <p className="text-xs text-brand-link mt-1 font-body">{formatDateForDisplay(ev.date)}</p>
                     )}
                   </div>
 
                   {!ev.isPrivateEvent && ev.city && (
-                    <div className="mb-3 rounded-lg border border-[#F0D0DC] bg-[#FFF8FA] p-3">
-                      <Label className="font-body text-xs text-[#6B4C3B] font-semibold uppercase tracking-wider">APY Public Class Slot *</Label>
+                    <div className="mb-3 rounded-lg border border-border bg-accent p-3">
+                      <Label className="font-body text-xs text-muted-foreground font-semibold uppercase tracking-wider">APY Public Class Slot *</Label>
                       <Select value={ev.classSlot || ""} onValueChange={(v) => updateEvent(idx, "classSlot", v)} disabled={calendarConfirmationScheduleId !== null}>
-                        <SelectTrigger className="mt-1 border-[#F0D0DC] bg-white font-body text-sm">
+                        <SelectTrigger className="mt-1 border-border bg-white font-body text-sm">
                           <SelectValue placeholder="Choose 10:00, 11:30, or 1:30" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1017,7 +1017,7 @@ export default function BreedersDashboard() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <p className="mt-1 font-body text-xs text-[#6B4C3B]">This is the guest-facing Luma class time. The logistics window below is for puppy handoff only.</p>
+                      <p className="mt-1 font-body text-xs text-muted-foreground">This is the guest-facing Luma class time. The logistics window below is for puppy handoff only.</p>
                     </div>
                   )}
 
@@ -1026,36 +1026,36 @@ export default function BreedersDashboard() {
                       checked={ev.apyTransport}
                       onCheckedChange={(v) => updateEvent(idx, "apyTransport", v)}
                     />
-                    <Label className="font-body text-sm text-[#1A0A12]">APY handles transportation</Label>
+                    <Label className="font-body text-sm text-foreground">APY handles transportation</Label>
                   </div>
 
                   {ev.apyTransport ? (
                     <div className="grid grid-cols-2 gap-3 mb-3">
                       <div>
-                        <Label className="font-body text-xs text-[#6B4C3B] font-semibold uppercase tracking-wider">Pickup Time</Label>
+                        <Label className="font-body text-xs text-muted-foreground font-semibold uppercase tracking-wider">Pickup Time</Label>
                         <TimeSelect value={ev.pickupTime} onChange={(v) => updateEvent(idx, "pickupTime", v)} placeholder="Select time..." />
                       </div>
                       <div>
-                        <Label className="font-body text-xs text-[#6B4C3B] font-semibold uppercase tracking-wider">Return Time</Label>
+                        <Label className="font-body text-xs text-muted-foreground font-semibold uppercase tracking-wider">Return Time</Label>
                         <TimeSelect value={ev.returnTime} onChange={(v) => updateEvent(idx, "returnTime", v)} placeholder="Select time..." />
                       </div>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-3 mb-3">
                       <div>
-                        <Label className="font-body text-xs text-[#6B4C3B] font-semibold uppercase tracking-wider">Drop-off Time</Label>
+                        <Label className="font-body text-xs text-muted-foreground font-semibold uppercase tracking-wider">Drop-off Time</Label>
                         <TimeSelect value={ev.dropOffTime} onChange={(v) => updateEvent(idx, "dropOffTime", v)} placeholder="Select time..." />
                       </div>
                       <div>
-                        <Label className="font-body text-xs text-[#6B4C3B] font-semibold uppercase tracking-wider">Pick-up Time</Label>
+                        <Label className="font-body text-xs text-muted-foreground font-semibold uppercase tracking-wider">Pick-up Time</Label>
                         <TimeSelect value={ev.pickUpTime} onChange={(v) => updateEvent(idx, "pickUpTime", v)} placeholder="Select time..." />
                       </div>
                     </div>
                   )}
 
                   <div>
-                    <Label className="font-body text-xs text-[#6B4C3B] font-semibold uppercase tracking-wider">Compensation *</Label>
-                    <Input value={ev.compensation} onChange={(e) => updateEvent(idx, "compensation", e.target.value)} className="mt-1 border-[#F0D0DC] font-body text-sm" placeholder="$450" />
+                    <Label className="font-body text-xs text-muted-foreground font-semibold uppercase tracking-wider">Compensation *</Label>
+                    <Input value={ev.compensation} onChange={(e) => updateEvent(idx, "compensation", e.target.value)} className="mt-1 border-border font-body text-sm" placeholder="$450" />
                   </div>
                 </div>
               ))}
@@ -1067,14 +1067,14 @@ export default function BreedersDashboard() {
                   if (confirmBreeder) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events: updated, availabilityNote }));
                   return updated;
                 })}
-                className="w-full border-dashed border-[#F0D0DC] text-[#8B2252] hover:bg-[#FFF0F4] font-body gap-2"
+                className="w-full border-dashed border-border text-brand-link hover:bg-accent font-body gap-2"
               >
                 <Plus className="w-4 h-4" />
                 Add Another Event
               </Button>}
 
               <div>
-                <Label className="font-body text-sm text-[#1A0A12] font-semibold">Checking Availability For (optional)</Label>
+                <Label className="font-body text-sm text-foreground font-semibold">Checking Availability For (optional)</Label>
                 <Input
                   value={availabilityNote}
                   onChange={(e) => {
@@ -1082,14 +1082,14 @@ export default function BreedersDashboard() {
                     setAvailabilityNote(val);
                     if (confirmBreeder && calendarConfirmationScheduleId === null) localStorage.setItem(`apy-confirm-draft-${confirmBreeder.id}`, JSON.stringify({ events, availabilityNote: val }));
                   }}
-                  className="mt-1 border-[#F0D0DC] font-body"
+                  className="mt-1 border-border font-body"
                   placeholder="e.g. Saturday, July 11"
                 />
-                <p className="font-body text-xs text-[#C4A0B0] mt-1">This adds a line asking if they're available for an additional date.</p>
+                <p className="font-body text-xs text-muted-foreground mt-1">This adds a line asking if they're available for an additional date.</p>
               </div>
 
-              <div className="p-3 bg-[#FFF5F8] border border-[#F0D0DC] rounded-lg">
-                <p className="font-body text-xs text-[#6B4C3B]">
+              <div className="p-3 bg-accent border border-border rounded-lg">
+                <p className="font-body text-xs text-muted-foreground">
                   Confirmation will be sent from <strong>afropuppyyoga@gmail.com</strong> / <strong>289-788-1885</strong> to:{" "}
                   {confirmBreeder?.email && <><strong>{confirmBreeder.email}</strong> (email){confirmBreeder?.phone ? " · " : ""}</>}
                   {confirmBreeder?.phone && <><strong>{confirmBreeder.phone}</strong> (SMS)</>}
@@ -1101,12 +1101,12 @@ export default function BreedersDashboard() {
 
           {!previewHtml && (
             <DialogFooter>
-              <Button variant="outline" onClick={() => { setConfirmBreeder(null); setCalendarConfirmationScheduleId(null); }} className="font-body border-[#F0D0DC]">Cancel</Button>
+              <Button variant="outline" onClick={() => { setConfirmBreeder(null); setCalendarConfirmationScheduleId(null); }} className="font-body border-border">Cancel</Button>
               <Button
                 onClick={handlePreview}
                 disabled={previewMutation.isPending}
                 variant="outline"
-                className="border-[#8B2252] text-[#8B2252] hover:bg-[#FFF0F4] font-body gap-2"
+                className="border-border text-brand-link hover:bg-accent font-body gap-2"
               >
                 <Eye className="w-4 h-4" />
                 {previewMutation.isPending ? "Generating..." : "Preview Email"}
@@ -1120,42 +1120,42 @@ export default function BreedersDashboard() {
       <Dialog open={showHistory !== null} onOpenChange={(open) => { if (!open) setShowHistory(null); }}>
         <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl text-[#1A0A12]">Confirmation History</DialogTitle>
+            <DialogTitle className="font-display text-xl text-foreground">Confirmation History</DialogTitle>
           </DialogHeader>
           {historyLoading || communicationsLoading ? (
-            <p className="font-body text-sm text-[#6B4C3B] py-4">Loading...</p>
+            <p className="font-body text-sm text-muted-foreground py-4">Loading...</p>
           ) : confirmHistory.length === 0 && communicationHistory.length === 0 ? (
             <div className="text-center py-8">
-              <Clock className="w-10 h-10 text-[#F0D0DC] mx-auto mb-2" />
-              <p className="font-body text-sm text-[#6B4C3B]">No breeder activity recorded yet</p>
+              <Clock className="w-10 h-10 text-border mx-auto mb-2" />
+              <p className="font-body text-sm text-muted-foreground">No breeder activity recorded yet</p>
             </div>
           ) : (
             <div className="space-y-6">
               {confirmHistory.length > 0 && (
                 <section>
-                  <p className="mb-2 font-body text-xs font-bold uppercase tracking-wider text-[#8B2252]">Commitments</p>
+                  <p className="mb-2 font-body text-xs font-bold uppercase tracking-wider text-brand-link">Commitments</p>
                   <div className="space-y-3">
                     {confirmHistory.map((c: any) => {
                       const evts = JSON.parse(c.events || "[]");
                       return (
-                        <div key={c.id} className="border border-[#F0D0DC] rounded-xl p-4 bg-[#FEFAF4]">
+                        <div key={c.id} className="border border-border rounded-xl p-4 bg-background">
                           <div className="flex items-start justify-between mb-2">
                             <div>
-                              <p className="font-body text-sm font-semibold text-[#1A0A12]">
+                              <p className="font-body text-sm font-semibold text-foreground">
                                 {evts.length} event{evts.length !== 1 ? "s" : ""} recorded
                               </p>
-                              <p className="font-body text-xs text-[#C4A0B0]">
+                              <p className="font-body text-xs text-muted-foreground">
                                 {c.status === "sent" ? "Delivered to " : c.status === "pending" ? "Delivery in progress to " : "Delivery failed to "}
                                 {[c.sentToEmail, c.sentToPhone].filter(Boolean).join(" · ") || "no contact"}
                               </p>
                             </div>
-                            <span className="font-body text-xs text-[#C4A0B0]">
+                            <span className="font-body text-xs text-muted-foreground">
                               {new Date(c.createdAt).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}
                             </span>
                           </div>
                           <div className="space-y-1">
                             {evts.map((ev: any, i: number) => (
-                              <p key={i} className="font-body text-xs text-[#6B4C3B]">📍 {ev.city || "Private Event"} — {ev.date} — {ev.compensation}</p>
+                              <p key={i} className="font-body text-xs text-muted-foreground">📍 {ev.city || "Private Event"} — {ev.date} — {ev.compensation}</p>
                             ))}
                           </div>
                         </div>
@@ -1166,17 +1166,17 @@ export default function BreedersDashboard() {
               )}
               {communicationHistory.length > 0 && (
                 <section>
-                  <p className="mb-2 font-body text-xs font-bold uppercase tracking-wider text-[#8B2252]">Communications</p>
+                  <p className="mb-2 font-body text-xs font-bold uppercase tracking-wider text-brand-link">Communications</p>
                   <div className="space-y-2">
                     {communicationHistory.map((item: any) => (
-                      <div key={item.id} className="rounded-xl border border-[#F0D0DC] bg-white p-3">
+                      <div key={item.id} className="rounded-xl border border-border bg-white p-3">
                         <div className="flex items-center gap-2">
-                          {item.channel === "email" ? <Mail className="h-3.5 w-3.5 text-[#8B2252]" /> : <Phone className="h-3.5 w-3.5 text-[#8B2252]" />}
-                          <p className="font-body text-xs font-semibold text-[#1A0A12]">{item.direction === "inbound" ? "Received" : "Sent"} {item.channel.toUpperCase()}</p>
+                          {item.channel === "email" ? <Mail className="h-3.5 w-3.5 text-brand-link" /> : <Phone className="h-3.5 w-3.5 text-brand-link" />}
+                          <p className="font-body text-xs font-semibold text-foreground">{item.direction === "inbound" ? "Received" : "Sent"} {item.channel.toUpperCase()}</p>
                           <Badge variant="outline" className="ml-auto text-[10px]">{item.deliveryStatus}</Badge>
                         </div>
-                        {item.bodyPreview && <p className="mt-1 line-clamp-3 font-body text-xs text-[#6B4C3B]">{item.bodyPreview}</p>}
-                        <p className="mt-1 font-body text-[10px] text-[#C4A0B0]">
+                        {item.bodyPreview && <p className="mt-1 line-clamp-3 font-body text-xs text-muted-foreground">{item.bodyPreview}</p>}
+                        <p className="mt-1 font-body text-[10px] text-muted-foreground">
                           {new Date(item.createdAt).toLocaleString("en-CA", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
                           {item.actorName ? ` · ${item.actorName}` : ""}
                         </p>
@@ -1194,29 +1194,29 @@ export default function BreedersDashboard() {
       <Dialog open={showPresetsModal} onOpenChange={setShowPresetsModal}>
         <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl text-[#1A0A12]">Saved Locations</DialogTitle>
+            <DialogTitle className="font-display text-xl text-foreground">Saved Locations</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="font-body text-sm text-[#6B4C3B]">Save frequently used venues so you can quickly fill them in when creating confirmations.</p>
+            <p className="font-body text-sm text-muted-foreground">Save frequently used venues so you can quickly fill them in when creating confirmations.</p>
 
-            <div className="border border-[#F0D0DC] rounded-xl p-4 bg-[#FEFAF4] space-y-3">
-              <p className="font-body text-sm font-semibold text-[#1A0A12]">Add New Location</p>
+            <div className="border border-border rounded-xl p-4 bg-background space-y-3">
+              <p className="font-body text-sm font-semibold text-foreground">Add New Location</p>
               <div>
-                <Label className="font-body text-xs text-[#6B4C3B] font-semibold uppercase tracking-wider">Label</Label>
-                <Input value={newPreset.label} onChange={(e) => setNewPreset(p => ({ ...p, label: e.target.value }))} className="mt-1 border-[#F0D0DC] font-body text-sm" placeholder="e.g. TenC Dance Studio - Kitchener" />
+                <Label className="font-body text-xs text-muted-foreground font-semibold uppercase tracking-wider">Label</Label>
+                <Input value={newPreset.label} onChange={(e) => setNewPreset(p => ({ ...p, label: e.target.value }))} className="mt-1 border-border font-body text-sm" placeholder="e.g. TenC Dance Studio - Kitchener" />
               </div>
               <div>
-                <Label className="font-body text-xs text-[#6B4C3B] font-semibold uppercase tracking-wider">City</Label>
-                <Input value={newPreset.city} onChange={(e) => setNewPreset(p => ({ ...p, city: e.target.value }))} className="mt-1 border-[#F0D0DC] font-body text-sm" placeholder="Kitchener" />
+                <Label className="font-body text-xs text-muted-foreground font-semibold uppercase tracking-wider">City</Label>
+                <Input value={newPreset.city} onChange={(e) => setNewPreset(p => ({ ...p, city: e.target.value }))} className="mt-1 border-border font-body text-sm" placeholder="Kitchener" />
               </div>
               <div>
-                <Label className="font-body text-xs text-[#6B4C3B] font-semibold uppercase tracking-wider">Full Address</Label>
-                <Input value={newPreset.address} onChange={(e) => setNewPreset(p => ({ ...p, address: e.target.value }))} className="mt-1 border-[#F0D0DC] font-body text-sm" placeholder="329 King Street East, Kitchener, Ontario" />
+                <Label className="font-body text-xs text-muted-foreground font-semibold uppercase tracking-wider">Full Address</Label>
+                <Input value={newPreset.address} onChange={(e) => setNewPreset(p => ({ ...p, address: e.target.value }))} className="mt-1 border-border font-body text-sm" placeholder="329 King Street East, Kitchener, Ontario" />
               </div>
               <Button
                 onClick={() => { if (!newPreset.label || !newPreset.city || !newPreset.address) { alert("All fields required"); return; } addPresetMutation.mutate(newPreset); }}
                 disabled={addPresetMutation.isPending}
-                className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body text-sm w-full"
+                className="bg-primary hover:bg-primary text-primary-foreground font-body text-sm w-full"
               >
                 {addPresetMutation.isPending ? "Saving..." : "Save Location"}
               </Button>
@@ -1225,10 +1225,10 @@ export default function BreedersDashboard() {
             {presets.length > 0 && (
               <div className="space-y-2">
                 {presets.map((p: any) => (
-                  <div key={p.id} className="flex items-start justify-between bg-white border border-[#F0D0DC] rounded-lg p-3">
+                  <div key={p.id} className="flex items-start justify-between bg-white border border-border rounded-lg p-3">
                     <div>
-                      <p className="font-body text-sm font-semibold text-[#1A0A12]">{p.label}</p>
-                      <p className="font-body text-xs text-[#6B4C3B]">{p.city} — {p.address}</p>
+                      <p className="font-body text-sm font-semibold text-foreground">{p.label}</p>
+                      <p className="font-body text-xs text-muted-foreground">{p.city} — {p.address}</p>
                     </div>
                     <button
                       onClick={() => deletePresetMutation.mutate({ id: p.id })}
@@ -1248,58 +1248,58 @@ export default function BreedersDashboard() {
       <Dialog open={showAddModal || !!editBreeder} onOpenChange={(open) => { if (!open) { setShowAddModal(false); setEditBreeder(null); } }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl text-[#1A0A12]">
+            <DialogTitle className="font-display text-xl text-foreground">
               {editBreeder ? "Edit Breeder" : "Add New Breeder"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <Label className="font-body text-sm text-[#1A0A12] font-semibold">Breeder / Kennel Name *</Label>
-              <Input value={form.name} onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} className="mt-1 border-[#F0D0DC] font-body" placeholder="e.g. Taco Yorkies" />
+              <Label className="font-body text-sm text-foreground font-semibold">Breeder / Kennel Name *</Label>
+              <Input value={form.name} onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} className="mt-1 border-border font-body" placeholder="e.g. Taco Yorkies" />
             </div>
             <div>
-              <Label className="font-body text-sm text-[#1A0A12] font-semibold">Contact Name</Label>
-              <Input value={form.contactName} onChange={(e) => setForm(f => ({ ...f, contactName: e.target.value }))} className="mt-1 border-[#F0D0DC] font-body" placeholder="First and last name" />
+              <Label className="font-body text-sm text-foreground font-semibold">Contact Name</Label>
+              <Input value={form.contactName} onChange={(e) => setForm(f => ({ ...f, contactName: e.target.value }))} className="mt-1 border-border font-body" placeholder="First and last name" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="font-body text-sm text-[#1A0A12] font-semibold">Phone</Label>
-                <Input value={form.phone} onChange={(e) => setForm(f => ({ ...f, phone: e.target.value }))} className="mt-1 border-[#F0D0DC] font-body" placeholder="647-000-0000" />
+                <Label className="font-body text-sm text-foreground font-semibold">Phone</Label>
+                <Input value={form.phone} onChange={(e) => setForm(f => ({ ...f, phone: e.target.value }))} className="mt-1 border-border font-body" placeholder="647-000-0000" />
               </div>
               <div>
-                <Label className="font-body text-sm text-[#1A0A12] font-semibold">Email</Label>
-                <Input value={form.email} onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))} className="mt-1 border-[#F0D0DC] font-body" placeholder="breeder@email.com" type="email" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="font-body text-sm text-[#1A0A12] font-semibold">Instagram</Label>
-                <Input value={form.instagram} onChange={(e) => setForm(f => ({ ...f, instagram: e.target.value }))} className="mt-1 border-[#F0D0DC] font-body" placeholder="@handle" />
-              </div>
-              <div>
-                <Label className="font-body text-sm text-[#1A0A12] font-semibold">Breed(s)</Label>
-                <Input value={form.breed} onChange={(e) => setForm(f => ({ ...f, breed: e.target.value }))} className="mt-1 border-[#F0D0DC] font-body" placeholder="e.g. Goldendoodles" />
+                <Label className="font-body text-sm text-foreground font-semibold">Email</Label>
+                <Input value={form.email} onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))} className="mt-1 border-border font-body" placeholder="breeder@email.com" type="email" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="font-body text-sm text-[#1A0A12] font-semibold">Litter Timeline</Label>
-                <Input value={form.litterTimeline} onChange={(e) => setForm(f => ({ ...f, litterTimeline: e.target.value }))} className="mt-1 border-[#F0D0DC] font-body" placeholder="e.g. Spring 2026" />
+                <Label className="font-body text-sm text-foreground font-semibold">Instagram</Label>
+                <Input value={form.instagram} onChange={(e) => setForm(f => ({ ...f, instagram: e.target.value }))} className="mt-1 border-border font-body" placeholder="@handle" />
               </div>
               <div>
-                <Label className="font-body text-sm text-[#1A0A12] font-semibold">Typical Rate</Label>
-                <Input value={form.typicalRate} onChange={(e) => setForm(f => ({ ...f, typicalRate: e.target.value }))} className="mt-1 border-[#F0D0DC] font-body" placeholder="e.g. 500" />
+                <Label className="font-body text-sm text-foreground font-semibold">Breed(s)</Label>
+                <Input value={form.breed} onChange={(e) => setForm(f => ({ ...f, breed: e.target.value }))} className="mt-1 border-border font-body" placeholder="e.g. Goldendoodles" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="font-body text-sm text-[#1A0A12] font-semibold">Transport</Label>
-                <Input value={form.transport} onChange={(e) => setForm(f => ({ ...f, transport: e.target.value }))} className="mt-1 border-[#F0D0DC] font-body" placeholder="e.g. Breeder" />
+                <Label className="font-body text-sm text-foreground font-semibold">Litter Timeline</Label>
+                <Input value={form.litterTimeline} onChange={(e) => setForm(f => ({ ...f, litterTimeline: e.target.value }))} className="mt-1 border-border font-body" placeholder="e.g. Spring 2026" />
               </div>
               <div>
-                <Label className="font-body text-sm text-[#1A0A12] font-semibold">Contract Status</Label>
+                <Label className="font-body text-sm text-foreground font-semibold">Typical Rate</Label>
+                <Input value={form.typicalRate} onChange={(e) => setForm(f => ({ ...f, typicalRate: e.target.value }))} className="mt-1 border-border font-body" placeholder="e.g. 500" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="font-body text-sm text-foreground font-semibold">Transport</Label>
+                <Input value={form.transport} onChange={(e) => setForm(f => ({ ...f, transport: e.target.value }))} className="mt-1 border-border font-body" placeholder="e.g. Breeder" />
+              </div>
+              <div>
+                <Label className="font-body text-sm text-foreground font-semibold">Contract Status</Label>
                 <Select value={form.contractStatus} onValueChange={(v) => setForm(f => ({ ...f, contractStatus: v as ContractStatus }))}>
-                  <SelectTrigger className="mt-1 border-[#F0D0DC] font-body">
+                  <SelectTrigger className="mt-1 border-border font-body">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1311,16 +1311,16 @@ export default function BreedersDashboard() {
               </div>
             </div>
             <div>
-              <Label className="font-body text-sm text-[#1A0A12] font-semibold">Notes</Label>
-              <Textarea value={form.notes} onChange={(e) => setForm(f => ({ ...f, notes: e.target.value }))} className="mt-1 border-[#F0D0DC] font-body resize-none" rows={3} placeholder="Any additional notes..." />
+              <Label className="font-body text-sm text-foreground font-semibold">Notes</Label>
+              <Textarea value={form.notes} onChange={(e) => setForm(f => ({ ...f, notes: e.target.value }))} className="mt-1 border-border font-body resize-none" rows={3} placeholder="Any additional notes..." />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowAddModal(false); setEditBreeder(null); }} className="font-body border-[#F0D0DC]">Cancel</Button>
+            <Button variant="outline" onClick={() => { setShowAddModal(false); setEditBreeder(null); }} className="font-body border-border">Cancel</Button>
             <Button
               onClick={handleSubmit}
               disabled={addMutation.isPending || updateMutation.isPending}
-              className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body"
+              className="bg-primary hover:bg-primary text-primary-foreground font-body"
             >
               {addMutation.isPending || updateMutation.isPending ? "Saving..." : editBreeder ? "Save Changes" : "Add Breeder"}
             </Button>
@@ -1332,11 +1332,11 @@ export default function BreedersDashboard() {
       <Dialog open={!!deleteConfirm} onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="font-display text-lg text-[#1A0A12]">Remove Breeder?</DialogTitle>
+            <DialogTitle className="font-display text-lg text-foreground">Remove Breeder?</DialogTitle>
           </DialogHeader>
-          <p className="font-body text-sm text-[#6B4C3B]">This will permanently remove this breeder from the database. This cannot be undone.</p>
+          <p className="font-body text-sm text-muted-foreground">This will permanently remove this breeder from the database. This cannot be undone.</p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteConfirm(null)} className="font-body border-[#F0D0DC]">Cancel</Button>
+            <Button variant="outline" onClick={() => setDeleteConfirm(null)} className="font-body border-border">Cancel</Button>
             <Button
               onClick={() => deleteConfirm && deleteMutation.mutate({ id: deleteConfirm })}
               disabled={deleteMutation.isPending}

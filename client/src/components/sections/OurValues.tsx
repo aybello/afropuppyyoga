@@ -20,7 +20,7 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 30 }}
+      initial={false}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.6, delay, ease: "easeOut" }}
     >
@@ -35,29 +35,28 @@ export default function OurValues() {
       <div className="container">
         <FadeUp>
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-0.5 bg-[#8B2252]" />
-            <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">Our Values</span>
+            <div className="w-8 h-0.5 bg-[#B83F67]" />
+            <span className="text-[#B83F67] font-body text-xs font-semibold tracking-widest uppercase">Our Values</span>
           </div>
-          <h3 className="font-display text-3xl md:text-4xl font-bold text-[#1A0A12] mb-2">
+          <h3 className="font-display text-3xl md:text-4xl font-medium text-[#34221D] mb-2">
             The Principles Behind Every Session
           </h3>
-          <p className="font-body text-[#1A0A12]/60 mb-10">What guides every class, every event, and every puppy cuddle.</p>
+          <p className="font-body text-[#34221D]/70 mb-10">What guides every class, every event, and every puppy cuddle.</p>
         </FadeUp>
 
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
           {values.map((val, i) => (
             <motion.div
               key={val.title}
-              initial={{ opacity: 0, y: 20 }}
+              initial={false}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.08, duration: 0.5 }}
-              className="flex gap-3 p-3 md:p-5 bg-white/60 rounded-xl border border-[#F0D0DC]"
+              className="flex gap-3 pt-5 border-t border-[#EBCDD5]"
             >
-              <div className="w-1.5 rounded-full bg-gradient-to-b from-[#8B2252] to-[#F2A0B8] shrink-0" />
               <div>
-                <h4 className="font-display font-bold text-sm md:text-base text-[#1A0A12] mb-1">{val.title}</h4>
-                <p className="font-body text-xs md:text-sm text-[#1A0A12]/60 leading-relaxed">{val.desc}</p>
+                <h4 className="font-display font-medium text-lg text-[#34221D] mb-1">{val.title}</h4>
+                <p className="font-body text-sm md:text-base text-[#34221D]/70 leading-relaxed">{val.desc}</p>
               </div>
             </motion.div>
           ))}

@@ -156,8 +156,8 @@ function FreshVideo({ videoKey, videoUrl }: { videoKey: string | null; videoUrl:
     }
   }, [videoKey, videoUrl]);
 
-  if (loading) return <div className="w-full h-32 rounded-xl border border-[#F0D0DC] bg-[#FFF5F8] flex items-center justify-center"><span className="font-body text-xs text-[#3D1A2E]">Loading video...</span></div>;
-  if (error || !src) return <div className="w-full h-32 rounded-xl border border-[#F0D0DC] bg-[#FFF5F8] flex items-center justify-center"><span className="font-body text-xs text-[#3D1A2E]">Video unavailable</span></div>;
+  if (loading) return <div className="w-full h-32 rounded-xl border border-border bg-accent flex items-center justify-center"><span className="font-body text-xs text-foreground">Loading video...</span></div>;
+  if (error || !src) return <div className="w-full h-32 rounded-xl border border-border bg-accent flex items-center justify-center"><span className="font-body text-xs text-foreground">Video unavailable</span></div>;
 
   return (
     <video
@@ -165,7 +165,7 @@ function FreshVideo({ videoKey, videoUrl }: { videoKey: string | null; videoUrl:
       controls
       playsInline
       preload="metadata"
-      className="w-full rounded-xl border border-[#F0D0DC] bg-black"
+      className="w-full rounded-xl border border-border bg-black"
       style={{ maxHeight: "320px" }}
       onError={() => setError(true)}
     >
@@ -179,8 +179,8 @@ function StatusBadge({ status }: { status: AppStatus }) {
     new: "bg-blue-100 text-blue-700",
     reviewed: "bg-yellow-100 text-yellow-700",
     shortlisted: "bg-emerald-100 text-emerald-700",
-    interview_requested: "bg-violet-100 text-violet-700",
-    interview_scheduled: "bg-purple-100 text-purple-700",
+    interview_requested: "bg-accent text-brand-link",
+    interview_scheduled: "bg-accent text-brand-link",
     accepted: "bg-green-100 text-green-700",
     rejected: "bg-red-100 text-red-600",
     onboarded: "bg-teal-100 text-teal-700",
@@ -269,60 +269,60 @@ function InterviewInviteAttempt({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && !sendInvite.isPending && onClose()}>
-      <DialogContent className="max-w-lg bg-[#FEFAF4] border-[#F0D0DC]">
+      <DialogContent className="max-w-lg bg-background border-border">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl text-[#1A0A12]">
+          <DialogTitle className="font-display text-xl text-foreground">
             📅 Send Interview Request
           </DialogTitle>
-          <DialogDescription className="font-body text-sm text-[#1A0A12]">
+          <DialogDescription className="font-body text-sm text-foreground">
             Sending to <strong>{app.name}</strong> ({app.email}) for <strong>{app.role}</strong>
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          <div className="bg-[#FFF5F8] border border-[#F0D0DC] rounded-xl p-4">
-            <p className="font-body text-sm text-[#3D1A2E] leading-relaxed">
+          <div className="bg-accent border border-border rounded-xl p-4">
+            <p className="font-body text-sm text-foreground leading-relaxed">
               Email: <strong className="break-all">{app.email}</strong><br />
               Text: <strong>{savedPhone ? formatCanadianPhoneNumber(savedPhone) : "No valid saved phone number. Email only."}</strong><br />
               The text uses the same booking link. Numbers that opted out are skipped. Additional notes are included in the email only. Sending a link does not confirm a booking. Use Check bookings to find confirmed appointments.
             </p>
           </div>
-          {delivery && <div role="status" aria-live="polite" className="rounded-xl border border-[#F0D0DC] bg-white p-4 font-body text-sm leading-6 text-[#3D1A2E]">{describeInterviewInviteDelivery(delivery).message}</div>}
+          {delivery && <div role="status" aria-live="polite" className="rounded-xl border border-border bg-white p-4 font-body text-sm leading-6 text-foreground">{describeInterviewInviteDelivery(delivery).message}</div>}
 
           <div>
-            <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Booking Link *</Label>
+            <Label className="font-body text-sm text-foreground mb-1 block">Booking Link *</Label>
             <Input
               placeholder="https://calendar.app.google/..."
               value={bookingLink}
               disabled={sendInvite.isPending || Boolean(requestKey.current)}
               onChange={(e) => setBookingLink(e.target.value)}
-              className="border-[#F0D0DC] font-body"
+              className="border-border font-body"
             />
-            <p className="font-body text-xs text-[#C4A0B0] mt-1">Pre-filled with your Google Calendar link</p>
+            <p className="font-body text-xs text-muted-foreground mt-1">Pre-filled with your Google Calendar link</p>
           </div>
 
           <div>
-            <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Additional Notes (optional)</Label>
+            <Label className="font-body text-sm text-foreground mb-1 block">Additional Notes (optional)</Label>
             <Textarea
               placeholder="Any additional info for the applicant..."
               value={additionalNotes}
               disabled={sendInvite.isPending || Boolean(requestKey.current)}
               onChange={(e) => setAdditionalNotes(e.target.value)}
-              className="border-[#F0D0DC] font-body resize-none"
+              className="border-border font-body resize-none"
               rows={3}
             />
           </div>
         </div>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose} disabled={sendInvite.isPending} className="font-body border-[#F0D0DC]">
+          <Button variant="outline" onClick={onClose} disabled={sendInvite.isPending} className="font-body border-border">
             {delivery ? "Close" : "Cancel"}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={sendInvite.isPending || Boolean(delivery)}
-            className="font-body text-white"
-            style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}
+            className="font-body text-primary-foreground"
+            style={{ background: "var(--primary)" }}
           >
             {sendInvite.isPending ? (
               <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Sending...</>
@@ -363,18 +363,18 @@ function OfferSigningAttempt({ app, open, onClose }: OfferLetterModalProps) {
   const handleSend = () => sendSigningLink.mutate({ applicationId: app.id, requestKey });
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-lg bg-[#FEFAF4] border-[#F0D0DC]">
+      <DialogContent className="max-w-lg bg-background border-border">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl text-[#1A0A12]">Send Offer for Signing</DialogTitle>
-          <DialogDescription className="font-body text-sm text-[#1A0A12]">
+          <DialogTitle className="font-display text-xl text-foreground">Send Offer for Signing</DialogTitle>
+          <DialogDescription className="font-body text-sm text-foreground">
             <strong>{app.name}</strong>, <strong>{app.role}</strong> in {app.location}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
-          <div className="rounded-xl border border-[#F0D0DC] bg-white p-4 font-body text-sm space-y-2">
+          <div className="rounded-xl border border-border bg-white p-4 font-body text-sm space-y-2">
             <p><strong>Email:</strong> {app.email}</p>
             <p><strong>Text:</strong> {savedPhone ? formatCanadianPhoneNumber(savedPhone) : "No valid saved phone number. Email only."}</p>
-            <p className="text-xs text-[#6B4A5A]">The text uses the same private signing link as the email. Texts are skipped for applicants who opted out.</p>
+            <p className="text-xs text-muted-foreground">The text uses the same private signing link as the email. Texts are skipped for applicants who opted out.</p>
           </div>
           {!result ? (
             <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-2">
@@ -390,13 +390,13 @@ function OfferSigningAttempt({ app, open, onClose }: OfferLetterModalProps) {
             <div className={`rounded-xl border p-4 space-y-3 ${feedback?.warning ? "bg-amber-50 border-amber-200 text-amber-900" : "bg-green-50 border-green-200 text-green-800"}`}>
               <p role="status" className="font-body text-sm">{feedback?.message}</p>
               <p className="font-body text-xs">Private link for {app.name} only. Do not forward it to anyone else.</p>
-              <a href={result.signingLink} target="_blank" rel="noopener noreferrer" className="font-body text-xs text-[#8B2252] break-all hover:underline">Open signing page</a>
+              <a href={result.signingLink} target="_blank" rel="noopener noreferrer" className="font-body text-xs text-brand-link break-all hover:underline">Open signing page</a>
               <p className="font-body text-xs">Expires {new Date(result.expiresAt).toLocaleString("en-CA", { timeZone: "America/Toronto", timeZoneName: "short" })}.</p>
             </div>
           )}
         </div>
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose} className="font-body border-[#F0D0DC]">{result ? "Close" : "Cancel"}</Button>
+          <Button variant="outline" onClick={onClose} className="font-body border-border">{result ? "Close" : "Cancel"}</Button>
           {!result && <Button onClick={handleSend} disabled={sendSigningLink.isPending} className="font-body text-white bg-green-600 hover:bg-green-700">
             {sendSigningLink.isPending ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Sending...</> : <><Send className="w-4 h-4 mr-2" /> {sendSigningLink.isError ? "Retry same offer attempt" : "Send Email + Text"}</>}
           </Button>}
@@ -480,12 +480,12 @@ function OnboardingEmailModal({
 
   return (
     <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
-      <DialogContent className="max-w-lg bg-[#FEFAF4] border-[#F0D0DC] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg bg-background border-border max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl text-[#1A0A12]">
+          <DialogTitle className="font-display text-xl text-foreground">
             🐾 {isResend ? "Resend Onboarding Documents" : "Send Onboarding Documents"}
           </DialogTitle>
-          <DialogDescription className="font-body text-sm text-[#1A0A12]">
+          <DialogDescription className="font-body text-sm text-foreground">
             Sending to <strong>{app.name}</strong> ({app.email}) for <strong>{app.role}</strong> — {app.location}
           </DialogDescription>
         </DialogHeader>
@@ -505,9 +505,9 @@ function OnboardingEmailModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Orientation Date (optional)</Label>
+              <Label className="font-body text-sm text-foreground mb-1 block">Orientation Date (optional)</Label>
               <Select value={orientationDate} onValueChange={setOrientationDate}>
-                <SelectTrigger className="border-[#F0D0DC] font-body"><SelectValue placeholder="Select a date" /></SelectTrigger>
+                <SelectTrigger className="border-border font-body"><SelectValue placeholder="Select a date" /></SelectTrigger>
                 <SelectContent>
                   {Array.from({ length: 28 }, (_, index) => {
                     const date = new Date();
@@ -521,61 +521,61 @@ function OnboardingEmailModal({
                   })}
                 </SelectContent>
               </Select>
-              <p className="font-body text-xs text-[#C4A0B0] mt-1">Leave unselected to omit</p>
+              <p className="font-body text-xs text-muted-foreground mt-1">Leave unselected to omit</p>
             </div>
             <div>
-              <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Orientation Time (optional)</Label>
+              <Label className="font-body text-sm text-foreground mb-1 block">Orientation Time (optional)</Label>
               <Select value={orientationTime} onValueChange={(value) => setOrientationTime(value as (typeof APY_ORIENTATION_TIME_OPTIONS)[number]["value"])}>
-                <SelectTrigger className="border-[#F0D0DC] font-body"><SelectValue placeholder="Select a time" /></SelectTrigger>
+                <SelectTrigger className="border-border font-body"><SelectValue placeholder="Select a time" /></SelectTrigger>
                 <SelectContent>
                   {APY_ORIENTATION_TIME_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <p className="font-body text-xs text-[#C4A0B0] mt-1">Choose the correct location time</p>
+              <p className="font-body text-xs text-muted-foreground mt-1">Choose the correct location time</p>
             </div>
           </div>
 
           <div>
-            <Label className="font-body text-sm text-[#1A0A12] mb-1 block">APY Planning Document</Label>
-            <Input type="url" value={planningDocUrl} onChange={(event) => setPlanningDocUrl(event.target.value)} className="border-[#F0D0DC] font-body" placeholder="https://docs.google.com/..." />
-            <p className="font-body text-xs text-[#C4A0B0] mt-1">The current APY planning document is pre-filled. Replace it only when the resource has changed.</p>
+            <Label className="font-body text-sm text-foreground mb-1 block">APY Planning Document</Label>
+            <Input type="url" value={planningDocUrl} onChange={(event) => setPlanningDocUrl(event.target.value)} className="border-border font-body" placeholder="https://docs.google.com/..." />
+            <p className="font-body text-xs text-muted-foreground mt-1">The current APY planning document is pre-filled. Replace it only when the resource has changed.</p>
           </div>
 
-          <div className="space-y-3 rounded-xl border border-[#F0D0DC] bg-white p-4">
+          <div className="space-y-3 rounded-xl border border-border bg-white p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <Label className="font-body text-sm text-[#1A0A12] block">Additional Onboarding Documents</Label>
-                <p className="font-body text-xs text-[#8B6070] mt-1">Add up to four shareable links, such as training guides, a handbook, or a group-chat guide.</p>
+                <Label className="font-body text-sm text-foreground block">Additional Onboarding Documents</Label>
+                <p className="font-body text-xs text-muted-foreground mt-1">Add up to four shareable links, such as training guides, a handbook, or a group-chat guide.</p>
               </div>
-              <Button type="button" size="sm" variant="outline" disabled={documents.length >= 4} onClick={() => setDocuments((current) => [...current, { title: "", url: "" }])} className="shrink-0 border-[#F0D0DC] text-[#8B2252] hover:bg-[#FFF5F8]">
+              <Button type="button" size="sm" variant="outline" disabled={documents.length >= 4} onClick={() => setDocuments((current) => [...current, { title: "", url: "" }])} className="shrink-0 border-border text-brand-link hover:bg-accent">
                 + Add document
               </Button>
             </div>
             {documents.map((document, index) => (
               <div key={index} className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)_auto]">
-                <Input value={document.title} onChange={(event) => setDocuments((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, title: event.target.value } : item))} placeholder="Document name" className="border-[#F0D0DC] font-body" />
-                <Input type="url" value={document.url} onChange={(event) => setDocuments((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, url: event.target.value } : item))} placeholder="https://drive.google.com/..." className="border-[#F0D0DC] font-body" />
-                <Button type="button" variant="outline" size="icon" onClick={() => setDocuments((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="border-[#F0D0DC] text-[#8B6070] hover:bg-red-50 hover:text-red-600" aria-label={`Remove document ${index + 1}`}>
+                <Input value={document.title} onChange={(event) => setDocuments((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, title: event.target.value } : item))} placeholder="Document name" className="border-border font-body" />
+                <Input type="url" value={document.url} onChange={(event) => setDocuments((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, url: event.target.value } : item))} placeholder="https://drive.google.com/..." className="border-border font-body" />
+                <Button type="button" variant="outline" size="icon" onClick={() => setDocuments((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="border-border text-muted-foreground hover:bg-red-50 hover:text-red-600" aria-label={`Remove document ${index + 1}`}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
             ))}
-            {!documents.length && <p className="font-body text-xs text-[#8B6070]">No extra documents will be included unless you add them here.</p>}
+            {!documents.length && <p className="font-body text-xs text-muted-foreground">No extra documents will be included unless you add them here.</p>}
           </div>
 
-          <p className="font-body text-xs text-[#8B6070]">Offer Letter and NDA signing remain in the separate <strong>Send Offer Letter</strong> step. This email delivers the post-acceptance onboarding information and resources. Add the signed applicant to Employee Directory first. Their role-based login and training access are enabled immediately. Sending these documents does not mark training complete.</p>
+          <p className="font-body text-xs text-muted-foreground">Offer Letter and NDA signing remain in the separate <strong>Send Offer Letter</strong> step. This email delivers the post-acceptance onboarding information and resources. Add the signed applicant to Employee Directory first. Their role-based login and training access are enabled immediately. Sending these documents does not mark training complete.</p>
 
           <div>
-            <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Additional Notes (optional)</Label>
-            <Textarea placeholder="Any extra info to include for this specific hire..." value={additionalNotes} onChange={(event) => setAdditionalNotes(event.target.value)} className="border-[#F0D0DC] font-body resize-none" rows={3} />
+            <Label className="font-body text-sm text-foreground mb-1 block">Additional Notes (optional)</Label>
+            <Textarea placeholder="Any extra info to include for this specific hire..." value={additionalNotes} onChange={(event) => setAdditionalNotes(event.target.value)} className="border-border font-body resize-none" rows={3} />
           </div>
         </div>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose} className="font-body border-[#F0D0DC]">Cancel</Button>
-          <Button onClick={handleSend} disabled={isSending} className="font-body text-white" style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}>
+          <Button variant="outline" onClick={onClose} className="font-body border-border">Cancel</Button>
+          <Button onClick={handleSend} disabled={isSending} className="font-body text-primary-foreground" style={{ background: "var(--primary)" }}>
             {isSending ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Sending...</> : <><PartyPopper className="w-4 h-4 mr-2" /> {isResend ? "Resend Onboarding Documents" : "Send Onboarding Documents"}</>}
           </Button>
         </DialogFooter>
@@ -610,12 +610,12 @@ function RejectionLetterModal({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-lg bg-[#FEFAF4] border-[#F0D0DC]">
+      <DialogContent className="max-w-lg bg-background border-border">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl text-[#1A0A12]">
+          <DialogTitle className="font-display text-xl text-foreground">
             Send Rejection Letter
           </DialogTitle>
-          <DialogDescription className="font-body text-sm text-[#1A0A12]">
+          <DialogDescription className="font-body text-sm text-foreground">
             Sending to <strong>{app.name}</strong> ({app.email}) for <strong>{app.role}</strong>
           </DialogDescription>
         </DialogHeader>
@@ -628,19 +628,19 @@ function RejectionLetterModal({
           </div>
 
           <div>
-            <Label className="font-body text-sm text-[#1A0A12] mb-1 block">Additional Notes (optional)</Label>
+            <Label className="font-body text-sm text-foreground mb-1 block">Additional Notes (optional)</Label>
             <Textarea
               placeholder="Any personalized feedback or encouragement to include..."
               value={additionalNotes}
               onChange={(e) => setAdditionalNotes(e.target.value)}
-              className="border-[#F0D0DC] font-body resize-none"
+              className="border-border font-body resize-none"
               rows={3}
             />
           </div>
         </div>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose} className="font-body border-[#F0D0DC]">
+          <Button variant="outline" onClick={onClose} className="font-body border-border">
             Cancel
           </Button>
           <Button
@@ -715,10 +715,10 @@ function ApplicationDetailModal({
   return (
     <>
       <Dialog open={open && !showInterviewModal && !showOfferModal && !showRejectionModal && !showOnboardingModal && !hireApplicant && !showOnboardingReconciliation} onOpenChange={(v) => !v && onClose()}>
-        <DialogContent className="max-w-2xl bg-[#FEFAF4] border-[#F0D0DC] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl bg-background border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl text-[#1A0A12]">{app.name}</DialogTitle>
-            <DialogDescription className="font-body text-sm text-[#1A0A12]">
+            <DialogTitle className="font-display text-2xl text-foreground">{app.name}</DialogTitle>
+            <DialogDescription className="font-body text-sm text-foreground">
               {app.role} · {app.location} · Applied {new Date(app.createdAt).toLocaleDateString("en-CA", { month: "long", day: "numeric", year: "numeric" })}
             </DialogDescription>
           </DialogHeader>
@@ -727,13 +727,13 @@ function ApplicationDetailModal({
             {/* Contact */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-1">Email</p>
-                <a href={`mailto:${app.email}`} className="font-body text-sm text-[#1A0A12] hover:text-[#8B2252]">{app.email}</a>
+                <p className="font-body text-xs text-brand-link font-semibold uppercase tracking-wide mb-1">Email</p>
+                <a href={`mailto:${app.email}`} className="font-body text-sm text-foreground hover:text-brand-link">{app.email}</a>
               </div>
               {app.phone && (
                 <div>
-                  <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-1">Phone</p>
-                  <a href={`tel:${app.phone}`} className="font-body text-sm text-[#1A0A12] hover:text-[#8B2252]">{app.phone}</a>
+                  <p className="font-body text-xs text-brand-link font-semibold uppercase tracking-wide mb-1">Phone</p>
+                  <a href={`tel:${app.phone}`} className="font-body text-sm text-foreground hover:text-brand-link">{app.phone}</a>
                 </div>
               )}
             </div>
@@ -741,36 +741,36 @@ function ApplicationDetailModal({
             {/* Why APY */}
             {app.whyAPY && (
               <div>
-                <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-2">Why AfroPuppyYoga?</p>
-                <p className="font-body text-sm text-[#3D1A2E] leading-relaxed bg-white rounded-xl p-4 border border-[#F0D0DC]">{app.whyAPY}</p>
+                <p className="font-body text-xs text-brand-link font-semibold uppercase tracking-wide mb-2">Why AfroPuppyYoga?</p>
+                <p className="font-body text-sm text-foreground leading-relaxed bg-white rounded-xl p-4 border border-border">{app.whyAPY}</p>
               </div>
             )}
 
             {/* Experience */}
             {app.experience && (
               <div>
-                <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-2">Experience</p>
-                <p className="font-body text-sm text-[#3D1A2E] leading-relaxed bg-white rounded-xl p-4 border border-[#F0D0DC]">{app.experience}</p>
+                <p className="font-body text-xs text-brand-link font-semibold uppercase tracking-wide mb-2">Experience</p>
+                <p className="font-body text-sm text-foreground leading-relaxed bg-white rounded-xl p-4 border border-border">{app.experience}</p>
               </div>
             )}
 
             {/* Video */}
             {app.videoUrl && (
               <div>
-                <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-2">Video Application</p>
+                <p className="font-body text-xs text-brand-link font-semibold uppercase tracking-wide mb-2">Video Application</p>
                 {isExternalVideoLink(app.videoUrl) ? (
                   <a
                     href={app.videoUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-3 bg-[#F9E4EE] border border-[#F0D0DC] rounded-xl hover:bg-[#F0D0DC] transition-colors"
+                    className="flex items-center gap-3 p-3 bg-accent border border-border rounded-xl hover:bg-accent transition-colors"
                   >
-                    <Play className="w-5 h-5 text-[#8B2252] shrink-0" />
+                    <Play className="w-5 h-5 text-brand-link shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="font-body text-sm font-semibold text-[#1A0A12]">Watch Video</p>
-                      <p className="font-body text-xs text-[#3D1A2E] truncate">{app.videoUrl}</p>
+                      <p className="font-body text-sm font-semibold text-foreground">Watch Video</p>
+                      <p className="font-body text-xs text-foreground truncate">{app.videoUrl}</p>
                     </div>
-                    <span className="font-body text-xs text-[#8B2252] font-semibold shrink-0">Open ↗</span>
+                    <span className="font-body text-xs text-brand-link font-semibold shrink-0">Open ↗</span>
                   </a>
                 ) : (
                   <FreshVideo videoKey={app.videoKey} videoUrl={app.videoUrl} />
@@ -781,7 +781,7 @@ function ApplicationDetailModal({
             {/* Resume */}
             {app.resumeUrl && (
               <div>
-                <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-2">Resume</p>
+                <p className="font-body text-xs text-brand-link font-semibold uppercase tracking-wide mb-2">Resume</p>
                 <button
                   type="button"
                   onClick={() => openResume(app.resumeKey, app.resumeUrl)}
@@ -794,31 +794,31 @@ function ApplicationDetailModal({
 
             {/* Current Status */}
             <div>
-              <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-2">Current Status</p>
+              <p className="font-body text-xs text-brand-link font-semibold uppercase tracking-wide mb-2">Current Status</p>
               <p className="font-semibold text-sm">{workflow.label}</p><p className="text-sm mt-1">{workflow.next}</p>
             </div>
 
             <div>
-              <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-3">Hiring Timeline</p>
-              <div className="bg-white rounded-xl border border-[#F0D0DC] divide-y divide-[#F0D0DC]">
+              <p className="font-body text-xs text-brand-link font-semibold uppercase tracking-wide mb-3">Hiring Timeline</p>
+              <div className="bg-white rounded-xl border border-border divide-y divide-border">
                 {timelineLoading ? (
-                  <div className="p-4 flex items-center gap-2 font-body text-sm text-[#6B4658]">
+                  <div className="p-4 flex items-center gap-2 font-body text-sm text-muted-foreground">
                     <Loader2 className="w-4 h-4 animate-spin" /> Loading timeline…
                   </div>
                 ) : !timeline?.actions.length ? (
-                  <p className="p-4 font-body text-sm text-[#6B4658]">New activity will appear here as the application moves through hiring.</p>
+                  <p className="p-4 font-body text-sm text-muted-foreground">New activity will appear here as the application moves through hiring.</p>
                 ) : timeline.actions.map((item) => (
                   <div key={item.id} className="p-3 flex items-start justify-between gap-4">
                     <div>
-                      <p className="font-body text-sm font-semibold text-[#1A0A12]">
+                      <p className="font-body text-sm font-semibold text-foreground">
                         {item.action.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase())}
                       </p>
-                      <p className="font-body text-xs text-[#6B4658] mt-0.5">
+                      <p className="font-body text-xs text-muted-foreground mt-0.5">
                         {item.actorName || item.actorEmail || "APY HQ"}
                         {item.fromStatus && item.toStatus && item.fromStatus !== item.toStatus ? ` · ${item.fromStatus} → ${item.toStatus}` : ""}
                       </p>
                     </div>
-                    <time className="font-body text-[11px] text-[#8B6070] whitespace-nowrap">
+                    <time className="font-body text-[11px] text-muted-foreground whitespace-nowrap">
                       {new Date(item.createdAt).toLocaleString("en-CA", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
                     </time>
                   </div>
@@ -828,13 +828,13 @@ function ApplicationDetailModal({
 
             {/* Action Buttons */}
             <div>
-              <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-3">Pipeline Actions</p>
+              <p className="font-body text-xs text-brand-link font-semibold uppercase tracking-wide mb-3">Pipeline Actions</p>
               <div className="flex flex-wrap gap-3">
                 <Button
                   onClick={() => { setShowInterviewModal(true); }}
                   disabled={!workflow.canInterview}
-                  className="font-body text-sm text-white"
-                  style={{ background: "linear-gradient(135deg, #7C3AED, #5B21B6)" }}
+                  className="font-body text-sm text-primary-foreground"
+                  style={{ background: "var(--primary)" }}
                 >
                   <Calendar className="w-4 h-4 mr-2" /> Invite to Interview
                 </Button>
@@ -872,8 +872,8 @@ function ApplicationDetailModal({
                 {getHiringWorkflow(app).canSendDocuments && !app.onboardingSentAt && (
                   <Button
                     onClick={() => { setShowOnboardingModal(true); }}
-                    className="font-body text-sm text-white"
-                    style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}
+                    className="font-body text-sm text-primary-foreground"
+                    style={{ background: "var(--primary)" }}
                   >
                     <PartyPopper className="w-4 h-4 mr-2" /> Send Onboarding Documents
                   </Button>
@@ -900,12 +900,12 @@ function ApplicationDetailModal({
                   <Button
                     onClick={() => setHireApplicant(app as Application)}
                     variant="outline"
-                    className="font-body text-sm border-[#8B2252]/30 text-[#8B2252] hover:bg-[#FFF5F8]"
+                    className="font-body text-sm border-border text-brand-link hover:bg-accent"
                   >
                     <UserPlus className="w-4 h-4 mr-2" /> Add to Employee Directory
                   </Button>
                 )}
-                {app.employeeId && <Link className="text-sm underline text-[#8B2252]" href={`/admin/employees?employee=${app.employeeId}`}>Open employee record</Link>}
+                {app.employeeId && <Link className="text-sm underline text-brand-link" href={`/admin/employees?employee=${app.employeeId}`}>Open employee record</Link>}
               </div>
             </div>
           </div>
@@ -926,15 +926,15 @@ function ApplicationDetailModal({
         <OnboardingEmailModal app={app} open={showOnboardingModal} isResend={Boolean(app.onboardingSentAt)} onClose={() => setShowOnboardingModal(false)} />
       )}
       <AlertDialog open={showOnboardingReconciliation} onOpenChange={setShowOnboardingReconciliation}>
-        <AlertDialogContent className="bg-[#FEFAF4] border-[#F0D0DC]">
+        <AlertDialogContent className="bg-background border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-xl text-[#1A0A12]">Resolve pending onboarding</AlertDialogTitle>
-            <AlertDialogDescription className="font-body text-sm text-[#3D1A2A] leading-relaxed">
+            <AlertDialogTitle className="font-display text-xl text-foreground">Resolve pending onboarding</AlertDialogTitle>
+            <AlertDialogDescription className="font-body text-sm text-foreground leading-relaxed">
               An initial onboarding email was claimed but not fully completed. Confirm whether the email provider accepted the send request. This action never sends another email.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 sm:gap-2">
-            <AlertDialogCancel className="font-body border-[#F0D0DC]">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="font-body border-border">Cancel</AlertDialogCancel>
             <Button
               type="button"
               variant="outline"
@@ -947,7 +947,7 @@ function ApplicationDetailModal({
             <AlertDialogAction
               disabled={reconcileOnboarding.isPending}
               onClick={() => reconcileOnboarding.mutate({ id: app.id, outcome: "delivered" })}
-              className="font-body bg-[#8B2252] hover:bg-[#701b42]"
+              className="font-body bg-primary hover:bg-primary-hover"
             >
               {reconcileOnboarding.isPending ? "Saving..." : "Provider accepted send"}
             </AlertDialogAction>
@@ -1098,22 +1098,22 @@ export default function ApplicationsDashboard() {
   });
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#8B2252]" />
+      <div className="min-h-screen apy-staff-ui bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-link" />
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#FEFAF4] flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen apy-staff-ui bg-background flex flex-col items-center justify-center p-6">
         <img src={LOGO_URL} alt="AfroPuppyYoga" className="w-16 h-16 rounded-full object-cover mb-6" />
-        <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Admin Access Required</h2>
-        <p className="font-body text-[#1A0A12] mb-6">Please log in to view applications.</p>
+        <h2 className="font-display font-medium text-2xl text-foreground mb-2">Admin Access Required</h2>
+        <p className="font-body text-foreground mb-6">Please log in to view applications.</p>
         <button
           onClick={() => window.location.href = getLoginUrl()}
-          className="inline-flex items-center px-6 py-3 font-body font-semibold text-sm rounded-full text-white transition-all duration-200 hover:-translate-y-0.5"
-          style={{ background: "linear-gradient(135deg, #8B2252, #c2410c)" }}
+          className="inline-flex items-center px-6 py-3 font-body font-semibold text-sm rounded-full text-primary-foreground transition-all duration-200 hover:-translate-y-0.5"
+          style={{ background: "var(--primary)" }}
         >
           Log In
         </button>
@@ -1123,10 +1123,10 @@ export default function ApplicationsDashboard() {
 
   if (user.role !== "admin" && user.role !== "staff") {
     return (
-      <div className="min-h-screen bg-[#FEFAF4] flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen apy-staff-ui bg-background flex flex-col items-center justify-center p-6">
         <img src={LOGO_URL} alt="AfroPuppyYoga" className="w-16 h-16 rounded-full object-cover mb-6" />
-        <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Access Denied</h2>
-        <p className="font-body text-[#1A0A12]">This page is for admins only.</p>
+        <h2 className="font-display font-medium text-2xl text-foreground mb-2">Access Denied</h2>
+        <p className="font-body text-foreground">This page is for admins only.</p>
       </div>
     );
   }
@@ -1154,7 +1154,7 @@ export default function ApplicationsDashboard() {
   );
 
   return (
-    <div className="min-h-screen bg-[#FEFAF4]">
+    <div className="min-h-screen apy-staff-ui bg-background">
       <AdminNav />
 
       <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
@@ -1162,17 +1162,17 @@ export default function ApplicationsDashboard() {
         <div className="flex items-start justify-between">
           <div>
             <div className="inline-flex items-center gap-2 mb-2">
-              <span className="h-px w-6 bg-[#8B2252]" />
-              <span className="font-body text-xs font-semibold tracking-widest uppercase text-[#8B2252]">Admin</span>
+              <span className="h-px w-6 bg-primary" />
+              <span className="font-body text-xs font-semibold tracking-widest uppercase text-brand-link">Admin</span>
             </div>
-            <h1 className="font-display font-bold text-3xl text-[#1A0A12]">Job Applications</h1>
-            <p className="font-body text-sm text-[#1A0A12] mt-1">Interview → Offer → Signature → Add employee → Send onboarding documents</p>
+            <h1 className="font-display font-medium text-3xl text-foreground">Job Applications</h1>
+            <p className="font-body text-sm text-foreground mt-1">Interview → Offer → Signature → Add employee → Send onboarding documents</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2"><Link href="/admin/employees" className="text-sm text-[#8B2252] underline">Employee Directory</Link><Link href="/admin/staff-training" className="text-sm text-[#8B2252] underline">Training progress</Link>
+          <div className="flex flex-wrap items-center gap-2"><Link href="/admin/employees" className="text-sm text-brand-link underline">Employee Directory</Link><Link href="/admin/staff-training" className="text-sm text-brand-link underline">Training progress</Link>
           <Button
             variant="outline"
             size="sm"
-            className="border-[#F0D0DC] text-[#8B2252] hover:bg-[#FFF5F8] font-body"
+            className="border-border text-brand-link hover:bg-accent font-body"
             disabled={syncBookings.isPending}
             title="Check verified APY calendar booking notices from the last 90 days. Does not send emails or offers."
             onClick={() => syncBookings.mutate()}
@@ -1182,7 +1182,7 @@ export default function ApplicationsDashboard() {
           <Button
             variant="outline"
             size="sm"
-            className="border-[#F0D0DC] text-[#8B2252] hover:bg-[#FFF5F8] font-body"
+            className="border-border text-brand-link hover:bg-accent font-body"
             onClick={() => setShowArchived(true)}
           >
             <Inbox className="w-4 h-4 mr-1.5" /> Archived
@@ -1197,26 +1197,26 @@ export default function ApplicationsDashboard() {
               type="button"
               aria-pressed={pipelineView === value}
               onClick={() => { setPipelineView(value); setStatusFilter("all"); setApplicationPage(1); }}
-              className={`rounded-2xl p-4 border text-left transition-all ${pipelineView === value ? "bg-[#8B2252] border-[#8B2252] text-white shadow-sm" : "bg-white border-[#F0D0DC] text-[#1A0A12] hover:border-[#C86B8D]"}`}
+              className={`rounded-2xl p-4 border text-left transition-all ${pipelineView === value ? "bg-primary border-border text-primary-foreground shadow-sm" : "bg-white border-border text-foreground hover:border-border"}`}
             >
-              <p className={`font-body text-xs ${pipelineView === value ? "text-pink-100" : "text-[#6B4658]"}`}>{label}</p>
-              <p className="font-display font-bold text-2xl mt-1">{pipelineCounts.get(value)}</p>
+              <p className={`font-body text-xs ${pipelineView === value ? "text-primary-foreground" : "text-muted-foreground"}`}>{label}</p>
+              <p className="font-display font-medium text-2xl mt-1">{pipelineCounts.get(value)}</p>
             </button>
           ))}
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#F0D0DC] p-4 flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+        <div className="bg-white rounded-2xl border border-border p-4 flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
           <div className="flex flex-col sm:flex-row gap-3 flex-1">
             <Input
               value={applicationQuery}
               onChange={(event) => { setApplicationQuery(event.target.value); setApplicationPage(1); }}
               placeholder="Search applicant, email, role, or location"
-              className="sm:max-w-sm border-[#F0D0DC]"
+              className="sm:max-w-sm border-border"
             />
             <select
               value={statusFilter}
               onChange={(event) => { setStatusFilter(event.target.value as "all" | AppStatus); setPipelineView("all"); setApplicationPage(1); }}
-              className="h-10 rounded-md border border-[#F0D0DC] bg-white px-3 font-body text-sm text-[#3D1A2E]"
+              className="h-10 rounded-md border border-border bg-white px-3 font-body text-sm text-foreground"
             >
               <option value="all">All statuses</option>
               <option value="new">New</option>
@@ -1231,7 +1231,7 @@ export default function ApplicationsDashboard() {
             <select
               value={locationFilter}
               onChange={(event) => { setLocationFilter(event.target.value); setApplicationPage(1); }}
-              className="h-10 rounded-md border border-[#F0D0DC] bg-white px-3 font-body text-sm text-[#3D1A2E]"
+              className="h-10 rounded-md border border-border bg-white px-3 font-body text-sm text-foreground"
             >
               <option value="all">All locations</option>
               {applicationLocations.map((location) => <option key={location} value={location}>{location}</option>)}
@@ -1239,13 +1239,13 @@ export default function ApplicationsDashboard() {
             <select
               value={roleFilter}
               onChange={(event) => { setRoleFilter(event.target.value); setApplicationPage(1); }}
-              className="h-10 rounded-md border border-[#F0D0DC] bg-white px-3 font-body text-sm text-[#3D1A2E]"
+              className="h-10 rounded-md border border-border bg-white px-3 font-body text-sm text-foreground"
             >
               <option value="all">All roles</option>
               {applicationRoles.map((role) => <option key={role} value={role}>{role}</option>)}
             </select>
           </div>
-          <p className="font-body text-xs text-[#6B4658] whitespace-nowrap">
+          <p className="font-body text-xs text-muted-foreground whitespace-nowrap">
             Showing {displayedApplications.length} of {filteredApplications.length} applications
           </p>
         </div>
@@ -1253,69 +1253,69 @@ export default function ApplicationsDashboard() {
 
 
         {/* Applications table */}
-        <div className="bg-white rounded-2xl border border-[#F0D0DC] overflow-hidden">
+        <div className="bg-white rounded-2xl border border-border overflow-hidden">
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-[#8B2252]" />
+              <Loader2 className="w-8 h-8 animate-spin text-brand-link" />
             </div>
           ) : applicationsError ? <p role="alert" className="p-6 text-red-700">Applications could not be loaded. Refresh to try again.</p> : !applications || applications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="w-16 h-16 rounded-full bg-[#FFF5F8] flex items-center justify-center mb-4">
-                <Users className="w-8 h-8 text-[#8B2252]" />
+              <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center mb-4">
+                <Users className="w-8 h-8 text-brand-link" />
               </div>
-              <h3 className="font-display font-bold text-xl text-[#1A0A12] mb-2">No applications yet</h3>
-              <p className="font-body text-[#1A0A12] text-sm">
+              <h3 className="font-display font-medium text-xl text-foreground mb-2">No applications yet</h3>
+              <p className="font-body text-foreground text-sm">
                 Applications submitted through the careers page will appear here.
               </p>
             </div>
           ) : filteredApplications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <h3 className="font-display font-bold text-xl text-[#1A0A12] mb-2">No matching applications</h3>
-              <p className="font-body text-[#1A0A12] text-sm">Try clearing or changing your search filters.</p>
+              <h3 className="font-display font-medium text-xl text-foreground mb-2">No matching applications</h3>
+              <p className="font-body text-foreground text-sm">Try clearing or changing your search filters.</p>
             </div>
           ) : (
             <div
               ref={dragScroll.ref}
               className="overflow-x-auto cursor-grab"
-              style={{ scrollbarWidth: 'thin', scrollbarColor: '#F0D0DC #FEFAF4' }}
+              style={{ scrollbarWidth: 'thin', scrollbarColor: 'var(--border) var(--background)' }}
               onMouseDown={dragScroll.onMouseDown}
               onMouseUp={dragScroll.onMouseUp}
               onMouseMove={dragScroll.onMouseMove}
               onMouseLeave={dragScroll.onMouseLeave}
             >
-              <table className="w-full">
+              <table className="w-full min-w-[640px]">
                 <thead>
-                  <tr className="bg-[#FFF5F8] border-b border-[#F0D0DC]">
-                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Applicant</th>
-                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Position</th>
-                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Application</th>
-                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Stage</th>
-                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Next step</th>
+                  <tr className="bg-accent border-b border-border">
+                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-brand-link">Applicant</th>
+                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-brand-link">Position</th>
+                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-brand-link">Application</th>
+                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-brand-link">Stage</th>
+                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-brand-link">Next step</th>
                   </tr>
                 </thead>
                 <tbody>
                   {displayedApplications.map((app, idx) => (
                     <tr
                       key={app.id}
-                      className={`border-b border-[#F0D0DC] last:border-0 transition-colors hover:bg-[#FFF5F8] ${idx % 2 === 0 ? "" : "bg-[#FEFAF4]"}`}
+                      className={`border-b border-border last:border-0 transition-colors hover:bg-accent ${idx % 2 === 0 ? "" : "bg-background"}`}
                     >
                       {/* Applicant */}
                       <td className="px-5 py-4">
                         <button
                           onClick={() => setSelectedApp(app as Application)}
-                          className="text-left hover:text-[#8B2252] transition-colors"
+                          className="text-left hover:text-brand-link transition-colors"
                         >
-                          <p className="font-body font-semibold text-sm text-[#1A0A12]">{app.name}</p>
-                          <p className="font-body text-xs text-[#8B6070] mt-0.5 max-w-[220px] truncate">{app.email}</p>
-                          {app.phone && <p className="font-body text-xs text-[#8B6070] mt-0.5">{app.phone}</p>}
+                          <p className="font-body font-semibold text-sm text-foreground">{app.name}</p>
+                          <p className="font-body text-xs text-muted-foreground mt-0.5 max-w-[220px] truncate">{app.email}</p>
+                          {app.phone && <p className="font-body text-xs text-muted-foreground mt-0.5">{app.phone}</p>}
                         </button>
                       </td>
 
                       {/* Role */}
                       <td className="px-5 py-4">
-                        <p className="font-body text-sm text-[#1A0A12]">{app.role}</p>
-                        <p className="font-body text-xs text-[#C4A0B0]">{app.location}</p>
-                        <p className="font-body text-xs text-[#8B6070] mt-1">
+                        <p className="font-body text-sm text-foreground">{app.role}</p>
+                        <p className="font-body text-xs text-muted-foreground">{app.location}</p>
+                        <p className="font-body text-xs text-muted-foreground mt-1">
                           Applied {new Date(app.createdAt).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}
                         </p>
                       </td>
@@ -1324,27 +1324,27 @@ export default function ApplicationsDashboard() {
                       <td className="px-5 py-4">
                         <div className="flex flex-wrap gap-2">
                           {app.videoUrl ? (
-                            <button onClick={() => openVideo(app.videoKey, app.videoUrl)} className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-[#FFF5F8] border border-[#F2A0B8] rounded-lg font-body text-xs font-semibold text-[#8B2252] hover:bg-[#F2A0B8]/20">
+                            <button onClick={() => openVideo(app.videoKey, app.videoUrl)} className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-accent border border-border rounded-lg font-body text-xs font-semibold text-brand-link hover:bg-accent">
                               <Play className="w-3 h-3" /> Video
                             </button>
-                          ) : <span className="font-body text-xs text-[#C4A0B0]">No video</span>}
+                          ) : <span className="font-body text-xs text-muted-foreground">No video</span>}
                           {app.resumeUrl ? (
                             <button type="button" onClick={() => openResume(app.resumeKey, app.resumeUrl)} className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 border border-blue-200 rounded-lg font-body text-xs font-semibold text-blue-700 hover:bg-blue-100">
                               <FileText className="w-3 h-3" /> Resume
                             </button>
-                          ) : <span className="font-body text-xs text-[#C4A0B0]">No resume</span>}
+                          ) : <span className="font-body text-xs text-muted-foreground">No resume</span>}
                         </div>
                       </td>
 
                       {/* Stage */}
                       <td className="px-5 py-4">
-                        <p className="font-semibold text-sm text-[#8B2252] mb-1">{getHiringWorkflow(app).label}</p>
+                        <p className="font-semibold text-sm text-brand-link mb-1">{getHiringWorkflow(app).label}</p>
                         {app.status === "interview_scheduled" && app.interviewSlotLabel && (
-                          <p className="inline-flex items-center gap-1 text-xs font-semibold text-purple-700 bg-purple-50 border border-purple-200 rounded-md px-2 py-1 mb-2">
+                          <p className="inline-flex items-center gap-1 text-xs font-semibold text-brand-link bg-accent border border-border rounded-md px-2 py-1 mb-2">
                             <Calendar className="w-3 h-3" /> {app.interviewSlotLabel}
                           </p>
                         )}
-                        <p className="text-xs text-[#6B4658] max-w-64 mb-2">{getHiringWorkflow(app).next}</p>
+                        <p className="text-xs text-muted-foreground max-w-64 mb-2">{getHiringWorkflow(app).next}</p>
                         <Select
                           disabled={Boolean(app.employeeId) || app.status === "onboarded" || Boolean(app.onboardingDeliveryToken)}
                           value={app.status}
@@ -1356,7 +1356,7 @@ export default function ApplicationsDashboard() {
                             updateStatus.mutate({ id: app.id, status: val as AppStatus });
                           }}
                         >
-                          <SelectTrigger className="w-44 h-8 text-xs font-body border-[#F0D0DC] bg-white">
+                          <SelectTrigger className="w-44 h-8 text-xs font-body border-border bg-white">
                             <SelectValue>
                               <StatusBadge status={app.status as AppStatus} />
                             </SelectValue>
@@ -1383,13 +1383,13 @@ export default function ApplicationsDashboard() {
                         <div className="flex flex-wrap items-center gap-2 min-w-48">
                           <button
                             onClick={() => setSelectedApp(app as Application)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#FFF5F8] border border-[#F0D0DC] rounded-lg font-body text-xs font-semibold text-[#8B2252] hover:bg-[#F9E4EE] transition-colors"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-accent border border-border rounded-lg font-body text-xs font-semibold text-brand-link hover:bg-accent transition-colors"
                             title="View full application"
                           >
                             <Eye className="w-3 h-3" /> View
                           </button>
                           {getHiringWorkflow(app).canInterview && ["new", "reviewed", "shortlisted"].includes(app.status) && (
-                            <button onClick={() => { setSelectedApp(app as Application); setShowInterviewModal(true); }} className="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-lg font-body text-xs font-semibold text-purple-700 hover:bg-purple-100">
+                            <button onClick={() => { setSelectedApp(app as Application); setShowInterviewModal(true); }} className="inline-flex items-center gap-1 px-3 py-1.5 bg-accent border border-border rounded-lg font-body text-xs font-semibold text-brand-link hover:bg-accent">
                               <Calendar className="w-3 h-3" /> Interview
                             </button>
                           )}
@@ -1416,9 +1416,9 @@ export default function ApplicationsDashboard() {
                               <UserPlus className="w-3 h-3" /> Add employee
                             </button>
                           )}
-                          {getHiringWorkflow(app).canSendDocuments && Boolean(app.onboardingSentAt) && <button className="text-xs text-[#8B2252] underline" onClick={() => { setSelectedApp(app as Application); setShowOnboardingModal(true); }}>Resend onboarding documents</button>}
+                          {getHiringWorkflow(app).canSendDocuments && Boolean(app.onboardingSentAt) && <button className="text-xs text-brand-link underline" onClick={() => { setSelectedApp(app as Application); setShowOnboardingModal(true); }}>Resend onboarding documents</button>}
                           {app.onboardingDeliveryToken && <button className="text-xs text-amber-800 underline" onClick={() => setSelectedApp(app as Application)}>Resolve pending onboarding</button>}
-                          {app.employeeId && <Link className="text-xs text-[#8B2252] underline" href={`/admin/employees?employee=${app.employeeId}`}>Open employee record</Link>}
+                          {app.employeeId && <Link className="text-xs text-brand-link underline" href={`/admin/employees?employee=${app.employeeId}`}>Open employee record</Link>}
                           {app.status !== "rejected" && app.status !== "onboarded" && !app.employeeId && (
                             <button
                               type="button"
@@ -1446,25 +1446,25 @@ export default function ApplicationsDashboard() {
             </div>
           )}
           {filteredApplications.length > applicationsPerPage && (
-            <div className="flex items-center justify-between border-t border-[#F0D0DC] px-5 py-3 bg-[#FEFAF4]">
+            <div className="flex items-center justify-between border-t border-border px-5 py-3 bg-background">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 disabled={currentApplicationPage === 1}
                 onClick={() => setApplicationPage((page) => Math.max(1, page - 1))}
-                className="border-[#F0D0DC] text-[#8B2252]"
+                className="border-border text-brand-link"
               >
                 Previous
               </Button>
-              <p className="font-body text-xs text-[#6B4658]">Page {currentApplicationPage} of {totalApplicationPages}</p>
+              <p className="font-body text-xs text-muted-foreground">Page {currentApplicationPage} of {totalApplicationPages}</p>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 disabled={currentApplicationPage === totalApplicationPages}
                 onClick={() => setApplicationPage((page) => Math.min(totalApplicationPages, page + 1))}
-                className="border-[#F0D0DC] text-[#8B2252]"
+                className="border-border text-brand-link"
               >
                 Next
               </Button>
@@ -1513,15 +1513,15 @@ export default function ApplicationsDashboard() {
       )}
       {/* Archive Confirmation Dialog */}
       <AlertDialog open={deleteConfirmId !== null} onOpenChange={(v) => !v && setDeleteConfirmId(null)}>
-        <AlertDialogContent className="bg-[#FEFAF4] border-[#F0D0DC]">
+        <AlertDialogContent className="bg-background border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-xl text-[#1A0A12]">Archive Application?</AlertDialogTitle>
-            <AlertDialogDescription className="font-body text-sm text-[#1A0A12]">
+            <AlertDialogTitle className="font-display text-xl text-foreground">Archive Application?</AlertDialogTitle>
+            <AlertDialogDescription className="font-body text-sm text-foreground">
               This will move the application to the archive. You can restore it later from the Archived tab.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="font-body border-[#F0D0DC]">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="font-body border-border">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteConfirmId !== null && deleteApplication.mutate({ id: deleteConfirmId })}
               className="font-body bg-amber-600 hover:bg-amber-700 text-white"
@@ -1538,16 +1538,16 @@ export default function ApplicationsDashboard() {
 
       {/* Archived Applications Dialog */}
       <Dialog open={showArchived} onOpenChange={setShowArchived}>
-        <DialogContent className="bg-[#FEFAF4] border-[#F0D0DC] max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="bg-background border-border max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl text-[#1A0A12]">Archived Applications</DialogTitle>
-            <DialogDescription className="font-body text-sm text-[#1A0A12]">
+            <DialogTitle className="font-display text-xl text-foreground">Archived Applications</DialogTitle>
+            <DialogDescription className="font-body text-sm text-foreground">
               These applications were archived and can be restored at any time.
             </DialogDescription>
           </DialogHeader>
           {archivedLoading ? (
             <div className="flex items-center justify-center py-10">
-              <Loader2 className="w-6 h-6 animate-spin text-[#8B2252]" />
+              <Loader2 className="w-6 h-6 animate-spin text-brand-link" />
             </div>
           ) : !archivedApps || archivedApps.length === 0 ? (
             <div className="text-center py-10">
@@ -1557,9 +1557,9 @@ export default function ApplicationsDashboard() {
           ) : (
             <div className="space-y-3">
               {archivedApps.map((app) => (
-                <div key={app.id} className="flex items-center justify-between bg-white rounded-xl p-4 border border-[#F0D0DC]">
+                <div key={app.id} className="flex items-center justify-between bg-white rounded-xl p-4 border border-border">
                   <div>
-                    <p className="font-body font-semibold text-[#1A0A12]">{app.name}</p>
+                    <p className="font-body font-semibold text-foreground">{app.name}</p>
                     <p className="font-body text-xs text-gray-500">{app.role} • {app.location} • Archived {app.deletedAt ? new Date(app.deletedAt).toLocaleDateString() : ''}</p>
                   </div>
                   <Button

@@ -37,7 +37,7 @@ const BREEDS = [
 const BASE_PAY = 450;
 
 const DEMAND_MULTIPLIERS: Record<string, { mult: number; label: string; color: string }> = {
-  rare:   { mult: 1.30, label: "Rare / Exotic",  color: "#7c3aed" },
+  rare:   { mult: 1.30, label: "Rare / Exotic",  color: "#B52F5A" },
   high:   { mult: 1.15, label: "High Demand",     color: "#059669" },
   medium: { mult: 1.00, label: "Medium Demand",   color: "#0284c7" },
   low:    { mult: 0.90, label: "Lower Demand",    color: "#64748b" },
@@ -72,7 +72,7 @@ function fmt(n: number) {
 }
 
 function getTierLabel(pay: number): { label: string; color: string; bg: string } {
-  if (pay >= 660) return { label: "Premium",  color: "#7c3aed", bg: "#f5f3ff" };
+  if (pay >= 660) return { label: "Premium",  color: "#B52F5A", bg: "#FDE9EF" };
   if (pay >= 580) return { label: "High",     color: "#059669", bg: "#ecfdf5" };
   if (pay >= 510) return { label: "Standard", color: "#0284c7", bg: "#eff6ff" };
   return              { label: "Base",      color: "#64748b", bg: "#f8fafc" };
@@ -113,12 +113,12 @@ export default function BreederCalculator() {
   const barPct = Math.round(((result.pay - 450) / (700 - 450)) * 100);
 
   return (
-    <div className="min-h-screen bg-[#FEFAF4] font-sans">
+    <div className="min-h-screen apy-staff-ui bg-background font-sans">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-6 py-4">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+            <h1 className="text-xl font-medium text-slate-900 tracking-tight">
               🐶 Breeder Pay Calculator
             </h1>
             <p className="text-sm text-slate-500 mt-0.5">
@@ -127,7 +127,7 @@ export default function BreederCalculator() {
           </div>
           <a
             href="/predictor"
-            className="text-sm text-[#8B2252] font-medium hover:underline hidden sm:block"
+            className="text-sm text-brand-link font-medium hover:underline hidden sm:block"
           >
             ← Fill Rate Predictor
           </a>
@@ -147,7 +147,7 @@ export default function BreederCalculator() {
             <select
               value={breed}
               onChange={(e) => setBreed(e.target.value)}
-              className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#8B2252]"
+              className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {BREEDS.map((b) => (
                 <option key={b.name} value={b.name}>
@@ -179,7 +179,7 @@ export default function BreederCalculator() {
                 max={120}
                 value={distanceKm}
                 onChange={(e) => setDistanceKm(Number(e.target.value))}
-                className="flex-1 accent-[#8B2252]"
+                className="flex-1 accent-ring"
               />
               <span className="text-sm font-bold text-slate-800 w-16 text-right">
                 {distanceKm} km
@@ -192,8 +192,8 @@ export default function BreederCalculator() {
                   onClick={() => setDistanceKm(d.max === 999 ? 90 : Math.round(d.max * 0.7))}
                   className={`text-xs px-2 py-1 rounded-lg border transition-all ${
                     result.distBracket.label === d.label
-                      ? "bg-[#8B2252] text-white border-[#8B2252]"
-                      : "bg-slate-50 text-slate-600 border-slate-200 hover:border-[#8B2252]"
+                      ? "bg-primary text-primary-foreground border-border"
+                      : "bg-slate-50 text-slate-600 border-slate-200 hover:border-border"
                   }`}
                 >
                   {d.label}
@@ -214,8 +214,8 @@ export default function BreederCalculator() {
                   onClick={() => setPuppyCount(p.count)}
                   className={`py-2.5 rounded-xl text-xs font-bold border transition-all ${
                     puppyCount === p.count
-                      ? "bg-[#8B2252] text-white border-[#8B2252] shadow-sm"
-                      : "bg-slate-50 text-slate-600 border-slate-200 hover:border-[#8B2252]"
+                      ? "bg-primary text-primary-foreground border-border shadow-sm"
+                      : "bg-slate-50 text-slate-600 border-slate-200 hover:border-border"
                   }`}
                 >
                   <span className="block">{p.count === 10 ? "10+" : p.count}</span>
@@ -237,8 +237,8 @@ export default function BreederCalculator() {
                   onClick={() => setReliability(r.key)}
                   className={`text-left px-3 py-2.5 rounded-xl border text-sm transition-all ${
                     reliability === r.key
-                      ? "bg-[#8B2252] text-white border-[#8B2252]"
-                      : "bg-slate-50 text-slate-700 border-slate-200 hover:border-[#8B2252]"
+                      ? "bg-primary text-primary-foreground border-border"
+                      : "bg-slate-50 text-slate-700 border-slate-200 hover:border-border"
                   }`}
                 >
                   {r.label}
@@ -290,7 +290,7 @@ export default function BreederCalculator() {
 
           {/* Breakdown */}
           <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">
+            <h3 className="text-xs font-medium text-slate-500 uppercase tracking-widest mb-4">
               Pay Breakdown
             </h3>
             <div className="flex flex-col gap-2">
@@ -321,12 +321,12 @@ export default function BreederCalculator() {
 
           {/* Quick reference */}
           <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">
+            <h3 className="text-xs font-medium text-slate-500 uppercase tracking-widest mb-3">
               Pay Range Reference
             </h3>
             <div className="flex flex-col gap-1.5">
               {[
-                { range: "CA$660 – CA$700", desc: "Rare breed + far distance", color: "#7c3aed" },
+                { range: "CA$660 – CA$700", desc: "Rare breed + far distance", color: "#B52F5A" },
                 { range: "CA$580 – CA$655", desc: "High demand + 3+ puppies", color: "#059669" },
                 { range: "CA$510 – CA$575", desc: "Standard session",          color: "#0284c7" },
                 { range: "CA$450 – CA$505", desc: "Low demand + close by",     color: "#64748b" },

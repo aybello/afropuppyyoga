@@ -12,7 +12,7 @@ type ReviewRecord = {
 };
 
 function RecordDetails({ record, label }: { record: ReviewRecord; label: string }) {
-  return <div className="rounded-md border border-[#D1A1B5] bg-white p-3">
+  return <div className="rounded-md border border-[#E8D8D0] bg-white p-3">
     <p className="font-semibold">{label} — application #{record.id}</p>
     <p>Name: {record.name || "Not recorded"}</p>
     <p>Email: {record.email || "Not recorded"}</p>
@@ -31,7 +31,7 @@ export function DuplicateApplicationReview({ selected, matches, checked, onCheck
   selected: ReviewRecord; matches: ReviewRecord[]; checked: boolean; onCheckedChange: (checked: boolean) => void;
   canReview: boolean; disabled?: boolean;
 }) {
-  return <section aria-labelledby="duplicate-review-heading" className="space-y-3 text-sm text-[#3D1A2E]">
+  return <section aria-labelledby="duplicate-review-heading" className="space-y-3 text-sm text-[#34221D]">
     <h3 id="duplicate-review-heading" className="font-semibold">Review matching applications</h3>
     <p>These records share contact details and may belong to the same person. Compare every record before enabling login.</p>
     <p>Approval requires matching name, email, and phone. Different names or applications already linked to an employee cannot be approved here.</p>
@@ -41,7 +41,7 @@ export function DuplicateApplicationReview({ selected, matches, checked, onCheck
     </div>
     {canReview && <p>If you confirm this review and add the employee, the reviewed matching applications will be linked to the same employee for history. The applications and signed offers remain on their original records; eligible signed offers may be available to the employee after ownership checks. Only the selected application will be used to enable employee login; the other applications will not be activated.</p>}
     {!canReview ? <p role="alert" className="rounded-md border border-red-300 bg-red-50 p-3 text-red-900">These conflicts cannot be approved here. A record may be ambiguous, already linked, onboarded, or otherwise ineligible. Review the applications and Employee Directory before granting access.</p> :
-      <label className="flex items-start gap-2 rounded-md border border-[#D1A1B5] bg-white p-3">
+      <label className="flex items-start gap-2 rounded-md border border-[#E8D8D0] bg-white p-3">
         <input type="checkbox" className="mt-1" checked={checked} disabled={disabled} onChange={(event) => onCheckedChange(event.target.checked)} />
         <span>I reviewed all matching applications, confirm they belong to the same person, and confirm the selected application's email and phone are appropriate for login.</span>
       </label>}
@@ -148,10 +148,10 @@ function ApplicantDialog({ applicant, onClose, onAdded }: { applicant: Applicant
     } else hire.mutate({ applicationId: applicant.id, confirmed, expectedDirectory: data.prospectiveReuse });
   };
   return <Dialog open onOpenChange={(open) => { if (!open && !hire.isPending) onClose(); }}>
-    <DialogContent className="max-h-[90vh] overflow-y-auto bg-[#FEFAF4] border-[#F0D0DC]">
+    <DialogContent className="max-h-[90vh] overflow-y-auto bg-[#FEFAF4] border-[#E8D8D0]">
       <DialogHeader><DialogTitle>Add to Employee Directory?</DialogTitle>
         <DialogDescription>This adds employee access from the existing application, creating a Directory record or linking an eligible existing record. It does not send an email or mark training complete.</DialogDescription></DialogHeader>
-      <div className="space-y-2 text-sm text-[#3D1A2E]">
+      <div className="space-y-2 text-sm text-[#34221D]">
         <p><strong>{applicant.name}</strong> · {applicant.email}</p>
         <p>Login phone: <strong>{applicant.phone || "Not recorded. Email sign-in only."}</strong></p>
         <p>{applicant.role} · {applicant.location}</p>
@@ -164,7 +164,7 @@ function ApplicantDialog({ applicant, onClose, onAdded }: { applicant: Applicant
       {data && !preflight.isFetching && !preflight.isError && !matchesDisplayed && <p role="alert">The selected application changed. Close this dialog and refresh Applications before continuing.</p>}
       {data && !preflight.isFetching && !preflight.isError && data.directoryMatches?.length > 0 && <section className="space-y-2 text-sm" aria-label="Matching Directory records">
         <h3 className="font-semibold">Matching Employee Directory records</h3>
-        {data.directoryMatches.map((employee) => <div key={employee.id} className="rounded-md border border-[#D1A1B5] bg-white p-3">
+        {data.directoryMatches.map((employee) => <div key={employee.id} className="rounded-md border border-[#E8D8D0] bg-white p-3">
           <p>Directory record #{employee.id}: {employee.name}</p><p>Email: {employee.email || "Not recorded"}</p><p>Phone: {employee.phone || "Not recorded"}</p>
           <p>Role: {employee.role} · Location: {employee.location}</p><p>Employment: {employee.employmentStatus} · Linked application: {employee.sourceApplicationId ?? "None"}</p>
         </div>)}
@@ -176,7 +176,7 @@ function ApplicantDialog({ applicant, onClose, onAdded }: { applicant: Applicant
       {inlineConflict && <p role="alert" className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-900">{inlineConflict}</p>}
       <DialogFooter><Button variant="outline" disabled={hire.isPending || preflight.isFetching} onClick={refresh}>Refresh review</Button>
         <Button variant="outline" disabled={hire.isPending} onClick={onClose}>Cancel</Button>
-        <Button className="bg-[#8B2252] text-white" disabled={!canSubmit} onClick={submit}>{hire.isPending ? "Enabling login..." : data?.prospectiveReuse && data.eligible ? "Link existing record and enable login" : "Add employee and enable login"}</Button></DialogFooter>
+        <Button className="bg-[#F29CB8] text-[#34221D] hover:bg-[#EB8DAA] hover:text-[#34221D]" disabled={!canSubmit} onClick={submit}>{hire.isPending ? "Enabling login..." : data?.prospectiveReuse && data.eligible ? "Link existing record and enable login" : "Add employee and enable login"}</Button></DialogFooter>
     </DialogContent>
   </Dialog>;
 }

@@ -4,17 +4,15 @@ export default function LocalDogsImpact() {
   return (
     <aside
       aria-label="Local dogs in need contribution"
-      className="mt-6 flex max-w-xl items-center gap-3 rounded-2xl border border-white/70 bg-[#FFF6F7]/90 px-4 py-3 text-left text-[#3D1728] shadow-[0_16px_42px_rgba(38,10,25,0.24)] backdrop-blur-md sm:mt-7 sm:gap-4 sm:px-5"
+      className="mt-6 flex max-w-xl items-start gap-3 border-t border-[#EBCDD5] pt-4 text-left text-[#34221D]"
     >
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[#ECA9BD]/60 bg-[#FCE3EA] sm:size-10">
-        <HeartIcon className="size-4 text-[#A62B57] sm:size-[18px]" aria-hidden />
-      </span>
+      <HeartIcon className="size-[18px] shrink-0 mt-0.5 text-[#B83F67]" aria-hidden />
       <div className="min-w-0">
-        <p className="font-body text-[10px] font-bold uppercase tracking-[0.16em] text-[#A62B57]">
+        <p className="font-body text-xs font-semibold text-[#B83F67]">
           Puppy love, shared forward
         </p>
-        <p className="mt-0.5 font-body text-xs leading-relaxed text-[#5A2940] sm:text-sm">
-          Your visit helps, too. <strong className="font-semibold text-[#7C1D43]">$0.50 from every eligible paid public-class ticket</strong> supports local dogs in need.
+        <p className="mt-1 font-body text-sm leading-relaxed text-[#66514A] [text-wrap:pretty]">
+          Your visit helps, too. <strong className="font-semibold text-[#34221D]">$0.50 from every eligible paid public-class ticket</strong> supports local dogs in need.
         </p>
       </div>
     </aside>

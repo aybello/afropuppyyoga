@@ -6,7 +6,7 @@ import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Heart, Brain, Smile, Activity } from "lucide-react";
 
-const ABOUT_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/apy_about_img-J97haeYoPmNbnyyRPN9b8K.webp";
+const ABOUT_IMG = "/manus-storage/apy_kitchener_gallery_06_aug01_puppy_bc15310d.jpg";
 
 const benefits = [
   {
@@ -37,7 +37,7 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 30 }}
+      initial={false}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.6, delay, ease: "easeOut" }}
     >
@@ -48,38 +48,38 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export default function About() {
   return (
-    <section id="about" className="py-10 md:py-16 bg-[#FFF5F8]">
+    <section id="about" className="py-10 md:py-16 bg-[#FEFAF4]">
       <div className="container">
-        <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-14 items-center">
           {/* Text column — comes first on mobile, second on desktop */}
-          <div className="order-2 lg:order-1 space-y-8">
+          <div className="order-1 space-y-8">
             <FadeUp>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-0.5 bg-[#8B2252]" />
-                <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">
+                <div className="w-8 h-0.5 bg-[#B83F67]" />
+                <span className="text-[#B83F67] font-body text-xs font-semibold tracking-widest uppercase">
                   About Us
                 </span>
               </div>
-              <h2 className="font-display text-4xl md:text-5xl font-bold text-[#1A0A12] leading-tight">
+              <h2 className="font-display text-4xl md:text-5xl font-medium text-[#34221D] leading-tight">
                 Where Wellness Meets
                 <br />
-                <span className="italic text-[#8B2252]">Culture & Puppy Love</span>
+                <span className="italic text-[#B83F67]">Culture & Puppy Love</span>
               </h2>
             </FadeUp>
 
             <FadeUp delay={0.15}>
-              <p className="font-body text-[#1A0A12]/75 text-lg leading-relaxed">
-                <strong className="text-[#1A0A12] font-semibold">AfroPuppyYoga (APY)</strong> blends the serene art of yoga with the playful spirit of puppies, all set to the rhythmic beauty of Afro beats.
+              <p className="font-body text-[#34221D]/75 text-lg leading-relaxed">
+                <strong className="text-[#34221D] font-semibold">AfroPuppyYoga (APY)</strong> blends the serene art of yoga with the playful spirit of puppies, all set to the rhythmic beauty of Afro beats.
               </p>
-              <p className="font-body text-[#1A0A12]/75 text-lg leading-relaxed mt-4">
+              <p className="font-body text-[#34221D]/75 text-lg leading-relaxed mt-4">
                 In each class, participants engage in a series of yoga poses that enhance flexibility and reduce stress, while adorable puppies roam freely, adding a touch of joy and spontaneity. Our sessions create a warm, uplifting atmosphere that relaxes the body and energizes the mind.
               </p>
             </FadeUp>
 
             {/* Pull quote */}
             <FadeUp delay={0.25}>
-              <blockquote className="border-l-4 border-[#8B2252] pl-6 py-2">
-                <p className="font-accent text-xl md:text-2xl italic text-[#1A0A12]/80 leading-relaxed">
+              <blockquote className="border-l-4 border-[#B83F67] pl-6 py-2">
+                <p className="font-accent text-xl md:text-2xl italic text-[#34221D]/80 leading-relaxed">
                   "An inclusive, vibrant atmosphere inspired by culture, movement, and music — turning every class into a celebration."
                 </p>
               </blockquote>
@@ -91,17 +91,17 @@ export default function About() {
                 {benefits.map((b, i) => (
                   <motion.div
                     key={b.title}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={false}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.35 + i * 0.1, duration: 0.5 }}
-                    className="bg-white/60 backdrop-blur-sm rounded-xl p-3 md:p-4 border border-[#F0D0DC] hover:border-[#8B2252]/30 transition-colors"
+                    className="bg-white/60 backdrop-blur-sm rounded-xl p-3 md:p-4 border border-[#EBCDD5] hover:border-[#B83F67]/30 transition-colors"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-[#8B2252]/10 flex items-center justify-center mb-3">
-                      <b.icon size={18} className="text-[#8B2252]" />
+                    <div className="w-9 h-9 rounded-lg bg-[#B83F67]/10 flex items-center justify-center mb-3">
+                      <b.icon size={18} className="text-[#B83F67]" />
                     </div>
-                    <h3 className="font-display font-bold text-sm text-[#1A0A12] mb-1">{b.title}</h3>
-                    <p className="font-body text-xs text-[#1A0A12]/60 leading-relaxed">{b.desc}</p>
+                    <h3 className="font-display font-medium text-sm text-[#34221D] mb-1">{b.title}</h3>
+                    <p className="font-body text-xs text-[#34221D]/70 leading-relaxed">{b.desc}</p>
                   </motion.div>
                 ))}
               </div>
@@ -109,24 +109,26 @@ export default function About() {
           </div>
 
           {/* Image column */}
-          <div className="order-1 lg:order-2">
+          <div className="order-2">
             <FadeUp delay={0.1}>
               <div className="relative">
-                <div className="relative overflow-hidden rounded-3xl shadow-2xl aspect-[3/4] max-w-sm mx-auto lg:max-w-none">
+                <div className="relative overflow-hidden rounded-3xl shadow-sm aspect-[3/4] max-w-sm mx-auto lg:max-w-none">
                   <img
                     src={ABOUT_IMG}
-                    alt="AfroPuppyYoga instructor with puppy"
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                    alt="Kitchener guest cuddling a Bernese puppy at AfroPuppyYoga"
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1A0A12]/20 to-transparent" />
+
                 </div>
                 {/* Decorative circles */}
-                <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-[#8B2252]/15 -z-10" />
-                <div className="absolute -bottom-8 -left-8 w-48 h-48 rounded-full bg-[#8B2252]/10 -z-10" />
+
+
                 {/* Floating tag */}
-                <div className="absolute top-6 left-0 md:-left-8 bg-[#8B2252] text-white rounded-xl px-4 py-3 shadow-lg">
-                  <div className="font-body text-xs font-semibold uppercase tracking-wide mb-0.5 text-white/70">Afro-Beat</div>
-                  <div className="font-display font-bold text-sm">Yoga + Puppies</div>
+                <div className="mt-4 flex flex-wrap items-baseline gap-3 text-[#34221D]">
+                  <div className="font-body text-xs font-semibold uppercase tracking-wide mb-0.5 text-[#66514A]">Afro-Beat</div>
+                  <div className="font-display font-medium text-sm">Yoga + Puppies</div>
                 </div>
               </div>
             </FadeUp>

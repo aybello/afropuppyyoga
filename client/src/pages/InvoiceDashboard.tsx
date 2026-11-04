@@ -50,7 +50,7 @@ function StatusBadge({ status, daysLeft, urgency }: {
     );
   }
   if (daysLeft === null) {
-    return <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-body font-semibold bg-[#FFF5F8] text-[#1A0A12]">No due date</span>;
+    return <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-body font-semibold bg-accent text-foreground">No due date</span>;
   }
   if (urgency === "overdue") {
     return (
@@ -113,25 +113,25 @@ function SetInvoiceTotalModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md rounded-2xl border border-[#F0D0DC] bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-[#F0D0DC] px-6 py-4">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-white shadow-xl">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <div>
-            <h2 className="font-display text-lg font-bold text-[#1A0A12]">Confirm Invoice Total</h2>
-            <p className="mt-0.5 font-body text-xs text-[#1A0A12]">{invoice.staffName ?? "Staff invoice"}</p>
+            <h2 className="font-display text-lg font-medium text-foreground">Confirm Invoice Total</h2>
+            <p className="mt-0.5 font-body text-xs text-foreground">{invoice.staffName ?? "Staff invoice"}</p>
           </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-[#1A0A12] transition-colors hover:bg-[#FFF5F8]" aria-label="Close invoice total dialog">
+          <button onClick={onClose} className="rounded-lg p-1.5 text-foreground transition-colors hover:bg-accent" aria-label="Close invoice total dialog">
             <X className="h-4 w-4" />
           </button>
         </div>
         <div className="px-6 py-5">
-          <p className="mb-4 font-body text-sm leading-relaxed text-[#1A0A12]">
+          <p className="mb-4 font-body text-sm leading-relaxed text-foreground">
             The uploaded PDF did not provide a usable total. Enter the invoice total before you review and approve it.
           </p>
-          <label className="mb-1.5 block font-body text-xs font-semibold text-[#1A0A12]" htmlFor={`invoice-total-${invoice.id}`}>
+          <label className="mb-1.5 block font-body text-xs font-semibold text-foreground" htmlFor={`invoice-total-${invoice.id}`}>
             Invoice Total (CAD)
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm text-[#1A0A12]">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm text-foreground">$</span>
             <input
               id={`invoice-total-${invoice.id}`}
               type="number"
@@ -140,19 +140,19 @@ function SetInvoiceTotalModal({
               value={amountStr}
               onChange={(event) => setAmountStr(event.target.value)}
               placeholder="0.00"
-              className="w-full rounded-xl border border-[#F0D0DC] bg-[#FEFAF4] py-2.5 pl-7 pr-4 font-body text-sm text-[#1A0A12] focus:outline-none focus:ring-2 focus:ring-[#8B2252]/30"
+              className="w-full rounded-xl border border-border bg-background py-2.5 pl-7 pr-4 font-body text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
             />
           </div>
         </div>
-        <div className="flex gap-3 border-t border-[#F0D0DC] px-6 py-4">
-          <button onClick={onClose} className="flex-1 rounded-full border border-[#F0D0DC] bg-white px-4 py-2.5 font-body text-sm font-semibold text-[#1A0A12] transition-colors hover:bg-[#FFF5F8]">
+        <div className="flex gap-3 border-t border-border px-6 py-4">
+          <button onClick={onClose} className="flex-1 rounded-full border border-border bg-white px-4 py-2.5 font-body text-sm font-semibold text-foreground transition-colors hover:bg-accent">
             Cancel
           </button>
           <button
             onClick={() => onSave(amountCents)}
             disabled={isSaving || !Number.isFinite(amountCents) || amountCents <= 0}
-            className="flex-1 rounded-full px-4 py-2.5 font-body text-sm font-semibold text-white transition-all disabled:opacity-50"
-            style={{ background: "linear-gradient(135deg, #8B2252, #c2410c)" }}
+            className="flex-1 rounded-full px-4 py-2.5 font-body text-sm font-semibold text-primary-foreground transition-all disabled:opacity-50"
+            style={{ background: "var(--primary)" }}
           >
             {isSaving ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : "Save Total"}
           </button>
@@ -188,16 +188,16 @@ function RecordPaymentModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md border border-[#F0D0DC]">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md border border-border">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#F0D0DC]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <div>
-            <h2 className="font-display font-bold text-lg text-[#1A0A12]">Record Payment</h2>
-            <p className="font-body text-xs text-[#1A0A12] mt-0.5">
+            <h2 className="font-display font-medium text-lg text-foreground">Record Payment</h2>
+            <p className="font-body text-xs text-foreground mt-0.5">
               {invoice.staffName ?? "Unknown staff"} · Invoice total: {invoice.payAmount ?? "—"}
             </p>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-[#1A0A12] hover:bg-[#FFF5F8] transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded-lg text-foreground hover:bg-accent transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -207,29 +207,29 @@ function RecordPaymentModal({
           {/* Progress bar */}
           {totalCents > 0 && (
             <div>
-              <div className="flex justify-between text-xs font-body text-[#1A0A12] mb-1">
+              <div className="flex justify-between text-xs font-body text-foreground mb-1">
                 <span>Paid so far</span>
                 <span>{centsToDisplay(alreadyPaidCents)} / {invoice.payAmount}</span>
               </div>
-              <div className="h-2 bg-[#FFF5F8] rounded-full overflow-hidden">
+              <div className="h-2 bg-accent rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-[#8B2252] rounded-full transition-all"
+                  className="h-full bg-primary rounded-full transition-all"
                   style={{ width: `${Math.min(100, (alreadyPaidCents / totalCents) * 100)}%` }}
                 />
               </div>
-              <p className="text-xs font-body text-[#1A0A12] mt-1">
-                Remaining: <span className="font-semibold text-[#1A0A12]">{centsToDisplay(remainingCents)}</span>
+              <p className="text-xs font-body text-foreground mt-1">
+                Remaining: <span className="font-semibold text-foreground">{centsToDisplay(remainingCents)}</span>
               </p>
             </div>
           )}
 
           {/* Amount paid input */}
           <div>
-            <label className="block font-body text-xs font-semibold text-[#1A0A12] mb-1.5">
+            <label className="block font-body text-xs font-semibold text-foreground mb-1.5">
               Total Amount Paid So Far (CAD)
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm text-[#1A0A12]">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm text-foreground">$</span>
               <input
                 type="number"
                 min="0"
@@ -237,12 +237,12 @@ function RecordPaymentModal({
                 value={amountStr}
                 onChange={(e) => setAmountStr(e.target.value)}
                 placeholder="0.00"
-                className="w-full pl-7 pr-4 py-2.5 border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] bg-[#FEFAF4] focus:outline-none focus:ring-2 focus:ring-[#8B2252]/30"
+                className="w-full pl-7 pr-4 py-2.5 border border-border rounded-xl font-body text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-ring/30"
               />
             </div>
             {totalCents > 0 && amountCents > 0 && (
-              <p className="text-xs font-body text-[#1A0A12] mt-1">
-                New remaining: <span className={`font-semibold ${newRemaining === 0 ? "text-emerald-600" : "text-[#8B2252]"}`}>
+              <p className="text-xs font-body text-foreground mt-1">
+                New remaining: <span className={`font-semibold ${newRemaining === 0 ? "text-emerald-600" : "text-brand-link"}`}>
                   {centsToDisplay(newRemaining)}
                 </span>
                 {newRemaining === 0 && " · Will be marked as Paid ✓"}
@@ -255,13 +255,13 @@ function RecordPaymentModal({
             <div className="flex gap-2">
               <button
                 onClick={() => setAmountStr((totalCents / 2 / 100).toFixed(2))}
-                className="flex-1 px-3 py-2 text-xs font-body font-semibold rounded-xl border border-[#F0D0DC] text-[#1A0A12] bg-white hover:bg-[#FFF5F8] transition-colors"
+                className="flex-1 px-3 py-2 text-xs font-body font-semibold rounded-xl border border-border text-foreground bg-white hover:bg-accent transition-colors"
               >
                 Half ({centsToDisplay(Math.round(totalCents / 2))})
               </button>
               <button
                 onClick={() => setAmountStr((totalCents / 100).toFixed(2))}
-                className="flex-1 px-3 py-2 text-xs font-body font-semibold rounded-xl border border-[#F0D0DC] text-[#1A0A12] bg-white hover:bg-[#FFF5F8] transition-colors"
+                className="flex-1 px-3 py-2 text-xs font-body font-semibold rounded-xl border border-border text-foreground bg-white hover:bg-accent transition-colors"
               >
                 Full ({invoice.payAmount})
               </button>
@@ -270,7 +270,7 @@ function RecordPaymentModal({
 
           {/* Notes */}
           <div>
-            <label className="block font-body text-xs font-semibold text-[#1A0A12] mb-1.5">
+            <label className="block font-body text-xs font-semibold text-foreground mb-1.5">
               Payment Notes (optional)
             </label>
             <textarea
@@ -278,24 +278,24 @@ function RecordPaymentModal({
               onChange={(e) => setNotes(e.target.value)}
               placeholder="e.g. Half payment on May 1, rest on May 15"
               rows={2}
-              className="w-full px-4 py-2.5 border border-[#F0D0DC] rounded-xl font-body text-sm text-[#1A0A12] bg-[#FEFAF4] focus:outline-none focus:ring-2 focus:ring-[#8B2252]/30 resize-none"
+              className="w-full px-4 py-2.5 border border-border rounded-xl font-body text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-ring/30 resize-none"
             />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 px-6 py-4 border-t border-[#F0D0DC]">
+        <div className="flex gap-3 px-6 py-4 border-t border-border">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2.5 font-body font-semibold text-sm rounded-full border border-[#F0D0DC] text-[#1A0A12] bg-white hover:bg-[#FFF5F8] transition-colors"
+            className="flex-1 px-4 py-2.5 font-body font-semibold text-sm rounded-full border border-border text-foreground bg-white hover:bg-accent transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={() => onSave(amountCents, notes)}
             disabled={isSaving || amountCents < 0 || (totalCents > 0 && amountCents > totalCents)}
-            className="flex-1 px-4 py-2.5 font-body font-semibold text-sm rounded-full text-white transition-all disabled:opacity-50"
-            style={{ background: "linear-gradient(135deg, #8B2252, #c2410c)" }}
+            className="flex-1 px-4 py-2.5 font-body font-semibold text-sm rounded-full text-primary-foreground transition-all disabled:opacity-50"
+            style={{ background: "var(--primary)" }}
           >
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : totalCents > 0 && amountCents === totalCents ? "Mark Fully Paid" : "Save Payment"}
           </button>
@@ -350,22 +350,22 @@ export default function InvoiceDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#8B2252]" />
+      <div className="min-h-screen apy-staff-ui bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-link" />
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#FEFAF4] flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen apy-staff-ui bg-background flex flex-col items-center justify-center p-6">
         <img src={LOGO_URL} alt="AfroPuppyYoga" className="w-16 h-16 rounded-full object-cover mb-6" />
-        <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Admin Access Required</h2>
-        <p className="font-body text-[#1A0A12] mb-6">Please log in to view invoices.</p>
+        <h2 className="font-display font-medium text-2xl text-foreground mb-2">Admin Access Required</h2>
+        <p className="font-body text-foreground mb-6">Please log in to view invoices.</p>
         <button
           onClick={() => window.location.href = getLoginUrl()}
-          className="inline-flex items-center px-6 py-3 font-body font-semibold text-sm rounded-full text-white transition-all duration-200 hover:-translate-y-0.5"
-          style={{ background: "linear-gradient(135deg, #8B2252, #c2410c)" }}
+          className="inline-flex items-center px-6 py-3 font-body font-semibold text-sm rounded-full text-primary-foreground transition-all duration-200 hover:-translate-y-0.5"
+          style={{ background: "var(--primary)" }}
         >
           Log In
         </button>
@@ -375,10 +375,10 @@ export default function InvoiceDashboard() {
 
   if (user.role !== "admin" && user.role !== "staff") {
     return (
-      <div className="min-h-screen bg-[#FEFAF4] flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen apy-staff-ui bg-background flex flex-col items-center justify-center p-6">
         <img src={LOGO_URL} alt="AfroPuppyYoga" className="w-16 h-16 rounded-full object-cover mb-6" />
-        <h2 className="font-display font-bold text-2xl text-[#1A0A12] mb-2">Access Denied</h2>
-        <p className="font-body text-[#1A0A12]">This page is for admins only.</p>
+        <h2 className="font-display font-medium text-2xl text-foreground mb-2">Access Denied</h2>
+        <p className="font-body text-foreground">This page is for admins only.</p>
       </div>
     );
   }
@@ -430,7 +430,7 @@ export default function InvoiceDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FEFAF4]">
+    <div className="min-h-screen apy-staff-ui bg-background">
       <AdminNav />
 
       {/* Payment modal */}
@@ -465,11 +465,11 @@ export default function InvoiceDashboard() {
         {/* Page title */}
         <div>
           <div className="inline-flex items-center gap-2 mb-2">
-            <span className="h-px w-6 bg-[#8B2252]" />
-            <span className="font-body text-xs font-semibold tracking-widest uppercase text-[#8B2252]">Admin</span>
+            <span className="h-px w-6 bg-primary" />
+            <span className="font-body text-xs font-semibold tracking-widest uppercase text-brand-link">Admin</span>
           </div>
-          <h1 className="font-display font-bold text-3xl text-[#1A0A12]">Staff Invoices</h1>
-          <p className="font-body text-sm text-[#1A0A12] mt-1">Manage and track staff payment requests</p>
+          <h1 className="font-display font-medium text-3xl text-foreground">Staff Invoices</h1>
+          <p className="font-body text-sm text-foreground mt-1">Manage and track staff payment requests</p>
         </div>
 
         {actionError && (
@@ -483,37 +483,37 @@ export default function InvoiceDashboard() {
 
         {/* Summary cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-white rounded-2xl p-5 border border-[#F0D0DC]">
-            <p className="font-body text-xs text-[#1A0A12] mb-1">Pending</p>
-            <p className="font-display font-bold text-3xl text-[#1A0A12]">{pendingCount}</p>
+          <div className="bg-white rounded-2xl p-5 border border-border">
+            <p className="font-body text-xs text-foreground mb-1">Pending</p>
+            <p className="font-display font-medium text-3xl text-foreground">{pendingCount}</p>
           </div>
           <div className="bg-white rounded-2xl p-5 border border-blue-200">
             <p className="font-body text-xs text-blue-500 mb-1">Partial</p>
-            <p className="font-display font-bold text-3xl text-blue-600">{partialCount}</p>
+            <p className="font-display font-medium text-3xl text-blue-600">{partialCount}</p>
           </div>
           <div className="bg-white rounded-2xl p-5 border border-red-200">
             <p className="font-body text-xs text-red-500 mb-1">Overdue</p>
-            <p className="font-display font-bold text-3xl text-red-600">{overdueCount}</p>
+            <p className="font-display font-medium text-3xl text-red-600">{overdueCount}</p>
           </div>
-          <div className="bg-white rounded-2xl p-5 border border-[#F0D0DC]">
+          <div className="bg-white rounded-2xl p-5 border border-border">
             {activeTab === "all" ? (
               <>
-                <p className="font-body text-xs text-[#1A0A12] mb-1">Total Invoiced</p>
-                <p className="font-display font-bold text-3xl text-[#1A0A12]">
+                <p className="font-body text-xs text-foreground mb-1">Total Invoiced</p>
+                <p className="font-display font-medium text-3xl text-foreground">
                   ${totalInvoiced.toFixed(2)}
                 </p>
               </>
             ) : activeTab === "paid" ? (
               <>
                 <p className="font-body text-xs text-emerald-600 mb-1">Total Paid</p>
-                <p className="font-display font-bold text-3xl text-emerald-600">
+                <p className="font-display font-medium text-3xl text-emerald-600">
                   ${totalPaid.toFixed(2)}
                 </p>
               </>
             ) : (
               <>
-                <p className="font-body text-xs text-[#1A0A12] mb-1">Outstanding</p>
-                <p className="font-display font-bold text-3xl text-[#8B2252]">
+                <p className="font-body text-xs text-foreground mb-1">Outstanding</p>
+                <p className="font-display font-medium text-3xl text-brand-link">
                   ${totalOutstandingFixed.toFixed(2)}
                 </p>
               </>
@@ -522,20 +522,20 @@ export default function InvoiceDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center gap-1 bg-white rounded-2xl border border-[#F0D0DC] p-1.5 w-fit">
+        <div className="flex items-center flex-wrap gap-1 bg-white rounded-2xl border border-border p-1.5 w-full sm:w-fit">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`inline-flex items-center gap-2 px-4 py-2 font-body font-semibold text-sm rounded-xl transition-colors ${
                 activeTab === tab.id
-                  ? "bg-[#8B2252] text-white"
-                  : "text-[#1A0A12] hover:bg-[#FFF5F8]"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-foreground hover:bg-accent"
               }`}
             >
               {tab.label}
               <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
-                activeTab === tab.id ? "bg-white/20 text-white" : "bg-[#FFF5F8] text-[#8B2252]"
+                activeTab === tab.id ? "bg-accent text-accent-foreground" : "bg-accent text-brand-link"
               }`}>
                 {tab.count}
               </span>
@@ -544,46 +544,46 @@ export default function InvoiceDashboard() {
         </div>
 
         {/* Invoices table */}
-        <div className="bg-white rounded-2xl border border-[#F0D0DC] overflow-hidden">
+        <div className="bg-white rounded-2xl border border-border overflow-hidden">
           {invoiceError ? (
             <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
               <div className="w-16 h-16 rounded-full bg-rose-50 flex items-center justify-center mb-4">
                 <AlertTriangle className="w-8 h-8 text-rose-700" />
               </div>
-              <h3 className="font-display font-bold text-xl text-[#1A0A12] mb-2">Could not load invoices</h3>
-              <p className="font-body text-[#1A0A12] text-sm max-w-md mb-5">
+              <h3 className="font-display font-medium text-xl text-foreground mb-2">Could not load invoices</h3>
+              <p className="font-body text-foreground text-sm max-w-md mb-5">
                 The invoice records are still safely stored. Please retry the connection before assuming anything was removed.
               </p>
               <button
                 type="button"
                 onClick={() => void refetchInvoices()}
                 disabled={isFetching}
-                className="px-5 py-2.5 rounded-full font-body font-semibold text-sm bg-[#8B2252] text-white disabled:opacity-60"
+                className="px-5 py-2.5 rounded-full font-body font-semibold text-sm bg-primary text-primary-foreground disabled:opacity-60"
               >
                 {isFetching ? "Retrying…" : "Retry invoices"}
               </button>
             </div>
           ) : isLoading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-[#8B2252]" />
+              <Loader2 className="w-8 h-8 animate-spin text-brand-link" />
             </div>
           ) : filteredInvoices.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="w-16 h-16 rounded-full bg-[#FFF5F8] flex items-center justify-center mb-4">
-                <FileText className="w-8 h-8 text-[#8B2252]" />
+              <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center mb-4">
+                <FileText className="w-8 h-8 text-brand-link" />
               </div>
-              <h3 className="font-display font-bold text-xl text-[#1A0A12] mb-2">
+              <h3 className="font-display font-medium text-xl text-foreground mb-2">
                 {activeTab === "remaining" ? "No outstanding invoices" :
                  activeTab === "paid" ? "No paid invoices yet" : "No invoices yet"}
               </h3>
               {activeTab === "all" && (
-                <p className="font-body text-[#1A0A12] text-sm mb-4">
+                <p className="font-body text-foreground text-sm mb-4">
                   Share the invoice submission link with your staff
                 </p>
               )}
               {activeTab === "all" && (
-                <div className="px-5 py-3 bg-[#FFF5F8] rounded-xl border border-[#F0D0DC]">
-                  <p className="font-body text-xs text-[#1A0A12] font-mono">
+                <div className="px-5 py-3 bg-accent rounded-xl border border-border">
+                  <p className="font-body text-xs text-foreground font-mono">
                     {window.location.origin}/submit-invoice
                   </p>
                 </div>
@@ -591,17 +591,17 @@ export default function InvoiceDashboard() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[640px]">
                 <thead>
-                  <tr className="bg-[#FFF5F8] border-b border-[#F0D0DC]">
-                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Staff Member</th>
-                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Position</th>
-                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Invoice Total</th>
-                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Paid / Remaining</th>
-                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Due Date</th>
-                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Status</th>
-                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Invoice</th>
-                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-[#8B2252]">Update</th>
+                  <tr className="bg-accent border-b border-border">
+                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-brand-link">Staff Member</th>
+                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-brand-link">Position</th>
+                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-brand-link">Invoice Total</th>
+                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-brand-link">Paid / Remaining</th>
+                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-brand-link">Due Date</th>
+                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-brand-link">Status</th>
+                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-brand-link">Invoice</th>
+                    <th className="text-left px-5 py-4 font-body font-semibold text-xs uppercase tracking-wide text-brand-link">Update</th>
                     <th className="px-5 py-4"></th>
                   </tr>
                 </thead>
@@ -617,32 +617,32 @@ export default function InvoiceDashboard() {
                     return (
                       <tr
                         key={invoice.id}
-                        className={`border-b border-[#F0D0DC] last:border-0 transition-colors hover:bg-[#FFF5F8] ${idx % 2 === 0 ? "" : "bg-[#FEFAF4]"}`}
+                        className={`border-b border-border last:border-0 transition-colors hover:bg-accent ${idx % 2 === 0 ? "" : "bg-background"}`}
                       >
                         {/* Staff name */}
                         <td className="px-5 py-4">
                           {invoice.extractionStatus === "pending" ? (
-                            <span className="flex items-center gap-1.5 font-body text-sm text-[#1A0A12]">
+                            <span className="flex items-center gap-1.5 font-body text-sm text-foreground">
                               <Loader2 className="w-3 h-3 animate-spin" />
                               Processing...
                             </span>
                           ) : invoice.extractionStatus === "failed" ? (
                             <span className="font-body text-sm text-red-500">Extraction failed</span>
                           ) : (
-                            <span className="font-body font-semibold text-sm text-[#1A0A12]">
-                              {invoice.staffName ?? <span className="italic text-[#1A0A12]">Not found</span>}
+                            <span className="font-body font-semibold text-sm text-foreground">
+                              {invoice.staffName ?? <span className="italic text-foreground">Not found</span>}
                             </span>
                           )}
                         </td>
 
                         {/* Position */}
-                        <td className="px-5 py-4 font-body text-sm text-[#1A0A12]">
+                        <td className="px-5 py-4 font-body text-sm text-foreground">
                           {invoice.position ?? <span className="italic">—</span>}
                         </td>
 
                         {/* Invoice total */}
-                        <td className="px-5 py-4 font-body font-bold text-sm text-[#1A0A12]">
-                          {invoice.payAmount ?? <span className="italic text-[#1A0A12]">—</span>}
+                        <td className="px-5 py-4 font-body font-bold text-sm text-foreground">
+                          {invoice.payAmount ?? <span className="italic text-foreground">—</span>}
                         </td>
 
                         {/* Paid / Remaining */}
@@ -651,29 +651,29 @@ export default function InvoiceDashboard() {
                             <span className="font-body text-xs text-emerald-600 font-semibold">Fully paid</span>
                           ) : hasPaid ? (
                             <div>
-                              <div className="flex justify-between text-xs font-body text-[#1A0A12] mb-1">
+                              <div className="flex justify-between text-xs font-body text-foreground mb-1">
                                 <span className="text-emerald-600 font-semibold">${paidAmount.toFixed(2)} paid</span>
-                                <span className="text-[#8B2252] font-semibold">${remaining.toFixed(2)} left</span>
+                                <span className="text-brand-link font-semibold">${remaining.toFixed(2)} left</span>
                               </div>
-                              <div className="h-1.5 bg-[#FFF5F8] rounded-full overflow-hidden">
+                              <div className="h-1.5 bg-accent rounded-full overflow-hidden">
                                 <div
                                   className="h-full bg-emerald-500 rounded-full"
                                   style={{ width: `${paidPct}%` }}
                                 />
                               </div>
                               {invoice.paymentNotes && (
-                                <p className="text-[10px] text-[#1A0A12] mt-0.5 italic truncate max-w-[130px]" title={invoice.paymentNotes}>
+                                <p className="text-[10px] text-foreground mt-0.5 italic truncate max-w-[130px]" title={invoice.paymentNotes}>
                                   {invoice.paymentNotes}
                                 </p>
                               )}
                             </div>
                           ) : (
-                            <span className="font-body text-xs text-[#1A0A12] italic">No payments yet</span>
+                            <span className="font-body text-xs text-foreground italic">No payments yet</span>
                           )}
                         </td>
 
                         {/* Due date */}
-                        <td className="px-5 py-4 font-body text-sm text-[#1A0A12]">
+                        <td className="px-5 py-4 font-body text-sm text-foreground">
                           {invoice.dueDate
                             ? new Date(invoice.dueDate).toLocaleDateString("en-CA", {
                                 year: "numeric",
@@ -698,7 +698,7 @@ export default function InvoiceDashboard() {
                             href={invoice.fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 font-body font-semibold text-sm text-[#8B2252] hover:underline"
+                            className="inline-flex items-center gap-1.5 font-body font-semibold text-sm text-brand-link hover:underline"
                           >
                             <FileText className="w-4 h-4" />
                             View
@@ -713,7 +713,7 @@ export default function InvoiceDashboard() {
                                 setActionError(null);
                                 setTotalModal({ id: invoice.id, staffName: invoice.staffName, payAmount: invoice.payAmount });
                               }}
-                              className="inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-3 py-1.5 text-xs font-semibold text-violet-800 transition-colors hover:bg-violet-200"
+                              className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-brand-link transition-colors hover:bg-accent"
                             >
                               <PencilLine className="h-3 w-3" /> Set total
                             </button>
@@ -722,7 +722,7 @@ export default function InvoiceDashboard() {
                           ) : invoice.workflowStatus === "reviewed" ? (
                             <button onClick={() => { setActionError(null); approveInvoice.mutate({ id: invoice.id }, { onError: (error) => setActionError(error.message) }); }} className="rounded-full bg-amber-100 px-3 py-1.5 text-xs font-semibold text-amber-800 transition-colors hover:bg-amber-200">Approve</button>
                           ) : (
-                            <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${invoice.workflowStatus === "paid" ? "bg-emerald-100 text-emerald-700" : "bg-purple-100 text-purple-700"}`}>{invoice.workflowStatus === "paid" ? "Paid" : "Approved"}</span>
+                            <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${invoice.workflowStatus === "paid" ? "bg-emerald-100 text-emerald-700" : "bg-accent text-brand-link"}`}>{invoice.workflowStatus === "paid" ? "Paid" : "Approved"}</span>
                           )}
                         </td>
 
@@ -739,7 +739,7 @@ export default function InvoiceDashboard() {
                                 paymentNotes: invoice.paymentNotes,
                               })}
                               disabled={invoice.workflowStatus !== "approved" && invoice.workflowStatus !== "paid"}
-                              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 font-body text-xs font-semibold text-[#8B2252] transition-colors hover:bg-[#FFF5F8] disabled:cursor-not-allowed disabled:opacity-40"
+                              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 font-body text-xs font-semibold text-brand-link transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
                               title="Record payment or mark the full invoice paid"
                             >
                               <DollarSign className="w-4 h-4" />
@@ -760,7 +760,7 @@ export default function InvoiceDashboard() {
                                 </button>
                                 <button
                                   onClick={() => setConfirmDeleteId(null)}
-                                  className="px-2 py-1 text-xs font-body font-semibold rounded-full bg-[#FFF5F8] text-[#1A0A12] hover:bg-[#F0D0DC] transition-colors"
+                                  className="px-2 py-1 text-xs font-body font-semibold rounded-full bg-accent text-foreground hover:bg-accent transition-colors"
                                 >
                                   Cancel
                                 </button>
@@ -768,7 +768,7 @@ export default function InvoiceDashboard() {
                             ) : (
                               <button
                                 onClick={() => setConfirmDeleteId(invoice.id)}
-                                className="p-1.5 rounded-lg text-[#1A0A12] hover:text-red-600 hover:bg-red-50 transition-colors"
+                                className="p-1.5 rounded-lg text-foreground hover:text-red-600 hover:bg-red-50 transition-colors"
                                 title="Archive invoice"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -787,15 +787,15 @@ export default function InvoiceDashboard() {
 
         {/* Staff submission link */}
         {invoices && invoices.length > 0 && (
-          <div className="bg-white rounded-2xl border border-[#F0D0DC] p-6">
-            <p className="font-body font-semibold text-sm text-[#1A0A12] mb-1">Staff Invoice Submission Link</p>
-            <p className="font-body text-xs text-[#1A0A12] mb-3">Share this link with your staff to submit invoices:</p>
+          <div className="bg-white rounded-2xl border border-border p-6">
+            <p className="font-body font-semibold text-sm text-foreground mb-1">Staff Invoice Submission Link</p>
+            <p className="font-body text-xs text-foreground mb-3">Share this link with your staff to submit invoices:</p>
             <div className="flex items-center gap-3">
-              <code className="flex-1 font-body text-xs bg-[#FFF5F8] border border-[#F0D0DC] rounded-xl px-4 py-3 text-[#1A0A12]">
+              <code className="flex-1 font-body text-xs bg-accent border border-border rounded-xl px-4 py-3 text-foreground">
                 {window.location.origin}/submit-invoice
               </code>
               <button
-                className="inline-flex items-center gap-1.5 px-4 py-3 font-body font-semibold text-xs rounded-xl border border-[#F0D0DC] text-[#1A0A12] bg-white hover:bg-[#FFF5F8] transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-3 font-body font-semibold text-xs rounded-xl border border-border text-foreground bg-white hover:bg-accent transition-colors"
                 onClick={() => navigator.clipboard.writeText(`${window.location.origin}/submit-invoice`)}
               >
                 <Copy className="w-3.5 h-3.5" />

@@ -190,21 +190,21 @@ export default function SmsInbox() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFF8FB]">
+    <div className="min-h-screen apy-staff-ui bg-accent">
       <AdminNav />
       <div className="max-w-3xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#8B2252] flex items-center justify-center">
-              <Inbox className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+              <Inbox className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="font-display font-bold text-2xl text-[#1A0A12]">SMS Inbox</h1>
-              <p className="text-sm text-[#8B6070]">Read and reply from the APY business number</p>
+              <h1 className="font-display font-medium text-2xl text-foreground">SMS Inbox</h1>
+              <p className="text-sm text-muted-foreground">Read and reply from the APY business number</p>
             </div>
             {unreadCount > 0 && (
-              <Badge className="bg-[#8B2252] text-white text-xs px-2 py-0.5 rounded-full">
+              <Badge className="bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full">
                 {unreadCount} unread
               </Badge>
             )}
@@ -214,7 +214,7 @@ export default function SmsInbox() {
               variant="outline"
               size="sm"
               onClick={() => refetch()}
-              className="border-[#F0D0DC] text-[#8B2252]"
+              className="border-border text-brand-link"
             >
               <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
               Refresh
@@ -224,7 +224,7 @@ export default function SmsInbox() {
                 size="sm"
                 onClick={() => markAllRead.mutate()}
                 disabled={markAllRead.isPending}
-                className="bg-[#8B2252] hover:bg-[#6B1A3E] text-white"
+                className="bg-primary hover:bg-primary-hover text-primary-foreground"
               >
                 <CheckCheck className="w-3.5 h-3.5 mr-1.5" />
                 Mark all read
@@ -241,8 +241,8 @@ export default function SmsInbox() {
               onClick={() => setFilter(f)}
               className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${
                 filter === f
-                  ? "bg-[#8B2252] text-white"
-                  : "bg-white border border-[#F0D0DC] text-[#8B2252] hover:bg-[#FFF0F4]"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-white border border-border text-brand-link hover:bg-accent"
               }`}
             >
               {f === "all" ? `All (${messages.length})` : `Unread (${unreadCount})`}
@@ -252,14 +252,14 @@ export default function SmsInbox() {
 
         {/* Messages */}
         {isLoading ? (
-          <div className="text-center py-16 text-[#8B6070]">Loading messages...</div>
+          <div className="text-center py-16 text-muted-foreground">Loading messages...</div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-16">
-            <MessageSquare className="w-12 h-12 text-[#D4A0B8] mx-auto mb-3" />
-            <p className="text-[#8B6070] font-medium">
+            <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground font-medium">
               {filter === "unread" ? "No unread messages" : "No messages yet"}
             </p>
-            <p className="text-sm text-[#B08090] mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Replies from breeders will appear here
             </p>
           </div>
@@ -271,36 +271,36 @@ export default function SmsInbox() {
                 onClick={() => { if (!msg.isRead) markRead.mutate({ id: msg.id }); }}
                 className={`rounded-xl border p-4 cursor-pointer transition-all ${
                   msg.isRead
-                    ? "bg-white border-[#F0D0DC]"
-                    : "bg-[#FFF0F4] border-[#E8A0C0] shadow-sm"
+                    ? "bg-white border-border"
+                    : "bg-accent border-border shadow-sm"
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
-                      msg.isRead ? "bg-[#F5E8EE]" : "bg-[#8B2252]"
+                      msg.isRead ? "bg-accent" : "bg-primary"
                     }`}>
-                      <Phone className={`w-4 h-4 ${msg.isRead ? "text-[#8B2252]" : "text-white"}`} />
+                      <Phone className={`w-4 h-4 ${msg.isRead ? "text-brand-link" : "text-primary-foreground"}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-sm text-[#1A0A12]">
+                        <span className="font-semibold text-sm text-foreground">
                           {msg.breederName ?? msg.fromPhone}
                         </span>
                         {msg.breederName && (
-                          <span className="text-xs text-[#8B6070]">{msg.fromPhone}</span>
+                          <span className="text-xs text-muted-foreground">{msg.fromPhone}</span>
                         )}
                         {!msg.isRead && (
-                          <span className="w-2 h-2 rounded-full bg-[#8B2252] shrink-0" />
+                          <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
                         )}
                       </div>
-                      <p className="text-sm text-[#3D1A2E] leading-relaxed">{msg.body}</p>
-                      <div className="mt-3 rounded-lg border border-[#F0D0DC] bg-[#FFF8FB] p-3" onClick={(event) => event.stopPropagation()}>
+                      <p className="text-sm text-foreground leading-relaxed">{msg.body}</p>
+                      <div className="mt-3 rounded-lg border border-border bg-accent p-3" onClick={(event) => event.stopPropagation()}>
                         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                          <p className="text-xs font-medium text-[#6B4C3B]">Reply from the APY business number</p>
+                          <p className="text-xs font-medium text-muted-foreground">Reply from the APY business number</p>
                           <a
                             href={`tel:${msg.fromPhone}`}
-                            className="inline-flex items-center gap-1 text-xs font-semibold text-[#8B2252] hover:underline"
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-brand-link hover:underline"
                           >
                             <PhoneCall className="h-3.5 w-3.5" /> Call {msg.fromPhone}
                           </a>
@@ -311,15 +311,15 @@ export default function SmsInbox() {
                           placeholder={`Reply to ${msg.breederName ?? msg.fromPhone}…`}
                           maxLength={1600}
                           rows={3}
-                          className="resize-y border-[#E8C4D2] bg-white text-sm"
+                          className="resize-y border-border bg-white text-sm"
                         />
                         <div className="mt-2 flex items-center justify-between gap-3">
-                          <span className="text-xs text-[#8B6070]">{(replyDrafts[msg.id] ?? "").length}/1600</span>
+                          <span className="text-xs text-muted-foreground">{(replyDrafts[msg.id] ?? "").length}/1600</span>
                           <Button
                             size="sm"
                             onClick={() => sendReply(msg.id)}
                             disabled={reply.isPending || !(replyDrafts[msg.id]?.trim())}
-                            className="bg-[#8B2252] text-white hover:bg-[#6B1A3E]"
+                            className="bg-primary text-primary-foreground hover:bg-primary-hover"
                           >
                             <Send className="mr-1.5 h-3.5 w-3.5" />
                             {reply.isPending ? "Sending…" : "Send reply"}
@@ -328,7 +328,7 @@ export default function SmsInbox() {
                       </div>
                     </div>
                   </div>
-                  <span className="text-xs text-[#B08090] shrink-0 mt-0.5">
+                  <span className="text-xs text-muted-foreground shrink-0 mt-0.5">
                     {timeAgo(msg.receivedAt)}
                   </span>
                 </div>

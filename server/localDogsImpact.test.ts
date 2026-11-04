@@ -24,8 +24,8 @@ describe("local dogs in need ticket donation message", () => {
     expect(heroSource).toContain("<LocalDogsImpact />");
     expect(sectionSource).not.toContain("three-month pilot");
     expect(sectionSource).not.toContain("Pound Dog Rescue");
-    expect(sectionSource).toContain("bg-[#FFF6F7]/90");
-    expect(sectionSource).toContain("text-[#3D1728]");
+    expect(sectionSource).toContain("border-t border-[#EBCDD5]");
+    expect(sectionSource).toContain("text-[#34221D]");
     expect(sectionSource).not.toContain("bg-[#2C1320]/70");
   });
 });

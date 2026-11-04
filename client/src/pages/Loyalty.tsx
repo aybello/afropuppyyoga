@@ -3,7 +3,6 @@ import { BOOK_URL } from "@/const";
    Rewards Program Page — /loyalty
    Colors: Warm light palette matching APY brand
    ============================================================ */
-import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useEffect } from "react";
@@ -78,7 +77,8 @@ const faqs = [
 export default function Loyalty() {
   useSeoMeta({
     title: "The Pack — APY Rewards Program | AfroPuppyYoga",
-    description: "Join The Pack, AfroPuppyYoga's free rewards program. Earn paw points every class, unlock perks, and get exclusive member benefits at our studios in Hamilton, Kitchener & Oakville.",
+    description:
+      "Join The Pack, AfroPuppyYoga's free rewards program. Earn paw points every class, unlock perks, and get exclusive member benefits at our studios in Hamilton, Kitchener & Oakville.",
     canonical: "https://afropuppyyoga.ca/loyalty",
   });
   useEffect(() => {
@@ -90,27 +90,24 @@ export default function Loyalty() {
       <Navbar />
 
       {/* Hero */}
-      <section className="bg-[#FFF5F8] pt-28 pb-20 px-6 border-b border-[#F2A0B8]/20">
+      <section className="bg-[#FEFAF4] pt-28 pb-16 md:pt-32 md:pb-20 px-6 border-b border-[#F29CB8]/20">
         <div className="max-w-3xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
+          <div>
             <div className="flex items-center justify-center gap-3 mb-5">
-              <div className="w-8 h-0.5 bg-[#8B2252]" />
-              <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">
+              <div className="w-8 h-0.5 bg-primary" />
+              <span className="text-brand-link font-body text-xs font-semibold tracking-widest uppercase">
                 The Pack
               </span>
-              <div className="w-8 h-0.5 bg-[#8B2252]" />
+              <div className="w-8 h-0.5 bg-primary" />
             </div>
-            <h1 className="font-display text-5xl md:text-6xl font-bold text-[#1A0A12] mb-6 leading-tight">
+            <h1 className="font-display text-[clamp(2.5rem,5vw,4.25rem)] font-medium text-[#34221D] mb-6 leading-tight">
               APY Rewards Program
             </h1>
-            <p className="font-body text-[#1A0A12]/65 text-xl leading-relaxed mb-4 max-w-2xl mx-auto">
-              Attend 3 classes. Get your 4th free. Automatically. No apps, no punch cards, no forms — just show up and we take care of the rest.
+            <p className="font-body text-[#34221D]/80 text-xl leading-relaxed mb-4 max-w-2xl mx-auto">
+              Attend 3 classes. Get your 4th free. Automatically. No apps, no
+              punch cards, no forms — just show up and we take care of the rest.
             </p>
-            <p className="font-body text-[#8B2252] text-sm font-semibold mb-8">
+            <p className="font-body text-brand-link text-sm font-semibold mb-8">
               ✅ Works across all APY locations — Kitchener, Hamilton & Oakville
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -118,18 +115,18 @@ export default function Loyalty() {
                 href={BOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center px-10 py-4 bg-[#8B2252] text-white font-body font-semibold text-base rounded-full hover:bg-[#8B2252] transition-all duration-200 shadow-md"
+                className="inline-flex items-center justify-center px-8 py-4 bg-primary text-[#34221D] font-body font-semibold text-base rounded-full hover:bg-primary-hover transition-colors motion-reduce:transition-none duration-200 shadow-sm"
               >
                 Book a Class to Start
               </a>
               <a
                 href="mailto:afropuppyyoga@gmail.com?subject=Loyalty%20Program%20-%20Check%20My%20Progress"
-                className="inline-flex items-center px-10 py-4 border-2 border-[#8B2252] text-[#8B2252] font-body font-semibold text-base rounded-full hover:bg-[#8B2252] hover:text-white transition-all duration-200"
+                className="inline-flex items-center justify-center px-8 py-4 border-2 border-primary text-brand-link font-body font-semibold text-base rounded-full hover:bg-primary-hover hover:text-[#34221D] transition-colors motion-reduce:transition-none duration-200"
               >
                 Ask Us to Track Your Visits
               </a>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -137,46 +134,42 @@ export default function Loyalty() {
       <section className="py-20 px-6 bg-[#FEFAF4]">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-[#1A0A12] mb-3">
+            <h2 className="font-display text-3xl md:text-4xl font-medium text-[#34221D] mb-3">
               How It Works
             </h2>
-            <p className="font-body text-[#1A0A12]/60 text-lg">
+            <p className="font-body text-[#34221D]/80 text-lg">
               Four simple steps. Zero effort on your part.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {steps.map((step, i) => (
-              <motion.div
+              <div
                 key={i}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="bg-white border border-[#F2A0B8]/30 rounded-2xl p-8 flex gap-5 shadow-sm"
+                className="bg-white border border-[#F29CB8]/30 rounded-2xl p-6 sm:p-8 flex gap-4 shadow-sm"
               >
-                <div className="shrink-0 w-12 h-12 rounded-full bg-[#F2A0B8]/30 flex items-center justify-center text-xl">
+                <div className="shrink-0 w-12 h-12 rounded-full bg-[#F29CB8]/30 flex items-center justify-center text-xl">
                   {step.emoji}
                 </div>
                 <div>
-                  <div className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase mb-1">
+                  <div className="text-brand-link font-body text-xs font-semibold tracking-widest uppercase mb-1">
                     {step.number}
                   </div>
-                  <h3 className="font-display text-lg font-bold text-[#1A0A12] mb-2">
+                  <h3 className="font-display text-lg font-medium text-[#34221D] mb-2">
                     {step.title}
                   </h3>
-                  <p className="font-body text-[#1A0A12]/65 text-sm leading-relaxed">
+                  <p className="font-body text-[#34221D]/80 text-base leading-relaxed">
                     {step.description}
                   </p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* Stats strip */}
-      <section className="py-12 px-6 bg-[#8B2252]">
+      <section className="py-12 px-6 bg-blush border-y border-[#E8D8D0]">
         <div className="max-w-4xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
@@ -186,8 +179,12 @@ export default function Loyalty() {
               { value: "∞", label: "Repeats forever" },
             ].map((stat, i) => (
               <div key={i}>
-                <div className="font-display text-4xl font-bold text-white mb-1">{stat.value}</div>
-                <div className="font-body text-white/60 text-sm uppercase tracking-wide">{stat.label}</div>
+                <div className="font-display text-4xl font-medium text-[#34221D] mb-1">
+                  {stat.value}
+                </div>
+                <div className="font-body text-[#34221D]/80 text-base uppercase tracking-wide">
+                  {stat.label}
+                </div>
               </div>
             ))}
           </div>
@@ -195,53 +192,50 @@ export default function Loyalty() {
       </section>
 
       {/* FAQ */}
-      <section className="py-20 px-6 bg-[#FFF5F8]">
+      <section className="py-20 px-6 bg-[#FDE9EF]">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-[#1A0A12] mb-3">
+            <h2 className="font-display text-3xl md:text-4xl font-medium text-[#34221D] mb-3">
               Questions
             </h2>
           </div>
           <div className="space-y-4">
             {faqs.map((faq, i) => (
-              <motion.div
+              <div
                 key={i}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ duration: 0.4, delay: i * 0.07 }}
-                className="bg-white border border-[#F2A0B8]/30 rounded-xl px-7 py-6 shadow-sm"
+                className="bg-white border border-[#F29CB8]/30 rounded-xl px-7 py-6 shadow-sm"
               >
-                <h3 className="font-body font-semibold text-[#1A0A12] text-base mb-2">
+                <h3 className="font-body font-semibold text-[#34221D] text-base mb-2">
                   {faq.q}
                 </h3>
-                <p className="font-body text-[#1A0A12]/65 text-sm leading-relaxed">
+                <p className="font-body text-[#34221D]/80 text-base leading-relaxed">
                   {faq.a}
                 </p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* Bottom CTA */}
-      <section className="py-16 px-6 bg-[#FFF5F8] border-t border-[#F2A0B8]/20 text-center">
+      <section className="py-16 px-6 bg-[#FDE9EF] border-t border-[#F29CB8]/20 text-center">
         <div className="max-w-xl mx-auto">
           <div className="text-4xl mb-4">🐾</div>
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-[#1A0A12] mb-4">
+          <h2 className="font-display text-3xl md:text-4xl font-medium text-[#34221D] mb-4">
             Your next free class is 3 sessions away.
           </h2>
-          <p className="font-body text-[#1A0A12]/60 text-base mb-4">
+          <p className="font-body text-[#34221D]/80 text-base mb-4">
             Book your first class today. We'll handle the rest.
           </p>
-          <p className="font-body text-[#1A0A12]/50 text-sm mb-8">
-            Already attended a few classes? Ask us after your next session and we'll check your progress on the spot.
+          <p className="font-body text-[#34221D]/80 text-base mb-8">
+            Already attended a few classes? Ask us after your next session and
+            we'll check your progress on the spot.
           </p>
           <a
             href={BOOK_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center px-10 py-4 bg-[#8B2252] text-white font-body font-semibold text-base rounded-full hover:bg-[#8B2252] transition-all duration-200 shadow-md"
+            className="inline-flex items-center justify-center px-8 py-4 bg-primary text-[#34221D] font-body font-semibold text-base rounded-full hover:bg-primary-hover transition-colors motion-reduce:transition-none duration-200 shadow-sm"
           >
             Book a Class
           </a>

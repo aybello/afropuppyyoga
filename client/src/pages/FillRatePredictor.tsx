@@ -279,9 +279,9 @@ export default function FillRatePredictor() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
+      <div className="min-h-screen apy-staff-ui bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="w-10 h-10 border-[3px] border-[#8B2252] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-10 h-10 border-[3px] border-border border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-slate-500 font-medium">Loading model data...</p>
         </div>
       </div>
@@ -290,7 +290,7 @@ export default function FillRatePredictor() {
 
   if (!model) {
     return (
-      <div className="min-h-screen bg-[#FEFAF4] flex items-center justify-center">
+      <div className="min-h-screen apy-staff-ui bg-background flex items-center justify-center">
         <p className="text-red-500">Failed to load model data.</p>
       </div>
     );
@@ -309,12 +309,12 @@ export default function FillRatePredictor() {
   const breedTypes = model.breed_types || {};
 
   return (
-    <div className="min-h-screen bg-[#FEFAF4] font-sans">
+    <div className="min-h-screen apy-staff-ui bg-background font-sans">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-6 py-4">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
+        <div className="max-w-5xl mx-auto flex flex-wrap gap-4 items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+            <h1 className="text-xl font-medium text-slate-900 tracking-tight">
               APY Fill Rate Predictor
             </h1>
             <p className="text-sm text-slate-500 mt-0.5">
@@ -327,7 +327,7 @@ export default function FillRatePredictor() {
               onClick={() => setActiveTab("predict")}
               className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
                 activeTab === "predict"
-                  ? "bg-white text-slate-900 shadow-sm"
+                  ? "bg-accent text-foreground shadow-sm"
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >
@@ -337,7 +337,7 @@ export default function FillRatePredictor() {
               onClick={() => setActiveTab("rankings")}
               className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
                 activeTab === "rankings"
-                  ? "bg-white text-slate-900 shadow-sm"
+                  ? "bg-accent text-foreground shadow-sm"
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >
@@ -363,8 +363,8 @@ export default function FillRatePredictor() {
                     onClick={() => setMode("known")}
                     className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all border ${
                       mode === "known"
-                        ? "bg-[#8B2252] text-white border-[#8B2252]"
-                        : "bg-slate-50 text-slate-500 border-slate-200 hover:border-[#8B2252]"
+                        ? "bg-primary text-primary-foreground border-border"
+                        : "bg-slate-50 text-slate-500 border-slate-200 hover:border-border"
                     }`}
                   >
                     Known Breed
@@ -373,8 +373,8 @@ export default function FillRatePredictor() {
                     onClick={() => setMode("new")}
                     className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all border ${
                       mode === "new"
-                        ? "bg-[#8B2252] text-white border-[#8B2252]"
-                        : "bg-slate-50 text-slate-500 border-slate-200 hover:border-[#8B2252]"
+                        ? "bg-primary text-primary-foreground border-border"
+                        : "bg-slate-50 text-slate-500 border-slate-200 hover:border-border"
                     }`}
                   >
                     New Breed
@@ -391,7 +391,7 @@ export default function FillRatePredictor() {
                       <select
                         value={breed}
                         onChange={(e) => setBreed(e.target.value)}
-                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#8B2252] focus:border-transparent"
+                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                       >
                         {model.all_breeds.map((b) => (
                           <option key={b} value={b}>
@@ -418,8 +418,8 @@ export default function FillRatePredictor() {
                             onClick={() => setBreedTypeKey(key)}
                             className={`w-full text-left px-3 py-3 rounded-xl border transition-all ${
                               breedTypeKey === key
-                                ? "bg-[#8B2252]/10 border-[#8B2252] text-slate-900"
-                                : "bg-slate-50 border-slate-200 text-slate-600 hover:border-[#8B2252]/50"
+                                ? "bg-accent border-border text-slate-900"
+                                : "bg-slate-50 border-slate-200 text-slate-600 hover:border-border"
                             }`}
                           >
                             <div className="flex items-center gap-2">
@@ -433,7 +433,7 @@ export default function FillRatePredictor() {
                                 </div>
                               </div>
                               {breedTypeKey === key && (
-                                <div className="ml-auto w-2 h-2 rounded-full bg-[#8B2252]" />
+                                <div className="ml-auto w-2 h-2 rounded-full bg-primary" />
                               )}
                             </div>
                           </button>
@@ -454,8 +454,8 @@ export default function FillRatePredictor() {
                           onClick={() => setLocation(loc)}
                           className={`py-2.5 rounded-xl text-sm font-medium transition-all border ${
                             location === loc
-                              ? "bg-[#8B2252] text-white border-[#8B2252]"
-                              : "bg-slate-50 text-slate-600 border-slate-200 hover:border-[#8B2252] hover:text-[#8B2252]"
+                              ? "bg-primary text-primary-foreground border-border"
+                              : "bg-slate-50 text-slate-600 border-slate-200 hover:border-border hover:text-brand-link"
                           }`}
                         >
                           {loc}
@@ -472,7 +472,7 @@ export default function FillRatePredictor() {
                     <select
                       value={month}
                       onChange={(e) => setMonth(Number(e.target.value))}
-                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#8B2252] focus:border-transparent"
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                     >
                       {MONTHS.map((m) => (
                         <option key={m.value} value={m.value}>
@@ -504,7 +504,7 @@ export default function FillRatePredictor() {
                         <div
                           className={`w-full rounded-sm transition-all ${
                             isSelected
-                              ? "bg-[#8B2252]"
+                              ? "bg-primary"
                               : fillRatePct >= 80
                               ? "bg-emerald-400 group-hover:bg-emerald-500"
                               : fillRatePct >= 50
@@ -515,7 +515,7 @@ export default function FillRatePredictor() {
                         />
                         <span
                           className={`text-[9px] font-medium ${
-                            isSelected ? "text-[#8B2252]" : "text-slate-400"
+                            isSelected ? "text-brand-link" : "text-slate-400"
                           }`}
                         >
                           {m.month_name.slice(0, 1)}
@@ -612,7 +612,7 @@ export default function FillRatePredictor() {
                     </div>
                     <div className="bg-white rounded-xl p-3 text-center border border-slate-200 shadow-sm">
                       <div className="text-xs text-slate-400 mb-1">Day Revenue</div>
-                      <div className="text-base font-bold text-[#8B2252]">
+                      <div className="text-base font-bold text-brand-link">
                         ${prediction.revenue_estimate.toLocaleString()}
                       </div>
                     </div>
@@ -654,7 +654,7 @@ export default function FillRatePredictor() {
                           </span>
                           <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-[#8B2252] rounded-full"
+                              className="h-full bg-primary rounded-full"
                               style={{ width: `${Math.min(100, (avg / 20) * 100)}%` }}
                             />
                           </div>
@@ -684,7 +684,7 @@ export default function FillRatePredictor() {
                           </span>
                           <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-[#8B2252] rounded-full"
+                              className="h-full bg-primary rounded-full"
                               style={{
                                 width: `${Math.min(100, (r.avg_tickets / 20) * 100)}%`,
                               }}
@@ -724,7 +724,7 @@ export default function FillRatePredictor() {
                 </p>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full min-w-[640px]">
                   <thead>
                     <tr className="bg-slate-50 text-xs text-slate-500 uppercase tracking-wider">
                       <th className="px-6 py-3 text-left">#</th>

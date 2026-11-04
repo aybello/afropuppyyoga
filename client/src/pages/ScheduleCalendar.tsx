@@ -100,10 +100,10 @@ const LOCATION_COLORS: Record<Location, { bg: string; text: string; dot: string;
     border: "border-pink-200",
   },
   Hamilton: {
-    bg: "bg-purple-50",
-    text: "text-purple-800",
-    dot: "bg-purple-400",
-    border: "border-purple-200",
+    bg: "bg-blue-50",
+    text: "text-blue-800",
+    dot: "bg-blue-400",
+    border: "border-blue-200",
   },
   Oakville: {
     bg: "bg-teal-50",
@@ -185,57 +185,57 @@ function LumaClassPreviewCard({ form }: { form: ScheduleForm }) {
     : "Choose a class date";
 
   return (
-    <section className="rounded-2xl border border-[#D9A0B5] bg-[#FFF4F8] overflow-hidden shadow-[0_8px_20px_rgba(139,34,82,0.08)]" aria-label="Luma event preview">
-      <div className="relative overflow-hidden border-b border-[#EBC3D1] bg-[#9B2335] px-4 py-3 text-white">
-        <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:12px_12px]" />
+    <section className="rounded-2xl border border-border bg-accent overflow-hidden shadow-[0_8px_20px_rgba(52,34,29,0.08)]" aria-label="Luma event preview">
+      <div className="relative overflow-hidden border-b border-border bg-accent px-4 py-3 text-accent-foreground">
+        <div className="absolute inset-0 bg-primary/10" />
         <div className="relative flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Eye size={16} />
             <div>
-              <p className="font-body text-[10px] font-bold tracking-[0.16em] uppercase text-white/75">Before you create</p>
-              <h3 className="font-display text-base font-bold">Luma Event Preview</h3>
+              <p className="font-body text-[10px] font-bold tracking-[0.16em] uppercase text-muted-foreground">Before you create</p>
+              <h3 className="font-display text-base font-medium">Luma Event Preview</h3>
             </div>
           </div>
-          <Badge className="bg-white/15 border border-white/30 text-white font-body text-[10px]">New regular class</Badge>
+          <Badge className="bg-white border border-border text-foreground font-body text-[10px]">New regular class</Badge>
         </div>
       </div>
 
       <div className="space-y-3 p-4">
         <div>
-          <p className="font-display text-sm font-bold text-[#3D1A2E] leading-snug">{eventName}</p>
-          <p className="font-body text-xs text-[#6B4C3B] mt-0.5">{dateLabel} · Standard sessions: 10AM, 11:30AM, and 1:30PM</p>
+          <p className="font-display text-sm font-bold text-foreground leading-snug">{eventName}</p>
+          <p className="font-body text-xs text-muted-foreground mt-0.5">{dateLabel} · Standard sessions: 10AM, 11:30AM, and 1:30PM</p>
         </div>
 
         <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-xl bg-white/80 border border-[#F0D0DC] p-2.5">
-            <UsersRound size={14} className="text-[#8B2252] mb-1" />
-            <p className="font-body text-[10px] text-[#6B4C3B]">Registration</p>
-            <p className="font-body text-xs font-bold text-[#3D1A2E]">Group on</p>
+          <div className="rounded-xl bg-white/80 border border-border p-2.5">
+            <UsersRound size={14} className="text-brand-link mb-1" />
+            <p className="font-body text-[10px] text-muted-foreground">Registration</p>
+            <p className="font-body text-xs font-bold text-foreground">Group on</p>
           </div>
-          <div className="rounded-xl bg-white/80 border border-[#F0D0DC] p-2.5">
-            <Palette size={14} className="text-[#8B2252] mb-1" />
-            <p className="font-body text-[10px] text-[#6B4C3B]">Appearance</p>
-            <p className="font-body text-xs font-bold text-[#3D1A2E]">{APY_REGULAR_CLASS_LUMA_PREVIEW.pattern} · {APY_REGULAR_CLASS_LUMA_PREVIEW.display}</p>
+          <div className="rounded-xl bg-white/80 border border-border p-2.5">
+            <Palette size={14} className="text-brand-link mb-1" />
+            <p className="font-body text-[10px] text-muted-foreground">Appearance</p>
+            <p className="font-body text-xs font-bold text-foreground">{APY_REGULAR_CLASS_LUMA_PREVIEW.pattern} · {APY_REGULAR_CLASS_LUMA_PREVIEW.display}</p>
           </div>
-          <div className="rounded-xl bg-white/80 border border-[#F0D0DC] p-2.5">
-            <span className="block h-3.5 w-3.5 rounded-full border border-[#711936] mb-1" style={{ backgroundColor: APY_REGULAR_CLASS_LUMA_PREVIEW.tintColor }} />
-            <p className="font-body text-[10px] text-[#6B4C3B]">Tint</p>
-            <p className="font-body text-xs font-bold text-[#3D1A2E]">Cranberry</p>
+          <div className="rounded-xl bg-white/80 border border-border p-2.5">
+            <span className="block h-3.5 w-3.5 rounded-full border border-ring mb-1" style={{ backgroundColor: APY_REGULAR_CLASS_LUMA_PREVIEW.tintColor }} />
+            <p className="font-body text-[10px] text-muted-foreground">Tint</p>
+            <p className="font-body text-xs font-bold text-foreground">Cranberry</p>
           </div>
         </div>
 
-        <div className="rounded-xl bg-white/70 border border-[#F0D0DC] p-3">
+        <div className="rounded-xl bg-white/70 border border-border p-3">
           <div className="flex items-center gap-1.5 mb-2">
-            <Ticket size={14} className="text-[#8B2252]" />
-            <p className="font-body text-xs font-bold text-[#3D1A2E]">Tickets that will be created</p>
+            <Ticket size={14} className="text-brand-link" />
+            <p className="font-body text-xs font-bold text-foreground">Tickets that will be created</p>
           </div>
-          <p className="font-body text-[11px] leading-relaxed text-[#6B4C3B]">
+          <p className="font-body text-[11px] leading-relaxed text-muted-foreground">
             <strong>{pricingLabel}:</strong> {APY_REGULAR_CLASS_TIME_SLOTS.map((slot) => slot.label).join(", ")}: {ticketOptions.map((option) => `${option.label} ${option.displayPrice}`).join(" · ")}. {APY_MAT_RENTAL_TICKET.name.replace(" 🧘‍♀️", "")} {APY_MAT_RENTAL_TICKET.displayPrice}.
           </p>
-          <p className="font-body text-[10px] text-[#8B2252] font-semibold mt-2">No Standard Free ticket will be included.</p>
+          <p className="font-body text-[10px] text-brand-link font-semibold mt-2">No Standard Free ticket will be included.</p>
         </div>
 
-        <p className="font-body text-[10px] text-[#8B2252]/75">The Luma page is created only after you select <strong>Add Slot</strong>.</p>
+        <p className="font-body text-[10px] text-brand-link">The Luma page is created only after you select <strong>Add Slot</strong>.</p>
       </div>
     </section>
   );
@@ -439,7 +439,7 @@ export default function ScheduleCalendar() {
   // ─── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-[#FEFAF4]">
+    <div className="min-h-screen apy-staff-ui bg-background">
       <AdminNav />
       <div className="max-w-6xl mx-auto px-4 py-8">
 
@@ -447,17 +447,17 @@ export default function ScheduleCalendar() {
         <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-1 h-6 bg-[#8B2252] rounded-full" />
-              <span className="text-[#8B2252] font-body text-xs font-bold tracking-widest uppercase">Admin</span>
+              <div className="w-1 h-6 bg-primary rounded-full" />
+              <span className="text-brand-link font-body text-xs font-bold tracking-widest uppercase">Admin</span>
             </div>
-            <h1 className="font-display text-3xl font-bold text-[#1A0A12]">Schedule Calendar</h1>
-            <p className="font-body text-sm text-[#6B4C3B] mt-1">
+            <h1 className="font-display text-3xl font-medium text-foreground">Schedule Calendar</h1>
+            <p className="font-body text-sm text-muted-foreground mt-1">
               Assign breeds and breeders to class slots. Weekends are highlighted.
             </p>
           </div>
           <Button
             onClick={() => openAdd()}
-            className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body font-semibold rounded-full px-5 gap-2"
+            className="bg-primary hover:bg-primary text-primary-foreground font-body font-semibold rounded-full px-5 gap-2"
           >
             <Plus size={16} /> Add Slot
           </Button>
@@ -466,15 +466,15 @@ export default function ScheduleCalendar() {
         {/* ── Stats ─────────────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
           {[
-            { label: "Total Slots", value: stats.total, color: "text-[#8B2252]" },
+            { label: "Total Slots", value: stats.total, color: "text-brand-link" },
             { label: "Kitchener", value: stats.kitchener, color: "text-pink-600" },
-            { label: "Hamilton", value: stats.hamilton, color: "text-purple-600" },
+            { label: "Hamilton", value: stats.hamilton, color: "text-blue-600" },
             { label: "Oakville", value: stats.oakville, color: "text-teal-600" },
             { label: "Private Events", value: stats.private, color: "text-amber-600" },
           ].map(({ label, value, color }) => (
-            <div key={label} className="bg-white rounded-xl border border-[#F0D0DC] p-4">
+            <div key={label} className="bg-white rounded-xl border border-border p-4">
               <div className={`font-display text-2xl font-bold ${color}`}>{value}</div>
-              <div className="font-body text-xs text-[#6B4C3B] mt-0.5">{label}</div>
+              <div className="font-body text-xs text-muted-foreground mt-0.5">{label}</div>
             </div>
           ))}
         </div>
@@ -483,21 +483,21 @@ export default function ScheduleCalendar() {
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={prevMonth}
-            className="p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#F0D0DC] text-[#6B4C3B] hover:text-[#8B2252] transition-all"
+            className="p-2 rounded-lg hover:bg-white border border-transparent hover:border-border text-muted-foreground hover:text-brand-link transition-all"
             aria-label="Previous month"
           >
             <ChevronLeft size={20} />
           </button>
           <div className="flex items-center gap-3">
-            <CalendarDays size={20} className="text-[#8B2252]" />
-            <h2 className="font-display text-xl font-bold text-[#1A0A12]">
+            <CalendarDays size={20} className="text-brand-link" />
+            <h2 className="font-display text-xl font-medium text-foreground">
               {MONTH_NAMES[month - 1]} {year}
             </h2>
-            {isLoading && <Loader2 size={16} className="animate-spin text-[#8B2252]" />}
+            {isLoading && <Loader2 size={16} className="animate-spin text-brand-link" />}
           </div>
           <button
             onClick={nextMonth}
-            className="p-2 rounded-lg hover:bg-white border border-transparent hover:border-[#F0D0DC] text-[#6B4C3B] hover:text-[#8B2252] transition-all"
+            className="p-2 rounded-lg hover:bg-white border border-transparent hover:border-border text-muted-foreground hover:text-brand-link transition-all"
             aria-label="Next month"
           >
             <ChevronRight size={20} />
@@ -505,16 +505,16 @@ export default function ScheduleCalendar() {
         </div>
 
         {/* ── Calendar grid ─────────────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl border border-[#F0D0DC] overflow-hidden shadow-sm">
+        <div className="bg-white rounded-2xl border border-border overflow-x-auto shadow-sm">
           {/* Day-of-week header */}
-          <div className="grid grid-cols-7 border-b border-[#F0D0DC]">
+          <div className="grid min-w-[700px] grid-cols-7 border-b border-border">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d, i) => (
               <div
                 key={d}
                 className={`py-2 text-center font-body text-xs font-bold tracking-wider uppercase ${
                   i === 0 || i === 6
-                    ? "text-[#8B2252] bg-[#FFF5F8]"
-                    : "text-[#6B4C3B]"
+                    ? "text-brand-link bg-accent"
+                    : "text-muted-foreground"
                 }`}
               >
                 {d}
@@ -524,7 +524,7 @@ export default function ScheduleCalendar() {
 
           {/* Calendar rows */}
           {calendarGrid.map((row, ri) => (
-            <div key={ri} className="grid grid-cols-7 border-b border-[#F0D0DC] last:border-b-0">
+            <div key={ri} className="grid grid-cols-7 border-b border-border last:border-b-0">
               {row.map((dateStr, ci) => {
                 const isWeekend = ci === 0 || ci === 6; // Sun or Sat column
                 const isToday = dateStr === todayStr;
@@ -534,12 +534,12 @@ export default function ScheduleCalendar() {
                 return (
                   <div
                     key={ci}
-                    className={`min-h-[110px] border-r border-[#F0D0DC] last:border-r-0 p-1.5 flex flex-col transition-colors ${
+                    className={`min-h-[110px] border-r border-border last:border-r-0 p-1.5 flex flex-col transition-colors ${
                       !dateStr
-                        ? "bg-[#FAFAFA]"
+                        ? "bg-card"
                         : isWeekend
-                        ? "bg-[#FFF8FB] hover:bg-[#FFF0F6]"
-                        : "bg-white hover:bg-[#FEFAF4]"
+                        ? "bg-accent hover:bg-accent"
+                        : "bg-white hover:bg-background"
                     } ${dateStr ? "cursor-pointer group" : ""}`}
                     onClick={() => dateStr && openAdd(dateStr)}
                   >
@@ -549,10 +549,10 @@ export default function ScheduleCalendar() {
                         <span
                           className={`font-body text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full ${
                             isToday
-                              ? "bg-[#8B2252] text-white"
+                              ? "bg-primary text-primary-foreground"
                               : isWeekend
-                              ? "text-[#8B2252]"
-                              : "text-[#6B4C3B]"
+                              ? "text-brand-link"
+                              : "text-muted-foreground"
                           }`}
                         >
                           {dayNum}
@@ -563,7 +563,7 @@ export default function ScheduleCalendar() {
                             e.stopPropagation();
                             if (dateStr) openAdd(dateStr);
                           }}
-                          className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-full bg-[#8B2252] text-white flex items-center justify-center transition-opacity hover:bg-[#8B2252]"
+                          className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center transition-opacity hover:bg-primary"
                           aria-label="Add slot"
                         >
                           <Plus size={10} />
@@ -609,7 +609,7 @@ export default function ScheduleCalendar() {
 
         {/* ── Legend ────────────────────────────────────────────────────────── */}
         <div className="flex flex-wrap gap-4 mt-4 items-center">
-          <span className="font-body text-xs text-[#C4A0B0] font-semibold uppercase tracking-wider">Legend:</span>
+          <span className="font-body text-xs text-muted-foreground font-semibold uppercase tracking-wider">Legend:</span>
           {LOCATIONS.map((loc) => {
             const c = LOCATION_COLORS[loc];
             return (
@@ -622,7 +622,7 @@ export default function ScheduleCalendar() {
           <span className="flex items-center gap-1.5 font-body text-xs font-semibold px-2.5 py-1 rounded-full border bg-amber-50 text-amber-700 border-amber-200">
             <Lock size={10} /> Private Event
           </span>
-          <span className="flex items-center gap-1.5 font-body text-xs font-semibold px-2.5 py-1 rounded-full border bg-[#FFF5F8] text-[#8B2252] border-[#F0D0DC]">
+          <span className="flex items-center gap-1.5 font-body text-xs font-semibold px-2.5 py-1 rounded-full border bg-accent text-brand-link border-border">
             Weekend
           </span>
         </div>
@@ -630,9 +630,9 @@ export default function ScheduleCalendar() {
 
       {/* ── Add / Edit Dialog ──────────────────────────────────────────────── */}
       <Dialog open={showDialog} onOpenChange={(open) => { if (!open) { setShowDialog(false); setEditId(null); setForm({ ...EMPTY_FORM }); } }}>
-        <DialogContent className="max-w-md bg-[#FEFAF4] border-[#F0D0DC] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-md bg-background border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl text-[#1A0A12]">
+            <DialogTitle className="font-display text-xl text-foreground">
               {editId !== null ? "Edit Class Slot" : "Add Class Slot"}
             </DialogTitle>
           </DialogHeader>
@@ -640,20 +640,20 @@ export default function ScheduleCalendar() {
           <div className="space-y-4 py-2">
             {/* Date */}
             <div>
-              <Label className="font-body text-sm text-[#1A0A12] font-semibold">
+              <Label className="font-body text-sm text-foreground font-semibold">
                 Date <span className="text-red-500">*</span>
               </Label>
               <Input
                 type="date"
-                className="mt-1 border-[#F0D0DC] font-body text-sm"
+                className="mt-1 border-border font-body text-sm"
                 value={form.classDate}
                 onChange={(e) => handleDateChange(e.target.value)}
               />
               {form.dayOfWeek && (
-                <p className="text-xs text-[#6B4C3B] mt-1 font-body">
+                <p className="text-xs text-muted-foreground mt-1 font-body">
                   Day: <span className="font-semibold">{form.dayOfWeek}</span>
                   {(form.dayOfWeek === "Saturday" || form.dayOfWeek === "Sunday") && (
-                    <span className="ml-1 text-[#8B2252]">· Weekend class</span>
+                    <span className="ml-1 text-brand-link">· Weekend class</span>
                   )}
                 </p>
               )}
@@ -661,12 +661,12 @@ export default function ScheduleCalendar() {
 
             {/* Class Type */}
             <div>
-              <Label className="font-body text-sm text-[#1A0A12] font-semibold">Class Type</Label>
+              <Label className="font-body text-sm text-foreground font-semibold">Class Type</Label>
               <Select
                 value={form.classType}
                 onValueChange={(v) => setForm((f) => ({ ...f, classType: v as "regular" | "private" }))}
               >
-                <SelectTrigger className="mt-1 border-[#F0D0DC] font-body text-sm">
+                <SelectTrigger className="mt-1 border-border font-body text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -678,14 +678,14 @@ export default function ScheduleCalendar() {
 
             {/* Location */}
             <div>
-              <Label className="font-body text-sm text-[#1A0A12] font-semibold">
+              <Label className="font-body text-sm text-foreground font-semibold">
                 Location <span className="text-red-500">*</span>
               </Label>
               <Select
                 value={form.location}
                 onValueChange={(v) => setForm((f) => ({ ...f, location: v as Location }))}
               >
-                <SelectTrigger className="mt-1 border-[#F0D0DC] font-body text-sm">
+                <SelectTrigger className="mt-1 border-border font-body text-sm">
                   <SelectValue placeholder="Select location" />
                 </SelectTrigger>
                 <SelectContent>
@@ -704,42 +704,42 @@ export default function ScheduleCalendar() {
             {/* Start / End time */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="font-body text-sm text-[#1A0A12] font-semibold flex items-center gap-1">
+                <Label className="font-body text-sm text-foreground font-semibold flex items-center gap-1">
                   <Clock size={13} /> Start Time
                 </Label>
                 <Input
                   type="time"
-                  className="mt-1 border-[#F0D0DC] font-body text-sm"
+                  className="mt-1 border-border font-body text-sm"
                   value={form.startTime}
                   onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
                 />
               </div>
               <div>
-                <Label className="font-body text-sm text-[#1A0A12] font-semibold flex items-center gap-1">
+                <Label className="font-body text-sm text-foreground font-semibold flex items-center gap-1">
                   <Clock size={13} /> End Time
                 </Label>
                 <Input
                   type="time"
-                  className="mt-1 border-[#F0D0DC] font-body text-sm"
+                  className="mt-1 border-border font-body text-sm"
                   value={form.endTime}
                   onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))}
                 />
               </div>
             </div>
-            <p className="text-xs text-[#C4A0B0] font-body -mt-2">
+            <p className="text-xs text-muted-foreground font-body -mt-2">
               3 classes: 9 AM–3 PM · 4 classes: 9 AM–4:30 PM
             </p>
 
             {/* Breeder */}
             <div>
-              <Label className="font-body text-sm text-[#1A0A12] font-semibold">
+              <Label className="font-body text-sm text-foreground font-semibold">
                 Breeder <span className="text-red-500">*</span>
               </Label>
               <Select
                 value={form.breederId ? String(form.breederId) : ""}
                 onValueChange={handleBreederChange}
               >
-                <SelectTrigger className="mt-1 border-[#F0D0DC] font-body text-sm">
+                <SelectTrigger className="mt-1 border-border font-body text-sm">
                   <SelectValue placeholder="Select breeder" />
                 </SelectTrigger>
                 <SelectContent className="max-h-60">
@@ -754,27 +754,27 @@ export default function ScheduleCalendar() {
 
             {/* Breed */}
             <div>
-              <Label className="font-body text-sm text-[#1A0A12] font-semibold">
+              <Label className="font-body text-sm text-foreground font-semibold">
                 Breed <span className="text-red-500">*</span>
               </Label>
               <Input
-                className="mt-1 border-[#F0D0DC] font-body text-sm"
+                className="mt-1 border-border font-body text-sm"
                 placeholder="e.g. Golden Retriever, Cavapoo"
                 value={form.breed}
                 onChange={(e) => setForm((f) => ({ ...f, breed: e.target.value }))}
               />
-              <p className="text-xs text-[#C4A0B0] mt-1 font-body">
+              <p className="text-xs text-muted-foreground mt-1 font-body">
                 Auto-filled from breeder profile — edit if different.
               </p>
             </div>
 
             {/* Notes */}
             <div>
-              <Label className="font-body text-sm text-[#1A0A12] font-semibold">
-                Notes <span className="text-[#C4A0B0] font-normal">(optional)</span>
+              <Label className="font-body text-sm text-foreground font-semibold">
+                Notes <span className="text-muted-foreground font-normal">(optional)</span>
               </Label>
               <Textarea
-                className="mt-1 border-[#F0D0DC] font-body text-sm resize-none"
+                className="mt-1 border-border font-body text-sm resize-none"
                 placeholder="e.g. 4 puppies, drop-off at 9:30 AM"
                 rows={2}
                 value={form.notes}
@@ -793,26 +793,26 @@ export default function ScheduleCalendar() {
                   {editingSlot.lumaSyncStatus === "synced" ? <CheckCircle2 size={14} /> : <AlertTriangle size={14} />}
                   {editingSlot.classType === "private" ? "Private event — no public Luma page" : editingSlot.lumaSyncStatus === "synced" ? "APY HQ and Luma are synchronized" : "Luma synchronization required"}
                 </div>
-                {editingSlot.lumaEventUrl && <a href={editingSlot.lumaEventUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 font-bold text-[#8B2252] hover:underline"><ExternalLink size={12} />Open Luma event</a>}
+                {editingSlot.lumaEventUrl && <a href={editingSlot.lumaEventUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 font-bold text-brand-link hover:underline"><ExternalLink size={12} />Open Luma event</a>}
                 {editingSlot.scheduleStatus === "cancelled" && <p className="mt-2 font-semibold text-red-700">This class is cancelled and can only be archived.</p>}
               </div>
             )}
 
             {access?.level === "owner" && editingSlot?.classType === "regular" && editingSlot.lumaEventId && editingSlot.scheduleStatus === "scheduled" && (
-              <section className="rounded-xl border border-[#D9A0B5] bg-[#FFF4F8] p-3" aria-label="Owner Luma invitation control">
+              <section className="rounded-xl border border-border bg-accent p-3" aria-label="Owner Luma invitation control">
                 <div className="flex items-start gap-2">
-                  <ShieldCheck size={16} className="mt-0.5 shrink-0 text-[#8B2252]" />
+                  <ShieldCheck size={16} className="mt-0.5 shrink-0 text-brand-link" />
                   <div>
-                    <p className="font-body text-xs font-bold text-[#3D1A2E]">Luma invitations <span className="font-normal text-[#8B2252]">· Owner only</span></p>
-                    <p className="mt-0.5 font-body text-[11px] leading-relaxed text-[#6B4C3B]">Checks the live event first. Registered guests and duplicate emails are excluded; recipient details never appear in APY HQ.</p>
+                    <p className="font-body text-xs font-bold text-foreground">Luma invitations <span className="font-normal text-brand-link">· Owner only</span></p>
+                    <p className="mt-0.5 font-body text-[11px] leading-relaxed text-muted-foreground">Checks the live event first. Registered guests and duplicate emails are excluded; recipient details never appear in APY HQ.</p>
                   </div>
                 </div>
 
                 {invitationSlotId === editingSlot.id && invitationReadinessQuery.isLoading && (
-                  <p className="mt-3 flex items-center gap-1.5 font-body text-xs text-[#6B4C3B]"><Loader2 size={13} className="animate-spin" /> Checking the live Luma event…</p>
+                  <p className="mt-3 flex items-center gap-1.5 font-body text-xs text-muted-foreground"><Loader2 size={13} className="animate-spin" /> Checking the live Luma event…</p>
                 )}
                 {invitationSlotId === editingSlot.id && invitationReadinessQuery.data && (
-                  <div className="mt-3 rounded-lg border border-[#F0D0DC] bg-white/80 p-2.5 font-body text-xs text-[#3D1A2E]">
+                  <div className="mt-3 rounded-lg border border-border bg-white/80 p-2.5 font-body text-xs text-foreground">
                     {invitationReadinessQuery.data.readiness.status === "ready" && <p><strong>{invitationReadinessQuery.data.readiness.recipientCount} contacts are ready.</strong> {invitationReadinessQuery.data.readiness.registeredGuestCount} registered guest{invitationReadinessQuery.data.readiness.registeredGuestCount === 1 ? " is" : "s are"} excluded.</p>}
                     {invitationReadinessQuery.data.readiness.status === "already_invited" && <p><strong>Already invited.</strong> Luma has {invitationReadinessQuery.data.readiness.existingInvitationCount} invitation record{invitationReadinessQuery.data.readiness.existingInvitationCount === 1 ? "" : "s"} for this event, so APY HQ will not resend.</p>}
                     {invitationReadinessQuery.data.readiness.status === "no_recipients" && <p><strong>No eligible recipients.</strong> There is no invitation set to send.</p>}
@@ -821,11 +821,11 @@ export default function ScheduleCalendar() {
                 )}
 
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Button type="button" variant="outline" onClick={() => setInvitationSlotId(editingSlot.id)} disabled={invitationReadinessQuery.isFetching || sendLumaInvitationsMutation.isPending} className="h-8 border-[#D9A0B5] bg-white text-[#8B2252] hover:bg-[#FFF0F6] font-body text-xs">
+                  <Button type="button" variant="outline" onClick={() => setInvitationSlotId(editingSlot.id)} disabled={invitationReadinessQuery.isFetching || sendLumaInvitationsMutation.isPending} className="h-8 border-border bg-white text-brand-link hover:bg-accent font-body text-xs">
                     {invitationReadinessQuery.isFetching ? <Loader2 size={13} className="mr-1.5 animate-spin" /> : <ShieldCheck size={13} className="mr-1.5" />} Check readiness
                   </Button>
                   {invitationSlotId === editingSlot.id && invitationReadinessQuery.data?.readiness.status === "ready" && (
-                    <Button type="button" onClick={() => setInvitationConfirmId(editingSlot.id)} disabled={sendLumaInvitationsMutation.isPending} className="h-8 bg-[#8B2252] text-white hover:bg-[#711936] font-body text-xs">
+                    <Button type="button" onClick={() => setInvitationConfirmId(editingSlot.id)} disabled={sendLumaInvitationsMutation.isPending} className="h-8 bg-primary text-primary-foreground hover:bg-primary-hover font-body text-xs">
                       <Send size={13} className="mr-1.5" /> Send invitations
                     </Button>
                   )}
@@ -835,7 +835,7 @@ export default function ScheduleCalendar() {
 
             {/* Delete button when editing */}
             {editId !== null && (
-              <div className="pt-2 border-t border-[#F0D0DC]">
+              <div className="pt-2 border-t border-border">
                 <Button
                   variant="outline"
                   onClick={() => { setShowDialog(false); setDeleteId(editId); }}
@@ -851,14 +851,14 @@ export default function ScheduleCalendar() {
             <Button
               variant="outline"
               onClick={() => { setShowDialog(false); setEditId(null); setForm({ ...EMPTY_FORM }); }}
-              className="font-body border-[#F0D0DC]"
+              className="font-body border-border"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSubmit}
               disabled={createMutation.isPending || updateMutation.isPending || editingSlot?.scheduleStatus === "cancelled"}
-              className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body font-semibold rounded-full px-6"
+              className="bg-primary hover:bg-primary text-primary-foreground font-body font-semibold rounded-full px-6"
             >
               {(createMutation.isPending || updateMutation.isPending) && (
                 <Loader2 size={14} className="animate-spin mr-2" />
@@ -900,19 +900,19 @@ export default function ScheduleCalendar() {
       />
 
       <AlertDialog open={invitationConfirmId !== null} onOpenChange={(open) => !open && setInvitationConfirmId(null)}>
-        <AlertDialogContent className="bg-[#FEFAF4] border-[#F0D0DC]">
+        <AlertDialogContent className="bg-background border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-[#1A0A12]">Send this Luma invitation set?</AlertDialogTitle>
-            <AlertDialogDescription className="font-body text-[#6B4C3B]">
+            <AlertDialogTitle className="font-display text-foreground">Send this Luma invitation set?</AlertDialogTitle>
+            <AlertDialogDescription className="font-body text-muted-foreground">
               APY HQ will recheck the live event immediately before sending. It will invite only the current eligible calendar contacts, exclude registered guests and duplicate emails, and stop if the event is no longer eligible or already invited.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="font-body border-[#F0D0DC]">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="font-body border-border">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => invitationConfirmId !== null && sendLumaInvitationsMutation.mutate({ scheduleId: invitationConfirmId, confirm: true })}
               disabled={sendLumaInvitationsMutation.isPending}
-              className="bg-[#8B2252] hover:bg-[#711936] text-white font-body"
+              className="bg-primary hover:bg-primary-hover text-primary-foreground font-body"
             >
               {sendLumaInvitationsMutation.isPending && <Loader2 size={14} className="mr-2 animate-spin" />} Send invitations
             </AlertDialogAction>

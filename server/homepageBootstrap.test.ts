@@ -36,7 +36,7 @@ describe("public homepage performance bootstrap", () => {
 
   it("uses regular navigation for routes outside the lean homepage", () => {
     expect(navbarSource).not.toContain('from "wouter"');
-    expect(navbarSource).toContain('href={link.href}');
+    expect(navbarSource).toContain('link.href.startsWith("#") ? homeSectionHref(link.href) : link.href');
     expect(navbarSource).toContain('href="/staff-access"');
   });
 
@@ -48,8 +48,9 @@ describe("public homepage performance bootstrap", () => {
     expect(homeSource).not.toContain('import ChatbotWidget from');
   });
 
-  it("uses CSS rather than Framer Motion for the hero viewport", () => {
+  it("uses a static CSS layout rather than Framer Motion for the hero viewport", () => {
     expect(heroSource).not.toContain("framer-motion");
-    expect(heroSource).toContain("heroReveal");
+    expect(heroSource).toContain('className="w-full h-full object-cover object-center"');
+    expect(heroSource).toContain('fetchPriority="high"');
   });
 });

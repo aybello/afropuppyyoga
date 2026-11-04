@@ -14,7 +14,7 @@ const socials = [
     handle: "@afropuppyyoga",
     url: "https://www.instagram.com/afropuppyyoga",
     icon: Instagram,
-    color: "bg-gradient-to-br from-[#f09433] via-[#e6683c] to-[#8B2252]",
+    color: "bg-[#B83F67]",
     followers: "12.2K followers",
   },
   {
@@ -77,7 +77,7 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 30 }}
+      initial={false}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.6, delay, ease: "easeOut" }}
     >
@@ -115,24 +115,24 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" className="py-10 md:py-14 bg-[#8B2252]">
+    <section id="contact" className="py-10 md:py-14 bg-[#FDE9EF]">
       <div className="container">
         <div className="grid lg:grid-cols-2 gap-10 items-start">
           {/* Left: Contact form + info */}
           <div>
             <FadeUp>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-0.5 bg-[#F2A0B8]" />
-                <span className="text-[#F2A0B8] font-body text-xs font-semibold tracking-widest uppercase">
+                <div className="w-8 h-0.5 bg-[#F29CB8]" />
+                <span className="text-[#B83F67] font-body text-xs font-semibold tracking-widest uppercase">
                   Get In Touch
                 </span>
               </div>
-              <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-4">
+              <h2 className="font-display text-3xl md:text-4xl font-medium text-[#34221D] mb-4">
                 Ready to Join
                 <br />
-                <span className="italic text-[#F2A0B8]">The Pack?</span>
+                <span className="italic text-[#B83F67]">The Pack?</span>
               </h2>
-              <p className="font-body text-white/70 text-base leading-relaxed mb-6">
+              <p className="font-body text-[#34221D]/70 text-base leading-relaxed mb-6">
                 Whether you're booking a class, planning a private event, or just want to say hello — we'd love to hear from you. Our team responds within 48 hours.
               </p>
             </FadeUp>
@@ -140,50 +140,53 @@ export default function Contact() {
             {/* Contact form */}
             <FadeUp delay={0.1}>
               {submitted ? (
-                <div className="flex items-center gap-3 bg-white/10 rounded-2xl p-5 border border-white/20 mb-6">
-                  <CheckCircle size={22} className="text-[#F2A0B8] flex-shrink-0" />
+                <div className="flex items-center gap-3 bg-[#FEFAF4] rounded-2xl p-5 border border-[#EBCDD5] mb-6">
+                  <CheckCircle size={22} className="text-[#287344] flex-shrink-0" />
                   <div>
-                    <div className="font-body font-semibold text-white text-sm">Message sent!</div>
-                    <div className="font-body text-white/60 text-xs mt-0.5">We'll get back to you within 48 hours.</div>
+                    <div className="font-body font-semibold text-[#34221D] text-sm">Message sent!</div>
+                    <div className="font-body text-[#34221D]/65 text-xs mt-0.5">We'll get back to you within 48 hours.</div>
                   </div>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-3 mb-6">
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <input
                         type="text"
                         placeholder="Your name"
+                        aria-label="Your name"
                         value={form.name}
                         onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                         maxLength={100}
-                        className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/40 font-body text-sm focus:outline-none focus:border-[#F2A0B8]/60 transition-colors"
+                        className="w-full bg-[#FEFAF4] border border-[#EBCDD5] rounded-xl px-4 py-3 text-[#34221D] placeholder-[#66514A] font-body text-base focus:outline-none focus:border-[#B83F67] focus:ring-2 focus:ring-[#B83F67]/20 transition-colors"
                       />
                     </div>
                     <div>
                       <input
                         type="email"
                         placeholder="Email address"
+                        aria-label="Email address"
                         value={form.email}
                         onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                         maxLength={200}
-                        className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/40 font-body text-sm focus:outline-none focus:border-[#F2A0B8]/60 transition-colors"
+                        className="w-full bg-[#FEFAF4] border border-[#EBCDD5] rounded-xl px-4 py-3 text-[#34221D] placeholder-[#66514A] font-body text-base focus:outline-none focus:border-[#B83F67] focus:ring-2 focus:ring-[#B83F67]/20 transition-colors"
                       />
                     </div>
                   </div>
                   <textarea
                     placeholder="Your message..."
+                    aria-label="Your message"
                     value={form.message}
                     onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
                     maxLength={1000}
                     rows={4}
-                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/40 font-body text-sm focus:outline-none focus:border-[#F2A0B8]/60 transition-colors resize-none"
+                    className="w-full bg-[#FEFAF4] border border-[#EBCDD5] rounded-xl px-4 py-3 text-[#34221D] placeholder-[#66514A] font-body text-base focus:outline-none focus:border-[#B83F67] focus:ring-2 focus:ring-[#B83F67]/20 transition-colors resize-none"
                   />
-                  {error && <p className="font-body text-[#F2A0B8] text-xs">{error}</p>}
+                  {error && <p className="font-body text-[#B42318] text-sm" role="alert">{error}</p>}
                   <button
                     type="submit"
                     disabled={notifyOwner.isPending}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-sm rounded-full hover:bg-[#f0b0c4] transition-all duration-200 shadow-lg hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#F29CB8] text-[#34221D] font-body font-bold text-sm rounded-full hover:bg-[#FEFAF4] transition-all duration-200 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {notifyOwner.isPending ? "Sending..." : <>Send Message <Send size={14} /></>}
                   </button>
@@ -195,12 +198,12 @@ export default function Contact() {
             <FadeUp delay={0.2}>
               <div className="flex flex-wrap gap-4 mb-6">
                 <a href="mailto:afropuppyyoga@gmail.com" className="flex items-center gap-2 group">
-                  <Mail size={15} className="text-[#F2A0B8]" />
-                  <span className="font-body text-white/70 text-sm group-hover:text-[#F2A0B8] transition-colors">afropuppyyoga@gmail.com</span>
+                  <Mail size={15} className="text-[#B83F67]" />
+                  <span className="font-body text-[#34221D]/70 text-sm group-hover:text-[#B83F67] transition-colors">afropuppyyoga@gmail.com</span>
                 </a>
                 <a href="tel:+12897881885" className="flex items-center gap-2 group">
-                  <Phone size={15} className="text-[#F2A0B8]" />
-                  <span className="font-body text-white/70 text-sm group-hover:text-[#F2A0B8] transition-colors">(289) 788-1885</span>
+                  <Phone size={15} className="text-[#B83F67]" />
+                  <span className="font-body text-[#34221D]/70 text-sm group-hover:text-[#B83F67] transition-colors">(289) 788-1885</span>
                 </a>
               </div>
             </FadeUp>
@@ -211,7 +214,7 @@ export default function Contact() {
                 href={BOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-base rounded-full hover:bg-[#f0b0c4] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-[#F29CB8] text-[#34221D] font-body font-bold text-base rounded-full hover:bg-[#FEFAF4] transition-all duration-200 shadow-sm hover:shadow-md"
               >
                 Book on Luma
                 <ExternalLink size={16} />
@@ -222,7 +225,7 @@ export default function Contact() {
           {/* Right: Social links + locations */}
           <div>
             <FadeUp delay={0.1}>
-              <h3 className="font-display font-bold text-xl text-white mb-4">
+              <h3 className="font-display font-medium text-xl text-[#34221D] mb-4">
                 Follow Our Journey
               </h3>
             </FadeUp>
@@ -233,42 +236,42 @@ export default function Contact() {
                   href={social.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={false}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.1 + i * 0.1, duration: 0.5 }}
-                  className="group bg-white/10 hover:bg-white/15 rounded-2xl p-3 sm:p-4 border border-white/10 hover:border-white/20 transition-all duration-300 hover:-translate-y-1"
+                  className="group bg-[#FEFAF4] hover:bg-[#FEFAF4] rounded-2xl p-3 sm:p-4 border border-[#EBCDD5] hover:border-[#EBCDD5] transition-all duration-300"
                 >
                   <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl ${social.color} flex items-center justify-center mb-2`}>
                     <social.icon size={18} className="text-white" />
                   </div>
-                  <div className="font-display font-bold text-white text-sm mb-0.5">{social.name}</div>
-                  <div className="font-body text-white/50 text-xs">{social.handle}</div>
-                  <div className="font-body text-white/40 text-xs mt-0.5 hidden sm:block">{social.followers}</div>
+                  <div className="font-display font-medium text-[#34221D] text-sm mb-0.5">{social.name}</div>
+                  <div className="font-body text-[#34221D]/65 text-xs">{social.handle}</div>
+                  <div className="font-body text-[#34221D]/65 text-xs mt-0.5 hidden sm:block">{social.followers}</div>
                 </motion.a>
               ))}
             </div>
 
             {/* Locations */}
             <FadeUp delay={0.4}>
-              <div className="bg-white/10 rounded-2xl p-5 border border-white/10">
-                <h4 className="font-display font-bold text-white text-base mb-3">Our Locations</h4>
+              <div className="bg-[#FEFAF4] rounded-2xl p-5 border border-[#EBCDD5]">
+                <h4 className="font-display font-medium text-[#34221D] text-base mb-3">Our Locations</h4>
                 <div className="space-y-3">
                   {locations.map((loc, i) => (
                     <div key={loc.city}>
-                      {i > 0 && <div className="border-t border-white/10 mb-3" />}
+                      {i > 0 && <div className="border-t border-[#EBCDD5] mb-3" />}
                       <a
                         href={loc.mapsUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-start gap-3 group"
                       >
-                        <div className="w-8 h-8 rounded-lg bg-[#F2A0B8]/20 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-[#F2A0B8]/30 transition-colors">
-                          <MapPin size={15} className="text-[#F2A0B8]" />
+                        <div className="w-8 h-8 rounded-lg bg-[#F29CB8]/20 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-[#FDE9EF]/30 transition-colors">
+                          <MapPin size={15} className="text-[#B83F67]" />
                         </div>
                         <div>
-                          <div className="font-body text-white font-semibold text-sm group-hover:text-[#F2A0B8] transition-colors">{loc.city}</div>
-                          <div className="font-body text-white/60 text-xs leading-relaxed">{loc.venue}<br />{loc.address}</div>
+                          <div className="font-body text-[#34221D] font-semibold text-sm group-hover:text-[#B83F67] transition-colors">{loc.city}</div>
+                          <div className="font-body text-[#34221D]/65 text-xs leading-relaxed">{loc.venue}<br />{loc.address}</div>
                         </div>
                       </a>
                     </div>

@@ -34,7 +34,7 @@ type Location = typeof LOCATIONS[number];
 
 const LOCATION_COLORS: Record<Location, string> = {
   Kitchener: "bg-pink-50 text-pink-700 border-pink-200",
-  Hamilton: "bg-purple-50 text-purple-700 border-purple-200",
+  Hamilton: "bg-blue-50 text-blue-700 border-blue-200",
   Oakville: "bg-amber-50 text-amber-700 border-amber-200",
 };
 
@@ -245,24 +245,24 @@ export default function PuppySchedule() {
   const activeBreeders = breeders.filter((b: any) => b.isActive === 1);
 
   return (
-    <div className="min-h-screen bg-[#FEFAF4]">
+    <div className="min-h-screen apy-staff-ui bg-background">
       <AdminNav />
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-1 h-6 bg-[#8B2252] rounded-full" />
-              <span className="text-[#8B2252] font-body text-xs font-bold tracking-widest uppercase">Admin</span>
+              <div className="w-1 h-6 bg-primary rounded-full" />
+              <span className="text-brand-link font-body text-xs font-bold tracking-widest uppercase">Admin</span>
             </div>
-            <h1 className="font-display text-3xl font-bold text-[#1A0A12]">Puppy Class Schedule</h1>
-            <p className="font-body text-sm text-[#6B4C3B] mt-1">
+            <h1 className="font-display text-3xl font-medium text-foreground">Puppy Class Schedule</h1>
+            <p className="font-body text-sm text-muted-foreground mt-1">
               Assign breeds and breeders to Saturday & Sunday classes across all locations.
             </p>
           </div>
           <Button
             onClick={openAdd}
-            className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body font-semibold rounded-full px-5"
+            className="bg-primary hover:bg-primary text-primary-foreground font-body font-semibold rounded-full px-5"
           >
             <Plus size={16} className="mr-1" /> Schedule Class
           </Button>
@@ -276,9 +276,9 @@ export default function PuppySchedule() {
             { label: "Hamilton", value: schedules.filter(s => s.location === "Hamilton").length },
             { label: "Oakville", value: schedules.filter(s => s.location === "Oakville").length },
           ].map(({ label, value }) => (
-            <div key={label} className="bg-white rounded-xl border border-[#F0D0DC] p-4">
-              <div className="font-display text-2xl font-bold text-[#8B2252]">{value}</div>
-              <div className="font-body text-xs text-[#6B4C3B] mt-0.5">{label}</div>
+            <div key={label} className="bg-white rounded-xl border border-border p-4">
+              <div className="font-display text-2xl font-bold text-brand-link">{value}</div>
+              <div className="font-body text-xs text-muted-foreground mt-0.5">{label}</div>
             </div>
           ))}
         </div>
@@ -291,8 +291,8 @@ export default function PuppySchedule() {
               onClick={() => setFilterLocation(loc)}
               className={`px-4 py-1.5 rounded-full font-body text-sm font-semibold border transition-all ${
                 filterLocation === loc
-                  ? "bg-[#8B2252] text-white border-[#8B2252]"
-                  : "bg-white text-[#6B4C3B] border-[#F0D0DC] hover:border-[#8B2252]"
+                  ? "bg-primary text-primary-foreground border-border"
+                  : "bg-white text-muted-foreground border-border hover:border-border"
               }`}
             >
               {loc === "all" ? "All Locations" : loc}
@@ -302,14 +302,14 @@ export default function PuppySchedule() {
 
         {/* Schedule list */}
         {isLoading ? (
-          <div className="flex items-center justify-center py-20 text-[#6B4C3B]">
+          <div className="flex items-center justify-center py-20 text-muted-foreground">
             <Loader2 className="animate-spin mr-2" size={20} /> Loading schedule...
           </div>
         ) : sortedDates.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-2xl border border-[#F0D0DC]">
-            <Dog size={48} className="mx-auto text-[#F0D0DC] mb-3" />
-            <p className="font-display text-lg text-[#1A0A12] font-semibold">No classes scheduled yet</p>
-            <p className="font-body text-sm text-[#6B4C3B] mt-1">Click "Schedule Class" to add your first entry.</p>
+          <div className="text-center py-20 bg-white rounded-2xl border border-border">
+            <Dog size={48} className="mx-auto text-border mb-3" />
+            <p className="font-display text-lg text-foreground font-semibold">No classes scheduled yet</p>
+            <p className="font-body text-sm text-muted-foreground mt-1">Click "Schedule Class" to add your first entry.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -319,52 +319,52 @@ export default function PuppySchedule() {
               const dateLabel = d.toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
               const dayOfWeek = entries[0].dayOfWeek;
               return (
-                <div key={date} className="bg-white rounded-2xl border border-[#F0D0DC] overflow-hidden">
+                <div key={date} className="bg-white rounded-2xl border border-border overflow-hidden">
                   {/* Date header */}
-                  <div className="flex items-center gap-3 px-5 py-3 bg-[#FFF5F8] border-b border-[#F0D0DC]">
-                    <CalendarDays size={18} className="text-[#8B2252]" />
-                    <span className="font-display font-bold text-[#1A0A12] text-base">{dateLabel}</span>
+                  <div className="flex items-center gap-3 px-5 py-3 bg-accent border-b border-border">
+                    <CalendarDays size={18} className="text-brand-link" />
+                    <span className="font-display font-medium text-foreground text-base">{dateLabel}</span>
                     <Badge className={`text-xs font-body border ${DAY_COLORS[dayOfWeek]}`}>{dayOfWeek}</Badge>
                   </div>
                   {/* Entries for this date */}
-                  <div className="divide-y divide-[#F0D0DC]">
+                  <div className="divide-y divide-border">
                     {entries.map(s => (
                       <div key={s.id} className="flex items-start gap-4 px-5 py-4">
-                        <div className="w-9 h-9 rounded-full bg-[#FFF0F4] flex items-center justify-center shrink-0 mt-0.5">
-                          <PawPrint size={18} className="text-[#8B2252]" />
+                        <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center shrink-0 mt-0.5">
+                          <PawPrint size={18} className="text-brand-link" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap mb-1">
-                            <span className="font-body font-semibold text-[#1A0A12]">{s.breed}</span>
+                            <span className="font-body font-semibold text-foreground">{s.breed}</span>
                             <Badge className={`text-xs font-body border ${LOCATION_COLORS[s.location as Location]}`}>
                               <MapPin size={10} className="mr-1" />{s.location}
                             </Badge>
                           </div>
-                          <div className="font-body text-sm text-[#6B4C3B]">
-                            Breeder: <span className="font-semibold text-[#1A0A12]">{s.breederName}</span>
+                          <div className="font-body text-sm text-muted-foreground">
+                            Breeder: <span className="font-semibold text-foreground">{s.breederName}</span>
                           </div>
                           {s.notes && (
-                            <div className="font-body text-xs text-[#C4A0B0] mt-1 italic">{s.notes}</div>
+                            <div className="font-body text-xs text-muted-foreground mt-1 italic">{s.notes}</div>
                           )}
                           {s.lumaEventUrl ? (
                             <a
                               href={s.lumaEventUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 mt-1.5 text-xs font-body text-[#8B2252] hover:underline"
+                              className="inline-flex items-center gap-1 mt-1.5 text-xs font-body text-brand-link hover:underline"
                             >
                               <ExternalLink size={11} />
                               View Luma Event
                             </a>
                           ) : (
-                            <span className="inline-flex items-center gap-1 mt-1.5 text-xs font-body text-[#C4A0B0] italic">
+                            <span className="inline-flex items-center gap-1 mt-1.5 text-xs font-body text-muted-foreground italic">
                               No Luma event yet
                             </span>
                           )}
                           <div className={`mt-3 rounded-xl border p-3 ${s.staffing.fullyStaffed ? "border-emerald-200 bg-emerald-50/60" : "border-amber-200 bg-amber-50/70"}`}>
                             <div className="flex flex-wrap items-center justify-between gap-2">
-                              <div className="flex items-center gap-1.5 text-xs font-bold text-[#1A0A12]"><UsersRound size={14} className={s.staffing.fullyStaffed ? "text-emerald-600" : "text-amber-600"} /> Class staffing</div>
-                              <button onClick={() => openStaffing(s)} className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-[#8B2252] shadow-sm ring-1 ring-[#EADBE2] transition-colors hover:bg-[#FFF5F8]"><UserPlus size={12} /> Manage</button>
+                              <div className="flex items-center gap-1.5 text-xs font-bold text-foreground"><UsersRound size={14} className={s.staffing.fullyStaffed ? "text-emerald-600" : "text-amber-600"} /> Class staffing</div>
+                              <button onClick={() => openStaffing(s)} className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-brand-link shadow-sm ring-1 ring-border transition-colors hover:bg-accent"><UserPlus size={12} /> Manage</button>
                             </div>
                             <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] font-semibold">
                               <span className={`rounded-full px-2 py-1 ${s.staffing.operationsManager ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-700"}`}>Ops: {s.staffing.operationsManager?.name ?? "Gap"}</span>
@@ -376,13 +376,13 @@ export default function PuppySchedule() {
                         <div className="flex gap-2 shrink-0">
                           <button
                             onClick={() => openEdit(s)}
-                            className="p-1.5 rounded-lg hover:bg-[#FFF0F4] text-[#6B4C3B] hover:text-[#8B2252] transition-colors"
+                            className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-brand-link transition-colors"
                           >
                             <Pencil size={15} />
                           </button>
                           <button
                             onClick={() => setDeleteId(s.id)}
-                            className="p-1.5 rounded-lg hover:bg-red-50 text-[#6B4C3B] hover:text-red-600 transition-colors"
+                            className="p-1.5 rounded-lg hover:bg-red-50 text-muted-foreground hover:text-red-600 transition-colors"
                           >
                             <Trash2 size={15} />
                           </button>
@@ -399,57 +399,57 @@ export default function PuppySchedule() {
 
       {/* Class Staffing Dialog */}
       <Dialog open={staffingEntry !== null} onOpenChange={open => !open && setStaffingEntry(null)}>
-        {staffingEntry && <DialogContent className="max-w-lg bg-[#FEFAF4] border-[#F0D0DC]">
+        {staffingEntry && <DialogContent className="max-w-lg bg-background border-border">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl text-[#1A0A12]">Class staffing</DialogTitle>
+            <DialogTitle className="font-display text-xl text-foreground">Class staffing</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="rounded-xl border border-[#F0D0DC] bg-white p-3">
-              <p className="font-body text-sm font-bold text-[#1A0A12]">{staffingEntry.breed} · {staffingEntry.location}</p>
-              <p className="mt-1 font-body text-xs text-[#6B4C3B]">{staffingEntry.classDate} · Breeder: {staffingEntry.breederName}</p>
+            <div className="rounded-xl border border-border bg-white p-3">
+              <p className="font-body text-sm font-bold text-foreground">{staffingEntry.breed} · {staffingEntry.location}</p>
+              <p className="mt-1 font-body text-xs text-muted-foreground">{staffingEntry.classDate} · Breeder: {staffingEntry.breederName}</p>
             </div>
 
             <div>
-              <div className="mb-2 flex items-center gap-1.5"><CheckCircle2 size={14} className="text-[#8B2252]" /><Label className="font-body text-sm font-semibold text-[#1A0A12]">Leadership coverage</Label></div>
+              <div className="mb-2 flex items-center gap-1.5"><CheckCircle2 size={14} className="text-brand-link" /><Label className="font-body text-sm font-semibold text-foreground">Leadership coverage</Label></div>
               <div className="grid gap-2 sm:grid-cols-2">
-                <div className={`rounded-lg border px-3 py-2 ${staffingEntry.staffing.operationsManager ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50"}`}><p className="text-[10px] font-bold uppercase tracking-wide text-[#6B4C3B]">Operations Manager</p><p className="mt-0.5 text-xs font-bold text-[#1A0A12]">{staffingEntry.staffing.operationsManager?.name ?? "Coverage gap"}</p></div>
-                <div className={`rounded-lg border px-3 py-2 ${staffingEntry.staffing.yogaInstructor ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50"}`}><p className="text-[10px] font-bold uppercase tracking-wide text-[#6B4C3B]">Yoga Instructor</p><p className="mt-0.5 text-xs font-bold text-[#1A0A12]">{staffingEntry.staffing.yogaInstructor?.name ?? "Coverage gap"}</p></div>
+                <div className={`rounded-lg border px-3 py-2 ${staffingEntry.staffing.operationsManager ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50"}`}><p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Operations Manager</p><p className="mt-0.5 text-xs font-bold text-foreground">{staffingEntry.staffing.operationsManager?.name ?? "Coverage gap"}</p></div>
+                <div className={`rounded-lg border px-3 py-2 ${staffingEntry.staffing.yogaInstructor ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50"}`}><p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Yoga Instructor</p><p className="mt-0.5 text-xs font-bold text-foreground">{staffingEntry.staffing.yogaInstructor?.name ?? "Coverage gap"}</p></div>
               </div>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                <div className="rounded-lg border border-[#EADBE2] bg-white p-2.5"><Label className="text-[10px] font-bold uppercase tracking-wide text-[#6B4C3B]">Assign or replace Operations Manager</Label><div className="mt-1.5 flex gap-2"><select value={selectedOperationsManager} onChange={(event) => setSelectedOperationsManager(event.target.value)} className="min-w-0 flex-1 rounded-md border border-[#F0D0DC] bg-white px-2 py-1.5 text-xs"><option value="">Select Operations Manager</option>{staffingEntry.staffing.eligibleOperationsManagers.map((person: any) => <option key={person.id} value={person.id}>{person.name}</option>)}</select><Button size="sm" onClick={() => selectedOperationsManager && assignLeadership.mutate({ scheduleId: staffingEntry.id, role: "Operations Manager", staffId: Number(selectedOperationsManager) })} disabled={!selectedOperationsManager || assignLeadership.isPending} className="bg-[#8B2252] text-xs text-white hover:bg-[#6B1A3E]">Save</Button></div></div>
-                <div className="rounded-lg border border-[#EADBE2] bg-white p-2.5"><Label className="text-[10px] font-bold uppercase tracking-wide text-[#6B4C3B]">Assign or replace Yoga Instructor</Label><div className="mt-1.5 flex gap-2"><select value={selectedYogaInstructor} onChange={(event) => setSelectedYogaInstructor(event.target.value)} className="min-w-0 flex-1 rounded-md border border-[#F0D0DC] bg-white px-2 py-1.5 text-xs"><option value="">Select Yoga Instructor</option>{staffingEntry.staffing.eligibleYogaInstructors.map((person: any) => <option key={person.id} value={person.id}>{person.name}</option>)}</select><Button size="sm" onClick={() => selectedYogaInstructor && assignLeadership.mutate({ scheduleId: staffingEntry.id, role: "Yoga Instructor", staffId: Number(selectedYogaInstructor) })} disabled={!selectedYogaInstructor || assignLeadership.isPending} className="bg-[#8B2252] text-xs text-white hover:bg-[#6B1A3E]">Save</Button></div></div>
+                <div className="rounded-lg border border-border bg-white p-2.5"><Label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Assign or replace Operations Manager</Label><div className="mt-1.5 flex gap-2"><select value={selectedOperationsManager} onChange={(event) => setSelectedOperationsManager(event.target.value)} className="min-w-0 flex-1 rounded-md border border-border bg-white px-2 py-1.5 text-xs"><option value="">Select Operations Manager</option>{staffingEntry.staffing.eligibleOperationsManagers.map((person: any) => <option key={person.id} value={person.id}>{person.name}</option>)}</select><Button size="sm" onClick={() => selectedOperationsManager && assignLeadership.mutate({ scheduleId: staffingEntry.id, role: "Operations Manager", staffId: Number(selectedOperationsManager) })} disabled={!selectedOperationsManager || assignLeadership.isPending} className="bg-primary text-xs text-primary-foreground hover:bg-primary-hover">Save</Button></div></div>
+                <div className="rounded-lg border border-border bg-white p-2.5"><Label className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Assign or replace Yoga Instructor</Label><div className="mt-1.5 flex gap-2"><select value={selectedYogaInstructor} onChange={(event) => setSelectedYogaInstructor(event.target.value)} className="min-w-0 flex-1 rounded-md border border-border bg-white px-2 py-1.5 text-xs"><option value="">Select Yoga Instructor</option>{staffingEntry.staffing.eligibleYogaInstructors.map((person: any) => <option key={person.id} value={person.id}>{person.name}</option>)}</select><Button size="sm" onClick={() => selectedYogaInstructor && assignLeadership.mutate({ scheduleId: staffingEntry.id, role: "Yoga Instructor", staffId: Number(selectedYogaInstructor) })} disabled={!selectedYogaInstructor || assignLeadership.isPending} className="bg-primary text-xs text-primary-foreground hover:bg-primary-hover">Save</Button></div></div>
               </div>
               {(!staffingEntry.staffing.operationsManager || !staffingEntry.staffing.yogaInstructor) && <p className="mt-2 flex items-center gap-1 text-xs font-medium text-rose-700"><ShieldAlert size={13} /> Leadership coverage gap. Owners can still send schedules to the assigned team.</p>}
             </div>
 
             <div>
-              <div className="mb-2 flex items-center justify-between gap-2"><div className="flex items-center gap-1.5"><UsersRound size={14} className="text-[#8B2252]" /><Label className="font-body text-sm font-semibold text-[#1A0A12]">Puppy Monitors</Label></div><span className={`rounded-full px-2 py-1 text-[11px] font-bold ${staffingEntry.staffing.assignedPuppyMonitors.length >= 2 ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>{staffingEntry.staffing.assignedPuppyMonitors.length}/2 required · 3 max</span></div>
+              <div className="mb-2 flex items-center justify-between gap-2"><div className="flex items-center gap-1.5"><UsersRound size={14} className="text-brand-link" /><Label className="font-body text-sm font-semibold text-foreground">Puppy Monitors</Label></div><span className={`rounded-full px-2 py-1 text-[11px] font-bold ${staffingEntry.staffing.assignedPuppyMonitors.length >= 2 ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>{staffingEntry.staffing.assignedPuppyMonitors.length}/2 required · 3 max</span></div>
               <div className="space-y-2">
-                {staffingEntry.staffing.assignedPuppyMonitors.map((monitor: any) => <div key={monitor.id} className="flex items-center justify-between rounded-lg border border-[#EADBE2] bg-white px-3 py-2"><span className="font-body text-sm font-semibold text-[#1A0A12]">{monitor.name}</span><button onClick={() => removePuppyMonitor.mutate({ id: monitor.id })} disabled={removePuppyMonitor.isPending} className="rounded-md p-1 text-[#C4A0B0] hover:bg-red-50 hover:text-red-600" aria-label={`Remove ${monitor.name} from class`}><X size={14} /></button></div>)}
+                {staffingEntry.staffing.assignedPuppyMonitors.map((monitor: any) => <div key={monitor.id} className="flex items-center justify-between rounded-lg border border-border bg-white px-3 py-2"><span className="font-body text-sm font-semibold text-foreground">{monitor.name}</span><button onClick={() => removePuppyMonitor.mutate({ id: monitor.id })} disabled={removePuppyMonitor.isPending} className="rounded-md p-1 text-muted-foreground hover:bg-red-50 hover:text-red-600" aria-label={`Remove ${monitor.name} from class`}><X size={14} /></button></div>)}
                 {Array.from({ length: Math.max(0, 2 - staffingEntry.staffing.assignedPuppyMonitors.length) }, (_, index) => <div key={index} className="rounded-lg border border-dashed border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">Puppy Monitor {staffingEntry.staffing.assignedPuppyMonitors.length + index + 1} still required</div>)}
               </div>
-              {staffingEntry.staffing.assignedPuppyMonitors.length < 3 && <div className="mt-3 flex gap-2"><select value={selectedPuppyMonitor} onChange={event => setSelectedPuppyMonitor(event.target.value)} className="min-w-0 flex-1 rounded-lg border border-[#F0D0DC] bg-white px-3 py-2 text-sm font-body focus:border-[#8B2252] focus:outline-none"><option value="">Select an available Puppy Monitor</option>{staffingEntry.staffing.eligiblePuppyMonitors.map((monitor: any) => <option key={monitor.id} value={monitor.id}>{monitor.name}</option>)}</select><Button onClick={() => selectedPuppyMonitor && assignPuppyMonitor.mutate({ scheduleId: staffingEntry.id, staffId: Number(selectedPuppyMonitor) })} disabled={!selectedPuppyMonitor || assignPuppyMonitor.isPending} className="bg-[#8B2252] text-white hover:bg-[#6B1A3E]"><UserPlus size={14} className="mr-1" />{staffingEntry.staffing.assignedPuppyMonitors.length >= 2 ? "Add optional third" : "Assign"}</Button></div>}
+              {staffingEntry.staffing.assignedPuppyMonitors.length < 3 && <div className="mt-3 flex gap-2"><select value={selectedPuppyMonitor} onChange={event => setSelectedPuppyMonitor(event.target.value)} className="min-w-0 flex-1 rounded-lg border border-border bg-white px-3 py-2 text-sm font-body focus:border-border focus:outline-none"><option value="">Select an available Puppy Monitor</option>{staffingEntry.staffing.eligiblePuppyMonitors.map((monitor: any) => <option key={monitor.id} value={monitor.id}>{monitor.name}</option>)}</select><Button onClick={() => selectedPuppyMonitor && assignPuppyMonitor.mutate({ scheduleId: staffingEntry.id, staffId: Number(selectedPuppyMonitor) })} disabled={!selectedPuppyMonitor || assignPuppyMonitor.isPending} className="bg-primary text-primary-foreground hover:bg-primary-hover"><UserPlus size={14} className="mr-1" />{staffingEntry.staffing.assignedPuppyMonitors.length >= 2 ? "Add optional third" : "Assign"}</Button></div>}
               {staffingEntry.staffing.assignedPuppyMonitors.length < 3 && staffingEntry.staffing.eligiblePuppyMonitors.length === 0 && <p className="mt-2 text-xs text-rose-700">No available Puppy Monitors are currently listed for this studio and date.</p>}
             </div>
           </div>
-          <DialogFooter><Button variant="outline" onClick={() => setStaffingEntry(null)} className="font-body border-[#F0D0DC]">Close</Button></DialogFooter>
+          <DialogFooter><Button variant="outline" onClick={() => setStaffingEntry(null)} className="font-body border-border">Close</Button></DialogFooter>
         </DialogContent>}
       </Dialog>
 
       {/* Add / Edit Dialog */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-md bg-[#FEFAF4] border-[#F0D0DC]">
+        <DialogContent className="max-w-md bg-background border-border">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl text-[#1A0A12]">
+            <DialogTitle className="font-display text-xl text-foreground">
               {editId !== null ? "Edit Scheduled Class" : "Schedule a Class"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             {/* Date */}
             <div>
-              <Label className="font-body text-sm text-[#1A0A12] font-semibold">Class Date <span className="text-red-500">*</span></Label>
+              <Label className="font-body text-sm text-foreground font-semibold">Class Date <span className="text-red-500">*</span></Label>
               <Select value={form.classDate} onValueChange={handleDateChange}>
-                <SelectTrigger className="mt-1 border-[#F0D0DC] font-body text-sm">
+                <SelectTrigger className="mt-1 border-border font-body text-sm">
                   <SelectValue placeholder="Select a Saturday or Sunday" />
                 </SelectTrigger>
                 <SelectContent className="max-h-64">
@@ -462,7 +462,7 @@ export default function PuppySchedule() {
                 </SelectContent>
               </Select>
               {form.dayOfWeek && (
-                <p className="text-xs text-[#6B4C3B] mt-1 font-body">
+                <p className="text-xs text-muted-foreground mt-1 font-body">
                   Day: <span className="font-semibold">{form.dayOfWeek}</span>
                 </p>
               )}
@@ -470,9 +470,9 @@ export default function PuppySchedule() {
 
             {/* Location */}
             <div>
-              <Label className="font-body text-sm text-[#1A0A12] font-semibold">Location <span className="text-red-500">*</span></Label>
+              <Label className="font-body text-sm text-foreground font-semibold">Location <span className="text-red-500">*</span></Label>
               <Select value={form.location} onValueChange={v => setForm(f => ({ ...f, location: v as Location }))}>
-                <SelectTrigger className="mt-1 border-[#F0D0DC] font-body text-sm">
+                <SelectTrigger className="mt-1 border-border font-body text-sm">
                   <SelectValue placeholder="Select location" />
                 </SelectTrigger>
                 <SelectContent>
@@ -485,9 +485,9 @@ export default function PuppySchedule() {
 
             {/* Breeder */}
             <div>
-              <Label className="font-body text-sm text-[#1A0A12] font-semibold">Breeder <span className="text-red-500">*</span></Label>
+              <Label className="font-body text-sm text-foreground font-semibold">Breeder <span className="text-red-500">*</span></Label>
               <Select value={form.breederId ? String(form.breederId) : ""} onValueChange={handleBreederChange}>
-                <SelectTrigger className="mt-1 border-[#F0D0DC] font-body text-sm">
+                <SelectTrigger className="mt-1 border-border font-body text-sm">
                   <SelectValue placeholder="Select breeder" />
                 </SelectTrigger>
                 <SelectContent className="max-h-60">
@@ -502,21 +502,21 @@ export default function PuppySchedule() {
 
             {/* Breed */}
             <div>
-              <Label className="font-body text-sm text-[#1A0A12] font-semibold">Breed <span className="text-red-500">*</span></Label>
+              <Label className="font-body text-sm text-foreground font-semibold">Breed <span className="text-red-500">*</span></Label>
               <Input
-                className="mt-1 border-[#F0D0DC] font-body text-sm"
+                className="mt-1 border-border font-body text-sm"
                 placeholder="e.g. Golden Retriever, Cavapoo"
                 value={form.breed}
                 onChange={e => setForm(f => ({ ...f, breed: e.target.value }))}
               />
-              <p className="text-xs text-[#C4A0B0] mt-1 font-body">Auto-filled from breeder profile — edit if different.</p>
+              <p className="text-xs text-muted-foreground mt-1 font-body">Auto-filled from breeder profile — edit if different.</p>
             </div>
 
             {/* Notes */}
             <div>
-              <Label className="font-body text-sm text-[#1A0A12] font-semibold">Notes <span className="text-[#C4A0B0] font-normal">(optional)</span></Label>
+              <Label className="font-body text-sm text-foreground font-semibold">Notes <span className="text-muted-foreground font-normal">(optional)</span></Label>
               <Textarea
-                className="mt-1 border-[#F0D0DC] font-body text-sm resize-none"
+                className="mt-1 border-border font-body text-sm resize-none"
                 placeholder="e.g. 4 puppies, drop-off at 9:30 AM"
                 rows={2}
                 value={form.notes}
@@ -525,13 +525,13 @@ export default function PuppySchedule() {
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowDialog(false)} className="font-body border-[#F0D0DC]">
+            <Button variant="outline" onClick={() => setShowDialog(false)} className="font-body border-border">
               Cancel
             </Button>
             <Button
               onClick={handleSubmit}
               disabled={createMutation.isPending || updateMutation.isPending}
-              className="bg-[#8B2252] hover:bg-[#8B2252] text-white font-body font-semibold rounded-full px-6"
+              className="bg-primary hover:bg-primary text-primary-foreground font-body font-semibold rounded-full px-6"
             >
               {(createMutation.isPending || updateMutation.isPending) && <Loader2 size={14} className="animate-spin mr-2" />}
               {editId !== null ? "Save Changes" : "Schedule Class"}

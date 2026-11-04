@@ -1,6 +1,6 @@
 /* ============================================================
    Private Events Section — Corporate + Personal events
-   Layout: Full-bleed image with overlaid content cards
+   Layout: Authentic event photo and editorial header with light content panels
    ============================================================ */
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
@@ -8,7 +8,7 @@ import { Building2, PartyPopper, Users, MapPin, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import { trackCTAClick } from "@/hooks/useAnalytics";
 
-const EVENTS_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/apy_private_events-Nb3wGnpKGLiacEq7DDkbgp.webp";
+const EVENTS_IMG = "/manus-storage/apy_private_events_hero_43ef0f7d.jpg";
 
 
 const eventTypes = [
@@ -42,7 +42,7 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 30 }}
+      initial={false}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.6, delay, ease: "easeOut" }}
     >
@@ -53,60 +53,49 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export default function PrivateEvents() {
   return (
-    <section id="private-events" className="py-10 md:py-32 bg-[#FFF5F8] relative overflow-hidden">
-      {/* Background image with dark overlay */}
-      <div className="absolute inset-0">
-        <img
-          src={EVENTS_IMG}
-          alt="Private puppy yoga event"
-          className="w-full h-full object-cover opacity-60"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#1A0A12]/50 via-[#1A0A12]/40 to-[#1A0A12]/70" />
-      </div>
-
-      {/* Decorative circles — clipped by section overflow-hidden */}
-      <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-[#8B2252]/5 translate-x-1/3 -translate-y-1/3" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-[#8B2252]/10 -translate-x-1/3 translate-y-1/3" />
-
+    <section id="private-events" className="py-10 md:py-20 bg-[#FDE9EF] relative">
       <div className="relative container">
         {/* Header */}
-        <FadeUp>
-          <div className="text-center mb-16">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="w-8 h-0.5 bg-[#8B2252]" />
-              <span className="text-[#8B2252] font-body text-xs font-semibold tracking-widest uppercase">
-                Private Events
-              </span>
-              <div className="w-8 h-0.5 bg-[#8B2252]" />
+        <div className="grid lg:grid-cols-[1.1fr_1fr] items-center gap-8 lg:gap-14 mb-12">
+          <FadeUp>
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-px bg-[#EBCDD5]" />
+                <span className="text-[#B83F67] font-body text-xs font-semibold tracking-widest uppercase">
+                  Private Events
+                </span>
+                <div className="w-8 h-px bg-[#EBCDD5]" />
+              </div>
+              <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-medium text-[#34221D] mb-6">
+                Host an Experience
+                <br />
+                <span className="italic text-[#B83F67]">They'll Never Forget</span>
+              </h2>
+              <p className="font-body text-[#34221D]/70 text-lg max-w-2xl leading-relaxed">
+                Whether you're planning a corporate wellness day, team bonding session, birthday party, or bachelorette — AfroPuppyYoga brings joy, connection, and a whole lot of puppy cuddles to your event.
+              </p>
             </div>
-            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
-              Host an Experience
-              <br />
-              <span className="italic text-[#F2A0B8]">They'll Never Forget</span>
-            </h2>
-            <p className="font-body text-white/70 text-lg max-w-2xl mx-auto leading-relaxed">
-              Whether you're planning a corporate wellness day, team bonding session, birthday party, or bachelorette — AfroPuppyYoga brings joy, connection, and a whole lot of puppy cuddles to your event.
-            </p>
-          </div>
-        </FadeUp>
+          </FadeUp>
+          <img src={EVENTS_IMG} alt="Guests and puppies at an AfroPuppyYoga private event" loading="lazy" decoding="async" className="w-full aspect-[4/3] object-cover rounded-2xl" />
+        </div>
 
         {/* Event type cards */}
         <div className="grid md:grid-cols-2 gap-6 mb-12">
           {eventTypes.map((event, i) => (
             <FadeUp key={event.title} delay={i * 0.15}>
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:border-[#8B2252]/50 transition-all duration-300 hover:-translate-y-1 group">
+              <div className="bg-[#FEFAF4] backdrop-blur-sm rounded-2xl p-8 border border-[#EBCDD5] hover:border-[#B83F67]/50 transition-all duration-300 group">
                 <div className="flex items-start gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-[#8B2252]/30 flex items-center justify-center shrink-0 group-hover:bg-[#8B2252]/50 transition-colors">
-                    <event.icon size={22} className="text-white" />
+                  <div className="w-12 h-12 rounded-xl bg-[#FDE9EF]/30 flex items-center justify-center shrink-0 group-hover:bg-[#FDE9EF]/50 transition-colors">
+                    <event.icon size={22} className="text-[#34221D]" />
                   </div>
                   <div>
-                    <span className="inline-block px-2.5 py-0.5 bg-[#8B2252]/30 text-white text-xs font-body font-semibold rounded-full mb-2">
+                    <span className="inline-block px-2.5 py-0.5 bg-[#F29CB8]/30 text-[#34221D] text-xs font-body font-semibold rounded-full mb-2">
                       {event.tag}
                     </span>
-                    <h3 className="font-display font-bold text-xl text-white">{event.title}</h3>
+                    <h3 className="font-display font-medium text-xl text-[#34221D]">{event.title}</h3>
                   </div>
                 </div>
-                <p className="font-body text-white/65 leading-relaxed">{event.desc}</p>
+                <p className="font-body text-[#34221D]/65 leading-relaxed">{event.desc}</p>
               </div>
             </FadeUp>
           ))}
@@ -115,16 +104,16 @@ export default function PrivateEvents() {
         {/* What's included + Locations */}
         <div className="grid md:grid-cols-2 gap-8 mb-12">
           <FadeUp delay={0.2}>
-            <div className="bg-white/5 rounded-2xl p-8 border border-white/10">
+            <div className="bg-[#FEFAF4] rounded-2xl p-8 border border-[#EBCDD5]">
               <div className="flex items-center gap-2 mb-5">
-                <Users size={18} className="text-[#8B2252]" />
-                <h3 className="font-display font-bold text-lg text-white">What's Included</h3>
+                <Users size={18} className="text-[#B83F67]" />
+                <h3 className="font-display font-medium text-lg text-[#34221D]">What's Included</h3>
               </div>
               <ul className="space-y-3">
                 {includes.map((item) => (
                   <li key={item} className="flex items-start gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#8B2252] mt-2 shrink-0" />
-                    <span className="font-body text-white/70 text-sm leading-relaxed">{item}</span>
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#B83F67] mt-2 shrink-0" />
+                    <span className="font-body text-[#34221D]/70 text-sm leading-relaxed">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -132,22 +121,22 @@ export default function PrivateEvents() {
           </FadeUp>
 
           <FadeUp delay={0.3}>
-            <div className="bg-white/5 rounded-2xl p-8 border border-white/10">
+            <div className="bg-[#FEFAF4] rounded-2xl p-8 border border-[#EBCDD5]">
               <div className="flex items-center gap-2 mb-5">
-                <MapPin size={18} className="text-[#8B2252]" />
-                <h3 className="font-display font-bold text-lg text-white">Available Locations</h3>
+                <MapPin size={18} className="text-[#B83F67]" />
+                <h3 className="font-display font-medium text-lg text-[#34221D]">Available Locations</h3>
               </div>
               <div className="flex flex-wrap gap-3">
                 {locations.map((loc) => (
                   <span
                     key={loc}
-                    className="px-4 py-2 bg-[#8B2252]/25 text-white font-body text-sm font-medium rounded-full border border-[#8B2252]/50"
+                    className="px-4 py-2 bg-[#F29CB8]/25 text-[#34221D] font-body text-sm font-medium rounded-full border border-[#B83F67]/50"
                   >
                     {loc}
                   </span>
                 ))}
               </div>
-              <p className="font-body text-white/50 text-sm mt-6 leading-relaxed">
+              <p className="font-body text-[#34221D]/65 text-sm mt-6 leading-relaxed">
                 We'll come to your location and transform your event into a feel-good memory filled with laughter, connection, and plenty of tail wags.
               </p>
             </div>
@@ -160,17 +149,17 @@ export default function PrivateEvents() {
             <Link
               href="/private-events/quote"
               onClick={() => trackCTAClick("Book Your Private Event — Private Events")}
-              className="inline-flex items-center gap-3 px-12 py-5 bg-[#8B2252] text-white font-body font-bold text-lg rounded-full hover:bg-[#7a1d47] transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1"
+              className="inline-flex items-center justify-center gap-3 px-7 sm:px-10 py-4 bg-[#F29CB8] text-[#34221D] font-body font-bold text-lg rounded-full hover:bg-[#FEFAF4] transition-all duration-200 shadow-sm hover:shadow-md"
             >
               <Sparkles size={20} />
               Book Your Private Event
             </Link>
-            <p className="font-body text-white/40 text-sm mt-5">
+            <p className="font-body text-[#34221D]/65 text-sm mt-5">
               Get an instant quote in 60 seconds — no commitment required.
             </p>
-            <p className="font-body text-white/30 text-xs mt-2">
+            <p className="font-body text-[#34221D]/65 text-xs mt-2">
               Questions?{" "}
-              <a href="mailto:afropuppyyoga@gmail.com" className="text-[#8B2252]/70 hover:text-[#8B2252] transition-colors">
+              <a href="mailto:afropuppyyoga@gmail.com" className="text-[#B83F67] hover:text-[#34221D] transition-colors">
                 afropuppyyoga@gmail.com
               </a>
             </p>

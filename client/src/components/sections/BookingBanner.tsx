@@ -34,7 +34,7 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 30 }}
+      initial={false}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.6, delay, ease: "easeOut" }}
     >
@@ -45,21 +45,21 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export default function BookingBanner() {
   return (
-    <section className="py-10 md:py-24 bg-[#8B2252]">
+    <section className="py-10 md:py-24 bg-[#FDE9EF]">
       <div className="container">
         <FadeUp>
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="w-8 h-0.5 bg-[#F2A0B8]" />
-              <span className="text-[#F2A0B8] font-body text-xs font-semibold tracking-widest uppercase">
+              <div className="w-8 h-0.5 bg-[#F29CB8]" />
+              <span className="text-[#B83F67] font-body text-xs font-semibold tracking-widest uppercase">
                 Upcoming Classes
               </span>
-              <div className="w-8 h-0.5 bg-[#F2A0B8]" />
+              <div className="w-8 h-0.5 bg-[#F29CB8]" />
             </div>
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-3">
+            <h2 className="font-display text-3xl md:text-4xl font-medium text-[#34221D] mb-3">
               Find a Class Near You
             </h2>
-            <p className="font-body text-white/60 text-base">
+            <p className="font-body text-[#34221D]/65 text-base">
               Classes run weekly across three Ontario cities. Spots fill up fast!
             </p>
           </div>
@@ -69,28 +69,28 @@ export default function BookingBanner() {
           {upcomingClasses.map((cls, i) => (
             <motion.div
               key={cls.city}
-              initial={{ opacity: 0, y: 20 }}
+              initial={false}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1, duration: 0.5 }}
-              className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-white/10 hover:border-[#F2A0B8]/30 transition-all duration-300 hover:-translate-y-1"
+              className="bg-[#FEFAF4] backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-[#EBCDD5] hover:border-[#F29CB8]/30 transition-all duration-300"
             >
               <div className="flex items-center gap-2 mb-4">
-                <MapPin size={16} className="text-[#F2A0B8]" />
-                <span className="font-display font-bold text-white text-lg">{cls.city}</span>
+                <MapPin size={16} className="text-[#B83F67]" />
+                <span className="font-display font-medium text-[#34221D] text-lg">{cls.city}</span>
               </div>
               <div className="space-y-2 mb-5">
                 <div className="flex items-center gap-2">
-                  <Calendar size={13} className="text-white/40 shrink-0" />
-                  <span className="font-body text-white/70 text-sm">{cls.date}</span>
+                  <Calendar size={13} className="text-[#34221D]/65 shrink-0" />
+                  <span className="font-body text-[#34221D]/70 text-sm">{cls.date}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Clock size={13} className="text-white/40 shrink-0" />
-                  <span className="font-body text-white/70 text-sm">{cls.time}</span>
+                  <Clock size={13} className="text-[#34221D]/65 shrink-0" />
+                  <span className="font-body text-[#34221D]/70 text-sm">{cls.time}</span>
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="inline-block px-3 py-1 bg-[#F2A0B8]/20 text-[#F2A0B8] font-body text-xs font-semibold rounded-full">
+                <span className="inline-block px-3 py-1 bg-[#F29CB8]/20 text-[#B83F67] font-body text-xs font-semibold rounded-full">
                   {cls.spots}
                 </span>
               </div>
@@ -104,7 +104,7 @@ export default function BookingBanner() {
               href={BOOK_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-10 py-4 bg-[#F2A0B8] text-[#1A0A12] font-body font-bold text-base rounded-full hover:bg-[#F2A0B8] transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1"
+              className="inline-flex items-center gap-2 px-10 py-4 bg-[#F29CB8] text-[#34221D] font-body font-bold text-base rounded-full hover:bg-[#FDE9EF] transition-all duration-200 shadow-sm hover:shadow-md"
             >
               View All Classes & Book Now
               <ArrowRight size={18} />

@@ -178,12 +178,12 @@ export default function CancellationDashboard() {
   const emailOnly = previewData?.guests.filter((g) => !g.hasPhone) ?? [];
 
   return (
-    <div className="min-h-screen bg-[#faf7f2]">
+    <div className="min-h-screen apy-staff-ui bg-background">
       <AdminNav />
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#2d1b4e] mb-1 flex items-center gap-2">
-            <PhoneCall className="w-7 h-7 text-[#8b5cf6]" />
+          <h1 className="text-3xl font-medium text-foreground mb-1 flex items-center gap-2">
+            <PhoneCall className="w-7 h-7 text-brand-link" />
             Class Cancellation
           </h1>
           <p className="text-gray-600 text-sm">
@@ -194,9 +194,9 @@ export default function CancellationDashboard() {
         </div>
 
         {/* Step 1: Event Selector */}
-        <Card className="mb-6 border-[#e8dff5]">
+        <Card className="mb-6 border-border">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg text-[#2d1b4e]">1. Select Event to Cancel</CardTitle>
+            <CardTitle className="text-lg text-foreground">1. Select Event to Cancel</CardTitle>
           </CardHeader>
           <CardContent>
             {eventsLoading ? (
@@ -209,7 +209,7 @@ export default function CancellationDashboard() {
                   <span className="text-sm text-gray-500">{events?.length ?? 0} upcoming events</span>
                   <button
                     onClick={() => refetchEvents()}
-                    className="text-xs text-[#8b5cf6] hover:underline flex items-center gap-1"
+                    className="text-xs text-brand-link hover:underline flex items-center gap-1"
                   >
                     <RefreshCw className="w-3 h-3" /> Refresh
                   </button>
@@ -221,11 +221,11 @@ export default function CancellationDashboard() {
                       onClick={() => handleSelectEvent(event.apiId)}
                       className={`text-left p-3 rounded-lg border transition-all ${
                         selectedEventApiId === event.apiId
-                          ? "border-[#8b5cf6] bg-[#f3eeff]"
-                          : "border-gray-200 bg-white hover:border-[#c4b5fd] hover:bg-[#faf5ff]"
+                          ? "border-border bg-accent"
+                          : "border-gray-200 bg-white hover:border-border hover:bg-accent"
                       }`}
                     >
-                      <div className="font-medium text-[#2d1b4e] text-sm">{event.name}</div>
+                      <div className="font-medium text-foreground text-sm">{event.name}</div>
                       <div className="text-xs text-gray-500 mt-0.5">
                         {new Date(event.startAt).toLocaleString()}{" "}
                         {event.address && `· ${event.address}`}
@@ -240,9 +240,9 @@ export default function CancellationDashboard() {
 
         {/* Step 2: Custom Message */}
         {selectedEventApiId && (
-          <Card className="mb-6 border-[#e8dff5]">
+          <Card className="mb-6 border-border">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg text-[#2d1b4e]">2. Customize Message (Optional)</CardTitle>
+              <CardTitle className="text-lg text-foreground">2. Customize Message (Optional)</CardTitle>
             </CardHeader>
             <CardContent>
               <Label className="text-sm text-gray-600 mb-2 block">
@@ -266,11 +266,11 @@ export default function CancellationDashboard() {
 
         {/* Step 3: Preview Recipients Button */}
         {selectedEventApiId && !showPreview && !cancellationResult && (
-          <Card className="mb-6 border-[#e8dff5]">
+          <Card className="mb-6 border-border">
             <CardContent className="pt-5">
               <Button
                 onClick={handlePreviewRecipients}
-                className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white"
+                className="bg-primary hover:bg-primary text-primary-foreground"
               >
                 <Eye className="w-4 h-4 mr-2" />
                 Review Messages &amp; Recipients
@@ -284,15 +284,15 @@ export default function CancellationDashboard() {
 
         {/* Step 3b: Preview Panel — shows exact recipients */}
         {showPreview && !cancellationResult && (
-          <Card className="mb-6 border-[#8b5cf6] bg-[#faf5ff]">
+          <Card className="mb-6 border-border bg-accent">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg text-[#2d1b4e] flex items-center gap-2">
-                  <Users className="w-5 h-5 text-[#8b5cf6]" />
+                <CardTitle className="text-lg text-foreground flex items-center gap-2">
+                  <Users className="w-5 h-5 text-brand-link" />
                   3. Review Recipients
                 </CardTitle>
                 {previewData && (
-                  <Badge className="bg-[#8b5cf6] text-white text-sm px-3 py-1">
+                  <Badge className="bg-primary text-primary-foreground text-sm px-3 py-1">
                     {previewData.total} recipient{previewData.total !== 1 ? "s" : ""}
                   </Badge>
                 )}
@@ -313,11 +313,11 @@ export default function CancellationDashboard() {
                 </div>
               ) : previewData?.previewKey ? (
                 <>
-                  <div className="mb-5 space-y-4 rounded-xl border border-[#d8c7ec] bg-white p-4">
+                  <div className="mb-5 space-y-4 rounded-xl border border-border bg-white p-4">
                     <div className="flex items-center gap-2">
-                      <Eye className="h-4 w-4 text-[#8b5cf6]" />
+                      <Eye className="h-4 w-4 text-brand-link" />
                       <div>
-                        <p className="text-sm font-semibold text-[#2d1b4e]">Review the exact messages before delivery</p>
+                        <p className="text-sm font-semibold text-foreground">Review the exact messages before delivery</p>
                         <p className="text-xs text-gray-500">The personalised email uses each recipient’s first name; the text below is otherwise the delivery copy.</p>
                       </div>
                     </div>
@@ -329,14 +329,14 @@ export default function CancellationDashboard() {
                         <p className="mb-2 text-xs font-medium text-green-800">Subject: {previewData.emailPreview.subject}</p>
                         <pre className="whitespace-pre-wrap font-sans text-xs leading-5 text-gray-700">{previewData.emailPreview.text}</pre>
                       </div>
-                      <div className="rounded-lg border border-purple-200 bg-purple-50 p-3">
-                        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-purple-900">
+                      <div className="rounded-lg border border-border bg-accent p-3">
+                        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-brand-link">
                           <MessageSquare className="h-4 w-4" /> SMS
                         </div>
                         <p className="whitespace-pre-wrap text-sm leading-6 text-gray-700">{previewData.smsPreview}</p>
                       </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-[#6f1630]">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-destructive">
                       <Ticket className="h-4 w-4" />
                       <span>Verified calendar-level 100%-off rebooking code: <strong className="font-mono tracking-widest">{previewData.rebookingCode}</strong></span>
                     </div>
@@ -344,21 +344,21 @@ export default function CancellationDashboard() {
 
                   {/* Summary badges */}
                   <div className="flex flex-wrap gap-3 mb-4">
-                    <div className="flex items-center gap-1.5 bg-white rounded-lg px-3 py-2 border border-[#e8dff5]">
+                    <div className="flex items-center gap-1.5 bg-white rounded-lg px-3 py-2 border border-border">
                       <PhoneCall className="w-4 h-4 text-blue-500" />
-                      <span className="text-sm font-medium text-[#2d1b4e]">{withPhone.length}</span>
+                      <span className="text-sm font-medium text-foreground">{withPhone.length}</span>
                       <span className="text-xs text-gray-500">will get call + SMS + email</span>
                     </div>
-                    <div className="flex items-center gap-1.5 bg-white rounded-lg px-3 py-2 border border-[#e8dff5]">
+                    <div className="flex items-center gap-1.5 bg-white rounded-lg px-3 py-2 border border-border">
                       <Mail className="w-4 h-4 text-green-500" />
-                      <span className="text-sm font-medium text-[#2d1b4e]">{emailOnly.length}</span>
+                      <span className="text-sm font-medium text-foreground">{emailOnly.length}</span>
                       <span className="text-xs text-gray-500">will get email only (no phone)</span>
                     </div>
                   </div>
 
                   {/* Recipient list */}
-                  <div className="bg-white rounded-lg border border-[#e8dff5] overflow-hidden">
-                    <table className="w-full text-sm">
+                  <div className="bg-white rounded-lg border border-border overflow-x-auto">
+                    <table className="w-full text-sm min-w-[640px]">
                       <thead>
                         <tr className="border-b border-gray-200 bg-gray-50">
                           <th className="text-left py-2 px-3 text-gray-500 font-medium text-xs">#</th>
@@ -372,7 +372,7 @@ export default function CancellationDashboard() {
                         {previewData.guests.map((g, i) => (
                           <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
                             <td className="py-2 px-3 text-gray-400 text-xs">{i + 1}</td>
-                            <td className="py-2 px-3 font-medium text-[#2d1b4e]">{g.name}</td>
+                            <td className="py-2 px-3 font-medium text-foreground">{g.name}</td>
                             <td className="py-2 px-3 text-gray-600 text-xs">{g.email}</td>
                             <td className="py-2 px-3 text-gray-600 text-xs">
                               {g.phone || <span className="text-gray-400 italic">none</span>}
@@ -382,7 +382,7 @@ export default function CancellationDashboard() {
                                 {g.hasPhone ? (
                                   <>
                                     <PhoneCall className="w-3.5 h-3.5 text-blue-500" />
-                                    <MessageSquare className="w-3.5 h-3.5 text-purple-500" />
+                                    <MessageSquare className="w-3.5 h-3.5 text-brand-link" />
                                     <Mail className="w-3.5 h-3.5 text-green-500" />
                                   </>
                                 ) : (
@@ -482,7 +482,7 @@ export default function CancellationDashboard() {
               </div>
                 <div className="grid grid-cols-5 gap-3 mb-4">
                 <div className="text-center bg-white rounded-lg p-3 border border-green-200">
-                  <div className="text-2xl font-bold text-[#2d1b4e]">{cancellationResult.total}</div>
+                  <div className="text-2xl font-bold text-foreground">{cancellationResult.total}</div>
                   <div className="text-xs text-gray-500">Total</div>
                 </div>
                 <div className="text-center bg-white rounded-lg p-3 border border-green-200">
@@ -492,7 +492,7 @@ export default function CancellationDashboard() {
                   </div>
                 </div>
                 <div className="text-center bg-white rounded-lg p-3 border border-green-200">
-                  <div className="text-2xl font-bold text-purple-600">{cancellationResult.texted}</div>
+                  <div className="text-2xl font-bold text-brand-link">{cancellationResult.texted}</div>
                   <div className="text-xs text-gray-500 flex items-center justify-center gap-1">
                     <MessageSquare className="w-3 h-3" /> Texted
                   </div>
@@ -509,12 +509,12 @@ export default function CancellationDashboard() {
                   </div>
                 </div>
 
-                <div className="mb-4 flex items-start gap-3 rounded-lg border border-[#e7bdd1] bg-white px-4 py-3">
-                  <div className="mt-0.5 rounded-full bg-[#9B2335] p-2 text-white">
+                <div className="mb-4 flex items-start gap-3 rounded-lg border border-border bg-white px-4 py-3">
+                  <div className="mt-0.5 rounded-full bg-accent p-2 text-brand-link">
                     <Ticket className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-[#6f1630]">
+                    <p className="text-sm font-semibold text-brand-link">
                       Free Luma rebooking code: <span className="font-mono tracking-widest">{cancellationResult.rebookingCode}</span>
                     </p>
                     <p className="mt-0.5 text-xs text-gray-600">
@@ -532,7 +532,7 @@ export default function CancellationDashboard() {
                   >
                     <div className="flex items-center gap-2">
                       <PhoneCall className="w-4 h-4 text-blue-500" />
-                      <span className="font-medium text-[#2d1b4e]">{r.name}</span>
+                      <span className="font-medium text-foreground">{r.name}</span>
                       <span className="text-gray-400 text-xs truncate max-w-32">{r.phone}</span>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap justify-end">
@@ -563,14 +563,14 @@ export default function CancellationDashboard() {
 
         {/* Call Log History */}
         {selectedEventApiId && callLogsData && callLogsData.length > 0 && (
-          <Card className="border-[#e8dff5]">
+          <Card className="border-border">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg text-[#2d1b4e]">Notification Log</CardTitle>
+                <CardTitle className="text-lg text-foreground">Notification Log</CardTitle>
                 <button
                   onClick={handleRefreshLogs}
                   disabled={syncDeliveryStatuses.isPending}
-                  className="text-xs text-[#8b5cf6] hover:underline flex items-center gap-1"
+                  className="text-xs text-brand-link hover:underline flex items-center gap-1"
                 >
                   <RefreshCw className={`w-3 h-3 ${syncDeliveryStatuses.isPending ? "animate-spin" : ""}`} />
                   {syncDeliveryStatuses.isPending ? "Syncing…" : "Refresh"}
@@ -579,7 +579,7 @@ export default function CancellationDashboard() {
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm min-w-[640px]">
                   <thead>
                     <tr className="border-b border-gray-200">
                       <th className="text-left py-2 px-2 text-gray-500 font-medium">Guest</th>
@@ -593,7 +593,7 @@ export default function CancellationDashboard() {
                   <tbody>
                     {callLogsData.map((log) => (
                       <tr key={log.id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-2 px-2 font-medium text-[#2d1b4e]">{log.guestName}</td>
+                        <td className="py-2 px-2 font-medium text-foreground">{log.guestName}</td>
                         <td className="py-2 px-2 text-gray-600 text-xs">
                           {log.phone.startsWith("email:") ? (
                             <span className="text-blue-600">
