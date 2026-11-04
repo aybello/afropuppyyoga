@@ -69,6 +69,14 @@ const locations = [
     mapsUrl: "https://www.google.com/maps/search/?api=1&query=1670%20North%20Service%20Rd%20E&query_place_id=ChIJofNPAT9DK4gRAhVcvaHDk7Y",
     active: true,
   },
+  {
+    city: "Guelph",
+    venue: "Emotion Dance Company",
+    address: "375 Southgate Drive, Unit 2, Guelph, ON",
+    mapsUrl: "https://maps.google.com/?q=Emotion+Dance+Company+375+Southgate+Drive+Unit+2+Guelph+Ontario",
+    eventPage: "/puppy-yoga-guelph",
+    active: true,
+  },
 ];
 
 function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
@@ -274,6 +282,11 @@ export default function Contact() {
                           <div className="font-body text-[#34221D]/65 text-xs leading-relaxed">{loc.venue}<br />{loc.address}</div>
                         </div>
                       </a>
+                      {loc.eventPage && (
+                        <a href={loc.eventPage} className="mt-2 ml-11 block font-body text-xs text-[#B83F67] underline underline-offset-4">
+                          Check the venue on your selected event before booking.
+                        </a>
+                      )}
                     </div>
                   ))}
                 </div>

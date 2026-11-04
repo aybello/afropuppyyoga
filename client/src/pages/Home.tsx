@@ -13,7 +13,7 @@ import DeferredSection from "@/components/DeferredSection";
 import { useScrollDepthTracking, useTimeOnPageTracking } from "@/hooks/useAnalytics";
 import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { useEffect, useState } from "react";
-import { FIVE_STAR_REVIEW_COUNT } from "../../../shared/reviewMetrics";
+import { HOME_SEO_TITLE, HOME_SEO_DESCRIPTION } from "@shared/publicLocations";
 
 // Lazy-load below-the-fold sections — they load as the user scrolls, not on initial paint.
 const Experience = lazy(() => import("@/components/sections/Experience"));
@@ -45,8 +45,8 @@ export default function Home() {
   useScrollDepthTracking();
   useTimeOnPageTracking();
   useSeoMeta({
-    title: "AfroPuppyYoga — Puppy Yoga in Kitchener, Hamilton & Oakville",
-    description: `Puppy yoga in Kitchener-Waterloo, Hamilton & Oakville. ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Guided movement, Afro-beat music and puppy cuddles. Book your class today.`,
+    title: HOME_SEO_TITLE,
+    description: HOME_SEO_DESCRIPTION,
     canonical: "https://afropuppyyoga.ca/",
   });
 

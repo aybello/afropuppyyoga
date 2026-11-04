@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useEffect } from "react";
 import { useSeoMeta } from "@/hooks/useSeoMeta";
+import { LOYALTY_SEO_DESCRIPTION, PUBLIC_LOCATION_LIST } from "@shared/publicLocations";
 
 const steps = [
   {
@@ -62,7 +63,7 @@ const faqs = [
   },
   {
     q: "Does the loyalty program work across all APY locations?",
-    a: "Yes. Your attendance is tracked by email address across all APY locations — Kitchener, Hamilton, and Oakville. A class in any city counts the same.",
+    a: `Yes. Your attendance is tracked by email address across ${PUBLIC_LOCATION_LIST}. A class in any city counts the same.`,
   },
   {
     q: "How do I know how many classes I've attended?",
@@ -77,8 +78,7 @@ const faqs = [
 export default function Loyalty() {
   useSeoMeta({
     title: "The Pack — APY Rewards Program | AfroPuppyYoga",
-    description:
-      "Join The Pack, AfroPuppyYoga's free rewards program. Earn paw points every class, unlock perks, and get exclusive member benefits at our studios in Hamilton, Kitchener & Oakville.",
+    description: LOYALTY_SEO_DESCRIPTION,
     canonical: "https://afropuppyyoga.ca/loyalty",
   });
   useEffect(() => {
@@ -108,7 +108,7 @@ export default function Loyalty() {
               punch cards, no forms — just show up and we take care of the rest.
             </p>
             <p className="font-body text-brand-link text-sm font-semibold mb-8">
-              ✅ Works across all APY locations — Kitchener, Hamilton & Oakville
+              ✅ Works across all APY locations: {PUBLIC_LOCATION_LIST}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a

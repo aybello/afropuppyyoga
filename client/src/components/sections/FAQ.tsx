@@ -6,6 +6,7 @@ import { motion, useInView, AnimatePresence, useReducedMotion } from "framer-mot
 import { useRef, useState } from "react";
 import { Plus, Minus } from "lucide-react";
 import type { ReactNode } from "react";
+import { PUBLIC_LOCATION_FAQ } from "@shared/publicLocations";
 
 const faqs: { q: string; a: ReactNode }[] = [
   {
@@ -90,7 +91,7 @@ const faqs: { q: string; a: ReactNode }[] = [
   },
   {
     q: "Where are your classes held?",
-    a: "We currently host classes in Hamilton, Kitchener, and Oakville. Specific venue details are provided upon booking confirmation.",
+    a: PUBLIC_LOCATION_FAQ,
   },
 ];
 

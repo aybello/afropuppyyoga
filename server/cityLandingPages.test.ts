@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import type { Request, Response } from "express";
 import { FIVE_STAR_REVIEW_COUNT } from "@shared/reviewMetrics";
+import { PUBLIC_LOCATION_COUNT } from "@shared/publicLocations";
 import { seoRenderMiddleware } from "./seoRenderer";
 
 const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
@@ -27,7 +28,8 @@ describe("APY city landing pages", () => {
       expect(read(path), path).toContain("/puppy-yoga-guelph");
     }
     expect(read("client/src/App.tsx")).toContain('lazy(() => import("./pages/Guelph"))');
-    expect(read("client/src/components/sections/Experience.tsx")).toContain('value={4} suffix="" label="Ontario Locations"');
+    expect(PUBLIC_LOCATION_COUNT).toBe(4);
+    expect(read("client/src/components/sections/Experience.tsx")).toContain('value={PUBLIC_LOCATION_COUNT} suffix="" label="Ontario Locations"');
   });
 
   it("keeps Colibri the main Hamilton studio, with its complete address and a separate collaboration label", () => {

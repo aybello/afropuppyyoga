@@ -18,6 +18,7 @@ import {
   FIVE_STAR_REVIEW_COUNT,
   REVIEW_METRICS,
 } from "../shared/reviewMetrics";
+import { HOME_SEO_TITLE, HOME_SEO_DESCRIPTION, LOYALTY_SEO_DESCRIPTION, MEMBERSHIP_LOCATION_COPY, PUBLIC_LOCATION_NAMES, PUBLIC_LOCATION_LIST, PUBLIC_LOCATION_FAQ, PUBLIC_SERVICE_DESCRIPTION } from "../shared/publicLocations";
 
 // ─── Crawler Detection ────────────────────────────────────────────────────────
 
@@ -136,8 +137,7 @@ const LOCAL_BUSINESS_SCHEMA = {
   "@type": "LocalBusiness",
   "@id": `${BASE}/#business`,
   name: "AfroPuppyYoga",
-  description:
-    "Ontario's #1 puppy yoga studio. Guided yoga, Afro-beat rhythms and adorable puppies in Hamilton, Kitchener-Waterloo and Oakville, Ontario.",
+  description: PUBLIC_SERVICE_DESCRIPTION,
   url: BASE,
   logo: {
     "@type": "ImageObject",
@@ -159,23 +159,11 @@ const LOCAL_BUSINESS_SCHEMA = {
     postalCode: "N2G 2L3",
     addressCountry: "CA",
   },
-  areaServed: [
-    {
-      "@type": "City",
-      name: "Kitchener",
-      containedInPlace: { "@type": "State", name: "Ontario" },
-    },
-    {
-      "@type": "City",
-      name: "Hamilton",
-      containedInPlace: { "@type": "State", name: "Ontario" },
-    },
-    {
-      "@type": "City",
-      name: "Oakville",
-      containedInPlace: { "@type": "State", name: "Ontario" },
-    },
-  ],
+  areaServed: PUBLIC_LOCATION_NAMES.map(name => ({
+    "@type": "City",
+    name,
+    containedInPlace: { "@type": "State", name: "Ontario" },
+  })),
   sameAs: [
     "https://www.instagram.com/afropuppyyoga",
     "https://www.tiktok.com/@afropuppyyoga",
@@ -253,9 +241,8 @@ const PAGES: Record<string, () => string> = {
     }),
   "/": () =>
     buildHtml({
-      title: "AfroPuppyYoga | Ontario's #1 Puppy Yoga Experience",
-      description:
-        `Puppy yoga in Kitchener-Waterloo, Hamilton & Oakville. ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Guided movement, Afro-beat music and puppy cuddles. Book your class today.`,
+      title: HOME_SEO_TITLE,
+      description: HOME_SEO_DESCRIPTION,
       canonical: `${BASE}/`,
       schema: [
         LOCAL_BUSINESS_SCHEMA,
@@ -276,7 +263,7 @@ const PAGES: Record<string, () => string> = {
               name: "Where are your classes held?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "AfroPuppyYoga currently runs classes in Kitchener-Waterloo (TenC Dance Studio, 329 King St E), Hamilton (Colibri Studio, 2751 Barton St E), and Oakville. Check our booking page for upcoming dates at each location.",
+                text: PUBLIC_LOCATION_FAQ,
               },
             },
             {
@@ -343,7 +330,7 @@ const PAGES: Record<string, () => string> = {
 <main>
   <section id="hero">
     <h2>Guided yoga, Afro-beat rhythms, and adorable puppies — all in one unforgettable session.</h2>
-    <p>Serving Hamilton, Kitchener-Waterloo &amp; Oakville, Ontario. Ontario's #1 puppy yoga studio.</p>
+    <p>Serving ${PUBLIC_LOCATION_LIST}, Ontario. Ontario's #1 puppy yoga studio.</p>
     <p><a href="https://lu.ma/afropuppyyoga">Book a Class</a></p>
   </section>
 
@@ -355,7 +342,7 @@ const PAGES: Record<string, () => string> = {
       <li>Live Afro-beat music soundtrack</li>
       <li>Ethically sourced puppies from registered breeders</li>
       <li>All levels welcome — no yoga experience required</li>
-      <li>Available in Hamilton, Kitchener, and Oakville</li>
+      <li>Available in ${PUBLIC_LOCATION_LIST}</li>
     </ul>
   </section>
 
@@ -367,8 +354,11 @@ const PAGES: Record<string, () => string> = {
       <li><strong>Regular Ticket:</strong> standard single admission</li>
       <li><strong>Bring a Friend Package:</strong> two tickets at a reduced per-person rate</li>
       <li><strong>Group of 3 Package:</strong> three tickets at a reduced per-person rate</li>
-      <li><strong>Monthly Membership:</strong> Unlimited classes at a discounted rate</li>
+      <li><strong>Puppy Pass:</strong> $40/month, 1 class credit per month</li>
+      <li><strong>Wellness Pack:</strong> $60/month, 2 class credits per month</li>
     </ul>
+    <p>${MEMBERSHIP_LOCATION_COPY}</p>
+    <p>Both passes include 20% off additional classes and a free class during your birthday month. Credits do not roll over. A 3-month minimum commitment applies; cancel anytime after that.</p>
     <p><a href="https://lu.ma/afropuppyyoga">Book your class on Luma</a></p>
   </section>
 
@@ -385,6 +375,12 @@ const PAGES: Record<string, () => string> = {
     <article>
       <h3>Oakville</h3>
       <p>Classes held at rotating venues in Oakville, ON.</p>
+    </article>
+    <article>
+      <h3>Guelph</h3>
+      <address>Emotion Dance Company, 375 Southgate Drive, Unit 2, Guelph, ON</address>
+      <p>Confirm the venue and arrival details on your selected event listing before booking.</p>
+      <p><a href="/puppy-yoga-guelph">Explore Guelph classes</a></p>
     </article>
   </section>
 
@@ -421,7 +417,7 @@ const PAGES: Record<string, () => string> = {
       <dd>Puppy yoga is a guided yoga class where adorable puppies roam freely around the studio while you practice. At AfroPuppyYoga, we combine Afro-beat rhythms with yoga and playful puppies for a unique wellness experience.</dd>
 
       <dt>Where are classes held?</dt>
-      <dd>We hold classes in Hamilton (Colibri Studio, 2751 Barton St E), Kitchener (TenC Dance Studio, 329 King St E), and Oakville, Ontario.</dd>
+      <dd>${PUBLIC_LOCATION_FAQ}</dd>
 
       <dt>How much does a class cost?</dt>
       <dd>Ticket prices vary by date and tier. Early bird, regular, bring-a-friend and group-of-three options are available, and current prices for each class are shown at checkout on our Luma booking page.</dd>
@@ -451,7 +447,7 @@ const PAGES: Record<string, () => string> = {
 
 <footer>
   <p>&copy; 2025 AfroPuppyYoga. All rights reserved.</p>
-  <p>Ontario's #1 Puppy Yoga Studio | Hamilton | Kitchener | Oakville | Ontario</p>
+  <p>Ontario's #1 Puppy Yoga Studio | ${PUBLIC_LOCATION_NAMES.join(" | ")} | Ontario</p>
   <nav>
     <a href="/partnerships">Partnerships</a> |
     <a href="/loyalty">Loyalty Program</a> |
@@ -541,8 +537,7 @@ const PAGES: Record<string, () => string> = {
   "/loyalty": () =>
     buildHtml({
       title: "AfroPuppyYoga Loyalty Program | Earn Rewards",
-      description:
-        "Earn points with every AfroPuppyYoga class and redeem them for free sessions, merchandise, and exclusive perks. Join our loyalty program today.",
+      description: LOYALTY_SEO_DESCRIPTION,
       canonical: `${BASE}/loyalty`,
       schema: [
         breadcrumb({ name: "Loyalty Program", url: `${BASE}/loyalty` }),
@@ -554,13 +549,13 @@ const PAGES: Record<string, () => string> = {
 </header>
 <main>
   <h2>Earn Rewards for Every Class</h2>
-  <p>The AfroPuppyYoga loyalty program rewards our most dedicated community members. Earn points with every class you attend and redeem them for free sessions, exclusive merchandise, and special perks.</p>
+  <p>Attend 3 qualifying APY classes and earn a free standard class. Your attendance is tracked by email across ${PUBLIC_LOCATION_LIST}.</p>
   <h3>How It Works</h3>
   <ul>
-    <li>Earn points for every class you attend</li>
-    <li>Earn bonus points for referring friends</li>
-    <li>Redeem points for free classes, merchandise, and exclusive experiences</li>
-    <li>Points never expire as long as your account is active</li>
+    <li>Book and attend standard APY classes through Luma using the same email address</li>
+    <li>After your third class, receive a free standard-class ticket code</li>
+    <li>Your free ticket code is valid for 60 days from issue</li>
+    <li>After redeeming your free class, the cycle resets</li>
   </ul>
   <p><a href="/loyalty">Join the Loyalty Program</a></p>
   <p>Book your next class: <a href="https://lu.ma/afropuppyyoga">View upcoming sessions</a></p>
@@ -695,7 +690,7 @@ const PAGES: Record<string, () => string> = {
               name: "Can you come to our office for a corporate puppy yoga event?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "Yes. We offer offsite corporate events at your office, boardroom, or any suitable space across the Greater Toronto Area, Hamilton, Kitchener-Waterloo, and Oakville. A travel fee applies for offsite events.",
+                text: `Yes. We offer offsite corporate events at your office, boardroom, or suitable space across the Greater Toronto Area and ${PUBLIC_LOCATION_LIST}. A travel fee applies for offsite events.`,
               },
             },
             {
@@ -748,7 +743,7 @@ const PAGES: Record<string, () => string> = {
     <li><strong>Proven stress relief:</strong> Interacting with puppies measurably reduces cortisol and increases oxytocin — backed by peer-reviewed research.</li>
     <li><strong>No experience required:</strong> Sessions are designed for all fitness levels, from complete beginners to active yogis.</li>
     <li><strong>Inclusive and memorable:</strong> Unlike typical team activities, puppy yoga creates genuine shared joy across diverse teams.</li>
-    <li><strong>Flexible format:</strong> Studio sessions in Kitchener, Hamilton, or Oakville, or we come to your office or venue.</li>
+    <li><strong>Flexible format:</strong> Partner venues in ${PUBLIC_LOCATION_LIST}, subject to availability, or we come to your office or venue.</li>
     <li><strong>Fully managed:</strong> Certified instructors, trained Puppy Monitors, all equipment, and a dedicated event host included.</li>
   </ul>
 
@@ -780,7 +775,7 @@ const PAGES: Record<string, () => string> = {
     <dt>How many people can attend?</dt>
     <dd>Groups from 6 to 50+. We scale puppies, instructors, and monitors to match your group size.</dd>
     <dt>Can you come to our office?</dt>
-    <dd>Yes. We offer offsite events across the GTA, Hamilton, Kitchener-Waterloo, and Oakville. A travel fee applies.</dd>
+    <dd>Yes. We offer offsite events across the GTA and ${PUBLIC_LOCATION_LIST}. A travel fee applies.</dd>
     <dt>How much does it cost?</dt>
     <dd>Events start at $1,200 for up to 20 guests at a studio location. Use our instant quote tool for an accurate estimate.</dd>
     <dt>Is yoga experience required?</dt>
@@ -838,7 +833,7 @@ const PAGES: Record<string, () => string> = {
               name: "How much does a private puppy yoga event cost in Ontario?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "Private puppy yoga events start at $1,200 for up to 20 guests at a studio location in Kitchener-Waterloo, Hamilton, or Oakville. Pricing varies based on group size, location, and package tier. Use the instant quote tool at afropuppyyoga.ca/private-events/quote for an accurate estimate.",
+                text: `Private puppy yoga events start at $1,200 for up to 20 guests. We arrange partner venues in ${PUBLIC_LOCATION_LIST}, subject to availability. Pricing varies based on group size, location, and package tier. Use the instant quote tool at afropuppyyoga.ca/private-events/quote for an accurate estimate.`,
               },
             },
             {
@@ -854,7 +849,7 @@ const PAGES: Record<string, () => string> = {
               name: "Can AfroPuppyYoga host a private event at my venue?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "Yes. We offer offsite private events at your chosen venue across the Greater Toronto Area, Hamilton, Kitchener-Waterloo, and Oakville. A travel fee applies for offsite locations.",
+                text: `Yes. We offer offsite private events at your chosen venue across the Greater Toronto Area and ${PUBLIC_LOCATION_LIST}. A travel fee applies for offsite locations.`,
               },
             },
           ],
@@ -868,7 +863,7 @@ const PAGES: Record<string, () => string> = {
 <main>
   <h2>Make Any Occasion Unforgettable with a Private Puppy Yoga Event</h2>
   <p>AfroPuppyYoga brings the puppies, the yoga, and the good vibes directly to your private event. Whether you're celebrating a birthday, planning a bachelorette, organizing a corporate wellness day, or hosting a student group — a private puppy yoga session is an experience your guests will never forget.</p>
-  <p>We serve groups from 6 to 50+ across Hamilton, Kitchener-Waterloo, and Oakville, Ontario. Offsite events available across the Greater Toronto Area.</p>
+  <p>We serve groups from 6 to 50+ across ${PUBLIC_LOCATION_LIST}, Ontario. Offsite events available across the Greater Toronto Area.</p>
 
   <h3>Private Event Types</h3>
   <ul>
@@ -902,6 +897,7 @@ const PAGES: Record<string, () => string> = {
     <li>Kitchener-Waterloo — TenC Dance Studio, 329 King St E, Kitchener</li>
     <li>Hamilton — Colibri Studio, 2751 Barton St E, Hamilton</li>
     <li>Oakville — 1670 North Service Rd E, Oakville</li>
+    <li>Guelph — partner venue subject to availability; request a quote to confirm details</li>
     <li>Offsite — your venue across the GTA and surrounding regions (travel fee applies)</li>
   </ul>
 
@@ -914,7 +910,7 @@ const PAGES: Record<string, () => string> = {
     <dt>How far in advance should I book?</dt>
     <dd>3–4 weeks for studio events, 4–6 weeks for offsite or large corporate events.</dd>
     <dt>Can you come to my venue?</dt>
-    <dd>Yes. We offer offsite events across the GTA, Hamilton, Kitchener-Waterloo, and Oakville. A travel fee applies.</dd>
+    <dd>Yes. We offer offsite events across the GTA and ${PUBLIC_LOCATION_LIST}. A travel fee applies.</dd>
   </dl>
 
   <p><a href="/private-events/quote">Get an Instant Quote</a> | <a href="/corporate-puppy-yoga">Corporate Events</a> | <a href="/birthday">Birthday Packages</a></p>
@@ -1331,7 +1327,7 @@ const PAGES: Record<string, () => string> = {
               name: "Where can you host a private puppy yoga event?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "We host private events at our studio locations in Kitchener-Waterloo, Hamilton, and Oakville. We also offer offsite events at your chosen venue across the Greater Toronto Area and surrounding regions. A travel fee applies for offsite locations.",
+                text: `We arrange private events at partner venues in ${PUBLIC_LOCATION_LIST}, subject to availability. We also offer offsite events at your chosen venue across the Greater Toronto Area and surrounding regions. A travel fee applies for offsite locations.`,
               },
             },
             {
@@ -1366,7 +1362,7 @@ const PAGES: Record<string, () => string> = {
   <ul>
     <li>Exclusive session — just your group and the puppies</li>
     <li>Flexible scheduling, including weekdays for corporate events</li>
-    <li>Available at our studios in Kitchener, Hamilton, Oakville, and Guelph, or offsite at your venue</li>
+    <li>Partner venues in ${PUBLIC_LOCATION_LIST}, subject to availability, or offsite at your venue</li>
     <li>Certified yoga instructors and trained Puppy Monitors included</li>
     <li>Customizable packages: Classic, Signature, and Luxury tiers</li>
     <li>Add-ons available: photography, refreshments, branded merchandise</li>
@@ -1395,7 +1391,7 @@ const PAGES: Record<string, () => string> = {
     <dt>How much does a private event cost?</dt>
     <dd>Events start at $1,200 for up to 20 guests at a studio location. Pricing varies by guest count, location, and package tier. Use the quote tool on our website for an accurate estimate.</dd>
     <dt>Where can you host a private event?</dt>
-    <dd>We host events at our studios in Kitchener-Waterloo, Hamilton, and Oakville, and offsite across the GTA and surrounding regions. A travel fee applies for offsite events.</dd>
+    <dd>We arrange partner venues in ${PUBLIC_LOCATION_LIST}, subject to availability, and offsite across the GTA and surrounding regions. A travel fee applies for offsite events.</dd>
     <dt>What is included?</dt>
     <dd>All events include certified instructors, ethically sourced puppies, Puppy Monitors, Afro-beat music, mats, props, and a dedicated event host. Add-ons are available.</dd>
     <dt>How far in advance should I book?</dt>

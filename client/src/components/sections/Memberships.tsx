@@ -1,6 +1,7 @@
 import { BOOK_URL } from "@/const";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { MEMBERSHIP_LOCATION_COPY, PUBLIC_LOCATION_LIST } from "@shared/publicLocations";
 
 const passes = [
   {
@@ -70,7 +71,7 @@ export default function Memberships() {
             Members get guaranteed class credits, exclusive perks, and priority access every month — across all APY locations.
           </p>
           <p className="text-sm mt-2" style={{ color: "#34221D" }}>
-            ✅ Valid at Kitchener, Hamilton & Oakville
+            ✅ Valid in {PUBLIC_LOCATION_LIST}
           </p>
         </div>
 
@@ -172,7 +173,7 @@ export default function Memberships() {
             🗺️ Use your membership at any APY location
           </p>
           <p className="text-sm" style={{ color: "#B83F67" }}>
-            Your Puppy Pass or Wellness Pack is valid at Kitchener, Hamilton, and Oakville. One membership, three cities.
+            {MEMBERSHIP_LOCATION_COPY}
           </p>
         </div>
         <p className="text-center text-sm mt-4" style={{ color: "#34221D" }}>

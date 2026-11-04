@@ -1,11 +1,12 @@
 import LocationPage, { type LocationConfig } from "@/components/LocationPage";
+import { PUBLIC_LOCATION_LIST } from "@shared/publicLocations";
 
 const config: LocationConfig = {
   slug: "private-puppy-yoga-events",
   city: "Private Events",
   pageTitle: "Private Puppy Yoga Events Ontario | AfroPuppyYoga",
   metaDescription:
-    "Book a private puppy yoga event in Ontario with AfroPuppyYoga. Perfect for birthdays, bachelorettes, team building, and corporate wellness. Available in Kitchener, Hamilton, Oakville & more. Get an instant quote.",
+    `Private puppy yoga for birthdays, bachelorettes and teams in ${PUBLIC_LOCATION_LIST}, Toronto and surrounding areas. Request your event quote.`,
   heroHeadline: "Private Puppy Yoga Events",
   heroSubline:
     "Birthdays, bachelorettes, corporate wellness days, and more — AfroPuppyYoga brings the puppies, the yoga, and the Afrobeats to your private event across Ontario.",
@@ -75,7 +76,7 @@ const config: LocationConfig = {
     {
       question: "Where can you host private events?",
       answer:
-        "We operate across Ontario including Kitchener, Hamilton, Oakville, Toronto, Guelph, and surrounding areas. We can come to your venue or arrange space at one of our partner studios.",
+        `We arrange event venues in ${PUBLIC_LOCATION_LIST}, Toronto and surrounding areas, subject to availability. We can come to your venue or discuss partner space.`,
     },
     {
       question: "What is included in a private event?",

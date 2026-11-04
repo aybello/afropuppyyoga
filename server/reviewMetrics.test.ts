@@ -10,6 +10,7 @@ import {
   REVIEW_METRICS,
 } from "../shared/reviewMetrics";
 import { seoRenderMiddleware } from "./seoRenderer";
+import { HOME_SEO_DESCRIPTION } from "../shared/publicLocations";
 
 vi.mock("../client/src/hooks/useCountUp", () => ({
   useCountUp: (value: number) => ({ count: value, ref: { current: null } }),
@@ -167,12 +168,14 @@ describe("five-star review count baseline", () => {
     for (const name of ['name="description"', 'property="og:description"', 'name="twitter:description"']) {
       expect(shell.match(new RegExp(`<meta ${name} content="([^"]*)"`))?.[1]).toContain("546 five-star reviews");
     }
-    for (const route of ["/", "/corporate-puppy-yoga", "/private-puppy-yoga-events", "/puppy-yoga-kitchener", "/puppy-yoga-hamilton", "/puppy-yoga-oakville"]) {
+    for (const route of ["/", "/corporate-puppy-yoga", "/private-puppy-yoga-events", "/puppy-yoga-kitchener", "/puppy-yoga-hamilton", "/puppy-yoga-oakville", "/puppy-yoga-guelph"]) {
       const html = crawlHomepage(route);
       expect(html.match(/<meta name="description" content="([^"]*)"/)?.[1], route).toContain("546 five-star reviews");
       expect(html, route).not.toMatch(INTERNAL_METHOD_COPY);
     }
-    for (const path of ["client/src/pages/Home.tsx", "client/src/pages/Corporate.tsx", "client/src/components/LocationPage.tsx"]) {
+    expect(source("client/src/pages/Home.tsx")).toContain("description: HOME_SEO_DESCRIPTION");
+    expect(HOME_SEO_DESCRIPTION).toContain(`${FIVE_STAR_REVIEW_COUNT} five-star reviews`);
+    for (const path of ["client/src/pages/Corporate.tsx", "client/src/components/LocationPage.tsx"]) {
       expect(source(path), path).toContain("${FIVE_STAR_REVIEW_COUNT} five-star reviews");
     }
   });

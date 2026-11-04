@@ -9,6 +9,7 @@ import Footer from "@/components/Footer";
 import { trpc } from "@/lib/trpc";
 import { Building2, Sparkles, Tv, Store, Heart, CheckCircle, ArrowRight, ExternalLink } from "lucide-react";
 import { trackCTAClick } from "@/hooks/useAnalytics";
+import { PUBLIC_LOCATION_LIST } from "@shared/publicLocations";
 
 const PARTNERSHIP_TYPES = [
   "Corporate Wellness",
@@ -43,7 +44,7 @@ const CATEGORIES = [
     description:
       "Partner with AfroPuppyYoga to reach a highly engaged wellness audience. We work with brands in pet care, apparel, food and beverage, wellness products, and lifestyle. Our audience is 80% women aged 22–40.",
     benefits: [
-      "Product placement at classes (KW + Hamilton)",
+      "Product placement at APY classes, subject to event availability",
       "Co-branded social content (854K+ monthly Instagram views)",
       "Sponsored giveaways and featured posts",
       "Exclusive member discount codes for your audience",
@@ -57,7 +58,7 @@ const CATEGORIES = [
     description:
       "AfroPuppyYoga is a visually stunning, emotionally engaging setting for TV, film, YouTube, and editorial content. We are open to collaborations with production companies, reality shows, lifestyle media, and content creators.",
     benefits: [
-      "Location access for filming at KW and Hamilton studios",
+      "Filming at APY partner venues, subject to venue approval",
       "Puppy and instructor coordination for productions",
       "Paid collaboration agreements for featured content",
       "Press and editorial partnerships",
@@ -83,7 +84,7 @@ const CATEGORIES = [
     title: "Breeder Partnership",
     tagline: "Become an official APY breeder partner",
     description:
-      "We partner with ethical, responsible breeders who share our commitment to puppy welfare. Our classes run every Saturday across two locations and we are always looking for healthy, well-socialized puppies.",
+      `We partner with ethical, responsible breeders who share our commitment to puppy welfare. Our classes serve ${PUBLIC_LOCATION_LIST}, and we are always looking for healthy, well-socialized puppies.`,
     benefits: [
       "Regular, recurring booking schedule",
       "Featured breeder profile on our website",

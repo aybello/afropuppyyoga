@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { Check, ChevronDown } from "lucide-react";
 import { FIVE_STAR_REVIEW_COUNT } from "../../../shared/reviewMetrics";
+import { PUBLIC_LOCATION_COUNT, PUBLIC_LOCATION_LIST } from "@shared/publicLocations";
 
 const trustedByLogos = [
   {
@@ -118,7 +119,7 @@ const packages = [
     name: "In-Studio Private Event",
     icon: "🏛️",
     bestFor: "Teams of 6–25",
-    desc: "We host your group at one of our partner studios in Kitchener, Hamilton, or Oakville. Fully private, fully branded to APY. Includes instructor, puppies, mats, and props.",
+    desc: `We arrange partner venues in ${PUBLIC_LOCATION_LIST}, subject to availability. Fully private, fully branded to APY. Includes instructor, puppies, mats, and props.`,
     price: "Starting at $1,200",
     includes: [
       "Certified yoga instructor",
@@ -280,7 +281,7 @@ export default function Corporate() {
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           {[
             { stat: "6–50+", label: "Group sizes" },
-            { stat: "3+", label: "Ontario locations" },
+            { stat: PUBLIC_LOCATION_COUNT, label: "Ontario locations" },
             { stat: "$1,200", label: "Starting price" },
             { stat: FIVE_STAR_REVIEW_COUNT, label: "Five-Star Reviews" },
           ].map(item => (
