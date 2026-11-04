@@ -41,6 +41,7 @@ const trustedBy = [
 export default function Hero() {
   const [heroImage, setHeroImage] = useState(HERO_PHOTO);
   const [heroImageFailed, setHeroImageFailed] = useState(false);
+  const [logosPaused, setLogosPaused] = useState(false);
 
   const scrollToExperience = () => {
     scrollToHomeSection("#experience");
@@ -144,9 +145,14 @@ export default function Hero() {
 
       <div className="border-b border-[#EBCDD5] bg-[#FEFAF4] py-5">
         <div className="container flex flex-col sm:flex-row sm:items-center gap-4">
-          <span className="shrink-0 font-body text-xs font-semibold tracking-[0.14em] uppercase text-[#66514A] sm:pr-5 sm:border-r sm:border-[#EBCDD5]">Trusted By</span>
+          <div className="shrink-0 flex items-center gap-3 sm:flex-col sm:items-start sm:pr-5 sm:border-r sm:border-[#EBCDD5]">
+            <span className="font-body text-xs font-semibold tracking-[0.14em] uppercase text-[#66514A]">Trusted By</span>
+            <button type="button" aria-label={logosPaused ? "Resume partner logos" : "Pause partner logos"} aria-pressed={logosPaused} onClick={() => setLogosPaused(!logosPaused)} className="min-h-8 px-2 rounded font-body text-xs text-[#66514A] hover:text-[#B83F67] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B83F67] motion-reduce:hidden">
+              {logosPaused ? "Resume" : "Pause"}
+            </button>
+          </div>
           <div className="apy-trust-window flex-1 min-w-0 pb-2" role="region" aria-label="Trusted APY partners" tabIndex={0}>
-            <div className="apy-trust-track">
+            <div className="apy-trust-track" style={logosPaused ? { animationPlayState: "paused" } : undefined}>
               {[0, 1].map((copy) => (
                 <div key={copy} className="apy-trust-set" aria-hidden={copy === 1 ? true : undefined}>
                   {trustedBy.map((org) => (

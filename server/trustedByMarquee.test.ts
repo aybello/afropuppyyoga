@@ -27,6 +27,9 @@ describe("Trusted By strip and approved photo replacement", () => {
   it("can pause for reading and provides an unanimated scrollable alternative", () => {
     expect(css).toContain('.apy-trust-window:hover .apy-trust-track');
     expect(css).toContain('.apy-trust-window:focus-within .apy-trust-track');
+    expect(hero).toContain('aria-pressed={logosPaused}');
+    expect(hero).toContain('"Resume partner logos" : "Pause partner logos"');
+    expect(hero).toContain('animationPlayState: "paused"');
     expect(css).toContain('animation-play-state: paused');
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)\s*\{\s*\.apy-trust-window \{ overflow-x: auto; \}\s*\.apy-trust-track \{ animation: none; \}/);
     expect(css).toContain('.apy-trust-set[aria-hidden="true"] { display: none; }');
