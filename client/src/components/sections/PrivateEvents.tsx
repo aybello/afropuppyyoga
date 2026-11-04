@@ -7,8 +7,10 @@ import { useRef } from "react";
 import { Building2, PartyPopper, Users, MapPin, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import { trackCTAClick } from "@/hooks/useAnalytics";
+import { publicPortraitUrl } from "@shared/publicPortraits";
+import { recoverPublicPortrait } from "@/lib/publicPortraitRecovery";
 
-const EVENTS_IMG = "/manus-storage/apy_portrait_two_goldens_oct13_44cd44f3.jpg";
+const EVENTS_IMG = publicPortraitUrl("/manus-storage/apy_portrait_two_goldens_oct13_44cd44f3.jpg");
 
 
 const eventTypes = [
@@ -76,7 +78,7 @@ export default function PrivateEvents() {
               </p>
             </div>
           </FadeUp>
-          <img src={EVENTS_IMG} alt="Smiling AfroPuppyYoga guest holding two Golden Retriever puppies" loading="lazy" decoding="async" className="w-full aspect-[4/3] object-cover rounded-2xl" />
+          <img src={EVENTS_IMG} onError={recoverPublicPortrait} alt="Smiling AfroPuppyYoga guest holding two Golden Retriever puppies" loading="lazy" decoding="async" className="w-full aspect-[4/3] object-cover rounded-2xl" />
         </div>
 
         {/* Event type cards */}

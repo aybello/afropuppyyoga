@@ -1,15 +1,12 @@
 /* Homepage hero — approved ivory editorial layout with authentic APY photography. */
 import { BOOK_URL } from "@/const";
-import { useState } from "react";
+import { useReducer } from "react";
 import { ChevronDownIcon } from "@/components/PublicIcons";
 import { trackCTAClick } from "@/hooks/useAnalytics";
 import LocalDogsImpact from "@/components/sections/LocalDogsImpact";
 import { handleHomeSectionClick, homeSectionHref, scrollToHomeSection } from "@/components/homeSectionNavigation";
 import { FIVE_STAR_REVIEW_COUNT } from "@shared/reviewMetrics";
-
-// Existing managed source photographs, not generated concept artwork.
-const HERO_PHOTO = "/manus-storage/apy_portrait_chow_cuddle_nov01_52f30f49.jpg";
-const HERO_FALLBACK_PHOTO = "/manus-storage/apy_portrait_golden_cuddle_oct19_d7e4953e.jpg";
+import { heroImageReducer, heroImageSource, INITIAL_HERO_IMAGE_STATE } from "@shared/heroImage";
 
 // Partner logos remain in their original colors and at their approved display sizes.
 const trustedBy = [
@@ -39,8 +36,10 @@ const trustedBy = [
 ];
 
 export default function Hero() {
-  const [heroImage, setHeroImage] = useState(HERO_PHOTO);
-  const [heroImageFailed, setHeroImageFailed] = useState(false);
+  const [heroImageState, dispatchHeroImage] = useReducer(heroImageReducer, INITIAL_HERO_IMAGE_STATE);
+  const heroImageIndex = heroImageState.index;
+  const heroImageFailed = heroImageState.failed;
+  const heroImage = heroImageSource(heroImageState);
 
   const scrollToExperience = () => {
     scrollToHomeSection("#experience");
@@ -78,8 +77,8 @@ export default function Hero() {
               Memberships
             </a>
             <a
-              href={homeSectionHref("#private-events")}
-              onClick={(e) => { trackCTAClick("Private Events — Hero"); handleHomeSectionClick(e, "#private-events"); }}
+              href="/private-puppy-yoga-events"
+              onClick={() => trackCTAClick("Private Events — Hero")}
               className="inline-flex flex-1 sm:flex-none items-center justify-center min-h-12 px-5 py-3 font-body font-semibold text-sm sm:text-base rounded-full border border-[#EBCDD5] hover:bg-[#FDE9EF] transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B83F67]"
             >
               Private Events
@@ -97,8 +96,9 @@ export default function Hero() {
         <div className="relative w-full max-w-xl mx-auto overflow-hidden rounded-t-[50%] bg-[#FDE9EF] aspect-[3/4] lg:aspect-[4/5] lg:col-start-2 lg:row-start-1 lg:row-span-2">
           {!heroImageFailed && (
             <img
+              key={heroImage}
               src={heroImage}
-              alt={heroImage === HERO_PHOTO ? "Smiling guest cuddling a fluffy Chow puppy at AfroPuppyYoga" : "Smiling guest holding a Golden Retriever puppy at AfroPuppyYoga"}
+              alt={heroImageIndex < 2 ? "Smiling guest cuddling a fluffy Chow puppy at AfroPuppyYoga" : "Smiling guest holding a Golden Retriever puppy at AfroPuppyYoga"}
               width={1500}
               height={2000}
               loading="eager"
@@ -106,15 +106,23 @@ export default function Hero() {
               fetchPriority="high"
               onLoad={() => document.documentElement.classList.remove("home-pending")}
               onError={() => {
-                if (heroImage === HERO_PHOTO) {
-                  setHeroImage(HERO_FALLBACK_PHOTO);
-                } else {
-                  document.documentElement.classList.remove("home-pending");
-                  setHeroImageFailed(true);
-                }
+                document.documentElement.classList.remove("home-pending");
+                dispatchHeroImage({ type: "error", index: heroImageIndex, cycle: heroImageState.cycle });
               }}
               className="w-full h-full object-cover object-center"
             />
+          )}
+          {heroImageFailed && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center font-body text-[#66514A]">
+              <p className="text-sm" role="status">The photo could not load.</p>
+              <button
+                type="button"
+                onClick={() => dispatchHeroImage({ type: "retry" })}
+                className="min-h-11 rounded-full border border-[#EBCDD5] bg-[#FEFAF4] px-5 py-2 text-sm font-semibold text-[#34221D] hover:bg-[#FDE9EF] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B83F67]"
+              >
+                Retry photo
+              </button>
+            </div>
           )}
         </div>
         <div className="min-w-0 lg:col-start-1 lg:row-start-2 lg:self-start">

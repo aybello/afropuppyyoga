@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { PRIMARY_HERO_IMAGE } from "../shared/heroImage";
 
 const appSource = readFileSync(new URL("../client/src/App.tsx", import.meta.url), "utf8");
 const indexSource = readFileSync(new URL("../client/index.html", import.meta.url), "utf8");
@@ -23,9 +24,10 @@ describe("homepage first paint", () => {
   });
 
   it("preloads the same authentic photograph used by the React hero and initial HTML image", () => {
-    const heroPhoto = heroSource.match(/const HERO_PHOTO = "([^"]+)"/)?.[1];
+    const heroPhoto = PRIMARY_HERO_IMAGE;
     const preloadPhoto = indexSource.match(/<link rel="preload" as="image" href="([^"]+)"/)?.[1];
-    expect(heroPhoto).toBe("/manus-storage/apy_portrait_chow_cuddle_nov01_52f30f49.jpg");
+    expect(heroSource).toContain("heroImageSource(heroImageState)");
+    expect(heroPhoto).toContain("files.manuscdn.com/");
     expect(preloadPhoto).toBe(heroPhoto);
     expect(indexSource).toContain(`background: url("${heroPhoto}")`);
     expect(indexSource).not.toContain("apy_hero_bg-aDMPriKGFaJ3ZgQKWVBv5n.webp");

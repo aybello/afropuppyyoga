@@ -14,6 +14,8 @@ import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { useMetaPixel } from "@/hooks/useMetaPixel";
 import { appendAttributionToLumaUrl } from "@/lib/lumaAttribution";
 import { FIVE_STAR_REVIEW_COUNT } from "@shared/reviewMetrics";
+import { publicPortraitUrl } from "@shared/publicPortraits";
+import { recoverPublicPortrait } from "@/lib/publicPortraitRecovery";
 
 const CANONICAL_URL = "https://afropuppyyoga.ca/puppy-yoga-guelph";
 const PAGE_TITLE = "Puppy Yoga Guelph | AfroPuppyYoga";
@@ -90,7 +92,7 @@ export default function Guelph() {
     canonical: CANONICAL_URL,
     ogTitle: PAGE_TITLE,
     ogDescription: description,
-    ogImage: `https://afropuppyyoga.ca${HERO_PHOTO}`,
+    ogImage: publicPortraitUrl(HERO_PHOTO),
   });
 
   useEffect(() => {
@@ -216,11 +218,12 @@ export default function Guelph() {
               </div>
               <figure className="mx-auto w-full max-w-[420px] lg:mr-0 lg:ml-auto">
                 <div className="overflow-hidden rounded-[50%_50%_1rem_1rem/22%_22%_1rem_1rem] bg-blush">
-                  <img
-                    src={HERO_PHOTO}
-                    alt="Smiling guest holding a fluffy Chow Chow puppy at AfroPuppyYoga"
-                    width={1500}
-                    height={2000}
+                    <img
+                      src={publicPortraitUrl(HERO_PHOTO)}
+                      onError={recoverPublicPortrait}
+                      alt="Smiling guest holding a fluffy Chow Chow puppy at AfroPuppyYoga"
+                      width={1500}
+                      height={2000}
                     fetchPriority="high"
                     decoding="async"
                     className="block h-auto w-full"
@@ -300,7 +303,8 @@ export default function Guelph() {
                       className={`overflow-hidden rounded-2xl bg-blush ${index === 1 ? "mt-10 sm:mt-16" : ""}`}
                     >
                       <img
-                        src={photo.src}
+                        src={publicPortraitUrl(photo.src)}
+                        onError={recoverPublicPortrait}
                         alt={photo.alt}
                         width={1500}
                         height={2000}

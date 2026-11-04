@@ -46,4 +46,17 @@ describe("requested public navigation", () => {
     expect(source("client/src/pages/StaffAccess.tsx")).toContain('href="/submit-invoice"');
     expect(source("client/src/App.tsx")).toContain('<Route path={"/submit-invoice"} component={InvoiceSubmit} />');
   });
+
+  it("opens the existing private-event page from the header, mobile menu, hero and footer", () => {
+    const html = renderNav();
+    const privateLinks = html.match(/<a\b[^>]*>Private Events<\/a>/g) ?? [];
+    expect(privateLinks).toHaveLength(2);
+    for (const link of privateLinks) expect(link).toContain('href="/private-puppy-yoga-events"');
+    const hero = source("client/src/components/sections/Hero.tsx");
+    expect(hero).toContain('href="/private-puppy-yoga-events"');
+    expect(hero).not.toContain('handleHomeSectionClick(e, "#private-events")');
+    expect(hero).toContain('trackCTAClick("Private Events — Hero")');
+    expect(source("client/src/components/Footer.tsx")).toContain('{ label: "Private Events", href: "/private-puppy-yoga-events", isPage: true }');
+    expect(source("client/src/App.tsx")).toContain('<Route path="/private-puppy-yoga-events" component={PrivatePuppyYogaEvents} />');
+  });
 });

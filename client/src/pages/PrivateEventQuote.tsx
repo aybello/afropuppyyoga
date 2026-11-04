@@ -10,6 +10,8 @@
 import { useState } from "react";
 import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { formatCanadianPhoneNumber, normalizeCanadianPhoneNumber } from "@shared/phone";
+import { publicPortraitUrl } from "@shared/publicPortraits";
+import { recoverPublicPortrait } from "@/lib/publicPortraitRecovery";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -214,7 +216,8 @@ export default function PrivateEventQuote() {
             </p>
             <div className="max-w-lg aspect-[5/4] lg:aspect-[4/5] overflow-hidden rounded-t-[48%] rounded-b-[2rem] bg-[#FDE9EF] border border-[#F29CB8]/30">
               <img
-                src="/manus-storage/apy_portrait_two_goldens_oct13_44cd44f3.jpg"
+                src={publicPortraitUrl("/manus-storage/apy_portrait_two_goldens_oct13_44cd44f3.jpg")}
+                onError={recoverPublicPortrait}
                 alt=""
                 aria-hidden="true"
                 className="w-full h-full object-cover object-center"

@@ -62,12 +62,12 @@ function click(overrides = {}) {
     currentTarget: { target: "", hasAttribute: () => false }, preventDefault: vi.fn(), ...overrides } as any;
 }
 describe("homepage section navigation", () => {
-  it("renders private-event links for desktop, mobile and footer on every route", () => {
+  it("opens the private-event page from desktop, mobile and footer on every route", () => {
     for (const path of ["/", "/careers", "/private-events/quote"]) {
       location.pathname = path;
       const html = renderToStaticMarkup(createElement(Navbar));
-      expect([...html.matchAll(/<a\b[^>]*href="\/#private-events"[^>]*>Private Events<\/a>/g)]).toHaveLength(2);
-      expect(renderToStaticMarkup(createElement(Footer))).toMatch(/href="\/#private-events"[^>]*>Private Events<\/a>/);
+      expect([...html.matchAll(/<a\b[^>]*href="\/private-puppy-yoga-events"[^>]*>Private Events<\/a>/g)]).toHaveLength(2);
+      expect(renderToStaticMarkup(createElement(Footer))).toMatch(/href="\/private-puppy-yoga-events"[^>]*>Private Events<\/a>/);
     }
     expect(homeSectionHref("#gallery")).toBe("/#gallery");
   });

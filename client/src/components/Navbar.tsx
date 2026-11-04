@@ -8,7 +8,7 @@ const primaryLinks = [
   { label: "Home", href: "#home" },
   { label: "Experience", href: "#experience" },
   { label: "Memberships", href: "#memberships" },
-  { label: "Private Events", href: "#private-events" },
+  { label: "Private Events", href: "/private-puppy-yoga-events", isPage: true },
   { label: "Class Pictures", href: "https://drive.google.com/drive/folders/1Q8WpKFj4cUsXlnn0jeKdBeWz5hSunp2t?usp=drive_link", isPage: true, isExternal: true },
   { label: "Careers", href: "/careers", isPage: true },
 ];

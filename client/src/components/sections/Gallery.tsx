@@ -9,6 +9,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { X, ChevronLeft, ChevronRight, Instagram, ZoomIn } from "lucide-react";
+import { publicPortraitUrl } from "@shared/publicPortraits";
+import { recoverPublicPortrait } from "@/lib/publicPortraitRecovery";
 
 const CDN = "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ";
 
@@ -182,7 +184,8 @@ export default function Gallery() {
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setLightboxIdx(i); } }}
               >
                 <img
-                  src={photo.src}
+                  src={publicPortraitUrl(photo.src)}
+                  onError={recoverPublicPortrait}
                   alt={photo.alt}
                   loading="lazy"
                   className="w-full h-auto block object-cover object-top transition-transform duration-500 group-hover:scale-105"
@@ -298,7 +301,8 @@ export default function Gallery() {
               onClick={e => e.stopPropagation()}
             >
               <img
-                src={filtered[lightboxIdx].src}
+                src={publicPortraitUrl(filtered[lightboxIdx].src)}
+                onError={recoverPublicPortrait}
                 alt={filtered[lightboxIdx].alt}
                 className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-sm"
               />

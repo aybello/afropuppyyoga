@@ -21,7 +21,7 @@ const navGroups = [
       { label: "Book a Class", href: BOOK_URL, isExternal: true },
       { label: "Experience", href: "#experience" },
       { label: "Memberships", href: "#memberships" },
-      { label: "Private Events", href: "#private-events" },
+      { label: "Private Events", href: "/private-puppy-yoga-events", isPage: true },
       { label: "Rewards", href: "/loyalty", isPage: true },
     ],
   },

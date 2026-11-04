@@ -9,6 +9,8 @@ import { MapPin, Clock, Users, Star, ChevronDown, Quote, Check, ArrowRight } fro
 import { useMetaPixel } from "@/hooks/useMetaPixel";
 import { appendAttributionToLumaUrl } from "@/lib/lumaAttribution";
 import { FIVE_STAR_REVIEW_COUNT, REVIEW_METRICS } from "../../../shared/reviewMetrics";
+import { publicPortraitUrl } from "@shared/publicPortraits";
+import { recoverPublicPortrait } from "@/lib/publicPortraitRecovery";
 
 /* Shared city template: presentation changes only. Location configuration,
    schema, booking attribution, calendar filters and checkout events stay intact. */
@@ -254,7 +256,8 @@ export default function LocationPage({ config }: Props) {
             </div>
             <figure className="w-full max-w-[420px] mx-auto lg:ml-auto lg:mr-0 bg-blush rounded-[50%_50%_1rem_1rem/22%_22%_1rem_1rem] overflow-hidden">
               <img
-                src={heroSrc}
+                src={publicPortraitUrl(heroSrc)}
+                onError={recoverPublicPortrait}
                 alt={heroPhoto?.alt ?? "Guests and puppies at an AfroPuppyYoga class"}
                 className="block w-full h-auto"
                 fetchPriority="high"
@@ -382,7 +385,7 @@ export default function LocationPage({ config }: Props) {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-start">
               {config.photos.map((photo, i) => (
                 <figure key={i} className="rounded-2xl overflow-hidden bg-blush border border-border">
-                  <img src={photo.src} alt={photo.alt} className="block w-full h-auto" loading="lazy" decoding="async" />
+                  <img src={publicPortraitUrl(photo.src)} onError={recoverPublicPortrait} alt={photo.alt} className="block w-full h-auto" loading="lazy" decoding="async" />
                 </figure>
               ))}
             </div>

@@ -4,6 +4,7 @@ import {
   FALLBACK_HERO_IMAGE,
   getNextHeroImageOnError,
   PRIMARY_HERO_IMAGE,
+  HERO_IMAGE_SOURCES,
 } from "../shared/heroImage";
 
 const readProjectFile = (path: string) =>
@@ -12,12 +13,13 @@ const readProjectFile = (path: string) =>
 describe("public website image references", () => {
   it("uses a working managed asset when the primary homepage hero fails", () => {
     expect(FALLBACK_HERO_IMAGE).toBe(
-      "/manus-storage/apy_corporate_hero_202ea280.jpg",
+      "/manus-storage/apy_portrait_chow_cuddle_nov01_52f30f49.jpg?v=apy-portraits-20261104",
     );
     expect(getNextHeroImageOnError(PRIMARY_HERO_IMAGE)).toBe(
       FALLBACK_HERO_IMAGE,
     );
-    expect(getNextHeroImageOnError(FALLBACK_HERO_IMAGE)).toBeNull();
+    expect(getNextHeroImageOnError(FALLBACK_HERO_IMAGE)).toBe(HERO_IMAGE_SOURCES[2]);
+    expect(getNextHeroImageOnError(HERO_IMAGE_SOURCES[3])).toBeNull();
   });
 
   it("does not restore the deleted hero or location preview paths", () => {

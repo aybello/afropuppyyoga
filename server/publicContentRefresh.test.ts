@@ -19,7 +19,7 @@ describe("APY November 4 public content refresh", () => {
   });
 
   it("uses polished portraits instead of the rejected hero and couple photos", () => {
-    const hero = read("../client/src/components/sections/Hero.tsx");
+    const hero = read("../client/src/components/sections/Hero.tsx") + read("../shared/heroImage.ts");
     const privateEvents = read("../client/src/components/sections/PrivateEvents.tsx");
     const quote = read("../client/src/pages/PrivateEventQuote.tsx");
     const shell = read("../client/index.html");

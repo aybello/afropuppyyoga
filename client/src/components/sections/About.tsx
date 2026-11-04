@@ -5,8 +5,10 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Heart, Brain, Smile, Activity } from "lucide-react";
+import { publicPortraitUrl } from "@shared/publicPortraits";
+import { recoverPublicPortrait } from "@/lib/publicPortraitRecovery";
 
-const ABOUT_IMG = "/manus-storage/apy_portrait_golden_cuddle_oct19_d7e4953e.jpg";
+const ABOUT_IMG = publicPortraitUrl("/manus-storage/apy_portrait_golden_cuddle_oct19_d7e4953e.jpg");
 
 const benefits = [
   {
@@ -115,6 +117,7 @@ export default function About() {
                 <div className="relative overflow-hidden rounded-3xl shadow-sm aspect-[3/4] max-w-sm mx-auto lg:max-w-none">
                   <img
                     src={ABOUT_IMG}
+                    onError={recoverPublicPortrait}
                     alt="Smiling guest cuddling a Golden Retriever puppy at an AfroPuppyYoga class"
                     width={1500}
                     height={2000}
