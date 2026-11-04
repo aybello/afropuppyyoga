@@ -40,8 +40,8 @@ export default function StaffAccess() {
   }
 
   return (
-    <main className="min-h-screen apy-staff-ui bg-background px-5 py-6 text-foreground sm:py-8">
-      <section className="mx-auto max-w-md rounded-2xl border border-border bg-white p-6 shadow-sm sm:p-8">
+    <main className="min-h-screen apy-staff-ui bg-background px-5 py-6 text-foreground sm:py-5">
+      <section className="mx-auto max-w-md rounded-2xl border border-border bg-white p-6 shadow-sm">
         <img src={LOGO_URL} alt="AfroPuppyYoga" className="mx-auto h-12 w-12 rounded-2xl object-cover" />
         <div className="mt-4 text-center">
           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-link">APY HQ</p>
