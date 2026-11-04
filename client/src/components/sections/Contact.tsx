@@ -15,7 +15,7 @@ const socials = [
     url: "https://www.instagram.com/afropuppyyoga",
     icon: Instagram,
     color: "bg-[#B83F67]",
-    followers: "12.2K followers",
+    followers: "13.7K followers",
   },
   {
     name: "Facebook",

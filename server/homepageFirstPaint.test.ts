@@ -25,7 +25,7 @@ describe("homepage first paint", () => {
   it("preloads the same authentic photograph used by the React hero and initial HTML image", () => {
     const heroPhoto = heroSource.match(/const HERO_PHOTO = "([^"]+)"/)?.[1];
     const preloadPhoto = indexSource.match(/<link rel="preload" as="image" href="([^"]+)"/)?.[1];
-    expect(heroPhoto).toMatch(/^\/manus-storage\/apy_kitchener_gallery_/);
+    expect(heroPhoto).toBe("/manus-storage/apy_portrait_chow_cuddle_nov01_52f30f49.jpg");
     expect(preloadPhoto).toBe(heroPhoto);
     expect(indexSource).toContain(`background: url("${heroPhoto}")`);
     expect(indexSource).not.toContain("apy_hero_bg-aDMPriKGFaJ3ZgQKWVBv5n.webp");

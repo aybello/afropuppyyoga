@@ -250,7 +250,7 @@ export default function InstagramFeed() {
             className="inline-flex items-center gap-2 font-body text-sm font-semibold text-[#B83F67] hover:text-[#34221D] transition-colors duration-200"
           >
             <Instagram size={15} />
-            @afropuppyyoga · 12.2K followers
+            @afropuppyyoga · 13.7K followers
           </a>
         </motion.div>
       </div>

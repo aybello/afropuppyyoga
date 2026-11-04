@@ -8,8 +8,8 @@ import { handleHomeSectionClick, homeSectionHref, scrollToHomeSection } from "@/
 import { FIVE_STAR_REVIEW_COUNT } from "@shared/reviewMetrics";
 
 // Existing managed source photographs, not generated concept artwork.
-const HERO_PHOTO = "/manus-storage/apy_kitchener_gallery_07_jun21_on_mat_172ef0af.jpg";
-const HERO_FALLBACK_PHOTO = "/manus-storage/apy_kitchener_gallery_02_oct24_portrait_7773eb35.jpg";
+const HERO_PHOTO = "/manus-storage/apy_portrait_chow_cuddle_nov01_52f30f49.jpg";
+const HERO_FALLBACK_PHOTO = "/manus-storage/apy_portrait_golden_cuddle_oct19_d7e4953e.jpg";
 
 // Partner logos remain in their original colors and at their approved display sizes.
 const trustedBy = [
@@ -99,7 +99,7 @@ export default function Hero() {
           {!heroImageFailed && (
             <img
               src={heroImage}
-              alt={heroImage === HERO_PHOTO ? "Puppy relaxing with a smiling guest on a yoga mat at AfroPuppyYoga Kitchener" : "Kitchener guest smiling while holding a puppy at AfroPuppyYoga"}
+              alt={heroImage === HERO_PHOTO ? "Smiling guest cuddling a fluffy Chow puppy at AfroPuppyYoga" : "Smiling guest holding a Golden Retriever puppy at AfroPuppyYoga"}
               width={1500}
               height={2000}
               loading="eager"

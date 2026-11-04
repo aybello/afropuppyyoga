@@ -401,7 +401,7 @@ export const JOB_LISTINGS: CareerJob[] = [
       SOCIAL_MEDIA_INTERN_PAY_DESCRIPTION,
       "Flexible remote schedule",
       "Free access to APY classes",
-      "Hands-on experience growing a real brand with 12.2k+ followers",
+      "Hands-on experience growing a real brand with 13.7K Instagram followers",
       "Mentorship and creative freedom to bring your ideas to life",
       "Be part of a culturally rich, community-driven wellness brand",
     ],

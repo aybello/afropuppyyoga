@@ -39,7 +39,7 @@ Reusable utilities: `apy-page`, `apy-eyebrow`, `apy-section`, `apy-heading`, `ap
 ## Authentic asset inventory
 
 - Original logo: `LOGO_URL` in `client/src/const.ts` → `https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png`. Used without circular cropping in public Navbar and Footer. Never redraw or replace it.
-- Actual Kitchener class hero photograph: `/manus-storage/apy_kitchener_gallery_07_jun21_on_mat_172ef0af.jpg`. Used consistently by the React hero, initial HTML shell and preload. Actual source-photo fallback: `/manus-storage/apy_kitchener_gallery_02_oct24_portrait_7773eb35.jpg`. Other page photographs remain their existing source paths.
+- Actual APY Instagram hero portrait: `/manus-storage/apy_portrait_chow_cuddle_nov01_52f30f49.jpg`. Used consistently by the React hero, initial HTML shell and preload. Actual source-photo fallback: `/manus-storage/apy_portrait_golden_cuddle_oct19_d7e4953e.jpg`. These are authentic published APY originals, not generated guests.
 - Existing favicon and original social image assets stay unchanged.
 - Approved visual reference only: `/home/ubuntu/outputs/apy-homepage-concept/apy-homepage-desktop-pink.png` and related pink page concepts. Do not embed concept-generated people or mockup photographs in the app.
 - Partner logos, including LiftOff, remain their actual source assets and original colors.

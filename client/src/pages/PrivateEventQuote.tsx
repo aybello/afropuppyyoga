@@ -214,7 +214,7 @@ export default function PrivateEventQuote() {
             </p>
             <div className="max-w-lg aspect-[5/4] lg:aspect-[4/5] overflow-hidden rounded-t-[48%] rounded-b-[2rem] bg-[#FDE9EF] border border-[#F29CB8]/30">
               <img
-                src="/manus-storage/apy_private_events_hero_43ef0f7d.jpg"
+                src="/manus-storage/apy_portrait_two_goldens_oct13_44cd44f3.jpg"
                 alt=""
                 aria-hidden="true"
                 className="w-full h-full object-cover object-center"

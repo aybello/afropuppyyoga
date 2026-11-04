@@ -8,7 +8,7 @@ import { Building2, PartyPopper, Users, MapPin, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import { trackCTAClick } from "@/hooks/useAnalytics";
 
-const EVENTS_IMG = "/manus-storage/apy_private_events_hero_43ef0f7d.jpg";
+const EVENTS_IMG = "/manus-storage/apy_portrait_two_goldens_oct13_44cd44f3.jpg";
 
 
 const eventTypes = [
@@ -76,7 +76,7 @@ export default function PrivateEvents() {
               </p>
             </div>
           </FadeUp>
-          <img src={EVENTS_IMG} alt="Guests and puppies at an AfroPuppyYoga private event" loading="lazy" decoding="async" className="w-full aspect-[4/3] object-cover rounded-2xl" />
+          <img src={EVENTS_IMG} alt="Smiling AfroPuppyYoga guest holding two Golden Retriever puppies" loading="lazy" decoding="async" className="w-full aspect-[4/3] object-cover rounded-2xl" />
         </div>
 
         {/* Event type cards */}
