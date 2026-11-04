@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   resolveApyAccess: vi.fn(),
   prepareHiringOffer: vi.fn(),
   recordCurrentOfferSignature: vi.fn(),
+  withCurrentHiringOfferDelivery: vi.fn(),
   getDb: vi.fn(),
   updateJobApplicationStatusIfUnclaimed: vi.fn(),
   sendOfferSigningEmail: vi.fn(),
@@ -17,6 +18,7 @@ vi.mock("./apyAccess", () => ({ resolveApyAccess: mocks.resolveApyAccess }));
 vi.mock("./hiringOfferLifecycle", () => ({
   prepareHiringOffer: mocks.prepareHiringOffer,
   recordCurrentOfferSignature: mocks.recordCurrentOfferSignature,
+  withCurrentHiringOfferDelivery: mocks.withCurrentHiringOfferDelivery,
 }));
 vi.mock("./db", () => ({
   createSigningToken: vi.fn(),
@@ -71,6 +73,7 @@ beforeEach(() => {
   mocks.resolveApyAccess.mockResolvedValue({ level: "owner", canManageOperations: true });
   mocks.getDb.mockResolvedValue({ source: "db" });
   mocks.prepareHiringOffer.mockResolvedValue(prepared);
+  mocks.withCurrentHiringOfferDelivery.mockImplementation(async (_db, _id, _token, _expected, deliver) => deliver());
   mocks.sendOfferSigningEmail.mockResolvedValue({ status: "sent" });
   mocks.sendOfferSigningSms.mockResolvedValue({ status: "queued", phone: "+12895550101" });
   mocks.updateJobApplicationStatusIfUnclaimed.mockResolvedValue(true);
@@ -193,6 +196,15 @@ describe("signing.createSigningRequest", () => {
     await expect(caller().createSigningRequest(input)).rejects.toThrow(message);
     expect(mocks.sendOfferSigningEmail).not.toHaveBeenCalled();
     expect(mocks.sendOfferSigningSms).not.toHaveBeenCalled();
+  });
+
+  it("does not dispatch when a reviewed association is established after preparation", async () => {
+    mocks.withCurrentHiringOfferDelivery.mockRejectedValue(new Error("This application already belongs to an employee."));
+    await expect(caller().createSigningRequest(input)).rejects.toThrow("already belongs");
+    expect(mocks.withCurrentHiringOfferDelivery).toHaveBeenCalledWith({ source: "db" }, applicant.id, TOKEN, applicant, expect.any(Function));
+    expect(mocks.sendOfferSigningEmail).not.toHaveBeenCalled();
+    expect(mocks.sendOfferSigningSms).not.toHaveBeenCalled();
+    expect(mocks.updateJobApplicationStatusIfUnclaimed).not.toHaveBeenCalled();
   });
 
   it("reuses the lifecycle's actual expiry in the response and email instead of claiming a new seven days", async () => {

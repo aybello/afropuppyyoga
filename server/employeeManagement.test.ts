@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
-import { employees, jobApplications, classStaffAssignments, staffInvites, staffPhoneAccessCodes, staffingMutationLocks, users, weekendLeadershipCoverage } from "../drizzle/schema";
+import { employeeApplicationAssociations, employees, jobApplications, classStaffAssignments, signingTokens, staffInvites, staffPhoneAccessCodes, staffingMutationLocks, users, weekendLeadershipCoverage } from "../drizzle/schema";
+import { APY_TEAM_ROLES, isCentralApyTeamRole } from "../shared/apyPermissions";
 
 const { getDb, resolveApyAccess } = vi.hoisted(() => ({ getDb: vi.fn(), resolveApyAccess: vi.fn() }));
 vi.mock("./db", () => ({ getDb, getUserByOpenId: vi.fn(), upsertUser: vi.fn() }));
@@ -27,7 +28,7 @@ function mockDb(reads: unknown[][]) {
     select: vi.fn(() => {
       let result: unknown[] = [];
       const chain: any = {
-        from: (table: unknown) => { result = table === staffingMutationLocks ? [] : reads.shift() ?? []; return chain; },
+        from: (table: unknown) => { result = table === staffingMutationLocks || table === employeeApplicationAssociations ? [] : reads.shift() ?? []; return chain; },
         where: () => chain, orderBy: () => chain, innerJoin: () => chain,
         limit: async () => result,
         for: async () => [],
@@ -142,7 +143,7 @@ describe("simple employee management", () => {
       { table: employees, values: { employmentStatus: "active", endedAt: null, sourceApplicationId: 42 } },
       { table: jobApplications, values: expect.objectContaining({ isTeamMember: true, deletedAt: null, status: "onboarded" }) },
     ]));
-    expect(db.select).toHaveBeenCalledTimes(4);
+    expect(db.select).toHaveBeenCalledTimes(5);
     expect(inserts).toEqual(expect.arrayContaining([{ table: expect.anything(), values: expect.objectContaining({ action: "employee_and_login_activated" }) }]));
     expect(updates.some((update) => update.table === staffInvites)).toBe(false);
   });
@@ -318,6 +319,47 @@ describe("simple employee management", () => {
     }
   });
 
+  it("refuses to enable login through an edit without explicit confirmation", async () => {
+    for (const linked of [false, true]) {
+      const active = { ...employee, employmentStatus: "active", sourceApplicationId: linked ? 42 : null };
+      const harness = mockDb([[active], [{ ...person, isTeamMember: false }]]); getDb.mockResolvedValue(harness.db);
+      await expect(staffAvailabilityRouter.createCaller(context()).updateEmployeeRecord({ id: 7, name: person.name, email: person.email, phone: "", role: "Yoga Instructor", location: "OAK" })).rejects.toThrow("Confirm this access change");
+      expect(harness.updates).toEqual([]);
+      expect(harness.inserts.filter((entry) => entry.table !== staffingMutationLocks)).toEqual([]);
+    }
+  });
+
+  it("enables a disabled login only when explicitly confirmed", async () => {
+    const active = { ...employee, employmentStatus: "active", endedAt: null };
+    const disabled = { ...person, isTeamMember: false };
+    const next = { ...active, role: "Yoga Instructor", location: "OAK", phone: null };
+    const harness = mockDb([[active], [disabled], [active], [], [next], [{ ...disabled, role: next.role, location: next.location, phone: null }], [next], [], [], []]);
+    getDb.mockResolvedValue(harness.db);
+    await expect(staffAvailabilityRouter.createCaller(context()).updateEmployeeRecord({ id: 7, name: person.name, email: person.email, phone: "", role: "Yoga Instructor", location: "OAK", confirmEnableLogin: true })).resolves.toMatchObject({ success: true, roleChanged: true });
+    expect(harness.updates).toContainEqual({ table: jobApplications, values: expect.objectContaining({ isTeamMember: true, deletedAt: null }) });
+  });
+
+  it("edits an inactive employee without enabling login", async () => {
+    const harness = mockDb([[employee]]); getDb.mockResolvedValue(harness.db);
+    await expect(staffAvailabilityRouter.createCaller(context()).updateEmployeeRecord({ id: 7, name: person.name, email: person.email, phone: "", role: "BDR", location: "CENTRAL" })).resolves.toMatchObject({ success: true, roleChanged: true });
+    expect(harness.updates).toContainEqual({ table: employees, values: expect.objectContaining({ role: "BDR", location: "CENTRAL" }) });
+    expect(harness.updates.some((entry) => "isTeamMember" in entry.values)).toBe(false);
+    expect(harness.updates.some((entry) => entry.table === signingTokens)).toBe(false);
+  });
+
+  it.each(APY_TEAM_ROLES)("updates the active profile to %s without rewriting a signed offer", async (role) => {
+    const active = { ...employee, employmentStatus: "active", endedAt: null };
+    const location = isCentralApyTeamRole(role) ? "CENTRAL" : "GUE";
+    const next = { ...active, role, location, phone: null };
+    const harness = mockDb([[active], [person], [person], [active], [], [next], [{ ...person, role, location, phone: null }], [next], [], [], []]);
+    getDb.mockResolvedValue(harness.db);
+    await expect(staffAvailabilityRouter.createCaller(context()).updateEmployeeRecord({ id: 7, name: person.name, email: person.email, phone: "", role, location })).resolves.toMatchObject({ success: true });
+    expect(harness.updates).toContainEqual({ table: employees, values: expect.objectContaining({ role, location }) });
+    expect(harness.updates).toContainEqual({ table: jobApplications, values: expect.objectContaining({ role, location }) });
+    expect(harness.updates.some((entry) => entry.table === signingTokens)).toBe(false);
+    expect(harness.inserts.some((entry) => entry.table === signingTokens)).toBe(false);
+  });
+
   it("deactivates a linked employee from the Directory without another management screen", async () => {
     const harness = mockDb([[{ ...employee, employmentStatus: "active" }], [person], []]); getDb.mockResolvedValue(harness.db);
     await expect(staffAvailabilityRouter.createCaller(context()).markEmployeeDeparted({ employeeId: 7 })).resolves.toMatchObject({ success: true });
@@ -383,6 +425,7 @@ describe("simple employee management", () => {
     await expect(staffAvailabilityRouter.createCaller(context(false)).removeTeamMember({ id: 42 })).rejects.toMatchObject({ code: "UNAUTHORIZED" });
     resolveApyAccess.mockResolvedValue({ level: "team_member", canManageOperations: false });
     await expect(staffAvailabilityRouter.createCaller(context()).reactivateEmployeeEmployment({ employeeId: 7 })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(staffAvailabilityRouter.createCaller(context()).updateEmployeeRecord({ id: 7, name: person.name, email: person.email, phone: "", role: "Yoga Instructor", location: "OAK", confirmEnableLogin: true })).rejects.toMatchObject({ code: "FORBIDDEN" });
     expect(getDb).not.toHaveBeenCalled();
   });
 

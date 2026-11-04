@@ -71,7 +71,9 @@ describe("duplicate application review panel", () => {
     const html = renderToStaticMarkup(createElement(DuplicateApplicationReview, { selected, matches: [match, other], checked: false, onCheckedChange: vi.fn(), canReview: false }));
     for (const text of ["application #42", "application #73", "application #99", applicant.name, applicant.email, applicant.phone,
       "Different Name", "different@example.com", "Not recorded", "onboarded", "Team member: Yes", "Archived: Yes", "15, 18",
-      "cannot be approved", "No application history will be merged", "historical records will not be activated"]) expect(html).toContain(text);
+      "Approval requires matching name, email, and phone", "Different names or applications already linked to an employee cannot be approved here",
+      "cannot be approved", "ambiguous, already linked, onboarded, or otherwise ineligible"]) expect(html).toContain(text);
+    expect(html).not.toContain("will be linked to the same employee for history");
     expect(html).not.toContain('type="checkbox"');
     expect(html).not.toContain(">null<");
   });
@@ -81,6 +83,13 @@ describe("duplicate application review panel", () => {
     const html = renderToStaticMarkup(element);
     expect(html).toContain('type="checkbox"');
     expect(html).toContain("reviewed all matching applications");
+    expect(html).toContain("If you confirm this review and add the employee");
+    expect(html).toContain("reviewed matching applications will be linked to the same employee for history");
+    expect(html).toContain("applications and signed offers remain on their original records");
+    expect(html).toContain("eligible signed offers may be available to the employee after ownership checks");
+    expect(html).toContain("Only the selected application will be used to enable employee login");
+    expect(html).toContain("other applications will not be activated");
+    expect(html).not.toContain("No application history will be merged or transferred");
     expect(html).not.toContain('checked=""');
     // Exercise the actual native checkbox handler.
     const label = (element.props as any).children.at(-1);
@@ -92,7 +101,9 @@ describe("duplicate application review panel", () => {
 
 describe("add applicant employee dialog", () => {
   it("preserves the no-conflict submission and confirmed fields", () => {
-    expect(render()).toContain("No matching applications found");
+    const html = render();
+    expect(html).toContain("No matching applications found");
+    expect(html).not.toContain("will be linked to the same employee for history");
     expect(add().disabled).toBe(false);
     add().click();
     const { id, ...confirmed } = applicant;

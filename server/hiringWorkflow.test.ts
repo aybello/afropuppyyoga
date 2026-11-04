@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MySqlDialect } from "drizzle-orm/mysql-core";
-import { employees, jobApplications, signingTokens, staffingMutationLocks } from "../drizzle/schema";
+import { employeeApplicationAssociations, employees, jobApplications, signingTokens, staffingMutationLocks } from "../drizzle/schema";
 import { getHiringWorkflow } from "../shared/hiringWorkflow";
 import { hireSignedApplicant, preflightHireSignedApplicant } from "./hireSignedApplicant";
 import { hiringReviewSnapshot, issueHiringReviewToken } from "./hiringDuplicateIdentity";
@@ -106,6 +106,26 @@ describe("signed offer to employee", () => {
     const otherActor = harness([[selected], [], [offer], [selected, duplicate]]);
     await expect(hireSignedApplicant(otherActor.db, 42, { ...actor, id: 2 }, selected, { token, acknowledged: true })).rejects.toThrow("Review all matching");
   });
+  it("fails closed if either reviewed application already has a durable owner", async () => {
+    const selected = { ...app, phone: "4165550101" };
+    const duplicate = { ...selected, id: 55 };
+    const token = issueHiringReviewToken(actor.id, hiringReviewSnapshot(selected, offer, [selected, duplicate], []));
+    for (const applicationId of [selected.id, duplicate.id]) {
+      const claims = [{ applicationId, employeeId: 88, canonicalApplicationId: 70 }];
+      const preflight = await preflightHireSignedApplicant(harness([[selected], [offer], [], [selected, duplicate], claims]).db, selected.id, actor);
+      expect(preflight).toMatchObject({ eligible: false, reviewToken: null });
+      const h = harness([[selected], [], [offer], [selected, duplicate], claims]);
+      await expect(hireSignedApplicant(h.db, selected.id, actor, selected, { token, acknowledged: true })).rejects.toThrow("already has an employee record");
+      expect(h.updates).toEqual([]); expect(h.inserts).toEqual([]);
+    }
+  });
+  it("does not associate a duplicate with an in-flight onboarding delivery", async () => {
+    const selected = { ...app, phone: "4165550101" };
+    const duplicate = { ...selected, id: 55, onboardingDeliveryToken: "in-flight" };
+    const h = harness([[selected], [], [offer], [selected, duplicate]]);
+    await expect(hireSignedApplicant(h.db, selected.id, actor)).rejects.toThrow("Another applicant");
+    expect(h.updates).toEqual([]); expect(h.inserts).toEqual([]);
+  });
   it.each(["offer", "selected", "conflict", "role", "location", "archived", "addition", "removal", "ownership", "expiry"])("rejects stale review when %s changes", async (change) => {
     const selected = { ...app, phone: "4165550101" };
     const duplicate = { ...selected, id: 55 };
@@ -173,7 +193,10 @@ describe("signed offer to employee", () => {
     expect(action.applicationId).toBe(selected.id);
     expect(JSON.parse(action.details)).toMatchObject({ signingTokenId: offer.id, duplicateReview: { version: 2, canonicalApplicationId: 42, employeeId: 7, reviewed: [{ applicationId: 8, recordHash: expect.stringMatching(/^[a-f0-9]{64}$/) }, { applicationId: 12, recordHash: expect.stringMatching(/^[a-f0-9]{64}$/) }] } });
     expect(action.details).not.toContain(selected.email);
-    expect(h.inserts).toHaveLength(2); // employee and audit only, no document transfer
+    const associations = h.inserts.find((entry) => entry.table === employeeApplicationAssociations).values;
+    expect(associations.map((entry: any) => entry.applicationId)).toEqual([42, 8, 12]);
+    expect(associations.every((entry: any) => entry.employeeId === 7 && entry.canonicalApplicationId === 42 && entry.actorUserId === actor.id && /^[a-f0-9]{64}$/.test(entry.recordHash))).toBe(true);
+    expect(h.inserts).toHaveLength(3); // employee, associations and audit; no document transfer
   });
   it.each([
     ["different name", { name: "Other Applicant" }],

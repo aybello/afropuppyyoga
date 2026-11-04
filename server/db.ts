@@ -1,12 +1,12 @@
-import { and, desc, eq, gte, isNull, isNotNull, inArray, ne } from "drizzle-orm";
+import { and, desc, eq, gte, isNull, isNotNull, inArray, ne, notExists, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { randomUUID } from "node:crypto";
-import { InsertInvoice, InsertJobApplication, InsertUser, InsertBirthdayInquiry, InsertPartnershipInquiry, InsertStaffInvite, InsertSigningToken, invoices, employees, jobApplicationActions, jobApplications, users, birthdayInquiries, partnershipInquiries, staffInvites, signingTokens } from "../drizzle/schema";
+import { InsertInvoice, InsertJobApplication, InsertUser, InsertBirthdayInquiry, InsertPartnershipInquiry, InsertStaffInvite, InsertSigningToken, invoices, employeeApplicationAssociations, employees, jobApplicationActions, jobApplications, users, birthdayInquiries, partnershipInquiries, staffInvites, signingTokens } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { withStaffingMutationLock } from "./staffingMutationLock";
-
+import { isStaffingDeleteRestrictedError } from "./staffingDeletion";
+import { legacyHiringOwnershipClaims } from "./hiringDuplicateIdentity";
 let _db: ReturnType<typeof drizzle> | null = null;
-
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
@@ -399,7 +399,54 @@ export async function restoreJobApplication(id: number) {
 export async function permanentlyDeleteJobApplication(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.delete(jobApplications).where(eq(jobApplications.id, id));
+  return deleteArchivedJobApplication(db, id);
+}
+
+/** The explicit DB argument also allows deterministic validation without a connection. */
+export async function deleteArchivedJobApplication(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, id: number) {
+  try {
+    return await withStaffingMutationLock(db, async (tx): Promise<"deleted" | "not_archived" | "employee" | "associated" | "changed"> => {
+      const [app]: Array<typeof jobApplications.$inferSelect> = await tx.select().from(jobApplications)
+        .where(eq(jobApplications.id, id)).limit(1).for("update");
+      if (!app || !app.deletedAt) return "not_archived";
+
+      const sourceLink = () => tx.select({ id: employees.id }).from(employees)
+        .where(eq(employees.sourceApplicationId, id));
+      const linked: Array<{ id: number }> = await sourceLink().limit(1).for("update");
+      if ((app.isTeamMember !== false && (app.isTeamMember as unknown) !== 0) || app.status === "onboarded" || linked.length) {
+        return "employee";
+      }
+
+      // Both sides of reviewed ownership are protected, even for former staff.
+      const associationLink = () => tx.select({ id: employeeApplicationAssociations.id }).from(employeeApplicationAssociations)
+        .where(or(eq(employeeApplicationAssociations.applicationId, id), eq(employeeApplicationAssociations.canonicalApplicationId, id)));
+      const associated: Array<{ id: number }> = await associationLink().limit(1).for("update");
+      if (associated.length) return "associated";
+
+      // Legacy reviews claim IDs without relying on current contacts, a surviving
+      // directory row, or an automatic migration/backfill of associations.
+      const actions: Array<typeof jobApplicationActions.$inferSelect> = await tx.select().from(jobApplicationActions)
+        .where(eq(jobApplicationActions.action, "employee_added_after_signature")).for("update");
+      let legacyClaims;
+      try { legacyClaims = legacyHiringOwnershipClaims(actions); } catch { return "associated"; }
+      if (legacyClaims.some((claim) => claim.applicationId === id)) return "associated";
+
+      const [result] = await tx.delete(jobApplications).where(and(
+        eq(jobApplications.id, id),
+        isNotNull(jobApplications.deletedAt),
+        eq(jobApplications.isTeamMember, false),
+        ne(jobApplications.status, "onboarded"),
+        notExists(sourceLink()),
+        notExists(associationLink()),
+      ));
+      return Number(result.affectedRows ?? 0) === 1 ? "deleted" : "changed";
+    });
+  } catch (error) {
+    // Retain restrictive FKs as a final safety net; never remove associated rows
+    // or contracts to make a parent delete succeed.
+    if (isStaffingDeleteRestrictedError(error)) return "associated" as const;
+    throw error;
+  }
 }
 
 export async function createBirthdayInquiry(data: InsertBirthdayInquiry) {

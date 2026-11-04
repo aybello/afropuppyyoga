@@ -1,4 +1,4 @@
-import { prepareHiringOffer, recordCurrentOfferSignature } from "../hiringOfferLifecycle";
+import { prepareHiringOffer, recordCurrentOfferSignature, withCurrentHiringOfferDelivery } from "../hiringOfferLifecycle";
 import { z } from "zod";
 import { adminProcedure, staffProcedure, publicProcedure, router } from "../_core/trpc";
 import { createSigningToken, getSigningTokenByToken, updateSigningToken, getSigningTokenByApplicationId, getJobApplicationById, updateJobApplication, updateJobApplicationStatusIfUnclaimed, getDb } from "../db";
@@ -35,14 +35,17 @@ export const signingRouter = router({
       const subject = "Action Required: Review & Sign Your Offer | AfroPuppyYoga";
       const expiryLabel = expiresAt.toLocaleString("en-CA", { timeZone: "America/Toronto", timeZoneName: "short" });
       const text = `Hi ${applicant.name},\n\nCongratulations! Please review and sign your offer letter and NDA for the ${applicant.role} position at AfroPuppyYoga (${applicant.location}).\n\nBoth documents are on the same signing page:\n${signingLink}\n\nThis private link expires ${expiryLabel}. Do not forward it. Questions? Reply to this email.\n\nBest regards,\nThe AfroPuppyYoga Team`;
-      const email = await sendOfferSigningEmail({
-        applicationId: applicant.id, requestKey: input.requestKey, actor: ctx.user,
-        email: { to: applicant.email, subject,
-          html: buildSigningEmail({ applicantName: applicant.name, role: applicant.role, location: applicant.location, signingLink, expiryLabel }), text },
-      });
-      const sms = await sendOfferSigningSms({
-        applicationId: applicant.id, requestKey: input.requestKey, actor: ctx.user,
-        applicantName: applicant.name, role: applicant.role, phone: applicant.phone, signingLink,
+      const { email, sms } = await withCurrentHiringOfferDelivery(sourceDb, applicant.id, token, applicant, async () => {
+        const email = await sendOfferSigningEmail({
+          applicationId: applicant.id, requestKey: input.requestKey, actor: ctx.user,
+          email: { to: applicant.email, subject,
+            html: buildSigningEmail({ applicantName: applicant.name, role: applicant.role, location: applicant.location, signingLink, expiryLabel }), text },
+        });
+        const sms = await sendOfferSigningSms({
+          applicationId: applicant.id, requestKey: input.requestKey, actor: ctx.user,
+          applicantName: applicant.name, role: applicant.role, phone: applicant.phone, signingLink,
+        });
+        return { email, sms };
       });
       const anyAccepted = email.status === "sent" || ["queued", "sent", "delivered"].includes(sms.status);
       let trackingWarning: string | undefined;

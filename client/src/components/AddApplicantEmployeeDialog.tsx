@@ -34,11 +34,12 @@ export function DuplicateApplicationReview({ selected, matches, checked, onCheck
   return <section aria-labelledby="duplicate-review-heading" className="space-y-3 text-sm text-[#3D1A2E]">
     <h3 id="duplicate-review-heading" className="font-semibold">Review matching applications</h3>
     <p>These records share contact details and may belong to the same person. Compare every record before enabling login.</p>
+    <p>Approval requires matching name, email, and phone. Different names or applications already linked to an employee cannot be approved here.</p>
     <RecordDetails record={selected} label="Selected application — login will use these details" />
     <div className="space-y-2" aria-label="Matching applications">
       {matches.map((match) => <RecordDetails key={match.id} record={match} label="Matching application" />)}
     </div>
-    <p>No application history will be merged or transferred. Only the selected application will be used to create employee login access; historical records will not be activated.</p>
+    {canReview && <p>If you confirm this review and add the employee, the reviewed matching applications will be linked to the same employee for history. The applications and signed offers remain on their original records; eligible signed offers may be available to the employee after ownership checks. Only the selected application will be used to enable employee login; the other applications will not be activated.</p>}
     {!canReview ? <p role="alert" className="rounded-md border border-red-300 bg-red-50 p-3 text-red-900">These conflicts cannot be approved here. A record may be ambiguous, already linked, onboarded, or otherwise ineligible. Review the applications and Employee Directory before granting access.</p> :
       <label className="flex items-start gap-2 rounded-md border border-[#D1A1B5] bg-white p-3">
         <input type="checkbox" className="mt-1" checked={checked} disabled={disabled} onChange={(event) => onCheckedChange(event.target.checked)} />

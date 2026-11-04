@@ -34,7 +34,8 @@ describe("Employee Directory consolidated navigation", () => {
     expect(directory).toContain('navigate(employeeDirectoryTabUrl(next, search))');
     expect(directory).toContain('<EmployeeTeamTree employees={employees}');
     expect(directory).not.toContain('<EmployeeTeamTree employees={visibleEmployees}');
-    expect(directory).toContain('if (record) setEditingEmployee(withEditableAssignment(record))');
+    expect(directory).toContain('if (record) openEmployeeEditor(record)');
+    expect(directory).toContain('setEditingEmployee(withEditableAssignment(employee))');
     expect(directory).toContain('setAvailabilityEmployeeId(employee.id)');
     expect(directory).not.toContain('href="/admin/staff-availability?tab=team"');
   });

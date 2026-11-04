@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { MySqlDialect } from "drizzle-orm/mysql-core";
 import type { SQL } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { jobApplications, signingTokens, staffingMutationLocks, type SigningToken } from "../drizzle/schema";
+import { employeeApplicationAssociations, employees, jobApplicationActions, jobApplications, signingTokens, staffingMutationLocks, type SigningToken } from "../drizzle/schema";
 import { recordCurrentOfferSignature } from "./hiringOfferLifecycle";
 import { createOfferDocumentSnapshot, readOfferDocumentSnapshot, type OfferDocumentSource } from "./offerDocumentSnapshot";
 import type { OfferLetterType } from "./signingPolicy";
@@ -95,6 +95,7 @@ function transactionalHarness(record = offerRecord(), signatureAffectedRows = 1)
                 rows = [{ lockName: "apy_staffing_mutation_v1" }];
               } else if (table === signingTokens) rows = [structuredClone(pending.offer)];
               else if (table === jobApplications) rows = [structuredClone(pending.applicant)];
+              else if ([employeeApplicationAssociations, employees, jobApplicationActions].includes(table as never)) rows = [];
               else throw new Error("Unexpected table read in snapshot lifecycle test");
               return chain;
             },

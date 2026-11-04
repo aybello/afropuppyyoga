@@ -1,4 +1,4 @@
-import { bigint, boolean, index, int, mysqlEnum, mysqlTable, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/mysql-core";
+import { bigint, boolean, foreignKey, index, int, mysqlEnum, mysqlTable, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -149,6 +149,23 @@ export const employees = mysqlTable("employees", {
 
 export type Employee = typeof employees.$inferSelect;
 export type InsertEmployee = typeof employees.$inferInsert;
+
+/** Append-only reviewed identity ownership; application and offer rows remain untouched. */
+export const employeeApplicationAssociations = mysqlTable("employeeApplicationAssociations", {
+  id: int("id").autoincrement().primaryKey(),
+  applicationId: int("applicationId").notNull(),
+  employeeId: int("employeeId").notNull(),
+  canonicalApplicationId: int("canonicalApplicationId").notNull(),
+  actorUserId: int("actorUserId").notNull(),
+  actorName: varchar("actorName", { length: 255 }),
+  actorEmail: varchar("actorEmail", { length: 320 }),
+  recordHash: varchar("recordHash", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => [uniqueIndex("uq_employeeApplicationAssociations_application").on(t.applicationId), index("idx_employeeApplicationAssociations_employee").on(t.employeeId),
+  foreignKey({ name: "fk_emp_app_assoc_application", columns: [t.applicationId], foreignColumns: [jobApplications.id] }).onDelete("restrict").onUpdate("restrict"),
+  foreignKey({ name: "fk_emp_app_assoc_employee", columns: [t.employeeId], foreignColumns: [employees.id] }).onDelete("restrict").onUpdate("restrict"),
+  foreignKey({ name: "fk_emp_app_assoc_canonical", columns: [t.canonicalApplicationId], foreignColumns: [jobApplications.id] }).onDelete("restrict").onUpdate("restrict"),
+]);
 
 /** Immutable hiring timeline entries. Applicant status changes and outbound actions
  * are recorded here so the dashboard can answer who did what and when. */

@@ -22,6 +22,7 @@ const rawContactMatch = (left: Identity, right: Identity) => employeeContactsMat
 const view = (app: Application, directory: Employee[]) => ({
   id: app.id, name: app.name, email: app.email, phone: app.phone, role: app.role, location: app.location,
   status: app.status, isTeamMember: app.isTeamMember, deletedAt: app.deletedAt ?? null,
+  onboardingDeliveryToken: Boolean(app.onboardingDeliveryToken),
   directoryOwnerIds: directory.filter((employee) => employee.sourceApplicationId === app.id).map((employee) => employee.id).sort((a, b) => a - b),
 });
 const sha = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -43,22 +44,67 @@ export function inspectHiringDuplicates(app: Application, profiles: Application[
   const name = nameOf(app.name), email = emailOf(app.email), phone = phoneOf(app.phone);
   const canReview = Boolean(conflicts.length && name && email && phone && conflicts.every((p) =>
     nameOf(p.name) === name && emailOf(p.email) === email && phoneOf(p.phone) === phone
-    && (p.isTeamMember === false || (p.isTeamMember as unknown) === 0) && p.status !== "onboarded" && p.directoryOwnerIds.length === 0));
+    && (p.isTeamMember === false || (p.isTeamMember as unknown) === 0) && p.status !== "onboarded" && !p.onboardingDeliveryToken && p.directoryOwnerIds.length === 0));
   return { selected: view(app, directory), conflicts, canReview };
 }
 /** Bind reviewed state, latest offer and relevant directory ownership and contacts. */
-export function hiringReviewSnapshot(app: Application, offer: unknown, profiles: Application[], directory: Employee[]) {
+export function hiringReviewSnapshot(app: Application, offer: unknown, profiles: Application[], directory: Employee[], associations: Array<{ applicationId: number; employeeId: number; canonicalApplicationId: number }> = []) {
   const inspection = inspectHiringDuplicates(app, profiles, directory);
   const ids = new Set([app.id, ...inspection.conflicts.map((p) => p.id)]);
   const owners = directory.filter((employee) => (employee.sourceApplicationId !== null && ids.has(employee.sourceApplicationId)) || rawContactMatch(app, employee))
     .sort((a, b) => a.id - b.id).map((employee) => ({ id: employee.id, sourceApplicationId: employee.sourceApplicationId,
       name: employee.name, email: employee.email, phone: employee.phone, role: employee.role ?? null,
       location: employee.location ?? null, employmentStatus: employee.employmentStatus }));
-  return { version: 1, selected: inspection.selected, onboardingDeliveryToken: app.onboardingDeliveryToken ?? null, offer, conflicts: inspection.conflicts, owners };
+  const claims = associations.filter((entry) => ids.has(entry.applicationId)).map(({ applicationId, employeeId, canonicalApplicationId }) => ({ applicationId, employeeId, canonicalApplicationId })).sort((a, b) => a.applicationId - b.applicationId);
+  // Public views expose presence only. The private digest must still change
+  // when one non-empty delivery claim is replaced by another.
+  const privateView = (record: Application) => ({ ...view(record, directory), onboardingDeliveryToken: record.onboardingDeliveryToken ?? null });
+  return { version: 1, selected: privateView(app), onboardingDeliveryToken: app.onboardingDeliveryToken ?? null, offer,
+    conflicts: profiles.filter((record) => record.id !== app.id && ids.has(record.id)).sort((a, b) => a.id - b.id).map(privateView), owners, claims };
 }
 export function hiringReviewEvidence(snapshot: ReturnType<typeof hiringReviewSnapshot>, employeeId: number) {
   return { version: 2, canonicalApplicationId: snapshot.selected.id, employeeId,
     reviewed: snapshot.conflicts.map((record) => ({ applicationId: record.id, recordHash: reviewedHiringRecordHash(record) })) };
+}
+type LegacyHiringAction = { applicationId: number; action: string; details: string | null };
+type HiringClaim = { applicationId: number; employeeId: number; canonicalApplicationId: number };
+const positiveId = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value > 0;
+/**
+ * Validate the self-contained legacy envelope, not today's directory link or
+ * identity hash. A removed employee or changed contact cannot release history.
+ * This read-only parser never infers or backfills associations from contacts.
+ */
+export function legacyHiringOwnershipClaims(actions: LegacyHiringAction[]): HiringClaim[] {
+  const claims: HiringClaim[] = [];
+  for (const action of actions) {
+    if (action.action !== "employee_added_after_signature" || !positiveId(action.applicationId)) continue;
+    let details: any;
+    try { details = JSON.parse(action.details ?? "null"); } catch { continue; }
+    if (!details || typeof details !== "object" || Array.isArray(details) || !("duplicateReview" in details)
+      || !positiveId(details.employeeId)) continue;
+    const review = details.duplicateReview;
+    const invalid = () => new Error("Reviewed applicant ownership could not be verified. Review Employee Directory before continuing.");
+    if (!review || typeof review !== "object" || Array.isArray(review) || review.version !== 2
+      || review.employeeId !== details.employeeId || review.canonicalApplicationId !== action.applicationId
+      || !Array.isArray(review.reviewed) || review.reviewed.length === 0) throw invalid();
+    const seen = new Set<number>();
+    for (const item of review.reviewed) {
+      if (!item || typeof item !== "object" || Array.isArray(item) || !positiveId(item.applicationId)
+        || item.applicationId === action.applicationId || seen.has(item.applicationId)
+        || typeof item.recordHash !== "string" || !/^[a-f0-9]{64}$/.test(item.recordHash)) throw invalid();
+      seen.add(item.applicationId);
+    }
+    for (const applicationId of [action.applicationId, ...Array.from(seen)]) {
+      claims.push({ applicationId, employeeId: details.employeeId, canonicalApplicationId: action.applicationId });
+    }
+  }
+  return claims;
+}
+/** Historical IDs stay claimed even when the parent employee no longer exists. */
+export function hasHiringOwnershipClaim(applicationIds: Set<number>, directory: Array<{ id: number; sourceApplicationId: number | null }>, associations: HiringClaim[], actions: LegacyHiringAction[]) {
+  return associations.some((claim) => applicationIds.has(claim.applicationId))
+    || directory.some((employee) => employee.sourceApplicationId !== null && applicationIds.has(employee.sourceApplicationId))
+    || legacyHiringOwnershipClaims(actions).some((claim) => applicationIds.has(claim.applicationId));
 }
 function secret() {
   const value = process.env.JWT_SECRET;

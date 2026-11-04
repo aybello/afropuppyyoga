@@ -77,8 +77,10 @@ describe("Employee Directory position controls", () => {
 
   it("repairs a legacy pairing when the editor opens so the owner is never blocked", () => {
     expect(directory).toContain("function withEditableAssignment(");
-    const opens = directory.match(/setEditingEmployee\(withEditableAssignment\(/g) ?? [];
-    expect(opens).toHaveLength(3);
+    expect(directory).toContain("setEditingEmployee(withEditableAssignment(employee))");
+    expect(directory).toContain("if (requested) openEmployeeEditor(requested as Employee)");
+    expect(directory).toContain("onClick={() => openEmployeeEditor(employee)}");
+    expect(directory).toContain("if (record) openEmployeeEditor(record)");
   });
 
   it("reports what a position change did to upcoming duties", () => {

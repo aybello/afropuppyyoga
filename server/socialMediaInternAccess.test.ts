@@ -1,7 +1,7 @@
 import type { SQL } from "drizzle-orm";
 import { MySqlDialect } from "drizzle-orm/mysql-core";
 import { describe, expect, it, vi } from "vitest";
-import { employees, jobApplicationActions, jobApplications, signingTokens, staffingMutationLocks } from "../drizzle/schema";
+import { employeeApplicationAssociations, employees, jobApplicationActions, jobApplications, signingTokens, staffingMutationLocks } from "../drizzle/schema";
 import { canAccessHubTool, canManageOperations, getApyAccessLevel, isApprovedApyTeamRole } from "../shared/apyPermissions";
 import { hireSignedApplicant } from "./hireSignedApplicant";
 
@@ -23,12 +23,13 @@ type Values = Record<string, unknown>;
  * table/predicate mistakes fail closed, and failed callbacks discard domain writes.
  * The actual staffing-lock and hiring implementations run without module mocks.
  */
-function hiringHarness(options: { role?: string; signed?: number; failAudit?: boolean } = {}) {
+function hiringHarness(options: { role?: string; signed?: number; failAudit?: boolean; existingAssociation?: boolean } = {}) {
   const role = options.role ?? applicant.role;
   let committed = {
     applicant: { ...applicant, role },
     offer: { ...signedOffer, role, signed: options.signed ?? 1 },
     directory: [] as Values[],
+    associations: options.existingAssociation ? [{ applicationId: applicant.id, employeeId: 99 }] : [],
     audit: [] as Values[],
   };
   const writes: Array<{ table: unknown; values: Values }> = [];
@@ -55,6 +56,8 @@ function hiringHarness(options: { role?: string; signed?: number; failAudit?: bo
               else if (table === jobApplications) rows = [structuredClone(pending.applicant)];
               else if (table === signingTokens) rows = [structuredClone(pending.offer)];
               else if (table === employees) rows = structuredClone(pending.directory);
+              else if (table === employeeApplicationAssociations) rows = structuredClone(pending.associations);
+              else if (table === jobApplicationActions) rows = structuredClone(pending.audit);
               else throw new Error("Unexpected table read");
               return chain;
             },
@@ -67,6 +70,8 @@ function hiringHarness(options: { role?: string; signed?: number; failAudit?: bo
                 assertSql(predicate, "jobApplications.id = ?", [pending.applicant.id]);
               } else if (table === signingTokens) {
                 assertSql(predicate, "signingTokens.applicationId = ?", [pending.applicant.id]);
+              } else if (table === jobApplicationActions) {
+                assertSql(predicate, "jobApplicationActions.action = ?", ["employee_added_after_signature"]);
               } else throw new Error("Unexpected filtered read");
               return chain;
             },
@@ -91,6 +96,8 @@ function hiringHarness(options: { role?: string; signed?: number; failAudit?: bo
               else if (table === jobApplications) expect([filtered, limited, ordered]).toEqual(filtered ? [true, true, false] : [false, false, false]);
               else if (table === signingTokens) expect([filtered, limited, ordered]).toEqual([true, true, true]);
               else if (table === employees) expect([filtered, limited, ordered]).toEqual([false, false, false]);
+              else if (table === employeeApplicationAssociations) expect([filtered, limited, ordered]).toEqual([false, false, false]);
+              else if (table === jobApplicationActions) expect([filtered, limited, ordered]).toEqual([true, false, false]);
               else throw new Error("Unexpected locked read");
               lockedReads.push({ table, filtered, limited, ordered });
               return rows;
@@ -213,6 +220,8 @@ describe("signed Social Media Intern hiring", () => {
       { table: employees, filtered: false, limited: false, ordered: false },
       { table: signingTokens, filtered: true, limited: true, ordered: true },
       { table: jobApplications, filtered: false, limited: false, ordered: false },
+      { table: employeeApplicationAssociations, filtered: false, limited: false, ordered: false },
+      { table: jobApplicationActions, filtered: true, limited: false, ordered: false },
     ]);
     expect(h.db.transaction).toHaveBeenCalledTimes(1);
     expect(h.commits).toBe(1);
@@ -223,6 +232,16 @@ describe("signed Social Media Intern hiring", () => {
     const h = hiringHarness({ role: "Social Media Intern Manager" });
     const before = h.state;
     await expect(hireSignedApplicant(h.db, applicant.id, actor)).rejects.toThrow("supported staff role");
+    expect(h.state).toEqual(before);
+    expect(h.writes).toEqual([]);
+    expect(h.commits).toBe(0);
+    expect(h.rollbacks).toBe(1);
+  });
+
+  it("does not grant access when the application is already associated with an employee", async () => {
+    const h = hiringHarness({ existingAssociation: true });
+    const before = h.state;
+    await expect(hireSignedApplicant(h.db, applicant.id, actor)).rejects.toThrow("already has an employee record");
     expect(h.state).toEqual(before);
     expect(h.writes).toEqual([]);
     expect(h.commits).toBe(0);

@@ -1,11 +1,18 @@
 import { eq } from "drizzle-orm";
-import { employees, jobApplicationActions, jobApplications, staffInvites } from "../drizzle/schema";
+import { employeeApplicationAssociations, employees, jobApplicationActions, jobApplications, staffInvites } from "../drizzle/schema";
 import { getEmployeeLoginDetails } from "./employeeLoginDetails";
 import { employeeContactsMatch, isInertArchivedApplicant, resolveEmployeeLoginProfile } from "./employeeProfileResolution";
 import { reviewedHiringProfileIds } from "./employeeReviewedHiringEvidence";
 import { revokeTeamProfileAccess } from "./staffAccessRevocation";
 import { isActiveTeamMember } from "./teamMembership";
 
+async function assertAssociationsAvailable(tx: any, employeeId: number, ids: number[]) {
+  if (!ids.length) return;
+  const claims: Array<typeof employeeApplicationAssociations.$inferSelect> = await tx.select().from(employeeApplicationAssociations);
+  if (claims.some(claim => ids.includes(claim.applicationId) && claim.employeeId !== employeeId)) {
+    throw new Error("The matching APY HQ profile is already linked to another employee.");
+  }
+}
 /** Explicit employee activation, inside the shared staffing transaction lock. */
 export async function activateEmployeeWithAccess(tx: any, employeeId: number, actor: {
   id: number;
@@ -37,6 +44,7 @@ export async function activateEmployeeWithAccess(tx: any, employeeId: number, ac
   const resolved = resolveEmployeeLoginProfile({ ...employee, email, phone }, profiles.filter((profile) => !historicalIds.has(profile.id)), directory, reviewedIds);
   const profile = resolved.canonical;
   const duplicates = [...resolved.duplicates, ...historical];
+  await assertAssociationsAvailable(tx, employee.id, [profile?.id, ...duplicates.map(duplicate => duplicate.id)].filter((id): id is number => id !== undefined));
   for (const duplicate of duplicates) {
     // Preserve applicant/signing history. Only the redundant login capability
     // is retired, and active duplicate duties follow the existing safe path.
@@ -78,6 +86,7 @@ export async function prepareActiveEmployeeEdit(tx: any, employee: typeof employ
   const directory: Array<typeof employees.$inferSelect> = await tx.select().from(employees);
   const reviewedIds = await reviewedHiringProfileIds(tx, employee, profiles, directory);
   const previous = resolveEmployeeLoginProfile(employee, profiles, directory, reviewedIds);
+  await assertAssociationsAvailable(tx, employee.id, [previous.canonical?.id, ...previous.duplicates.map(duplicate => duplicate.id)].filter((id): id is number => id !== undefined));
   const knownIds = new Set([previous.canonical?.id, ...previous.duplicates.map((profile) => profile.id)]);
   if (directory.some((other) => other.id !== employee.id && employeeContactsMatch(next, other))) {
     throw new Error("Another Employee Directory record uses this contact.");

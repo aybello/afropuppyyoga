@@ -720,7 +720,16 @@ export const careersRouter = router({
   permanentlyDelete: adminProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
-      await permanentlyDeleteJobApplication(input.id);
+      const result = await permanentlyDeleteJobApplication(input.id);
+      if (result === "employee") {
+        throw new TRPCError({ code: "CONFLICT", message: "This application is a team profile or the canonical source of an employee record. Keep its hiring history and manage the employee through Employee Directory." });
+      }
+      if (result === "associated") {
+        throw new TRPCError({ code: "CONFLICT", message: "This application has linked employee or signed-offer history that must be retained. Keep it archived and review the linked record in Employee Directory instead of permanently deleting it." });
+      }
+      if (result !== "deleted") {
+        throw new TRPCError({ code: "CONFLICT", message: "This application is no longer archived or changed before it could be deleted. Refresh Applications and archive an unlinked applicant before trying again." });
+      }
       return { success: true };
     }),
 

@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { PUBLIC_DEFERRED_SECTION_MARGIN } from "@shared/deferredSection";
+import { HOME_SECTION_NAVIGATION, isHomeDeferredSectionTarget } from "./homeSectionNavigation";
 
 type DeferredSectionProps = {
   children: ReactNode;
@@ -21,8 +22,20 @@ export default function DeferredSection({
   const [shouldRender, setShouldRender] = useState(false);
 
   useEffect(() => {
+    if (shouldRender) return;
+    const reveal = (event: Event) => {
+      const hash = (event as CustomEvent<string>).detail;
+      if (markerRef.current && isHomeDeferredSectionTarget(hash, markerRef.current)) {
+        setShouldRender(true);
+      }
+    };
+    window.addEventListener(HOME_SECTION_NAVIGATION, reveal);
+    return () => window.removeEventListener(HOME_SECTION_NAVIGATION, reveal);
+  }, [shouldRender]);
+
+  useEffect(() => {
     const marker = markerRef.current;
-    if (!marker) return;
+    if (!marker || shouldRender) return;
 
     if (typeof IntersectionObserver === "undefined") {
       setShouldRender(true);
@@ -40,10 +53,10 @@ export default function DeferredSection({
     );
     observer.observe(marker);
     return () => observer.disconnect();
-  }, [rootMargin]);
+  }, [rootMargin, shouldRender]);
 
   return (
-    <div ref={markerRef} style={shouldRender ? undefined : { minHeight }}>
+    <div ref={markerRef} data-home-deferred-section style={shouldRender ? undefined : { minHeight }}>
       {shouldRender ? children : null}
     </div>
   );

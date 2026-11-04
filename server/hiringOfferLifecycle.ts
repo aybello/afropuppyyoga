@@ -1,15 +1,25 @@
 import crypto from "node:crypto";
 import { and, desc, eq, isNull, ne } from "drizzle-orm";
-import { jobApplications, signingTokens } from "../drizzle/schema";
+import { employeeApplicationAssociations, employees, jobApplicationActions, jobApplications, signingTokens } from "../drizzle/schema";
 import { canReuseSigningToken, detectOfferLetterType } from "./signingPolicy";
 import { withStaffingMutationLock } from "./staffingMutationLock";
 import { getPuppyMonitorOfferShiftPay, PUPPY_MONITOR_SHIFT_PAY_CAD } from "../shared/puppyMonitorTerms";
 import { getMovementInstructorOfferHourlyPay, MOVEMENT_INSTRUCTOR_HOURLY_PAY_CAD } from "../shared/movementInstructorTerms";
 import { getSocialMediaOfferStartHourlyPay, SOCIAL_MEDIA_INTERN_START_HOURLY_PAY_CAD } from "../shared/socialMediaTerms";
 import { createOfferDocumentSnapshot } from "./offerDocumentSnapshot";
+import { hasHiringOwnershipClaim } from "./hiringDuplicateIdentity";
 
 const isSocialMediaOfferType = (type: string) => type === "social_media_intern" || type === "social_media_specialist";
 
+/** Called only inside the staffing lock, shared with reviewed-association creation. */
+async function assertUnclaimedApplicant(tx: any, applicationId: number) {
+  const associations: Array<typeof employeeApplicationAssociations.$inferSelect> = await tx.select().from(employeeApplicationAssociations).for("update");
+  const directory: Array<typeof employees.$inferSelect> = await tx.select().from(employees).for("update");
+  const actions: Array<typeof jobApplicationActions.$inferSelect> = await tx.select().from(jobApplicationActions).where(eq(jobApplicationActions.action, "employee_added_after_signature")).for("update");
+  if (hasHiringOwnershipClaim(new Set([applicationId]), directory, associations, actions)) {
+    throw new Error("This application already belongs to an employee. Manage or restore access from Employee Directory.");
+  }
+}
 function assertOpenApplicant(app: typeof jobApplications.$inferSelect | undefined) {
   if (!app || app.deletedAt) throw new Error("Application not found or archived.");
   if (app.status === "onboarded" || app.isTeamMember) throw new Error("This person is already an employee. Manage them in Employee Directory.");
@@ -24,6 +34,7 @@ export async function prepareHiringOffer(db: any, applicationId: number) {
     const applicant = assertOpenApplicant(record);
     const [latest] = await tx.select().from(signingTokens).where(eq(signingTokens.applicationId, applicationId))
       .orderBy(desc(signingTokens.createdAt), desc(signingTokens.id)).limit(1);
+    await assertUnclaimedApplicant(tx, applicationId);
     if (latest?.signed === 1) throw new Error("This applicant has already signed their offer.");
     const offerLetterType = detectOfferLetterType(applicant.role, applicant.location);
     const tokenCanBeReused = canReuseSigningToken(latest ?? null, applicant);
@@ -52,6 +63,21 @@ export async function prepareHiringOffer(db: any, applicationId: number) {
       socialMediaHourlyPayCad: isSocialMediaOfferType(offerLetterType) ? SOCIAL_MEDIA_INTERN_START_HOURLY_PAY_CAD : null,
       token, signed: 0, expiresAt });
     return { applicant, reuse, token, expiresAt, offerLetterType };
+  });
+}
+/** Serialize dispatch with association creation; preparation alone cannot authorize a later send. */
+export async function withCurrentHiringOfferDelivery<T>(db: any, applicationId: number, token: string, expected: Pick<typeof jobApplications.$inferSelect, "name" | "email" | "phone" | "role" | "location">, deliver: () => Promise<T>): Promise<T> {
+  return withStaffingMutationLock(db, async (tx) => {
+    const [record] = await tx.select().from(jobApplications).where(eq(jobApplications.id, applicationId)).limit(1);
+    const applicant = assertOpenApplicant(record);
+    const [latest] = await tx.select().from(signingTokens).where(eq(signingTokens.applicationId, applicationId))
+      .orderBy(desc(signingTokens.createdAt), desc(signingTokens.id)).limit(1);
+    await assertUnclaimedApplicant(tx, applicationId);
+    if (!latest || latest.token !== token || !canReuseSigningToken(latest, applicant)
+      || (["name", "email", "phone", "role", "location"] as const).some(field => applicant[field] !== expected[field])) {
+      throw new Error("This offer has been replaced, signed, or the applicant details changed. Refresh before sending.");
+    }
+    return deliver();
   });
 }
 export async function recordCurrentOfferSignature(db: any, token: string, signedName: string, signedIp: string, confirmedOfferLetterType: string | undefined, confirmedPuppyMonitorShiftPayCad?: number, confirmedMovementInstructorHourlyPayCad?: number, confirmedSocialMediaHourlyPayCad?: number, confirmedDocumentSha256?: string) {
@@ -92,6 +118,7 @@ export async function recordCurrentOfferSignature(db: any, token: string, signed
     const app = assertOpenApplicant(appRecord);
     const [latest] = await tx.select().from(signingTokens).where(eq(signingTokens.applicationId, record.applicationId))
       .orderBy(desc(signingTokens.createdAt), desc(signingTokens.id)).limit(1);
+    await assertUnclaimedApplicant(tx, record.applicationId);
     if (latest?.id !== record.id || !canReuseSigningToken(record, app)) throw new Error("This offer has been replaced or the applicant details changed. Please request the current signing link.");
     const [changed] = await tx.update(jobApplications).set({ status: "accepted" }).where(and(
       eq(jobApplications.id, app.id), ne(jobApplications.status, "onboarded"), ne(jobApplications.status, "rejected"),

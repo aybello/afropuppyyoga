@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SQL } from "drizzle-orm";
 import { MySqlDialect } from "drizzle-orm/mysql-core";
-import { signingTokens, type SigningToken, type User } from "../drizzle/schema";
+import { signingTokens, staffingMutationLocks, users, type SigningToken, type User } from "../drizzle/schema";
 import type { ApyAccess } from "./apyAccess";
 import type { TrpcContext } from "./_core/context";
 
@@ -120,20 +120,59 @@ function sqlPredicate(condition: SQL): Predicate {
   return result;
 }
 
-function fakeDb(records: SigningToken[]) {
+function fakeDb(records: SigningToken[], currentUsers: User[] = [user]) {
   const queries: Array<{ sql?: string; params?: unknown[]; orderBy: string[]; limit?: number }> = [];
-  const db = {
+  const events: string[] = [];
+  const afterUnlock = vi.fn();
+  let locked = false;
+  const tx = {
+    insert: vi.fn((table: unknown) => {
+      expect(table).toBe(staffingMutationLocks);
+      events.push("seed lock");
+      return { values: (values: unknown) => {
+        expect(values).toEqual({ lockName: "apy_staffing_mutation_v1" });
+        return { onDuplicateKeyUpdate: async (options: unknown) => {
+          expect(options).toEqual({ set: { lockName: "apy_staffing_mutation_v1" } });
+        } };
+      } };
+    }),
     select: vi.fn(() => {
       let predicate: Predicate = () => true;
       let ordering: Column[] = [];
+      let table: unknown;
       const query: (typeof queries)[number] = { orderBy: [] };
-      queries.push(query);
       const chain = {
-        from(table: unknown) { expect(table).toBe(signingTokens); return chain; },
+        from(selected: unknown) {
+          table = selected;
+          if (table === staffingMutationLocks) return chain;
+          expect(locked).toBe(true);
+          if (table === signingTokens) {
+            queries.push(query);
+            events.push("token read");
+          } else {
+            expect(table).toBe(users);
+            events.push("user read");
+          }
+          return chain;
+        },
         where(condition: SQL) {
           Object.assign(query, dialect.sqlToQuery(condition));
-          predicate = sqlPredicate(condition);
+          if (table === signingTokens) predicate = sqlPredicate(condition);
+          else if (table === users) {
+            expect(query.sql).toBe("(`users`.`id` = ? and `users`.`openId` = ?)");
+            expect(query.params).toEqual([expect.any(Number), expect.any(String)]);
+          } else {
+            expect(query.sql).toBe("`staffingMutationLocks`.`lockName` = ?");
+            expect(query.params).toEqual(["apy_staffing_mutation_v1"]);
+          }
           return chain;
+        },
+        async for(mode: string) {
+          expect(table).toBe(staffingMutationLocks);
+          expect(mode).toBe("update");
+          locked = true;
+          events.push("lock acquired");
+          return [{ lockName: "apy_staffing_mutation_v1" }];
         },
         orderBy(...conditions: SQL[]) {
           query.orderBy = conditions.map((condition) => dialect.sqlToQuery(condition).sql);
@@ -149,6 +188,13 @@ function fakeDb(records: SigningToken[]) {
           resolve?: ((rows: SigningToken[]) => TResult1 | PromiseLike<TResult1>) | null,
           reject?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
         ): Promise<TResult1 | TResult2> {
+          if (table === users) {
+            expect(query.limit).toBe(1);
+            return Promise.resolve(currentUsers.filter(row => row.id === query.params?.[0] && row.openId === query.params?.[1]).slice(0, 1))
+              .then(resolve as any, reject);
+          }
+          expect(table).toBe(signingTokens);
+          expect(locked).toBe(true);
           const rows = records.filter(predicate).sort((left, right) => {
             for (const column of ordering) {
               const comparison = Number(right[column]) - Number(left[column]);
@@ -162,7 +208,16 @@ function fakeDb(records: SigningToken[]) {
       return chain;
     }),
   };
-  return { db, queries };
+  const db = {
+    tx,
+    select: vi.fn(() => { throw new Error("Document read outside transaction"); }),
+    transaction: vi.fn(async (callback: (connection: typeof tx) => Promise<unknown>) => {
+      events.push("transaction begin");
+      try { return await callback(tx); }
+      finally { events.push("transaction end"); locked = false; afterUnlock(); }
+    }),
+  };
+  return { db, tx, queries, events, afterUnlock, isLocked: () => locked };
 }
 
 function caller(identity: User | null = user, extra: Partial<TrpcContext> = {}) {
@@ -220,7 +275,114 @@ describe("staffDocuments real teamMemberProcedure middleware", () => {
   });
 });
 
+describe("staffDocuments locked authorization snapshot", () => {
+  it.each(["list", "download"] as const)("keeps current identity, ownership and %s token fetch on the same locked transaction", async operation => {
+    const freshUser = { ...user, name: "Updated Login Name", email: "fresh@example.com" };
+    const h = fakeDb([signedRecord()], [freshUser]);
+    mocks.getDb.mockResolvedValue(h.db);
+    mocks.getMySignedOfferApplicationIds.mockImplementation(async (tx, identity, resolved) => {
+      expect(tx).toBe(h.tx);
+      expect(h.isLocked()).toBe(true);
+      expect(identity).toBe(freshUser);
+      expect(resolved).toBe(access);
+      h.events.push("ownership revalidated");
+      return [42];
+    });
+    const { api } = caller();
+    if (operation === "list") await api.mySignedOffers();
+    else await api.downloadMySignedOffer({ id: 101 });
+    expect(h.events).toEqual([
+      "transaction begin", "seed lock", "lock acquired", "user read",
+      "ownership revalidated", "token read", "transaction end",
+    ]);
+    expect(h.db.transaction).toHaveBeenCalledOnce();
+    expect(h.db.select).not.toHaveBeenCalled();
+    expect(h.isLocked()).toBe(false);
+  });
+
+  it.each([
+    { label: "deleted authenticated user", currentUsers: [] },
+    { label: "rebound login ID", currentUsers: [{ ...user, openId: "staff-email:other@example.com" }] },
+    { label: "replaced user row", currentUsers: [{ ...user, id: 99 }] },
+    { label: "new administrator role", currentUsers: [{ ...user, role: "admin" as const }] },
+    { label: "changed user role", currentUsers: [{ ...user, role: "user" as const }] },
+  ])("denies $label even though earlier middleware granted member access", async ({ currentUsers }) => {
+    const h = fakeDb([signedRecord()], currentUsers);
+    mocks.getDb.mockResolvedValue(h.db);
+    const { api } = caller();
+    await expect(api.mySignedOffers()).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(api.downloadMySignedOffer({ id: 101 })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(mocks.getMySignedOfferApplicationIds).not.toHaveBeenCalled();
+    expect(h.queries).toEqual([]);
+    expect(mocks.buildSignedOfferPdf).not.toHaveBeenCalled();
+  });
+
+  it.each(["list", "download"] as const)("denies %s when refreshed login contacts no longer authenticate the canonical member", async operation => {
+    const freshUser = { ...user, email: "other@example.com" };
+    const h = fakeDb([signedRecord()], [freshUser]);
+    mocks.getDb.mockResolvedValue(h.db);
+    mocks.getMySignedOfferApplicationIds.mockImplementation(async (tx, identity) => {
+      expect(tx).toBe(h.tx);
+      expect(identity.email).toBe("other@example.com");
+      const { TRPCError } = await import("@trpc/server");
+      throw new TRPCError({ code: "FORBIDDEN" });
+    });
+    const { api } = caller();
+    await expect(operation === "list" ? api.mySignedOffers() : api.downloadMySignedOffer({ id: 101 }))
+      .rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(h.queries).toEqual([]);
+    expect(mocks.buildSignedOfferPdf).not.toHaveBeenCalled();
+  });
+
+  it("cannot read identity, ownership or tokens if the staffing lock fails", async () => {
+    const h = fakeDb([signedRecord()]);
+    h.tx.insert.mockImplementationOnce(() => { throw new Error("Lock unavailable"); });
+    mocks.getDb.mockResolvedValue(h.db);
+    await expect(caller().api.mySignedOffers()).rejects.toThrow("Lock unavailable");
+    expect(h.tx.select).not.toHaveBeenCalled();
+    expect(mocks.getMySignedOfferApplicationIds).not.toHaveBeenCalled();
+    expect(mocks.buildSignedOfferPdf).not.toHaveBeenCalled();
+  });
+
+  it("builds the PDF after unlocking from a detached frozen record, not from later mutable document state", async () => {
+    const record = signedRecord();
+    const expected = structuredClone(record);
+    const h = fakeDb([record]);
+    mocks.getDb.mockResolvedValue(h.db);
+    h.afterUnlock.mockImplementationOnce(() => {
+      record.applicantName = "Later Owner";
+      record.signedDocumentSnapshot = "later snapshot";
+      record.signedAt!.setTime(now.getTime());
+    });
+    mocks.buildSignedOfferPdf.mockImplementation(async selected => {
+      expect(h.isLocked()).toBe(false);
+      expect(selected).toEqual(expected);
+      expect(selected).not.toBe(record);
+      expect(selected.signedAt).not.toBe(record.signedAt);
+      expect(Object.isFrozen(selected)).toBe(true);
+      expect(h.events.at(-1)).toBe("transaction end");
+      return pdf;
+    });
+    await expect(caller().api.downloadMySignedOffer({ id: 101 })).resolves.toEqual(expectedDownload(expected));
+    expect(h.queries).toHaveLength(1);
+    expect(mocks.buildSignedOfferPdf).toHaveBeenCalledOnce();
+  });
+});
+
 describe("staffDocuments.mySignedOffers", () => {
+  it("does not list or download a grouped offer whose token identity no longer matches the review", async () => {
+    mocks.getMySignedOfferApplicationIds.mockImplementation(async (_db, _user, _access, identities) => {
+      identities.set(41, { name: member.name, email: member.email });
+      return [42, 41];
+    });
+    const wrong = signedRecord({ id: 100, applicationId: 41, applicantName: "Other Person" });
+    const right = signedRecord({ id: 101, applicationId: 41 });
+    mocks.getDb.mockResolvedValue(fakeDb([wrong, right]).db);
+    const { api } = caller();
+    expect((await api.mySignedOffers()).map(record => record.id)).toEqual([101]);
+    await expect(api.downloadMySignedOffer({ id: 100 })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(api.downloadMySignedOffer({ id: 101 })).resolves.toEqual(expectedDownload(right));
+  });
   it.each([
     { label: "ordinary employee", identity: user, resolved: access },
     {
@@ -237,7 +399,7 @@ describe("staffDocuments.mySignedOffers", () => {
     const { db, queries } = fakeDb([older, first, otherPerson, newerUnsigned, tied,
       signedRecord({ id: 104, signedName: null }), signedRecord({ id: 105, signedName: "  " }),
       signedRecord({ id: 106, signedAt: null }), signedRecord({ id: 107, signedAt: new Date("invalid") }),
-    ]);
+    ], [identity]);
     mocks.getDb.mockResolvedValue(db);
     const { api, setHeader } = caller(identity, { apyAccess: ownerAccess });
     const result = await api.mySignedOffers();
@@ -253,7 +415,7 @@ describe("staffDocuments.mySignedOffers", () => {
       expect(serialized).not.toContain(secret);
     }
     expect(mocks.resolveApyAccess).toHaveBeenCalledExactlyOnceWith(identity);
-    expect(mocks.getMySignedOfferApplicationIds).toHaveBeenCalledExactlyOnceWith(db, identity, resolved);
+    expect(mocks.getMySignedOfferApplicationIds).toHaveBeenCalledExactlyOnceWith(db.tx, identity, resolved, expect.any(Map));
     expect(queries).toHaveLength(1);
     expect(queries[0].sql).toContain("`signingTokens`.`applicationId` in (?, ?)");
     expect(queries[0].sql).toContain("`signingTokens`.`signed` = ?");
@@ -274,7 +436,7 @@ describe("staffDocuments.mySignedOffers", () => {
     await expect(api.mySignedOffers()).resolves.toEqual([]);
     await expect(api.downloadMySignedOffer({ id: 101 })).rejects.toMatchObject({ code: "NOT_FOUND" });
     expect(mocks.resolveApyAccess).toHaveBeenCalledTimes(2);
-    expect(mocks.getMySignedOfferApplicationIds).toHaveBeenCalledWith(db, owner, ownerAccess);
+    expect(mocks.getMySignedOfferApplicationIds).toHaveBeenCalledWith(db.tx, owner, ownerAccess, expect.any(Map));
     expect(db.select).not.toHaveBeenCalled();
     expect(mocks.buildSignedOfferPdf).not.toHaveBeenCalled();
     expectPrivate(setHeader);
@@ -313,7 +475,7 @@ describe("staffDocuments.downloadMySignedOffer", () => {
     expect(result).toEqual(expectedDownload(record));
     expect(Buffer.from(result.base64, "base64")).toEqual(pdf);
     expect(mocks.buildSignedOfferPdf).toHaveBeenCalledExactlyOnceWith(record);
-    expect(mocks.getMySignedOfferApplicationIds).toHaveBeenCalledExactlyOnceWith(db, user, access);
+    expect(mocks.getMySignedOfferApplicationIds).toHaveBeenCalledExactlyOnceWith(db.tx, user, access, expect.any(Map));
     expect(queries[0].params).toEqual([101, 42, 41, 1]);
     expect(queries[0].limit).toBe(1);
     expect(queries[0].sql).not.toContain("expiresAt");

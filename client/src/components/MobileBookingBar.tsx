@@ -10,6 +10,7 @@ import { BOOK_URL } from "@/const";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CalendarDays, Users } from "lucide-react";
+import { handleHomeSectionClick, homeSectionHref } from "./homeSectionNavigation";
 
 
 export default function MobileBookingBar() {
@@ -52,13 +53,8 @@ export default function MobileBookingBar() {
 
               {/* Secondary CTA */}
               <a
-                href="#private-events"
-                onClick={(e) => {
-                  e.preventDefault();
-                  document
-                    .querySelector("#private-events")
-                    ?.scrollIntoView({ behavior: "smooth" });
-                }}
+                href={homeSectionHref("#private-events")}
+                onClick={(e) => handleHomeSectionClick(e, "#private-events")}
                 className="flex items-center justify-center gap-2 px-4 py-3.5 bg-[#F2A0B8]/20 border border-[#F2A0B8] text-[#8B2252] font-body font-semibold text-sm rounded-xl active:scale-95 transition-transform duration-150"
               >
                 <Users size={16} />

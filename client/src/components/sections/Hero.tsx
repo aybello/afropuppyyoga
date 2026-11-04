@@ -8,6 +8,7 @@ import { useState } from "react";
 import { ChevronDownIcon } from "@/components/PublicIcons";
 import { trackCTAClick } from "@/hooks/useAnalytics";
 import LocalDogsImpact from "@/components/sections/LocalDogsImpact";
+import { handleHomeSectionClick, homeSectionHref, scrollToHomeSection } from "@/components/homeSectionNavigation";
 import {
   getNextHeroImageOnError,
   PRIMARY_HERO_IMAGE,
@@ -54,7 +55,7 @@ export default function Hero() {
   const [heroImageFailed, setHeroImageFailed] = useState(false);
 
   const scrollToExperience = () => {
-    document.querySelector("#experience")?.scrollIntoView({ behavior: "smooth" });
+    scrollToHomeSection("#experience");
   };
 
   return (
@@ -145,16 +146,16 @@ export default function Hero() {
               Book a Class
             </a>
             <a
-              href="#memberships"
-              onClick={(e) => { e.preventDefault(); trackCTAClick("Memberships — Hero"); document.querySelector("#memberships")?.scrollIntoView({ behavior: "smooth" }); }}
+              href={homeSectionHref("#memberships")}
+              onClick={(e) => { trackCTAClick("Memberships — Hero"); handleHomeSectionClick(e, "#memberships"); }}
               className="inline-flex items-center justify-center px-3 py-2.5 sm:px-8 sm:py-4 font-body font-bold text-xs sm:text-base rounded-full transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-1 whitespace-nowrap"
               style={{ background: "linear-gradient(135deg, #F2A0B8, #F97316)", color: "#1A0A12" }}
             >
               Memberships
             </a>
             <a
-              href="#private-events"
-              onClick={(e) => { e.preventDefault(); trackCTAClick("Private Events — Hero"); document.querySelector("#private-events")?.scrollIntoView({ behavior: "smooth" }); }}
+              href={homeSectionHref("#private-events")}
+              onClick={(e) => { trackCTAClick("Private Events — Hero"); handleHomeSectionClick(e, "#private-events"); }}
               className="inline-flex items-center justify-center px-3 py-2.5 sm:px-8 sm:py-4 bg-white/15 backdrop-blur-sm text-white font-body font-semibold text-xs sm:text-base rounded-full border border-white/30 hover:bg-white/25 transition-all duration-200 whitespace-nowrap"
             >
               Private Events

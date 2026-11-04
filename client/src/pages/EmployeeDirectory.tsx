@@ -92,6 +92,45 @@ export default function EmployeeDirectory() {
   };
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [confirmEditEnablesLogin, setConfirmEditEnablesLogin] = useState(false);
+  const [accessRefresh, setAccessRefresh] = useState<"loading" | "failed" | null>(null);
+  const editSession = useRef(0);
+  const openEmployeeEditor = (employee: Employee) => {
+    editSession.current += 1;
+    setAccessRefresh(null);
+    setConfirmEditEnablesLogin(false);
+    setEditingEmployee(withEditableAssignment(employee));
+  };
+  const closeEmployeeEditor = () => {
+    editSession.current += 1;
+    setAccessRefresh(null);
+    setConfirmEditEnablesLogin(false);
+    setEditingEmployee(null);
+  };
+  const refreshEditingAccess = async (employeeId: number, session: number) => {
+    if (editSession.current !== session) return;
+    setConfirmEditEnablesLogin(false);
+    setAccessRefresh("loading");
+    try {
+      const result = await refetch();
+      if (editSession.current !== session) return;
+      const employee = !result.isError && result.data?.find((person) => person.id === employeeId);
+      if (!employee) {
+        setAccessRefresh("failed");
+        return;
+      }
+      // Do not replace the draft: only these two server-owned fields affect consent.
+      setEditingEmployee((current) => current?.id === employeeId ? {
+        ...current,
+        employmentStatus: employee.employmentStatus,
+        hasApyHqAccess: employee.hasApyHqAccess,
+      } : current);
+      setConfirmEditEnablesLogin(false);
+      setAccessRefresh(null);
+    } catch {
+      if (editSession.current === session) setAccessRefresh("failed");
+    }
+  };
   const [showAddEmployee, setShowAddEmployee] = useState(false);
   const [newEmployee, setNewEmployee] = useState<NewEmployeeForm>(createEmptyEmployeeForm);
   const [departingEmployee, setDepartingEmployee] = useState<Employee | null>(null);
@@ -105,7 +144,7 @@ export default function EmployeeDirectory() {
     if (!data || openedRequestedEmployee.current === requestedEmployeeId) return;
     openedRequestedEmployee.current = requestedEmployeeId;
     const requested = data.find((employee) => String(employee.id) === requestedEmployeeId);
-    if (requested) setEditingEmployee(withEditableAssignment(requested as Employee));
+    if (requested) openEmployeeEditor(requested as Employee);
   }, [data, requestedEmployeeId]);
   // Restores a linked APY HQ profile and therefore grants operational access.
   const restoreApyHqTeamMember = trpc.staffAvailability.reactivateTeamMember.useMutation({
@@ -120,19 +159,25 @@ export default function EmployeeDirectory() {
       const retired = result.retiredClassAssignments + result.releasedLeadershipCoverage;
       if (result.roleChanged && retired > 0) {
         toast.success(`Position updated from ${result.previousRole}`, {
-          description: `${retired} upcoming ${retired === 1 ? "duty" : "duties"} the new position cannot cover ${retired === 1 ? "was" : "were"} removed from the schedule. Weekend leadership slots are now open for reassignment.`,
+          description: `${result.retiredClassAssignments} class assignments removed; ${result.releasedLeadershipCoverage} leadership slots opened for reassignment.`,
         });
       } else if (result.roleChanged) {
         toast.success(`Position updated from ${result.previousRole}`, {
-          description: "Portal access now follows the new position. No upcoming duties were affected.",
+          description: "No upcoming duties were affected. Existing login access and training follow the saved position.",
         });
       } else {
         toast.success("Employee record updated");
       }
-      setEditingEmployee(null);
+      closeEmployeeEditor();
       refreshPeople();
     },
-    onError: (error) => toast.error(error.message),
+    onMutate: () => editSession.current,
+    onError: (error, variables, session) => {
+      toast.error(error.message);
+      if (session !== undefined && /saving this active employee will enable APY HQ login\. Confirm this access change before saving\./i.test(error.message)) {
+        void refreshEditingAccess(variables.id, session);
+      }
+    },
   });
   const createEmployee = trpc.staffAvailability.createEmployeeRecord.useMutation({
     onSuccess: () => {
@@ -188,14 +233,24 @@ export default function EmployeeDirectory() {
   const handleUpdateEmployee = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!editingEmployee) return;
+    if (accessRefresh) return;
+    if (!APY_TEAM_ROLES.some((role) => role === editingEmployee.role)) {
+      toast.error("Choose a supported position before saving.");
+      return;
+    }
+    if (editingEmployee.employmentStatus === "active" && !editingEmployee.hasApyHqAccess && !confirmEditEnablesLogin) {
+      toast.error("Confirm that saving will enable login for this active employee.");
+      return;
+    }
     const formData = new FormData(event.currentTarget);
     updateEmployee.mutate({
       id: editingEmployee.id,
       name: String(formData.get("name") ?? ""),
       email: String(formData.get("email") ?? ""),
       phone: String(formData.get("phone") ?? ""),
-      role: String(formData.get("role") ?? "") as ApyTeamRole,
-      location: String(formData.get("location") ?? "CENTRAL") as "KW" | "OAK" | "HAM" | "CENTRAL",
+      role: editingEmployee.role as ApyTeamRole,
+      location: editingEmployee.location as ApyTeamLocation,
+      confirmEnableLogin: editingEmployee.employmentStatus === "active" && !editingEmployee.hasApyHqAccess && confirmEditEnablesLogin,
     });
   };
 
@@ -325,8 +380,8 @@ export default function EmployeeDirectory() {
                         </td>
                         <td className="px-5 py-4 text-right">
                           <div className="flex items-center justify-end gap-3">
-                            <button type="button" onClick={() => setEditingEmployee(withEditableAssignment(employee))} className="inline-flex items-center gap-1.5 font-body text-xs font-bold text-[#8B2252] hover:text-[#6B1A3E]">
-                              <Pencil className="h-3.5 w-3.5" /> Edit
+                            <button type="button" onClick={() => openEmployeeEditor(employee)} className="inline-flex items-center gap-1.5 font-body text-xs font-bold text-[#8B2252] hover:text-[#6B1A3E]">
+                              <Pencil className="h-3.5 w-3.5" /> Edit position or details
                             </button>
                             {isActive && employee.sourceApplicationId && employee.hasApyHqAccess ? (
                               <span className="inline-flex items-center gap-1.5 font-body text-xs font-bold text-emerald-700"><KeyRound className="h-3.5 w-3.5" /> Login enabled</span>
@@ -391,7 +446,7 @@ export default function EmployeeDirectory() {
               {availability.isLoading && <p role="status" className="mb-4 text-sm text-[#6E5360]">Loading availability controls…</p>}
               {availability.error && <p role="alert" className="mb-4 text-sm text-[#956A7C]">Leave information could not be loaded. <button type="button" onClick={() => availability.refetch()} className="font-semibold underline">Retry availability</button></p>}
               <EmployeeTeamTree employees={employees} leaves={availability.data?.leaves ?? []} today={today}
-                onEditEmployee={(employee) => { const record = employees.find((person) => person.id === employee.id); if (record) setEditingEmployee(withEditableAssignment(record)); }}
+                onEditEmployee={(employee) => { const record = employees.find((person) => person.id === employee.id); if (record) openEmployeeEditor(record); }}
                 onManageAvailability={availability.data && !availability.error ? (employee) => setAvailabilityEmployeeId(employee.id) : undefined} />
             </>}
           </TabsContent>
@@ -485,17 +540,17 @@ export default function EmployeeDirectory() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={Boolean(editingEmployee)} onOpenChange={(open) => !open && setEditingEmployee(null)}>
+      <Dialog open={Boolean(editingEmployee)} onOpenChange={(open) => { if (!open) closeEmployeeEditor(); }}>
         <DialogContent className="max-w-xl border-[#EADBE2] bg-[#FEFAF4]">
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl text-[#1A0A12]">Edit employee record</DialogTitle>
-            <DialogDescription className="font-body leading-6 text-[#6E5360]">Update contact and assignment details. Changes also update the linked APY HQ profile when one exists.</DialogDescription>
+            <DialogTitle className="font-display text-2xl text-[#1A0A12]">Edit position or employee details</DialogTitle>
+            <DialogDescription className="font-body leading-6 text-[#6E5360]">Choose a position and location or update contact details. Changes also update the linked APY HQ profile when one exists.</DialogDescription>
           </DialogHeader>
           {editingEmployee && (
             <form key={editingEmployee.id} onSubmit={handleUpdateEmployee} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="space-y-1.5 font-body text-sm font-semibold text-[#3D1A2E]">Name<Input name="name" defaultValue={editingEmployee.name} required className="border-[#EADBE2] bg-white" /></label>
-                <label className="space-y-1.5 font-body text-sm font-semibold text-[#3D1A2E]">Role
+                <label className="space-y-1.5 font-body text-sm font-semibold text-[#3D1A2E]">Position / role
                   <select
                     name="role"
                     value={editingEmployee.role}
@@ -506,6 +561,7 @@ export default function EmployeeDirectory() {
                     } : current)}
                     className="h-9 w-full rounded-md border border-[#EADBE2] bg-white px-3 text-sm outline-none focus:border-[#8B2252] focus:ring-2 focus:ring-[#8B2252]/15"
                   >
+                    {!APY_TEAM_ROLES.some((role) => role === editingEmployee.role) && <option value={editingEmployee.role} disabled>Current legacy role: {editingEmployee.role || "not set"} — choose a position</option>}
                     {APY_TEAM_ROLES.map((role) => <option key={role} value={role}>{role}</option>)}
                   </select>
                 </label>
@@ -526,9 +582,18 @@ export default function EmployeeDirectory() {
                 </select>
                 {isCentralApyTeamRole(editingEmployee.role) && <span className="block text-xs font-normal text-[#956A7C]">This APY-wide role is centrally assigned.</span>}
               </label>
+              <p className="rounded-lg border border-[#EADBE2] bg-white p-3 font-body text-xs leading-5 text-[#6E5360]">A position change can change portal permissions and role-based training, and remove incompatible upcoming duties from the schedule. Signed offer documents are not changed. Check the location before saving; switching from an APY-wide role defaults to Kitchener.</p>
+              {accessRefresh === "loading" && <p role="status" className="text-sm text-[#6E5360]">Refreshing login access before you can save…</p>}
+              {accessRefresh === "failed" && <p role="alert" className="text-sm text-[#9A3B51]">Could not refresh this employee's login access. Your edits are still here. <button type="button" className="font-semibold underline" onClick={() => void refreshEditingAccess(editingEmployee.id, editSession.current)}>Retry refresh</button></p>}
+              {editingEmployee.employmentStatus === "active" && !editingEmployee.hasApyHqAccess && (
+                <label className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 font-body text-xs leading-5 text-amber-900">
+                  <input type="checkbox" checked={confirmEditEnablesLogin} disabled={Boolean(accessRefresh)} onChange={(event) => setConfirmEditEnablesLogin(event.target.checked)} className="mt-1" />
+                  <span>I understand that saving this active employee will also enable their APY HQ login using the saved contact details.</span>
+                </label>
+              )}
               <DialogFooter className="pt-2">
-                <Button type="button" variant="outline" onClick={() => setEditingEmployee(null)}>Cancel</Button>
-                <Button type="submit" disabled={updateEmployee.isPending} className="bg-[#8B2252] text-white hover:bg-[#6B1A3E]">{updateEmployee.isPending ? "Saving…" : "Save record"}</Button>
+                <Button type="button" variant="outline" onClick={closeEmployeeEditor}>Cancel</Button>
+                <Button type="submit" disabled={updateEmployee.isPending || Boolean(accessRefresh)} className="bg-[#8B2252] text-white hover:bg-[#6B1A3E]">{updateEmployee.isPending ? "Saving…" : "Save record"}</Button>
               </DialogFooter>
             </form>
           )}

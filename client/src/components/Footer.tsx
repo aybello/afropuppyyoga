@@ -1,4 +1,5 @@
 import { BOOK_URL, LOGO_URL  } from "@/const";
+import { handleHomeSectionClick, homeSectionHref } from "./homeSectionNavigation";
 /* ============================================================
    Footer — Minimal, warm, brand-consistent
    ============================================================ */
@@ -39,11 +40,6 @@ const navGroups = [
     ],
   },
 ];
-
-const handleNavClick = (href: string) => {
-  const el = document.querySelector(href);
-  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-};
 
 export default function Footer() {
   return (
@@ -102,8 +98,8 @@ export default function Footer() {
                         </a>
                       ) : (
                         <a
-                          href={link.href}
-                          onClick={(e) => { e.preventDefault(); handleNavClick(link.href); }}
+                          href={homeSectionHref(link.href)}
+                          onClick={(e) => handleHomeSectionClick(e, link.href)}
                           className="font-body text-sm text-white/50 hover:text-[#F2A0B8] transition-colors"
                         >
                           {link.label}

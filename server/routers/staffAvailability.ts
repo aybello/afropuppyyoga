@@ -1,8 +1,9 @@
 import { hireSignedApplicant, preflightHireSignedApplicant } from "../hireSignedApplicant";
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { adminProcedure, staffProcedure, router } from "../_core/trpc";
 import { getDb, getUserByOpenId, upsertUser } from "../db";
-import { classStaffAssignments, employees, jobApplicationActions, jobApplications, signingTokens, staffAvailability, staffInvites, weekendLeadershipCoverage } from "../../drizzle/schema";
+import { classStaffAssignments, employeeApplicationAssociations, employees, jobApplicationActions, jobApplications, signingTokens, staffAvailability, staffInvites, weekendLeadershipCoverage } from "../../drizzle/schema";
 import { and, asc, desc, eq, gte, inArray, isNull, isNotNull, lte } from "drizzle-orm";
 import { getUpcomingWeekendDates, isAwayOnDate, isWeekendDate } from "../weekendCoverage";
 import { isActiveTeamMember } from "../teamMembership";
@@ -15,7 +16,8 @@ import { revokeTeamProfileAccess } from "../staffAccessRevocation";
 import { activateEmployeeWithAccess, prepareActiveEmployeeEdit } from "../employeeActivation";
 import { employeeContactsMatch } from "../employeeProfileResolution";
 import { withStaffingMutationLock } from "../staffingMutationLock";
-
+import { isStaffingDeleteRestrictedError } from "../staffingDeletion";
+import { legacyHiringOwnershipClaims } from "../hiringDuplicateIdentity";
 export const directTeamMemberSchema = z.object({
   name: z.string().trim().min(2, "Enter the team member's full name."),
   email: z.string().trim().email("Enter a valid email address.").or(z.literal("")).default(""),
@@ -71,6 +73,7 @@ export const employeeRecordUpdateSchema = z.object({
   phone: z.string().trim().max(50).optional().default(""),
   role: z.enum(APY_TEAM_ROLES),
   location: z.enum(APY_TEAM_LOCATIONS),
+  confirmEnableLogin: z.boolean().optional().default(false),
 }).superRefine((value, ctx) => {
   if (!value.email && !value.phone) {
     ctx.addIssue({ code: "custom", path: ["email"], message: "Add either an email address or phone number." });
@@ -386,6 +389,14 @@ export const staffAvailabilityRouter = router({
         .limit(1);
       if (!employee) throw new Error("Employee record not found.");
 
+      if (employee.employmentStatus === "active" && !input.confirmEnableLogin) {
+        const [profile] = employee.sourceApplicationId === null ? [] : await tx.select().from(jobApplications)
+          .where(eq(jobApplications.id, employee.sourceApplicationId)).limit(1);
+        if (!hasActiveApyHqAccess(profile)) {
+          throw new Error("Saving this active employee will enable APY HQ login. Confirm this access change before saving.");
+        }
+      }
+
       const email = input.email ? input.email.toLowerCase() : null;
       const phone = input.phone ? normalizeCanadianPhoneNumber(input.phone) : null;
       const updates = {
@@ -584,33 +595,59 @@ export const staffAvailabilityRouter = router({
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const [employee] = await db.select().from(employees).where(eq(employees.id, input.employeeId)).limit(1);
-      if (!employee) throw new Error("Employee record not found.");
+      const historyConflict = () => new TRPCError({ code: "CONFLICT", message: "This former employee has linked application or signed-offer history that must be retained. Keep the record inactive in Employee Directory instead of permanently deleting it." });
+      try {
+        return await withStaffingMutationLock(db, async (tx) => {
+          // Read only after acquiring the same lock used by employee activation.
+          const [employee] = await tx.select().from(employees).where(eq(employees.id, input.employeeId)).limit(1).for("update");
+          if (!employee) throw new TRPCError({ code: "CONFLICT", message: "This employee record no longer exists. Refresh Employee Directory before trying again." });
 
-      const linkedProfile = employee.sourceApplicationId === null ? null : (await db.select({
-        isTeamMember: jobApplications.isTeamMember,
-        deletedAt: jobApplications.deletedAt,
-      }).from(jobApplications).where(eq(jobApplications.id, employee.sourceApplicationId)).limit(1))[0] ?? null;
-      const eligibility = getFormerEmployeeDeletionEligibility({
-        employmentStatus: employee.employmentStatus,
-        linkedActiveTeamProfile: Boolean(linkedProfile?.isTeamMember) && !linkedProfile?.deletedAt,
-      });
-      if (!eligibility.eligible) throw new Error(eligibility.reason);
-
-      await db.transaction(async (tx) => {
-        if (employee.sourceApplicationId !== null) {
-          await tx.insert(jobApplicationActions).values({
-            applicationId: employee.sourceApplicationId,
-            action: "employee_directory_record_deleted",
-            actorUserId: ctx.user.id,
-            actorName: ctx.user.name,
-            actorEmail: ctx.user.email,
-            details: JSON.stringify({ directoryRecordDeleted: true }),
+          const linkedProfile = employee.sourceApplicationId === null ? null : (await tx.select({
+            isTeamMember: jobApplications.isTeamMember,
+            deletedAt: jobApplications.deletedAt,
+          }).from(jobApplications).where(eq(jobApplications.id, employee.sourceApplicationId)).limit(1).for("update"))[0] ?? null;
+          const eligibility = getFormerEmployeeDeletionEligibility({
+            employmentStatus: employee.employmentStatus,
+            linkedActiveTeamProfile: Boolean(linkedProfile?.isTeamMember) && !linkedProfile?.deletedAt,
           });
-        }
-        await tx.delete(employees).where(eq(employees.id, employee.id));
-      });
-      return { success: true };
+          if (!eligibility.eligible) throw new TRPCError({ code: "CONFLICT", message: eligibility.reason });
+
+          const associated = await tx.select({ id: employeeApplicationAssociations.id }).from(employeeApplicationAssociations)
+            .where(eq(employeeApplicationAssociations.employeeId, employee.id)).limit(1).for("update");
+          if (associated.length) throw historyConflict();
+
+          // Pre-migration reviews have no association rows. Retain their parent
+          // by the audited employee ID even after contacts or source links change.
+          const actions = await tx.select().from(jobApplicationActions)
+            .where(eq(jobApplicationActions.action, "employee_added_after_signature")).for("update");
+          let legacyClaims;
+          try { legacyClaims = legacyHiringOwnershipClaims(actions); } catch { throw historyConflict(); }
+          if (legacyClaims.some((claim) => claim.employeeId === employee.id)) throw historyConflict();
+
+          const [result] = await tx.delete(employees).where(and(
+            eq(employees.id, employee.id),
+            eq(employees.employmentStatus, "inactive"),
+            employee.sourceApplicationId === null ? isNull(employees.sourceApplicationId) : eq(employees.sourceApplicationId, employee.sourceApplicationId),
+          ));
+          if (Number(result.affectedRows ?? 0) !== 1) {
+            throw new TRPCError({ code: "CONFLICT", message: "This employee changed before it could be deleted. Refresh Employee Directory and confirm the person is still inactive." });
+          }
+          if (employee.sourceApplicationId !== null) {
+            await tx.insert(jobApplicationActions).values({
+              applicationId: employee.sourceApplicationId,
+              action: "employee_directory_record_deleted",
+              actorUserId: ctx.user.id,
+              actorName: ctx.user.name,
+              actorEmail: ctx.user.email,
+              details: JSON.stringify({ directoryRecordDeleted: true }),
+            });
+          }
+          return { success: true };
+        });
+      } catch (error) {
+        if (isStaffingDeleteRestrictedError(error)) throw historyConflict();
+        throw error;
+      }
     }),
 
   // Get availability for a specific staff member

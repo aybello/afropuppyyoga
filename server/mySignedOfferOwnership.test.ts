@@ -3,13 +3,16 @@ import { TRPCError } from "@trpc/server";
 import { MySqlDialect } from "drizzle-orm/mysql-core";
 import type { SQL } from "drizzle-orm";
 import {
+  employeeApplicationAssociations,
   employees,
   jobApplicationActions,
   jobApplications,
+  signingTokens,
   type User,
 } from "../drizzle/schema";
 import type { ApyAccess } from "./apyAccess";
 import { getMySignedOfferApplicationIds } from "./mySignedOfferOwnership";
+import { reviewedHiringRecordHash } from "./hiringDuplicateIdentity";
 
 const member = {
   id: 42,
@@ -117,11 +120,20 @@ function scenario({
   profiles = [member],
   directory = [employee],
   actions = [activation()],
-}: { profiles?: unknown[]; directory?: unknown[]; actions?: unknown[] } = {}) {
+  associations = [],
+  groupedProfiles = [],
+  offers = [],
+}: { profiles?: unknown[]; directory?: unknown[]; actions?: unknown[]; associations?: any[]; groupedProfiles?: unknown[]; offers?: unknown[] } = {}) {
+  const needsGroupedReads = associations.some(entry => entry.employeeId === 7 && entry.canonicalApplicationId === 42 && entry.applicationId !== 42
+    && associations.filter(other => other.applicationId === entry.applicationId).length === 1
+    && !directory.some((other: any) => other.id !== 7 && other.sourceApplicationId === entry.applicationId)
+    && !profiles.some((profile: any) => profile.id === entry.applicationId && profile.isTeamMember && !profile.deletedAt && ["accepted", "onboarded"].includes(profile.status)));
   return fakeDb([
     { table: jobApplications, rows: profiles },
     { table: employees, rows: directory },
+    { table: employeeApplicationAssociations, rows: associations },
     { table: jobApplicationActions, rows: actions },
+    ...(needsGroupedReads ? [{ table: jobApplications, rows: groupedProfiles }, { table: signingTokens, rows: offers }] : []),
   ]);
 }
 async function expectForbidden(promise: Promise<unknown>) {
@@ -130,6 +142,31 @@ async function expectForbidden(promise: Promise<unknown>) {
 }
 
 describe("getMySignedOfferApplicationIds", () => {
+  const historical = { ...member, id: 41, isTeamMember: false, status: "rejected" };
+  const claim = (applicationId: number, employeeId = 7, canonicalApplicationId = 42) => ({ applicationId, employeeId, canonicalApplicationId, recordHash: reviewedHiringRecordHash(historical) });
+  it("includes only durable associations for the uniquely authenticated canonical employee", async () => {
+    const { db } = scenario({ associations: [claim(42), claim(41), claim(40, 8)], actions: [], groupedProfiles: [historical], offers: [{ applicationId: 41, applicantName: member.name, applicantEmail: member.email }] });
+    await expect(getMySignedOfferApplicationIds(db, user, access)).resolves.toEqual([42, 41]);
+  });
+  it("withholds grouped documents when the reviewed identity changed or any signed offer has a different identity", async () => {
+    for (const options of [
+      { groupedProfiles: [{ ...historical, name: "Different" }], offers: [] },
+      { groupedProfiles: [historical], offers: [{ applicationId: 41, applicantName: "Wrong Person", applicantEmail: member.email }] },
+      { groupedProfiles: [historical], offers: [{ applicationId: 41, applicantName: member.name, applicantEmail: "wrong@example.com" }] },
+    ]) {
+      const { db } = scenario({ associations: [claim(42), claim(41)], actions: [], ...options });
+      await expect(getMySignedOfferApplicationIds(db, user, access)).resolves.toEqual([42]);
+    }
+  });
+  it("rejects conflicting canonical claims and never exposes another employee's history through legacy evidence", async () => {
+    await expectForbidden(getMySignedOfferApplicationIds(scenario({ associations: [claim(42, 8)] }).db, user, access));
+    const { db } = scenario({ associations: [claim(42), claim(41, 8)], actions: [activation([41, 40])] });
+    await expect(getMySignedOfferApplicationIds(db, user, access)).resolves.toEqual([42, 40]);
+  });
+  it("does not expose a grouped application if another active profile or directory row claims it", async () => {
+    const { db } = scenario({ profiles: [member, { ...member, id: 41, email: "other@example.com", phone: null }], associations: [claim(42), claim(41)], actions: [] });
+    await expect(getMySignedOfferApplicationIds(db, user, access)).resolves.toEqual([42]);
+  });
   it("returns no personal identity for an owner and performs no reads", async () => {
     const { db } = fakeDb([]);
     await expect(
@@ -167,7 +204,7 @@ describe("getMySignedOfferApplicationIds", () => {
       getMySignedOfferApplicationIds(harness.db, user, access)
     ).resolves.toEqual([42, 41]);
     expect(harness.queue).toEqual([]);
-    expect(harness.queries).toHaveLength(3);
+    expect(harness.queries).toHaveLength(4);
     const dialect = new MySqlDialect();
     const activeSql = dialect.sqlToQuery(harness.queries[0].predicates[0]);
     expect(activeSql.sql).toContain("`jobApplications`.`isTeamMember` = ?");
@@ -178,7 +215,8 @@ describe("getMySignedOfferApplicationIds", () => {
       predicates: [],
       limited: false,
     });
-    const auditSql = dialect.sqlToQuery(harness.queries[2].predicates[0]);
+    expect(harness.queries[2].table).toBe(employeeApplicationAssociations);
+    const auditSql = dialect.sqlToQuery(harness.queries[3].predicates[0]);
     expect(auditSql.sql).toContain(
       "`jobApplicationActions`.`applicationId` = ?"
     );
@@ -322,6 +360,18 @@ describe("getMySignedOfferApplicationIds", () => {
     await expectForbidden(getMySignedOfferApplicationIds(db, user, access));
   });
 
+  it.each([null, ""])("rechecks current role permission instead of retaining stale context access (%j)", async role => {
+    const { db } = scenario({ profiles: [{ ...member, role }] });
+    await expectForbidden(getMySignedOfferApplicationIds(db, user, access));
+    expect(db.select).toHaveBeenCalledTimes(1);
+  });
+
+  it("never lets a newly administrative login impersonate an earlier member identity", async () => {
+    const { db } = fakeDb([]);
+    await expectForbidden(getMySignedOfferApplicationIds(db, { ...user, role: "admin" }, access));
+    expect(db.select).not.toHaveBeenCalled();
+  });
+
   it.each(
     [
       [],
@@ -390,7 +440,7 @@ describe("getMySignedOfferApplicationIds", () => {
     await expect(
       getMySignedOfferApplicationIds(db, user, access)
     ).resolves.toEqual([42]);
-    expect(db.select).toHaveBeenCalledTimes(2);
+    expect(db.select).toHaveBeenCalledTimes(3);
   });
 
   it("does not infer a directory link from matching contacts and name", async () => {
@@ -400,7 +450,7 @@ describe("getMySignedOfferApplicationIds", () => {
     await expect(
       getMySignedOfferApplicationIds(db, user, access)
     ).resolves.toEqual([42]);
-    expect(db.select).toHaveBeenCalledTimes(2);
+    expect(db.select).toHaveBeenCalledTimes(3);
   });
 
   it("rejects an inactive linked directory record, even alongside unrelated active rows", async () => {
@@ -411,13 +461,13 @@ describe("getMySignedOfferApplicationIds", () => {
       ],
     });
     await expectForbidden(getMySignedOfferApplicationIds(db, user, access));
-    expect(db.select).toHaveBeenCalledTimes(2);
+    expect(db.select).toHaveBeenCalledTimes(3);
   });
 
   it("rejects multiple directory rows claiming the canonical profile rather than selecting the first", async () => {
     const { db } = scenario({ directory: [employee, { ...employee, id: 8 }] });
     await expectForbidden(getMySignedOfferApplicationIds(db, user, access));
-    expect(db.select).toHaveBeenCalledTimes(2);
+    expect(db.select).toHaveBeenCalledTimes(3);
   });
 
   it("includes archived history only with explicit employee activation evidence, not contact/name similarity", async () => {

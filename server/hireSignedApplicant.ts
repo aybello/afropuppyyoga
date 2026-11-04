@@ -1,9 +1,9 @@
 import { and, desc, eq, isNull } from "drizzle-orm";
-import { employees, jobApplicationActions, jobApplications, signingTokens } from "../drizzle/schema";
+import { employeeApplicationAssociations, employees, jobApplicationActions, jobApplications, signingTokens } from "../drizzle/schema";
 import { isApprovedApyTeamRole, isOperationsManagerRole, normalizeApyRole } from "../shared/apyPermissions";
 import { normalizeCanadianPhoneNumber } from "../shared/phone";
 import { employeeContactsMatch } from "./employeeProfileResolution";
-import { hiringReviewEvidence, hiringReviewSnapshot, inspectHiringDuplicates, issueHiringReviewToken, verifyHiringReviewToken } from "./hiringDuplicateIdentity";
+import { hasHiringOwnershipClaim, hiringReviewEvidence, hiringReviewSnapshot, inspectHiringDuplicates, issueHiringReviewToken, reviewedHiringRecordHash, verifyHiringReviewToken } from "./hiringDuplicateIdentity";
 import { withStaffingMutationLock } from "./staffingMutationLock";
 
 type Actor = { id: number; name: string | null; email: string | null };
@@ -34,11 +34,14 @@ export async function preflightHireSignedApplicant(db: any, applicationId: numbe
     .orderBy(desc(signingTokens.createdAt), desc(signingTokens.id)).limit(1);
   const directory: Array<typeof employees.$inferSelect> = await db.select().from(employees);
   const profiles: Array<typeof jobApplications.$inferSelect> = await db.select().from(jobApplications);
+  const associations: Array<typeof employeeApplicationAssociations.$inferSelect> = await db.select().from(employeeApplicationAssociations);
+  const actions: Array<typeof jobApplicationActions.$inferSelect> = await db.select().from(jobApplicationActions).where(eq(jobApplicationActions.action, "employee_added_after_signature"));
   const inspection = inspectHiringDuplicates(app, profiles, directory);
   const contact = directoryMatches(app, directory);
   const validOffer = Boolean(offer && offer.signed === 1 && normalizeApyRole(offer.role) === normalizeApyRole(app.role)
     && offer.location === app.location && offer.applicantEmail.trim().toLowerCase() === app.email?.trim().toLowerCase());
-  const eligibilityReason = directory.some((employee) => employee.sourceApplicationId === app.id) ? "This person already has an employee record. Manage or restore access from Employee Directory."
+  const reviewedIds = new Set([app.id, ...inspection.conflicts.map((entry) => entry.id)]);
+  const eligibilityReason = hasHiringOwnershipClaim(reviewedIds, directory, associations, actions) ? "This person already has an employee record. Manage or restore access from Employee Directory."
     : app.status !== "accepted" || app.isTeamMember || app.onboardingDeliveryToken ? "Select a signed, accepted applicant with no pending email delivery before adding an employee."
     : !offer || offer.signed !== 1 ? "Wait for the applicant to sign their current Offer Letter and NDA before adding them."
     : !validOffer ? "The current applicant details differ from the signed offer. Review the offer and assignment first."
@@ -49,7 +52,7 @@ export async function preflightHireSignedApplicant(db: any, applicationId: numbe
     : inspection.conflicts.length && !inspection.canReview ? "Another applicant or staff profile uses these contacts. Review the conflicting record before granting access."
     : null;
   const canReview = inspection.canReview && !eligibilityReason;
-  const reviewToken = canReview ? issueHiringReviewToken(actor.id, hiringReviewSnapshot(app, offer, profiles, directory)) : null;
+  const reviewToken = canReview ? issueHiringReviewToken(actor.id, hiringReviewSnapshot(app, offer, profiles, directory, associations)) : null;
   return { ...inspection, canReview, reviewToken, eligible: !eligibilityReason, eligibilityReason,
     directoryMatches: contact.matches.map(directoryView), prospectiveReuse: !contact.blocked && contact.match ? directoryView(contact.match) : null };
 }
@@ -95,12 +98,18 @@ export async function hireSignedApplicant(db: any, applicationId: number, actor:
       throw new Error("The matching Directory record changed. Refresh and review again before granting access.");
     }
     const profiles: Array<typeof jobApplications.$inferSelect> = await tx.select().from(jobApplications).for("update");
+    const associations: Array<typeof employeeApplicationAssociations.$inferSelect> = await tx.select().from(employeeApplicationAssociations).for("update");
+    const actions: Array<typeof jobApplicationActions.$inferSelect> = await tx.select().from(jobApplicationActions).where(eq(jobApplicationActions.action, "employee_added_after_signature")).for("update");
     const inspection = inspectHiringDuplicates(app, profiles, directory);
     if (inspection.conflicts.length > MAX_REVIEWED_DUPLICATES) throw new Error(TOO_MANY_MATCHES);
     if (inspection.conflicts.length && !inspection.canReview) {
       throw new Error("Another applicant or staff profile uses these contacts. Review the conflicting record before granting access.");
     }
-    const snapshot = hiringReviewSnapshot(app, offer, profiles, directory);
+    const reviewedIds = new Set([app.id, ...inspection.conflicts.map((entry) => entry.id)]);
+    if (hasHiringOwnershipClaim(reviewedIds, directory, associations, actions)) {
+      throw new Error("This person already has an employee record. Manage or restore access from Employee Directory.");
+    }
+    const snapshot = hiringReviewSnapshot(app, offer, profiles, directory, associations);
     if (inspection.conflicts.length && (!duplicateReview || duplicateReview.acknowledged !== true
       || !verifyHiringReviewToken(duplicateReview.token, actor.id, snapshot))) {
       throw new Error("Review all matching applications and confirm with a current review token before granting access.");
@@ -117,6 +126,13 @@ export async function hireSignedApplicant(db: any, applicationId: number, actor:
       employeeId = Number(insert.insertId);
     }
     if (!employeeId) throw new Error("The employee record could not be created.");
+    if (inspection.conflicts.length) {
+      const evidence = hiringReviewEvidence(snapshot, employeeId);
+      await tx.insert(employeeApplicationAssociations).values([
+        { applicationId: app.id, employeeId, canonicalApplicationId: app.id, actorUserId: actor.id, actorName: actor.name, actorEmail: actor.email, recordHash: reviewedHiringRecordHash(app) },
+        ...evidence.reviewed.map((entry) => ({ applicationId: entry.applicationId, employeeId, canonicalApplicationId: app.id, actorUserId: actor.id, actorName: actor.name, actorEmail: actor.email, recordHash: entry.recordHash })),
+      ]);
+    }
     await tx.insert(jobApplicationActions).values({
       applicationId: app.id, action: "employee_added_after_signature", fromStatus: app.status, toStatus: "onboarded",
       actorUserId: actor.id, actorName: actor.name, actorEmail: actor.email,

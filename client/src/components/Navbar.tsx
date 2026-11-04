@@ -8,6 +8,7 @@ import { BOOK_URL, LOGO_URL  } from "@/const";
 import { useState, useEffect, useRef } from "react";
 import { ChevronDownIcon, CloseIcon, MenuIcon } from "@/components/PublicIcons";
 import { trackCTAClick } from "@/hooks/useAnalytics";
+import { handleHomeSectionClick, homeSectionHref, scrollToHomeSection } from "./homeSectionNavigation";
 
 
 const primaryLinks = [
@@ -46,6 +47,17 @@ export default function Navbar() {
   const isSubPage = typeof window !== "undefined" && window.location.pathname !== "/";
 
   useEffect(() => {
+    const navigateToHash = () => scrollToHomeSection(window.location.hash);
+    // Wait until the homepage's deferred-section listeners have mounted.
+    const timer = window.setTimeout(navigateToHash, 0);
+    window.addEventListener("hashchange", navigateToHash);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("hashchange", navigateToHash);
+    };
+  }, []);
+
+  useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
@@ -66,13 +78,7 @@ export default function Navbar() {
     setMenuOpen(false);
     setMoreOpen(false);
     if (href.startsWith("#")) {
-      if (isSubPage) {
-        window.location.href = "/" + href;
-      } else {
-        e.preventDefault();
-        const el = document.querySelector(href);
-        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
+      handleHomeSectionClick(e, href);
     }
   };
 
@@ -117,10 +123,9 @@ export default function Navbar() {
                 <li key={link.href}>
                   {link.label === "Memberships" ? (
                     <a
-                      href={isSubPage ? "/#memberships" : link.href}
+                      href={homeSectionHref(link.href)}
                       onClick={(e) => handleNavClick(e, link.href)}
-                      className="px-3 py-1.5 text-sm font-body font-bold rounded-full transition-all duration-200 text-white animate-pulse-subtle"
-                      style={{ background: "linear-gradient(135deg, #D4708A, #8B2252)", boxShadow: "0 2px 12px rgba(212,112,138,0.5), 0 0 20px rgba(139,34,82,0.3)" }}
+                      className="px-3 py-1.5 text-sm font-body font-bold rounded-full transition-colors duration-200 bg-[#F3B4A5] text-[#34221D] hover:bg-[#EBA392] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#34221D]"
                     >
                       {link.label}
                     </a>
@@ -143,7 +148,7 @@ export default function Navbar() {
                     </a>
                   ) : (
                     <a
-                      href={isSubPage ? `/${link.href}` : link.href}
+                      href={homeSectionHref(link.href)}
                       onClick={(e) => handleNavClick(e, link.href)}
                       className={`px-3 py-2 text-sm font-body font-medium rounded-md transition-all duration-200 ${navTextClass} ${navHoverClass}`}
                     >
@@ -153,13 +158,12 @@ export default function Navbar() {
                 </li>
               ))}
 
-              {/* Loyalty — same bright hot pink pill as Memberships */}
+              {/* Rewards uses a warm neutral alongside the coral Memberships pill. */}
               <li>
                 <a
                   href={loyaltyLink.href}
                   onClick={() => { setMenuOpen(false); setMoreOpen(false); }}
-                  className="px-3 py-1.5 text-sm font-body font-bold rounded-full transition-all duration-200 text-white animate-pulse-subtle"
-                  style={{ background: "linear-gradient(135deg, #D4708A, #8B2252)", boxShadow: "0 2px 12px rgba(212,112,138,0.5), 0 0 20px rgba(139,34,82,0.3)" }}
+                  className="px-3 py-1.5 text-sm font-body font-bold rounded-full transition-colors duration-200 bg-[#EAD8C7] text-[#34221D] hover:bg-[#DFC9B5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#34221D]"
                 >
                   {loyaltyLink.label}
                 </a>
@@ -179,8 +183,8 @@ export default function Navbar() {
                     {moreLinks.map((link) => (
                       <a
                         key={link.href}
-                        href={link.href}
-                        onClick={() => setMoreOpen(false)}
+                        href={link.href.startsWith("#") ? homeSectionHref(link.href) : link.href}
+                        onClick={(e) => handleNavClick(e, link.href)}
                         className="block px-4 py-3 text-sm font-body font-medium text-[#1A0A12] hover:bg-[#8B2252]/10 hover:text-[#8B2252] transition-colors"
                       >
                         {link.label}
@@ -243,10 +247,9 @@ export default function Navbar() {
               <li key={link.href}>
                 {link.label === "Memberships" ? (
                   <a
-                    href={isSubPage ? "/#memberships" : link.href}
+                    href={homeSectionHref(link.href)}
                     onClick={(e) => { handleNavClick(e, link.href); setMenuOpen(false); }}
-                    className="block px-4 py-3 font-body font-bold rounded-lg text-white transition-colors"
-                    style={{ background: "linear-gradient(135deg, #8B2252, #8B2252)" }}
+                    className="block px-4 py-3 font-body font-bold rounded-lg transition-colors bg-[#F3B4A5] text-[#34221D] hover:bg-[#EBA392] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#34221D]"
                   >
                     {link.label}
                   </a>
@@ -254,8 +257,7 @@ export default function Navbar() {
                   <a
                     href={link.href}
                     onClick={() => setMenuOpen(false)}
-                    className="block px-4 py-3 font-body font-bold rounded-lg text-white transition-colors animate-pulse-subtle"
-                    style={{ background: "linear-gradient(135deg, #D4708A, #8B2252)" }}
+                    className="block px-4 py-3 font-body font-bold rounded-lg transition-colors bg-[#EAD8C7] text-[#34221D] hover:bg-[#DFC9B5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#34221D]"
                   >
                     {link.label}
                   </a>
@@ -279,7 +281,7 @@ export default function Navbar() {
                   </a>
                 ) : (
                   <a
-                    href={isSubPage ? `/${link.href}` : link.href}
+                    href={homeSectionHref(link.href)}
                     onClick={(e) => { handleNavClick(e, link.href); setMenuOpen(false); }}
                     className="block px-4 py-3 text-[#1A0A12] font-body font-medium rounded-lg hover:bg-[#8B2252]/10 hover:text-[#8B2252] transition-colors"
                   >
