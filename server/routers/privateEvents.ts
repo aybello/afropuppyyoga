@@ -759,7 +759,7 @@ export const privateEventsRouter = router({
             return normalized;
           }),
         eventType: z.string().min(1),
-        guests: z.number().min(1),
+        guests: z.number().int().min(1).max(2000),
         location: z.string().min(1),
         packageType: z.enum(["classic", "signature", "luxury"]),
         preferredDate: z.string().optional().default(""),
@@ -772,10 +772,6 @@ export const privateEventsRouter = router({
     )
     .mutation(async ({ input }) => {
       if (input.eventPreferences) {
-        // Bound the new attendance contract without reinterpreting legacy inputs.
-        if (!Number.isInteger(input.guests) || input.guests > 2000) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Enter a whole-number attendance between 1 and 2000 guests." });
-        }
         const attendanceError = validatePrivateEventAttendance(input.eventPreferences, input.guests);
         if (attendanceError) throw new TRPCError({ code: "BAD_REQUEST", message: attendanceError });
         const expectedPackage = input.eventPreferences.packagePreference === "help_me_choose"

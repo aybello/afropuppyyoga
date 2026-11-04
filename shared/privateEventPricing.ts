@@ -27,15 +27,18 @@ export function estimatePrivateEventPackage(input: {
 }) {
   const band = PRIVATE_EVENT_PACKAGE_BANDS[input.packageType];
   const requiresCustomQuote = input.guests > 20 || privateEventScopeRequiresCustomQuote(input.eventPreferences);
+  if (requiresCustomQuote) return {
+    min: null, max: null, requiresCustomQuote: true as const,
+    breakdown: ["Custom quote required for the full event.", "Final pricing depends on the confirmed scope, date and delivery costs.", PRIVATE_EVENT_TRAVEL_NOTE, PRIVATE_EVENT_CUSTOM_NOTE],
+  };
   return {
     min: band.min,
     max: band.max,
-    requiresCustomQuote,
+    requiresCustomQuote: false as const,
     breakdown: [
       `${band.name}: ${privateEventBandLabel(input.packageType)} (CAD)`,
       "Final pricing depends on the confirmed scope, date and delivery costs.",
       PRIVATE_EVENT_TRAVEL_NOTE,
-      ...(requiresCustomQuote ? [PRIVATE_EVENT_CUSTOM_NOTE] : []),
     ],
   };
 }
@@ -52,7 +55,8 @@ export function formatStoredPrivateEventEstimate(min: number, max: number): stri
 }
 
 export function storedPrivateEventPriceInput(inquiry: { finalPriceCents: number | null; hstCents?: number | null; pricingType: string | null; estimatedMin: number; estimatedMax: number }): string {
-  if (inquiry.finalPriceCents) {
+  if (inquiry.finalPriceCents !== null) {
+    if (inquiry.finalPriceCents <= 0) return "";
     const total = inquiry.finalPriceCents + (inquiry.pricingType === "all_in" ? inquiry.hstCents ?? 0 : 0);
     return String(total / 100);
   }

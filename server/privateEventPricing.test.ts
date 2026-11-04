@@ -38,8 +38,8 @@ describe("approved private-event pricing test bands", () => {
     for (const guests of [21, 40, 41, 200]) {
       const estimate = estimatePrivateEventPackage({ packageType, guests });
       expect(estimate.requiresCustomQuote).toBe(true);
-      expect(estimate.min).toBe(PRIVATE_EVENT_PACKAGE_BANDS[packageType].min);
-      expect(estimate.max).toBe(PRIVATE_EVENT_PACKAGE_BANDS[packageType].max);
+      expect(estimate.min).toBeNull();
+      expect(estimate.max).toBeNull();
       expect(estimate.breakdown.join(" ")).toContain("may exceed");
       expect(estimate.breakdown.join(" ")).not.toMatch(/\+\$\d/);
     }
@@ -85,6 +85,7 @@ describe("approved private-event pricing test bands", () => {
     expect(storedPrivateEventPriceInput({ finalPriceCents: 300000, hstCents: 39000, pricingType: "all_in", estimatedMin: 0, estimatedMax: 0 })).toBe("3390");
     expect(storedPrivateEventPriceInput({ finalPriceCents: 300000, hstCents: 39000, pricingType: "plus_hst", estimatedMin: 0, estimatedMax: 0 })).toBe("3000");
     expect(storedPrivateEventPriceInput({ finalPriceCents: null, pricingType: null, estimatedMin: 0, estimatedMax: 0 })).toBe("");
+    expect(storedPrivateEventPriceInput({ finalPriceCents: 0, pricingType: "plus_hst", estimatedMin: 1500, estimatedMax: 1750 })).toBe("");
     expect(admin).toContain("combinedQuoteInput > 3000");
   });
 });

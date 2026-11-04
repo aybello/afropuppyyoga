@@ -359,7 +359,7 @@ describe("explicit combined event pricing without changing legacy commercial mat
     { ...standardPreferences, durationMinutes: 90 },
     { ...standardPreferences, packagePreference: "help_me_choose" as const },
   ])("stores one $1500 combined event price with three real sessions for scope %j", async eventPreferences => {
-    const bookingDb = createBookingDb({ ...pendingInquiry, notes: formatPrivateEventPreferences(eventPreferences) });
+    const bookingDb = createBookingDb({ ...pendingInquiry, notes: storePrivateEventScope(formatPrivateEventPreferences(eventPreferences)) });
     mocks.getDb.mockResolvedValue(bookingDb);
     const result = await privateEventsRouter.createCaller(context(true)).generateBookingLink({
       ...bookingInput, priceBasis: "event_total",

@@ -46,7 +46,7 @@ export function storePrivateEventScope(summary: string, clientNotes?: string): s
 export function readStoredPrivateEventScope(notes?: string | null): string | undefined {
   if (!notes?.startsWith(STORED_EVENT_SCOPE_PREFIX)) return undefined;
   const scope = notes.slice(STORED_EVENT_SCOPE_PREFIX.length);
-  return scope.startsWith("Preferred experience: ") && scope.includes("\nSchedule: ") && scope.includes("\nVenue choice: ") ? scope : undefined;
+  return scope.trim() ? scope : undefined;
 }
 
 export function privateEventScopeRequiresCustomQuote(preferences?: Partial<PrivateEventPreferences>): boolean {

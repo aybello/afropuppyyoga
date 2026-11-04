@@ -51,6 +51,12 @@ const EVENT_TYPES = [
   "Other",
 ];
 
+const LOUNGE_PACKAGE_CONTENT: Record<PrivateEventPackageType, { desc: string; items: Array<{ emoji: string; text: string }> }> = {
+  classic: { desc: "The core supervised puppy lounge, with scope and staffing agreed for your event.", items: [{ emoji: "", text: "Supervised puppy interaction without guided yoga" }, { emoji: "", text: "Puppies and dedicated handlers" }, { emoji: "", text: "Capacity, operating hours and puppy rest agreed for your scope" }] },
+  signature: { desc: "The puppy lounge with professional photography and an enhanced setup, quoted for your scope.", items: [{ emoji: "", text: "The supervised puppy lounge experience" }, { emoji: "", text: "Professional photography and enhanced setup agreed in your quote" }, { emoji: "", text: "Photo moments and event styling tailored to your scope" }] },
+  luxury: { desc: "A more customized puppy lounge, with styling, content and add-on options agreed in your quote.", items: [{ emoji: "", text: "Customized supervised puppy lounge and staffing plan" }, { emoji: "", text: "Photography, videography and branding options" }, { emoji: "", text: "Add-ons, operating hours and setup confirmed in the final scope" }] },
+};
+
 const LOCATIONS = [
   { value: "kitchener", label: "Kitchener" },
   { value: "cambridge", label: "Cambridge" },
@@ -98,7 +104,7 @@ export default function PrivateEventQuote() {
   const preferencesReady = parsedPreferences.success && !attendanceError;
   const packageCardsCustom = privateEventScopeRequiresCustomQuote(eventPreferences) || guestCount > 20;
   const quoteReady =
-    Number.isInteger(guestCount) && guestCount >= 5 && guestCount <= 2000 && locationKey && eventType && packageType;
+    Number.isInteger(guestCount) && guestCount >= 1 && guestCount <= 2000 && locationKey && eventType && packageType;
 
   const quote = quoteReady
     ? estimatePrivateEventPackage({ guests: guestCount, packageType, eventPreferences })
@@ -169,6 +175,7 @@ export default function PrivateEventQuote() {
               {
                 emoji: "\uD83D\uDC3E",
                 name: "Classic Experience",
+                tier: "classic" as const,
                 price: privateEventBandLabel("classic"),
                 bestFor: "Birthdays, girls' days & intimate private events",
                 desc: "The core studio experience for birthdays, girls' days and intimate wellness events.",
@@ -203,6 +210,7 @@ export default function PrivateEventQuote() {
               {
                 emoji: "\u2728",
                 name: "Signature Experience",
+                tier: "signature" as const,
                 price: privateEventBandLabel("signature"),
                 bestFor:
                   "Bachelorettes, elevated celebrations & premium content",
@@ -240,6 +248,7 @@ export default function PrivateEventQuote() {
               {
                 emoji: "\uD83D\uDC8E",
                 name: "Luxury Experience",
+                tier: "luxury" as const,
                 price: privateEventBandLabel("luxury"),
                 bestFor: "Corporate wellness, brand activations & large groups",
                 desc: "A more customized experience. Larger or more complex events receive a custom quote above this range.",
@@ -299,10 +308,10 @@ export default function PrivateEventQuote() {
                   </span>
                 </div>
                 <p className="font-body text-[#34221D]/80 text-sm mb-5 leading-relaxed">
-                  {preferencesDraft.experience === "puppy_lounge" ? (pkg.name === "Classic Experience" ? "The core supervised puppy lounge, with scope and staffing agreed for your event." : pkg.name === "Signature Experience" ? "The puppy lounge with professional photography and an enhanced setup, quoted for your scope." : "A more customized puppy lounge, with styling, content and add-on options agreed in your quote.") : pkg.desc}
+                  {preferencesDraft.experience === "puppy_lounge" ? LOUNGE_PACKAGE_CONTENT[pkg.tier].desc : pkg.desc}
                 </p>
                 <ul className="space-y-3">
-                  {(preferencesDraft.experience === "puppy_lounge" ? (pkg.name === "Classic Experience" ? [{ emoji: "", text: "Supervised puppy interaction without guided yoga" }, { emoji: "", text: "Puppies and dedicated handlers" }, { emoji: "", text: "Capacity, operating hours and puppy rest agreed for your scope" }] : pkg.items.filter(item => !/mats|Extended puppy interaction/.test(item.text))) : pkg.items).map(item => (
+                  {(preferencesDraft.experience === "puppy_lounge" ? LOUNGE_PACKAGE_CONTENT[pkg.tier].items : pkg.items).map(item => (
                     <li
                       key={item.text}
                       className="flex items-start gap-2 text-sm font-body text-[#34221D]/80 leading-relaxed"
@@ -375,7 +384,7 @@ export default function PrivateEventQuote() {
           </section>
 
           {/* Quote generator */}
-          <section className="min-w-0 scroll-mt-28" id="quote-form">
+          <section className="min-w-0 scroll-mt-28" id="quote-form" tabIndex={-1}>
             <div className="min-w-0">
               <AnimatePresence mode="wait">
                 {step === "submitted" ? (
@@ -532,10 +541,10 @@ export default function PrivateEventQuote() {
                               id="event-total-guests"
                               aria-label="Total expected attendance"
                               type="number"
-                              min="5"
+                              min="1"
                               max="2000"
                               step="1"
-                              placeholder="e.g. 25"
+                              placeholder="e.g. 20"
                               value={guests}
                               onChange={e => setGuests(e.target.value)}
                               className="h-12 md:h-12 w-full min-w-0 bg-[#FEFAF4] text-base md:text-base text-[#34221D] border-[#AA365D]/70 focus:border-[#AA365D] focus-visible:border-[#AA365D] focus-visible:ring-[#AA365D]/20 rounded-xl placeholder:text-[#34221D]/60"

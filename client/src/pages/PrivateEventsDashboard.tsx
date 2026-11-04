@@ -1315,10 +1315,11 @@ export default function PrivateEventsDashboard() {
                   {/* Price + HST */}
                   <div className="mb-4">
                     <label htmlFor="private-quote-price-basis" className="font-body text-xs font-semibold text-foreground mb-1 block">Price entry basis</label>
-                    <select id="private-quote-price-basis" value={bookingForm.priceBasis} onChange={e => setBookingForm({ ...bookingForm, priceBasis: e.target.value as "event_total" | "per_session" })} className="w-full min-h-11 rounded-md border border-border bg-white text-foreground px-3 font-body text-sm">
+                    <select id="private-quote-price-basis" value={bookingForm.priceBasis} onChange={e => setBookingForm({ ...bookingForm, finalPrice: "", priceBasis: e.target.value as "event_total" | "per_session" })} className="w-full min-h-11 rounded-md border border-border bg-white text-foreground px-3 font-body text-sm">
                       <option value="event_total">One combined event price</option>
                       <option value="per_session">Per-session price (legacy entry)</option>
                     </select>
+                    <p className="mt-1 text-xs font-body text-muted-foreground">Changing the price basis clears the amount. Enter the agreed amount for the selected basis.</p>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>

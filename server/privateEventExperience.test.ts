@@ -55,7 +55,8 @@ describe("private event experience and format pricing", () => {
     expect(readStoredPrivateEventScope(summary)).toBeUndefined();
     expect(readStoredPrivateEventScope(null)).toBeUndefined();
     expect(readStoredPrivateEventScope(storePrivateEventScope(summary, "Client request"))).toBe(summary + "\n\nClient notes: Client request");
-    expect(readStoredPrivateEventScope("APY EVENT PREFERENCES v1\nIncomplete")).toBeUndefined();
+    expect(readStoredPrivateEventScope("APY EVENT PREFERENCES v1\nExperience: Puppy lounge\nLocation: Client office")).toContain("Puppy lounge");
+    expect(readStoredPrivateEventScope("APY EVENT PREFERENCES v1\n ")).toBeUndefined();
   });
 });
 
@@ -95,6 +96,8 @@ describe("experience selector and conditional form controls", () => {
     expect(admin).toContain('bookingForm.priceBasis === "event_total" ? 1 : sessionCount');
     expect(admin).toContain("Session count controls the schedule only");
     expect(admin).toContain("One combined event price");
+    expect(admin).toContain('setBookingForm({ ...bookingForm, finalPrice: "", priceBasis: e.target.value');
+    expect(quote).toContain("guestCount >= 1");
   });
 });
 
