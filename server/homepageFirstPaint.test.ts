@@ -58,6 +58,7 @@ describe("homepage first paint", () => {
     }
     expect(image.src).toBe("");
     expect(image.dataset.heroFailed).toBe("true");
+    expect(() => runInNewContext(script, { window: { location: { pathname: "/" } }, document: { getElementById: () => null } })).not.toThrow();
     let queried = false;
     runInNewContext(script, { window: { location: { pathname: "/privacy" } }, document: { getElementById: () => { queried = true; } } });
     expect(queried).toBe(false);

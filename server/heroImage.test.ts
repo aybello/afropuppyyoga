@@ -42,6 +42,8 @@ describe("actual homepage portrait recovery", () => {
     expect(heroImageStateFromShell(null, false)).toEqual(INITIAL_HERO_IMAGE_STATE);
     const exhausted = heroImageStateFromShell(null, true);
     expect(exhausted).toEqual({ index: 4, cycle: 0, failed: true });
+    expect(heroImageStateFromShell("https://untrusted.example/stale.jpg", true)).toEqual(exhausted);
+    expect(heroImageStateFromShell(HERO_IMAGE_SOURCES[0], true)).toEqual(exhausted);
     expect(heroImageReducer(exhausted, { type: "retry" })).toEqual({ index: 0, cycle: 1, failed: false });
   });
 

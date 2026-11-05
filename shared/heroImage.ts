@@ -21,7 +21,7 @@ export const INITIAL_HERO_IMAGE_STATE: HeroImageState = { index: 0, cycle: 0, fa
 
 /** Only a known shell source can seed the React recovery chain. */
 export function heroImageStateFromShell(source: string | null, exhausted: boolean): HeroImageState {
-  if (exhausted && source === null) return { index: HERO_IMAGE_SOURCES.length - 1, cycle: 0, failed: true };
+  if (exhausted) return { index: HERO_IMAGE_SOURCES.length - 1, cycle: 0, failed: true };
   const index = source === null ? -1 : HERO_IMAGE_SOURCES.indexOf(source);
   return index < 0 ? INITIAL_HERO_IMAGE_STATE : { index, cycle: 0, failed: false };
 }

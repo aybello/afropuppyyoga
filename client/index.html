@@ -472,11 +472,13 @@
           "/manus-storage/apy_portrait_golden_cuddle_oct19_d7e4953e.jpg?v=apy-portraits-20261104"
         ];
         let shellSourceIndex = 0;
-        shellPhoto.onerror = () => {
-          if (++shellSourceIndex < shellSources.length) shellPhoto.src = shellSources[shellSourceIndex];
-          else { shellPhoto.dataset.heroFailed = "true"; shellPhoto.removeAttribute("src"); }
-        };
-        shellPhoto.src = shellSources[shellSourceIndex];
+        if (shellPhoto) {
+          shellPhoto.onerror = () => {
+            if (++shellSourceIndex < shellSources.length) shellPhoto.src = shellSources[shellSourceIndex];
+            else { shellPhoto.dataset.heroFailed = "true"; shellPhoto.removeAttribute("src"); }
+          };
+          shellPhoto.src = shellSources[shellSourceIndex];
+        }
       }
     </script>
     <script type="module" src="/src/main.tsx"></script>
