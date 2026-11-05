@@ -33,6 +33,7 @@ const trustedBy: ReadonlyArray<{ name: string; src: string; height: number; opti
   { name: "Manulife", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/manulife_logo_cropped_ecd0a51b.png", height: 40 },
   { name: "Soul Seat", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/soul_seat_logo_cca03879.png", height: 52 },
   { name: "Brock Solutions", src: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/dwXWkrdWFpxsxxJF.png", height: 72 },
+  { name: "Nutram Pet Foods", src: "/manus-storage/nutram-canada-official-blue-transparent_d5a5964e.png", height: 36 },
 ];
 
 function PartnerLogo({ org, copy }: { org: (typeof trustedBy)[number]; copy: number }) {
