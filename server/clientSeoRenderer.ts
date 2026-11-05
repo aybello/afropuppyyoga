@@ -42,10 +42,8 @@ export function isRegisteredSpaPath(pathname: string): boolean {
 export function renderClientSeoHead(template: string, pathname: string, options: { noindex?: boolean } = {}): string {
   // Only normalize paths the client actually accepts; in particular, do not
   // turn malformed or unknown paths into a known marketing page.
-  let decoded = pathname;
-  try { decoded = decodeURI(pathname); } catch { /* Match Wouter's fallback. */ }
   const snapshot = !options.noindex && isRegisteredSpaPath(pathname)
-    ? getPublicSeoSnapshot(decoded.toLowerCase())
+    ? getPublicSeoSnapshot(pathname)
     : undefined;
   const headMatch = template.match(/<head\b[^>]*>[\s\S]*?<\/head>/i);
   if (!headMatch) return template;

@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import express from "express";
+import ts from "typescript";
 import { createServer, type Server } from "node:http";
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -23,6 +24,7 @@ beforeAll(async () => {
   // middleware in their real order without starting the database-backed server.
   app.use((req, res, next) => {
     res.vary("Accept-Encoding");
+    if (req.headers["x-test-noindex"] === "yes") res.set("X-Robots-Tag", "noindex, nofollow");
     if (/^\/(?:admin(?:\/|$)|staff(?:\/|$)|staff-access$|sign$|submit-invoice$)/.test(req.path)) {
       res.set("X-Robots-Tag", "noindex, nofollow, noarchive");
       res.set("Cache-Control", "private, no-store");
@@ -49,12 +51,71 @@ afterAll(async () => {
 
 const get = (url: string, init: RequestInit = {}) => fetch(origin + url, { redirect: "manual", ...init });
 
+// Parse JSX rather than relying on prop order, whitespace, or a single line.
+function extractRoutes(source: string) {
+  const file = ts.createSourceFile("routes.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const routes: string[] = [];
+  const dynamic: string[] = [];
+  function visit(node: ts.Node) {
+    if ((ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) && node.tagName.getText(file) === "Route") {
+      for (const spread of node.attributes.properties.filter(ts.isJsxSpreadAttribute)) dynamic.push(`spread props: ${spread.getText(file)}`);
+      const prop = node.attributes.properties.find(p => ts.isJsxAttribute(p) && p.name.getText(file) === "path");
+      if (prop && ts.isJsxAttribute(prop)) {
+        const value = prop.initializer;
+        if (value && ts.isStringLiteral(value)) routes.push(value.text);
+        else if (value && ts.isJsxExpression(value) && value.expression && ts.isStringLiteral(value.expression)) routes.push(value.expression.text);
+        else dynamic.push(`dynamic path: ${prop.getText(file)}`);
+      }
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(file);
+  return { routes, dynamic };
+}
+
 describe("SPA document routing over HTTP", () => {
   it("tracks every explicit App.tsx route, but not its catch-all", () => {
     const app = readFileSync(new URL("../client/src/App.tsx", import.meta.url), "utf8");
-    const found = [...app.matchAll(/<Route\s+path=\{?["']([^"']+)["']\}?/g)].map(match => match[1]);
-    expect(found.length).toBeGreaterThan(40);
-    expect([...SPA_ROUTE_PATTERNS].sort()).toEqual(found.sort());
+    const { routes, dynamic } = extractRoutes(app);
+    expect(dynamic, `Dynamic Route paths or spread props require manual registry review: ${dynamic.join(", ")}`).toEqual([]);
+    expect(routes.length).toBeGreaterThan(40);
+    expect([...SPA_ROUTE_PATTERNS].sort()).toEqual(routes.sort());
+  });
+  it("detects multiline and reordered JSX props and warns on dynamic paths and spreads", () => {
+    const result = extractRoutes(`<Switch><Route component={Foo}
+ path = {"/multiline"} /><Route component={Bar} path='/other'></Route><Route path={variable} /><Route {...props} /><Route /></Switch>`);
+    expect(result.routes).toEqual(["/multiline", "/other"]);
+    expect(result.dynamic).toHaveLength(2);
+    expect(result.dynamic.join(" ")).toMatch(/dynamic path/);
+    expect(result.dynamic.join(" ")).toMatch(/spread props/);
+  });
+  it("serves identical crawler snapshots for encoded mixed-case GET and HEAD, and refuses explicit noindex", async () => {
+    for (const url of ["/PUPPY-YOGA-GUEL%70H", "/Puppy-Yoga-Guelph/?x=1"]) {
+      const headers = { "user-agent": "Googlebot" };
+      const response = await get(url, { headers });
+      const head = await get(url, { method: "HEAD", headers });
+      const html = await response.text();
+      expect(response.status).toBe(200);
+      expect(html).toContain('<h1>Puppy Yoga in Guelph</h1>');
+      expect(html).not.toContain('id="root"');
+      expect(head.status).toBe(response.status);
+      for (const header of ["content-type", "cache-control", "surrogate-control", "vary", "x-robots-tag"]) expect(head.headers.get(header), header).toBe(response.headers.get(header));
+      expect(response.headers.get("cache-control")).toBe("private, no-store");
+      expect(response.headers.get("vary")).toMatch(/Accept-Encoding/i);
+      expect(response.headers.get("vary")).toMatch(/User-Agent/i);
+      expect(await head.text()).toBe("");
+      const noindexHeaders = { ...headers, "x-test-noindex": "yes" };
+      const blocked = await get(url, { headers: noindexHeaders });
+      const blockedHead = await get(url, { method: "HEAD", headers: noindexHeaders });
+      const blockedHtml = await blocked.text();
+      expect(blockedHtml).toContain('id="root"');
+      expect(blockedHtml).not.toContain('<h1>Puppy Yoga in Guelph</h1>');
+      expect(blockedHtml).not.toContain('rel="canonical"');
+      expect(blockedHtml).toContain('content="noindex, nofollow, noarchive"');
+      expect(blocked.headers.get("x-robots-tag")).toContain("noindex");
+      expect(blockedHead.status).toBe(blocked.status);
+      for (const header of ["cache-control", "surrogate-control", "vary", "x-robots-tag"]) expect(blockedHead.headers.get(header), header).toBe(blocked.headers.get(header));
+    }
   });
   it.each([...SPA_ROUTE_PATTERNS])("serves registered route %s", async pattern => {
     const url = pattern.replace(":id", "example-42");
@@ -73,7 +134,7 @@ describe("SPA document routing over HTTP", () => {
     expect(body).not.toContain('rel="canonical"');
   });
   it("protects registered staff and parameterized routes even for Googlebot", async () => {
-    for (const url of ["/staff", "/staff-access?token=example", "/admin-login", "/ADMIN-LOGIN/", "/admin/breeder-leads/AbC123?source=test", "/STAFF/training", "/st%61ff-access", "/SIGN", "/submit-invoice"]) {
+    for (const url of ["/staff", "/staff-access?token=example", "/admin-login", "/ADMIN-LOGIN/", "/%61DMIN-login", "/%61DMIN/breeder-leads/Mixed", "/admin/breeder-leads/AbC123?source=test", "/STAFF/training", "/st%61ff-access", "/SIGN", "/submit-invoice"]) {
       const response = await get(url, { headers: { "user-agent": "Googlebot" } });
       expect(response.status).toBe(200);
       expect(response.headers.get("x-robots-tag")).toContain("noindex");
@@ -85,6 +146,11 @@ describe("SPA document routing over HTTP", () => {
       expect(body).not.toContain('rel="canonical"');
       expect(body).not.toContain('property="og:url"');
       expect(body).toContain("<title>AfroPuppyYoga</title>");
+      expect(body).not.toContain('<meta name="robots" content="index, follow"');
+      const head = await get(url, { method: "HEAD", headers: { "user-agent": "Googlebot" } });
+      expect(head.status, url).toBe(response.status);
+      for (const header of ["cache-control", "surrogate-control", "x-robots-tag", "vary"]) expect(head.headers.get(header), `${url} ${header}`).toBe(response.headers.get(header));
+      expect(await head.text()).toBe("");
     }
   });
   it.each(["Googlebot", "Mozilla/5.0"])("serves correct uppercase Guelph metadata for %s", async agent => {
@@ -111,11 +177,16 @@ describe("SPA document routing over HTTP", () => {
     }
   });
   it("does not accept malformed parameterized or prototype paths", async () => {
-    for (const url of ["/admin/breeder-leads/123/extra", "/constructor", "/missing//", "/careers//"]) {
+    for (const url of ["/admin/breeder-leads/123/extra", "/constructor", "/missing//", "/careers//", "/puppy-yoga-guelph%2F"]) {
       for (const agent of ["Googlebot", "Mozilla/5.0"]) {
         expect((await get(url, { headers: { "user-agent": agent } })).status).toBe(404);
       }
     }
+  });
+  it("refuses malformed escapes without leaking a snapshot", async () => {
+    const response = await get("/careers%ZZ", { headers: { "user-agent": "Googlebot" } });
+    expect([400, 404]).toContain(response.status);
+    expect(await response.text()).not.toContain("Careers at AfroPuppyYoga | Join Our Team");
   });
   it("matches Wouter's case, decodeURI and single-trailing-slash rules", () => {
     expect(isRegisteredSpaPath("/STAFF/TRAINING/")).toBe(true);

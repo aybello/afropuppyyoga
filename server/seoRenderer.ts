@@ -1448,10 +1448,39 @@ const PAGES: Record<string, () => string> = {
     }),
 };
 
-/** Return a snapshot only for an explicitly defined public marketing route. */
+/** Return only an explicit public page, using Wouter's decoding and slash rules. */
 export function getPublicSeoSnapshot(path: string): string | undefined {
-  const normalized = path === "/" ? path : path.replace(/\/+$/, "");
+  let decoded: string;
+  try { decoded = decodeURI(path); } catch { return undefined; }
+  if (!decoded.startsWith("/")) return undefined;
+  const normalized = decoded.toLowerCase().replace(/\/$/, "") || "/";
+  // Wouter permits at most one trailing slash, including at the root.
+  if (decoded !== "/" && normalized.endsWith("/")) return undefined;
   return Object.hasOwn(PAGES, normalized) ? PAGES[normalized]() : undefined;
+}
+
+/** Apply internal document protections before any crawler snapshot is considered. */
+export function protectInternalDocument(req: Request, res: Response): boolean {
+  let pathname = (req.originalUrl || req.path).split("?", 1)[0];
+  try { pathname = decodeURI(pathname); } catch { /* Match Wouter's fallback. */ }
+  pathname = pathname.toLowerCase().replace(/\/+$/, "") || "/";
+  if (pathname === "/admin" || pathname.startsWith("/admin/") ||
+      pathname === "/staff" || pathname.startsWith("/staff/") ||
+      ["/admin-login", "/staff-login", "/staff-access", "/submit-invoice", "/sign", "/predictor",
+        "/breeder-calculator", "/breeder-availability", "/404"].includes(pathname)) {
+    res.set({
+      "X-Robots-Tag": "noindex, nofollow, noarchive",
+      "Cache-Control": "private, no-store",
+      "Surrogate-Control": "no-store",
+      "Referrer-Policy": "no-referrer",
+    });
+    return true;
+  }
+  return false;
+}
+
+export function hasNoindex(res: Response): boolean {
+  return /\bnoindex\b/i.test(String(typeof res.getHeader === "function" ? res.getHeader("X-Robots-Tag") || "" : ""));
 }
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
@@ -1461,23 +1490,21 @@ export function seoRenderMiddleware(
   res: Response,
   next: NextFunction
 ) {
-  // Only handle GET requests for HTML pages (not API, assets, etc.)
-  if (req.method !== "GET") return next();
+  if (req.method !== "GET" && req.method !== "HEAD") return next();
+  const protectedDocument = protectInternalDocument(req, res);
+  if (protectedDocument || hasNoindex(res)) return next();
   if (req.path.startsWith("/api/")) return next();
-  if (req.path.startsWith("/admin/")) return next();
   if (req.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|map|json|xml|txt)$/)) return next();
 
   // Only serve to crawlers
   if (!isCrawler(req)) return next();
 
-  const normalizedPath = req.path === "/" ? req.path : req.path.replace(/\/$/, "");
-  const pageFn = Object.hasOwn(PAGES, normalizedPath) ? PAGES[normalizedPath] : undefined;
+  const html = getPublicSeoSnapshot((req.originalUrl || req.path).split("?", 1)[0]);
 
   // A snapshot list is not an exhaustive SPA/server route registry. Unknown
   // paths (including staff, signing, and future routes) must reach the app.
-  if (!pageFn) return next();
+  if (!html) return next();
 
-  const html = pageFn();
   // Preserve upstream cache variation (for example, Accept-Encoding).
   const existingVary = typeof res.getHeader === "function" ? res.getHeader("Vary") : undefined;
   const vary = Array.isArray(existingVary) ? existingVary.join(", ") : String(existingVary || "");

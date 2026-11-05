@@ -56,6 +56,13 @@ describe("public initial-document SEO", () => {
       expect(renderClientSeoHead(template, path)).not.toContain('rel="canonical"');
     }
   });
+  it("uses one decodeURI pass and only exact public page keys for snapshots", () => {
+    const guelph = getPublicSeoSnapshot("/puppy-yoga-guelph");
+    expect(getPublicSeoSnapshot("/PUPPY-YOGA-GUEL%70H/")).toBe(guelph);
+    for (const path of ["/puppy-yoga-guel%2570h", "/puppy-yoga-guelph%2F", "/puppy-yoga-guelph//", "/careers%ZZ", "//", "/constructor", "/__proto__"]) {
+      expect(getPublicSeoSnapshot(path), path).toBeUndefined();
+    }
+  });
   it("aligns private shell robots and removes misleading homepage metadata", () => {
     const result = renderClientSeoHead(template, "/ADMIN-LOGIN", { noindex: true });
     expect(result).toContain('<meta name="robots" content="noindex, nofollow, noarchive"');

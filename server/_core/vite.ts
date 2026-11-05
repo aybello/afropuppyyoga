@@ -5,32 +5,11 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import viteConfig from "../../vite.config";
 import { isRegisteredSpaPath, renderClientSeoHead } from "../clientSeoRenderer";
-import { getPublicSeoSnapshot, isCrawler } from "../seoRenderer";
+import { getPublicSeoSnapshot, hasNoindex, isCrawler, protectInternalDocument } from "../seoRenderer";
 import {
   getDocumentCacheControl,
   getDocumentSurrogateCacheControl,
 } from "../publicDocumentCache";
-
-// Wouter matches case-insensitively and decodes URI path characters. Mirror the
-// earlier security middleware for variant spellings that it may not recognize.
-function protectInternalDocument(req: express.Request, res: express.Response): boolean {
-  let pathname = req.originalUrl.split("?", 1)[0];
-  try { pathname = decodeURI(pathname); } catch { /* Match Wouter's fallback. */ }
-  pathname = pathname.toLowerCase().replace(/\/+$/, "") || "/";
-  if (pathname === "/admin" || pathname.startsWith("/admin/") ||
-      pathname === "/staff" || pathname.startsWith("/staff/") ||
-      ["/admin-login", "/staff-login", "/staff-access", "/submit-invoice", "/sign", "/predictor",
-        "/breeder-calculator", "/breeder-availability", "/404"].includes(pathname)) {
-    res.set({
-      "X-Robots-Tag": "noindex, nofollow, noarchive",
-      "Cache-Control": "private, no-store",
-      "Surrogate-Control": "no-store",
-      "Referrer-Policy": "no-referrer",
-    });
-    return true;
-  }
-  return false;
-}
 
 // Server routes, redirects and static assets get first refusal before this check.
 function rejectUnknownDocument(req: express.Request, res: express.Response): boolean {
@@ -49,10 +28,10 @@ function rejectUnknownDocument(req: express.Request, res: express.Response): boo
   return true;
 }
 
-// The preceding crawler middleware handles GET only. A HEAD for the same URL
-// must describe that snapshot, not a differently cached browser SPA shell.
+// If the primary crawler middleware is absent, describe the same public
+// snapshot for HEAD rather than a differently cached browser SPA shell.
 function serveCrawlerHead(req: express.Request, res: express.Response): boolean {
-  if (req.method !== "HEAD" || !isCrawler(req)) return false;
+  if (req.method !== "HEAD" || hasNoindex(res) || !isCrawler(req)) return false;
   const pathname = req.originalUrl.split("?", 1)[0];
   if (!isRegisteredSpaPath(pathname)) return false;
   const snapshot = getPublicSeoSnapshot(pathname);
@@ -86,8 +65,9 @@ export async function setupVite(app: Express, server: Server) {
   app.use(vite.middlewares);
   app.use("*", async (req, res, next) => {
     if (rejectUnknownDocument(req, res)) return;
-    if (serveCrawlerHead(req, res)) return;
-    const noindex = protectInternalDocument(req, res) || /\bnoindex\b/i.test(String(res.getHeader("X-Robots-Tag") || ""));
+    const internal = protectInternalDocument(req, res);
+    const noindex = internal || hasNoindex(res);
+    if (!noindex && serveCrawlerHead(req, res)) return;
     const url = req.originalUrl;
 
     try {
@@ -152,8 +132,9 @@ export function serveStatic(app: Express, staticDirectory?: string) {
   // strips the wildcard mount from req.path; retain the original pathname.
   app.use("*", async (req, res, next) => {
     if (rejectUnknownDocument(req, res)) return;
-    if (serveCrawlerHead(req, res)) return;
-    const noindex = protectInternalDocument(req, res) || /\bnoindex\b/i.test(String(res.getHeader("X-Robots-Tag") || ""));
+    const internal = protectInternalDocument(req, res);
+    const noindex = internal || hasNoindex(res);
+    if (!noindex && serveCrawlerHead(req, res)) return;
     try {
       const pathname = req.originalUrl.split("?", 1)[0];
       const template = await fs.promises.readFile(path.resolve(distPath, "index.html"), "utf-8");
