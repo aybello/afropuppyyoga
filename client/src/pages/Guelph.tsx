@@ -372,12 +372,12 @@ export default function Guelph() {
                   role="status"
                   className="font-body text-xs text-muted-foreground"
                 >
-                  {calendarLoaded ? "Live calendar" : "Loading calendar..."}
+                  {calendarLoaded ? "Calendar frame loaded" : "Loading calendar..."}
                 </span>
               </div>
               <iframe
                 src={attributedCalendarUrl}
-                title="AfroPuppyYoga live class calendar, including Guelph events"
+                title="Shared AfroPuppyYoga class calendar on Luma"
                 width="100%"
                 height="500"
                 loading="lazy"

@@ -176,6 +176,8 @@ describe("private event public experience content", () => {
     const { schemas } = crawl(route);
     const business = schemas.find(schema => schema["@type"] === "LocalBusiness");
     expect(business).toBeDefined();
-    expect(business.priceRange).toBe("$$");
+    expect(business).not.toHaveProperty("priceRange");
+    expect(business).not.toHaveProperty("openingHoursSpecification");
+    expect(business).not.toHaveProperty("geo");
   });
 });

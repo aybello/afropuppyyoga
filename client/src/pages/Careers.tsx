@@ -28,6 +28,13 @@ import {
 } from "@/lib/localVideoPreview";
 import { createSubmissionKey } from "@/lib/submissionKey";
 import {
+  EXPERIENCE_LIMIT,
+  WHY_APY_LIMIT,
+  validateCareerApplication,
+  validateVideoFile,
+  validateVideoLink,
+} from "./careerApplicationValidation";
+import {
   MapPin,
   Clock,
   Heart,
@@ -480,8 +487,13 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 500 * 1024 * 1024) {
-      setError("Video must be under 500MB.");
+    const fileError = validateVideoFile(file);
+    if (fileError) {
+      e.target.value = "";
+      setVideoFile(null);
+      setUploadedVideo(null);
+      setVideoPreviewError(null);
+      setError(fileError);
       return;
     }
     setVideoFile(file);
@@ -513,52 +525,15 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
     e.preventDefault();
     setError(null);
 
-    if (!form.name || !form.email) {
-      setError("Name and email are required.");
+    const validationError = validateCareerApplication({
+      form, resumeFile, videoMode, videoFile, videoLink,
+    });
+    if (validationError) {
+      setError(validationError);
       return;
     }
-    if (!resumeFile) {
-      setError(
-        "A resume is required. Please upload your resume (PDF or Word)."
-      );
-      return;
-    }
-    // Video is required
-    if (videoMode === "upload" && !videoFile) {
-      setError(
-        "A video introduction is required. Please upload a video or paste a link."
-      );
-      return;
-    }
-    if (videoMode === "link") {
-      const trimmed = videoLink.trim();
-      if (!trimmed) {
-        setError(
-          "A video introduction is required. Please upload a video or paste a link."
-        );
-        return;
-      }
-      try {
-        const videoUrl = new URL(trimmed);
-        if (videoUrl.protocol !== "https:") {
-          throw new Error("Please use a secure https:// video link.");
-        }
-        if (
-          videoUrl.hostname === "linkedin.com" ||
-          videoUrl.hostname.endsWith(".linkedin.com")
-        ) {
-          throw new Error(
-            "LinkedIn profile links are not video submissions. Please use a viewable YouTube, Google Drive, Dropbox, Loom, or similar video link."
-          );
-        }
-      } catch (linkError: any) {
-        setError(
-          linkError?.message ??
-            "Please enter a valid secure video URL (e.g. a YouTube, Google Drive, Dropbox, or Loom link)."
-        );
-        return;
-      }
-    }
+    // The preflight requires a resume; keep the narrowing local to this flow.
+    if (!resumeFile) return;
 
     // Helper: upload a small file with XHR for progress tracking (used for resume)
     const uploadWithProgress = (
@@ -841,8 +816,8 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
     applyMutation.mutate({
       role: job.title,
       location: job.locationCode,
-      name: form.name,
-      email: form.email,
+      name: form.name.trim(),
+      email: form.email.trim(),
       phone: form.phone || undefined,
       whyAPY: form.whyAPY || undefined,
       experience: form.experience || undefined,
@@ -908,6 +883,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
             {error && (
               <div
                 ref={errorRef}
+                role="alert"
                 className="p-3 bg-red-50 border border-red-200 rounded-xl"
               >
                 <p className="font-body text-base text-red-600">{error}</p>
@@ -970,6 +946,9 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                 rows={3}
                 className="w-full px-4 py-2.5 bg-white border border-input rounded-xl font-body text-base text-[#34221D] placeholder:text-[#71574F] focus:outline-none focus:border-brand-link focus:ring-1 focus:ring-brand-link/30 transition-colors resize-none"
               />
+              <p className={`mt-1 font-body text-xs ${form.whyAPY.length > WHY_APY_LIMIT ? "text-red-600" : "text-[#71574F]"}`}>
+                {form.whyAPY.length} / {WHY_APY_LIMIT} characters
+              </p>
             </div>
 
             <div>
@@ -983,6 +962,9 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                 rows={3}
                 className="w-full px-4 py-2.5 bg-white border border-input rounded-xl font-body text-base text-[#34221D] placeholder:text-[#71574F] focus:outline-none focus:border-brand-link focus:ring-1 focus:ring-brand-link/30 transition-colors resize-none"
               />
+              <p className={`mt-1 font-body text-xs ${form.experience.length > EXPERIENCE_LIMIT ? "text-red-600" : "text-[#71574F]"}`}>
+                {form.experience.length} / {EXPERIENCE_LIMIT} characters
+              </p>
             </div>
 
             {/* Resume Upload */}
@@ -1087,7 +1069,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="video/*"
+                accept=".mp4,.mov,.webm,.avi"
                 onChange={handleVideoChange}
                 className="hidden"
               />
@@ -1190,14 +1172,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                     link".
                   </p>
                   {videoLink.trim() &&
-                    (() => {
-                      try {
-                        new URL(videoLink.trim());
-                        return true;
-                      } catch {
-                        return false;
-                      }
-                    })() && (
+                    !validateVideoLink(videoLink) && (
                       <div className="flex items-center gap-2 p-2.5 bg-[#FDE9EF] border border-[#E8D8D0] rounded-xl">
                         <CheckCircle
                           size={16}

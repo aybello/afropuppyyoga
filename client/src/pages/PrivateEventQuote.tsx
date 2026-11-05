@@ -157,7 +157,7 @@ export default function PrivateEventQuote() {
             Private Events
           </p>
           <h2 id="private-event-packages-title" className="font-display text-[clamp(2.5rem,4.5vw,3.75rem)] leading-[1.08] font-medium tracking-[-0.035em] text-[#34221D] mb-4 [text-wrap:pretty]">
-            Choose Your <span className="italic text-[#AA365D]">Package Level</span>
+            Private &amp; Corporate Puppy Yoga <span className="italic text-[#AA365D]">Packages in Ontario</span>
           </h2>
           <p className="font-body text-[#34221D]/80 text-base sm:text-lg leading-relaxed max-w-2xl">
             Classic is the core experience, Signature adds professional photography and enhanced setup, and Luxury is more customized. These are our standard studio puppy yoga packages and reference price bands. Custom formats are quoted separately.
@@ -243,7 +243,7 @@ export default function PrivateEventQuote() {
                 name: "Luxury Experience",
                 price: privateEventBandLabel("luxury"),
                 bestFor: "Corporate wellness, brand activations & large groups",
-                desc: "A more customized experience. Larger or more complex events receive a custom quote above this range.",
+                desc: "A more customized experience. The reference range is for standard 60-minute studio puppy yoga for up to 20 guests. Groups of 21 or more and other custom formats require a quote for the full event; it may exceed this range.",
                 color: "border-[#F29CB8]/50",
                 badge: "bg-[#FDE9EF] text-[#34221D]",
                 items: [
@@ -422,9 +422,7 @@ export default function PrivateEventQuote() {
                         Inquiry Received! 🎉
                       </h2>
                       <p className="font-body text-[#34221D]/80 text-lg max-w-md mx-auto mb-2">
-                        We've received your event details and will be in touch
-                        within <strong>24 hours</strong> with a formal quote and
-                        availability.
+                        We've received your event details and will follow up with a formal quote and availability.
                       </p>
                       <p className="font-body text-[#34221D]/80 text-sm max-w-sm mx-auto mb-10 break-words">
                         Check your inbox — a confirmation has been sent to{" "}
@@ -444,7 +442,7 @@ export default function PrivateEventQuote() {
                           },
                           {
                             step: "3",
-                            text: "You receive a formal quote within 24 hrs",
+                            text: "We follow up with a formal quote and availability",
                           },
                         ].map(item => (
                           <div
@@ -708,8 +706,7 @@ export default function PrivateEventQuote() {
                           Your Contact Info
                         </h3>
                         <p className="font-body text-[#34221D]/80 text-sm -mt-2">
-                          We'll follow up with a formal quote and availability
-                          within 24 hours.
+                          We'll follow up with a formal quote and availability.
                         </p>
 
                         <div className="grid sm:grid-cols-2 gap-x-5 gap-y-6">
@@ -852,7 +849,7 @@ export default function PrivateEventQuote() {
                       </Button>
 
                       <p className="text-center font-body text-[#34221D]/80 text-sm">
-                        No commitment required. We'll respond within 24 hours.
+                        No commitment required. We'll follow up with a formal quote and availability.
                       </p>
 
                       {/* What happens next */}
@@ -871,8 +868,7 @@ export default function PrivateEventQuote() {
                             <span className="text-[#AA365D] font-bold shrink-0">
                               2.
                             </span>{" "}
-                            We'll follow up within 24–48 hours with a formal
-                            quote and availability.
+                            We'll follow up with a formal quote and availability.
                           </li>
                           <li className="flex items-start gap-2 font-body text-sm text-[#34221D]/80">
                             <span className="text-[#AA365D] font-bold shrink-0">

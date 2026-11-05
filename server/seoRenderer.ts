@@ -5,7 +5,7 @@
  * HTML page with all key content baked in — no JavaScript required.
  * Real users always get the normal React SPA.
  *
- * This follows Google's recommended "dynamic rendering" pattern for SPAs:
+ * Dynamic rendering is a legacy workaround, not a substitute for unified SSR:
  * https://developers.google.com/search/docs/crawling-indexing/javascript/dynamic-rendering
  */
 
@@ -122,6 +122,15 @@ function buildHtml(opts: {
 </head>
 <body>
 ${opts.body}
+<nav aria-label="Explore AfroPuppyYoga">
+  <a href="/puppy-yoga-kitchener">Kitchener</a>
+  <a href="/puppy-yoga-hamilton">Hamilton</a>
+  <a href="/puppy-yoga-oakville">Oakville</a>
+  <a href="/puppy-yoga-guelph">Guelph</a>
+  <a href="/private-puppy-yoga-events">Private events</a>
+  <a href="/corporate-puppy-yoga">Corporate events</a>
+  <a href="/private-events/quote">Request a quote</a>
+</nav>
 </body>
 </html>`;
 }
@@ -196,7 +205,6 @@ const LOCAL_BUSINESS_SCHEMA = {
   image: OG_IMAGE,
   telephone: "+12897881885",
   email: "afropuppyyoga@gmail.com",
-  priceRange: "$$",
   currenciesAccepted: "CAD",
   paymentAccepted: "Credit Card",
   address: {
@@ -349,17 +357,6 @@ const PAGES: Record<string, () => string> = {
           ],
         },
         breadcrumb(),
-        // Review schema — 6 verified guest reviews
-        { "@context": "https://schema.org", "@type": "Review", itemReviewed: { "@type": "LocalBusiness", name: "AfroPuppyYoga", url: BASE }, author: { "@type": "Person", name: "Sheila Soares" }, reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" }, reviewBody: "So fun and well run! Highly recommend this experience. The puppies were adorable and the yoga instructor was amazing. Will definitely be back!", datePublished: "2025-06-01" },
-        { "@context": "https://schema.org", "@type": "Review", itemReviewed: { "@type": "LocalBusiness", name: "AfroPuppyYoga", url: BASE }, author: { "@type": "Person", name: "Cameron T." }, reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" }, reviewBody: "Absolutely incredible experience! The Afro-beat music, the puppies, the yoga \u2014 everything was perfectly curated. I've never felt so relaxed and happy at the same time.", datePublished: "2025-05-01" },
-        { "@context": "https://schema.org", "@type": "Review", itemReviewed: { "@type": "LocalBusiness", name: "AfroPuppyYoga", url: BASE }, author: { "@type": "Person", name: "Priya M." }, reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" }, reviewBody: "Brought my whole friend group for a birthday celebration and everyone LOVED it. The staff were so welcoming and the puppies were pure joy. 10/10 would recommend!", datePublished: "2025-04-01" },
-        { "@context": "https://schema.org", "@type": "Review", itemReviewed: { "@type": "LocalBusiness", name: "AfroPuppyYoga", url: BASE }, author: { "@type": "Person", name: "Jessica L." }, reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" }, reviewBody: "I was nervous as a yoga beginner but the instructor made it so accessible and fun. The puppies kept interrupting my poses in the best way possible. Laughed the whole time!", datePublished: "2025-04-01" },
-        { "@context": "https://schema.org", "@type": "Review", itemReviewed: { "@type": "LocalBusiness", name: "AfroPuppyYoga", url: BASE }, author: { "@type": "Person", name: "Marcus R." }, reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" }, reviewBody: "Took my partner here for our anniversary. The vibe was immaculate \u2014 Afro beats, cute puppies, good energy. We're already planning our next visit.", datePublished: "2025-03-01" },
-        { "@context": "https://schema.org", "@type": "Review", itemReviewed: { "@type": "LocalBusiness", name: "AfroPuppyYoga", url: BASE }, author: { "@type": "Person", name: "Aisha B." }, reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" }, reviewBody: "As someone who does yoga regularly, this was such a refreshing twist. The cultural element with the music and the warmth of the instructors made it feel truly special.", datePublished: "2025-02-01" },
-        // VideoObject schema — 3 Instagram reels with valid contentUrl and duration
-        { "@context": "https://schema.org", "@type": "VideoObject", name: "AfroPuppyYoga Guest Review \u2014 What Our Guests Are Saying", description: "A guest shares their experience at AfroPuppyYoga puppy yoga class in Ontario.", thumbnailUrl: OG_IMAGE, contentUrl: "https://www.instagram.com/reel/DV99b-vDPCy/", embedUrl: "https://www.instagram.com/reel/DV99b-vDPCy/embed", uploadDate: "2025-05-01", duration: "PT0M45S", publisher: { "@type": "Organization", name: "AfroPuppyYoga", url: BASE } },
-        { "@context": "https://schema.org", "@type": "VideoObject", name: "AfroPuppyYoga Guest Review \u2014 Another Happy Guest", description: "Another happy guest shares their AfroPuppyYoga experience.", thumbnailUrl: OG_IMAGE, contentUrl: "https://www.instagram.com/reel/DVKKYGIEa4-/", embedUrl: "https://www.instagram.com/reel/DVKKYGIEa4-/embed", uploadDate: "2025-04-01", duration: "PT0M38S", publisher: { "@type": "Organization", name: "AfroPuppyYoga", url: BASE } },
-        { "@context": "https://schema.org", "@type": "VideoObject", name: "AfroPuppyYoga \u2014 Fun Times at Puppy Yoga", description: "Fun and joyful moments from AfroPuppyYoga classes.", thumbnailUrl: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/YsmvRsuruPouMOgB.jpg", contentUrl: "https://www.instagram.com/reel/DZ7SyjbRYPb/", embedUrl: "https://www.instagram.com/reel/DZ7SyjbRYPb/embed", uploadDate: "2025-06-15", duration: "PT0M30S", publisher: { "@type": "Organization", name: "AfroPuppyYoga", url: BASE } },
       ],
       body: `
 <header>
@@ -577,7 +574,7 @@ const PAGES: Record<string, () => string> = {
   <p>Interested in hosting a private event? <a href="/private-events/quote">Get an instant quote.</a></p>
 </main>
 <footer>
-  <a href="/">Home</a> | <a href="/birthday">Birthday Packages</a> | <a href="/ethics">Ethical Standards</a> | <a href="/careers">Careers</a>
+  <a href="/">Home</a> | <a href="/private-events/quote">Birthday Packages</a> | <a href="/ethics">Ethical Standards</a> | <a href="/careers">Careers</a>
 </footer>
 `,
     }),
@@ -682,7 +679,7 @@ const PAGES: Record<string, () => string> = {
   <p><a href="/">Back to Home</a> | <a href="/careers">Join Our Team</a></p>
 </main>
 <footer>
-  <a href="/">Home</a> | <a href="/birthday">Birthday Packages</a> | <a href="/partnerships">Partnerships</a> | <a href="/loyalty">Loyalty Program</a> | <a href="/careers">Careers</a>
+  <a href="/">Home</a> | <a href="/private-events/quote">Birthday Packages</a> | <a href="/partnerships">Partnerships</a> | <a href="/loyalty">Loyalty Program</a> | <a href="/careers">Careers</a>
 </footer>
 `,
     }),
@@ -971,10 +968,10 @@ const PAGES: Record<string, () => string> = {
     <dd>Yes. We offer offsite events across the GTA and ${PUBLIC_LOCATION_LIST}, subject to availability. ${PRIVATE_EVENT_TRAVEL_NOTE}</dd>
   </dl>
 
-  <p><a href="/private-events/quote">Get an Instant Quote</a> | <a href="/corporate-puppy-yoga">Corporate Events</a> | <a href="/birthday">Birthday Packages</a></p>
+  <p><a href="/private-events/quote">Get an Instant Quote</a> | <a href="/corporate-puppy-yoga">Corporate Events</a> | <a href="/private-events/quote">Birthday Packages</a></p>
 </main>
 <footer>
-  <a href="/">Home</a> | <a href="/private-events/quote">Get a Quote</a> | <a href="/corporate-puppy-yoga">Corporate</a> | <a href="/birthday">Birthday</a> | <a href="/puppy-yoga-kitchener">Kitchener</a> | <a href="/puppy-yoga-hamilton">Hamilton</a> | <a href="/puppy-yoga-oakville">Oakville</a>
+  <a href="/">Home</a> | <a href="/private-events/quote">Get a Quote</a> | <a href="/corporate-puppy-yoga">Corporate</a> | <a href="/private-events/quote">Birthday</a> | <a href="/puppy-yoga-kitchener">Kitchener</a> | <a href="/puppy-yoga-hamilton">Hamilton</a> | <a href="/puppy-yoga-oakville">Oakville</a>
 </footer>
 `,
     }),
@@ -992,7 +989,7 @@ const PAGES: Record<string, () => string> = {
           "@type": "LocalBusiness",
           "@id": `${BASE}/puppy-yoga-kitchener#business`,
           name: "AfroPuppyYoga — Kitchener-Waterloo",
-          description: "Puppy yoga classes in Kitchener-Waterloo at TenC Dance Studio. Guided yoga with adorable puppies and Afro-beat music every weekend.",
+          description: "Puppy yoga classes in Kitchener-Waterloo at TenC Dance Studio. Guided yoga with adorable puppies and Afro-beat music.",
           url: `${BASE}/puppy-yoga-kitchener`,
           telephone: "+12897881885",
           address: {
@@ -1003,14 +1000,7 @@ const PAGES: Record<string, () => string> = {
             postalCode: "N2G 2L3",
             addressCountry: "CA",
           },
-          geo: { "@type": "GeoCoordinates", latitude: 43.4516, longitude: -80.4925 },
           image: OG_IMAGE,
-          openingHoursSpecification: [
-            { "@type": "OpeningHoursSpecification", dayOfWeek: "Saturday", opens: "09:00", closes: "18:00" },
-            { "@type": "OpeningHoursSpecification", dayOfWeek: "Sunday", opens: "09:00", closes: "18:00" },
-          ],
-          priceRange: "$$",
-          servesCuisine: "Wellness",
           sameAs: ["https://www.instagram.com/afropuppyyoga", "https://www.tiktok.com/@afropuppyyoga"],
         },
         {
@@ -1059,7 +1049,7 @@ const PAGES: Record<string, () => string> = {
 </header>
 <main>
   <h2>Ontario's #1 Puppy Yoga Experience — Now in Kitchener-Waterloo</h2>
-  <p>AfroPuppyYoga brings guided yoga, Afro-beat rhythms, and a litter of adorable puppies to downtown Kitchener every weekend. Whether you're a seasoned yogi or a complete beginner, our classes are designed to be joyful, accessible, and deeply relaxing.</p>
+  <p>AfroPuppyYoga brings guided yoga, Afro-beat rhythms, and a litter of adorable puppies to downtown Kitchener. Whether you're a seasoned yogi or a complete beginner, our classes are designed to be joyful, accessible, and deeply relaxing.</p>
   <p>Classes are held at <strong>TenC Dance Studio, 329 King St E, Kitchener, ON N2G 2L3</strong>.</p>
 
   <h3>What to Expect</h3>
@@ -1133,13 +1123,7 @@ const PAGES: Record<string, () => string> = {
             postalCode: "L8E 2J8",
             addressCountry: "CA",
           },
-          geo: { "@type": "GeoCoordinates", latitude: 43.2255, longitude: -79.7747 },
           image: OG_IMAGE,
-          openingHoursSpecification: [
-            { "@type": "OpeningHoursSpecification", dayOfWeek: "Saturday", opens: "09:00", closes: "18:00" },
-            { "@type": "OpeningHoursSpecification", dayOfWeek: "Sunday", opens: "09:00", closes: "18:00" },
-          ],
-          priceRange: "$$",
           sameAs: ["https://www.instagram.com/afropuppyyoga", "https://www.tiktok.com/@afropuppyyoga"],
         },
         {
@@ -1247,20 +1231,8 @@ const PAGES: Record<string, () => string> = {
           description: "Puppy yoga classes in Oakville, Ontario. Guided yoga with adorable puppies and Afro-beat music.",
           url: `${BASE}/puppy-yoga-oakville`,
           telephone: "+12897881885",
-          address: {
-            "@type": "PostalAddress",
-            streetAddress: "1670 North Service Rd E",
-            addressLocality: "Oakville",
-            addressRegion: "ON",
-            addressCountry: "CA",
-          },
-          geo: { "@type": "GeoCoordinates", latitude: 43.4675, longitude: -79.6877 },
+          areaServed: { "@type": "City", name: "Oakville" },
           image: OG_IMAGE,
-          openingHoursSpecification: [
-            { "@type": "OpeningHoursSpecification", dayOfWeek: "Saturday", opens: "09:00", closes: "18:00" },
-            { "@type": "OpeningHoursSpecification", dayOfWeek: "Sunday", opens: "09:00", closes: "18:00" },
-          ],
-          priceRange: "$$",
           sameAs: ["https://www.instagram.com/afropuppyyoga", "https://www.tiktok.com/@afropuppyyoga"],
         },
         {
@@ -1467,14 +1439,20 @@ const PAGES: Record<string, () => string> = {
   </dl>
 
   <p><a href="/private-events/quote">Get Your Instant Quote</a></p>
-  <p>Also explore our <a href="/birthday">Birthday Packages</a> or <a href="/partnerships">Corporate Partnership</a> options.</p>
+  <p>Also explore our <a href="/private-events/quote">Birthday Packages</a> or <a href="/partnerships">Corporate Partnership</a> options.</p>
 </main>
 <footer>
-  <a href="/">Home</a> | <a href="/birthday">Birthday Packages</a> | <a href="/partnerships">Partnerships</a> | <a href="/loyalty">Loyalty Program</a> | <a href="/ethics">Ethical Standards</a> | <a href="/careers">Careers</a>
+  <a href="/">Home</a> | <a href="/private-events/quote">Birthday Packages</a> | <a href="/partnerships">Partnerships</a> | <a href="/loyalty">Loyalty Program</a> | <a href="/ethics">Ethical Standards</a> | <a href="/careers">Careers</a>
 </footer>
 `,
     }),
 };
+
+/** Return a snapshot only for an explicitly defined public marketing route. */
+export function getPublicSeoSnapshot(path: string): string | undefined {
+  const normalized = path === "/" ? path : path.replace(/\/+$/, "");
+  return Object.hasOwn(PAGES, normalized) ? PAGES[normalized]() : undefined;
+}
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 
@@ -1492,20 +1470,23 @@ export function seoRenderMiddleware(
   // Only serve to crawlers
   if (!isCrawler(req)) return next();
 
-  const pageFn = PAGES[req.path];
+  const normalizedPath = req.path === "/" ? req.path : req.path.replace(/\/$/, "");
+  const pageFn = Object.hasOwn(PAGES, normalizedPath) ? PAGES[normalizedPath] : undefined;
 
-  // Unknown path — do not fall back to homepage (prevents soft 404s and
-  // duplicate homepage canonicals for random/internal URLs).
-  if (!pageFn) {
-    res
-      .status(404)
-      .set({ "Content-Type": "text/html; charset=utf-8" })
-      .end(
-        `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" /><title>404 Not Found | AfroPuppyYoga</title><meta name="robots" content="noindex, nofollow" /></head><body><h1>404 — Page Not Found</h1><p><a href="https://afropuppyyoga.ca/">Return to AfroPuppyYoga</a></p></body></html>`
-      );
-    return;
-  }
+  // A snapshot list is not an exhaustive SPA/server route registry. Unknown
+  // paths (including staff, signing, and future routes) must reach the app.
+  if (!pageFn) return next();
 
   const html = pageFn();
-  res.status(200).set({ "Content-Type": "text/html; charset=utf-8" }).end(html);
+  // Preserve upstream cache variation (for example, Accept-Encoding).
+  const existingVary = typeof res.getHeader === "function" ? res.getHeader("Vary") : undefined;
+  const vary = Array.isArray(existingVary) ? existingVary.join(", ") : String(existingVary || "");
+  const varyFields = vary.split(",").map(value => value.trim()).filter(Boolean);
+  if (!varyFields.some(value => value === "*" || value.toLowerCase() === "user-agent")) varyFields.push("User-Agent");
+  res.status(200).set({
+    "Content-Type": "text/html; charset=utf-8",
+    "Cache-Control": "private, no-store",
+    "Surrogate-Control": "no-store",
+    "Vary": varyFields.join(", "),
+  }).end(html);
 }

@@ -140,7 +140,8 @@ export default function LocationPage({ config }: Props) {
     ogImage: "https://afropuppyyoga.ca/manus-storage/apy_corporate_hero_202ea280.jpg",
   });
 
-  // Inject LocalBusiness schema
+  // City venue addresses are retained, but event schedules, prices and exact
+  // coordinates must not be asserted without independently verified data.
   useEffect(() => {
     const schema = {
       "@context": "https://schema.org",
@@ -161,20 +162,6 @@ export default function LocationPage({ config }: Props) {
         postalCode: config.schemaAddress.postalCode,
         addressCountry: "CA",
       },
-      geo: {
-        "@type": "GeoCoordinates",
-        latitude: config.lat,
-        longitude: config.lng,
-      },
-      openingHoursSpecification: [
-        {
-          "@type": "OpeningHoursSpecification",
-          dayOfWeek: ["Saturday", "Sunday"],
-          opens: "10:00",
-          closes: "18:00",
-        },
-      ],
-      priceRange: "$35–$45",
       currenciesAccepted: "CAD",
       paymentAccepted: "Credit Card, Debit Card",
       sameAs: [
@@ -228,7 +215,7 @@ export default function LocationPage({ config }: Props) {
       const el = document.getElementById(`schema-location-${config.slug}`);
       if (el) el.remove();
     };
-  }, [config.slug, canonicalUrl, config.metaDescription, config.city, config.schemaAddress, config.lat, config.lng, config.faqs, isPrivateEventPage]);
+  }, [config.slug, canonicalUrl, config.metaDescription, config.city, config.schemaAddress, config.faqs, isPrivateEventPage]);
 
   return (
     <div className="apy-page">
@@ -464,10 +451,12 @@ export default function LocationPage({ config }: Props) {
             <div className="max-w-2xl mb-8">
               <p className="apy-eyebrow mb-3">Upcoming Classes</p>
               <h2 className="apy-heading mb-4">Book Your Spot in {config.city}</h2>
-              <p className="font-body text-muted-foreground text-base leading-relaxed">Sessions fill up fast — reserve your mat today. All skill levels welcome.</p>
+              <p className="font-body text-muted-foreground text-base leading-relaxed">This shared Luma calendar may show events in other locations. Select a {config.city} event and check its date and venue before booking.</p>
+              {config.slug === "puppy-yoga-kitchener" && <p className="font-body text-muted-foreground text-sm leading-relaxed mt-3">For Kitchener, please bring your own yoga mat.</p>}
+              {config.slug === "puppy-yoga-oakville" && <p className="font-body text-muted-foreground text-sm leading-relaxed mt-3">For Oakville, bring a yoga mat. We recommend arriving 10 minutes early.</p>}
             </div>
             <div className="rounded-2xl overflow-hidden border border-border bg-white">
-              <div className="font-body text-sm font-semibold text-espresso px-5 py-4 border-b border-border">Live Luma calendar</div>
+              <div className="font-body text-sm font-semibold text-espresso px-5 py-4 border-b border-border">Shared AfroPuppyYoga calendar on Luma</div>
               <div className="relative">
                 {/* Keep the existing loading fallback and Luma-owned empty/error states. */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-ivory pointer-events-none z-0">
@@ -481,18 +470,19 @@ export default function LocationPage({ config }: Props) {
                   style={{ border: "none", position: "relative", zIndex: 1, display: "block" }}
                   allowFullScreen
                   aria-hidden="false"
-                  title={`AfroPuppyYoga ${config.city} class schedule`}
+                  title="Shared AfroPuppyYoga class calendar on Luma"
                 />
               </div>
             </div>
             <div className="mt-6">
+              <p className="font-body text-sm text-muted-foreground leading-relaxed mb-3">If the calendar does not display, open it on Luma and check the event location before booking.</p>
               <a
                 href={attributedBookUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => track("InitiateCheckout", { content_name: `View Classes — ${config.city}` })}
                 className="apy-primary-action min-h-12 w-full sm:w-auto"
-              >View All {config.city} Classes →</a>
+              >Open Shared Luma Calendar →</a>
             </div>
           </div>
         </section>
