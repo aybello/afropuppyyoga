@@ -16,8 +16,9 @@ import { capiSender, syncMetaPurchases } from "../metaCapi";
 import twilioWebhookRouter from "../twilioWebhook";
 import lumaWebhookRouter from "../lumaWebhook";
 import { requireStaffOrAdmin } from "./requireStaff";
-import { registerStorageProxy } from "./storageProxy";
+import { registerStorageProxy, storageProxyCacheHeaders } from "./storageProxy";
 import metaCampaignUploadRouter from "../metaCampaignUploadRoute";
+import { pdfProxyCacheHeaders, registerPdfProxy } from "./pdfProxy";
 import { getLegacyImageRecoveryTarget } from "../legacyImageRecovery";
 import { canonicalPublishedHostRedirect } from "../canonicalHostRedirect";
 import crypto from "crypto";
@@ -138,6 +139,12 @@ async function startServer() {
   app.set("trust proxy", 1);
   // Remove x-powered-by header (security best practice)
   app.disable("x-powered-by");
+
+  // Apply to redirects, authentication, parser, upstream error, and successful PDF responses.
+  app.use("/api/pdf-proxy", pdfProxyCacheHeaders);
+
+  // Default all storage responses to no-store before redirects and body parsers.
+  app.use("/manus-storage", storageProxyCacheHeaders);
 
   // 301 redirects for legacy URLs still indexed by Google
   app.use((req, res, next) => {
@@ -344,23 +351,7 @@ async function startServer() {
   });
 
   // Phase 2: Protect PDF proxy — only staff/admin can access applicant PDFs
-  app.get("/api/pdf-proxy", requireStaffOrAdmin, async (req, res) => {
-    const url = req.query.url as string;
-    if (!url || !url.startsWith("https://d2xsxph8kpxj0f.cloudfront.net/")) {
-      return res.status(400).send("Invalid URL");
-    }
-    try {
-      const response = await fetch(url);
-      if (!response.ok) return res.status(response.status).send("Failed to fetch PDF");
-      const buffer = await response.arrayBuffer();
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Access-Control-Allow-Origin", "*");
-      res.setHeader("Cache-Control", "public, max-age=86400");
-      res.send(Buffer.from(buffer));
-    } catch (e) {
-      res.status(500).send("Proxy error");
-    }
-  });
+  registerPdfProxy(app);
 
   // The signed Luma webhook must be mounted before the /api/luma tombstone.
   // Otherwise the prefix handler returns 410 first, which causes Luma to pause
