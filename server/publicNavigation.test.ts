@@ -39,6 +39,30 @@ describe("requested public navigation", () => {
     expect(source("client/src/components/Navbar.tsx")).toContain('{ label: "📍 Guelph", href: "/puppy-yoga-guelph", isPage: true }');
   });
 
+  it("preserves desktop links, actions, and the separately controlled mobile menu", () => {
+    const html = renderNav();
+    const header = html.match(/<header\b[\s\S]*?<\/header>/)?.[0] ?? "";
+    for (const label of ["Home", "Experience", "Memberships", "Private Events", "Class Pictures", "Careers", "🐾 Rewards", "More", "Staff Portal", "Book a Class"]) {
+      expect(header).toContain(label);
+    }
+    expect(header).toContain('aria-controls="apy-more-navigation"');
+    expect(header).toContain('aria-controls="apy-mobile-navigation"');
+    expect(header).toContain('class="apy-desktop-nav');
+    expect(header).toContain('class="apy-mobile-toggle');
+    expect(html).toContain('class="apy-nav-responsive"');
+  });
+
+  it("scopes the wider, non-wrapping header and text-relative fallback to the navbar", () => {
+    const css = source("client/src/index.css");
+    expect(css).toMatch(/\.apy-public-nav\s+\.apy-nav-container\s*\{\s*max-width:\s*90rem/);
+    expect(css).toMatch(/\.apy-nav-responsive\s*\{\s*container-type:\s*inline-size/);
+    expect(css).toContain("@media (min-width: 1280px)");
+    expect(css).toContain("@container (min-width: 80em)");
+    expect(css).toContain("min-height: max(44px, 2.75rem)");
+    expect(css).toMatch(/\.apy-desktop-nav\s+\.apy-nav-link\s*\{[^}]*white-space:\s*nowrap/);
+    expect(css).toMatch(/\.apy-nav-link\s*\{[^}]*min-height:\s*2\.75rem/);
+  });
+
   it("removes invoice links from both menus while preserving submission on Staff Access", () => {
     const html = renderNav();
     expect(html).not.toContain("Submit Invoice");

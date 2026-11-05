@@ -229,6 +229,36 @@
     background: var(--accent);
     color: var(--brand-link);
   }
+  /* Require both physical room and room relative to text size. Booking is
+     always available at the top of the menu when the header cannot fit it. */
+  .apy-nav-responsive { container-type: inline-size; }
+  .apy-public-nav .apy-nav-container { max-width: 90rem; }
+  .apy-desktop-nav, .apy-desktop-staff { display: none; }
+  .apy-mobile-toggle { display: flex; width: max(44px, 2.75rem); flex-shrink: 0; }
+  .apy-mobile-overlay { display: block; }
+  .apy-nav-booking { display: none; white-space: nowrap; }
+  @container (max-width: 26em) {
+    .apy-nav-logo { max-width: 28px; max-height: 36px; }
+    .apy-public-nav .apy-nav-container { padding-inline: 0.5rem; }
+  }
+  @media (max-width: 639px) {
+    @container (min-width: 20em) {
+      .apy-nav-booking { display: inline-flex; }
+    }
+  }
+  @media (min-width: 640px) {
+    @container (min-width: 40em) {
+      .apy-nav-booking { display: inline-flex; }
+    }
+  }
+  @media (min-width: 1280px) {
+    @container (min-width: 80em) {
+      .apy-desktop-nav { display: flex; flex-shrink: 0; }
+      .apy-desktop-staff { display: inline-flex; white-space: nowrap; }
+      .apy-mobile-toggle, .apy-mobile-overlay { display: none; }
+      .apy-desktop-nav .apy-nav-link { padding-inline: 0.5rem; white-space: nowrap; }
+    }
+  }
   .apy-staff-ui { font-size: 0.875rem; line-height: 1.5; }
   .apy-staff-ui .apy-heading { font-size: clamp(1.75rem, 3vw, 2.5rem); }
 
@@ -260,6 +290,9 @@
     .container { padding-inline: 2rem; max-width: 1280px; }
   }
 }
+
+/* A smaller root font must not reduce physical target sizes below 44px. */
+.apy-public-nav :is(a, button) { min-width: 44px; min-height: max(44px, 2.75rem); }
 
 /* State motion only. Higher-specificity scoped selectors avoid blanket overrides. */
 @media (prefers-reduced-motion: reduce) {
