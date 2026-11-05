@@ -40,7 +40,10 @@
       if (heroPreload && window.location.pathname === "/private-events/quote") {
         heroPreload.href = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/sVIpZHnGcGArBGBj.jpg";
         heroPreload.media = "all";
-      } else if (heroPreload && (window.location.pathname === "/" || window.location.pathname === "/puppy-yoga-guelph")) {
+      } else if (heroPreload && window.location.pathname === "/") {
+        heroPreload.href = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/AByzDGhoZeTLnWwe.webp";
+        heroPreload.media = "all";
+      } else if (heroPreload && window.location.pathname === "/puppy-yoga-guelph") {
         heroPreload.media = "all";
       }
       if (window.location.pathname === "/") document.documentElement.classList.add("home-pending");
@@ -63,15 +66,15 @@
         background: #FEFAF4;
       }
       html.home-pending #home-first-paint { display: flex; }
-      #home-first-paint::after {
-        content: "";
+      #home-first-paint .home-shell-photo {
         position: absolute;
         top: 7.5rem;
         right: clamp(1.5rem, 5vw, 6rem);
         bottom: 3rem;
         width: 40%;
         border-radius: 48% 48% 0.75rem 0.75rem;
-        background: url("https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/zstgfhkhgJOsMcBx.jpg") center / cover no-repeat;
+        height: calc(100% - 10.5rem);
+        object-fit: cover;
         z-index: -1;
       }
       #home-first-paint .home-shell-nav {
@@ -152,7 +155,7 @@
       }
       #home-first-paint .home-shell-cta { padding: 1rem 1.5rem; }
       @media (max-width: 767px) {
-        #home-first-paint::after {
+        #home-first-paint .home-shell-photo {
           position: relative;
           top: auto;
           right: auto;
@@ -178,7 +181,17 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,300;1,9..144,400;1,9..144,600;1,9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Load without blocking first paint; system fonts remain usable if loading or inline script is blocked. -->
+    <link id="google-fonts" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,300;1,9..144,400;1,9..144,600;1,9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" />
+    <script>
+      const googleFonts = document.getElementById("google-fonts");
+      if (googleFonts) {
+        const activateGoogleFonts = () => { googleFonts.media = "all"; };
+        googleFonts.addEventListener("load", activateGoogleFonts, { once: true });
+        if (googleFonts.sheet) activateGoogleFonts();
+      }
+    </script>
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,300;1,9..144,400;1,9..144,600;1,9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" /></noscript>
 
     <!-- =====================================================
          Schema.org Structured Data — Fixed for Google Rich Results
@@ -446,7 +459,26 @@
     <noscript><img height="1" width="1" style="display:none"
     src="https://www.facebook.com/tr?id=1453485382529828&ev=PageView&noscript=1"
     /></noscript>
-    <div id="root"><div id="home-first-paint" aria-label="AfroPuppyYoga"><header class="home-shell-nav"><span class="home-shell-brand">AfroPuppyYoga</span><a class="home-shell-book" href="https://lu.ma/afropuppyyoga" target="_blank" rel="noopener noreferrer">Book a Class</a></header><main class="home-shell-copy"><div class="home-shell-eyebrow">Ontario's #1 Puppy Yoga Studio</div><h1>Where Wellness<br />Meets <em>Puppy Love</em></h1><p>Guided yoga, Afro-beat rhythms, and adorable puppies in one unforgettable session.</p><a class="home-shell-cta" href="https://lu.ma/afropuppyyoga" target="_blank" rel="noopener noreferrer">Book a Class</a></main></div></div>
+    <div id="root"><div id="home-first-paint" aria-label="AfroPuppyYoga"><img class="home-shell-photo" id="home-shell-photo" alt="" /><header class="home-shell-nav"><span class="home-shell-brand">AfroPuppyYoga</span><a class="home-shell-book" href="https://lu.ma/afropuppyyoga" target="_blank" rel="noopener noreferrer">Book a Class</a></header><main class="home-shell-copy"><div class="home-shell-eyebrow">Ontario's #1 Puppy Yoga Studio</div><h1>Where Wellness<br />Meets <em>Puppy Love</em></h1><p>Guided yoga, Afro-beat rhythms, and adorable puppies in one unforgettable session.</p><a class="home-shell-cta" href="https://lu.ma/afropuppyyoga" target="_blank" rel="noopener noreferrer">Book a Class</a></main></div></div>
+    <script>
+      // No hidden-route image requests: start the same image as the homepage preload only on home.
+      if (window.location.pathname === "/") {
+        const shellPhoto = document.getElementById("home-shell-photo");
+        const shellSources = [
+          "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/AByzDGhoZeTLnWwe.webp",
+          "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/zstgfhkhgJOsMcBx.jpg",
+          "/manus-storage/apy_portrait_chow_cuddle_nov01_52f30f49.jpg?v=apy-portraits-20261104",
+          "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/tkTWwpxwClsSwSww.jpg",
+          "/manus-storage/apy_portrait_golden_cuddle_oct19_d7e4953e.jpg?v=apy-portraits-20261104"
+        ];
+        let shellSourceIndex = 0;
+        shellPhoto.onerror = () => {
+          if (++shellSourceIndex < shellSources.length) shellPhoto.src = shellSources[shellSourceIndex];
+          else { shellPhoto.dataset.heroFailed = "true"; shellPhoto.removeAttribute("src"); }
+        };
+        shellPhoto.src = shellSources[shellSourceIndex];
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
     <script
       defer

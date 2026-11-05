@@ -34,10 +34,9 @@ describe("route-specific hero preloads", () => {
       expect(preloadFor(route, true).classes).toEqual([]);
     }
   });
-  it("preloads the same approved Chow image on home and Guelph", () => {
-    for (const route of ["/", "/puppy-yoga-guelph"]) {
-      expect(preloadFor(route).link).toEqual({ href: PRIMARY_HERO_IMAGE, media: "all" });
-    }
+  it("preloads the optimized Chow on home and leaves Guelph on its original approved portrait", () => {
+    expect(preloadFor("/").link).toEqual({ href: PRIMARY_HERO_IMAGE, media: "all" });
+    expect(preloadFor("/puppy-yoga-guelph").link).toEqual({ href: publicPortraitUrl("/manus-storage/apy_portrait_chow_cuddle_nov01_52f30f49.jpg"), media: "all" });
     expect(preloadFor("/").classes).toContain("home-pending");
     expect(preloadFor("/puppy-yoga-guelph").classes).toEqual([]);
   });

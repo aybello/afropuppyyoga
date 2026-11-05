@@ -14,6 +14,7 @@ import { useScrollDepthTracking, useTimeOnPageTracking } from "@/hooks/useAnalyt
 import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { useEffect, useState } from "react";
 import { HOME_SEO_TITLE, HOME_SEO_DESCRIPTION } from "@shared/publicLocations";
+import type { HeroImageState } from "@shared/heroImage";
 
 // Lazy-load below-the-fold sections — they load as the user scrolls, not on initial paint.
 const Experience = lazy(() => import("@/components/sections/Experience"));
@@ -40,7 +41,7 @@ function SectionFallback() {
   return <div className="w-full py-16 bg-[#FEFAF4]" aria-hidden="true" />;
 }
 
-export default function Home() {
+export default function Home({ initialHeroImageState }: { initialHeroImageState?: HeroImageState; params?: unknown } = {}) {
   const [shouldLoadChat, setShouldLoadChat] = useState(false);
   useScrollDepthTracking();
   useTimeOnPageTracking();
@@ -79,7 +80,7 @@ export default function Home() {
       <Navbar />
       <main>
         {/* Above the fold — loaded immediately */}
-        <Hero />
+        <Hero initialHeroImageState={initialHeroImageState} />
         <RewardsStrip />
         <DeferredSection minHeight="36rem"><Suspense fallback={<SectionFallback />}><Experience /></Suspense></DeferredSection>
 

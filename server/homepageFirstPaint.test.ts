@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
+import { runInNewContext } from "node:vm";
 import { describe, expect, it } from "vitest";
-import { PRIMARY_HERO_IMAGE } from "../shared/heroImage";
+import { HERO_IMAGE_SOURCES, PRIMARY_HERO_IMAGE } from "../shared/heroImage";
 
 const appSource = readFileSync(new URL("../client/src/App.tsx", import.meta.url), "utf8");
 const indexSource = readFileSync(new URL("../client/index.html", import.meta.url), "utf8");
@@ -25,13 +26,40 @@ describe("homepage first paint", () => {
 
   it("preloads the same authentic photograph used by the React hero and initial HTML image", () => {
     const heroPhoto = PRIMARY_HERO_IMAGE;
-    const preloadPhoto = indexSource.match(/<link rel="preload" as="image" href="([^"]+)"/)?.[1];
     expect(heroSource).toContain("heroImageSource(heroImageState)");
     expect(heroPhoto).toContain("files.manuscdn.com/");
-    expect(preloadPhoto).toBe(heroPhoto);
-    expect(indexSource).toContain(`background: url("${heroPhoto}")`);
+    expect(indexSource).toContain(`heroPreload.href = "${heroPhoto}"`);
+    expect(indexSource).toContain(`"${heroPhoto}"`);
+    expect(indexSource).toContain("shellPhoto.onerror");
+    expect(indexSource).toContain("zstgfhkhgJOsMcBx.jpg");
+    expect(indexSource).not.toContain("<noscript><style>#home-first-paint");
     expect(indexSource).not.toContain("apy_hero_bg-aDMPriKGFaJ3ZgQKWVBv5n.webp");
     expect(heroSource).toContain('loading="eager"');
     expect(heroSource).toContain('classList.remove("home-pending")');
+  });
+
+  it("keeps the shell hidden without JavaScript on every route, while preserving the font fallback", () => {
+    expect(indexSource).toMatch(/#home-first-paint\s*\{[^}]*display:\s*none/s);
+    expect(indexSource).toContain('html.home-pending #home-first-paint { display: flex; }');
+    const noscripts = [...indexSource.matchAll(/<noscript>([\s\S]*?)<\/noscript>/g)].map(match => match[1]);
+    expect(noscripts.some(content => content.includes('fonts.googleapis.com'))).toBe(true);
+    expect(noscripts.every(content => !/home-first-paint|home-shell|Where Wellness|Book a Class/.test(content))).toBe(true);
+  });
+
+  it("uses the same finite genuine-photo recovery chain as React, without fetching on other routes", () => {
+    const script = indexSource.match(/<script>\s*\/\/ No hidden-route image requests[\s\S]*?<\/script>/)?.[0]
+      .replace(/^<script>|<\/script>$/g, "") ?? "";
+    expect(script).not.toBe("");
+    const image = { src: "", dataset: {} as Record<string, string>, onerror: () => {}, removeAttribute: (name: string) => { if (name === "src") image.src = ""; } };
+    runInNewContext(script, { window: { location: { pathname: "/" } }, document: { getElementById: () => image } });
+    for (const source of HERO_IMAGE_SOURCES) {
+      expect(image.src).toBe(source);
+      image.onerror();
+    }
+    expect(image.src).toBe("");
+    expect(image.dataset.heroFailed).toBe("true");
+    let queried = false;
+    runInNewContext(script, { window: { location: { pathname: "/privacy" } }, document: { getElementById: () => { queried = true; } } });
+    expect(queried).toBe(false);
   });
 });

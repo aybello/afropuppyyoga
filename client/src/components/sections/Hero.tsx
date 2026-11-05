@@ -1,27 +1,27 @@
 /* Homepage hero — approved ivory editorial layout with authentic APY photography. */
 import { BOOK_URL } from "@/const";
-import { useReducer } from "react";
+import { useReducer, useState } from "react";
 import { ChevronDownIcon } from "@/components/PublicIcons";
 import { trackCTAClick } from "@/hooks/useAnalytics";
 import LocalDogsImpact from "@/components/sections/LocalDogsImpact";
 import { handleHomeSectionClick, homeSectionHref, scrollToHomeSection } from "@/components/homeSectionNavigation";
 import { FIVE_STAR_REVIEW_COUNT } from "@shared/reviewMetrics";
-import { heroImageReducer, heroImageSource, INITIAL_HERO_IMAGE_STATE } from "@shared/heroImage";
+import { heroImageReducer, heroImageSource, INITIAL_HERO_IMAGE_STATE, type HeroImageState } from "@shared/heroImage";
 
 // Partner logos remain in their original colors and at their approved display sizes.
-const trustedBy = [
-  { name: "LiftOff", src: "/manus-storage/LiftOff_Logo_Building_Legacy_banner_5f5d7710.png", height: 88 },
-  { name: "Wilfrid Laurier University", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/laurier_logo_61911be5.webp", height: 30 },
+const trustedBy: ReadonlyArray<{ name: string; src: string; height: number; optimized?: string }> = [
+  { name: "LiftOff", src: "/manus-storage/LiftOff_Logo_Building_Legacy_banner_5f5d7710.png", height: 88, optimized: "/manus-storage/apy_opt_liftoff_92a927b1.webp" },
+  { name: "Wilfrid Laurier University", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/laurier_logo_61911be5.webp", height: 30, optimized: "/manus-storage/apy_opt_wilfrid_laurier_university_685fefa3.webp" },
   { name: "University of Waterloo", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/waterloo_fixed_a91debfb.png", height: 36 },
   { name: "McMaster University", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/mcmaster_dedf4891.png", height: 38 },
   { name: "University of Guelph", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/guelph_fixed_39bf0fba.png", height: 36 },
-  { name: "Brock University", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/brock_university_a69cc38d.png", height: 52 },
-  { name: "Scribenote", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/scribenote_dark_6221d6bf.png", height: 26 },
+  { name: "Brock University", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/brock_university_a69cc38d.png", height: 52, optimized: "/manus-storage/apy_opt_brock_university_527142cb.webp" },
+  { name: "Scribenote", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/scribenote_dark_6221d6bf.png", height: 26, optimized: "/manus-storage/apy_opt_scribenote_f38d0342.webp" },
   { name: "F45 Training", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/f45_fixed_f11e0ba3.png", height: 34 },
   { name: "9Round Kickboxing", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/9round_composite_ce7b2856.png", height: 56 },
   { name: "The Fit Club Waterloo", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/fitclub_waterloo_bf128bd7.webp", height: 32 },
-  { name: "Home2 Suites by Hilton", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/home2suites_wiki_457f2f4b.png", height: 38 },
-  { name: "Kitchener Lady Rangers", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/lady_rangers_logo_787e1b41.jpg", height: 64 },
+  { name: "Home2 Suites by Hilton", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/home2suites_wiki_457f2f4b.png", height: 38, optimized: "/manus-storage/apy_opt_home2_suites_by_hilton_64e0a128.webp" },
+  { name: "Kitchener Lady Rangers", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/lady_rangers_logo_787e1b41.jpg", height: 64, optimized: "/manus-storage/apy_opt_kitchener_lady_rangers_8a547efc.webp" },
   { name: "Curated KW", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/curatedkw_logo_34f34c0f.webp", height: 64 },
   { name: "MMSA Lang Guelph", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/mmsa_lang_logo_46c62a49.webp", height: 64 },
   { name: "Artemis Canada", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/artemis_canada_logo_b5401a15.jpg", height: 36 },
@@ -35,8 +35,20 @@ const trustedBy = [
   { name: "Brock Solutions", src: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/dwXWkrdWFpxsxxJF.png", height: 72 },
 ];
 
-export default function Hero() {
-  const [heroImageState, dispatchHeroImage] = useReducer(heroImageReducer, INITIAL_HERO_IMAGE_STATE);
+function PartnerLogo({ org, copy }: { org: (typeof trustedBy)[number]; copy: number }) {
+  const [useOriginal, setUseOriginal] = useState(false);
+  return (
+    <picture>
+      {org.optimized && !useOriginal && <source srcSet={org.optimized} type="image/webp" />}
+      <img src={org.src} alt={copy === 0 ? org.name : ""} loading="eager" decoding="async" style={{ height: org.height }} className="w-auto object-contain" onError={() => {
+        if (org.optimized && !useOriginal) setUseOriginal(true);
+      }} />
+    </picture>
+  );
+}
+
+export default function Hero({ initialHeroImageState = INITIAL_HERO_IMAGE_STATE }: { initialHeroImageState?: HeroImageState } = {}) {
+  const [heroImageState, dispatchHeroImage] = useReducer(heroImageReducer, initialHeroImageState);
   const heroImageIndex = heroImageState.index;
   const heroImageFailed = heroImageState.failed;
   const heroImage = heroImageSource(heroImageState);
@@ -98,7 +110,7 @@ export default function Hero() {
             <img
               key={heroImage}
               src={heroImage}
-              alt={heroImageIndex < 2 ? "Smiling guest cuddling a fluffy Chow puppy at AfroPuppyYoga" : "Smiling guest holding a Golden Retriever puppy at AfroPuppyYoga"}
+              alt={heroImageIndex < 3 ? "Smiling guest cuddling a fluffy Chow puppy at AfroPuppyYoga" : "Smiling guest holding a Golden Retriever puppy at AfroPuppyYoga"}
               width={1500}
               height={2000}
               loading="eager"
@@ -164,7 +176,7 @@ export default function Hero() {
                 <div key={copy} className="apy-trust-set" aria-hidden={copy === 1 ? true : undefined}>
                   {trustedBy.map((org) => (
                     <div key={org.name} className="apy-trust-logo">
-                      <img src={org.src} alt={copy === 0 ? org.name : ""} loading="eager" decoding="async" style={{ height: org.height }} className="w-auto object-contain" />
+                      <PartnerLogo org={org} copy={copy} />
                     </div>
                   ))}
                 </div>

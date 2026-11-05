@@ -1,6 +1,7 @@
 import { publicPortraitSources } from "./publicPortraits";
 
 export const HERO_IMAGE_SOURCES = [
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/AByzDGhoZeTLnWwe.webp",
   ...publicPortraitSources("/manus-storage/apy_portrait_chow_cuddle_nov01_52f30f49.jpg"),
   ...publicPortraitSources("/manus-storage/apy_portrait_golden_cuddle_oct19_d7e4953e.jpg"),
 ] as const;
@@ -17,6 +18,13 @@ export type HeroImageAction =
   | { type: "error"; index: number; cycle: number }
   | { type: "retry" };
 export const INITIAL_HERO_IMAGE_STATE: HeroImageState = { index: 0, cycle: 0, failed: false };
+
+/** Only a known shell source can seed the React recovery chain. */
+export function heroImageStateFromShell(source: string | null, exhausted: boolean): HeroImageState {
+  if (exhausted && source === null) return { index: HERO_IMAGE_SOURCES.length - 1, cycle: 0, failed: true };
+  const index = source === null ? -1 : HERO_IMAGE_SOURCES.indexOf(source);
+  return index < 0 ? INITIAL_HERO_IMAGE_STATE : { index, cycle: 0, failed: false };
+}
 
 /** Events from an earlier image or retry cycle cannot exhaust the current one. */
 export function heroImageReducer(state: HeroImageState, action: HeroImageAction): HeroImageState {

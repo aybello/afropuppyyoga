@@ -88,7 +88,7 @@ describe("reliable cross-page links from the lean public homepage", () => {
 
   it("preserves the lean homepage bootstrap and the actual public quote form route", () => {
     expect(read("main.tsx")).toContain('window.location.pathname === "/"');
-    expect(read("homeBootstrap.tsx")).toContain("<Home />");
+    expect(read("homeBootstrap.tsx")).toContain("<Home initialHeroImageState={initialHeroImageState} />");
     expect(read("homeBootstrap.tsx")).not.toContain("<App");
     expect(read("App.tsx")).toContain('<Route path={"/private-events/quote"} component={PrivateEventQuote} />');
     const quote = read("pages/PrivateEventQuote.tsx");

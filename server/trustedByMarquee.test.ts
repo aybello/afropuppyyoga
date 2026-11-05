@@ -18,12 +18,18 @@ describe("Trusted By strip and approved photo replacement", () => {
 
   it("loads moving logos eagerly and hides the duplicate from assistive technology", () => {
     const strip = hero.slice(hero.indexOf('className="apy-trust-window'));
-    expect(strip).toContain('loading="eager"');
-    expect(strip).not.toContain('loading="lazy"');
+    expect(hero).toContain('loading="eager"');
+    expect(hero).not.toContain('loading="lazy"');
     expect(strip).toContain('aria-hidden={copy === 1 ? true : undefined}');
-    expect(strip).toContain('alt={copy === 0 ? org.name : ""}');
+    expect(hero).toContain('alt={copy === 0 ? org.name : ""}');
     expect(hero).toContain('name: "LiftOff"');
     expect(hero).toContain('height: 88');
+    expect((hero.match(/name: "/g) ?? [])).toHaveLength(23);
+    expect((hero.match(/optimized: "\/manus-storage\//g) ?? [])).toHaveLength(6);
+    expect(hero).toContain('org.optimized && !useOriginal && <source');
+    expect(hero).toContain('if (org.optimized && !useOriginal) setUseOriginal(true)');
+    expect(hero).not.toContain('source.remove()');
+    expect(strip).toContain('<PartnerLogo org={org} copy={copy} />');
   });
 
   it("removes the Pause button while keeping hover, keyboard and reduced-motion behavior", () => {

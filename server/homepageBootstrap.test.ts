@@ -31,7 +31,7 @@ describe("public homepage performance bootstrap", () => {
 
   it("keeps public booking widgets inside the tRPC and query providers", () => {
     expect(homeBootstrapSource).toContain("ClientDataProviders");
-    expect(homeBootstrapSource).toContain("<Home />");
+    expect(homeBootstrapSource).toContain("<Home initialHeroImageState={initialHeroImageState} />");
   });
 
   it("uses regular navigation for routes outside the lean homepage", () => {
