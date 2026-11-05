@@ -26,7 +26,9 @@ describe("Trusted By strip and approved photo replacement", () => {
     expect(hero).toContain('height: 88');
     expect(hero).toContain('name: "Nutram Pet Foods"');
     expect(hero).toContain('/manus-storage/nutram-canada-official-blue-transparent_d5a5964e.png');
-    expect((hero.match(/name: "/g) ?? [])).toHaveLength(24);
+    expect(hero).toContain('name: "Little Scholars Child Care"');
+    expect(hero).toContain('/manus-storage/little-scholars-cambridge-original_2fac7cda.jpg');
+    expect((hero.match(/name: "/g) ?? [])).toHaveLength(25);
     expect((hero.match(/optimized: "\/manus-storage\//g) ?? [])).toHaveLength(6);
     expect(hero).toContain('org.optimized && !useOriginal && <source');
     expect(hero).toContain('if (org.optimized && !useOriginal) setUseOriginal(true)');
