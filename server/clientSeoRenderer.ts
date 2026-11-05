@@ -39,8 +39,14 @@ export function isRegisteredSpaPath(pathname: string): boolean {
  * adjusted; this is not SSR and must never be used as a React hydration tree.
  * Snapshot metadata is limited to the explicitly registered public routes.
  */
-export function renderClientSeoHead(template: string, pathname: string): string {
-  const snapshot = getPublicSeoSnapshot(pathname);
+export function renderClientSeoHead(template: string, pathname: string, options: { noindex?: boolean } = {}): string {
+  // Only normalize paths the client actually accepts; in particular, do not
+  // turn malformed or unknown paths into a known marketing page.
+  let decoded = pathname;
+  try { decoded = decodeURI(pathname); } catch { /* Match Wouter's fallback. */ }
+  const snapshot = !options.noindex && isRegisteredSpaPath(pathname)
+    ? getPublicSeoSnapshot(decoded.toLowerCase())
+    : undefined;
   const headMatch = template.match(/<head\b[^>]*>[\s\S]*?<\/head>/i);
   if (!headMatch) return template;
   let head = headMatch[0];
@@ -50,6 +56,14 @@ export function renderClientSeoHead(template: string, pathname: string): string 
   head = head.replace(/<script\b(?=[^>]*\btype\s*=\s*["']application\/ld\+json["'])[^>]*>[\s\S]*?<\/script\s*>/gi, "");
   if (!snapshot) {
     head = head.replace(/<link\b(?=[^>]*\brel=["']canonical["'])[^>]*\/?>/i, "");
+    if (options.noindex) {
+      // A private shell must not advertise the homepage's title or social URL.
+      head = head.replace(/<title\b[^>]*>[\s\S]*?<\/title>/i, "<title>AfroPuppyYoga</title>");
+      head = head.replace(/<meta\b(?=[^>]*\b(?:name=["'](?:description|keywords|twitter:title|twitter:description)["']|property=["']og:(?:url|title|description)["']))[^>]*\/?>/gi, "");
+      const robots = '<meta name="robots" content="noindex, nofollow, noarchive" />';
+      const robotsPattern = /<meta\b(?=[^>]*\bname=["']robots["'])[^>]*\/?>/i;
+      head = robotsPattern.test(head) ? head.replace(robotsPattern, robots) : head.replace(/<\/head>/i, `${robots}\n</head>`);
+    }
     return template.replace(headMatch[0], () => head);
   }
 

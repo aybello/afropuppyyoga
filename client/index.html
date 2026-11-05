@@ -33,13 +33,14 @@
     <link rel="preconnect" href="https://d2xsxph8kpxj0f.cloudfront.net" crossorigin />
     <link rel="preconnect" href="https://files.manuscdn.com" />
     <!-- An unrelated high-priority portrait would compete with the actual LCP. -->
+    <!-- Kitchener, Hamilton and Oakville deliberately have no preload: their city heroes differ and an improvement has not been measured. -->
     <link rel="preload" as="image" href="https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/zstgfhkhgJOsMcBx.jpg" fetchpriority="high" media="not all" id="route-hero-preload" />
     <script>
       const heroPreload = document.getElementById("route-hero-preload");
-      if (window.location.pathname === "/private-events/quote") {
+      if (heroPreload && window.location.pathname === "/private-events/quote") {
         heroPreload.href = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/sVIpZHnGcGArBGBj.jpg";
         heroPreload.media = "all";
-      } else if (window.location.pathname === "/" || window.location.pathname === "/puppy-yoga-guelph") {
+      } else if (heroPreload && (window.location.pathname === "/" || window.location.pathname === "/puppy-yoga-guelph")) {
         heroPreload.media = "all";
       }
       if (window.location.pathname === "/") document.documentElement.classList.add("home-pending");

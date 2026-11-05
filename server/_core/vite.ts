@@ -5,6 +5,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import viteConfig from "../../vite.config";
 import { isRegisteredSpaPath, renderClientSeoHead } from "../clientSeoRenderer";
+import { getPublicSeoSnapshot, isCrawler } from "../seoRenderer";
 import {
   getDocumentCacheControl,
   getDocumentSurrogateCacheControl,
@@ -12,13 +13,13 @@ import {
 
 // Wouter matches case-insensitively and decodes URI path characters. Mirror the
 // earlier security middleware for variant spellings that it may not recognize.
-function protectInternalDocument(req: express.Request, res: express.Response): void {
+function protectInternalDocument(req: express.Request, res: express.Response): boolean {
   let pathname = req.originalUrl.split("?", 1)[0];
   try { pathname = decodeURI(pathname); } catch { /* Match Wouter's fallback. */ }
   pathname = pathname.toLowerCase().replace(/\/+$/, "") || "/";
   if (pathname === "/admin" || pathname.startsWith("/admin/") ||
       pathname === "/staff" || pathname.startsWith("/staff/") ||
-      ["/staff-login", "/staff-access", "/submit-invoice", "/sign", "/predictor",
+      ["/admin-login", "/staff-login", "/staff-access", "/submit-invoice", "/sign", "/predictor",
         "/breeder-calculator", "/breeder-availability", "/404"].includes(pathname)) {
     res.set({
       "X-Robots-Tag": "noindex, nofollow, noarchive",
@@ -26,7 +27,9 @@ function protectInternalDocument(req: express.Request, res: express.Response): v
       "Surrogate-Control": "no-store",
       "Referrer-Policy": "no-referrer",
     });
+    return true;
   }
+  return false;
 }
 
 // Server routes, redirects and static assets get first refusal before this check.
@@ -43,6 +46,23 @@ function rejectUnknownDocument(req: express.Request, res: express.Response): boo
   res.status(404).type("html").send(
     '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>404 Not Found | AfroPuppyYoga</title><meta name="robots" content="noindex, nofollow"></head><body><h1>404 — Page Not Found</h1><p><a href="/">Return to AfroPuppyYoga</a></p></body></html>'
   );
+  return true;
+}
+
+// The preceding crawler middleware handles GET only. A HEAD for the same URL
+// must describe that snapshot, not a differently cached browser SPA shell.
+function serveCrawlerHead(req: express.Request, res: express.Response): boolean {
+  if (req.method !== "HEAD" || !isCrawler(req)) return false;
+  const pathname = req.originalUrl.split("?", 1)[0];
+  if (!isRegisteredSpaPath(pathname)) return false;
+  const snapshot = getPublicSeoSnapshot(pathname);
+  if (!snapshot) return false;
+  res.vary("User-Agent");
+  res.status(200).set({
+    "Content-Type": "text/html; charset=utf-8",
+    "Cache-Control": "private, no-store",
+    "Surrogate-Control": "no-store",
+  }).end(snapshot);
   return true;
 }
 
@@ -66,7 +86,8 @@ export async function setupVite(app: Express, server: Server) {
   app.use(vite.middlewares);
   app.use("*", async (req, res, next) => {
     if (rejectUnknownDocument(req, res)) return;
-    protectInternalDocument(req, res);
+    if (serveCrawlerHead(req, res)) return;
+    const noindex = protectInternalDocument(req, res) || /\bnoindex\b/i.test(String(res.getHeader("X-Robots-Tag") || ""));
     const url = req.originalUrl;
 
     try {
@@ -81,7 +102,7 @@ export async function setupVite(app: Express, server: Server) {
       const template = await fs.promises.readFile(clientTemplate, "utf-8");
       const page = await vite.transformIndexHtml(url, template);
       res.vary("User-Agent");
-      res.status(200).set({ "Content-Type": "text/html" }).end(renderClientSeoHead(page, req.originalUrl.split("?", 1)[0]));
+      res.status(200).set({ "Content-Type": "text/html" }).end(renderClientSeoHead(page, req.originalUrl.split("?", 1)[0], { noindex }));
     } catch (e) {
       vite.ssrFixStacktrace(e as Error);
       next(e);
@@ -131,11 +152,12 @@ export function serveStatic(app: Express, staticDirectory?: string) {
   // strips the wildcard mount from req.path; retain the original pathname.
   app.use("*", async (req, res, next) => {
     if (rejectUnknownDocument(req, res)) return;
-    protectInternalDocument(req, res);
+    if (serveCrawlerHead(req, res)) return;
+    const noindex = protectInternalDocument(req, res) || /\bnoindex\b/i.test(String(res.getHeader("X-Robots-Tag") || ""));
     try {
       const pathname = req.originalUrl.split("?", 1)[0];
       const template = await fs.promises.readFile(path.resolve(distPath, "index.html"), "utf-8");
-      const page = renderClientSeoHead(template, pathname);
+      const page = renderClientSeoHead(template, pathname, { noindex });
       res.vary("User-Agent");
       // The earlier security middleware can already have imposed a stricter
       // private/no-store policy (notably for invoice intake and signing).

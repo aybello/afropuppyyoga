@@ -10,12 +10,12 @@ const script = html.match(/<script>\s*const heroPreload[\s\S]*?<\/script>/)?.[0]
   .replace(/^<script>|<\/script>$/g, "") ?? "";
 const quoteImage = publicPortraitUrl("/manus-storage/apy_portrait_two_goldens_oct13_44cd44f3.jpg");
 
-function preloadFor(pathname: string) {
+function preloadFor(pathname: string, missingLink = false) {
   const link = { href: tag.match(/href="([^"]+)"/)?.[1], media: "not all" };
   const classes: string[] = [];
   runInNewContext(script, {
     window: { location: { pathname } },
-    document: { getElementById: () => link, documentElement: { classList: { add: (name: string) => classes.push(name) } } },
+    document: { getElementById: () => missingLink ? null : link, documentElement: { classList: { add: (name: string) => classes.push(name) } } },
   });
   return { link, classes };
 }
@@ -24,8 +24,14 @@ describe("route-specific hero preloads", () => {
   it("starts inactive so unrelated pages do not fetch the homepage portrait", () => {
     expect(tag).toContain('media="not all"');
     expect(tag).toContain('fetchpriority="high"');
-    for (const route of ["/privacy", "/puppy-yoga-hamilton", "/private-events/quote/other"]) {
+    for (const route of ["/privacy", "/puppy-yoga-kitchener", "/puppy-yoga-hamilton", "/puppy-yoga-oakville", "/private-events/quote/other"]) {
       expect(preloadFor(route).link.media).toBe("not all");
+    }
+  });
+  it("keeps first-paint setup working when the preload element is missing", () => {
+    expect(preloadFor("/", true).classes).toEqual(["home-pending"]);
+    for (const route of ["/puppy-yoga-guelph", "/private-events/quote", "/privacy"]) {
+      expect(preloadFor(route, true).classes).toEqual([]);
     }
   });
   it("preloads the same approved Chow image on home and Guelph", () => {

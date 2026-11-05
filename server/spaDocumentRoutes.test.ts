@@ -11,7 +11,7 @@ import { seoRenderMiddleware } from "./seoRenderer";
 let server: Server;
 let origin: string;
 let dir: string;
-const template = readFileSync(new URL("../client/index.html", import.meta.url), "utf8");
+const template = readFileSync(process.env.SEO_TEST_BUILT_INDEX || new URL("../client/index.html", import.meta.url), "utf8");
 
 beforeAll(async () => {
   dir = mkdtempSync(path.join(tmpdir(), "apy-spa-test-"));
@@ -73,13 +73,41 @@ describe("SPA document routing over HTTP", () => {
     expect(body).not.toContain('rel="canonical"');
   });
   it("protects registered staff and parameterized routes even for Googlebot", async () => {
-    for (const url of ["/staff", "/staff-access?token=example", "/admin/breeder-leads/123?source=test", "/STAFF/training", "/st%61ff-access"]) {
+    for (const url of ["/staff", "/staff-access?token=example", "/admin-login", "/ADMIN-LOGIN/", "/admin/breeder-leads/AbC123?source=test", "/STAFF/training", "/st%61ff-access", "/SIGN", "/submit-invoice"]) {
       const response = await get(url, { headers: { "user-agent": "Googlebot" } });
       expect(response.status).toBe(200);
       expect(response.headers.get("x-robots-tag")).toContain("noindex");
       expect(response.headers.get("cache-control")).toContain("no-store");
       expect(response.headers.get("surrogate-control")).toBe("no-store");
-      expect(await response.text()).toContain('id="root"');
+      const body = await response.text();
+      expect(body).toContain('id="root"');
+      expect(body).toContain('<meta name="robots" content="noindex, nofollow, noarchive"');
+      expect(body).not.toContain('rel="canonical"');
+      expect(body).not.toContain('property="og:url"');
+      expect(body).toContain("<title>AfroPuppyYoga</title>");
+    }
+  });
+  it.each(["Googlebot", "Mozilla/5.0"])("serves correct uppercase Guelph metadata for %s", async agent => {
+    const response = await get("/PUPPY-YOGA-GUELPH?source=test", { headers: { "user-agent": agent } });
+    const body = await response.text();
+    expect(response.status).toBe(200);
+    expect(body).toContain('rel="canonical" href="https://afropuppyyoga.ca/puppy-yoga-guelph"');
+    expect(body).toContain('<meta property="og:url" content="https://afropuppyyoga.ca/puppy-yoga-guelph"');
+    expect(body.match(/<title>(.*?)<\/title>/i)?.[1]).toMatch(/Guelph/i);
+    expect(body).not.toContain('<meta name="robots" content="noindex');
+  });
+  it("matches GET and HEAD status and cache policies for public, private and missing documents", async () => {
+    for (const agent of ["Googlebot", "Mozilla/5.0"]) {
+      for (const url of ["/puppy-yoga-guelph", "/PUPPY-YOGA-GUELPH", "/admin-login?token=example", "/ADMIN/breeder-leads/AbC", "/unknown"]) {
+        const headers = { "user-agent": agent };
+        const response = await get(url, { headers });
+        const head = await get(url, { method: "HEAD", headers });
+        expect(head.status, `${agent} ${url}`).toBe(response.status);
+        for (const header of ["cache-control", "surrogate-control", "x-robots-tag"]) {
+          expect(head.headers.get(header), `${agent} ${url} ${header}`).toBe(response.headers.get(header));
+        }
+        expect(await head.text()).toBe("");
+      }
     }
   });
   it("does not accept malformed parameterized or prototype paths", async () => {

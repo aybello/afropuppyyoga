@@ -94,7 +94,7 @@ Schedule is a separate choice, not another experience or package tier:
 
 Venue choices: ${PRIVATE_EVENT_VENUES.studio}, subject to availability, or ${PRIVATE_EVENT_VENUES.client_venue.toLowerCase()}. Do not promise a permanent APY studio in Guelph or guarantee any venue or date. Timing, capacity, setup, room resets and puppy rest are confirmed in the final event scope.
 
-Standard studio puppy yoga includes guided yoga, puppy playtime, a certified instructor and event host, ethically sourced puppies and handlers, mats and props, setup and cleanup, and a curated playlist. Lounge events provide supervised puppy interaction without a yoga instructor-led class; inclusions are confirmed in the custom quote. Refreshments, branded merchandise, and other options are not included by default; confirm them in the quote.
+Standard studio puppy yoga includes guided yoga, puppy playtime, a certified instructor and event host, ethically sourced puppies and handlers, mats and props, setup and cleanup, and a curated playlist. Lounge events provide supervised puppy interaction without a yoga instructor-led class; inclusions are confirmed in the custom quote. Refreshments, branded merchandise, and other options depend on the selected package and confirmed quote.
 
 Standard 60-minute studio private and corporate puppy yoga for up to 20 guests starts at $${PRIVATE_EVENT_PACKAGE_BANDS.classic.min.toLocaleString("en-CA")} + HST. Package bands:
 - Classic: ${privateEventBandLabel("classic")} — core studio experience.

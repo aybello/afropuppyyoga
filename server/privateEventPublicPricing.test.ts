@@ -174,7 +174,7 @@ describe("approved private-event public pricing", () => {
     expect(venueAnswer).toContain(PRIVATE_EVENT_TRAVEL_NOTE);
     const inclusionAnswer = faq.mainEntity.find((question: { name: string }) => /included/i.test(question.name)).acceptedAnswer.text;
     expect(inclusionAnswer).toContain("Signature adds professional photography and an enhanced setup");
-    expect(inclusionAnswer).toContain("not included by default");
+    expect(inclusionAnswer).toContain("inclusions depend on the selected package or confirmed quote");
     expect(html).toContain(PUBLIC_LOCATION_LIST);
     expect(html).toContain("subject to availability");
     expect(html).not.toMatch(/"startDate"|"@type":"Event"|"@type":"LocalBusiness","name":"AfroPuppyYoga.*Guelph/);

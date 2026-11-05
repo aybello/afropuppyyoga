@@ -93,7 +93,7 @@ const config: LocationConfig = {
     {
       question: "What is included in a private event?",
       answer:
-        "Standard studio puppy yoga includes guided yoga and puppy play, a certified yoga instructor and event host, mats and props, cleanup, and a curated Afrobeats playlist. Signature adds professional photography and an enhanced setup. Luxury is customized to the agreed scope. Puppy Play & Wellness Lounge has supervised puppy interaction, not a guided yoga class; its inclusions are confirmed in a custom quote. Refreshments, merchandise, and other options are not included by default.",
+        "Standard studio puppy yoga includes guided yoga and puppy play, a certified yoga instructor and event host, mats and props, cleanup, and a curated Afrobeats playlist. Signature adds professional photography and an enhanced setup. Luxury is customized to the agreed scope. Puppy Play & Wellness Lounge has supervised puppy interaction, not a guided yoga class; its inclusions are confirmed in a custom quote. Refreshments, merchandise, and other options depend on the selected package and confirmed quote.",
     },
     {
       question: "How much does a private puppy yoga event cost?",

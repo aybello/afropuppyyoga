@@ -64,7 +64,7 @@ const faqs: { q: string; a: ReactNode }[] = [
         >
           instant quote tool
         </a>
-        . Enter your event details, get a price estimate in seconds, and submit your inquiry. Our team will follow up within 24 hours with availability and next steps.
+        . Enter your event details, get a price estimate in seconds, and submit your inquiry. Our team will follow up with your personalized quote.
       </>
     ),
   },

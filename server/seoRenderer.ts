@@ -148,7 +148,7 @@ const PRIVATE_EVENT_SCHEDULE_COPY = `Schedule is separate from the experience: $
 const PRIVATE_EVENT_SCOPE_COPY = `${PRIVATE_EVENT_PRICE_NOTE} ${PRIVATE_EVENT_FORMAT_PRICE_NOTE} ${PRIVATE_EVENT_CUSTOM_SCOPE_NOTE}`;
 const PRIVATE_EVENT_SERVICE_COPY = `${PRIVATE_EVENT_EXPERIENCE_COPY} ${PRIVATE_EVENT_SCHEDULE_COPY} ${PRIVATE_EVENT_SCOPE_COPY} Other custom scopes include nonstandard durations and help choosing an experience or package; these receive a full custom quote, never a multiplied package price.`;
 const PRIVATE_EVENT_PRICING_COPY = `Standard 60-minute studio puppy yoga for up to 20 guests starts at ${PRIVATE_EVENT_START_PRICE}. Classic: ${privateEventBandLabel("classic")} for the core studio experience; Signature: ${privateEventBandLabel("signature")} with professional photography and an enhanced setup; Luxury: ${privateEventBandLabel("luxury")} for a customized experience. Groups from 6 to 50+ can be discussed, subject to venue and availability; groups of 21 or more require a custom quote. ${PRIVATE_EVENT_SCOPE_COPY} Nonstandard durations and help choosing an experience or package also receive a full custom quote, never a multiplied package price. Use the quote tool to view an indicative standard package range or request a custom quote.`;
-const PRIVATE_EVENT_INCLUSIONS_COPY = "Standard studio puppy yoga includes guided yoga and puppy play, a certified instructor and event host, ethically sourced puppies and handlers, mats and props, setup and cleanup, and a curated playlist. Signature adds professional photography and an enhanced setup. Luxury is customized to the agreed scope. Puppy Play & Wellness Lounge provides supervised puppy interaction without a guided yoga class; its inclusions are confirmed in a custom quote. Refreshments, merchandise, and other options are not included by default; availability and costs are confirmed in your quote.";
+const PRIVATE_EVENT_INCLUSIONS_COPY = "Standard studio puppy yoga includes guided yoga and puppy play, a certified instructor and event host, ethically sourced puppies and handlers, mats and props, setup and cleanup, and a curated playlist. Signature adds professional photography and an enhanced setup. Luxury is customized to the agreed scope. Puppy Play & Wellness Lounge provides supervised puppy interaction without a guided yoga class; its inclusions are confirmed in a custom quote. Refreshment, merchandise, and other option inclusions depend on the selected package or confirmed quote.";
 const PRIVATE_EVENT_EXPERIENCES_HTML = `
   <section id="private-event-experiences">
     <h2>Choose Your Experience</h2>
@@ -574,7 +574,7 @@ const PAGES: Record<string, () => string> = {
   <p>Interested in hosting a private event? <a href="/private-events/quote">Get an instant quote.</a></p>
 </main>
 <footer>
-  <a href="/">Home</a> | <a href="/private-events/quote">Birthday Packages</a> | <a href="/ethics">Ethical Standards</a> | <a href="/careers">Careers</a>
+  <a href="/">Home</a> | <a href="/ethics">Ethical Standards</a> | <a href="/careers">Careers</a>
 </footer>
 `,
     }),
@@ -968,10 +968,10 @@ const PAGES: Record<string, () => string> = {
     <dd>Yes. We offer offsite events across the GTA and ${PUBLIC_LOCATION_LIST}, subject to availability. ${PRIVATE_EVENT_TRAVEL_NOTE}</dd>
   </dl>
 
-  <p><a href="/private-events/quote">Get an Instant Quote</a> | <a href="/corporate-puppy-yoga">Corporate Events</a> | <a href="/private-events/quote">Birthday Packages</a></p>
+  <p><a href="/private-events/quote">Get an Instant Quote</a> | <a href="/corporate-puppy-yoga">Corporate Events</a></p>
 </main>
 <footer>
-  <a href="/">Home</a> | <a href="/private-events/quote">Get a Quote</a> | <a href="/corporate-puppy-yoga">Corporate</a> | <a href="/private-events/quote">Birthday</a> | <a href="/puppy-yoga-kitchener">Kitchener</a> | <a href="/puppy-yoga-hamilton">Hamilton</a> | <a href="/puppy-yoga-oakville">Oakville</a>
+  <a href="/">Home</a> | <a href="/private-events/quote">Get a Quote</a> | <a href="/corporate-puppy-yoga">Corporate</a> | <a href="/puppy-yoga-kitchener">Kitchener</a> | <a href="/puppy-yoga-hamilton">Hamilton</a> | <a href="/puppy-yoga-oakville">Oakville</a>
 </footer>
 `,
     }),
@@ -1409,7 +1409,7 @@ const PAGES: Record<string, () => string> = {
     <li>Partner venues in ${PUBLIC_LOCATION_LIST}, subject to availability, or offsite at your venue</li>
     <li>Certified yoga instructors for puppy yoga; supervised puppy interaction without a guided yoga class in the lounge</li>
     <li>Customizable packages: Classic, Signature, and Luxury tiers</li>
-    <li>Professional photography and enhanced setup in Signature; refreshments, branded merchandise, and other options quoted on request</li>
+    <li>Professional photography and enhanced setup in Signature; refreshment, branded merchandise, and other option inclusions depend on the selected package or confirmed quote</li>
   </ul>
 
   <h3>Standard Studio Puppy Yoga Packages</h3>
@@ -1439,10 +1439,10 @@ const PAGES: Record<string, () => string> = {
   </dl>
 
   <p><a href="/private-events/quote">Get Your Instant Quote</a></p>
-  <p>Also explore our <a href="/private-events/quote">Birthday Packages</a> or <a href="/partnerships">Corporate Partnership</a> options.</p>
+  <p>Also explore our <a href="/partnerships">Corporate Partnership</a> options.</p>
 </main>
 <footer>
-  <a href="/">Home</a> | <a href="/private-events/quote">Birthday Packages</a> | <a href="/partnerships">Partnerships</a> | <a href="/loyalty">Loyalty Program</a> | <a href="/ethics">Ethical Standards</a> | <a href="/careers">Careers</a>
+  <a href="/">Home</a> | <a href="/partnerships">Partnerships</a> | <a href="/loyalty">Loyalty Program</a> | <a href="/ethics">Ethical Standards</a> | <a href="/careers">Careers</a>
 </footer>
 `,
     }),

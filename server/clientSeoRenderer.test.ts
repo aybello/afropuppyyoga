@@ -44,6 +44,27 @@ describe("public initial-document SEO", () => {
       expect(page.slice(page.indexOf("<body>"))).toBe(template.slice(template.indexOf("<body>")));
     }
   });
+  it.each(["/PUPPY-YOGA-GUELPH", "/Puppy-Yoga-Guelph/", "/puppy-yoga-guel%70h"])("matches accepted public route %s to its lowercase snapshot", path => {
+    const result = renderClientSeoHead(template, path);
+    const snapshot = getPublicSeoSnapshot("/puppy-yoga-guelph")!;
+    expect(result.match(/<title>[^<]*<\/title>/i)?.[0]).toBe(snapshot.match(/<title>[^<]*<\/title>/i)?.[0]);
+    expect(result).toContain('rel="canonical" href="https://afropuppyyoga.ca/puppy-yoga-guelph"');
+    expect(result).toContain('<meta property="og:url" content="https://afropuppyyoga.ca/puppy-yoga-guelph"');
+  });
+  it("does not use a known page snapshot for unknown or malformed paths", () => {
+    for (const path of ["/PUPPY-YOGA-GUELPH//", "/PUPPY-YOGA-GUELPH/extra", "/constructor", "/careers%ZZ"]) {
+      expect(renderClientSeoHead(template, path)).not.toContain('rel="canonical"');
+    }
+  });
+  it("aligns private shell robots and removes misleading homepage metadata", () => {
+    const result = renderClientSeoHead(template, "/ADMIN-LOGIN", { noindex: true });
+    expect(result).toContain('<meta name="robots" content="noindex, nofollow, noarchive"');
+    expect(result).not.toContain('content="index, follow"');
+    expect(result).not.toContain('rel="canonical"');
+    expect(result).not.toContain('property="og:url"');
+    expect(result).toContain("<title>AfroPuppyYoga</title>");
+    expect(result.slice(result.indexOf("<body>"))).toBe(template.slice(template.indexOf("<body>")));
+  });
   it.each(routes)("keeps important links in the crawler snapshot for %s", path => {
     const { output, headers } = crawl(path);
     for (const link of links) expect(output).toContain(`href="${link}"`);

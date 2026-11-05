@@ -32,7 +32,7 @@ const includes = [
   "Certified yoga instructors & event hosts",
   "All mats, props & cleanup provided",
   "Custom playlists and Afro-inspired ambiance",
-  "Add-ons: Photography, Refreshments & Merchandise",
+  "Photography, refreshments & merchandise depend on your package",
 ];
 
 const locations = ["Toronto", "Kitchener", "Guelph", "Hamilton", "Oakville"];

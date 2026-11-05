@@ -189,7 +189,7 @@ const faqs = [
   },
   {
     q: "What is included in the price?",
-    a: "Standard studio puppy yoga includes a certified yoga instructor and event host, ethically sourced puppies and handlers, mats and props, setup and cleanup, and a curated playlist. Signature adds professional photography and an enhanced setup. Luxury is customized to the agreed scope. Lounge events do not include a guided yoga class; their inclusions are confirmed in the custom quote. Refreshments, branded merchandise, and other options are not included by default.",
+    a: "Standard studio puppy yoga includes a certified yoga instructor and event host, ethically sourced puppies and handlers, mats and props, setup and cleanup, and a curated playlist. Signature adds professional photography and an enhanced setup. Luxury is customized to the agreed scope. Lounge events do not include a guided yoga class; their inclusions are confirmed in the custom quote. Refreshments, branded merchandise, and other options depend on the selected package and confirmed quote.",
   },
   {
     q: "How much does a corporate puppy yoga event cost?",
