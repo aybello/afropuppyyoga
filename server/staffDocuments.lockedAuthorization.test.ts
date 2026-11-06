@@ -22,7 +22,7 @@ vi.mock("./signedOfferPdf", () => ({ buildSignedOfferPdf: mocks.buildSignedOffer
 import { staffDocumentsRouter } from "./routers/staffDocuments";
 
 const member = {
-  id: 42, name: "Canonical Employee", email: "member@example.com", phone: null,
+  id: 42, name: "Canonical Employee", email: "member@example.com", phone: "+12895550100",
   role: "Puppy Monitor", location: "KW", status: "onboarded", isTeamMember: true, deletedAt: null,
 };
 const user: User = {
@@ -30,7 +30,8 @@ const user: User = {
   role: "staff", loginMethod: "test", createdAt: new Date(0), updatedAt: new Date(0), lastSignedIn: new Date(0),
 };
 const access: ApyAccess = { level: "team_member", teamMember: member, canManageOperations: false };
-const employee = { id: 7, sourceApplicationId: 42, employmentStatus: "active" };
+const employee = { id: 7, sourceApplicationId: 42, employmentStatus: "active", name: member.name, email: member.email, phone: member.phone };
+const historical = { ...member, id: 41, phone: null, isTeamMember: false, deletedAt: new Date("2026-02-01") };
 const record = {
   id: 101, applicationId: 41, signed: 1, signedName: member.name, signedAt: new Date("2026-01-01"),
   applicantName: member.name, applicantEmail: member.email, signedDocumentSnapshot: "original snapshot",
@@ -47,7 +48,7 @@ type State = {
 };
 function harness(changeAfterMiddleware?: (state: State) => void) {
   const state: State = {
-    currentUser: { ...user }, profiles: [{ ...member }], directory: [{ ...employee }], associations: [],
+    currentUser: { ...user }, profiles: [{ ...member }, { ...historical }], directory: [{ ...employee }], associations: [],
     actions: [{ applicationId: 42, action: "employee_and_login_activated", details: JSON.stringify({ employeeId: 7, retiredDuplicateProfileIds: [41] }) }],
     records: [structuredClone(record)],
   };
@@ -93,9 +94,13 @@ function harness(changeAfterMiddleware?: (state: State) => void) {
             expect(limit).toBe(1);
             result = state.currentUser.id === user.id && state.currentUser.openId === user.openId ? [state.currentUser] : [];
           } else if (table === jobApplications) {
-            expect(condition?.sql).toBe("(`jobApplications`.`isTeamMember` = ? and `jobApplications`.`deletedAt` is null)");
-            expect(condition?.params).toEqual([true]);
-            result = state.profiles.filter(profile => profile.isTeamMember && profile.deletedAt == null);
+            if (condition?.sql === "(`jobApplications`.`isTeamMember` = ? and `jobApplications`.`deletedAt` is null)") {
+              expect(condition.params).toEqual([true]);
+              result = state.profiles.filter(profile => profile.isTeamMember && profile.deletedAt == null);
+            } else {
+              expect(condition?.sql).toContain("`jobApplications`.`id` in (");
+              result = state.profiles.filter(profile => condition?.params.includes(profile.id));
+            }
           } else if (table === employees) {
             expect(condition).toBeUndefined();
             result = state.directory;
@@ -174,6 +179,26 @@ describe("staffDocuments real locked ownership integration (no live database)", 
     await expect(h.api.downloadMySignedOffer({ id: 101 })).rejects.toMatchObject({ code: "FORBIDDEN" });
     expect(h.reads).not.toContain(signingTokens);
     expect(mocks.buildSignedOfferPdf).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { label: "email-only member", change: (s: State) => { s.profiles[0].phone = null; s.directory[0].phone = null; } },
+    { label: "changed member name", change: (s: State) => { s.profiles[0].name = "Updated Name"; } },
+    { label: "changed directory name", change: (s: State) => { s.directory[0].name = "Updated Name"; } },
+  ])("retains activation-only list and download for $label", async ({ change }) => {
+    const h = harness(change);
+    expect((await h.api.mySignedOffers()).map(row => row.id)).toEqual([101]);
+    expect((await h.api.downloadMySignedOffer({ id: 101 })).filename).toBe("APY-signed-offer-and-NDA-101.pdf");
+  });
+
+  it("documents the pre-existing activation reassignment risk rather than treating it as remediated", async () => {
+    const h = harness(s => {
+      Object.assign(s.profiles[0], { name: "Another Person", email: "another@example.com", phone: "+14165550111" });
+      Object.assign(s.directory[0], { name: "Another Person", email: "another@example.com", phone: "+14165550111" });
+      s.currentUser.email = "another@example.com";
+    });
+    expect((await h.api.mySignedOffers()).map(row => row.id)).toEqual([101]);
+    expect((await h.api.downloadMySignedOffer({ id: 101 })).filename).toBe("APY-signed-offer-and-NDA-101.pdf");
   });
 
   it.each(["directory", "association"] as const)("withholds history reassigned through another employee's %s claim before locking", async kind => {

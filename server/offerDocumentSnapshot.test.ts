@@ -352,7 +352,7 @@ describe("signature and snapshot atomicity (staged transaction double)", () => {
   it.each(signingCases)("commits the exact reviewed JSON with the signature without changing pay: $label", async ({ record }) => {
     const reviewed = createOfferDocumentSnapshot(record);
     const h = transactionalHarness(record);
-    await expect(sign(h, record, reviewed.sha256)).resolves.toEqual(record);
+    await expect(sign(h, record, reviewed.sha256)).resolves.toEqual({ ...record, associatedAuditRecorded: false });
     expect(h.db.transaction).toHaveBeenCalledTimes(1);
     expect(h.lockSeeds).toEqual([{ lockName: "apy_staffing_mutation_v1" }]);
     expect(h.lockReads).toEqual([staffingMutationLocks]);
@@ -363,7 +363,8 @@ describe("signature and snapshot atomicity (staged transaction double)", () => {
       signedDocumentSnapshot: JSON.stringify(reviewed),
     } });
     expect(h.query(h.writes[1].predicate)).toMatchObject({
-      sql: "(`signingTokens`.`id` = ? and `signingTokens`.`signed` = ?)", params: [record.id, 0],
+      sql: "(`signingTokens`.`id` = ? and `signingTokens`.`applicationId` = ? and `signingTokens`.`signed` = ? and BINARY `signingTokens`.`token` = BINARY ? and `signingTokens`.`expiresAt` > CURRENT_TIMESTAMP(3))",
+      params: [record.id, record.applicationId, 0, record.token],
     });
     for (const { values } of h.writes) {
       expect(values).not.toHaveProperty("puppyMonitorShiftPayCad");

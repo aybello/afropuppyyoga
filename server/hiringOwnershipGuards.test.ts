@@ -215,9 +215,9 @@ describe("offer/signature ownership lock guards", () => {
     }
   });
 
-  it.each(["association", "legacy"])("rejects a preexisting current signing link after a %s claim is established", async kind => {
+  it.each(["association", "legacy"])("rejects a preexisting current signing link after an invalid or legacy-only %s claim is established", async kind => {
     const record = offerFor(historical, 0);
-    const claims = kind === "association" ? [association()] : [];
+    const claims = kind === "association" ? [{ ...association(), recordHash: "0".repeat(64) }] : [];
     const actions = kind === "legacy" ? [legacyAction()] : [];
     const h = harness({ offers: [record], claims, actions });
     const before = structuredClone({ historical, record, claims, actions });
@@ -229,7 +229,7 @@ describe("offer/signature ownership lock guards", () => {
   it.each(["offer", "signature"])("observes an association established while %s waits to acquire the shared lock", async operation => {
     const record = offerFor(historical, 0);
     const claims: any[] = [];
-    const h = harness({ offers: [record], claims, actions: [], afterLock: () => claims.push(association()) });
+    const h = harness({ offers: [record], claims, actions: [], afterLock: () => claims.push({ ...association(), recordHash: "0".repeat(64) }) });
     const result = operation === "offer" ? prepareHiringOffer(h.db, historical.id) : recordCurrentOfferSignature(h.db, record.token, historical.name, "192.0.2.1", record.offerLetterType);
     await expect(result).rejects.toThrow(/already belongs to an employee/);
     expect(h.events).toEqual(["lock", "release"]);
@@ -293,7 +293,7 @@ describe("offer/signature ownership lock guards", () => {
   it("still signs an unclaimed applicant without granting login, changing compensation, or inserting associations", async () => {
     const record = offerFor(historical, 0);
     const h = harness({ profiles: [historical], directory: [], offers: [record], claims: [], actions: [] });
-    await expect(recordCurrentOfferSignature(h.db, record.token, historical.name, "192.0.2.1", record.offerLetterType, undefined, undefined, undefined, createOfferDocumentSnapshot(record).sha256)).resolves.toEqual(record);
+    await expect(recordCurrentOfferSignature(h.db, record.token, historical.name, "192.0.2.1", record.offerLetterType, undefined, undefined, undefined, createOfferDocumentSnapshot(record).sha256)).resolves.toEqual({ ...record, associatedAuditRecorded: false });
     expect(h.writes).toHaveLength(2);
     expect(h.writes[0]).toEqual({ table: jobApplications, values: { status: "accepted" } });
     expect(h.writes[1]).toMatchObject({ table: signingTokens, values: { signed: 1, signedDocumentSnapshot: expect.any(String) } });
@@ -317,7 +317,7 @@ describe("signing router ownership rejection without outbound effects", () => {
 
   it("rejects the preexisting public signature link before writes, confirmation mail or owner notification", async () => {
     const record = offerFor(historical, 0);
-    const h = harness({ offers: [record], claims: [association()], actions: [] });
+    const h = harness({ offers: [record], claims: [{ ...association(), recordHash: "0".repeat(64) }], actions: [] });
     external.db.getDb.mockResolvedValue(h.db);
     const caller = signingRouter.createCaller({ user: null, req: { headers: {} } } as never);
     await expect(caller.submitSignature({ token: record.token, signedName: historical.name, confirmedOfferLetterType: record.offerLetterType, confirmedDocumentSha256: createOfferDocumentSnapshot(record).sha256 })).rejects.toThrow("already belongs");

@@ -251,8 +251,7 @@ export default function SignDocuments() {
             <p className="text-[#34221D] text-sm leading-relaxed mb-6">
               Thank you{data.signedName ? `, ${data.signedName}` : ""}! Your
               Offer Letter and NDA have been signed and received by
-              AfroPuppyYoga. We'll be in touch shortly with your onboarding
-              details.
+              AfroPuppyYoga. Please contact us if you have any questions.
             </p>
             <div className="bg-[#FDE9EF] rounded-xl p-4 border border-[#E8D8D0] text-left mb-6">
               <p className="text-xs text-brand-link font-semibold uppercase tracking-wide mb-2">

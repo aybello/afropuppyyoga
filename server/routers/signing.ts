@@ -150,7 +150,7 @@ export const signingRouter = router({
           to: record.applicantEmail,
           subject: "Documents Signed — Welcome to AfroPuppyYoga! 🐾",
           html: buildSigningConfirmationEmail({ applicantName: record.applicantName, role: record.role, location: record.location }),
-          text: `Hi ${record.applicantName},\n\nThank you for signing your offer letter and NDA for the ${record.role} position at AfroPuppyYoga (${record.location}). We'll be in touch shortly with your onboarding details.\n\nWelcome to the family!\n\nThe AfroPuppyYoga Team`,
+          text: `Hi ${record.applicantName},\n\nThank you for signing your offer letter and NDA for the ${record.role} position at AfroPuppyYoga (${record.location}). We have received your signed documents. Please reply to this email if you have any questions.\n\nThe AfroPuppyYoga Team`,
         });
       } catch (error) {
         confirmationStatus = "failed";
@@ -160,16 +160,18 @@ export const signingRouter = router({
       const db = await getDb();
       if (db) {
         try {
-          await Promise.all([
-          db.insert(jobApplicationActions).values({
-            applicationId: record.applicationId,
-            action: "offer_signed",
-            fromStatus: "accepted",
-            toStatus: "accepted",
-            actorName: input.signedName,
-            details: JSON.stringify({ signingTokenId: record.id, signedIp: ip }),
-          }),
-          db.insert(communicationsLog).values({
+          const historyWrites: PromiseLike<unknown>[] = [];
+          if (!record.associatedAuditRecorded) {
+            historyWrites.push(db.insert(jobApplicationActions).values({
+              applicationId: record.applicationId,
+              action: "offer_signed",
+              fromStatus: "accepted",
+              toStatus: "accepted",
+              actorName: input.signedName,
+              details: JSON.stringify({ signingTokenId: record.id, signedIp: ip }),
+            }));
+          }
+          historyWrites.push(db.insert(communicationsLog).values({
             entityType: "job_application",
             entityId: record.applicationId,
             channel: "email",
@@ -180,8 +182,8 @@ export const signingRouter = router({
             bodyPreview: `Signed documents confirmed for ${record.role} at ${record.location}.`,
             deliveryStatus: confirmationStatus,
             actorName: "APY HQ",
-          }),
-          ]);
+          }));
+          await Promise.all(historyWrites);
         } catch (error) {
           console.error(`[Signing] Signature saved but history write failed for application ${record.applicationId}:`, error);
         }
@@ -317,7 +319,10 @@ function buildSigningEmail(input: { applicantName: string; role: string; locatio
 }
 
 function buildSigningConfirmationEmail(opts: { applicantName: string; role: string; location: string }): string {
-  const firstName = opts.applicantName.split(" ")[0];
+  const escape = (value: string) => value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]!));
+  const firstName = escape(opts.applicantName.split(" ")[0]);
+  const role = escape(opts.role);
+  const location = escape(opts.location);
   const APY_LOGO = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/pFRlGBKuUoljEWjn.png";
   return `<!DOCTYPE html>
 <html lang="en">
@@ -341,15 +346,15 @@ function buildSigningConfirmationEmail(opts: { applicantName: string; role: stri
           <tr>
             <td style="background:#C2185B;padding:32px 32px 24px;text-align:center;">
               <p style="margin:0 0 6px;font-size:12px;font-weight:bold;color:#FFD6E7;letter-spacing:1.5px;text-transform:uppercase;">🎉 Documents Received!</p>
-              <h1 style="margin:0 0 10px;font-family:Georgia,serif;font-size:27px;color:#FFFFFF;line-height:1.25;">Welcome to the pack,<br/>${firstName}! 🐶💕</h1>
-              <p style="margin:0;font-size:14px;color:#FFE4EF;line-height:1.5;"><strong style="color:#fff;">${opts.role}</strong> &middot; <strong style="color:#fff;">${opts.location}</strong></p>
+              <h1 style="margin:0 0 10px;font-family:Georgia,serif;font-size:27px;color:#FFFFFF;line-height:1.25;">Thank you,<br/>${firstName}!</h1>
+              <p style="margin:0;font-size:14px;color:#FFE4EF;line-height:1.5;"><strong style="color:#fff;">${role}</strong> &middot; <strong style="color:#fff;">${location}</strong></p>
             </td>
           </tr>
           <tr>
             <td style="padding:32px 32px 24px;background:#FFFFFF;">
-              <p style="margin:0 0 16px;font-size:15px;color:#3D1A2A;line-height:1.7;">We've received your signed Offer Letter and NDA. Your documents are on file and everything is confirmed!</p>
-              <p style="margin:0 0 16px;font-size:15px;color:#3D1A2A;line-height:1.7;">We'll be in touch shortly with your onboarding details and orientation schedule. We can't wait to have you on the team!</p>
-              <p style="margin:24px 0 0;font-family:Georgia,serif;font-size:15px;color:#1A0A12;">With excitement,<br/><strong>The AfroPuppyYoga Team</strong></p>
+              <p style="margin:0 0 16px;font-size:15px;color:#3D1A2A;line-height:1.7;">We've received your signed Offer Letter and NDA.</p>
+              <p style="margin:0 0 16px;font-size:15px;color:#3D1A2A;line-height:1.7;">Please reply to this email if you have any questions.</p>
+              <p style="margin:24px 0 0;font-family:Georgia,serif;font-size:15px;color:#1A0A12;"><strong>The AfroPuppyYoga Team</strong></p>
             </td>
           </tr>
           <tr>

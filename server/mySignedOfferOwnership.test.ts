@@ -119,7 +119,7 @@ function fakeDb(reads: Read[]) {
 function scenario({
   profiles = [member],
   directory = [employee],
-  actions = [activation()],
+  actions = [],
   associations = [],
   groupedProfiles = [],
   offers = [],
@@ -157,6 +157,96 @@ describe("getMySignedOfferApplicationIds", () => {
       const { db } = scenario({ associations: [claim(42), claim(41)], actions: [], ...options });
       await expect(getMySignedOfferApplicationIds(db, user, access)).resolves.toEqual([42]);
     }
+  });
+  const signedHistoricalOffer = { applicationId: 41, signed: 1, applicantName: member.name, applicantEmail: member.email };
+  it("withholds reviewed history after both canonical and directory identities are reassigned, without blocking unclaimed activation IDs", async () => {
+    const replacement = { name: "Different Person", email: "different@example.test", phone: "+14165550111" };
+    const current = { ...member, ...replacement };
+    const identities = new Map<number, { name: string; email: string }>();
+    const { db } = scenario({ profiles: [current], directory: [{ ...employee, ...replacement }],
+      associations: [claim(42), claim(41)], groupedProfiles: [historical], offers: [signedHistoricalOffer], actions: [activation([41, 40])] });
+    await expect(getMySignedOfferApplicationIds(db, { ...user, email: replacement.email }, access, identities)).resolves.toEqual([42, 40]);
+    expect(identities.size).toBe(0);
+  });
+
+  it.each([
+    ["name", { name: "Different Person" }],
+    ["email", { email: "different@example.test" }],
+    ["phone", { phone: "+14165550111" }],
+  ])("withholds historical documents on an individual %s mismatch in both current records", async (_field, change) => {
+    const current = { ...member, ...change };
+    const { db } = scenario({ profiles: [current], directory: [{ ...employee, ...change }], associations: [claim(42), claim(41)],
+      groupedProfiles: [historical], offers: [signedHistoricalOffer], actions: [activation()] });
+    await expect(getMySignedOfferApplicationIds(db, { ...user, email: current.email }, access)).resolves.toEqual([42]);
+  });
+
+  it.each([
+    ["canonical", "name", { name: "Different Person" }],
+    ["canonical", "email", { email: "different@example.test" }],
+    ["canonical", "phone", { phone: "+14165550111" }],
+    ["directory", "name", { name: "Different Person" }],
+    ["directory", "email", { email: "different@example.test" }],
+    ["directory", "phone", { phone: "+14165550111" }],
+  ])("requires the %s record's %s to match independently", async (side, _field, change) => {
+    const current = { ...member, ...(side === "canonical" ? change : {}) };
+    const owner = { ...employee, ...(side === "directory" ? change : {}) };
+    const { db } = scenario({ profiles: [current], directory: [owner], associations: [claim(42), claim(41)],
+      groupedProfiles: [historical], offers: [signedHistoricalOffer], actions: [activation()] });
+    await expect(getMySignedOfferApplicationIds(db, { ...user, email: current.email }, access)).resolves.toEqual([42]);
+  });
+
+  it("accepts the same reviewed person with normalized name, email and Canadian phone formatting", async () => {
+    const current = { ...member, name: "  CURRENT   MEMBER ", email: " MEMBER@EXAMPLE.COM ", phone: "1 (289) 555-0100" };
+    const owner = { ...employee, name: "current member", email: "member@example.com", phone: "289-555-0100" };
+    const identities = new Map<number, { name: string; email: string }>();
+    const { db } = scenario({ profiles: [current], directory: [owner], associations: [claim(42), claim(41)],
+      groupedProfiles: [historical], offers: [signedHistoricalOffer], actions: [activation()] });
+    await expect(getMySignedOfferApplicationIds(db, user, access, identities)).resolves.toEqual([42, 41]);
+    expect(identities.get(41)).toEqual({ name: historical.name, email: historical.email });
+    expect(identities.has(42)).toBe(false);
+  });
+
+  it("evaluates each reviewed historical profile separately and preserves the canonical id", async () => {
+    const different = { ...historical, id: 40, phone: "+14165550111" };
+    const identities = new Map<number, { name: string; email: string }>();
+    const { db } = scenario({ associations: [claim(42), claim(41), { ...claim(40), recordHash: reviewedHiringRecordHash(different) }],
+      groupedProfiles: [historical, different], offers: [signedHistoricalOffer, { ...signedHistoricalOffer, applicationId: 40 }],
+      actions: [activation([41, 40])] });
+    await expect(getMySignedOfferApplicationIds(db, user, access, identities)).resolves.toEqual([42, 41]);
+    expect([...identities.keys()]).toEqual([41]);
+  });
+
+  it.each([
+    ["canonical", { name: " " }], ["canonical", { email: null }], ["canonical", { phone: "invalid" }],
+    ["directory", { name: " " }], ["directory", { email: "not-an-email" }], ["directory", { phone: null }],
+    ["historical", { name: " " }], ["historical", { email: "not-an-email" }], ["historical", { phone: "+1 289 555 0100 ext 5" }],
+  ])("requires complete valid identity on the %s record (%j)", async (side, change) => {
+    const current = { ...member, ...(side === "canonical" ? change : {}) };
+    const owner = { ...employee, ...(side === "directory" ? change : {}) };
+    const prior = { ...historical, ...(side === "historical" ? change : {}) };
+    const historicalClaim = { ...claim(41), recordHash: reviewedHiringRecordHash(prior) };
+    const { db } = scenario({ profiles: [current], directory: [owner], associations: [claim(42), historicalClaim],
+      groupedProfiles: [prior], offers: [signedHistoricalOffer], actions: [activation()] });
+    const login = current.email ? { ...user, email: current.email } : { ...user, email: null, openId: `staff-phone:${member.phone}` };
+    await expect(getMySignedOfferApplicationIds(db, login, access)).resolves.toEqual([42]);
+  });
+
+  it.each(["active", "inactive"])("blocks reviewed history claimed by a different %s directory owner", async status => {
+    const { db } = scenario({ directory: [employee, { ...employee, id: 8, sourceApplicationId: 41, employmentStatus: status }],
+      associations: [claim(42), claim(41)], actions: [activation()] });
+    await expect(getMySignedOfferApplicationIds(db, user, access)).resolves.toEqual([42]);
+  });
+
+  it("forbids an inactive canonical directory owner even when reviewed history is valid", async () => {
+    const { db } = scenario({ directory: [{ ...employee, employmentStatus: "inactive" }],
+      associations: [claim(42), claim(41)], groupedProfiles: [historical], offers: [signedHistoricalOffer], actions: [activation()] });
+    await expectForbidden(getMySignedOfferApplicationIds(db, user, access));
+  });
+
+  it("does not restore a withheld reviewed claim via legacy activation evidence", async () => {
+    const { db } = scenario({ associations: [claim(42), claim(41)], groupedProfiles: [historical],
+      offers: [{ ...signedHistoricalOffer, applicantEmail: "different@example.test" }], actions: [activation([41])] });
+    await expect(getMySignedOfferApplicationIds(db, user, access)).resolves.toEqual([42]);
   });
   it("rejects conflicting canonical claims and never exposes another employee's history through legacy evidence", async () => {
     await expectForbidden(getMySignedOfferApplicationIds(scenario({ associations: [claim(42, 8)] }).db, user, access));
@@ -202,7 +292,7 @@ describe("getMySignedOfferApplicationIds", () => {
     const harness = scenario();
     await expect(
       getMySignedOfferApplicationIds(harness.db, user, access)
-    ).resolves.toEqual([42, 41]);
+    ).resolves.toEqual([42]);
     expect(harness.queue).toEqual([]);
     expect(harness.queries).toHaveLength(4);
     const dialect = new MySqlDialect();
@@ -245,7 +335,7 @@ describe("getMySignedOfferApplicationIds", () => {
         { ...user, email: " member@example.com " },
         access
       )
-    ).resolves.toEqual([42, 41]);
+    ).resolves.toEqual([42]);
   });
 
   it("supports phone-only staff identities with normalized numbers", async () => {
@@ -261,7 +351,7 @@ describe("getMySignedOfferApplicationIds", () => {
         },
         { ...access, teamMember: phoneMember }
       )
-    ).resolves.toEqual([42, 41]);
+    ).resolves.toEqual([42]);
   });
 
   it("does not count the same profile twice when both authenticated contacts match", async () => {
@@ -275,7 +365,7 @@ describe("getMySignedOfferApplicationIds", () => {
         },
         access
       )
-    ).resolves.toEqual([42, 41]);
+    ).resolves.toEqual([42]);
   });
 
   it.each([
@@ -398,7 +488,7 @@ describe("getMySignedOfferApplicationIds", () => {
     });
     await expect(
       getMySignedOfferApplicationIds(db, user, access)
-    ).resolves.toEqual([42, 41]);
+    ).resolves.toEqual([42]);
   });
 
   it("preserves the base id after current role, name, and email change without trusting stale context fields", async () => {
@@ -432,7 +522,7 @@ describe("getMySignedOfferApplicationIds", () => {
     });
     await expect(
       getMySignedOfferApplicationIds(db, user, access)
-    ).resolves.toEqual([42, 41]);
+    ).resolves.toEqual([42]);
   });
 
   it("allows manual staff their current documents but does not read unlinked historical audits", async () => {
@@ -470,31 +560,44 @@ describe("getMySignedOfferApplicationIds", () => {
     expect(db.select).toHaveBeenCalledTimes(3);
   });
 
+  const legacyHistory = { ...historical, status: "onboarded", deletedAt: new Date("2026-01-01"), phone: null };
+  it.each([
+    ["email-only staff", { ...member, phone: null }, { ...employee, phone: null }],
+    ["changed canonical name", { ...member, name: "Updated Name" }, employee],
+    ["changed directory name", member, { ...employee, name: "Updated Name" }],
+    ["changed current identity", { ...member, name: "Updated Name", email: "new@example.com", phone: "+14165550111" },
+      { ...employee, name: "Updated Name", email: "new@example.com", phone: "+14165550111" }],
+  ])("retains audited activation history for %s without adding reviewed identity filters", async (_label, current, owner) => {
+    const identities = new Map<number, { name: string; email: string }>();
+    const { db, queries, queue } = scenario({ profiles: [current], directory: [owner], actions: [activation()] });
+    await expect(getMySignedOfferApplicationIds(db, { ...user, email: current.email }, access, identities)).resolves.toEqual([42, 41]);
+    expect(identities.size).toBe(0);
+    expect(queries).toHaveLength(4);
+    expect(queue).toEqual([]);
+  });
+
+  it("requires the audit rather than inferring history from matching identities", async () => {
+    const { db } = scenario({ actions: [], groupedProfiles: [legacyHistory], offers: [signedHistoricalOffer] });
+    await expect(getMySignedOfferApplicationIds(db, user, access)).resolves.toEqual([42]);
+  });
+
+  it("cannot use legacy evidence to bypass a reviewed claim's invalid record hash", async () => {
+    const { db } = scenario({ actions: [activation()], associations: [claim(41)], groupedProfiles: [legacyHistory], offers: [signedHistoricalOffer] });
+    await expect(getMySignedOfferApplicationIds(db, user, access)).resolves.toEqual([42]);
+  });
+
   it("includes archived history only with explicit employee activation evidence, not contact/name similarity", async () => {
-    const history = {
-      ...member,
-      id: 41,
-      isTeamMember: false,
-      deletedAt: new Date(0),
-    };
+    const history = { ...member, id: 41, isTeamMember: false, deletedAt: new Date(0) };
     const profiles = [member, history, { ...history, id: 40 }];
     const without = scenario({ profiles, actions: [] });
-    await expect(
-      getMySignedOfferApplicationIds(without.db, user, access)
-    ).resolves.toEqual([42]);
+    await expect(getMySignedOfferApplicationIds(without.db, user, access)).resolves.toEqual([42]);
     const withAudit = scenario({ profiles, actions: [activation()] });
-    await expect(
-      getMySignedOfferApplicationIds(withAudit.db, user, access)
-    ).resolves.toEqual([42, 41]);
+    await expect(getMySignedOfferApplicationIds(withAudit.db, user, access)).resolves.toEqual([42, 41]);
   });
 
   it("unions valid historical audit IDs while keeping the canonical id first and unique", async () => {
-    const { db } = scenario({
-      actions: [activation([42, 41, 41]), activation([40, 41])],
-    });
-    await expect(
-      getMySignedOfferApplicationIds(db, user, access)
-    ).resolves.toEqual([42, 41, 40]);
+    const { db } = scenario({ actions: [activation([42, 41, 41]), activation([40, 41])] });
+    await expect(getMySignedOfferApplicationIds(db, user, access)).resolves.toEqual([42, 41, 40]);
   });
 
   it.each(["active", "inactive"])(
