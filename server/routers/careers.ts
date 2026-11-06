@@ -357,7 +357,7 @@ export const careersRouter = router({
         name: z.string().min(1).max(200),
         email: z.string().email(),
         phone: z.string().max(50).optional(),
-        referredBy: z.string().max(255).optional(),
+        referredBy: z.string().trim().max(255).optional(),
         whyAPY: z.string().max(2000).optional(),
         experience: z.string().max(1000).optional(),
         videoUrl: safeVideoUrl, // Required: S3 URL from upload OR a pasted video link
@@ -417,7 +417,7 @@ export const careersRouter = router({
           name: input.name,
           email: input.email,
           phone: input.phone ?? null,
-          referredBy: input.referredBy ?? null,
+          referredBy: input.referredBy || null,
           whyAPY: input.whyAPY ?? null,
           experience: input.experience ?? null,
           videoUrl: input.videoUrl,
@@ -476,7 +476,7 @@ export const careersRouter = router({
               to: "afropuppyyoga@gmail.com",
               subject: `New Application: ${input.name} — ${input.role} (${input.location})`,
               html: emailHtml,
-              text: `New job application received!\n\nRole: ${input.role} — ${input.location}\nName: ${input.name}\nEmail: ${input.email}\nPhone: ${input.phone ?? "Not provided"}\n\nWhy APY:\n${input.whyAPY ?? "Not provided"}\n\nExperience:\n${input.experience ?? "Not provided"}\n\nReview the application: ${APPLICATIONS_DASHBOARD_URL}\nIf prompted, sign in and choose Applications in APY HQ.`,
+              text: `New job application received!\n\nRole: ${input.role} — ${input.location}\nName: ${input.name}\nEmail: ${input.email}\nPhone: ${input.phone ?? "Not provided"}${input.referredBy ? `\nReferred By: ${input.referredBy}` : ""}\n\nWhy APY:\n${input.whyAPY ?? "Not provided"}\n\nExperience:\n${input.experience ?? "Not provided"}\n\nReview the application: ${APPLICATIONS_DASHBOARD_URL}\nIf prompted, sign in and choose Applications in APY HQ.`,
             }),
             sendEmail({
               to: input.email,

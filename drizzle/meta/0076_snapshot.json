@@ -2,7 +2,7 @@
   "version": "5",
   "dialect": "mysql",
   "id": "88a7b0f7-be0e-4c5b-b0c0-4ae40b4e084c",
-  "prevId": "d92e8c31-243a-4129-b446-e05ecbf1bf77",
+  "prevId": "0184e007-6a5a-419d-a018-2deaef46dcbb",
   "tables": {
     "birthdayInquiries": {
       "name": "birthdayInquiries",

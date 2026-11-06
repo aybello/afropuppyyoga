@@ -3,6 +3,7 @@
    Design: Warm Afro-Wellness Editorial (matches main site)
    ============================================================ */
 import { useState, useRef, useEffect } from "react";
+import { flushSync } from "react-dom";
 import {
   NEW_CAREERS_LISTINGS,
   PUPPY_MONITOR_SHIFT_DESCRIPTION,
@@ -29,8 +30,11 @@ import {
 import { createSubmissionKey } from "@/lib/submissionKey";
 import {
   EXPERIENCE_LIMIT,
+  REFERRED_BY_LIMIT,
   WHY_APY_LIMIT,
+  normalizeReferredBy,
   validateCareerApplication,
+  validateReferredBy,
   validateVideoFile,
   validateVideoLink,
 } from "./careerApplicationValidation";
@@ -448,13 +452,16 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
     url: string;
     key: string;
   } | null>(null);
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted, setSubmitted] = useState<"new" | "duplicate" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [submissionUnconfirmed, setSubmissionUnconfirmed] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [isReferralLocked, setIsReferralLocked] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resumeInputRef = useRef<HTMLInputElement>(null);
+  const referredByError = validateReferredBy(form.referredBy);
   const errorRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const submissionKeyRef = useRef(createSubmissionKey());
@@ -480,9 +487,17 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
   }, [videoFile]);
 
   const applyMutation = trpc.careers.submitApplication.useMutation({
-    onSuccess: () => setSubmitted(true),
-    onError: err =>
-      setError(err.message || "Something went wrong. Please try again."),
+    // Do not queue an offline application for replay after the form is closed.
+    networkMode: "always",
+    onSuccess: result => {
+      setSubmitted(result.duplicate ? "duplicate" : "new");
+      setIsReferralLocked(false);
+    },
+    onError: err => {
+      setError(err.message || "Something went wrong. Please try again.");
+      setSubmissionUnconfirmed(true);
+      setIsReferralLocked(false);
+    },
   });
 
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -535,6 +550,10 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
     }
     // The preflight requires a resume; keep the narrowing local to this flow.
     if (!resumeFile) return;
+    // Commit the lock before capturing the value and keep it through the
+    // upload-to-mutation handoff, even if the mutation state updates later.
+    flushSync(() => setIsReferralLocked(true));
+    const referredBy = normalizeReferredBy(form.referredBy);
 
     // Helper: upload a small file with XHR for progress tracking (used for resume)
     const uploadWithProgress = (
@@ -778,6 +797,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
         }
       } catch (err: any) {
         setIsUploading(false);
+        setIsReferralLocked(false);
         setUploadStatus(null);
         setError(err.message ?? "Video upload failed. Please try again.");
         return;
@@ -807,6 +827,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       resumeKey = data.key;
     } catch (err: any) {
       setIsUploading(false);
+      setIsReferralLocked(false);
       setUploadStatus(null);
       setError(err.message ?? "Resume upload failed. Please try again.");
       return;
@@ -820,7 +841,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       name: form.name.trim(),
       email: form.email.trim(),
       phone: form.phone || undefined,
-      referredBy: form.referredBy || undefined,
+      referredBy,
       whyAPY: form.whyAPY || undefined,
       experience: form.experience || undefined,
       videoUrl: videoUrl,
@@ -854,6 +875,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
           </div>
           <button
             onClick={onClose}
+            aria-label="Close application form"
             className="p-2 rounded-full hover:bg-[#E8D8D0] transition-colors text-[#34221D] mt-1"
           >
             <X size={18} />
@@ -869,8 +891,19 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
               Application Received!
             </h3>
             <p className="font-body text-[#34221D] text-base leading-relaxed mb-6">
-              Your application has been received. We'll review it and reach out
-              if you're a great fit.
+              {submitted === "duplicate" ? (
+                <>
+                  An application has already been received. Changes in this
+                  submission, including your referral, may not update the original
+                  application. If you need a correction, please contact APY at{" "}
+                  <a href="mailto:afropuppyyoga@gmail.com" className="underline">
+                    afropuppyyoga@gmail.com
+                  </a>.
+                </>
+              ) : (
+                <>Your application has been received. We'll review it and reach out
+                if you're a great fit.</>
+              )}
             </p>
             <button
               onClick={onClose}
@@ -882,13 +915,24 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
         ) : (
           <form onSubmit={handleSubmit} noValidate className="p-6 space-y-6">
             {/* Error banner — shown at top so it's always visible */}
-            {error && (
+            {(error || submissionUnconfirmed) && (
               <div
                 ref={errorRef}
                 role="alert"
                 className="p-3 bg-red-50 border border-red-200 rounded-xl"
               >
-                <p className="font-body text-base text-red-600">{error}</p>
+                {error && <p className="font-body text-base text-red-600">{error}</p>}
+                {submissionUnconfirmed && (
+                  <p className="font-body text-base text-red-600">
+                    We couldn't confirm whether your application was received. It
+                    may already have been saved. If you retry, changes (including
+                    your referral) may not update the original application. If you
+                    need a correction, please contact APY at{" "}
+                    <a href="mailto:afropuppyyoga@gmail.com" className="underline">
+                      afropuppyyoga@gmail.com
+                    </a>.
+                  </p>
+                )}
               </div>
             )}
             {/* Personal Info */}
@@ -938,19 +982,33 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
             </div>
 
             <div>
-              <label className="block font-body text-sm font-semibold text-[#34221D] uppercase tracking-wide mb-1.5">
+              <label htmlFor="career-referred-by" className="block font-body text-sm font-semibold text-[#34221D] uppercase tracking-wide mb-1.5">
                 Referred By
               </label>
               <input
+                id="career-referred-by"
                 type="text"
+                disabled={isReferralLocked || isUploading || applyMutation.isPending}
                 value={form.referredBy}
-                onChange={e => setForm({ ...form, referredBy: e.target.value })}
+                onChange={e => {
+                  setForm({ ...form, referredBy: e.target.value });
+                  if (referredByError && error === referredByError) setError(null);
+                }}
+                aria-invalid={!!referredByError}
+                aria-describedby={referredByError ? "career-referred-by-help career-referred-by-error" : "career-referred-by-help"}
                 placeholder="Team member's name (optional)"
-                className="w-full px-4 py-2.5 bg-white border border-input rounded-xl font-body text-base text-[#34221D] placeholder:text-[#71574F] focus:outline-none focus:border-brand-link focus:ring-1 focus:ring-brand-link/30 transition-colors"
+                className="w-full px-4 py-2.5 bg-white border border-input rounded-xl font-body text-base text-[#34221D] placeholder:text-[#71574F] focus:outline-none focus:border-brand-link focus:ring-1 focus:ring-brand-link/30 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               />
-              <p className="mt-1.5 font-body text-xs leading-5 text-[#71574F]">
+              <p id="career-referred-by-help" className="mt-1.5 font-body text-xs leading-5 text-[#71574F]">
                 Optional. If a team member told you to apply, write their name here.
+                Maximum {REFERRED_BY_LIMIT} characters after trimming; some symbols count as two.
+                <span role="status">{(isReferralLocked || isUploading || applyMutation.isPending) && " This field is locked while your application uploads and submits. If we cannot confirm submission, you can edit and retry, but changes may not update an already saved application."}</span>
               </p>
+              {referredByError && (
+                <p id="career-referred-by-error" className="mt-1 font-body text-xs text-red-600">
+                  {referredByError}
+                </p>
+              )}
             </div>
 
             <div>

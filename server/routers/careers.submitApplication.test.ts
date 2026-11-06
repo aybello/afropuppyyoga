@@ -119,6 +119,92 @@ describe("public careers application submission", () => {
     expect(createJobApplication).toHaveBeenCalledWith(expect.objectContaining({ role, location, status: "new" }));
   });
 
+  it("saves a trimmed referral and includes it safely in both owner email formats", async () => {
+    getDb.mockResolvedValue(createAuditDb().db);
+    const referral = `Alex & <script>"O'Brien"</script>`;
+
+    await expect(caller().submitApplication({ ...input, referredBy: `  ${referral}  ` })).resolves.toEqual({
+      success: true,
+      duplicate: false,
+      notificationWarning: false,
+    });
+
+    expect(createJobApplication).toHaveBeenCalledWith(expect.objectContaining({ referredBy: referral, status: "new" }));
+    expect(sendEmail).toHaveBeenCalledTimes(2);
+    const ownerEmail = sendEmail.mock.calls.find(([message]) => message.to === "afropuppyyoga@gmail.com")?.[0];
+    expect(ownerEmail).toBeDefined();
+    expect(ownerEmail.html).toContain("Referred By</td>");
+    expect(ownerEmail.html).toContain("Alex &amp; &lt;script&gt;&quot;O&#39;Brien&quot;&lt;/script&gt;");
+    expect(ownerEmail.html).not.toContain(referral);
+    expect(ownerEmail.html).not.toContain("<script>");
+    expect(ownerEmail.text).toContain(`\nReferred By: ${referral}\n`);
+    expect(buildApplicationConfirmationEmail).toHaveBeenCalledOnce();
+    expect(notifyOwner).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    ["legacy omitted field", undefined],
+    ["empty field", ""],
+    ["whitespace-only field", " \t\n "],
+  ])("stores null and omits the referral from owner email for %s", async (_description, referredBy) => {
+    getDb.mockResolvedValue(createAuditDb().db);
+    const application = referredBy === undefined ? input : { ...input, referredBy };
+
+    await expect(caller().submitApplication(application)).resolves.toEqual({
+      success: true,
+      duplicate: false,
+      notificationWarning: false,
+    });
+    expect(createJobApplication).toHaveBeenCalledWith(expect.objectContaining({ referredBy: null }));
+    const ownerEmail = sendEmail.mock.calls.find(([message]) => message.to === "afropuppyyoga@gmail.com")?.[0];
+    expect(ownerEmail).toBeDefined();
+    expect(ownerEmail.html).not.toContain("Referred By");
+    expect(ownerEmail.text).not.toContain("Referred By");
+    expect(sendEmail).toHaveBeenCalledTimes(2);
+    expect(notifyOwner).toHaveBeenCalledOnce();
+  });
+
+  it("accepts a referral of 255 characters after trimming", async () => {
+    getDb.mockResolvedValue(createAuditDb().db);
+    const referredBy = "A".repeat(255);
+
+    await expect(caller().submitApplication({ ...input, referredBy: ` ${referredBy} ` })).resolves.toMatchObject({ success: true, duplicate: false });
+    expect(createJobApplication).toHaveBeenCalledWith(expect.objectContaining({ referredBy }));
+    const ownerEmail = sendEmail.mock.calls.find(([message]) => message.to === "afropuppyyoga@gmail.com")?.[0];
+    expect(ownerEmail.html).toContain(referredBy);
+    expect(ownerEmail.text).toContain(`Referred By: ${referredBy}`);
+  });
+
+  it("rejects a referral over 255 characters before any submission side effects", async () => {
+    await expect(caller().submitApplication({ ...input, referredBy: ` ${"A".repeat(256)} ` })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
+    expect(getJobApplicationBySubmissionKey).not.toHaveBeenCalled();
+    expect(getRecentDuplicateJobApplication).not.toHaveBeenCalled();
+    expect(createJobApplication).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalled();
+    expect(notifyOwner).not.toHaveBeenCalled();
+  });
+
+  it("leaves recent-duplicate matching unchanged when a referral is supplied", async () => {
+    getRecentDuplicateJobApplication.mockResolvedValueOnce({ id: 12345 });
+
+    await expect(caller().submitApplication({ ...input, referredBy: "A different referrer" })).resolves.toEqual({
+      success: true,
+      duplicate: true,
+      notificationWarning: false,
+    });
+    expect(getJobApplicationBySubmissionKey).toHaveBeenCalledWith(input.submissionKey);
+    expect(getRecentDuplicateJobApplication).toHaveBeenCalledWith({
+      email: input.email,
+      role: input.role,
+      location: input.location,
+    });
+    expect(createJobApplication).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalled();
+    expect(notifyOwner).not.toHaveBeenCalled();
+  });
+
   it.each([
     ["uploaded video", {
       videoUrl: "https://storage.example.net/applications/videos/private-video.mp4?token=video-secret",
@@ -136,6 +222,7 @@ describe("public careers application submission", () => {
       ...video,
       resumeUrl: "https://storage.example.net/applications/resumes/private-resume.pdf?token=resume-secret",
       resumeKey: "applications/resumes/private-resume.pdf",
+      referredBy: "Trusted teammate",
     };
     // Incoming host headers must not influence the link sent to the owner.
     const untrustedCaller = careersRouter.createCaller({
@@ -154,6 +241,7 @@ describe("public careers application submission", () => {
       videoKey: application.videoKey ?? null,
       resumeUrl: application.resumeUrl,
       resumeKey: application.resumeKey,
+      referredBy: application.referredBy,
       submissionKey: application.submissionKey,
       status: "new",
     }));
@@ -172,6 +260,8 @@ describe("public careers application submission", () => {
     const dashboardUrl = "https://afropuppyyoga.ca/admin/applications";
     expect(ownerEmail.html).toContain(`href="${dashboardUrl}"`);
     expect(ownerEmail.text).toContain(dashboardUrl);
+    expect(ownerEmail.html).toContain(application.referredBy);
+    expect(ownerEmail.text).toContain(`Referred By: ${application.referredBy}`);
     expect(ownerNotification.content).toContain(dashboardUrl);
     for (const message of [ownerEmail.html, ownerEmail.text, JSON.stringify(ownerNotification)]) {
       for (const secret of [application.videoUrl, application.videoKey, application.resumeUrl, application.resumeKey]) {
@@ -292,11 +382,13 @@ describe("public careers application submission", () => {
   it("returns an existing submission without saving or sending another notification", async () => {
     getJobApplicationBySubmissionKey.mockResolvedValueOnce({ id: 12345 });
 
-    await expect(caller().submitApplication(input)).resolves.toEqual({
+    await expect(caller().submitApplication({ ...input, referredBy: "Another referrer" })).resolves.toEqual({
       success: true,
       duplicate: true,
       notificationWarning: false,
     });
+    expect(getJobApplicationBySubmissionKey).toHaveBeenCalledWith(input.submissionKey);
+    expect(getRecentDuplicateJobApplication).not.toHaveBeenCalled();
     expect(createJobApplication).not.toHaveBeenCalled();
     expect(sendEmail).not.toHaveBeenCalled();
     expect(notifyOwner).not.toHaveBeenCalled();

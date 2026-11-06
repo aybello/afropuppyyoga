@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { validateCareerApplication, validateVideoFile, validateVideoLink } from "../client/src/pages/careerApplicationValidation";
+import { normalizeReferredBy, validateCareerApplication, validateReferredBy, validateVideoFile, validateVideoLink } from "../client/src/pages/careerApplicationValidation";
 import { careersRouter } from "./routers/careers";
 
 // Parsing the schema does not execute the mutation or contact the database.
@@ -9,10 +9,11 @@ const serverSchema = careersRouter._def.procedures.submitApplication._def.inputs
 const serverInput = {
   role: "Puppy Monitor", location: "KW", name: "Applicant Example",
   email: "applicant@example.com", resumeUrl: "https://example.com/resume.pdf",
+  videoUrl: "https://example.com/video",
 };
 
 const valid = () => ({
-  form: { name: "  Applicant Example  ", email: "  applicant@example.com  ", phone: "", whyAPY: "Motivation", experience: "Experience" },
+  form: { name: "  Applicant Example  ", email: "  applicant@example.com  ", phone: "", referredBy: "", whyAPY: "Motivation", experience: "Experience" },
   resumeFile: { name: "resume.pdf", size: 100 },
   videoMode: "upload" as "upload" | "link",
   videoFile: { name: "intro.mp4", size: 100 },
@@ -57,6 +58,48 @@ describe("careers form preflight", () => {
     input.form.email = " applicant@example.com ";
     expect(validateCareerApplication(input)).toBeNull();
     expect(input.form.email).toBe(" applicant@example.com ");
+  });
+
+  it("normalizes optional referrals and validates 255/256 after trimming without changing the input", () => {
+    const input = valid();
+    for (const value of ["", "  \t\n  ", "\u2003\u00a0"]) {
+      input.form.referredBy = value;
+      expect(normalizeReferredBy(value)).toBeUndefined();
+      expect(validateCareerApplication(input)).toBeNull();
+    }
+    input.form.referredBy = `  ${"x".repeat(255)}  `;
+    expect(normalizeReferredBy(input.form.referredBy)).toBe("x".repeat(255));
+    expect(validateCareerApplication(input)).toBeNull();
+    expect(serverSchema.safeParse({ ...serverInput, referredBy: normalizeReferredBy(input.form.referredBy) }).success).toBe(true);
+    input.form.referredBy = `  ${"x".repeat(256)}  `;
+    expect(validateCareerApplication(input)).toMatch(/Referred By.*255.*256/);
+    expect(serverSchema.safeParse({ ...serverInput, referredBy: normalizeReferredBy(input.form.referredBy) }).success).toBe(false);
+    expect(input.form.referredBy).toBe(`  ${"x".repeat(256)}  `);
+    input.form.referredBy = "  Ayo  ";
+    expect(normalizeReferredBy(input.form.referredBy)).toBe("Ayo");
+    expect(validateCareerApplication(input)).toBeNull();
+  });
+
+  it("counts Unicode using the server's JavaScript string length and preserves Unicode", () => {
+    const input = valid();
+    input.form.referredBy = `  ${"🐶".repeat(127)}é  `; // 255 UTF-16 code units
+    expect(normalizeReferredBy(input.form.referredBy)).toBe(`${"🐶".repeat(127)}é`);
+    expect(validateCareerApplication(input)).toBeNull();
+    expect(serverSchema.safeParse({ ...serverInput, referredBy: normalizeReferredBy(input.form.referredBy) }).success).toBe(true);
+    input.form.referredBy = "🐶".repeat(128); // 256 UTF-16 code units
+    expect(validateReferredBy(input.form.referredBy)).toMatch(/Referred By.*255.*256/);
+    expect(validateCareerApplication(input)).toMatch(/Referred By.*255.*256/);
+    expect(serverSchema.safeParse({ ...serverInput, referredBy: input.form.referredBy }).success).toBe(false);
+  });
+
+  it("rejects an invalid referral before checking upload prerequisites", () => {
+    const input = valid();
+    input.form.referredBy = "x".repeat(256);
+    input.resumeFile = null as never;
+    input.videoFile = null as never;
+    expect(validateCareerApplication(input)).toMatch(/Referred By.*255/);
+    input.form.referredBy = "x".repeat(255);
+    expect(validateCareerApplication(input)).toMatch(/resume is required/i);
   });
 
   it("requires both a resume and either a video file or a video link", () => {
@@ -108,5 +151,23 @@ describe("careers form preflight", () => {
     expect(submit).toContain("experience: form.experience || undefined");
     expect(source).toContain('accept=".mp4,.mov,.webm,.avi"');
     expect(source).toContain("const fileError = validateVideoFile(file)");
+  });
+
+  it("associates the referral label, guidance, and inline error without truncating pasted text", () => {
+    const source = readFileSync(new URL("../client/src/pages/Careers.tsx", import.meta.url), "utf8");
+    const referral = source.slice(source.indexOf('<label htmlFor="career-referred-by"'), source.indexOf("Why do you want to join AfroPuppyYoga?"));
+    expect(referral).toMatch(/htmlFor="career-referred-by"[\s\S]*?Referred By[\s\S]*?<input[\s\S]*?id="career-referred-by"/);
+    expect(referral).toContain('id="career-referred-by-help"');
+    expect(referral).toContain('id="career-referred-by-error"');
+    expect(referral).toMatch(/aria-describedby=.*career-referred-by-help.*career-referred-by-error/);
+    expect(referral).toContain('aria-invalid={!!referredByError}');
+    expect(referral).toContain('{referredByError}');
+    expect(referral).not.toMatch(/maxLength|\.slice\(/);
+    const submit = source.slice(source.indexOf("  const handleSubmit ="), source.indexOf("  return (\n    <div className=\"fixed"));
+    expect(submit).toContain('const referredBy = normalizeReferredBy(form.referredBy)');
+    expect(submit).toMatch(/applyMutation\.mutate\(\{[\s\S]*?\breferredBy,/);
+    expect(submit.indexOf("validateCareerApplication(")).toBeLessThan(submit.indexOf("const referredBy = normalizeReferredBy"));
+    expect(submit).toContain("flushSync(() => setIsReferralLocked(true))");
+    expect(submit.indexOf("flushSync(() => setIsReferralLocked(true))")).toBeLessThan(submit.indexOf("const referredBy = normalizeReferredBy"));
   });
 });

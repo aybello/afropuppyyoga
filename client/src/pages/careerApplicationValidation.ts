@@ -2,8 +2,21 @@ import { z } from "zod";
 
 export const WHY_APY_LIMIT = 2000;
 export const EXPERIENCE_LIMIT = 1000;
+export const REFERRED_BY_LIMIT = 255;
 const MAX_VIDEO_SIZE = 500 * 1024 * 1024;
 const emailSchema = z.string().email();
+
+export function normalizeReferredBy(value: string): string | undefined {
+  return value.trim() || undefined;
+}
+
+export function validateReferredBy(value: string): string | null {
+  const length = normalizeReferredBy(value)?.length ?? 0;
+  if (length > REFERRED_BY_LIMIT) {
+    return `Referred By must be ${REFERRED_BY_LIMIT} characters or fewer after trimming (currently ${length}).`;
+  }
+  return null;
+}
 
 export function validateVideoFile(file: { name: string; size: number }): string | null {
   if (!/\.(mp4|mov|webm|avi)$/i.test(file.name)) {
@@ -35,7 +48,7 @@ export function validateVideoLink(value: string): string | null {
 }
 
 type ApplicationInput = {
-  form: { name: string; email: string; phone: string; whyAPY: string; experience: string };
+  form: { name: string; email: string; phone: string; referredBy: string; whyAPY: string; experience: string };
   resumeFile: { name: string; size: number } | null;
   videoMode: "upload" | "link";
   videoFile: { name: string; size: number } | null;
@@ -50,6 +63,8 @@ export function validateCareerApplication({ form, resumeFile, videoMode, videoFi
   if (!email) return "Please enter your email address.";
   if (!emailSchema.safeParse(email).success) return "Please enter a valid email address, such as name@example.com.";
   if (form.phone.length > 50) return "Your phone number must be 50 characters or fewer.";
+  const referredByError = validateReferredBy(form.referredBy);
+  if (referredByError) return referredByError;
   if (form.whyAPY.length > WHY_APY_LIMIT) return `Why APY must be ${WHY_APY_LIMIT} characters or fewer (currently ${form.whyAPY.length}).`;
   if (form.experience.length > EXPERIENCE_LIMIT) return `Relevant Experience must be ${EXPERIENCE_LIMIT} characters or fewer (currently ${form.experience.length}).`;
   if (!resumeFile) return "A resume is required. Please upload your resume (PDF or Word).";
