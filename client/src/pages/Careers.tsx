@@ -426,6 +426,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
     name: "",
     email: "",
     phone: "",
+    referredBy: "",
     whyAPY: "",
     experience: "",
   });
@@ -819,6 +820,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
       name: form.name.trim(),
       email: form.email.trim(),
       phone: form.phone || undefined,
+      referredBy: form.referredBy || undefined,
       whyAPY: form.whyAPY || undefined,
       experience: form.experience || undefined,
       videoUrl: videoUrl,
@@ -932,6 +934,22 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                 Optional. We may text this number about your application,
                 including your interview booking link. Reply STOP to opt out.
                 You can still apply without a phone number.
+              </p>
+            </div>
+
+            <div>
+              <label className="block font-body text-sm font-semibold text-[#34221D] uppercase tracking-wide mb-1.5">
+                Referred By
+              </label>
+              <input
+                type="text"
+                value={form.referredBy}
+                onChange={e => setForm({ ...form, referredBy: e.target.value })}
+                placeholder="Team member's name (optional)"
+                className="w-full px-4 py-2.5 bg-white border border-input rounded-xl font-body text-base text-[#34221D] placeholder:text-[#71574F] focus:outline-none focus:border-brand-link focus:ring-1 focus:ring-brand-link/30 transition-colors"
+              />
+              <p className="mt-1.5 font-body text-xs leading-5 text-[#71574F]">
+                Optional. If a team member told you to apply, write their name here.
               </p>
             </div>
 

@@ -1,0 +1,1 @@
+ALTER TABLE `jobApplications` ADD `referredBy` varchar(255);

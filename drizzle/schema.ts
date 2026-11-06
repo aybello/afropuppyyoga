@@ -90,6 +90,8 @@ export const jobApplications = mysqlTable("jobApplications", {
   email: varchar("email", { length: 320 }),
   /** Applicant's phone number */
   phone: varchar("phone", { length: 50 }),
+  /** Name of the team member who referred this applicant, if any. Drives the $50 staff referral bonus (referral must be hired and work 3 shifts). */
+  referredBy: varchar("referredBy", { length: 255 }),
   /** Why they want to work at APY */
   whyAPY: text("whyAPY"),
   /** Relevant experience */

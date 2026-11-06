@@ -113,6 +113,7 @@ type Application = {
   name: string;
   email: string;
   phone: string | null;
+  referredBy: string | null;
   role: string;
   location: string;
   whyAPY: string | null;
@@ -734,6 +735,12 @@ function ApplicationDetailModal({
                 <div>
                   <p className="font-body text-xs text-brand-link font-semibold uppercase tracking-wide mb-1">Phone</p>
                   <a href={`tel:${app.phone}`} className="font-body text-sm text-foreground hover:text-brand-link">{app.phone}</a>
+                </div>
+              )}
+              {app.referredBy && (
+                <div>
+                  <p className="font-body text-xs text-[#8B2252] font-semibold uppercase tracking-wide mb-1">Referred By</p>
+                  <p className="font-body text-sm text-[#1A0A12]">{app.referredBy}</p>
                 </div>
               )}
             </div>
