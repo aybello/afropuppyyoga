@@ -119,6 +119,70 @@ describe("public careers application submission", () => {
     expect(createJobApplication).toHaveBeenCalledWith(expect.objectContaining({ role, location, status: "new" }));
   });
 
+  it.each([
+    ["uploaded video", {
+      videoUrl: "https://storage.example.net/applications/videos/private-video.mp4?token=video-secret",
+      videoKey: "applications/videos/private-video.mp4",
+    }],
+    ["external video", {
+      videoUrl: "https://www.youtube.com/watch?v=private-video-id",
+      videoKey: undefined,
+    }],
+  ])("keeps %s and resume references out of owner messages while saving them", async (_kind, video) => {
+    const prepared = createAuditDb();
+    getDb.mockResolvedValue(prepared.db);
+    const application = {
+      ...input,
+      ...video,
+      resumeUrl: "https://storage.example.net/applications/resumes/private-resume.pdf?token=resume-secret",
+      resumeKey: "applications/resumes/private-resume.pdf",
+    };
+    // Incoming host headers must not influence the link sent to the owner.
+    const untrustedCaller = careersRouter.createCaller({
+      req: { headers: { host: "attacker.example", "x-forwarded-host": "attacker.example" } },
+    } as never);
+
+    await expect(untrustedCaller.submitApplication(application)).resolves.toEqual({
+      success: true,
+      duplicate: false,
+      notificationWarning: false,
+    });
+
+    expect(createJobApplication).toHaveBeenCalledOnce();
+    expect(createJobApplication).toHaveBeenCalledWith(expect.objectContaining({
+      videoUrl: application.videoUrl,
+      videoKey: application.videoKey ?? null,
+      resumeUrl: application.resumeUrl,
+      resumeKey: application.resumeKey,
+      submissionKey: application.submissionKey,
+      status: "new",
+    }));
+    expect(sendEmail).toHaveBeenCalledTimes(2);
+    const ownerEmail = sendEmail.mock.calls.find(([message]) => message.to === "afropuppyyoga@gmail.com")?.[0];
+    const confirmation = sendEmail.mock.calls.find(([message]) => message.to === application.email)?.[0];
+    expect(ownerEmail).toBeDefined();
+    expect(confirmation).toEqual({
+      to: application.email,
+      subject: "Application received",
+      html: "<p>Thank you</p>",
+      text: "Thank you",
+    });
+    expect(notifyOwner).toHaveBeenCalledOnce();
+    const ownerNotification = notifyOwner.mock.calls[0][0];
+    const dashboardUrl = "https://afropuppyyoga.ca/admin/applications";
+    expect(ownerEmail.html).toContain(`href="${dashboardUrl}"`);
+    expect(ownerEmail.text).toContain(dashboardUrl);
+    expect(ownerNotification.content).toContain(dashboardUrl);
+    for (const message of [ownerEmail.html, ownerEmail.text, JSON.stringify(ownerNotification)]) {
+      for (const secret of [application.videoUrl, application.videoKey, application.resumeUrl, application.resumeKey]) {
+        if (secret) expect(message).not.toContain(secret);
+      }
+      expect(message).not.toContain("attacker.example");
+    }
+    expect(prepared.inserts).toContainEqual(expect.objectContaining({ action: "application_submitted" }));
+    expect(prepared.inserts).toContainEqual(expect.objectContaining({ action: "application_confirmation_sent", deliveryStatus: "sent" }));
+  });
+
   it("confirms a durable application even when the secondary communications audit fails", async () => {
     const prepared = createAuditDb({ rejectCommunication: true });
     getDb.mockResolvedValue(prepared.db);
@@ -221,6 +285,19 @@ describe("public careers application submission", () => {
     createJobApplication.mockRejectedValue(new Error("database write failed"));
 
     await expect(caller().submitApplication(input)).rejects.toThrow("database write failed");
+    expect(sendEmail).not.toHaveBeenCalled();
+    expect(notifyOwner).not.toHaveBeenCalled();
+  });
+
+  it("returns an existing submission without saving or sending another notification", async () => {
+    getJobApplicationBySubmissionKey.mockResolvedValueOnce({ id: 12345 });
+
+    await expect(caller().submitApplication(input)).resolves.toEqual({
+      success: true,
+      duplicate: true,
+      notificationWarning: false,
+    });
+    expect(createJobApplication).not.toHaveBeenCalled();
     expect(sendEmail).not.toHaveBeenCalled();
     expect(notifyOwner).not.toHaveBeenCalled();
   });

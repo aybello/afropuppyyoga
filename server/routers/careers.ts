@@ -78,6 +78,8 @@ import { recordInterviewInviteOutcome } from "../interviewInviteAudit";
 export const APP_STATUS = ["new", "reviewed", "shortlisted", "interview_requested", "interview_scheduled", "accepted", "rejected", "onboarded"] as const;
 type AppStatus = (typeof APP_STATUS)[number];
 
+const APPLICATIONS_DASHBOARD_URL = "https://afropuppyyoga.ca/admin/applications";
+
 type HiringActor = {
   user: { id: number; name: string | null; email: string | null };
 };
@@ -400,10 +402,9 @@ export const careersRouter = router({
           ${input.whyAPY ? `<div style="margin-bottom: 16px;"><p style="color: #8B2252; font-size: 12px; font-weight: bold; text-transform: uppercase; margin: 0 0 6px;">Why APY</p><p style="color: #5A3040; font-size: 14px; line-height: 1.6; margin: 0; background: white; padding: 12px; border-radius: 8px; border: 1px solid #F0D0DC;">${escapeHtml(input.whyAPY)}</p></div>` : ""}
           ${input.experience ? `<div style="margin-bottom: 16px;"><p style="color: #8B2252; font-size: 12px; font-weight: bold; text-transform: uppercase; margin: 0 0 6px;">Experience</p><p style="color: #5A3040; font-size: 14px; line-height: 1.6; margin: 0; background: white; padding: 12px; border-radius: 8px; border: 1px solid #F0D0DC;">${escapeHtml(input.experience)}</p></div>` : ""}
           <div style="display: flex; gap: 12px; margin-top: 24px;">
-            ${input.videoUrl ? `<a href="${input.videoUrl}" style="flex: 1; display: block; text-align: center; background: #C2185B; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: bold;">▶ Watch Video</a>` : `<span style="flex: 1; display: block; text-align: center; background: #E0C0CC; color: #8B6070; padding: 12px 20px; border-radius: 8px; font-size: 14px;">No video submitted</span>`}
-            <a href="${input.resumeUrl}" style="flex: 1; display: block; text-align: center; background: #3D1A2E; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: bold;">📄 View Resume</a>
+            <a href="${APPLICATIONS_DASHBOARD_URL}" style="flex: 1; display: block; text-align: center; background: #3D1A2E; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: bold;">Review application</a>
           </div>
-          <p style="color: #C4A0B0; font-size: 11px; text-align: center; margin-top: 24px;">Manage applications at afropuppyyoga.ca/admin/applications</p>
+          <p style="color: #C4A0B0; font-size: 11px; text-align: center; margin-top: 24px;">If prompted, sign in and choose Applications in APY HQ to review the video and resume.</p>
         </div>
       `;
 
@@ -475,7 +476,7 @@ export const careersRouter = router({
               to: "afropuppyyoga@gmail.com",
               subject: `New Application: ${input.name} — ${input.role} (${input.location})`,
               html: emailHtml,
-              text: `New job application received!\n\nRole: ${input.role} — ${input.location}\nName: ${input.name}\nEmail: ${input.email}\nPhone: ${input.phone ?? "Not provided"}\n\nWhy APY:\n${input.whyAPY ?? "Not provided"}\n\nExperience:\n${input.experience ?? "Not provided"}\n\nVideo: ${input.videoUrl ?? "Not provided"}\nResume: ${input.resumeUrl}`,
+              text: `New job application received!\n\nRole: ${input.role} — ${input.location}\nName: ${input.name}\nEmail: ${input.email}\nPhone: ${input.phone ?? "Not provided"}\n\nWhy APY:\n${input.whyAPY ?? "Not provided"}\n\nExperience:\n${input.experience ?? "Not provided"}\n\nReview the application: ${APPLICATIONS_DASHBOARD_URL}\nIf prompted, sign in and choose Applications in APY HQ.`,
             }),
             sendEmail({
               to: input.email,
@@ -485,7 +486,7 @@ export const careersRouter = router({
             }),
             notifyOwner({
               title: `New Application: ${input.role} (${input.location})`,
-              content: `${input.name} (${input.email}) applied for ${input.role} — ${input.location}.\n\nVideo: ${input.videoUrl ?? "Not provided"}\nResume: ${input.resumeUrl}`,
+              content: `${input.name} (${input.email}) applied for ${input.role} — ${input.location}.\n\nReview the application: ${APPLICATIONS_DASHBOARD_URL}\nIf prompted, sign in and choose Applications in APY HQ.`,
             }),
           ]);
           const failedNotifications = notificationResults.filter((result) => result.status === "rejected").length;
