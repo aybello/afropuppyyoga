@@ -131,6 +131,10 @@ describeBrowser("career referral submission lock (isolated browser)", () => {
       await page.getByRole("button", { name: "Submit Application" }).click();
       await expect.poll(() => initCount).toBe(2);
       expect(await referral.isDisabled()).toBe(true);
+      page.once("dialog", (dialog: any) => dialog.dismiss());
+      await page.getByRole("button", { name: "Close application form" }).click();
+      expect(await referral.isVisible()).toBe(true);
+      expect(await page.getByText(/please keep this form open until it finishes/i).count()).toBe(1);
       expect(await referral.getAttribute("aria-describedby")).toContain("career-referred-by-help");
       expect(await page.locator("#career-referred-by-help").innerText()).toMatch(/locked while your application uploads and submits/i);
       expect(await referral.inputValue()).toBe("  First Referrer  ");
@@ -257,7 +261,10 @@ describeBrowser("career referral submission lock (isolated browser)", () => {
       resumeGate.resolve();
       // networkMode: online would leave the mutation paused here instead.
       await expect.poll(() => mutationCount, { timeout: 5_000 }).toBe(1);
+      let warning = "";
+      page.once("dialog", (dialog: any) => { warning = dialog.message(); return dialog.accept(); });
       await page.getByRole("button", { name: "Close application form" }).click();
+      expect(warning).toMatch(/may still receive your application/i);
       const requestFailed = page.waitForEvent("requestfailed", {
         predicate: (request: any) => request.url().includes("careers.submitApplication"),
       });

@@ -23,20 +23,72 @@ const forbidden = () =>
   });
 
 /**
+ * Query under the same staffing lock as ownership and offer selection. A marker
+ * is never accepted from the caller. Scan all signing audits so a marked token
+ * cannot lose its guard merely by being moved to a different application.
+ * A completely missing/deleted audit is indistinguishable from legacy data;
+ * the signing transaction and audit retention are therefore security invariants.
+ */
+export async function filterGuardedSignedOffers<T extends { id: number; applicationId: number }>(
+  db: any, records: T[], guardedReviewedIds: Set<number>,
+): Promise<T[]> {
+  if (!records.length) return records;
+  const actions: Array<typeof jobApplicationActions.$inferSelect> = await db.select().from(jobApplicationActions)
+    .where(eq(jobApplicationActions.action, "offer_signed"));
+  const blockedApplications = new Set<number>();
+  const markerByToken = new Map<number, { applicationId: number; valid: boolean; count: number }>();
+  for (const action of actions) {
+    if (action.action !== "offer_signed") continue;
+    let details: unknown;
+    try { details = JSON.parse(action.details ?? ""); }
+    catch {
+      // Unrelated malformed legacy details were not previously authoritative.
+      // An identifiable broken marker cannot be safely assigned to a token.
+      if (action.details?.includes("reviewedIdentityGuardVersion")) blockedApplications.add(action.applicationId);
+      continue;
+    }
+    if (!details || typeof details !== "object" || Array.isArray(details)) {
+      if (action.details?.includes("reviewedIdentityGuardVersion")) blockedApplications.add(action.applicationId);
+      continue;
+    }
+    const evidence = details as Record<string, unknown>;
+    if (!Object.prototype.hasOwnProperty.call(evidence, "reviewedIdentityGuardVersion")) continue;
+    const id = evidence.signingTokenId;
+    if (typeof id !== "number" || !Number.isSafeInteger(id) || id <= 0) {
+      blockedApplications.add(action.applicationId);
+      continue;
+    }
+    const previous = markerByToken.get(id);
+    markerByToken.set(id, {
+      applicationId: action.applicationId,
+      valid: evidence.reviewedIdentityGuardVersion === 1 && !previous,
+      count: (previous?.count ?? 0) + 1,
+    });
+  }
+  return records.filter(record => {
+    if (blockedApplications.has(record.applicationId)) return false;
+    const marker = markerByToken.get(record.id);
+    return !marker || (marker.valid && marker.count === 1 && marker.applicationId === record.applicationId
+      && guardedReviewedIds.has(record.applicationId));
+  });
+}
+
+/**
  * Resolve document ownership, not signing state. The caller must separately
  * select completed documents and must never expose signing tokens.
  *
  * Pass the shared staffing-lock transaction and its revalidated authenticated
  * user. Keep completed-document selection in that same transaction; IDs returned
  * here alone are not a durable authorization grant. This helper performs reads
- * only. Reviewed associations require current identity checks; legacy activation
- * audits authorize unclaimed IDs without an immutable identity snapshot.
+ * only. Baseline ownership is unchanged; guardedReviewedIds is additional
+ * eligibility for newly signed, server-audit-marked reviewed offers only.
  */
 export async function getMySignedOfferApplicationIds(
   db: any,
   user: User,
   access: ApyAccess,
-  reviewedIdentities: Map<number, { name: string; email: string }> = new Map()
+  reviewedIdentities: Map<number, { name: string; email: string }> = new Map(),
+  guardedReviewedIds: Set<number> = new Set()
 ): Promise<number[]> {
   if (access.level === "none") throw forbidden();
   // Owners have no implicit staff identity and cannot impersonate a member.
@@ -121,34 +173,44 @@ export async function getMySignedOfferApplicationIds(
   }
   const groupedCandidates = associations.filter(entry => entry.employeeId === employee.id && entry.canonicalApplicationId === member.id && entry.applicationId !== member.id
     && claimsByApplication.get(entry.applicationId)?.length === 1 && !otherClaims.has(entry.applicationId) && !otherActiveIds.has(entry.applicationId));
-
+  // A signing token has its own identity snapshot. A reviewed application can
+  // have older offers created for different details; never expose such offers.
   const safeGroupedIds = new Set<number>();
   if (groupedCandidates.length) {
     const ids = groupedCandidates.map(entry => entry.applicationId);
-    const profiles: Array<typeof jobApplications.$inferSelect> = await db.select().from(jobApplications).where(inArray(jobApplications.id, ids));
+    const groupedProfiles: Array<typeof jobApplications.$inferSelect> = await db.select().from(jobApplications).where(inArray(jobApplications.id, ids));
     const offers: Array<typeof signingTokens.$inferSelect> = await db.select().from(signingTokens).where(and(inArray(signingTokens.applicationId, ids), eq(signingTokens.signed, 1)));
-    const sameNameEmail = (current: typeof member | typeof employee, identity: { name: string; email: string }) =>
-      signedOfferIdentityMatches({ applicantName: current.name, applicantEmail: current.email }, identity);
-    const currentIdentitiesValid = hasValidReviewedIdentity(member) && hasValidReviewedIdentity(employee);
-    const currentIdentitiesMatch = currentIdentitiesValid
-      && sameNameEmail(employee, { name: member.name, email: member.email! })
-      && normalizeCanadianPhoneNumber(employee.phone!) === normalizeCanadianPhoneNumber(member.phone!);
-
+    const normalizedName = (name: string) => name.normalize("NFKC").trim().toLowerCase().replace(/\s+/g, " ");
     for (const entry of groupedCandidates) {
-      const profile = profiles.find(p => p.id === entry.applicationId);
-      if (!profile || reviewedHiringRecordHash(profile) !== entry.recordHash
-          || !hasValidReviewedIdentity(profile) || !currentIdentitiesMatch) continue;
-      const identity = { name: profile.name, email: profile.email! };
-      if (!sameNameEmail(member, identity)
-          || normalizeCanadianPhoneNumber(member.phone!) !== normalizeCanadianPhoneNumber(profile.phone!)) continue;
+      const profile = groupedProfiles.find(p => p.id === entry.applicationId);
+      if (!profile || reviewedHiringRecordHash(profile) !== entry.recordHash || !profile.email?.trim() || !profile.name?.trim()) continue;
       const matchingOffers = offers.filter(offer => offer.applicationId === entry.applicationId);
-      if (matchingOffers.every(offer => signedOfferIdentityMatches(offer, identity))) {
-        owned.add(entry.applicationId);
+      if (matchingOffers.every(offer => typeof offer.applicantName === "string" && normalizedName(offer.applicantName) === normalizedName(profile.name)
+        && typeof offer.applicantEmail === "string" && offer.applicantEmail.trim().toLowerCase() === profile.email!.trim().toLowerCase())) {
         safeGroupedIds.add(entry.applicationId);
-        reviewedIdentities.set(entry.applicationId, identity);
+        reviewedIdentities.set(entry.applicationId, { name: profile.name, email: profile.email });
+        // This stronger rule is deliberately NOT used for baseline ownership.
+        // Each value is explicitly checked before normalization: contact edits,
+        // missing fields and incomplete identities fail closed for marked offers.
+        if (employee.endedAt == null && hasValidReviewedIdentity(profile)
+          && hasValidReviewedIdentity(member) && hasValidReviewedIdentity(employee)
+          && typeof profile.email === "string" && typeof profile.phone === "string"
+          && typeof member.phone === "string" && typeof employee.phone === "string"
+          && signedOfferIdentityMatches({ applicantName: member.name, applicantEmail: member.email }, { name: profile.name, email: profile.email })
+          && signedOfferIdentityMatches({ applicantName: employee.name, applicantEmail: employee.email }, { name: profile.name, email: profile.email })
+          && normalizeCanadianPhoneNumber(member.phone) === normalizeCanadianPhoneNumber(profile.phone)
+          && normalizeCanadianPhoneNumber(employee.phone) === normalizeCanadianPhoneNumber(profile.phone)) {
+          guardedReviewedIds.add(entry.applicationId);
+        }
       }
     }
   }
+  for (const entry of associations) {
+    if (entry.employeeId !== employee.id || entry.canonicalApplicationId !== member.id) continue;
+    if (claimsByApplication.get(entry.applicationId)?.length !== 1 || otherClaims.has(entry.applicationId) || otherActiveIds.has(entry.applicationId)) continue;
+    if (entry.applicationId === member.id || safeGroupedIds.has(entry.applicationId)) owned.add(entry.applicationId);
+  }
+
   for (const action of actions) {
     if (
       action.applicationId !== member.id ||

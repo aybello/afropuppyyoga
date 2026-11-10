@@ -35,6 +35,7 @@ const trustedBy: ReadonlyArray<{ name: string; src: string; height: number; opti
   { name: "Brock Solutions", src: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663446228701/dwXWkrdWFpxsxxJF.png", height: 72 },
   { name: "Nutram Pet Foods", src: "/manus-storage/nutram-canada-official-blue-transparent_d5a5964e.png", height: 36 },
   { name: "Little Scholars Child Care", src: "/manus-storage/little-scholars-cambridge-original_2fac7cda.jpg", height: 88 },
+  { name: "Cyclone Spin Studio", src: "/manus-storage/cyclone-uw_a8d866c6.png", height: 62 },
 ];
 
 function PartnerLogo({ org, copy }: { org: (typeof trustedBy)[number]; copy: number }) {

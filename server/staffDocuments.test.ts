@@ -15,7 +15,7 @@ const mocks = vi.hoisted(() => ({
 // Paths are relative to this server-level test, not to the router module.
 vi.mock("./db", () => ({ getDb: mocks.getDb, getSigningTokenByToken: mocks.getSigningTokenByToken }));
 vi.mock("./apyAccess", () => ({ resolveApyAccess: mocks.resolveApyAccess }));
-vi.mock("./mySignedOfferOwnership", () => ({ getMySignedOfferApplicationIds: mocks.getMySignedOfferApplicationIds }));
+vi.mock("./mySignedOfferOwnership", () => ({ getMySignedOfferApplicationIds: mocks.getMySignedOfferApplicationIds, filterGuardedSignedOffers: async (_tx: unknown, records: unknown[]) => records }));
 vi.mock("./signedOfferPdf", () => ({ buildSignedOfferPdf: mocks.buildSignedOfferPdf }));
 // Deliberately do not mock _core/trpc: authentication and teamMemberProcedure run.
 import { staffDocumentsRouter } from "./routers/staffDocuments";
@@ -415,7 +415,7 @@ describe("staffDocuments.mySignedOffers", () => {
       expect(serialized).not.toContain(secret);
     }
     expect(mocks.resolveApyAccess).toHaveBeenCalledExactlyOnceWith(identity);
-    expect(mocks.getMySignedOfferApplicationIds).toHaveBeenCalledExactlyOnceWith(db.tx, identity, resolved, expect.any(Map));
+    expect(mocks.getMySignedOfferApplicationIds).toHaveBeenCalledExactlyOnceWith(db.tx, identity, resolved, expect.any(Map), expect.any(Set));
     expect(queries).toHaveLength(1);
     expect(queries[0].sql).toContain("`signingTokens`.`applicationId` in (?, ?)");
     expect(queries[0].sql).toContain("`signingTokens`.`signed` = ?");
@@ -436,7 +436,7 @@ describe("staffDocuments.mySignedOffers", () => {
     await expect(api.mySignedOffers()).resolves.toEqual([]);
     await expect(api.downloadMySignedOffer({ id: 101 })).rejects.toMatchObject({ code: "NOT_FOUND" });
     expect(mocks.resolveApyAccess).toHaveBeenCalledTimes(2);
-    expect(mocks.getMySignedOfferApplicationIds).toHaveBeenCalledWith(db.tx, owner, ownerAccess, expect.any(Map));
+    expect(mocks.getMySignedOfferApplicationIds).toHaveBeenCalledWith(db.tx, owner, ownerAccess, expect.any(Map), expect.any(Set));
     expect(db.select).not.toHaveBeenCalled();
     expect(mocks.buildSignedOfferPdf).not.toHaveBeenCalled();
     expectPrivate(setHeader);
@@ -475,7 +475,7 @@ describe("staffDocuments.downloadMySignedOffer", () => {
     expect(result).toEqual(expectedDownload(record));
     expect(Buffer.from(result.base64, "base64")).toEqual(pdf);
     expect(mocks.buildSignedOfferPdf).toHaveBeenCalledExactlyOnceWith(record);
-    expect(mocks.getMySignedOfferApplicationIds).toHaveBeenCalledExactlyOnceWith(db.tx, user, access, expect.any(Map));
+    expect(mocks.getMySignedOfferApplicationIds).toHaveBeenCalledExactlyOnceWith(db.tx, user, access, expect.any(Map), expect.any(Set));
     expect(queries[0].params).toEqual([101, 42, 41, 1]);
     expect(queries[0].limit).toBe(1);
     expect(queries[0].sql).not.toContain("expiresAt");

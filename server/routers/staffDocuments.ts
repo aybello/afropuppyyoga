@@ -4,7 +4,7 @@ import { z } from "zod";
 import { signingTokens, users, type User } from "../../drizzle/schema";
 import { getDb, getSigningTokenByToken } from "../db";
 import { router, publicProcedure, teamMemberProcedure } from "../_core/trpc";
-import { getMySignedOfferApplicationIds } from "../mySignedOfferOwnership";
+import { filterGuardedSignedOffers, getMySignedOfferApplicationIds } from "../mySignedOfferOwnership";
 import { buildSignedOfferPdf } from "../signedOfferPdf";
 import type { ApyAccess } from "../apyAccess";
 import { withStaffingMutationLock } from "../staffingMutationLock";
@@ -30,12 +30,13 @@ async function download(record: typeof signingTokens.$inferSelect) {
 async function withMySignedOfferRead<T>(
   user: User,
   access: ApyAccess,
-  select: (tx: any, ids: number[], identities: Map<number, { name: string; email: string }>) => Promise<T>,
+  select: (tx: any, ids: number[], identities: Map<number, { name: string; email: string }>, guardedReviewedIds: Set<number>) => Promise<T>,
 ) {
   const db = await getDb();
   if (!db) throw new Error("Database unavailable");
   return withStaffingMutationLock(db, async tx => {
     const identities = new Map<number, { name: string; email: string }>();
+    const guardedReviewedIds = new Set<number>();
     let currentUser = user;
     if (access.teamMember) {
       // Middleware ran before this transaction. Re-read the authenticated login,
@@ -50,19 +51,20 @@ async function withMySignedOfferRead<T>(
     // role and ownership claims on the same handle as the document read below.
     // The mutex serializes cooperating staffing writers; it cannot protect
     // against out-of-band SQL or revoke bytes already selected/returned.
-    const ids = await getMySignedOfferApplicationIds(tx, currentUser, access, identities);
-    return select(tx, ids, identities);
+    const ids = await getMySignedOfferApplicationIds(tx, currentUser, access, identities, guardedReviewedIds);
+    return select(tx, ids, identities, guardedReviewedIds);
   });
 }
 
 export const staffDocumentsRouter = router({
   mySignedOffers: teamMemberProcedure.query(async ({ ctx }) => {
     ctx.res.setHeader("Cache-Control", "private, no-store");
-    return withMySignedOfferRead(ctx.user, ctx.apyAccess, async (tx, ids, identities) => {
+    return withMySignedOfferRead(ctx.user, ctx.apyAccess, async (tx, ids, identities, guardedReviewedIds) => {
       if (!ids.length) return [];
       const records: Array<typeof signingTokens.$inferSelect> = await tx.select().from(signingTokens).where(and(inArray(signingTokens.applicationId, ids), eq(signingTokens.signed, 1)))
         .orderBy(desc(signingTokens.signedAt), desc(signingTokens.id));
-      return records.filter(record => validSignature(record) && matchesReviewedIdentity(record, identities)).map(record => ({
+      const guarded = await filterGuardedSignedOffers(tx, records, guardedReviewedIds);
+      return guarded.filter(record => validSignature(record) && matchesReviewedIdentity(record, identities)).map(record => ({
         id: record.id, role: record.role, location: record.location, signedAt: record.signedAt,
         signedName: record.signedName, hasOriginalSnapshot: Boolean(record.signedDocumentSnapshot),
       }));
@@ -70,11 +72,12 @@ export const staffDocumentsRouter = router({
   }),
   downloadMySignedOffer: teamMemberProcedure.input(z.object({ id: z.number().int().positive() }).strict()).mutation(async ({ ctx, input }) => {
     ctx.res.setHeader("Cache-Control", "private, no-store");
-    const record = await withMySignedOfferRead(ctx.user, ctx.apyAccess, async (tx, ids, identities) => {
+    const record = await withMySignedOfferRead(ctx.user, ctx.apyAccess, async (tx, ids, identities, guardedReviewedIds) => {
       if (!ids.length) throw new TRPCError({ code: "NOT_FOUND", message: "No signed document is available." });
       const [selected]: Array<typeof signingTokens.$inferSelect> = await tx.select().from(signingTokens).where(and(eq(signingTokens.id, input.id),
         inArray(signingTokens.applicationId, ids), eq(signingTokens.signed, 1))).limit(1);
-      if (!selected || !validSignature(selected) || !matchesReviewedIdentity(selected, identities)) {
+      if (!selected || !validSignature(selected) || !matchesReviewedIdentity(selected, identities)
+          || !(await filterGuardedSignedOffers(tx, [selected], guardedReviewedIds)).length) {
         throw new TRPCError({ code: "NOT_FOUND", message: "No signed document is available." });
       }
       // No further database reads during PDF generation. Detach dates as well

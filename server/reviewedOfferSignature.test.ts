@@ -92,7 +92,7 @@ describe("reviewed associated current offer signature (isolated)", () => {
     expect(h.events).toEqual(["lock", "commit"]);
     expect(h.calls).toHaveLength(2);
     expect(h.calls[0]).toMatchObject({ table: signingTokens, locked: true, values: { signed: 1, signedName: target.name, signedIp: "192.0.2.17", signedDocumentSnapshot: JSON.stringify(snapshot) } });
-    expect(h.calls[1]).toEqual({ table: jobApplicationActions, locked: true, values: { applicationId: 41, action: "offer_signed", fromStatus: "accepted", toStatus: "accepted", actorName: target.name, details: JSON.stringify({ signingTokenId: 3, signedIp: "192.0.2.17" }) } });
+    expect(h.calls[1]).toEqual({ table: jobApplicationActions, locked: true, values: { applicationId: 41, action: "offer_signed", fromStatus: "accepted", toStatus: "accepted", actorName: target.name, details: JSON.stringify({ signingTokenId: 3, signedIp: "192.0.2.17", reviewedIdentityGuardVersion: 1 }) } });
     expect(h.calls[0].predicate.sql).toMatch(/applicationId.*signed.*BINARY.*token.*expiresAt/);
     expect(h.calls[0].predicate.params.slice(0, 4)).toEqual([3, 41, 0, offer.token]);
     expect(h.state.apps).toEqual(input.apps); expect(h.state.directory).toEqual(input.directory);
@@ -393,6 +393,7 @@ describe("reviewed associated current offer signature (isolated)", () => {
     const state = base(), h = harness(state, { auditFails: true });
     await expect(sign(h)).rejects.toThrow("audit unavailable");
     expect(h.calls.map(call => call.table)).toEqual([signingTokens, jobApplicationActions]);
+    expect(JSON.parse(h.calls[1].values.details)).toEqual({ signingTokenId: offer.id, signedIp: "192.0.2.17", reviewedIdentityGuardVersion: 1 });
     expect(h.events).toEqual(["lock", "rollback"]); expect(h.state).toEqual(state);
   });
   it("rolls back if the guarded signature write loses a race", async () => {

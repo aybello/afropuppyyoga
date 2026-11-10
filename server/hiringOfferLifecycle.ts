@@ -240,7 +240,9 @@ export async function recordCurrentOfferSignature(db: any, token: string, signed
         fromStatus: "accepted",
         toStatus: "accepted",
         actorName: signedName,
-        details: JSON.stringify({ signingTokenId: record.id, signedIp }),
+        // Server-derived evidence, written in the same transaction as the
+        // signature; legacy and unrelated offer audits remain unmarked.
+        details: JSON.stringify({ signingTokenId: record.id, signedIp, reviewedIdentityGuardVersion: 1 }),
       });
     }
     // This marker stays server-internal; communications are attempted after commit.

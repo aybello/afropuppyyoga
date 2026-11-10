@@ -28,7 +28,9 @@ describe("Trusted By strip and approved photo replacement", () => {
     expect(hero).toContain('/manus-storage/nutram-canada-official-blue-transparent_d5a5964e.png');
     expect(hero).toContain('name: "Little Scholars Child Care"');
     expect(hero).toContain('/manus-storage/little-scholars-cambridge-original_2fac7cda.jpg');
-    expect((hero.match(/name: "/g) ?? [])).toHaveLength(25);
+    expect(hero).toContain('name: "Cyclone Spin Studio"');
+    expect(hero).toContain('/manus-storage/cyclone-uw_a8d866c6.png');
+    expect((hero.match(/name: "/g) ?? [])).toHaveLength(26);
     expect((hero.match(/optimized: "\/manus-storage\//g) ?? [])).toHaveLength(6);
     expect(hero).toContain('org.optimized && !useOriginal && <source');
     expect(hero).toContain('if (org.optimized && !useOriginal) setUseOriginal(true)');

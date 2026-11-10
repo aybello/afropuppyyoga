@@ -13,6 +13,7 @@ import {
 } from "../drizzle/schema";
 import type { TrpcContext } from "./_core/context";
 import type { ApyAccess } from "./apyAccess";
+import { reviewedHiringRecordHash } from "./hiringDuplicateIdentity";
 
 const mocks = vi.hoisted(() => ({ getDb: vi.fn(), resolveApyAccess: vi.fn(), buildSignedOfferPdf: vi.fn() }));
 vi.mock("./db", () => ({ getDb: mocks.getDb, getSigningTokenByToken: vi.fn() }));
@@ -108,8 +109,13 @@ function harness(changeAfterMiddleware?: (state: State) => void) {
             expect(condition).toBeUndefined();
             result = state.associations;
           } else if (table === jobApplicationActions) {
-            expect(condition?.params).toEqual([42, "employee_and_login_activated"]);
-            result = state.actions.filter(action => action.applicationId === 42 && action.action === "employee_and_login_activated");
+            if (condition?.params[0] === "offer_signed") {
+              expect(condition.params).toEqual(["offer_signed"]);
+              result = state.actions.filter(action => action.action === "offer_signed");
+            } else {
+              expect(condition?.params).toEqual([42, "employee_and_login_activated"]);
+              result = state.actions.filter(action => action.applicationId === 42 && action.action === "employee_and_login_activated");
+            }
           } else if (table === signingTokens) {
             const params = condition!.params;
             const downloading = limit === 1;
@@ -159,7 +165,7 @@ describe("staffDocuments real locked ownership integration (no live database)", 
       });
       expect((await h.api.downloadMySignedOffer({ id: 101 })).filename).toBe("APY-signed-offer-and-NDA-101.pdf");
     }
-    expect(h.reads).toEqual([staffingMutationLocks, users, jobApplications, employees, employeeApplicationAssociations, jobApplicationActions, signingTokens]);
+    expect(h.reads).toEqual([staffingMutationLocks, users, jobApplications, employees, employeeApplicationAssociations, jobApplicationActions, signingTokens, jobApplicationActions]);
     expect(h.db.transaction).toHaveBeenCalledOnce();
     expect(h.db.select).not.toHaveBeenCalled();
   });
@@ -210,4 +216,69 @@ describe("staffDocuments real locked ownership integration (no live database)", 
     await expect(h.api.downloadMySignedOffer({ id: 101 })).rejects.toMatchObject({ code: "NOT_FOUND" });
     expect(mocks.buildSignedOfferPdf).not.toHaveBeenCalled();
   });
+  const reviewed = (s: State) => {
+    s.profiles[1].phone = member.phone;
+    s.associations = [
+      { applicationId: 42, employeeId: 7, canonicalApplicationId: 42, recordHash: reviewedHiringRecordHash(s.profiles[0]) },
+      { applicationId: 41, employeeId: 7, canonicalApplicationId: 42, recordHash: reviewedHiringRecordHash(s.profiles[1]) },
+    ];
+    s.records = [{ ...record, id: 101 }, { ...record, id: 102 }];
+    s.actions = s.actions.filter(action => action.action !== "offer_signed");
+    s.actions.push({ applicationId: 41, action: "offer_signed", details: JSON.stringify({ signingTokenId: 102, signedIp: "192.0.2.1", reviewedIdentityGuardVersion: 1 }) });
+  };
+
+  it("lists and downloads both a marked new offer and unmarked legacy offer for the reviewed person", async () => {
+    const h = harness(reviewed);
+    expect((await h.api.mySignedOffers()).map(row => row.id)).toEqual([101, 102]);
+    expect((await h.api.downloadMySignedOffer({ id: 101 })).filename).toContain("101");
+    expect((await h.api.downloadMySignedOffer({ id: 102 })).filename).toContain("102");
+  });
+
+  it.each([
+    ["email-only member", (s: State) => { s.profiles[0].phone = null; s.directory[0].phone = null; }],
+    ["name edit", (s: State) => { s.directory[0].name = "New Name"; }],
+    ["email edit", (s: State) => { s.profiles[0].email = "new@example.test"; s.currentUser.email = "new@example.test"; }],
+    ["complete reassignment", (s: State) => {
+      const replacement = { name: "Different Person", email: "different@example.test", phone: "+14165550111" };
+      Object.assign(s.profiles[0], replacement); Object.assign(s.directory[0], replacement); s.currentUser.email = replacement.email;
+    }],
+  ])("retains unmarked reviewed offer, but hides marked offer for %s", async (_label, edit) => {
+    const h = harness(s => { reviewed(s); edit(s); });
+    expect((await h.api.mySignedOffers()).map(row => row.id)).toEqual([101]);
+    expect((await h.api.downloadMySignedOffer({ id: 101 })).filename).toContain("101");
+    await expect(h.api.downloadMySignedOffer({ id: 102 })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(mocks.buildSignedOfferPdf).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ["unknown version", (s: State) => { s.actions.at(-1).details = JSON.stringify({ signingTokenId: 102, reviewedIdentityGuardVersion: 2 }); }],
+    ["null version", (s: State) => { s.actions.at(-1).details = JSON.stringify({ signingTokenId: 102, reviewedIdentityGuardVersion: null }); }],
+    ["duplicate marker", (s: State) => { s.actions.push(structuredClone(s.actions.at(-1))); }],
+    ["cross-application marker", (s: State) => { s.actions.at(-1).applicationId = 99; }],
+    ["moved marked offer", (s: State) => { s.records[1].applicationId = 42; }],
+  ])("fails closed for a %s while retaining the unrelated unmarked token", async (_label, mutate) => {
+    const h = harness(s => { reviewed(s); mutate(s); });
+    expect((await h.api.mySignedOffers()).map(row => row.id)).toEqual([101]);
+    await expect(h.api.downloadMySignedOffer({ id: 102 })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(mocks.buildSignedOfferPdf).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    JSON.stringify({ signingTokenId: "102", reviewedIdentityGuardVersion: 1 }),
+    JSON.stringify({ reviewedIdentityGuardVersion: 1 }),
+    '{"reviewedIdentityGuardVersion":1,',
+  ])("fails closed for an unassignable or malformed marker within its application: %s", async details => {
+    const h = harness(s => { reviewed(s); s.actions.at(-1).details = details; });
+    expect(await h.api.mySignedOffers()).toEqual([]);
+    await expect(h.api.downloadMySignedOffer({ id: 101 })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(h.api.downloadMySignedOffer({ id: 102 })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(mocks.buildSignedOfferPdf).not.toHaveBeenCalled();
+  });
+
+  it("does not trust a client-supplied guard flag", async () => {
+    const h = harness(reviewed);
+    await expect(h.api.downloadMySignedOffer({ id: 102, reviewedIdentityGuardVersion: 1 } as any)).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    expect(mocks.buildSignedOfferPdf).not.toHaveBeenCalled();
+  });
+
 });

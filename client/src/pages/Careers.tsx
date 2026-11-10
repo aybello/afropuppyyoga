@@ -18,6 +18,8 @@ import {
   SOCIAL_MEDIA_INTERN_PAY_LABEL,
 } from "@shared/socialMediaTerms";
 import { useSeoMeta } from "@/hooks/useSeoMeta";
+import { publicPortraitUrl } from "@shared/publicPortraits";
+import { recoverPublicPortrait } from "@/lib/publicPortraitRecovery";
 import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -28,6 +30,7 @@ import {
   releaseLocalVideoPreview,
 } from "@/lib/localVideoPreview";
 import { createSubmissionKey } from "@/lib/submissionKey";
+import { filterCareers } from "./careerFilters";
 import {
   EXPERIENCE_LIMIT,
   REFERRED_BY_LIMIT,
@@ -852,11 +855,18 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
     });
   };
 
+  const requestClose = () => {
+    if (isReferralLocked && !window.confirm(
+      "Your application is still uploading or submitting. If you close this form, the request may continue and we may still receive your application. Close anyway?"
+    )) return;
+    onClose();
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={requestClose}
       />
       <div
         ref={modalRef}
@@ -874,7 +884,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
             </h2>
           </div>
           <button
-            onClick={onClose}
+            onClick={requestClose}
             aria-label="Close application form"
             className="p-2 rounded-full hover:bg-[#E8D8D0] transition-colors text-[#34221D] mt-1"
           >
@@ -934,6 +944,14 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                   </p>
                 )}
               </div>
+            )}
+            <div className="rounded-xl border border-[#E8D8D0] bg-[#FDE9EF] p-4 text-sm text-[#34221D] leading-relaxed" role="note">
+              <strong>Before you start:</strong> Have your resume and a 1 to 2 minute introduction video ready. You can upload the video or share a link. Keep the form open while uploading.
+            </div>
+            {isReferralLocked && (
+              <p role="status" className="rounded-xl bg-[#FDE9EF] p-3 font-body text-sm text-[#34221D]">
+                Your application is being uploaded or submitted. Please keep this form open until it finishes.
+              </p>
             )}
             {/* Personal Info */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1228,8 +1246,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                       Click to upload your video
                     </span>
                     <span className="font-body text-xs text-[#71574F]">
-                      MP4, MOV, WebM, AVI — Max 500MB. Upload resumes
-                      automatically after brief connection issues.
+                      MP4, MOV, WebM, AVI. Maximum 500MB. Video uploads may retry after a brief connection issue.
                     </span>
                   </button>
                 )
@@ -1255,7 +1272,7 @@ function ApplicationModal({ job, onClose }: ApplicationModalProps) {
                           className="text-brand-link shrink-0"
                         />
                         <span className="font-body text-xs text-[#34221D]">
-                          Link looks good!
+                          Link format looks valid. Please check its sharing permissions.
                         </span>
                       </div>
                     )}
@@ -1425,7 +1442,7 @@ export function JobCard({
               <button
                 onClick={() => setShareOpen(v => !v)}
                 className="flex items-center gap-1.5 min-h-11 px-4 py-2.5 border border-[#E8D8D0] text-brand-link font-body font-semibold text-xs rounded-full hover:bg-[#FDE9EF] hover:border-primary transition-colors"
-                aria-label="Share this job"
+                aria-label={`Share ${job.title} in ${job.location}`} aria-expanded={shareOpen}
               >
                 <Share2 size={13} />
                 <span className="hidden sm:inline">Share</span>
@@ -1514,6 +1531,8 @@ export function JobCard({
 
         <button
           onClick={onToggle}
+          aria-expanded={expanded}
+          aria-controls={`details-${job.id}`}
           className="flex items-center gap-1.5 min-h-11 font-body text-sm font-semibold text-brand-link hover:underline transition-colors"
         >
           {expanded ? "Show less" : "See full details"}
@@ -1524,7 +1543,7 @@ export function JobCard({
         </button>
 
         {expanded && (
-          <div className="mt-5 space-y-4 border-t border-[#E8D8D0] pt-5">
+          <div id={`details-${job.id}`} className="mt-5 space-y-4 border-t border-[#E8D8D0] pt-5">
             <div>
               <h4 className="font-body text-xs font-bold text-[#34221D] uppercase tracking-wide mb-2">
                 Responsibilities
@@ -1597,126 +1616,92 @@ export default function Careers() {
       "Movement Instructor jobs in Kitchener and Guelph, plus Puppy Monitor and Operations Specialist jobs in Guelph. Apply to AfroPuppyYoga with your resume and video.",
     canonical: "https://afropuppyyoga.ca/careers",
   });
-  const [selectedJob, setSelectedJob] = useState<
-    (typeof JOB_LISTINGS)[0] | null
-  >(null);
-  // Track expanded state per job ID so each card is fully independent
+  const [selectedJob, setSelectedJob] = useState<CareerJob | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [location, setLocation] = useState("all");
+  const [role, setRole] = useState("all");
+  const roles = Array.from(new Set(JOB_LISTINGS.map(job => job.title)));
+  const filtered = filterCareers(JOB_LISTINGS, location, role);
   const toggleExpanded = (id: string) => {
     setExpandedIds(prev => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   };
-
   return (
     <div className="min-h-screen bg-[#FEFAF4]">
       <Navbar />
-
-      {/* Hero */}
-      <section className="pt-28 pb-16 md:pt-32 md:pb-20 bg-[#FEFAF4] relative">
-        <div className="container relative">
-          <div className="max-w-2xl">
-            <p className="font-body text-xs text-brand-link uppercase tracking-widest mb-4">
-              — Join the Pack
-            </p>
-            <h1 className="font-display font-medium text-[clamp(2.5rem,5vw,4.5rem)] text-[#34221D] leading-[1.1] tracking-[-0.03em] mb-6">
-              Work With <span className="text-brand-link">AfroPuppyYoga</span>
+      <section className="relative bg-[#FEFAF4] pt-28 pb-10 md:pt-32 md:pb-14">
+        <div className="container grid md:grid-cols-[1.05fr_0.95fr] items-center gap-8 md:gap-14">
+          <div className="max-w-xl">
+            <p className="font-body text-xs font-semibold text-brand-link uppercase tracking-[0.18em] mb-4">Join the pack</p>
+            <h1 className="font-display font-medium text-[clamp(2.75rem,5.6vw,5rem)] text-[#34221D] leading-[1.04] tracking-[-0.03em] mb-5">
+              Bring joy to <span className="text-brand-link">every class.</span>
             </h1>
-            <p className="font-body text-base text-[#34221D]/80 leading-relaxed max-w-xl">
-              We're building Canada's most joyful wellness brand — one puppy at
-              a time. If you love dogs, community, and creating unforgettable
-              experiences, we want to hear from you.
+            <p className="font-body text-base md:text-lg text-[#34221D]/80 leading-relaxed max-w-lg">
+              Love puppies, people and bringing a little joy to their day? Explore opportunities to create thoughtful wellness experiences with AfroPuppyYoga.
             </p>
+            <div className="flex flex-wrap items-center gap-4 mt-7">
+              <a href="#open-positions" className="inline-flex items-center justify-center min-h-12 px-7 bg-primary rounded-full font-body font-semibold text-sm text-[#34221D] hover:bg-primary-hover transition-colors">Explore open roles <span aria-hidden="true" className="ml-2">→</span></a>
+              <span className="font-body text-sm text-[#71574F]">Ontario locations &amp; remote opportunities</span>
+            </div>
+          </div>
+          <div className="relative md:pl-4">
+            <div className="rounded-[1.75rem] overflow-hidden bg-[#FDE9EF] aspect-[5/4] md:aspect-[4/3] shadow-sm">
+              <img src={publicPortraitUrl("/manus-storage/apy_portrait_two_goldens_oct13_44cd44f3.jpg")} onError={recoverPublicPortrait} alt="A guest cuddling puppies at an AfroPuppyYoga class" className="h-full w-full object-cover object-center" />
+            </div>
+            <div className="absolute -bottom-3 left-3 md:left-0 bg-white border border-[#E8D8D0] rounded-2xl px-5 py-3 shadow-sm">
+              <p className="font-body text-xs uppercase font-semibold tracking-wider text-brand-link">People. Puppies. Community.</p>
+              <p className="font-display text-lg text-[#34221D]">Make someone's day brighter.</p>
+            </div>
           </div>
         </div>
       </section>
-
-      {/* Values strip */}
-      <section className="bg-[#FDE9EF] py-8 border-y border-[#E8D8D0]">
-        <div className="container">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-            {[
-              { icon: "🐾", label: "Puppy-First Culture" },
-              { icon: "💛", label: "Community Driven" },
-              { icon: "✨", label: "Flexible Schedules" },
-            ].map(v => (
-              <div key={v.label} className="flex flex-col items-center gap-2">
-                <span className="text-2xl">{v.icon}</span>
-                <span className="font-body text-sm font-semibold text-[#34221D] uppercase tracking-wide">
-                  {v.label}
-                </span>
-              </div>
-            ))}
+      <section className="bg-[#FDE9EF] border-y border-[#E8D8D0] py-5 mt-3" aria-label="What matters to us">
+        <div className="container flex flex-wrap justify-center gap-x-12 gap-y-3 text-[#34221D] font-body text-sm font-semibold">
+          <span>🐾 Puppy-first culture</span><span>💛 Community driven</span><span>✨ Flexible opportunities</span>
+        </div>
+      </section>
+      <section id="open-positions" className="py-12 md:py-16 scroll-mt-28">
+        <div className="container max-w-5xl">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-7">
+            <div>
+              <p className="font-body text-xs text-brand-link uppercase tracking-widest mb-2">Find your place</p>
+              <h2 className="font-display font-medium text-3xl md:text-4xl text-[#34221D]">Explore open roles</h2>
+              <p className="font-body text-base text-[#71574F] mt-3 max-w-2xl">Find an opportunity that fits your skills and location. Select a role to see the details and apply.</p>
+            </div>
+            <span className="font-body text-xs font-semibold text-brand-link bg-[#FDE9EF] rounded-full px-4 py-2 w-fit">{JOB_LISTINGS.length} openings</span>
+          </div>
+          <div className="bg-white border border-[#E8D8D0] rounded-2xl p-4 md:p-5 mb-6 grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-3 items-end">
+            <div><label htmlFor="career-location" className="block font-body text-xs font-bold uppercase tracking-wide text-[#71574F] mb-2">Location</label>
+              <select id="career-location" value={location} onChange={e => setLocation(e.target.value)} className="w-full h-11 px-3 bg-[#FEFAF4] border border-[#E8D8D0] rounded-xl font-body text-sm text-[#34221D]">
+                <option value="all">All locations</option><option value="KW">Kitchener-Waterloo</option><option value="HAM">Hamilton</option><option value="OAK">Oakville</option><option value="GUE">Guelph</option><option value="REMOTE">Remote</option>
+              </select></div>
+            <div><label htmlFor="career-role" className="block font-body text-xs font-bold uppercase tracking-wide text-[#71574F] mb-2">Role</label>
+              <select id="career-role" value={role} onChange={e => setRole(e.target.value)} className="w-full h-11 px-3 bg-[#FEFAF4] border border-[#E8D8D0] rounded-xl font-body text-sm text-[#34221D]">
+                <option value="all">All roles</option>{roles.map(name => <option key={name} value={name}>{name}</option>)}
+              </select></div>
+            <button type="button" onClick={() => {setLocation("all"); setRole("all");}} className="h-11 px-4 rounded-full font-body text-sm font-semibold text-brand-link hover:bg-[#FDE9EF]">Clear filters</button>
+          </div>
+          <div aria-live="polite" className="font-body text-sm text-[#71574F] mb-4">Showing {filtered.length} {filtered.length === 1 ? "opportunity" : "opportunities"}</div>
+          {filtered.length ? <div className="flex flex-col gap-4">
+            {filtered.map(job => <JobCard key={job.id} job={job} onApply={() => setSelectedJob(job)} expanded={expandedIds.has(job.id)} onToggle={() => toggleExpanded(job.id)} />)}
+          </div> : <div className="bg-white border border-[#E8D8D0] rounded-2xl p-8 font-body text-[#34221D]">No roles match these filters. Try a different location or role.</div>}
+          <div className="mt-8 rounded-2xl bg-[#FDE9EF] p-6 md:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+            <div><p className="font-body text-xs uppercase tracking-widest text-brand-link mb-1">Ready to apply?</p><h3 className="font-display text-xl text-[#34221D]">A little prep goes a long way.</h3><p className="font-body text-sm text-[#71574F] mt-2">Have your resume and a 1 to 2 minute introduction video ready. Upload your video or share a link.</p></div>
+            <span className="font-body text-xs text-[#34221D] border border-[#E8D8D0] bg-white rounded-full px-4 py-2 w-fit whitespace-nowrap">Resume + video required</span>
           </div>
         </div>
       </section>
-
-      {/* Open Positions */}
-      <section className="py-16">
-        <div className="container">
-          <div className="mb-10">
-            <p className="font-body text-xs text-brand-link uppercase tracking-widest mb-2">
-              Open Positions
-            </p>
-            <h2 className="font-display font-medium text-3xl md:text-4xl text-[#34221D]">
-              We're Hiring
-            </h2>
-            <p className="font-body text-base text-[#34221D] mt-3 max-w-xl">
-              All roles at AfroPuppyYoga are part-time given the nature of our
-              event-based business. Perfect for passionate people who want
-              flexibility without sacrificing impact.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-6">
-            {JOB_LISTINGS.map(job => (
-              <JobCard
-                key={job.id}
-                job={job}
-                onApply={() => setSelectedJob(job)}
-                expanded={expandedIds.has(job.id)}
-                onToggle={() => toggleExpanded(job.id)}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-16 bg-[#FDE9EF] border-t border-[#E8D8D0]">
-        <div className="container text-center">
-          <p className="font-body text-xs text-brand-link uppercase tracking-widest mb-3">
-            Don't see your role?
-          </p>
-          <h2 className="font-display font-medium text-2xl md:text-3xl text-[#34221D] mb-4">
-            We're always open to great people
-          </h2>
-          <p className="font-body text-base text-[#34221D]/80 mb-6 max-w-md mx-auto">
-            If you have a skill that could help AfroPuppyYoga grow, reach out.
-            We love hearing from passionate people.
-          </p>
-          <a
-            href="mailto:afropuppyyoga@gmail.com"
-            className="inline-flex items-center px-6 py-3 bg-primary text-[#34221D] font-body font-semibold text-base min-h-12 rounded-full hover:bg-primary-hover transition-colors"
-          >
-            Say Hello
-          </a>
-        </div>
-      </section>
-
-      <Footer />
-      <ScrollToTop />
-
-      {/* Application Modal */}
-      {selectedJob && (
-        <ApplicationModal
-          job={selectedJob}
-          onClose={() => setSelectedJob(null)}
-        />
-      )}
+      <section className="py-12 bg-[#FDE9EF] border-t border-[#E8D8D0]"><div className="container text-center">
+        <p className="font-body text-xs text-brand-link uppercase tracking-widest mb-3">Don't see your role?</p>
+        <h2 className="font-display font-medium text-2xl md:text-3xl text-[#34221D] mb-3">We're always open to great people</h2>
+        <p className="font-body text-base text-[#34221D]/80 mb-6 max-w-md mx-auto">If you have a skill that could help AfroPuppyYoga grow, we'd love to hear from you.</p>
+        <a href="mailto:afropuppyyoga@gmail.com" className="inline-flex items-center px-6 py-3 bg-primary text-[#34221D] font-body font-semibold text-base min-h-12 rounded-full hover:bg-primary-hover">Say hello</a>
+      </div></section>
+      <Footer /><ScrollToTop />
+      {selectedJob && <ApplicationModal job={selectedJob} onClose={() => setSelectedJob(null)} />}
     </div>
   );
 }

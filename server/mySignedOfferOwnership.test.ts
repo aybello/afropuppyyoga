@@ -159,76 +159,57 @@ describe("getMySignedOfferApplicationIds", () => {
     }
   });
   const signedHistoricalOffer = { applicationId: 41, signed: 1, applicantName: member.name, applicantEmail: member.email };
-  it("withholds reviewed history after both canonical and directory identities are reassigned, without blocking unclaimed activation IDs", async () => {
+  it("preserves baseline history but denies guarded eligibility after canonical and directory reassignment", async () => {
     const replacement = { name: "Different Person", email: "different@example.test", phone: "+14165550111" };
     const current = { ...member, ...replacement };
-    const identities = new Map<number, { name: string; email: string }>();
+    const guard = new Set<number>();
     const { db } = scenario({ profiles: [current], directory: [{ ...employee, ...replacement }],
       associations: [claim(42), claim(41)], groupedProfiles: [historical], offers: [signedHistoricalOffer], actions: [activation([41, 40])] });
-    await expect(getMySignedOfferApplicationIds(db, { ...user, email: replacement.email }, access, identities)).resolves.toEqual([42, 40]);
-    expect(identities.size).toBe(0);
+    await expect(getMySignedOfferApplicationIds(db, { ...user, email: replacement.email }, access, new Map(), guard)).resolves.toEqual([42, 41, 40]);
+    expect([...guard]).toEqual([]);
   });
 
   it.each([
-    ["name", { name: "Different Person" }],
-    ["email", { email: "different@example.test" }],
-    ["phone", { phone: "+14165550111" }],
-  ])("withholds historical documents on an individual %s mismatch in both current records", async (_field, change) => {
-    const current = { ...member, ...change };
-    const { db } = scenario({ profiles: [current], directory: [{ ...employee, ...change }], associations: [claim(42), claim(41)],
-      groupedProfiles: [historical], offers: [signedHistoricalOffer], actions: [activation()] });
-    await expect(getMySignedOfferApplicationIds(db, { ...user, email: current.email }, access)).resolves.toEqual([42]);
-  });
-
-  it.each([
-    ["canonical", "name", { name: "Different Person" }],
-    ["canonical", "email", { email: "different@example.test" }],
-    ["canonical", "phone", { phone: "+14165550111" }],
-    ["directory", "name", { name: "Different Person" }],
-    ["directory", "email", { email: "different@example.test" }],
-    ["directory", "phone", { phone: "+14165550111" }],
-  ])("requires the %s record's %s to match independently", async (side, _field, change) => {
+    ["canonical", "name", { name: "Different Person" }], ["canonical", "email", { email: "different@example.test" }],
+    ["canonical", "phone", { phone: "+14165550111" }], ["canonical", "phone", { phone: null }],
+    ["directory", "name", { name: "Different Person" }], ["directory", "email", { email: "different@example.test" }],
+    ["directory", "phone", { phone: "+14165550111" }], ["directory", "phone", { phone: null }],
+    ["directory", "status", { endedAt: new Date() }],
+  ])("preserves baseline history but denies guarded eligibility on %s %s mismatch", async (side, _field, change) => {
     const current = { ...member, ...(side === "canonical" ? change : {}) };
     const owner = { ...employee, ...(side === "directory" ? change : {}) };
-    const { db } = scenario({ profiles: [current], directory: [owner], associations: [claim(42), claim(41)],
-      groupedProfiles: [historical], offers: [signedHistoricalOffer], actions: [activation()] });
-    await expect(getMySignedOfferApplicationIds(db, { ...user, email: current.email }, access)).resolves.toEqual([42]);
+    const guard = new Set<number>();
+    const { db } = scenario({ profiles: [current], directory: [owner], associations: [claim(42), claim(41)], groupedProfiles: [historical], offers: [signedHistoricalOffer] });
+    await expect(getMySignedOfferApplicationIds(db, { ...user, email: current.email }, access, new Map(), guard)).resolves.toEqual([42, 41]);
+    expect([...guard]).toEqual([]);
   });
 
-  it("accepts the same reviewed person with normalized name, email and Canadian phone formatting", async () => {
+  it("accepts normalized identity only for the matching reviewed historical application", async () => {
     const current = { ...member, name: "  CURRENT   MEMBER ", email: " MEMBER@EXAMPLE.COM ", phone: "1 (289) 555-0100" };
     const owner = { ...employee, name: "current member", email: "member@example.com", phone: "289-555-0100" };
+    const other = { ...historical, id: 40, phone: "+14165550111" };
     const identities = new Map<number, { name: string; email: string }>();
-    const { db } = scenario({ profiles: [current], directory: [owner], associations: [claim(42), claim(41)],
-      groupedProfiles: [historical], offers: [signedHistoricalOffer], actions: [activation()] });
-    await expect(getMySignedOfferApplicationIds(db, user, access, identities)).resolves.toEqual([42, 41]);
+    const guard = new Set<number>();
+    const { db } = scenario({ profiles: [current], directory: [owner], associations: [claim(42), claim(41), { ...claim(40), recordHash: reviewedHiringRecordHash(other) }],
+      groupedProfiles: [historical, other], offers: [signedHistoricalOffer, { ...signedHistoricalOffer, applicationId: 40 }] });
+    await expect(getMySignedOfferApplicationIds(db, user, access, identities, guard)).resolves.toEqual([42, 41, 40]);
+    expect([...guard]).toEqual([41]);
     expect(identities.get(41)).toEqual({ name: historical.name, email: historical.email });
-    expect(identities.has(42)).toBe(false);
-  });
-
-  it("evaluates each reviewed historical profile separately and preserves the canonical id", async () => {
-    const different = { ...historical, id: 40, phone: "+14165550111" };
-    const identities = new Map<number, { name: string; email: string }>();
-    const { db } = scenario({ associations: [claim(42), claim(41), { ...claim(40), recordHash: reviewedHiringRecordHash(different) }],
-      groupedProfiles: [historical, different], offers: [signedHistoricalOffer, { ...signedHistoricalOffer, applicationId: 40 }],
-      actions: [activation([41, 40])] });
-    await expect(getMySignedOfferApplicationIds(db, user, access, identities)).resolves.toEqual([42, 41]);
-    expect([...identities.keys()]).toEqual([41]);
   });
 
   it.each([
     ["canonical", { name: " " }], ["canonical", { email: null }], ["canonical", { phone: "invalid" }],
     ["directory", { name: " " }], ["directory", { email: "not-an-email" }], ["directory", { phone: null }],
     ["historical", { name: " " }], ["historical", { email: "not-an-email" }], ["historical", { phone: "+1 289 555 0100 ext 5" }],
-  ])("requires complete valid identity on the %s record (%j)", async (side, change) => {
+  ])("does not mark incomplete %s identity eligible (%j)", async (side, change) => {
     const current = { ...member, ...(side === "canonical" ? change : {}) };
     const owner = { ...employee, ...(side === "directory" ? change : {}) };
     const prior = { ...historical, ...(side === "historical" ? change : {}) };
-    const historicalClaim = { ...claim(41), recordHash: reviewedHiringRecordHash(prior) };
-    const { db } = scenario({ profiles: [current], directory: [owner], associations: [claim(42), historicalClaim],
-      groupedProfiles: [prior], offers: [signedHistoricalOffer], actions: [activation()] });
+    const guard = new Set<number>();
+    const { db } = scenario({ profiles: [current], directory: [owner], associations: [claim(42), { ...claim(41), recordHash: reviewedHiringRecordHash(prior) }], groupedProfiles: [prior], offers: [signedHistoricalOffer] });
     const login = current.email ? { ...user, email: current.email } : { ...user, email: null, openId: `staff-phone:${member.phone}` };
-    await expect(getMySignedOfferApplicationIds(db, login, access)).resolves.toEqual([42]);
+    await getMySignedOfferApplicationIds(db, login, access, new Map(), guard);
+    expect([...guard]).toEqual([]);
   });
 
   it.each(["active", "inactive"])("blocks reviewed history claimed by a different %s directory owner", async status => {
