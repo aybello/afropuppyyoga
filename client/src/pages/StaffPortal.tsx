@@ -270,7 +270,9 @@ const TOOLS = [
 const CATEGORY_ORDER = ["Operations", "People", "Finance", "Events", "Breeders", "Growth"];
 
 function requiredAccessForTool(id: string): ApyHubToolAccess {
-  if (id === "invoices" || id === "revenue" || id === "private-revenue-dashboard" || id === "quickbooks" || id === "employee-directory" || id === "meta-campaigns") return "owner";
+  // Employee Directory is an operations tool (owner decision 2026-11-11); its
+  // backend routes already accept any operations-level profile.
+  if (id === "invoices" || id === "revenue" || id === "private-revenue-dashboard" || id === "quickbooks" || id === "meta-campaigns") return "owner";
   if (id === "staff-training" || id === "submit-invoice" || id === "my-documents" || id === "get-started") return "team";
   return "operations";
 }
