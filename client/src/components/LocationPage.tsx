@@ -10,6 +10,7 @@ import { useMetaPixel } from "@/hooks/useMetaPixel";
 import { appendAttributionToLumaUrl } from "@/lib/lumaAttribution";
 import { FIVE_STAR_REVIEW_COUNT, REVIEW_METRICS } from "../../../shared/reviewMetrics";
 import { publicPortraitUrl } from "@shared/publicPortraits";
+import { DEFAULT_SOCIAL_IMAGE } from "@shared/prioritySeo";
 import { recoverPublicPortrait } from "@/lib/publicPortraitRecovery";
 import { PRIVATE_EVENT_PACKAGE_BANDS, privateEventBandLabel, PRIVATE_EVENT_PRICE_NOTE } from "@shared/privateEventPricing";
 import { PRIVATE_EVENT_EXPERIENCES, PRIVATE_EVENT_SCHEDULES, PRIVATE_EVENT_VENUES, PRIVATE_EVENT_FORMAT_PRICE_NOTE, PRIVATE_EVENT_CUSTOM_SCOPE_NOTE } from "@shared/privateEventExperience";
@@ -44,6 +45,8 @@ export interface LocationConfig {
   pageTitle: string;
   /** Meta description (150–160 chars) */
   metaDescription: string;
+  /** Search and social preview image, when different from the standard logo. */
+  socialImage?: string;
   /** Hero headline */
   heroHeadline: string;
   /** Hero sub-headline */
@@ -137,7 +140,7 @@ export default function LocationPage({ config }: Props) {
     canonical: canonicalUrl,
     ogTitle: config.pageTitle,
     ogDescription: seoDescription,
-    ogImage: "https://afropuppyyoga.ca/manus-storage/apy_corporate_hero_202ea280.jpg",
+    ogImage: config.socialImage ?? DEFAULT_SOCIAL_IMAGE,
   });
 
   // City venue addresses are retained, but event schedules, prices and exact

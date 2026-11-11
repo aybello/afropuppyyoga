@@ -10,6 +10,7 @@ import { formatCanadianPhoneNumber, normalizeCanadianPhoneNumber } from "@shared
 import { estimatePrivateEventPackage, privateEventBandLabel, PRIVATE_EVENT_PRICE_NOTE, PRIVATE_EVENT_TRAVEL_NOTE, PRIVATE_EVENT_CUSTOM_NOTE, type PrivateEventPackageType } from "@shared/privateEventPricing";
 import { publicPortraitUrl } from "@shared/publicPortraits";
 import { FIVE_STAR_REVIEW_COUNT } from "@shared/reviewMetrics";
+import { QUOTE_SEO_TITLE, QUOTE_SEO_COPY, DEFAULT_SOCIAL_IMAGE } from "@shared/prioritySeo";
 import { recoverPublicPortrait } from "@/lib/publicPortraitRecovery";
 import { privateEventPreferencesSchema, privateEventScopeRequiresCustomQuote, validatePrivateEventAttendance, PRIVATE_EVENT_EXPERIENCES, PRIVATE_EVENT_SCHEDULES, PRIVATE_EVENT_VENUES, PRIVATE_EVENT_FORMAT_PRICE_NOTE, PRIVATE_EVENT_CUSTOM_SCOPE_NOTE, type PrivateEventPreferences } from "@shared/privateEventExperience";
 import { ExperienceCards, EventPreferencesFields, DEFAULT_EVENT_PREFERENCES, type EventPreferencesDraft } from "@/components/PrivateEventExperience";
@@ -65,9 +66,10 @@ const LOCATIONS = [
 export default function PrivateEventQuote() {
   const reduceMotion = useReducedMotion();
   useSeoMeta({
-    title: "Private Event Quote | AfroPuppyYoga",
-    description: `${FIVE_STAR_REVIEW_COUNT} five-star reviews. Choose private puppy yoga or a puppy play lounge, then share your schedule and venue. See standard studio package ranges or request a custom quote for your full event.`,
+    title: QUOTE_SEO_TITLE,
+    description: `AfroPuppyYoga: ${FIVE_STAR_REVIEW_COUNT} five-star reviews. ${QUOTE_SEO_COPY}`,
     canonical: "https://afropuppyyoga.ca/private-events/quote",
+    ogImage: DEFAULT_SOCIAL_IMAGE,
   });
   const [step, setStep] = useState<"form" | "quote" | "submitted">("form");
 

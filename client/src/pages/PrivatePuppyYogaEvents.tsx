@@ -1,14 +1,15 @@
 import LocationPage, { type LocationConfig } from "@/components/LocationPage";
 import { PUBLIC_LOCATION_LIST } from "@shared/publicLocations";
+import { PRIVATE_SEO_TITLE, PRIVATE_SEO_COPY, LOCATION_SOCIAL_IMAGE } from "@shared/prioritySeo";
 import { PRIVATE_EVENT_PACKAGE_BANDS, privateEventBandLabel, PRIVATE_EVENT_PRICE_NOTE, PRIVATE_EVENT_TRAVEL_NOTE, PRIVATE_EVENT_CUSTOM_NOTE } from "@shared/privateEventPricing";
 import { PRIVATE_EVENT_EXPERIENCES, PRIVATE_EVENT_SCHEDULES, PRIVATE_EVENT_FORMAT_PRICE_NOTE, PRIVATE_EVENT_CUSTOM_SCOPE_NOTE } from "@shared/privateEventExperience";
 
 const config: LocationConfig = {
   slug: "private-puppy-yoga-events",
   city: "Private Events",
-  pageTitle: "Private Puppy Yoga Events Ontario | AfroPuppyYoga",
-  metaDescription:
-    `Standard 60-minute studio puppy yoga for up to 20 guests from $${PRIVATE_EVENT_PACKAGE_BANDS.classic.min.toLocaleString("en-CA")} + HST. Puppy lounge and other formats: custom quotes across Ontario.`,
+  pageTitle: PRIVATE_SEO_TITLE,
+  metaDescription: PRIVATE_SEO_COPY,
+  socialImage: LOCATION_SOCIAL_IMAGE,
   heroHeadline: "Private Puppy Yoga Events",
   heroSubline:
     "Birthdays, bachelorettes, corporate wellness days, and more — choose guided puppy yoga or a supervised Puppy Play & Wellness Lounge without yoga, then plan the schedule and venue with us.",

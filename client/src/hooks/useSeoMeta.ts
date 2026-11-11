@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { DEFAULT_SOCIAL_IMAGE } from "@shared/prioritySeo";
 
 interface SeoMetaOptions {
   title: string;
@@ -59,9 +60,11 @@ export function useSeoMeta({
     const ogTitleEl = upsertMeta('meta[property="og:title"]', "content", ogTitle ?? title);
     const ogDescEl = upsertMeta('meta[property="og:description"]', "content", ogDescription ?? description);
     const ogUrlEl = upsertMeta('meta[property="og:url"]', "content", canonical);
-    const ogImgEl = ogImage
-      ? upsertMeta('meta[property="og:image"]', "content", ogImage)
-      : null;
+    const socialImage = ogImage ?? DEFAULT_SOCIAL_IMAGE;
+    upsertMeta('meta[property="og:image"]', "content", socialImage);
+    upsertMeta('meta[name="twitter:title"]', "content", ogTitle ?? title);
+    upsertMeta('meta[name="twitter:description"]', "content", ogDescription ?? description);
+    upsertMeta('meta[name="twitter:image"]', "content", socialImage);
 
     return () => {
       // Restore previous title on unmount — keep other tags as-is

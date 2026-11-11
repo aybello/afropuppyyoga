@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "wouter";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { Check, ChevronDown } from "lucide-react";
 import { FIVE_STAR_REVIEW_COUNT } from "../../../shared/reviewMetrics";
+import { CORPORATE_SEO_TITLE, CORPORATE_SEO_COPY, DEFAULT_SOCIAL_IMAGE } from "@shared/prioritySeo";
 import { PUBLIC_LOCATION_COUNT, PUBLIC_LOCATION_LIST } from "@shared/publicLocations";
 import { PRIVATE_EVENT_PACKAGE_BANDS, privateEventBandLabel, PRIVATE_EVENT_PRICE_NOTE, PRIVATE_EVENT_TRAVEL_NOTE, PRIVATE_EVENT_CUSTOM_NOTE } from "@shared/privateEventPricing";
 import { PRIVATE_EVENT_EXPERIENCES, PRIVATE_EVENT_SCHEDULES, PRIVATE_EVENT_VENUES, PRIVATE_EVENT_FORMAT_PRICE_NOTE, PRIVATE_EVENT_CUSTOM_SCOPE_NOTE } from "@shared/privateEventExperience";
@@ -233,15 +234,11 @@ function FAQItem({ faq }: { faq: { q: string; a: string } }) {
 
 export default function Corporate() {
   useSeoMeta({
-    title:
-      "Corporate Puppy Yoga Ontario | Team Wellness & Employee Appreciation | AfroPuppyYoga",
-    description: `AfroPuppyYoga: ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Standard 60-minute studio corporate puppy yoga for up to 20 guests from $${PRIVATE_EVENT_PACKAGE_BANDS.classic.min.toLocaleString("en-CA")} + HST. Puppy lounge and other formats: custom quotes across Ontario.`,
+    title: CORPORATE_SEO_TITLE,
+    description: `AfroPuppyYoga: ${FIVE_STAR_REVIEW_COUNT} five-star reviews. ${CORPORATE_SEO_COPY}`,
     canonical: "https://afropuppyyoga.ca/corporate-puppy-yoga",
+    ogImage: DEFAULT_SOCIAL_IMAGE,
   });
-
-  useEffect(() => {
-    document.title = "Corporate Puppy Yoga Ontario | AfroPuppyYoga";
-  }, []);
 
   return (
     <div className="min-h-screen bg-[#FEFAF4]">

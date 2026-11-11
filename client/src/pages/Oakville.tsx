@@ -1,11 +1,12 @@
 import LocationPage, { type LocationConfig } from "@/components/LocationPage";
+import { OAKVILLE_SEO_TITLE, OAKVILLE_SEO_COPY, LOCATION_SOCIAL_IMAGE } from "@shared/prioritySeo";
 
 const config: LocationConfig = {
   slug: "puppy-yoga-oakville",
   city: "Oakville",
-  pageTitle: "Puppy Yoga Oakville | AfroPuppyYoga",
-  metaDescription:
-    "AfroPuppyYoga is now in Oakville, Ontario! Ontario's #1 puppy yoga studio — guided yoga, Afrobeats music, and adorable puppies at 1670 North Service Rd E. Book your spot today.",
+  pageTitle: OAKVILLE_SEO_TITLE,
+  metaDescription: OAKVILLE_SEO_COPY,
+  socialImage: LOCATION_SOCIAL_IMAGE,
   heroHeadline: "Puppy Yoga in Oakville",
   heroSubline:
     "Premium wellness meets puppy joy. AfroPuppyYoga brings guided yoga, Afrobeats, and adorable puppies to Oakville — the perfect lifestyle experience for Halton Region.",
@@ -15,7 +16,7 @@ const config: LocationConfig = {
   venueAddress: "1670 North Service Rd E, Oakville, ON",
   venueArea: "Oakville · Halton Region",
   aboutParagraph:
-    "AfroPuppyYoga has arrived in Oakville — bringing our signature blend of guided yoga, Afrobeats music, and ethically sourced puppies to the Halton Region. Located at 1670 North Service Rd E, our Oakville sessions deliver the same unforgettable 60-minute experience (40 min guided yoga + 20 min puppy playtime) that has made APY Ontario's #1 puppy yoga studio. Whether you're a yoga veteran or a complete beginner, all you need is a love of puppies and a willingness to smile.",
+    "AfroPuppyYoga has arrived in Oakville — bringing our signature blend of guided yoga, Afrobeats music, and ethically sourced puppies to the Halton Region. Located at 1670 North Service Rd E, our Oakville sessions combine 40 minutes of guided yoga with 20 minutes of puppy play. Whether you're a yoga veteran or a complete beginner, all you need is a love of puppies and a willingness to smile.",
   scheduleDescription: "Regular sessions — check calendar for dates",
   lumaTag: "oakville",
   comingSoon: false,
@@ -34,7 +35,7 @@ const config: LocationConfig = {
     {
       icon: "✨",
       title: "Premium Wellness Experience",
-      desc: "Oakville deserves the best. APY's Oakville sessions deliver the same premium, curated experience that has made us Ontario's #1 puppy yoga studio.",
+      desc: "Enjoy a welcoming Oakville session with guided movement, Afrobeats and time with puppies.",
     },
     {
       icon: "🎉",
@@ -91,7 +92,7 @@ const config: LocationConfig = {
     {
       question: "What is AfroPuppyYoga?",
       answer:
-        "AfroPuppyYoga is Ontario's #1 puppy yoga studio. We combine 40 minutes of beginner-friendly yoga and 20 minutes of puppy playtime, with an Afrobeats soundtrack and ethically sourced puppies — an experience unlike anything else in Ontario.",
+        "AfroPuppyYoga combines 40 minutes of beginner-friendly yoga and 20 minutes of puppy playtime, with an Afrobeats soundtrack and ethically sourced puppies — an experience unlike anything else in Ontario.",
     },
     {
       question: "Do I need yoga experience to attend?",

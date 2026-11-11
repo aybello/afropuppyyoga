@@ -21,6 +21,8 @@ import {
 import { HOME_SEO_TITLE, HOME_SEO_DESCRIPTION, LOYALTY_SEO_DESCRIPTION, MEMBERSHIP_LOCATION_COPY, PUBLIC_LOCATION_NAMES, PUBLIC_LOCATION_LIST, PUBLIC_LOCATION_FAQ, PUBLIC_SERVICE_DESCRIPTION } from "../shared/publicLocations";
 import { PRIVATE_EVENT_PACKAGE_BANDS, privateEventBandLabel, PRIVATE_EVENT_PRICE_NOTE, PRIVATE_EVENT_TRAVEL_NOTE, PRIVATE_EVENT_CUSTOM_NOTE } from "../shared/privateEventPricing";
 import { PRIVATE_EVENT_EXPERIENCES, PRIVATE_EVENT_SCHEDULES, PRIVATE_EVENT_VENUES, PRIVATE_EVENT_FORMAT_PRICE_NOTE, PRIVATE_EVENT_CUSTOM_SCOPE_NOTE } from "../shared/privateEventExperience";
+import { OAKVILLE_SEO_TITLE, OAKVILLE_SEO_COPY, CORPORATE_SEO_TITLE, CORPORATE_SEO_COPY, PRIVATE_SEO_TITLE, PRIVATE_SEO_COPY, QUOTE_SEO_TITLE, QUOTE_SEO_COPY, LOCATION_SOCIAL_IMAGE } from "../shared/prioritySeo";
+import { publicPortraitUrl } from "../shared/publicPortraits";
 
 // ─── Crawler Detection ────────────────────────────────────────────────────────
 
@@ -254,7 +256,7 @@ const PAGES: Record<string, () => string> = {
       title: "Puppy Yoga Guelph | AfroPuppyYoga",
       description: `Puppy yoga in Guelph with AfroPuppyYoga. ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Guided movement, Afrobeats and puppy cuddles. See upcoming classes and venue details.`,
       canonical: `${BASE}/puppy-yoga-guelph`,
-      ogImage: `${BASE}/manus-storage/apy_portrait_chow_cuddle_nov01_52f30f49.jpg`,
+      ogImage: publicPortraitUrl("/manus-storage/apy_portrait_chow_cuddle_nov01_52f30f49.jpg"),
       schema: [
         breadcrumb({ name: "Puppy Yoga Guelph", url: `${BASE}/puppy-yoga-guelph` }),
         {
@@ -381,9 +383,9 @@ const PAGES: Record<string, () => string> = {
 
   <section id="experience">
     <h2>The AfroPuppyYoga Experience</h2>
-    <p>Every AfroPuppyYoga session is a 60-minute guided yoga class set to Afro-beat music, with a litter of adorable puppies roaming freely around you. Whether you're a seasoned yogi or a complete beginner, our classes are designed to be accessible, joyful, and deeply relaxing.</p>
+    <p>AfroPuppyYoga sessions combine 40 minutes of guided yoga with puppies and 20 minutes of dedicated puppy playtime, set to Afro-beat music. Whether you're a seasoned yogi or a complete beginner, our classes are designed to be accessible, joyful, and deeply relaxing.</p>
     <ul>
-      <li>60-minute guided yoga session</li>
+      <li>40 minutes of guided yoga with puppies and 20 minutes of dedicated puppy playtime</li>
       <li>Live Afro-beat music soundtrack</li>
       <li>Ethically sourced puppies from registered breeders</li>
       <li>All levels welcome — no yoga experience required</li>
@@ -686,9 +688,8 @@ const PAGES: Record<string, () => string> = {
 
   "/corporate-puppy-yoga": () =>
     buildHtml({
-      title: "Corporate Puppy Yoga in Ontario | Team Wellness Events | AfroPuppyYoga",
-      description:
-        `AfroPuppyYoga: ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Standard 60-minute studio corporate puppy yoga for up to 20 guests from ${PRIVATE_EVENT_START_PRICE}. Puppy lounge and other formats: custom quotes across Ontario.`,
+      title: CORPORATE_SEO_TITLE,
+      description: `AfroPuppyYoga: ${FIVE_STAR_REVIEW_COUNT} five-star reviews. ${CORPORATE_SEO_COPY}`,
       canonical: `${BASE}/corporate-puppy-yoga`,
       schema: [
         breadcrumb({ name: "Corporate Puppy Yoga", url: `${BASE}/corporate-puppy-yoga` }),
@@ -843,9 +844,9 @@ const PAGES: Record<string, () => string> = {
 
   "/private-puppy-yoga-events": () =>
     buildHtml({
-      title: "Private Puppy Yoga Events in Ontario | AfroPuppyYoga",
-      description:
-        `AfroPuppyYoga: ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Standard 60-minute studio puppy yoga for up to 20 guests from ${PRIVATE_EVENT_START_PRICE}. Puppy lounge and other formats: custom quotes across Ontario.`,
+      title: PRIVATE_SEO_TITLE,
+      description: `AfroPuppyYoga: ${FIVE_STAR_REVIEW_COUNT} five-star reviews. ${PRIVATE_SEO_COPY}`,
+      ogImage: LOCATION_SOCIAL_IMAGE,
       canonical: `${BASE}/private-puppy-yoga-events`,
       schema: [
         breadcrumb({ name: "Private Puppy Yoga Events", url: `${BASE}/private-puppy-yoga-events` }),
@@ -1054,11 +1055,11 @@ const PAGES: Record<string, () => string> = {
 
   <h3>What to Expect</h3>
   <ul>
-    <li>60-minute guided yoga session with a certified instructor</li>
+    <li>40 minutes of guided yoga with puppies and 20 minutes of dedicated puppy playtime</li>
     <li>Afro-beat inspired music soundtrack</li>
     <li>A litter of ethically sourced puppies roaming freely</li>
     <li>Dedicated Puppy Monitors ensuring puppy welfare throughout</li>
-    <li>All yoga mats and props provided</li>
+    <li>Please bring your own yoga mat</li>
     <li>All levels welcome — no experience required</li>
   </ul>
 
@@ -1170,11 +1171,11 @@ const PAGES: Record<string, () => string> = {
 
   <h3>What to Expect</h3>
   <ul>
-    <li>60-minute guided yoga session with a certified instructor</li>
+    <li>40 minutes of guided yoga with puppies and 20 minutes of dedicated puppy playtime</li>
     <li>Afro-beat inspired music soundtrack</li>
     <li>A litter of ethically sourced puppies roaming freely</li>
     <li>Dedicated Puppy Monitors ensuring puppy welfare throughout</li>
-    <li>All yoga mats and props provided</li>
+    <li>Check your selected event listing for yoga mat details</li>
   </ul>
 
   <h3>Pricing</h3>
@@ -1217,9 +1218,9 @@ const PAGES: Record<string, () => string> = {
 
   "/puppy-yoga-oakville": () =>
     buildHtml({
-      title: "Puppy Yoga Oakville Ontario | AfroPuppyYoga",
-      description:
-        `Puppy yoga in Oakville, Ontario. AfroPuppyYoga has ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Enjoy puppy cuddles and Afro-beat music. Book your class.`,
+      title: OAKVILLE_SEO_TITLE,
+      description: `AfroPuppyYoga: ${FIVE_STAR_REVIEW_COUNT} five-star reviews. ${OAKVILLE_SEO_COPY}`,
+      ogImage: LOCATION_SOCIAL_IMAGE,
       canonical: `${BASE}/puppy-yoga-oakville`,
       schema: [
         breadcrumb({ name: "Puppy Yoga Oakville", url: `${BASE}/puppy-yoga-oakville` }),
@@ -1263,14 +1264,6 @@ const PAGES: Record<string, () => string> = {
                 text: "AfroPuppyYoga runs regular classes in Oakville. Check our Luma calendar at lu.ma/afropuppyyoga for the latest Oakville schedule and to book your spot.",
               },
             },
-            {
-              "@type": "Question",
-              name: "Is Oakville a new AfroPuppyYoga location?",
-              acceptedAnswer: {
-                "@type": "Answer",
-                text: "Yes. AfroPuppyYoga launched in Oakville in June 2026, making it our third Ontario location alongside Kitchener-Waterloo and Hamilton. We are excited to bring puppy yoga to the Oakville and Halton Region community.",
-              },
-            },
           ],
         },
       ],
@@ -1286,11 +1279,11 @@ const PAGES: Record<string, () => string> = {
 
   <h3>What to Expect</h3>
   <ul>
-    <li>60-minute guided yoga session with a certified instructor</li>
+    <li>40 minutes of guided yoga with puppies and 20 minutes of dedicated puppy playtime</li>
     <li>Afro-beat inspired music soundtrack</li>
     <li>A litter of ethically sourced puppies roaming freely</li>
     <li>Dedicated Puppy Monitors ensuring puppy welfare throughout</li>
-    <li>All yoga mats and props provided</li>
+    <li>Bring a yoga mat</li>
   </ul>
 
   <h3>Pricing</h3>
@@ -1316,8 +1309,6 @@ const PAGES: Record<string, () => string> = {
     <dd>Ticket prices vary by date and tier. Current prices for each class are shown at checkout on our Luma booking page.</dd>
     <dt>When are classes?</dt>
     <dd>Regular classes in Oakville. Check lu.ma/afropuppyyoga for the latest schedule.</dd>
-    <dt>Is this a new location?</dt>
-    <dd>Yes. AfroPuppyYoga launched in Oakville in June 2026 — our third Ontario location.</dd>
   </dl>
 
   <p><a href="https://lu.ma/afropuppyyoga">Book a Class in Oakville</a> | <a href="/private-events/quote">Book a Private Event</a></p>
@@ -1331,9 +1322,8 @@ const PAGES: Record<string, () => string> = {
 
   "/private-events/quote": () =>
     buildHtml({
-      title: "Private Puppy Yoga Event Quote | AfroPuppyYoga",
-      description:
-        `AfroPuppyYoga: ${FIVE_STAR_REVIEW_COUNT} five-star reviews. Standard 60-minute studio puppy yoga for up to 20 guests from ${PRIVATE_EVENT_START_PRICE}. Puppy lounge, multiple sessions and other formats: full custom quotes across Ontario.`,
+      title: QUOTE_SEO_TITLE,
+      description: `AfroPuppyYoga: ${FIVE_STAR_REVIEW_COUNT} five-star reviews. ${QUOTE_SEO_COPY}`,
       canonical: `${BASE}/private-events/quote`,
       schema: [
         breadcrumb(

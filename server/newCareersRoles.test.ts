@@ -36,11 +36,12 @@ describe("confirmed Kitchener and Guelph careers additions", () => {
     expect(html).toContain("Apply");
   });
 
-  it.each(NEW_CAREERS_LISTINGS)("supports $id in Directory, login and tree without management permissions", (job) => {
+  it.each(NEW_CAREERS_LISTINGS)("supports $id in Directory, login and tree with the approved role permissions", (job) => {
     const parsed = directEmployeeSchema.parse({ name: "Fictional Employee", email: "fictional@example.com", role: job.title, location: job.locationCode, startedAt: "2026-10-05" });
-    expect(getApprovedNewHirePortalAccessPlan(parsed).portalAccessLevel).toBe("team_member");
+    const isOperations = job.title === "Operations Specialist";
+    expect(getApprovedNewHirePortalAccessPlan(parsed).portalAccessLevel).toBe(isOperations ? "operations_manager" : "team_member");
     expect(getEmployeeLoginDetails({ ...parsed, phone: parsed.phone || null }).role).toBe(job.title);
-    expect(canManageOperations(getApyAccessLevel(job.title))).toBe(false);
+    expect(canManageOperations(getApyAccessLevel(job.title))).toBe(isOperations);
     const tree = buildEmployeeTeamTree([{ ...parsed, id: 1, sourceApplicationId: 2, employmentStatus: "active", hasApyHqAccess: true }]);
     expect(tree.find((branch) => branch.key === job.locationCode)?.roles[0].members).toHaveLength(1);
     if (job.locationCode === "GUE") expect(tree.find((branch) => branch.key === "GUE")?.label).toBe("Guelph");
@@ -61,7 +62,7 @@ describe("confirmed Kitchener and Guelph careers additions", () => {
     expect(detectOfferLetterType("Operations Specialist", "GUE")).toBe("operations_specialist");
   });
 
-  it("assigns movement training without yoga lessons and Operations training without manager access", () => {
+  it("assigns movement training without yoga lessons and Operations training", () => {
     const movement = modulesForRole("Movement Instructor");
     expect(movement.some((module) => module.role === "Movement Instructor")).toBe(true);
     expect(movement.some((module) => module.role === "Yoga Instructor")).toBe(false);
