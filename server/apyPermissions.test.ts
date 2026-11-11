@@ -27,4 +27,18 @@ describe("APY HQ role permissions", () => {
     expect(getApyAccessLevel("Event Host")).toBe("team_member");
     expect(getApyAccessLevel("")).toBe("none");
   });
+
+  it("treats Operations Specialist exactly like Operations Manager for portal access (owner decision 2026-11-11)", () => {
+    for (const role of ["Operations Specialist", "operations_specialist", " Operation Specialist "]) {
+      expect(isOperationsManagerRole(role)).toBe(true);
+      expect(getApyAccessLevel(role)).toBe("operations_manager");
+      expect(canManageOperations(getApyAccessLevel(role))).toBe(true);
+      expect(canAccessHubTool(getApyAccessLevel(role), "operations")).toBe(true);
+      expect(canAccessHubTool(getApyAccessLevel(role), "owner")).toBe(false);
+    }
+    for (const role of ["Puppy Monitor", "Movement Instructor", "Social Media Intern", "Yoga Instructor"]) {
+      expect(isOperationsManagerRole(role)).toBe(false);
+      expect(getApyAccessLevel(role)).toBe("team_member");
+    }
+  });
 });

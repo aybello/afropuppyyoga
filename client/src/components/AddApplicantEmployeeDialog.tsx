@@ -155,7 +155,7 @@ function ApplicantDialog({ applicant, onClose, onAdded }: { applicant: Applicant
         <p><strong>{applicant.name}</strong> · {applicant.email}</p>
         <p>Login phone: <strong>{applicant.phone || "Not recorded. Email sign-in only."}</strong></p>
         <p>{applicant.role} · {applicant.location}</p>
-        <p>Access: <strong>{isOperationsManagerRole(applicant.role) ? "Operations Manager tools and training" : "Staff Portal and role-based training"}</strong>.</p>
+        <p>Access: <strong>{isOperationsManagerRole(applicant.role) ? "Operations tools (Job Applications, Private Events, Puppy Schedule and more) and training" : "Staff Portal and role-based training"}</strong>.</p>
         <p>They can sign in with their saved email or phone. Send onboarding documents afterward from this page.</p>
       </div>
       {preflight.isFetching && <p role="status">Checking for matching applications and Directory records...</p>}

@@ -56,8 +56,15 @@ export function isApprovedApyTeamRole(role: string | null | undefined): role is 
   return APY_TEAM_ROLES.some((teamRole) => normalizeApyRole(teamRole) === normalized);
 }
 
+/**
+ * Operations Manager and Operations Specialist are the same operations role at
+ * APY (owner decision, 2026-11-11). Both receive every operations tool in the
+ * staff portal, including Job Applications, but never owner-only finance tools.
+ */
+const OPERATIONS_ROLE_NAMES = new Set(["operations manager", "operation manager", "operations specialist", "operation specialist"]);
+
 export function isOperationsManagerRole(role: string | null | undefined): boolean {
-  return normalizeApyRole(role) === "operations manager";
+  return OPERATIONS_ROLE_NAMES.has(normalizeApyRole(role));
 }
 
 export function getApyAccessLevel(role: string | null | undefined, isOwner = false): ApyAccessLevel {

@@ -48,9 +48,12 @@ describe("moving staff between positions", () => {
   it("grants operations access on promotion and withdraws it on a move away", () => {
     expect(getApyAccessLevel("Puppy Monitor")).toBe("team_member");
     expect(getApyAccessLevel("Operations Manager")).toBe("operations_manager");
-    // A move out of Operations Manager drops operations permission immediately
-    // because access is resolved from the saved position on each request.
-    expect(getApyAccessLevel("Operations Specialist")).toBe("team_member");
+    // Operations Specialist is the same operations role as Operations Manager
+    // (owner decision 2026-11-11), so a move between them keeps access. A move
+    // to any other position drops operations permission immediately because
+    // access is resolved from the saved position on each request.
+    expect(getApyAccessLevel("Operations Specialist")).toBe("operations_manager");
+    expect(getApyAccessLevel("Yoga Instructor")).toBe("team_member");
   });
 });
 
