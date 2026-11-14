@@ -74,12 +74,12 @@ export default function Hero({ initialHeroImageState = INITIAL_HERO_IMAGE_STATE 
           <p className="font-body text-[#66514A] text-base sm:text-lg leading-relaxed max-w-xl mb-8 [text-wrap:pretty]">
             Guided yoga, Afro-beat rhythms, and adorable puppies in one unforgettable session. Serving Hamilton, Kitchener, Oakville & Guelph.
           </p>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-3">
             <a
               href={BOOK_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex w-full sm:w-auto items-center justify-center gap-3 min-h-12 px-7 py-3.5 bg-[#F29CB8] text-[#34221D] font-body font-semibold text-base rounded-full hover:bg-[#FDE9EF] transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B83F67]"
+              className="inline-flex w-full sm:w-auto items-center justify-center gap-2 sm:gap-3 min-h-12 px-3 sm:px-7 py-3.5 bg-[#F29CB8] text-[#34221D] font-body font-semibold text-sm sm:text-base rounded-full hover:bg-[#FDE9EF] transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B83F67]"
               onClick={() => trackCTAClick("Book a Class — Hero")}
             >
               Book a Class <span aria-hidden="true">→</span>
@@ -97,6 +97,15 @@ export default function Hero({ initialHeroImageState = INITIAL_HERO_IMAGE_STATE 
               className="inline-flex flex-1 sm:flex-none items-center justify-center min-h-12 px-5 py-3 font-body font-semibold text-sm sm:text-base rounded-full border border-[#EBCDD5] hover:bg-[#FDE9EF] transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B83F67]"
             >
               Private Events
+            </a>
+            <a
+              href="https://luma.com/15iajebr"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackCTAClick("Gift Cards — Hero")}
+              className="inline-flex flex-1 sm:flex-none items-center justify-center min-h-12 px-5 py-3 font-body font-semibold text-sm sm:text-base whitespace-nowrap rounded-full border border-[#EBCDD5] hover:bg-[#FDE9EF] transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B83F67]"
+            >
+              Gift Cards
             </a>
           </div>
           <div className="mt-6 flex flex-wrap items-center gap-3 font-body text-sm">
