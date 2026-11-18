@@ -9,7 +9,7 @@ import { FIVE_STAR_REVIEW_COUNT } from "@shared/reviewMetrics";
 import { heroImageReducer, heroImageSource, INITIAL_HERO_IMAGE_STATE, type HeroImageState } from "@shared/heroImage";
 
 // Partner logos remain in their original colors and at their approved display sizes.
-const trustedBy: ReadonlyArray<{ name: string; src: string; height: number; optimized?: string }> = [
+const trustedBy: ReadonlyArray<{ name: string; src: string; height: number; optimized?: string; background?: string }> = [
   { name: "LiftOff", src: "/manus-storage/LiftOff_Logo_Building_Legacy_banner_5f5d7710.png", height: 88, optimized: "/manus-storage/apy_opt_liftoff_92a927b1.webp" },
   { name: "Wilfrid Laurier University", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/laurier_logo_61911be5.webp", height: 30, optimized: "/manus-storage/apy_opt_wilfrid_laurier_university_685fefa3.webp" },
   { name: "University of Waterloo", src: "https://d2xsxph8kpxj0f.cloudfront.net/310519663446228701/TnRBecMtwf5qQkTJcvZpfJ/waterloo_fixed_a91debfb.png", height: 36 },
@@ -36,6 +36,9 @@ const trustedBy: ReadonlyArray<{ name: string; src: string; height: number; opti
   { name: "Nutram Pet Foods", src: "/manus-storage/nutram-canada-official-blue-transparent_d5a5964e.png", height: 36 },
   { name: "Little Scholars Child Care", src: "/manus-storage/little-scholars-cambridge-original_2fac7cda.jpg", height: 88 },
   { name: "Cyclone Spin Studio", src: "/manus-storage/cyclone-uw_a8d866c6.png", height: 62 },
+  { name: "Black Founders Network", src: "/manus-storage/bfn_b4c7db4c.webp", height: 34 },
+  { name: "Black Entrepreneurship Alliance", src: "/manus-storage/bea-white_6e169b46.webp", height: 48, background: "#191919" },
+  { name: "Startup Canada", src: "/manus-storage/startup-canada_c4227197.webp", height: 48 },
 ];
 
 function PartnerLogo({ org, copy }: { org: (typeof trustedBy)[number]; copy: number }) {
@@ -43,7 +46,7 @@ function PartnerLogo({ org, copy }: { org: (typeof trustedBy)[number]; copy: num
   return (
     <picture>
       {org.optimized && !useOriginal && <source srcSet={org.optimized} type="image/webp" />}
-      <img src={org.src} alt={copy === 0 ? org.name : ""} loading="eager" decoding="async" style={{ height: org.height }} className="w-auto object-contain" onError={() => {
+      <img src={org.src} alt={copy === 0 ? org.name : ""} loading="eager" decoding="async" style={{ height: org.height, ...(org.background ? { backgroundColor: org.background, padding: "8px 12px", borderRadius: 6, boxSizing: "content-box" as const } : {}) }} className="w-auto object-contain" onError={() => {
         if (org.optimized && !useOriginal) setUseOriginal(true);
       }} />
     </picture>
