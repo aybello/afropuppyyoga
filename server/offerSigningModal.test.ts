@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  preview: { data: { kind: "draft", offerHtml: "<p>Role-specific offer preview</p>", ndaHtml: "<p>Confidentiality preview</p>" } as any, isLoading: false, isError: false, refetch: vi.fn() },
   mutationOptions: null as null | {
     onSuccess: (result: any) => void;
     onError: (error: Error) => void;
@@ -41,6 +42,7 @@ vi.mock("../client/src/lib/trpc", () => ({
       },
     }),
     signing: {
+      previewOffer: { useQuery: () => mocks.preview },
       createSigningRequest: {
         useMutation: (options: typeof mocks.mutationOptions) => {
           mocks.mutationOptions = options;
@@ -103,6 +105,7 @@ function delivery(email: "sent" | "unknown" | "failed", sms: "queued" | "sent" |
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.mutationOptions = null;
+  Object.assign(mocks.preview, { data: { kind: "draft", offerHtml: "<p>Role-specific offer preview</p>", ndaHtml: "<p>Confidentiality preview</p>" }, isLoading: false, isError: false });
 });
 
 describe("OfferLetterModal", () => {
@@ -124,6 +127,9 @@ describe("OfferLetterModal", () => {
     expect(html).toContain(baseApp.email);
     expect(html).toContain("+1 (416) 555-0100");
     expect(html).toContain("Send Email + Text");
+    expect(html).toContain("Role-specific offer preview");
+    expect(html).toContain("Confidentiality preview");
+    expect(html).toContain("Each application has its own offer.");
     expect(mocks.mutate).not.toHaveBeenCalled();
   });
 
@@ -196,3 +202,20 @@ describe("OfferLetterModal", () => {
     expect(mocks.timelineInvalidate).not.toHaveBeenCalled();
   });
 });
+
+ it("shows the safe pre-send validation reason instead of claiming an uncertain delivery", () => {
+   render();
+   const message = "This application already has a signed offer. Open the separate application for the new role. No offer notification was sent.";
+   mocks.mutationOptions!.onError(Object.assign(new Error(message), { data: { code: "PRECONDITION_FAILED" } }));
+   expect(mocks.error).toHaveBeenCalledWith(message);
+   expect(mocks.mutate).not.toHaveBeenCalled();
+ });
+
+ it.each(["loading", "failed", "signed", "legacy"])("disables sending when preview is %s", state => {
+   if (state === "loading" || state === "failed") Object.assign(mocks.preview, { data: undefined, isLoading: state === "loading", isError: state === "failed" });
+   else mocks.preview.data.kind = state;
+   const html = render();
+   expect(html).toMatch(/<button[^>]*disabled[^>]*>[\s\S]*?Send Email \+ Text/);
+   expect(mocks.mutate).not.toHaveBeenCalled();
+   if (state === "failed") expect(html).toContain("The documents could not be loaded. Nothing has been sent.");
+ });

@@ -1,3 +1,4 @@
+import { MySqlDialect } from "drizzle-orm/mysql-core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ create: vi.fn(), twilio: vi.fn(), suppressed: vi.fn(), getDb: vi.fn() }));
@@ -29,13 +30,15 @@ function makeDb(options: { claimFails?: boolean; updateFails?: boolean; nestedDu
       if (rows.has(value.idempotencyKey)) throw duplicateError(options.nestedDuplicate);
       rows.set(value.idempotencyKey, { ...value });
     }) })),
-    select: vi.fn(() => ({ from: vi.fn(() => ({ where: vi.fn(() => ({ limit: vi.fn(async () => {
-      const row = [...rows.values()][0];
+    select: vi.fn(() => ({ from: vi.fn(() => ({ where: vi.fn((predicate: any) => ({ limit: vi.fn(async () => {
+      const params = new MySqlDialect().sqlToQuery(predicate).params;
+      const row = [...rows.values()].find(row => params.includes(row.idempotencyKey));
       return row ? [{ recipient: row.recipient, subject: row.subject, deliveryStatus: row.deliveryStatus, providerMessageId: row.providerMessageId }] : [];
     }) })) })) })),
-    update: vi.fn(() => ({ set: vi.fn((change: Partial<Row>) => ({ where: vi.fn(async () => {
+    update: vi.fn(() => ({ set: vi.fn((change: Partial<Row>) => ({ where: vi.fn(async (predicate: any) => {
       if (options.updateFails) throw new Error("update unavailable");
-      const key = [...rows.keys()][0];
+      const params = new MySqlDialect().sqlToQuery(predicate).params;
+      const key = [...rows.keys()].find(key => params.includes(key));
       if (key) rows.set(key, { ...rows.get(key)!, ...change });
     }) })) })),
   };
@@ -195,3 +198,15 @@ describe("sendOfferSigningSms", () => {
     await expect(sendOfferSigningSms({ ...baseInput, requestKey: "third-uuid" })).resolves.toEqual({ status: "unknown", reason: "SMS outcome could not be recorded.", phone: "+12897881885", providerMessageId: "SMaccepted" });
   });
 });
+
+ it("keeps two role offers to one phone independent and replays each without another text", async () => {
+   const { db, rows } = makeDb(); mocks.getDb.mockResolvedValue(db);
+   mocks.create.mockResolvedValue({ sid: "SMroles", status: "queued" });
+   const other = { ...baseInput, applicationId: 43, role: "Operations Specialist", signingLink: `https://afropuppyyoga.ca/sign?token=${"b".repeat(96)}` };
+   await expect(sendOfferSigningSms(baseInput)).resolves.toMatchObject({ status: "queued" });
+   await expect(sendOfferSigningSms(other)).resolves.toMatchObject({ status: "queued" });
+   await expect(sendOfferSigningSms(baseInput)).resolves.toMatchObject({ status: "queued" });
+   await expect(sendOfferSigningSms(other)).resolves.toMatchObject({ status: "queued" });
+   expect(mocks.create).toHaveBeenCalledTimes(2); expect(rows.size).toBe(2);
+   expect([...rows.values()].every(row => row.deliveryStatus === "queued")).toBe(true);
+ });

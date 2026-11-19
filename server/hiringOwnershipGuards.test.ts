@@ -307,7 +307,7 @@ describe("signing router ownership rejection without outbound effects", () => {
     const h = harness({ offers: [record], claims: kind === "association" ? [association()] : [], actions: kind === "legacy" ? [legacyAction()] : [] });
     external.db.getDb.mockResolvedValue(h.db);
     const caller = signingRouter.createCaller({ user: actor, res: { setHeader: vi.fn() } } as never);
-    await expect(caller.createSigningRequest({ applicationId: historical.id, requestKey: "123e4567-e89b-42d3-a456-426614174000" })).rejects.toThrow("already belongs");
+    await expect(caller.createSigningRequest({ applicationId: historical.id, requestKey: "123e4567-e89b-42d3-a456-426614174000" })).rejects.toThrow("No offer notification was sent");
     expect(h.writes).toEqual([]);
     expect(external.sendOfferSigningEmail).not.toHaveBeenCalled();
     expect(external.sendOfferSigningSms).not.toHaveBeenCalled();

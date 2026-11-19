@@ -238,3 +238,14 @@ describe("sendOfferSigningEmail", () => {
     expect(mocks.sendEmail).not.toHaveBeenCalled();
   });
 });
+
+ it("keeps offers for two applications to the same email independent, including retry replay", async () => {
+   const { db, rows } = makeDb();
+   mocks.getDb.mockResolvedValue(db); mocks.sendEmail.mockResolvedValue(undefined);
+   const other = { ...baseInput, applicationId: 43, email: { ...email, subject: "Operations Specialist offer", text: "Different role private link" } };
+   await expect(sendOfferSigningEmail(baseInput)).resolves.toMatchObject({ status: "sent" });
+   await expect(sendOfferSigningEmail(other)).resolves.toMatchObject({ status: "sent" });
+   await expect(sendOfferSigningEmail(baseInput)).resolves.toMatchObject({ status: "sent", reused: true });
+   await expect(sendOfferSigningEmail(other)).resolves.toMatchObject({ status: "sent", reused: true });
+   expect(mocks.sendEmail).toHaveBeenCalledTimes(2); expect(rows.size).toBe(2);
+ });

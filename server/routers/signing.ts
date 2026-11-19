@@ -8,14 +8,43 @@ import { sendEmail } from "../email";
 import crypto from "crypto";
 import { canReuseSigningToken, detectOfferLetterType, type OfferLetterType } from "../signingPolicy";
 import { communicationsLog, jobApplicationActions } from "../../drizzle/schema";
-import { createOfferDocumentSnapshot } from "../offerDocumentSnapshot";
+import { createOfferDocumentSnapshot, readOfferDocumentSnapshot } from "../offerDocumentSnapshot";
 import { sendOfferSigningEmail } from "../offerSigningEmail";
 import { sendOfferSigningSms } from "../offerSigningSms";
 import { recordOfferSigningOutcome } from "../offerSigningAudit";
+import { PUPPY_MONITOR_SHIFT_PAY_CAD } from "../../shared/puppyMonitorTerms";
+import { MOVEMENT_INSTRUCTOR_HOURLY_PAY_CAD } from "../../shared/movementInstructorTerms";
+import { SOCIAL_MEDIA_INTERN_START_HOURLY_PAY_CAD } from "../../shared/socialMediaTerms";
 
 export { canReuseSigningToken, detectOfferLetterType } from "../signingPolicy";
 
 export const signingRouter = router({
+  /** Read-only owner/operations preview. Never creates a token or contacts an applicant. */
+  previewOffer: staffProcedure
+    .input(z.object({ applicationId: z.number().int().positive() }))
+    .query(async ({ input, ctx }) => {
+      ctx.res.setHeader("Cache-Control", "private, no-store");
+      const applicant = await getJobApplicationById(input.applicationId);
+      if (!applicant || applicant.deletedAt) throw new TRPCError({ code: "NOT_FOUND", message: "Application not found or archived." });
+      const latest = await getSigningTokenByApplicationId(input.applicationId);
+      if (latest?.signed === 1) {
+        const snapshot = latest.signedDocumentSnapshot
+          ? readOfferDocumentSnapshot(latest.signedDocumentSnapshot)
+          : createOfferDocumentSnapshot(latest);
+        return { ...snapshot, kind: latest.signedDocumentSnapshot ? "signed" as const : "legacy" as const };
+      }
+      const offerLetterType = detectOfferLetterType(applicant.role, applicant.location);
+      const reuse = latest && applicant.email && canReuseSigningToken(latest, { ...applicant, email: applicant.email })
+        && latest.offerLetterType === offerLetterType;
+      const snapshot = createOfferDocumentSnapshot(reuse ? latest : {
+        applicantName: applicant.name, role: applicant.role, location: applicant.location, offerLetterType,
+        puppyMonitorShiftPayCad: offerLetterType.startsWith("puppy_monitor_") ? PUPPY_MONITOR_SHIFT_PAY_CAD : null,
+        movementInstructorHourlyPayCad: offerLetterType === "movement_instructor" ? MOVEMENT_INSTRUCTOR_HOURLY_PAY_CAD : null,
+        socialMediaHourlyPayCad: ["social_media_intern", "social_media_specialist"].includes(offerLetterType) ? SOCIAL_MEDIA_INTERN_START_HOURLY_PAY_CAD : null,
+        createdAt: new Date(),
+      });
+      return { ...snapshot, kind: reuse ? "current" as const : "draft" as const };
+    }),
   /**
    * Admin-only: create a signing request and send the signing link to the applicant
    */
@@ -29,7 +58,26 @@ export const signingRouter = router({
     .mutation(async ({ input, ctx }) => {
       const sourceDb = await getDb();
       if (!sourceDb) throw new Error("Database not available");
-      const { applicant, reuse, token, expiresAt, offerLetterType } = await prepareHiringOffer(sourceDb, input.applicationId);
+      let prepared: Awaited<ReturnType<typeof prepareHiringOffer>>;
+      try {
+        prepared = await prepareHiringOffer(sourceDb, input.applicationId);
+      } catch (error) {
+        // Only preparation errors are known to occur before either delivery channel.
+        // Do not expose provider/database details or turn an uncertain send into a retry.
+        const message = error instanceof Error ? error.message : "";
+        const reason = message.includes("already belongs to an employee")
+          ? "This application is linked to an employee, but its reviewed identity could not be verified. Review the linked records in Employee Directory."
+          : message.includes("already an employee")
+            ? "This is the existing employee profile. Open the separate application for the role you want to offer."
+            : message.includes("already signed")
+              ? "This application already has a signed offer. Open the separate application for the new role."
+              : message === "Application not found or archived." || message === "This application is rejected. Review its status before sending an offer."
+                || message === "Resolve the pending onboarding delivery first." || message === "This applicant does not have an email address."
+                ? message : null;
+        if (reason) throw new TRPCError({ code: "PRECONDITION_FAILED", message: `${reason} No offer notification was sent.` });
+        throw error;
+      }
+      const { applicant, reuse, token, expiresAt, offerLetterType } = prepared;
 
       const signingLink = `https://afropuppyyoga.ca/sign?token=${token}`;
       const subject = "Action Required: Review & Sign Your Offer | AfroPuppyYoga";

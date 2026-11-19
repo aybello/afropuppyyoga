@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { MySqlDialect } from "drizzle-orm/mysql-core";
 import { employeeApplicationAssociations, employees, jobApplicationActions, jobApplications, signingTokens, staffingMutationLocks } from "../drizzle/schema";
-import { recordCurrentOfferSignature } from "./hiringOfferLifecycle";
+import { prepareHiringOffer, recordCurrentOfferSignature, withCurrentHiringOfferDelivery } from "./hiringOfferLifecycle";
 import { reviewedHiringRecordHash } from "./hiringDuplicateIdentity";
 import { createOfferDocumentSnapshot } from "./offerDocumentSnapshot";
 
@@ -30,6 +30,11 @@ function harness(initial: State = base(), hooks: { afterLock?: (s: State) => voi
     const tx = {
       insert: (table: unknown) => ({ values: (values: any) => {
         if (table === staffingMutationLocks) return { onDuplicateKeyUpdate: async () => [{ affectedRows: 1 }] };
+        if (table === signingTokens) {
+          calls.push({ table, values, locked });
+          state.offers.push({ id: 99, createdAt: new Date(), signedName: null, signedIp: null, signedAt: null, signedDocumentSnapshot: null, ...values });
+          return Promise.resolve([{ affectedRows: 1, insertId: 99 }]);
+        }
         if (table !== jobApplicationActions) throw new Error("Unexpected domain insert");
         calls.push({ table, values, locked });
         if (hooks.auditFails) throw new Error("audit unavailable");
@@ -68,7 +73,7 @@ function harness(initial: State = base(), hooks: { afterLock?: (s: State) => voi
         if (table === signingTokens) {
           hooks.onSignature?.(state);
           const affected = hooks.signatureAffected ?? 1;
-          if (affected === 1) Object.assign(state.offers.find((row: any) => row.id === offer.id), values);
+          if (affected === 1) Object.assign(state.offers.find((row: any) => row.id === dialect.sqlToQuery(predicate).params[0]), values);
           return [{ affectedRows: affected }];
         }
         if (table === jobApplications) { Object.assign(state.apps.find((row: any) => row.id === target.id), values); return [{ affectedRows: 1 }]; }
@@ -437,5 +442,83 @@ describe("reviewed associated current offer signature (isolated)", () => {
     const state = base(); state.apps = [state.apps[0]]; state.claims = []; state.directory = [{ ...employee, sourceApplicationId: 41 }]; state.actions = []; state.offers = [state.offers[0]];
     const h = harness(state); await expect(sign(h)).rejects.toThrow("already belongs to an employee");
     expect(h.calls).toEqual([]); expect(h.state).toEqual(state);
+  });
+});
+
+
+describe("independent reviewed role offers", () => {
+  function operationsState(status = "interview_requested") {
+    const state = base();
+    state.apps[0].role = "Operations Specialist";
+    state.apps[0].status = status;
+    // No offer has been issued for this additional role. The canonical hire is signed.
+    state.offers = state.offers.filter(row => row.applicationId !== target.id);
+    return state;
+  }
+  it("prepares and dispatches an Operations Specialist offer while preserving a different signed role", async () => {
+    const initial = operationsState(), h = harness(initial);
+    const prepared = await prepareHiringOffer(h.db, target.id);
+    expect(prepared.offerLetterType).toBe("operations_specialist");
+    expect(prepared.applicant.id).toBe(target.id);
+    const dispatch = vi.fn(async () => "accepted by mocked provider");
+    await expect(withCurrentHiringOfferDelivery(h.db, target.id, prepared.token, prepared.applicant, dispatch)).resolves.toBe("accepted by mocked provider");
+    expect(dispatch).toHaveBeenCalledOnce();
+    expect(h.calls).toHaveLength(1);
+    expect(h.calls[0]).toMatchObject({ table: signingTokens, locked: true, values: { applicationId: target.id, role: "Operations Specialist", offerLetterType: "operations_specialist", signed: 0 } });
+    expect(h.state.directory).toEqual(initial.directory);
+    expect(h.state.apps).toEqual(initial.apps);
+    expect(h.state.claims).toEqual(initial.claims);
+    expect(h.state.offers.find(row => row.id === signedOffer.id)).toEqual(initial.offers[0]);
+    const next = harness(h.state);
+    await expect(prepareHiringOffer(next.db, target.id)).resolves.toMatchObject({ reuse: true, token: prepared.token });
+    expect(next.calls).toEqual([]);
+  });
+  it("signs the new Operations offer after send tracking accepts only that application", async () => {
+    const issued = harness(operationsState());
+    const prepared = await prepareHiringOffer(issued.db, target.id);
+    const state = issued.state;
+    state.apps[0].status = "accepted"; // Simulated normal post-dispatch tracking.
+    const current = state.offers.find(row => row.applicationId === target.id)!;
+    const snapshot = createOfferDocumentSnapshot(current);
+    expect(snapshot.offerHtml).toContain("$20.00 per hour");
+    const h = harness(state);
+    await expect(recordCurrentOfferSignature(h.db, prepared.token, target.name, "192.0.2.17", "operations_specialist", undefined, undefined, undefined, snapshot.sha256)).resolves.toMatchObject({ associatedAuditRecorded: true });
+    expect(h.calls.every(call => call.table === signingTokens || call.table === jobApplicationActions)).toBe(true);
+    expect(h.state.directory).toEqual(state.directory);
+    expect(h.state.apps).toEqual(state.apps);
+    expect(h.state.claims).toEqual(state.claims);
+    expect(h.state.offers.find(row => row.id === signedOffer.id)).toEqual(state.offers.find(row => row.id === signedOffer.id));
+  });
+  it("replaces an expired unsigned offer without changing its historical row or another role", async () => {
+    const state = operationsState("accepted");
+    const expired = { ...offer, role: "Operations Specialist", offerLetterType: "operations_specialist", puppyMonitorShiftPayCad: null, expiresAt: new Date("2020-01-01") };
+    state.offers.push(expired);
+    const h = harness(state);
+    const prepared = await prepareHiringOffer(h.db, target.id);
+    expect(prepared.reuse).toBe(false);
+    expect(prepared.token).not.toBe(expired.token);
+    expect(h.calls).toHaveLength(1);
+    expect(h.state.offers.find(row => row.id === expired.id)).toEqual(expired);
+  });
+  it.each(["stale identity", "inactive owner", "missing association", "unreviewed duplicate", "signed target"])("does not prepare an offer for %s", async reason => {
+    const state = operationsState();
+    if (reason === "stale identity") state.claims[0].recordHash = "0".repeat(64);
+    if (reason === "inactive owner") state.directory[0].employmentStatus = "inactive";
+    if (reason === "missing association") state.claims = state.claims.filter(c => c.applicationId !== target.id);
+    if (reason === "unreviewed duplicate") state.apps.push({ ...state.apps[0], id: 999 });
+    if (reason === "signed target") state.offers.push({ ...offer, signed: 1, role: "Operations Specialist", offerLetterType: "operations_specialist" });
+    const h = harness(state);
+    await expect(prepareHiringOffer(h.db, target.id)).rejects.toThrow();
+    expect(h.calls).toEqual([]);
+  });
+  it("rechecks the reviewed identity immediately before a delayed dispatch", async () => {
+    const h = harness(operationsState());
+    const prepared = await prepareHiringOffer(h.db, target.id);
+    const state = h.state;
+    state.directory[0].employmentStatus = "inactive";
+    const changed = harness(state), dispatch = vi.fn();
+    await expect(withCurrentHiringOfferDelivery(changed.db, target.id, prepared.token, prepared.applicant, dispatch)).rejects.toThrow();
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(changed.calls).toEqual([]);
   });
 });

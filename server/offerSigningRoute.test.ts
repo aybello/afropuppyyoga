@@ -193,7 +193,7 @@ describe("signing.createSigningRequest", () => {
   ])("does not send when current preparation rejects: %s", async (message) => {
     mocks.prepareHiringOffer.mockRejectedValue(new Error(message));
 
-    await expect(caller().createSigningRequest(input)).rejects.toThrow(message);
+    await expect(caller().createSigningRequest(input)).rejects.toThrow(message.includes("already signed") ? "No offer notification was sent." : message);
     expect(mocks.sendOfferSigningEmail).not.toHaveBeenCalled();
     expect(mocks.sendOfferSigningSms).not.toHaveBeenCalled();
   });

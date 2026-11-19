@@ -30,7 +30,10 @@ describe("Trusted By strip and approved photo replacement", () => {
     expect(hero).toContain('/manus-storage/little-scholars-cambridge-original_2fac7cda.jpg');
     expect(hero).toContain('name: "Cyclone Spin Studio"');
     expect(hero).toContain('/manus-storage/cyclone-uw_a8d866c6.png');
-    expect((hero.match(/name: "/g) ?? [])).toHaveLength(26);
+    expect(hero).toContain('name: "Black Founders Network"');
+    expect(hero).toContain('name: "Black Entrepreneurship Alliance"');
+    expect(hero).toContain('name: "Startup Canada"');
+    expect((hero.match(/name: "/g) ?? [])).toHaveLength(29);
     expect((hero.match(/optimized: "\/manus-storage\//g) ?? [])).toHaveLength(6);
     expect(hero).toContain('org.optimized && !useOriginal && <source');
     expect(hero).toContain('if (org.optimized && !useOriginal) setUseOriginal(true)');

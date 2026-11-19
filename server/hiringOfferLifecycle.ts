@@ -26,7 +26,7 @@ async function assertUnclaimedApplicant(tx: any, applicationId: number) {
 }
 
 /** Signing authority only, never hiring or access authority. Called with the staffing mutex held. */
-async function reviewedSigningOwnership(tx: any, app: typeof jobApplications.$inferSelect): Promise<boolean> {
+async function reviewedSigningOwnership(tx: any, app: typeof jobApplications.$inferSelect, forOfferDelivery = false): Promise<boolean> {
   const associations: Array<typeof employeeApplicationAssociations.$inferSelect> = await tx.select().from(employeeApplicationAssociations).for("update");
   const directory: Array<typeof employees.$inferSelect> = await tx.select().from(employees).for("update");
   const actions: Array<typeof jobApplicationActions.$inferSelect> = await tx.select().from(jobApplicationActions).where(eq(jobApplicationActions.action, "employee_added_after_signature")).for("update");
@@ -40,7 +40,10 @@ async function reviewedSigningOwnership(tx: any, app: typeof jobApplications.$in
   }
   const denied = () => new Error("This application already belongs to an employee; reviewed ownership could not be verified.");
   const validId = (value: unknown) => typeof value === "number" && Number.isSafeInteger(value) && value > 0;
-  if (targets.length !== 1 || app.status !== "accepted" || (app.isTeamMember !== false && (app.isTeamMember as unknown) !== 0)
+  const allowedStatus = forOfferDelivery
+    ? ["new", "reviewed", "shortlisted", "interview_requested", "interview_scheduled", "accepted"].includes(app.status)
+    : app.status === "accepted";
+  if (targets.length !== 1 || !allowedStatus || (app.isTeamMember !== false && (app.isTeamMember as unknown) !== 0)
       || app.deletedAt != null || app.onboardingDeliveryToken != null || !hasValidReviewedIdentity(app)) throw denied();
   const claim = targets[0];
   if (!validId(claim.employeeId) || !validId(claim.canonicalApplicationId) || claim.canonicalApplicationId === app.id
@@ -111,6 +114,19 @@ async function reviewedSigningOwnership(tx: any, app: typeof jobApplications.$in
   }
   return true;
 }
+/** A reviewed additional application can receive its own offer, never a second employee account. */
+async function assertOfferApplicantOwnership(tx: any, app: typeof jobApplications.$inferSelect & { email: string }) {
+  const associated = await reviewedSigningOwnership(tx, app, true);
+  if (!associated) {
+    await assertUnclaimedApplicant(tx, app.id);
+    return;
+  }
+  const offers: Array<typeof signingTokens.$inferSelect> = await tx.select().from(signingTokens)
+    .where(eq(signingTokens.applicationId, app.id)).for("update");
+  if (offers.some(offer => offer.signed === 1 && !signedOfferIdentityMatches(offer, app))) {
+    throw new Error("This application already belongs to an employee; reviewed ownership could not be verified.");
+  }
+}
 function assertOpenApplicant(app: typeof jobApplications.$inferSelect | undefined) {
   if (!app || app.deletedAt) throw new Error("Application not found or archived.");
   if (app.status === "onboarded" || app.isTeamMember) throw new Error("This person is already an employee. Manage them in Employee Directory.");
@@ -125,7 +141,7 @@ export async function prepareHiringOffer(db: any, applicationId: number) {
     const applicant = assertOpenApplicant(record);
     const [latest] = await tx.select().from(signingTokens).where(eq(signingTokens.applicationId, applicationId))
       .orderBy(desc(signingTokens.createdAt), desc(signingTokens.id)).limit(1);
-    await assertUnclaimedApplicant(tx, applicationId);
+    await assertOfferApplicantOwnership(tx, applicant);
     if (latest?.signed === 1) throw new Error("This applicant has already signed their offer.");
     const offerLetterType = detectOfferLetterType(applicant.role, applicant.location);
     const tokenCanBeReused = canReuseSigningToken(latest ?? null, applicant);
@@ -163,7 +179,7 @@ export async function withCurrentHiringOfferDelivery<T>(db: any, applicationId: 
     const applicant = assertOpenApplicant(record);
     const [latest] = await tx.select().from(signingTokens).where(eq(signingTokens.applicationId, applicationId))
       .orderBy(desc(signingTokens.createdAt), desc(signingTokens.id)).limit(1);
-    await assertUnclaimedApplicant(tx, applicationId);
+    await assertOfferApplicantOwnership(tx, applicant);
     if (!latest || latest.token !== token || !canReuseSigningToken(latest, applicant)
       || (["name", "email", "phone", "role", "location"] as const).some(field => applicant[field] !== expected[field])) {
       throw new Error("This offer has been replaced, signed, or the applicant details changed. Refresh before sending.");

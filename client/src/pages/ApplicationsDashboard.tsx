@@ -347,6 +347,7 @@ function OfferSigningAttempt({ app, open, onClose }: OfferLetterModalProps) {
   const [requestKey] = useState(() => crypto.randomUUID());
   const [result, setResult] = useState<(InterviewInviteDelivery & { signingLink: string; expiresAt: Date }) | null>(null);
   const savedPhone = app.phone ? normalizeCanadianPhoneNumber(app.phone) : null;
+  const preview = trpc.signing.previewOffer.useQuery({ applicationId: app.id }, { enabled: open, retry: false, staleTime: 0 });
   const sendSigningLink = trpc.signing.createSigningRequest.useMutation({
     onSuccess: (data) => {
       setResult(data);
@@ -356,15 +357,19 @@ function OfferSigningAttempt({ app, open, onClose }: OfferLetterModalProps) {
       if (feedback.warning) toast.warning(feedback.message, { duration: 12000 });
       else toast.success(feedback.message);
     },
-    onError: () => {
+    onError: (err) => {
+      if (err.data?.code === "PRECONDITION_FAILED") {
+        toast.error(err.message);
+        return;
+      }
       toast.error("The offer send could not be confirmed. Retry here to keep the same attempt. A channel not yet attempted may send; an existing send will not repeat.");
     },
   });
   const feedback = result ? describeInterviewInviteDelivery(result) : null;
   const handleSend = () => sendSigningLink.mutate({ applicationId: app.id, requestKey });
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-lg bg-background border-border">
+    <Dialog open={open} onOpenChange={(v) => !v && !sendSigningLink.isPending && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[90dvh] overflow-y-auto bg-background border-border">
         <DialogHeader>
           <DialogTitle className="font-display text-xl text-foreground">Send Offer for Signing</DialogTitle>
           <DialogDescription className="font-body text-sm text-foreground">
@@ -385,6 +390,7 @@ function OfferSigningAttempt({ app, open, onClose }: OfferLetterModalProps) {
                 <li>They review their role-specific Offer Letter and NDA on the same page, then sign.</li>
                 <li>New links last 7 days. Resending a valid link keeps its original expiry.</li>
                 <li>Existing signed documents and compensation are not changed.</li>
+                <li>Each application has its own offer. Sending or signing it does not change an existing employee role or portal access.</li>
               </ul>
             </div>
           ) : (
@@ -395,10 +401,22 @@ function OfferSigningAttempt({ app, open, onClose }: OfferLetterModalProps) {
               <p className="font-body text-xs">Expires {new Date(result.expiresAt).toLocaleString("en-CA", { timeZone: "America/Toronto", timeZoneName: "short" })}.</p>
             </div>
           )}
+          {!result && <div className="rounded-xl border border-border bg-white p-4 font-body">
+            <h3 className="font-semibold text-sm mb-2">Offer Letter and NDA preview</h3>
+            <p className="text-xs text-muted-foreground mb-3">For this application only. Previewing does not send anything. A new offer receives its issue date when sent.</p>
+            {preview.isLoading && <p role="status" className="text-sm">Loading documents...</p>}
+            {preview.isError && <div role="alert" className="text-sm"><p>The documents could not be loaded. Nothing has been sent.</p><Button variant="outline" onClick={() => preview.refetch()} className="mt-2">Retry preview</Button></div>}
+            {preview.data && <>
+              {preview.data.kind === "legacy" && <p className="text-sm mb-3">Reconstructed historical wording. The original signed document text was not saved.</p>}
+              {preview.data.kind === "signed" && <p className="text-sm mb-3">Previously signed documents. They cannot be overwritten or sent as a new offer.</p>}
+              <div aria-label="Offer Letter preview" dangerouslySetInnerHTML={{ __html: preview.data.offerHtml }} />
+              <details className="border-t border-border mt-4 pt-3"><summary className="cursor-pointer font-semibold text-sm min-h-11 flex items-center">Read Non-Disclosure Agreement</summary><div className="pt-3" aria-label="NDA preview" dangerouslySetInnerHTML={{ __html: preview.data.ndaHtml }} /></details>
+            </>}
+          </div>}
         </div>
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose} className="font-body border-border">{result ? "Close" : "Cancel"}</Button>
-          {!result && <Button onClick={handleSend} disabled={sendSigningLink.isPending} className="font-body text-white bg-green-600 hover:bg-green-700">
+          <Button variant="outline" onClick={onClose} disabled={sendSigningLink.isPending} className="font-body border-border">{result ? "Close" : "Cancel"}</Button>
+          {!result && <Button onClick={handleSend} disabled={sendSigningLink.isPending || !preview.data || preview.isError || ["signed", "legacy"].includes(preview.data.kind)} className="font-body text-white bg-green-600 hover:bg-green-700">
             {sendSigningLink.isPending ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Sending...</> : <><Send className="w-4 h-4 mr-2" /> {sendSigningLink.isError ? "Retry same offer attempt" : "Send Email + Text"}</>}
           </Button>}
         </DialogFooter>
