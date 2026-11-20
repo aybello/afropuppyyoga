@@ -1,3 +1,4 @@
+import { estimatePrivateEventBudget, formatPrivateEventBudgetSummary } from "../../shared/privateEventBudget";
 import { z } from "zod";
 import { ownerProcedure, publicProcedure, router, staffProcedure } from "../_core/trpc";
 import { notifyOwner } from "../_core/notification";
@@ -794,9 +795,15 @@ export const privateEventsRouter = router({
           : `${PRIVATE_EVENT_PACKAGE_BANDS[input.packageType].name} (${bandLabel}${estimate.requiresCustomQuote ? "; selected reference band only" : ""})`;
       const estimateStr = estimate.requiresCustomQuote ? "Custom quote required" : bandLabel;
       const estimateLabel = estimate.requiresCustomQuote ? "Custom Quote" : "Indicative Package Range";
-      const preferencesSummary = input.eventPreferences ? formatPrivateEventPreferences(input.eventPreferences) : undefined;
-      const storedNotes = preferencesSummary
-        ? storePrivateEventScope(preferencesSummary, input.notes)
+      // Descriptive planning only. Custom estimatedMin/Max remain 0/0 so owner approval cannot be bypassed.
+      const scopeSummary = input.eventPreferences ? formatPrivateEventPreferences(input.eventPreferences) : undefined;
+      const planningBudgetSummary = input.eventPreferences ? formatPrivateEventBudgetSummary(estimatePrivateEventBudget({
+        guests: input.guests, packageType: input.packageType, eventPreferences: input.eventPreferences,
+      })) : undefined;
+      const preferencesSummary = scopeSummary ? [scopeSummary, planningBudgetSummary].join("\n\n") : undefined;
+      // Final quote and payment documents reuse scope notes. Keep provisional budget numbers out of that scope.
+      const storedNotes = scopeSummary
+        ? storePrivateEventScope(scopeSummary, input.notes)
         : input.notes;
 
       // 1. Save to database first (source of truth)
@@ -913,7 +920,7 @@ export const privateEventsRouter = router({
             action: "inquiry_submitted",
             actorName: input.name,
             actorEmail: input.email,
-            details: actionDetails({ estimatedMin: serverMin, estimatedMax: serverMax, packageType: input.packageType, ...(input.eventPreferences ? { eventPreferences: input.eventPreferences } : {}) }),
+            details: actionDetails({ estimatedMin: serverMin, estimatedMax: serverMax, packageType: input.packageType, ...(input.eventPreferences ? { eventPreferences: input.eventPreferences, planningBudgetSummary } : {}) }),
           }),
           db.insert(communicationsLog).values({
             entityType: "private_event",

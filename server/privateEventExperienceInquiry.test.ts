@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { estimatePrivateEventBudget, formatPrivateEventBudgetSummary } from "../shared/privateEventBudget";
 import {
   communicationsLog,
   privateEventActions,
@@ -37,6 +38,7 @@ const baseInput = {
   preferredDate: "2026-12-12",
   notes: "Please confirm availability.",
 };
+const budgetSummary = (p: PrivateEventPreferences, guests: number, packageType: "classic" | "signature" | "luxury") => formatPrivateEventBudgetSummary(estimatePrivateEventBudget({ guests, packageType, eventPreferences: p }));
 const standardPreferences: PrivateEventPreferences = {
   experience: "puppy_yoga",
   schedule: "single",
@@ -147,7 +149,7 @@ describe("experience-aware inquiries: authoritative estimates", () => {
         }
       }
       expect(ownerContent()).toContain(label);
-      expect(storedAction().details).toBe(JSON.stringify({ estimatedMin: min, estimatedMax: max, packageType, eventPreferences }));
+      expect(storedAction().details).toBe(JSON.stringify({ estimatedMin: min, estimatedMax: max, packageType, eventPreferences, planningBudgetSummary: budgetSummary(eventPreferences, guests, packageType) }));
     }
   });
 
@@ -163,7 +165,7 @@ describe("experience-aware inquiries: authoritative estimates", () => {
     ["multiple-session lounge", { experience: "puppy_lounge", schedule: "multiple", sessionCount: 2, guestsPerSession: 6 }, 12],
     ["off-site drop-in lounge", { experience: "puppy_lounge", schedule: "drop_in", concurrentGuests: 6, venue: "client_venue", durationMinutes: 180 }, 12],
   ];
-  it.each(customCases)("stores 0/0 and advertises no numeric package band for %s", async (_description, preferences, guests) => {
+  it.each(customCases)("stores 0/0 with a separate planning budget and no binding package band for %s", async (_description, preferences, guests) => {
     const eventPreferences = { ...standardPreferences, ...preferences };
     await privateEventsRouter.createCaller(context()).submitInquiry({
       ...baseInput, guests, eventPreferences, estimatedMin: 1, estimatedMax: 999999,
@@ -171,20 +173,25 @@ describe("experience-aware inquiries: authoritative estimates", () => {
     expect(storedInquiry()).toMatchObject({ guests, packageType: "classic", estimatedMin: 0, estimatedMax: 0 });
     expect(storedInquiry()).not.toHaveProperty("sessions");
     expect(storedInquiry()).not.toHaveProperty("finalPriceCents");
+    const planning = estimatePrivateEventBudget({ guests, packageType: "classic", eventPreferences });
+    const planningSummary = formatPrivateEventBudgetSummary(planning);
     for (const email of emails()) {
       for (const body of [email.html, email.text!]) {
         expect(body).toContain("Custom quote required");
         expect(body).toContain(PRIVATE_EVENT_FORMAT_PRICE_NOTE);
-        expect(body).not.toMatch(/\$|999999|reference band only|free event/i);
+        expect(body).not.toMatch(/999999|reference band only|free event/i);
+        const safeSummary = body === email.html ? planningSummary.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;") : planningSummary;
+        expect(body).toContain(safeSummary);
+        if (planning.kind !== "estimate") expect(body).not.toContain("$");
         expect(body).toContain(eventPreferences.packagePreference === "help_me_choose" ? "Help me choose" : "Classic Experience");
-        if (eventPreferences.packagePreference === "help_me_choose") expect(body).not.toContain("Classic");
+        if (eventPreferences.packagePreference === "help_me_choose") expect(body).toContain("No Classic, Signature or Luxury package has been selected");
       }
     }
     expect(mocks.sendEmail.mock.calls[1][0].subject).toContain("Custom quote required");
     expect(mocks.sendEmail.mock.calls[1][0].subject).not.toContain("$");
     expect(ownerContent()).toContain("Custom quote required");
-    expect(ownerContent()).not.toContain("$");
-    expect(JSON.parse(storedAction().details as string)).toEqual({ estimatedMin: 0, estimatedMax: 0, packageType: "classic", eventPreferences });
+    expect(ownerContent()).toContain(planningSummary);
+    expect(JSON.parse(storedAction().details as string)).toEqual({ estimatedMin: 0, estimatedMax: 0, packageType: "classic", eventPreferences, planningBudgetSummary: planningSummary });
     expect(db.writes.find(entry => entry.table === communicationsLog)!.row.bodyPreview).toContain("Custom quote required");
   });
 
@@ -195,7 +202,8 @@ describe("experience-aware inquiries: authoritative estimates", () => {
     for (const email of emails()) {
       for (const body of [email.html, email.text!]) {
         expect(body).toContain(name);
-        expect(body).not.toContain("$");
+        expect(body).toContain("$1,250–$1,500 CAD before HST (core format only)");
+        if (packageType !== "classic") expect(body).toContain("upgrades are not priced or included");
         if (packageType !== "classic") expect(body).not.toContain("Classic Experience");
       }
     }
@@ -216,16 +224,16 @@ describe("experience-aware inquiries: durable details and safe email delivery", 
       durationMinutes: 180, scheduleNotes, venueDetails,
       ...(schedule === "multiple" ? { sessionCount: 3, guestsPerSession: 8 } : { concurrentGuests: 8 }),
     };
-    const summary = formatPrivateEventPreferences(eventPreferences);
+    const summary = [formatPrivateEventPreferences(eventPreferences), formatPrivateEventBudgetSummary(estimatePrivateEventBudget({ guests: 24, packageType: "signature", eventPreferences }))].join("\n\n");
     await privateEventsRouter.createCaller(context()).submitInquiry({
       ...baseInput, name, eventType, location, preferredDate, guests: 24, packageType: "signature", notes, eventPreferences,
     });
     expect(storedInquiry()).toMatchObject({
-      name, eventType, location, preferredDate, phone: "+12897881885", notes: storePrivateEventScope(summary, notes),
+      name, eventType, location, preferredDate, phone: "+12897881885", notes: storePrivateEventScope(formatPrivateEventPreferences(eventPreferences), notes),
       estimatedMin: 0, estimatedMax: 0,
     });
     expect(JSON.parse(storedAction().details as string)).toEqual({
-      estimatedMin: 0, estimatedMax: 0, packageType: "signature", eventPreferences,
+      estimatedMin: 0, estimatedMax: 0, packageType: "signature", eventPreferences, planningBudgetSummary: budgetSummary(eventPreferences, 24, "signature"),
     });
     const escaped = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     for (const email of emails()) {
@@ -250,6 +258,7 @@ describe("experience-aware inquiries: durable details and safe email delivery", 
     const { scheduleNotes: _scheduleNotes, venueDetails: _venueDetails, ...eventPreferences } = standardPreferences;
     await privateEventsRouter.createCaller(context()).submitInquiry({ ...baseInput, notes: "", eventPreferences });
     expect(storedInquiry().notes).toBe(storePrivateEventScope(formatPrivateEventPreferences(standardPreferences)));
+    expect(storedInquiry().notes).not.toContain("Planning budget");
     expect(JSON.parse(storedAction().details as string).eventPreferences).toEqual(standardPreferences);
   });
 

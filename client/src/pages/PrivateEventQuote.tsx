@@ -7,13 +7,14 @@
 import { useState } from "react";
 import { useSeoMeta } from "@/hooks/useSeoMeta";
 import { formatCanadianPhoneNumber, normalizeCanadianPhoneNumber } from "@shared/phone";
-import { estimatePrivateEventPackage, privateEventBandLabel, PRIVATE_EVENT_PRICE_NOTE, PRIVATE_EVENT_TRAVEL_NOTE, PRIVATE_EVENT_CUSTOM_NOTE, type PrivateEventPackageType } from "@shared/privateEventPricing";
+import { estimatePrivateEventPackage, privateEventBandLabel, PRIVATE_EVENT_PRICE_NOTE, type PrivateEventPackageType } from "@shared/privateEventPricing";
 import { publicPortraitUrl } from "@shared/publicPortraits";
 import { FIVE_STAR_REVIEW_COUNT } from "@shared/reviewMetrics";
 import { QUOTE_SEO_TITLE, QUOTE_SEO_COPY, DEFAULT_SOCIAL_IMAGE } from "@shared/prioritySeo";
 import { recoverPublicPortrait } from "@/lib/publicPortraitRecovery";
-import { privateEventPreferencesSchema, privateEventScopeRequiresCustomQuote, validatePrivateEventAttendance, PRIVATE_EVENT_EXPERIENCES, PRIVATE_EVENT_SCHEDULES, PRIVATE_EVENT_VENUES, PRIVATE_EVENT_FORMAT_PRICE_NOTE, PRIVATE_EVENT_CUSTOM_SCOPE_NOTE, type PrivateEventPreferences } from "@shared/privateEventExperience";
+import { privateEventPreferencesSchema, privateEventScopeRequiresCustomQuote, validatePrivateEventAttendance, PRIVATE_EVENT_FORMAT_PRICE_NOTE, type PrivateEventPreferences } from "@shared/privateEventExperience";
 import { ExperienceCards, EventPreferencesFields, DEFAULT_EVENT_PREFERENCES, type EventPreferencesDraft } from "@/components/PrivateEventExperience";
+import { PrivateEventBudgetPanel } from "@/components/PrivateEventBudgetPanel";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,7 +33,6 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import {
   Users,
-  MapPin,
   Sparkles,
   ChevronRight,
   CheckCircle2,
@@ -162,7 +162,7 @@ export default function PrivateEventQuote() {
             Private &amp; Corporate Puppy Yoga <span className="italic text-[#AA365D]">Packages in Ontario</span>
           </h2>
           <p className="font-body text-[#34221D]/80 text-base sm:text-lg leading-relaxed max-w-2xl">
-            Classic is the core experience, Signature adds professional photography and enhanced setup, and Luxury is more customized. These are our standard studio puppy yoga packages and reference price bands. Custom formats are quoted separately.
+            Classic is the core experience, Signature adds professional photography and enhanced setup, and Luxury is more customized. These are our standard studio puppy yoga packages and reference price bands. Use the planning budget below for supported event formats; custom scope and extras are confirmed in your final quote.
           </p>
           {packageCardsCustom && <p className="mt-4 font-body text-sm text-[#AA365D] leading-relaxed">Your selected format needs a custom quote for the full event. The studio package details and ranges below remain visible for comparison; they are not a quote for your selected format.</p>}
         </div>
@@ -363,7 +363,7 @@ export default function PrivateEventQuote() {
               <span className="block italic text-[#AA365D]">Quote</span>
             </h2>
             <p className="font-body text-[#34221D]/80 text-base sm:text-lg leading-relaxed max-w-lg mb-7 sm:mb-8">
-              Tell us about your experience, schedule and venue. See a standard studio package range or request a custom quote for the full event. No commitment required.
+              Tell us about your experience, schedule and venue. See a planning budget for supported formats before sharing your contact details, then request a final quote for your event. No commitment required.
             </p>
             <div className="max-w-lg aspect-[5/4] lg:aspect-[4/5] overflow-hidden rounded-t-[48%] rounded-b-[2rem] bg-[#FDE9EF] border border-[#F29CB8]/30">
               <img
@@ -486,7 +486,7 @@ export default function PrivateEventQuote() {
                         Tell Us About Your Event
                       </h2>
                       <p className="font-body text-[#34221D]/80">
-                        Choose your format first. Standard studio sessions show a range; other formats receive a custom event quote.
+                        Choose your format and attendance to see a live planning budget. If your scope needs review, we’ll explain what to confirm for your final quote.
                       </p>
                     </div>
 
@@ -627,79 +627,12 @@ export default function PrivateEventQuote() {
                         </div>
                       </div>
 
-                      {/* Live quote estimate */}
-                      <AnimatePresence>
-                        {quote && (
-                          <motion.div
-                            initial={
-                              reduceMotion ? false : { opacity: 0, y: 10 }
-                            }
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={
-                              reduceMotion
-                                ? { opacity: 1 }
-                                : { opacity: 0, y: -10 }
-                            }
-                            transition={{ duration: reduceMotion ? 0 : 0.2 }}
-                            className="rounded-2xl border border-[#F29CB8]/60 bg-[#FDE9EF] p-5 sm:p-7 text-[#34221D]"
-                          >
-                            <div className="flex items-center gap-2 mb-6">
-                              <Calculator
-                                size={18}
-                                className="text-[#AA365D]"
-                              />
-                              <span className="font-body text-sm font-semibold text-[#AA365D] uppercase tracking-wider">
-                                Your Estimate
-                              </span>
-                            </div>
-
-                            {quote.requiresCustomQuote ? (
-                              <div>
-                                <div className="font-display text-[clamp(1.875rem,3vw,2.5rem)] leading-tight font-medium text-[#34221D] [text-wrap:pretty] mb-2">
-                                  Custom quote required
-                                </div>
-                                <p className="font-body text-[#34221D]/80 text-sm">
-                                  Preferred package level: {helpChoosePackage ? "Help me choose" : packageType.charAt(0).toUpperCase() + packageType.slice(1)}. No package price is confirmed for this format.
-                                </p>
-                                <p className="font-body text-[#34221D]/80 text-sm mt-3">
-                                  {PRIVATE_EVENT_CUSTOM_SCOPE_NOTE} {PRIVATE_EVENT_CUSTOM_NOTE}
-                                </p>
-                              </div>
-                            ) : (
-                              <>
-                                <div className="font-display text-[clamp(1.875rem,3vw,2.5rem)] leading-tight font-medium text-[#34221D] [text-wrap:pretty] mb-1">
-                                  {privateEventBandLabel(packageType)}
-                                </div>
-                                <p className="font-body text-[#34221D]/80 text-sm mb-6">
-                                  Indicative package range (CAD). Not a final quote.
-                                </p>
-
-                                <div className="space-y-3 border-t border-[#AA365D]/20 pt-5">
-                                  {quote.breakdown.map(line => (
-                                    <div
-                                      key={line}
-                                      className="flex items-start gap-2"
-                                    >
-                                      <ChevronRight
-                                        size={14}
-                                        className="text-[#AA365D] mt-0.5 shrink-0"
-                                      />
-                                      <span className="font-body text-[#34221D]/80 text-sm leading-relaxed">
-                                        {line}
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-
-                                <p className="mt-4 font-body text-[#34221D]/80 text-sm leading-relaxed">{PRIVATE_EVENT_CUSTOM_NOTE}</p>
-                              </>
-                            )}
-                            <p className="font-body text-sm text-[#34221D]/80 mt-4 border-t border-[#AA365D]/20 pt-4" aria-live="polite">
-                              {PRIVATE_EVENT_EXPERIENCES[eventPreferences.experience].name} · {PRIVATE_EVENT_SCHEDULES[eventPreferences.schedule]} · {PRIVATE_EVENT_VENUES[eventPreferences.venue]} · {guestCount} attendees
-                            </p>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                      {/* Descriptive planning only; quote above is retained for the inquiry payload. */}
+                      <PrivateEventBudgetPanel
+                        guests={guestCount}
+                        packageType={packageType}
+                        eventPreferences={eventPreferences}
+                      />
 
                       {/* Contact info */}
                       <div className="bg-[#FEFAF4] rounded-2xl border border-[#F29CB8]/50 p-5 sm:p-7 space-y-6">
